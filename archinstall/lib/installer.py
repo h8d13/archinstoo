@@ -1787,10 +1787,8 @@ class Installer:
 
 	def set_vconsole(self, locale_cfg: 'LocaleConfiguration') -> None:
 		kb_vconsole: str = locale_cfg.kb_layout
-		# this is the default used in ISO
+		# this is the default used in ISO other options for hdpi screens ter-v16n ter-v32n
 		font_vconsole = 'default8x16'
-		# ter-v16n
-		# ter-v32n
 
 		# Ensure /etc exists
 		vconsole_dir: Path = Path(self.target) / 'etc'
