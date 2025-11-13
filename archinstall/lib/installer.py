@@ -1791,6 +1791,7 @@ class Installer:
 		# this is the default used in ISO other option for hdpi screens TER16x32
 		# can be checked using
 		# zgrep "CONFIG_FONT" /proc/config.gz
+		# https://wiki.archlinux.org/title/Linux_console#Fonts
 
 		font_vconsole = 'default8x16'
 
