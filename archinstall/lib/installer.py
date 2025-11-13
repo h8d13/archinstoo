@@ -871,7 +871,7 @@ class Installer:
 		# https://wiki.archlinux.org/title/Linux_console/Keyboard_configuration#Persistent_configuration
 		# https://gitlab.archlinux.org/archlinux/mkinitcpio/mkinitcpio/-/releases/v40
 		# https://www.gnu.org/software/grub/manual/grub/grub.html#Input-terminal
-		# Will require disclaimer or checking passwords will work with layout
+		# Also fixes https://github.com/archlinux/archinstall/issues/3160
 
 		locale_cfg = locale_config or LocaleConfiguration.default()
 		self.set_vconsole(locale_cfg)
