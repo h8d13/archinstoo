@@ -1787,17 +1787,18 @@ class Installer:
 
 	def set_vconsole(self, locale_cfg: 'LocaleConfiguration') -> None:
 		kb_vconsole: str = locale_cfg.kb_layout
-
 		# Ensure /etc exists
 		vconsole_dir: Path = Path(self.target) / 'etc'
 		vconsole_dir.mkdir(parents=True, exist_ok=True)
-
 		vconsole_path: Path = vconsole_dir / 'vconsole.conf'
 
-		# Write the KEYMAP to vconsole.conf
-		vconsole_path.write_text(f'KEYMAP={kb_vconsole}\n')
+		# Write both KEYMAP and FONT to vconsole.conf
+		vconsole_content = f'KEYMAP={kb_vconsole}\n'
+		# Corrects another warning
+		vconsole_content += 'FONT=default8x16\n'
 
-		info(f'Wrote to {vconsole_path} using {kb_vconsole}')
+		vconsole_path.write_text(vconsole_content)
+		info(f'Wrote to {vconsole_path} using {kb_vconsole} and default8x16 font')
 
 	def set_keyboard_language(self, language: str) -> bool:
 		info(f'Setting keyboard language to {language}')
