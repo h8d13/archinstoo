@@ -132,7 +132,7 @@ class Installer:
 			self.sync_log_to_install_medium()
 
 			# We avoid printing /mnt/<log path> because that might confuse people if they note it down
-			# and then reboot, and a identical log file will be found in the ISO medium anyway.
+			# and then reboot, and an identical log file will be found in the ISO medium anyway.
 			Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
 			Tui.print(tr('Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues'))
 
@@ -1160,19 +1160,18 @@ class Installer:
 			f"""\
 			# Created by: archinstall
 			# Created on: {self.init_time}
-			title   Arch Linux ({{kernel}}{{variant}})
+			title   Arch Linux ({{kernel}})
 			linux   /vmlinuz-{{kernel}}
-			initrd  /initramfs-{{kernel}}{{variant}}.img
+			initrd  /initramfs-{{kernel}}.img
 			options {' '.join(self._get_kernel_params(root))}
 			""",
 		)
 
 		for kernel in self.kernels:
-			for variant in ('', '-fallback'):
-				# Setup the loader entry
-				name = entry_name.format(kernel=kernel, variant=variant)
-				entry_conf = entries_dir / name
-				entry_conf.write_text(entry_template.format(kernel=kernel, variant=variant))
+			# Setup the loader entry
+			name = entry_name.format(kernel=kernel)
+			entry_conf = entries_dir / name
+			entry_conf.write_text(entry_template.format(kernel=kernel))
 
 	def _add_systemd_bootloader(
 		self,
@@ -1237,8 +1236,8 @@ class Installer:
 		if uki_enabled:
 			default_entry = f'arch-{default_kernel}.efi'
 		else:
-			entry_name = self.init_time + '_{kernel}{variant}.conf'
-			default_entry = entry_name.format(kernel=default_kernel, variant='')
+			entry_name = self.init_time + '_{kernel}.conf'
+			default_entry = entry_name.format(kernel=default_kernel)
 			self._create_bls_entries(boot_partition, root, entry_name)
 
 		default = f'default {default_entry}'
@@ -1321,11 +1320,8 @@ class Installer:
 
 			try:
 				SysCommand(command, peek_output=True)
-			except SysCallError:
-				try:
-					SysCommand(command, peek_output=True)
-				except SysCallError as err:
-					raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}')
+			except SysCallError as err:
+				raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}')
 		else:
 			info(f'GRUB boot partition: {boot_partition.dev_path}')
 
@@ -1496,15 +1492,14 @@ class Installer:
 				config_contents += f'\n/Arch Linux ({kernel})\n'
 				config_contents += '\n'.join([f'    {it}' for it in entry]) + '\n'
 			else:
-				for variant in ('', '-fallback'):
-					entry = [
-						'protocol: linux',
-						f'path: {path_root}:/vmlinuz-{kernel}',
-						f'cmdline: {kernel_params}',
-						f'module_path: {path_root}:/initramfs-{kernel}{variant}.img',
-					]
-					config_contents += f'\n/Arch Linux ({kernel}{variant})\n'
-					config_contents += '\n'.join([f'    {it}' for it in entry]) + '\n'
+				entry = [
+					'protocol: linux',
+					f'path: {path_root}:/vmlinuz-{kernel}',
+					f'cmdline: {kernel_params}',
+					f'module_path: {path_root}:/initramfs-{kernel}.img',
+				]
+				config_contents += f'\n/Arch Linux ({kernel})\n'
+				config_contents += '\n'.join([f'    {it}' for it in entry]) + '\n'
 
 		config_path.write_text(config_contents)
 
