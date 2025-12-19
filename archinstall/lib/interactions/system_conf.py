@@ -16,7 +16,16 @@ def select_kernel(preset: list[str] = []) -> list[str]:
 	:return: The string as a selected kernel
 	:rtype: string
 	"""
-	kernels = ['linux', 'linux-lts', 'linux-zen', 'linux-hardened']
+	kernels = [
+		'linux',
+		'linux-lts',
+		'linux-zen',
+		'linux-hardened',
+		'linux-cachyos',
+		'linux-cachyos-bore',
+		'linux-cachyos-lts',
+		'linux-cachyos-rc',
+	]
 	default_kernel = 'linux'
 
 	items = [MenuItem(k, value=k) for k in kernels]
