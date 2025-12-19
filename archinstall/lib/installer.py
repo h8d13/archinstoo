@@ -528,14 +528,11 @@ class Installer:
 
 		root = self.target if on_target else Path('/')
 		mirrorlist_config = root / 'etc/pacman.d/mirrorlist'
-		pacman_config = root / 'etc/pacman.conf'
 
-		repositories_config = mirror_config.repositories_config()
-		if repositories_config:
-			debug(f'Pacman config: {repositories_config}')
-
-			with open(pacman_config, 'a') as fp:
-				fp.write(repositories_config)
+		if mirror_config.custom_repositories:
+			pacman_conf = PacmanConfig(root if on_target else None)
+			pacman_conf.add_custom_repo(mirror_config.custom_repositories)
+			pacman_conf.apply()
 
 		regions_config = mirror_config.regions_config(speed_sort=True)
 		if regions_config:

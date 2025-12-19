@@ -162,6 +162,7 @@ class _CustomRepositorySerialization(TypedDict):
 	url: str
 	sign_check: str
 	sign_option: str
+	priority: bool
 
 
 @dataclass
@@ -170,6 +171,7 @@ class CustomRepository:
 	url: str
 	sign_check: SignCheck
 	sign_option: SignOption
+	priority: bool = False  # If True, repo appears before default repos
 
 	def table_data(self) -> dict[str, str]:
 		return {
@@ -177,6 +179,7 @@ class CustomRepository:
 			'Url': self.url,
 			'Sign check': self.sign_check.value,
 			'Sign options': self.sign_option.value,
+			'Priority': 'Yes' if self.priority else 'No',
 		}
 
 	def json(self) -> _CustomRepositorySerialization:
@@ -185,18 +188,25 @@ class CustomRepository:
 			'url': self.url,
 			'sign_check': self.sign_check.value,
 			'sign_option': self.sign_option.value,
+			'priority': self.priority,
 		}
 
 	@classmethod
-	def parse_args(cls, args: list[dict[str, str]]) -> list['CustomRepository']:
+	def parse_args(cls, args: list[dict[str, Any]]) -> list['CustomRepository']:
 		configs = []
 		for arg in args:
+			# Handle priority - could be bool or string from JSON
+			priority = arg.get('priority', False)
+			if isinstance(priority, str):
+				priority = priority.lower() in ('true', '1', 'yes')
+
 			configs.append(
 				CustomRepository(
 					arg['name'],
 					arg['url'],
 					SignCheck(arg['sign_check']),
 					SignOption(arg['sign_option']),
+					bool(priority),
 				),
 			)
 
@@ -287,6 +297,10 @@ class MirrorConfiguration:
 		return config
 
 	def repositories_config(self) -> str:
+		"""
+		Legacy method - kept for backwards compatibility.
+		New code should use PacmanConfig.add_custom_repo() instead.
+		"""
 		config = ''
 
 		for repo in self.custom_repositories:

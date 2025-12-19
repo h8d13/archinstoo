@@ -145,7 +145,32 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 			case _:
 				raise ValueError('Unhandled return type')
 
-		return CustomRepository(name, url, sign_check, sign_opt)
+		header += f'{tr("Signature option")}: {sign_opt.value}\n'
+		prompt = f'{header}\n' + tr('Priority repository? (appears before core/extra/multilib)')
+
+		priority_items = [
+			MenuItem('Yes', value=True),
+			MenuItem('No', value=False),
+		]
+		group = MenuItemGroup(priority_items, sort_items=False)
+
+		if preset is not None:
+			group.set_selected_by_value(preset.priority)
+
+		result = SelectMenu(
+			group,
+			header=prompt,
+			alignment=Alignment.CENTER,
+			allow_skip=False,
+		).run()
+
+		match result.type_:
+			case ResultType.Selection:
+				priority: bool = result.get_value()
+			case _:
+				raise ValueError('Unhandled return type')
+
+		return CustomRepository(name, url, sign_check, sign_opt, priority)
 
 
 class CustomMirrorServersList(ListManager[CustomServer]):
