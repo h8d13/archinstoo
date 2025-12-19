@@ -53,3 +53,12 @@ class PacmanConfig:
 	def persist(self) -> None:
 		if self._config_remote_path:
 			copy2(self._config_path, self._config_remote_path)
+
+			# Also copy pacman.d directory (mirrorlist, hooks, etc.)
+			from shutil import copytree
+
+			pacman_d_path = Path('/etc/pacman.d')
+			target_pacman_d = self._config_remote_path.parent / 'pacman.d'
+
+			if pacman_d_path.exists():
+				copytree(pacman_d_path, target_pacman_d, dirs_exist_ok=True)
