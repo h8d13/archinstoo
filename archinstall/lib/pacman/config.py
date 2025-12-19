@@ -51,5 +51,5 @@ class PacmanConfig:
 			f.writelines(content)
 
 	def persist(self) -> None:
-		if self._repositories and self._config_remote_path:
+		if self._config_remote_path:
 			copy2(self._config_path, self._config_remote_path)
