@@ -154,7 +154,8 @@
         "name": "myrepo",
         "url": "https://myrepo.com/$repo/os/$arch",
         "sign_check": "Required",
-        "sign_option": "TrustAll"
+        "sign_option": "TrustAll",
+        "priority": false
       }
     ]
   },
