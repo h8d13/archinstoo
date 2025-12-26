@@ -10,7 +10,7 @@ from typing import Any, TypedDict, override
 from pydantic import BaseModel, field_validator, model_validator
 
 from ..models.packages import Repository
-from ..networking import DownloadTimer, ping
+from ..networking import DownloadTimer, fetch_data_from_url, ping
 from ..output import debug
 
 
@@ -180,8 +180,6 @@ class ArchLinuxDeMirrorList(BaseModel):
 	@classmethod
 	def fetch_all(cls, base_url: str) -> 'ArchLinuxDeMirrorList':
 		"""Fetch all paginated results from archlinux.de API"""
-		from ..networking import fetch_data_from_url
-		from ..output import debug
 
 		limit = 100
 		first_page = cls.model_validate_json(fetch_data_from_url(f'{base_url}?offset=0&limit={limit}'))
