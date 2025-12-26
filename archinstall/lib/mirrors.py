@@ -27,56 +27,6 @@ from .networking import fetch_data_from_url
 from .output import FormattedOutput, debug
 
 
-class MirrorSource:
-	"""Represents a mirror list source with its URL and parser"""
-	def __init__(self, url: str, parser: type[MirrorStatusListV3] | type[ArchLinuxDeMirrorList], paginated: bool = False):
-		self.url = url
-		self.parser = parser
-		self.paginated = paginated
-
-	def fetch_all_pages(self) -> str:
-		"""Fetch all pages if paginated, otherwise just fetch once"""
-		if not self.paginated:
-			return fetch_data_from_url(self.url)
-
-		# For paginated sources (archlinux.de) - fetch first page to get total count
-		limit = 100
-		first_page_data = fetch_data_from_url(f'{self.url}?offset=0&limit={limit}')
-		first_page = ArchLinuxDeMirrorList.model_validate_json(first_page_data)
-
-		all_items = list(first_page.items)
-		debug(f'Fetched page 1/{(first_page.total + limit - 1) // limit} ({len(all_items)}/{first_page.total} mirrors)')
-
-		# Fetch remaining pages
-		for offset in range(limit, first_page.total, limit):
-			url = f'{self.url}?offset={offset}&limit={limit}'
-			data = fetch_data_from_url(url)
-			page = ArchLinuxDeMirrorList.model_validate_json(data)
-			all_items.extend(page.items)
-			debug(f'Fetched page {offset // limit + 1}/{(first_page.total + limit - 1) // limit} ({len(all_items)}/{first_page.total} mirrors)')
-
-		# Reconstruct a single ArchLinuxDeMirrorList with all items
-		combined = ArchLinuxDeMirrorList(
-			offset=0,
-			limit=len(all_items),
-			total=len(all_items),
-			count=len(all_items),
-			items=all_items
-		)
-		return combined.model_dump_json()
-
-	def parse(self, data: str) -> str:
-		"""Parse mirror data, returning V3 JSON format"""
-		if self.parser == ArchLinuxDeMirrorList:
-			de_list = ArchLinuxDeMirrorList.model_validate_json(data)
-			v3_list = de_list.to_v3()
-			return v3_list.model_dump_json()
-		else:
-			# Already in V3 format, just validate and return
-			MirrorStatusListV3.model_validate_json(data)
-			return data
-
-
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 	def __init__(self, custom_repositories: list[CustomRepository]):
 		self._actions = [
@@ -467,22 +417,26 @@ class MirrorListHandler:
 				self.load_local_mirrors()
 
 	def load_remote_mirrors(self) -> bool:
-		sources = [
-			#MirrorSource('https://archlinux.org/mirrors/status/json/', MirrorStatusListV3),
-			MirrorSource('https://www.archlinux.de/api/mirrors', ArchLinuxDeMirrorList, paginated=True),
-		]
 		attempts = 3
-
-		for source in sources:
-			for attempt_nr in range(attempts):
-				try:
-					data = source.fetch_all_pages()
-					mirrorlist = source.parse(data)
-					self._status_mappings = self._parse_remote_mirror_list(mirrorlist)
-					return True
-				except Exception as e:
-					debug(f'Error while fetching mirror list from {source.url}: {e}')
-					time.sleep(attempt_nr + 1)
+		# Fallback to archlinux.de
+		for attempt_nr in range(attempts):
+			try:
+				de_list = ArchLinuxDeMirrorList.fetch_all('https://www.archlinux.de/api/mirrors')
+				v3_list = de_list.to_v3()
+				self._status_mappings = self._parse_remote_mirror_list(v3_list.model_dump_json())
+				return True
+		# Try archlinux.org first
+			except Exception as e:
+				debug(f'Error fetching from archlinux.de: {e}')
+				time.sleep(attempt_nr + 1)
+		for attempt_nr in range(attempts):
+			try:
+				data = fetch_data_from_url('https://archlinux.org/mirrors/status/json/')
+				self._status_mappings = self._parse_remote_mirror_list(data)
+				return True
+			except Exception as e:
+				debug(f'Error fetching from archlinux.org: {e}')
+				time.sleep(attempt_nr + 1)
 
 		debug('Unable to fetch mirror list remotely, falling back to local mirror list')
 		return False

@@ -177,19 +177,33 @@ class ArchLinuxDeMirrorList(BaseModel):
 	count: int
 	items: list[ArchLinuxDeMirrorEntry]
 
+	@classmethod
+	def fetch_all(cls, base_url: str) -> 'ArchLinuxDeMirrorList':
+		"""Fetch all paginated results from archlinux.de API"""
+		from ..networking import fetch_data_from_url
+		from ..output import debug
+
+		limit = 100
+		first_page = cls.model_validate_json(fetch_data_from_url(f'{base_url}?offset=0&limit={limit}'))
+		all_items = list(first_page.items)
+
+		for offset in range(limit, first_page.total, limit):
+			page = cls.model_validate_json(fetch_data_from_url(f'{base_url}?offset={offset}&limit={limit}'))
+			all_items.extend(page.items)
+			debug(f'Fetched {len(all_items)}/{first_page.total} mirrors')
+
+		return cls(offset=0, limit=len(all_items), total=len(all_items), count=len(all_items), items=all_items)
+
 	def to_v3(self) -> MirrorStatusListV3:
 		"""Convert to MirrorStatusListV3 format"""
 		urls = [item.to_v3_entry() for item in self.items]
-
-		data = {
+		return MirrorStatusListV3.model_validate({
 			'version': 3,
 			'cutoff': 3600,
 			'last_check': datetime.datetime.now(datetime.UTC),
 			'num_checks': 1,
 			'urls': urls,
-		}
-
-		return MirrorStatusListV3.model_validate(data)
+		})
 
 
 @dataclass
