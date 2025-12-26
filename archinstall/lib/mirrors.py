@@ -418,17 +418,19 @@ class MirrorListHandler:
 
 	def load_remote_mirrors(self) -> bool:
 		attempts = 3
-		# Fallback to archlinux.de
+
+		# Try archlinux.de first
 		for attempt_nr in range(attempts):
 			try:
 				de_list = ArchLinuxDeMirrorList.fetch_all('https://www.archlinux.de/api/mirrors')
 				v3_list = de_list.to_v3()
 				self._status_mappings = self._parse_remote_mirror_list(v3_list.model_dump_json())
 				return True
-		# Try archlinux.org first
 			except Exception as e:
 				debug(f'Error fetching from archlinux.de: {e}')
 				time.sleep(attempt_nr + 1)
+
+		# Fallback to archlinux.org
 		for attempt_nr in range(attempts):
 			try:
 				data = fetch_data_from_url('https://archlinux.org/mirrors/status/json/')

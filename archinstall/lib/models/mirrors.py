@@ -197,13 +197,15 @@ class ArchLinuxDeMirrorList(BaseModel):
 	def to_v3(self) -> MirrorStatusListV3:
 		"""Convert to MirrorStatusListV3 format"""
 		urls = [item.to_v3_entry() for item in self.items]
-		return MirrorStatusListV3.model_validate({
-			'version': 3,
-			'cutoff': 3600,
-			'last_check': datetime.datetime.now(datetime.UTC),
-			'num_checks': 1,
-			'urls': urls,
-		})
+		return MirrorStatusListV3.model_validate(
+			{
+				'version': 3,
+				'cutoff': 3600,
+				'last_check': datetime.datetime.now(datetime.UTC),
+				'num_checks': 1,
+				'urls': urls,
+			}
+		)
 
 
 @dataclass
