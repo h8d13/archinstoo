@@ -131,6 +131,67 @@ class MirrorStatusListV3(BaseModel):
 		raise ValueError('MirrorStatusListV3 only accepts version 3 data from https://archlinux.org/mirrors/status/json/')
 
 
+class ArchLinuxDeCountry(BaseModel):
+	code: str
+	name: str
+
+
+class ArchLinuxDeMirrorEntry(BaseModel):
+	url: str
+	country: ArchLinuxDeCountry | None = None
+	durationAvg: float | None = None
+	delay: int | None = None
+	durationStddev: float | None = None
+	completionPct: float | None = None
+	score: float | None = None
+	lastSync: datetime.datetime | None = None
+	ipv4: bool = True
+	ipv6: bool = False
+	host: str
+
+	def to_v3_entry(self) -> dict[str, Any]:
+		"""Convert to MirrorStatusEntryV3 compatible format"""
+		return {
+			'url': self.url,
+			'protocol': urllib.parse.urlparse(self.url).scheme,
+			'active': True,
+			'country': self.country.name if self.country else 'Worldwide',
+			'country_code': self.country.code if self.country else 'WW',
+			'isos': True,
+			'ipv4': self.ipv4,
+			'ipv6': self.ipv6,
+			'details': self.host,
+			'delay': self.delay,
+			'last_sync': self.lastSync,
+			'duration_avg': self.durationAvg,
+			'duration_stddev': self.durationStddev,
+			'completion_pct': self.completionPct,
+			'score': self.score,
+		}
+
+
+class ArchLinuxDeMirrorList(BaseModel):
+	offset: int
+	limit: int
+	total: int
+	count: int
+	items: list[ArchLinuxDeMirrorEntry]
+
+	def to_v3(self) -> MirrorStatusListV3:
+		"""Convert to MirrorStatusListV3 format"""
+		urls = [item.to_v3_entry() for item in self.items]
+
+		data = {
+			'version': 3,
+			'cutoff': 3600,
+			'last_check': datetime.datetime.now(datetime.UTC),
+			'num_checks': 1,
+			'urls': urls,
+		}
+
+		return MirrorStatusListV3.model_validate(data)
+
+
 @dataclass
 class MirrorRegion:
 	name: str
