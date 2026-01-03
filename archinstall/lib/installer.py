@@ -1685,32 +1685,31 @@ class Installer:
 		except SysCallError as err:
 			raise DiskError(f'Could not install rEFInd to {self.target}{efi_partition.mountpoint}: {err}')
 
-		if not boot_partition.mountpoint:
-			raise ValueError('Boot partition is not mounted, cannot write rEFInd config')
+		# When UKI is enabled, skip refind_linux.conf - rEFInd auto-detects UKI .efi files
+		if not uki_enabled:
+			if not boot_partition.mountpoint:
+				raise ValueError('Boot partition is not mounted, cannot write rEFInd config')
 
-		boot_is_separate = boot_partition != efi_partition and boot_partition.dev_path != efi_partition.dev_path
+			boot_is_separate = boot_partition != efi_partition and boot_partition.dev_path != efi_partition.dev_path
 
-		if boot_is_separate:
-			# Separate boot partition (not ESP, not root)
-			config_path = self.target / boot_partition.mountpoint.relative_to('/') / 'refind_linux.conf'
-			boot_on_root = False
-		elif efi_partition.mountpoint == Path('/boot'):
-			# ESP is mounted at /boot, kernels are on ESP
-			config_path = self.target / 'boot' / 'refind_linux.conf'
-			boot_on_root = False
-		else:
-			# ESP is elsewhere (/efi, /boot/efi, etc.), kernels are on root filesystem at /boot
-			config_path = self.target / 'boot' / 'refind_linux.conf'
-			boot_on_root = True
-
-		config_contents = []
-
-		kernel_params = ' '.join(self._get_kernel_params(root))
-
-		for kernel in self.kernels:
-			if uki_enabled:
-				entry = f'"Arch Linux ({kernel}) UKI" "{kernel_params}"'
+			if boot_is_separate:
+				# Separate boot partition (not ESP, not root)
+				config_path = self.target / boot_partition.mountpoint.relative_to('/') / 'refind_linux.conf'
+				boot_on_root = False
+			elif efi_partition.mountpoint == Path('/boot'):
+				# ESP is mounted at /boot, kernels are on ESP
+				config_path = self.target / 'boot' / 'refind_linux.conf'
+				boot_on_root = False
 			else:
+				# ESP is elsewhere (/efi, /boot/efi, etc.), kernels are on root filesystem at /boot
+				config_path = self.target / 'boot' / 'refind_linux.conf'
+				boot_on_root = True
+
+			config_contents = []
+
+			kernel_params = ' '.join(self._get_kernel_params(root))
+
+			for kernel in self.kernels:
 				if boot_on_root:
 					# Kernels are in /boot subdirectory of root filesystem
 					if hasattr(root, 'btrfs_subvols') and root.btrfs_subvols:
@@ -1729,12 +1728,22 @@ class Installer:
 					initrd_path = f'initrd=\\initramfs-{kernel}.img'
 				entry = f'"Arch Linux ({kernel})" "{kernel_params} {initrd_path}"'
 
-			config_contents.append(entry)
+				config_contents.append(entry)
 
-		config_path.write_text('\n'.join(config_contents) + '\n')
+			config_path.write_text('\n'.join(config_contents) + '\n')
 
 		# When UKI is enabled, configure rEFInd to not auto-detect traditional kernels
 		if uki_enabled:
+			# Remove refind_linux.conf if it exists (created by refind package)
+			possible_conf_paths = [
+				self.target / 'boot' / 'refind_linux.conf',
+				self.target / efi_partition.relative_mountpoint / 'refind_linux.conf',
+			]
+			for conf_path in possible_conf_paths:
+				if conf_path.exists():
+					conf_path.unlink()
+
+			# Configure refind.conf to disable vmlinuz auto-detection
 			refind_conf = self.target / efi_partition.relative_mountpoint / 'EFI/refind/refind.conf'
 			if refind_conf.exists():
 				conf_content = refind_conf.read_text()
