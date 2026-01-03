@@ -1325,6 +1325,7 @@ class Installer:
 		boot_partition: PartitionModification,
 		root: PartitionModification | LvmVolume,
 		efi_partition: PartitionModification | None,
+		uki_enabled: bool = False,
 		bootloader_removable: bool = False,
 	) -> None:
 		debug('Installing grub bootloader')
@@ -1395,6 +1396,32 @@ class Installer:
 				SysCommand(command + add_options, peek_output=True)
 			except SysCallError as err:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
+
+		# Add custom UKI entries if enabled
+		if uki_enabled and SysInfo.has_uefi() and efi_partition:
+			custom_entries = self.target / 'etc/grub.d/40_custom'
+			entries_content = custom_entries.read_text()
+
+			# Generate UKI menu entries for each kernel (including fallback)
+			uki_entries = []
+			for kernel in self.kernels:
+				for variant in ('', '-fallback'):
+					uki_file = f'/EFI/Linux/arch-{kernel}{variant}.efi'
+					entry = textwrap.dedent(
+						f"""
+						menuentry "Arch Linux ({kernel}{variant}) UKI" {{
+							insmod fat
+							insmod chain
+							search --no-floppy --set=root --fs-uuid {efi_partition.fs_uuid}
+							chainloader {uki_file}
+						}}
+						"""
+					)
+					uki_entries.append(entry)
+
+			# Append UKI entries to 40_custom
+			entries_content += '\n'.join(uki_entries)
+			custom_entries.write_text(entries_content)
 
 		try:
 			self.arch_chroot(
@@ -1823,7 +1850,7 @@ class Installer:
 			case Bootloader.Systemd:
 				self._add_systemd_bootloader(boot_partition, root, efi_partition, uki_enabled)
 			case Bootloader.Grub:
-				self._add_grub_bootloader(boot_partition, root, efi_partition, bootloader_removable)
+				self._add_grub_bootloader(boot_partition, root, efi_partition, uki_enabled, bootloader_removable)
 			case Bootloader.Efistub:
 				self._add_efistub_bootloader(boot_partition, root, uki_enabled)
 			case Bootloader.Limine:
