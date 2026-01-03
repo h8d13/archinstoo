@@ -1424,16 +1424,15 @@ class Installer:
 			custom_entries.write_text(entries_content)
 			custom_entries.chmod(0o755)
 
+			# Disable 10_linux permanently to prevent broken entries on kernel updates
+			linux_script = self.target / 'etc/grub.d/10_linux'
+			if linux_script.exists():
+				linux_script.chmod(0o644)
+
 		try:
-			if uki_enabled and SysInfo.has_uefi() and efi_partition:
-				# Disable 10_linux to prevent broken default entries, gen entries, then re-enable it
-				self.arch_chroot(
-					f'chmod -x /etc/grub.d/10_linux && grub-mkconfig -o {boot_dir}/grub/grub.cfg; chmod +x /etc/grub.d/10_linux',
-				)
-			else:  # Original call
-				self.arch_chroot(
-					f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',
-				)
+			self.arch_chroot(
+				f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',
+			)
 		except SysCallError as err:
 			raise DiskError(f'Could not configure GRUB: {err}')
 
