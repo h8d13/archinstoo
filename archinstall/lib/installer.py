@@ -1399,34 +1399,41 @@ class Installer:
 
 		# Add custom UKI entries if enabled
 		if uki_enabled and SysInfo.has_uefi() and efi_partition:
-			custom_entries = self.target / 'etc/grub.d/40_custom'
-			entries_content = custom_entries.read_text()
+			custom_entries = self.target / 'etc/grub.d/09_custom'
+			# Initialize with proper shebang header
+			entries_content = '#!/bin/sh\nexec tail -n +3 $0\n'
 
-			# Generate UKI menu entries for each kernel (including fallback)
+			# Generate UKI menu entries for each kernel
 			uki_entries = []
 			for kernel in self.kernels:
-				for variant in ('', '-fallback'):
-					uki_file = f'/EFI/Linux/arch-{kernel}{variant}.efi'
-					entry = textwrap.dedent(
-						f"""
-						menuentry "Arch Linux ({kernel}{variant}) UKI" {{
-							insmod fat
-							insmod chain
-							search --no-floppy --set=root --fs-uuid {efi_partition.uuid}
-							chainloader {uki_file}
-						}}
-						"""
-					)
-					uki_entries.append(entry)
+				uki_file = f'/EFI/Linux/arch-{kernel}.efi'
+				entry = textwrap.dedent(
+					f"""
+					menuentry "Arch Linux ({kernel}) UKI" {{
+						insmod fat
+						insmod chain
+						search --no-floppy --set=root --fs-uuid {efi_partition.uuid}
+						chainloader {uki_file}
+					}}
+					"""
+				)
+				uki_entries.append(entry)
 
-			# Append UKI entries to 40_custom
+			# Write UKI entries to 09_custom
 			entries_content += '\n'.join(uki_entries)
 			custom_entries.write_text(entries_content)
+			custom_entries.chmod(0o755)
 
 		try:
-			self.arch_chroot(
-				f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',
-			)
+			if uki_enabled and SysInfo.has_uefi() and efi_partition:
+				# Disable 10_linux to prevent broken default entries, gen entries, then re-enable it
+				self.arch_chroot(
+					f'chmod -x /etc/grub.d/10_linux && grub-mkconfig -o {boot_dir}/grub/grub.cfg; chmod +x /etc/grub.d/10_linux',
+				)
+			else:  # Original call
+				self.arch_chroot(
+					f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',
+				)
 		except SysCallError as err:
 			raise DiskError(f'Could not configure GRUB: {err}')
 
@@ -1696,29 +1703,28 @@ class Installer:
 		kernel_params = ' '.join(self._get_kernel_params(root))
 
 		for kernel in self.kernels:
-			for variant in ('', '-fallback'):
-				if uki_enabled:
-					entry = f'"Arch Linux ({kernel}{variant}) UKI" "{kernel_params}"'
-				else:
-					if boot_on_root:
-						# Kernels are in /boot subdirectory of root filesystem
-						if hasattr(root, 'btrfs_subvols') and root.btrfs_subvols:
-							# Root is btrfs with subvolume, find the root subvolume
-							root_subvol = next((sv for sv in root.btrfs_subvols if sv.is_root()), None)
-							if root_subvol:
-								subvol_name = root_subvol.name
-								initrd_path = f'initrd={subvol_name}\\boot\\initramfs-{kernel}{variant}.img'
-							else:
-								initrd_path = f'initrd=\\boot\\initramfs-{kernel}{variant}.img'
+			if uki_enabled:
+				entry = f'"Arch Linux ({kernel}) UKI" "{kernel_params}"'
+			else:
+				if boot_on_root:
+					# Kernels are in /boot subdirectory of root filesystem
+					if hasattr(root, 'btrfs_subvols') and root.btrfs_subvols:
+						# Root is btrfs with subvolume, find the root subvolume
+						root_subvol = next((sv for sv in root.btrfs_subvols if sv.is_root()), None)
+						if root_subvol:
+							subvol_name = root_subvol.name
+							initrd_path = f'initrd={subvol_name}\\boot\\initramfs-{kernel}.img'
 						else:
-							# Root without btrfs subvolume
-							initrd_path = f'initrd=\\boot\\initramfs-{kernel}{variant}.img'
+							initrd_path = f'initrd=\\boot\\initramfs-{kernel}.img'
 					else:
-						# Kernels are at root of their partition (ESP or separate boot partition)
-						initrd_path = f'initrd=\\initramfs-{kernel}{variant}.img'
-					entry = f'"Arch Linux ({kernel}{variant})" "{kernel_params} {initrd_path}"'
+						# Root without btrfs subvolume
+						initrd_path = f'initrd=\\boot\\initramfs-{kernel}.img'
+				else:
+					# Kernels are at root of their partition (ESP or separate boot partition)
+					initrd_path = f'initrd=\\initramfs-{kernel}.img'
+				entry = f'"Arch Linux ({kernel})" "{kernel_params} {initrd_path}"'
 
-				config_contents.append(entry)
+			config_contents.append(entry)
 
 		config_path.write_text('\n'.join(config_contents) + '\n')
 
