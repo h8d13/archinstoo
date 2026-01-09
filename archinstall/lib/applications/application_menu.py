@@ -11,6 +11,8 @@ from archinstall.lib.models.application import (
 	FirewallConfiguration,
 	Management,
 	ManagementConfiguration,
+	Monitor,
+	MonitorConfiguration,
 	PowerManagement,
 	PowerManagementConfiguration,
 	PrintServiceConfiguration,
@@ -86,6 +88,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				preview_action=self._prev_management,
 				key='management_config',
 			),
+			MenuItem(
+				text=tr('Monitor'),
+				action=select_monitor,
+				preview_action=self._prev_monitor,
+				key='monitor_config',
+			),
 		]
 
 	def _prev_power_management(self, item: MenuItem) -> str | None:
@@ -129,6 +137,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			config: ManagementConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
 			return f'{tr("Management")}: {tools}'
+		return None
+
+	def _prev_monitor(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: MonitorConfiguration = item.value
+			return f'{tr("Monitor")}: {config.monitor.value}'
 		return None
 
 
@@ -280,5 +294,28 @@ def select_management(preset: ManagementConfiguration | None = None) -> Manageme
 			return preset
 		case ResultType.Selection:
 			return ManagementConfiguration(tools=result.get_values())
+		case ResultType.Reset:
+			return None
+
+
+def select_monitor(preset: MonitorConfiguration | None = None) -> MonitorConfiguration | None:
+	group = MenuItemGroup.from_enum(Monitor)
+
+	if preset:
+		group.set_focus_by_value(preset.monitor)
+
+	result = SelectMenu[Monitor](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Monitor')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return MonitorConfiguration(monitor=result.get_value())
 		case ResultType.Reset:
 			return None
