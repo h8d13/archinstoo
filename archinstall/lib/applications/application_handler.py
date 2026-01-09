@@ -4,6 +4,7 @@ from archinstall.applications.audio import AudioApp
 from archinstall.applications.bluetooth import BluetoothApp
 from archinstall.applications.firewall import FirewallApp
 from archinstall.applications.management import ManagementApp
+from archinstall.applications.monitor import MonitorApp
 from archinstall.applications.power_management import PowerManagementApp
 from archinstall.applications.print_service import PrintServiceApp
 from archinstall.lib.models import Audio
@@ -48,6 +49,12 @@ class ApplicationHandler:
 			ManagementApp().install(
 				install_session,
 				app_config.management_config,
+			)
+
+		if app_config.monitor_config:
+			MonitorApp().install(
+				install_session,
+				app_config.monitor_config,
 			)
 
 

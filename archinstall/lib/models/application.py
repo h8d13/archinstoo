@@ -48,6 +48,16 @@ class ManagementConfigSerialization(TypedDict):
 	tools: list[str]
 
 
+class Monitor(StrEnum):
+	HTOP = 'htop'
+	BTOP = 'btop'
+	BOTTOM = 'bottom'
+
+
+class MonitorConfigSerialization(TypedDict):
+	monitor: str
+
+
 class ZramAlgorithm(StrEnum):
 	ZSTD = 'zstd'
 	LZO_RLE = 'lzo-rle'
@@ -63,6 +73,7 @@ class ApplicationSerialization(TypedDict):
 	print_service_config: NotRequired[PrintServiceConfigSerialization]
 	firewall_config: NotRequired[FirewallConfigSerialization]
 	management_config: NotRequired[ManagementConfigSerialization]
+	monitor_config: NotRequired[MonitorConfigSerialization]
 
 
 @dataclass
@@ -153,6 +164,22 @@ class ManagementConfiguration:
 		)
 
 
+@dataclass
+class MonitorConfiguration:
+	monitor: Monitor
+
+	def json(self) -> MonitorConfigSerialization:
+		return {
+			'monitor': self.monitor.value,
+		}
+
+	@staticmethod
+	def parse_arg(arg: dict[str, Any]) -> 'MonitorConfiguration':
+		return MonitorConfiguration(
+			Monitor(arg['monitor']),
+		)
+
+
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
@@ -176,6 +203,7 @@ class ApplicationConfiguration:
 	print_service_config: PrintServiceConfiguration | None = None
 	firewall_config: FirewallConfiguration | None = None
 	management_config: ManagementConfiguration | None = None
+	monitor_config: MonitorConfiguration | None = None
 
 	@staticmethod
 	def parse_arg(
@@ -206,6 +234,9 @@ class ApplicationConfiguration:
 		if args and (management_config := args.get('management_config')) is not None:
 			app_config.management_config = ManagementConfiguration.parse_arg(management_config)
 
+		if args and (monitor_config := args.get('monitor_config')) is not None:
+			app_config.monitor_config = MonitorConfiguration.parse_arg(monitor_config)
+
 		return app_config
 
 	def json(self) -> ApplicationSerialization:
@@ -228,5 +259,8 @@ class ApplicationConfiguration:
 
 		if self.management_config:
 			config['management_config'] = self.management_config.json()
+
+		if self.monitor_config:
+			config['monitor_config'] = self.monitor_config.json()
 
 		return config

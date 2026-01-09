@@ -351,6 +351,11 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'{tr("Management")}: {tools}'
 				output += '\n'
 
+			if app_config.monitor_config:
+				monitor_config = app_config.monitor_config
+				output += f'{tr("Monitor")}: {monitor_config.monitor.value}'
+				output += '\n'
+
 			return output
 
 		return None
