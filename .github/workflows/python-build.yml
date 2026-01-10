@@ -18,7 +18,7 @@ jobs:
           pacman --noconfirm -Sy archlinux-keyring
           pacman --noconfirm -Syyu
           pacman --noconfirm -Sy python-uv python-setuptools python-pip
-          pacman --noconfirm -Sy python-pyparted python-pydantic
+          pacman --noconfirm -Sy python-pyparted python-pydantic python-cryptography
       - name: Remove existing archinstall (if any)
         run: 
           uv pip uninstall archinstall --break-system-packages --system
@@ -26,7 +26,7 @@ jobs:
         run: uv build --wheel
       - name: Install archinstall
         run: |
-          uv pip install dist/*.whl --break-system-packages --system
+          uv pip install dist/*.whl --break-system-packages --system --no-deps
       - name: Run archinstall
         run: |
           python -V
