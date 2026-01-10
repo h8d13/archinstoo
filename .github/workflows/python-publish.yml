@@ -24,10 +24,10 @@ jobs:
           pacman-key --init
           pacman --noconfirm -Sy archlinux-keyring
           pacman --noconfirm -Syyu
-          pacman --noconfirm -Sy python python-uv python-setuptools python-pip python-pyparted python-pydantic
+          pacman --noconfirm -Sy python python-uv python-setuptools python-pip python-build python-pyparted python-pydantic
       - name: Build archinstall
         run: |
-          uv build --wheel
+          python -m build --wheel
       - name: Publish archinstall to PyPi
         run: |
           uv publish --trusted-publishing always
