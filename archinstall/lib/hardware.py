@@ -3,6 +3,8 @@ from enum import Enum
 from functools import cached_property
 from pathlib import Path
 
+from archinstall.default_profiles.profile import DisplayServer
+
 from .exceptions import SysCallError
 from .general import SysCommand
 from .networking import enrich_iface_types, list_interfaces
@@ -71,8 +73,8 @@ class GfxDriver(Enum):
 			case _:
 				return False
 
-	def packages_text(self) -> str:
-		pkg_names = [p.value for p in self.gfx_packages()]
+	def packages_text(self, servers: set[DisplayServer] | None = None) -> str:
+		pkg_names = [p.value for p in self.gfx_packages(servers)]
 		text = tr('Installed packages') + ':\n'
 
 		for p in sorted(pkg_names):
@@ -80,8 +82,12 @@ class GfxDriver(Enum):
 
 		return text
 
-	def gfx_packages(self) -> list[GfxPackage]:
-		packages = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
+	def gfx_packages(self, servers: set[DisplayServer] | None = None) -> list[GfxPackage]:
+		packages = []
+
+		if servers is None or DisplayServer.X11 in servers:
+			packages = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
+		# else: servers is empty set or doesn't contain X11
 
 		match self:
 			case GfxDriver.AllOpenSource:
@@ -134,6 +140,7 @@ class GfxDriver(Enum):
 			case GfxDriver.VMOpenSource:
 				packages += [
 					GfxPackage.Mesa,
+					GfxPackage.LibvaMesaDriver,
 				]
 
 		return packages

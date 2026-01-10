@@ -26,6 +26,11 @@ class ProfileType(Enum):
 	Application = 'Application'
 
 
+class DisplayServer(Enum):
+	X11 = 'x11'
+	Wayland = 'wayland'
+
+
 class GreeterType(Enum):
 	Lightdm = 'lightdm-gtk-greeter'
 	LightdmSlick = 'lightdm-slick-greeter'
@@ -58,7 +63,6 @@ class Profile:
 		self.custom_settings: dict[str, str | None] = {}
 		self.advanced = advanced
 
-		self._support_gfx_driver = support_gfx_driver
 		self._support_greeter = support_greeter
 
 		# self.gfx_driver: str | None = None
@@ -164,16 +168,13 @@ class Profile:
 	def is_custom_type_profile(self) -> bool:
 		return self.profile_type == ProfileType.CustomType
 
-	def is_graphic_driver_supported(self) -> bool:
-		if not self.current_selection:
-			return self._support_gfx_driver
-		else:
-			if any([p._support_gfx_driver for p in self.current_selection]):
-				return True
-			return False
-
 	def is_greeter_supported(self) -> bool:
 		return self._support_greeter
+
+	def display_servers(self) -> set[DisplayServer]:
+		from ..lib.profile.profiles_handler import profile_handler
+
+		return profile_handler.display_servers(self)
 
 	def preview_text(self) -> str:
 		"""
