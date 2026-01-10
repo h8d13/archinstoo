@@ -8,7 +8,6 @@ import traceback
 
 from archinstall.lib.args import arch_config_handler
 from archinstall.lib.disk.utils import disk_layouts
-from archinstall.lib.network.wifi_handler import wifi_handler
 from archinstall.lib.networking import ping
 from archinstall.lib.packages.packages import check_package_upgrade
 from archinstall.tui.ui.components import tui as ttui
@@ -45,10 +44,9 @@ def _check_online() -> None:
 		ping('1.1.1.1')
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
-			if not arch_config_handler.args.skip_wifi_check:
-				success = not wifi_handler.setup()
-				if not success:
-					exit(0)
+			info('Use iwctl or nmcli to connect to internet.')
+			info('Then ping -c 3 google.com to make sure it works.')
+			exit(0)
 
 
 def _fetch_arch_db() -> None:

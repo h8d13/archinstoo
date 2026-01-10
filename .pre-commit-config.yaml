@@ -42,7 +42,6 @@ repos:
         - pydantic
         - pytest
         - cryptography
-        - textual
   - repo: https://github.com/pycqa/pylint
     rev: v4.0.4
     hooks:
