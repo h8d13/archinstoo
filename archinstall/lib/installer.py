@@ -135,7 +135,7 @@ class Installer:
 			# We avoid printing /mnt/<log path> because that might confuse people if they note it down
 			# and then reboot, and an identical log file will be found in the ISO medium anyway.
 			Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
-			Tui.print(tr('Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues'))
+			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(arch_config_handler.config.bug_report_url))
 
 			# Return None to propagate the exception
 			return None
@@ -154,7 +154,7 @@ class Installer:
 				warn(f' - {step}')
 
 			warn(f'Detailed error logs can be found at: {logger.directory}')
-			warn('Submit this zip file as an issue to https://github.com/archlinux/archinstall/issues')
+			warn(f'Submit this zip file as an issue to {arch_config_handler.config.bug_report_url}/issues')
 
 			self.sync_log_to_install_medium()
 			return False
