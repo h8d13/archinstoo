@@ -52,7 +52,8 @@ body:
         Please describe your issue as best as you can.
         And please consider personal preferences vs what the recommended
         steps/values are in https://wiki.archlinux.org/title/Installation_guide
-        as we try to abide by them as best we can.
+        as we try to abide by them as best we can. 
+        Specify branch used to install from: git clone -b <branch> repo and date
       value: |
         #### Description of the issue
 
