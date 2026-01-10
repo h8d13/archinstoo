@@ -7,7 +7,6 @@ from archinstall.default_profiles.profile import DisplayServer
 
 from .exceptions import SysCallError
 from .general import SysCommand
-from .networking import enrich_iface_types, list_interfaces
 from .output import debug
 from .translationhandler import tr
 
@@ -232,11 +231,6 @@ class SysInfo:
 	@staticmethod
 	def has_battery() -> bool:
 		return _sys_info.has_battery
-
-	@staticmethod
-	def has_wifi() -> bool:
-		ifaces = list(list_interfaces().values())
-		return 'WIRELESS' in enrich_iface_types(ifaces).values()
 
 	@staticmethod
 	def has_uefi() -> bool:
