@@ -23,7 +23,6 @@ class EditorApp:
 
 		editor_binary = self._get_editor_binary(editor_config.editor)
 		environment_path = install_session.target / 'etc' / 'environment'
-
 		debug(f'Setting EDITOR={editor_binary} in {environment_path}')
 
 		with open(environment_path, 'a') as f:
