@@ -71,13 +71,6 @@ class GfxDriver(Enum):
 			case _:
 				return False
 
-	def is_nvidia(self) -> bool:
-		match self:
-			case GfxDriver.NvidiaOpenKernel:
-				return True
-			case _:
-				return False
-
 	def packages_text(self, servers: set[DisplayServer] | None = None, kernels: list[str] | None = None) -> str:
 		pkg_names = [p.value for p in self.gfx_packages(servers, kernels)]
 		text = tr('Installed packages') + ':\n'
