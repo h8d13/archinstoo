@@ -28,7 +28,6 @@ depends=(
   'python-cryptography'
   'python-pydantic'
   'python-pyparted'
-  'python-textual'
   'systemd'
   'util-linux'
   'xfsprogs'
