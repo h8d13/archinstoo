@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import threading
 from enum import Enum
 from pathlib import Path
 from typing import assert_never
 
 from archinstall.lib.models.packages import Repository
-from archinstall.lib.packages.packages import list_available_packages
+from archinstall.lib.packages.packages import enrich_package_info, list_available_packages
 from archinstall.lib.translationhandler import tr
 from archinstall.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
@@ -177,7 +178,7 @@ def ask_additional_packages_to_install(
 		MenuItem(
 			name,
 			value=pkg,
-			preview_action=lambda x: x.value.info(),
+			preview_action=None,  # Will be set after menu_group is created
 		)
 		for name, pkg in packages.items()
 	]
@@ -193,6 +194,46 @@ def ask_additional_packages_to_install(
 
 	menu_group = MenuItemGroup(items, sort_items=True)
 	menu_group.set_selected_by_value(preset_packages)
+
+	# Helper to prefetch packages in both directions in background
+	def _prefetch_packages(group: MenuItemGroup, current_item: MenuItem) -> None:
+		try:
+			filtered_items = group.items
+			current_idx = filtered_items.index(current_item)
+
+			# Collect next 50 packages (forward)
+			prefetch = []
+			for i in range(current_idx + 1, min(current_idx + 51, len(filtered_items))):
+				next_pkg = filtered_items[i].value
+				if isinstance(next_pkg, AvailablePackage):
+					prefetch.append(next_pkg)
+
+			# Collect previous 50 packages (backward)
+			for i in range(max(0, current_idx - 50), current_idx):
+				prev_pkg = filtered_items[i].value
+				if isinstance(prev_pkg, AvailablePackage):
+					prefetch.append(prev_pkg)
+
+			if prefetch:
+				enrich_package_info(prefetch[0], prefetch=prefetch[1:])
+		except (ValueError, IndexError):
+			pass
+
+	# Preview function for packages - enriches current and prefetches ±50 packages
+	def preview_package(item: MenuItem) -> str:
+		pkg = item.value
+		if isinstance(pkg, AvailablePackage):
+			# Enrich current package synchronously
+			enrich_package_info(pkg)
+			# Prefetch next 50 in background thread
+			threading.Thread(target=_prefetch_packages, args=(menu_group, item), daemon=True).start()
+			return pkg.info()
+		return ''
+
+	# Set preview action for package items only
+	for item in items:
+		if isinstance(item.value, AvailablePackage):
+			item.preview_action = preview_package
 
 	result = SelectMenu[AvailablePackage | PackageGroup](
 		menu_group,

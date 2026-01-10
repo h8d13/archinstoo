@@ -128,6 +128,52 @@ def check_package_upgrade(package: str) -> str | None:
 	return None
 
 
+def _create_package_stub(repo: str, name: str, version: str) -> AvailablePackage:
+	defaults = {field_name: '' for field_name in AvailablePackage.model_fields.keys()}
+	defaults.update({'repository': repo, 'name': name, 'version': version})
+	return AvailablePackage(**defaults)
+
+
+def _update_package(pkg: AvailablePackage, detailed: AvailablePackage) -> None:
+	for field_name in AvailablePackage.model_fields.keys():
+		setattr(pkg, field_name, getattr(detailed, field_name))
+
+
+def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] = []) -> None:
+	# Collect packages that need enrichment
+	to_enrich = []
+	if not pkg.description:
+		to_enrich.append(pkg)
+
+	for p in prefetch:
+		if not p.description:
+			to_enrich.append(p)
+
+	if not to_enrich:
+		return
+
+	# Batch fetch with single pacman call
+	try:
+		pkg_names = ' '.join(p.name for p in to_enrich)
+		current_package = []
+
+		for line in Pacman.run(f'-Si {pkg_names}'):
+			dec_line = line.decode().strip()
+			current_package.append(dec_line)
+
+			if dec_line.startswith('Validated'):
+				if current_package:
+					detailed = _parse_package_output(current_package, AvailablePackage)
+					# Find matching package and update it
+					for p in to_enrich:
+						if p.name == detailed.name:
+							_update_package(p, detailed)
+							break
+					current_package = []
+	except Exception:
+		pass
+
+
 @lru_cache
 def list_available_packages(
 	repositories: tuple[Repository, ...],
@@ -136,24 +182,21 @@ def list_available_packages(
 	Returns a list of all available packages in the database
 	"""
 	packages: dict[str, AvailablePackage] = {}
-	current_package: list[str] = []
-	filtered_repos = [repo.value for repo in repositories]
 
 	try:
 		Pacman.run('-Sy')
 	except Exception as e:
 		debug(f'Failed to sync Arch Linux package database: {e}')
 
-	for line in Pacman.run('-S --info'):
-		dec_line = line.decode().strip()
-		current_package.append(dec_line)
-
-		if dec_line.startswith('Validated'):
-			if current_package:
-				avail_pkg = _parse_package_output(current_package, AvailablePackage)
-				if avail_pkg.repository in filtered_repos:
-					packages[avail_pkg.name] = avail_pkg
-				current_package = []
+	# Load package stubs from repositories
+	for repo in repositories:
+		try:
+			for line in Pacman.run(f'-Sl {repo.value}'):
+				parts = line.decode().strip().split()
+				if len(parts) >= 3:
+					packages[parts[1]] = _create_package_stub(parts[0], parts[1], parts[2])
+		except Exception as e:
+			debug(f'Failed to list packages from {repo.value}: {e}')
 
 	return packages
 
