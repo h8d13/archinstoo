@@ -78,6 +78,9 @@ class AuthenticationConfiguration:
 		if lock_root := args.get('lock_root_account'):
 			auth_config.lock_root_account = lock_root
 
+		if users := args.get('users'):
+			auth_config.users = User.parse_arguments(users)
+
 		return auth_config
 
 	def json(self) -> AuthenticationSerialization:
