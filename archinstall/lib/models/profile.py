@@ -54,7 +54,7 @@ class ProfileConfiguration:
 				except Exception:
 					_gfx_driver = GfxDriver[gfx_driver]
 
-		return ProfileConfiguration(
+		return cls(
 			profile,
 			_gfx_driver,
 			GreeterType(greeter) if greeter else None,

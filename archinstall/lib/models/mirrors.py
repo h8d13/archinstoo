@@ -270,7 +270,7 @@ class CustomRepository:
 		configs = []
 		for arg in args:
 			configs.append(
-				CustomRepository(
+				cls(
 					arg['name'],
 					arg['url'],
 					SignCheck(arg['sign_check']),
@@ -296,7 +296,7 @@ class CustomServer:
 		configs = []
 		for arg in args:
 			configs.append(
-				CustomServer(arg['url']),
+				cls(arg['url']),
 			)
 
 		return configs
@@ -380,7 +380,7 @@ class MirrorConfiguration:
 		args: dict[str, Any],
 		backwards_compatible_repo: list[Repository] = [],
 	) -> 'MirrorConfiguration':
-		config = MirrorConfiguration()
+		config = cls()
 
 		mirror_regions = args.get('mirror_regions', [])
 		if mirror_regions:
