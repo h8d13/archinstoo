@@ -76,14 +76,16 @@ class ArchConfig:
 	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
 
 	def unsafe_json(self) -> dict[str, Any]:
-		config: dict[str, list[UserSerialization] | str | None] = {}
+		config: dict[str, Any] = {}
 
 		if self.auth_config:
+			auth: dict[str, list[UserSerialization] | str] = {}
 			if self.auth_config.users:
-				config['users'] = [user.json() for user in self.auth_config.users]
-
-			if self.auth_config.root_enc_password:
-				config['root_enc_password'] = self.auth_config.root_enc_password.enc_password
+				auth['users'] = [user.json() for user in self.auth_config.users]
+			if self.auth_config.root_enc_password and self.auth_config.root_enc_password.enc_password:
+				auth['root_enc_password'] = self.auth_config.root_enc_password.enc_password
+			if auth:
+				config['auth_config'] = auth
 
 		if self.disk_config:
 			disk_encryption = self.disk_config.disk_encryption
