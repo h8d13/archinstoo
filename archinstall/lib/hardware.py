@@ -87,6 +87,7 @@ class GfxDriver(Enum):
 		if servers is None or DisplayServer.X11 in servers:
 			packages = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
 		# else: servers is empty set or doesn't contain X11
+		# this is then handled usually by deps of the DE/WM
 
 		match self:
 			case GfxDriver.AllOpenSource:
