@@ -10,8 +10,6 @@ from archinstall.tui.types import Alignment
 
 def _check_for_saved_config() -> None:
 	"""Check for saved config and offer to resume"""
-	if not arch_config_handler.args.debug:
-		return
 	if not ConfigurationHandler.has_saved_config() or arch_config_handler.args.silent:
 		return
 
