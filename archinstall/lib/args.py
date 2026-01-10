@@ -14,7 +14,7 @@ from pydantic.dataclasses import dataclass as p_dataclass
 
 from archinstall.lib.crypt import decrypt
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
-from archinstall.lib.models.authentication import AuthenticationConfiguration
+from archinstall.lib.models.authentication import AuthenticationConfiguration, U2FLoginConfigSerialization
 from archinstall.lib.models.bootloader import BootloaderConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration
 from archinstall.lib.models.locale import LocaleConfiguration
@@ -79,11 +79,13 @@ class ArchConfig:
 		config: dict[str, Any] = {}
 
 		if self.auth_config:
-			auth: dict[str, list[UserSerialization] | str] = {}
+			auth: dict[str, list[UserSerialization] | str | U2FLoginConfigSerialization] = {}
 			if self.auth_config.users:
 				auth['users'] = [user.json() for user in self.auth_config.users]
 			if self.auth_config.root_enc_password and self.auth_config.root_enc_password.enc_password:
 				auth['root_enc_password'] = self.auth_config.root_enc_password.enc_password
+			if self.auth_config.u2f_config:
+				auth['u2f_config'] = self.auth_config.u2f_config.json()
 			if auth:
 				config['auth_config'] = auth
 
