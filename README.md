@@ -17,7 +17,7 @@ nmcli dev wifi connect "SSID" -a
 # you can also use nmcli if you prefer
 ```
 
-1. Get and run the source code
+1. Get and run the source code or specific branch/fork
 
 ```
 pacman-key --init
@@ -27,4 +27,4 @@ cd archinstoo
 python -m archinstall [args]
 ```
 
-2. Enjoy your new system
+2. Enjoy your new system(s)
