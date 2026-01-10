@@ -75,7 +75,7 @@ class ArchConfig:
 	timezone: str = 'UTC'
 	services: list[str] = field(default_factory=list)
 	custom_commands: list[str] = field(default_factory=list)
-	bug_report_url: str = 'https://github.com/archlinux/archinstall'
+	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
 
 	def unsafe_json(self) -> dict[str, Any]:
 		config: dict[str, list[UserSerialization] | str | None] = {}
