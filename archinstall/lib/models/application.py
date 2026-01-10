@@ -39,6 +39,7 @@ class FirewallConfigSerialization(TypedDict):
 
 
 class Management(StrEnum):
+	GIT = 'git'
 	MAN = 'man-db'
 	PACMAN_CONTRIB = 'pacman-contrib'
 	REFLECTOR = 'reflector'

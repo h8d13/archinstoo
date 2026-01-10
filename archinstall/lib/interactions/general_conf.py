@@ -21,7 +21,7 @@ from ..translationhandler import Language
 class PostInstallationAction(Enum):
 	EXIT = tr('exit archinstall')
 	REBOOT = tr('reboot system')
-	CHROOT = tr('chroot into installation for post-installation configurations')
+	CHROOT = tr('chroot into install')
 
 
 def ask_ntp(preset: bool = True) -> bool:
