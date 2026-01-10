@@ -169,6 +169,9 @@ score = false
 [tool.pylint.variables]
 init-import = true
 
+[tool.pylint.imports]
+ignored-modules = ["parted"]
+
 [tool.ruff]
 target-version = "py312"
 line-length = 160
