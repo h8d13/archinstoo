@@ -1400,6 +1400,12 @@ class Installer:
 		if uki_enabled and SysInfo.has_uefi():
 			# Pattern follows 25_bli.in from upstream GRUB
 			grub_d = self.target / 'etc/grub.d'
+
+			# Disable 10_linux to prevent duplicate/broken entries
+			# UKI entries from 15_uki replace traditional kernel entries
+			linux_script = grub_d / '10_linux'
+			linux_script.chmod(0o644)
+
 			uki_script = grub_d / '15_uki'
 			uki_script.write_text('#!/bin/sh\nset -e\ncat << EOF\nif [ "\\$grub_platform" = "efi" ]; then\n  insmod blsuki\n  uki\nfi\nEOF\n')
 			uki_script.chmod(0o755)
