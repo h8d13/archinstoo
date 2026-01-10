@@ -49,7 +49,6 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 		offline=False,
 		no_pkg_lookups=False,
 		plugin=None,
-		skip_version_check=False,
 		advanced=False,
 	)
 
@@ -81,7 +80,6 @@ def test_correct_parsing_args(
 			'--no-pkg-lookups',
 			'--plugin',
 			'pytest_plugin.py',
-			'--skip-version-check',
 			'--advanced',
 			'--dry-run',
 			'--silent',
@@ -106,7 +104,6 @@ def test_correct_parsing_args(
 		offline=True,
 		no_pkg_lookups=True,
 		plugin='pytest_plugin.py',
-		skip_version_check=True,
 		advanced=True,
 	)
 
@@ -236,92 +233,6 @@ def test_config_file_parsing(
 		timezone='UTC',
 		services=['service_1', 'service_2'],
 		custom_commands=["echo 'Hello, World!'"],
-	)
-
-
-def test_deprecated_mirror_config_parsing(
-	monkeypatch: MonkeyPatch,
-	deprecated_mirror_config: Path,
-) -> None:
-	monkeypatch.setattr(
-		'sys.argv',
-		[
-			'archinstall',
-			'--config',
-			str(deprecated_mirror_config),
-		],
-	)
-
-	handler = ArchConfigHandler()
-	arch_config = handler.config
-
-	assert arch_config.mirror_config == MirrorConfiguration(
-		mirror_regions=[
-			MirrorRegion(
-				name='Australia',
-				urls=['http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch'],
-			),
-		],
-		custom_servers=[],
-		optional_repositories=[Repository.Testing],
-		custom_repositories=[
-			CustomRepository(
-				name='my_mirror',
-				url='example.com',
-				sign_check=SignCheck.Optional,
-				sign_option=SignOption.TrustedOnly,
-			),
-		],
-	)
-
-
-def test_deprecated_creds_config_parsing(
-	monkeypatch: MonkeyPatch,
-	deprecated_creds_config: Path,
-) -> None:
-	monkeypatch.setattr(
-		'sys.argv',
-		[
-			'archinstall',
-			'--creds',
-			str(deprecated_creds_config),
-		],
-	)
-
-	handler = ArchConfigHandler()
-	arch_config = handler.config
-
-	assert arch_config.auth_config is not None
-	assert arch_config.auth_config.root_enc_password == Password(plaintext='rootPwd')
-
-	assert arch_config.auth_config.users == [
-		User(
-			username='user_name',
-			password=Password(plaintext='userPwd'),
-			sudo=True,
-			groups=['wheel'],
-		),
-	]
-
-
-def test_deprecated_audio_config_parsing(
-	monkeypatch: MonkeyPatch,
-	deprecated_audio_config: Path,
-) -> None:
-	monkeypatch.setattr(
-		'sys.argv',
-		[
-			'archinstall',
-			'--config',
-			str(deprecated_audio_config),
-		],
-	)
-
-	handler = ArchConfigHandler()
-	arch_config = handler.config
-
-	assert arch_config.app_config == ApplicationConfiguration(
-		audio_config=AudioConfiguration(audio=Audio.PIPEWIRE),
 	)
 
 

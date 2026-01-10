@@ -15,14 +15,13 @@ from pydantic.dataclasses import dataclass as p_dataclass
 from archinstall.lib.crypt import decrypt
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstall.lib.models.authentication import AuthenticationConfiguration
-from archinstall.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstall.lib.models.device import DiskEncryption, DiskLayoutConfiguration
+from archinstall.lib.models.bootloader import BootloaderConfiguration
+from archinstall.lib.models.device import DiskLayoutConfiguration
 from archinstall.lib.models.locale import LocaleConfiguration
 from archinstall.lib.models.mirrors import MirrorConfiguration
 from archinstall.lib.models.network import NetworkConfiguration
-from archinstall.lib.models.packages import Repository
 from archinstall.lib.models.profile import ProfileConfiguration
-from archinstall.lib.models.users import Password, User, UserSerialization
+from archinstall.lib.models.users import Password, UserSerialization
 from archinstall.lib.output import debug, error, logger, warn
 from archinstall.lib.plugins import load_plugin
 from archinstall.lib.translationhandler import Language, tr, translation_handler
@@ -48,7 +47,6 @@ class Arguments:
 	offline: bool = False
 	no_pkg_lookups: bool = False
 	plugin: str | None = None
-	skip_version_check: bool = False
 	advanced: bool = False
 	verbose: bool = False
 
@@ -148,52 +146,20 @@ class ArchConfig:
 			password = Password(plaintext=enc_password) if enc_password else None
 			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(disk_config, password)
 
-			# DEPRECATED
-			# backwards compatibility for main level disk_encryption entry
-			disk_encryption: DiskEncryption | None = None
-
-			if args_config.get('disk_encryption', None) is not None and arch_config.disk_config is not None:
-				disk_encryption = DiskEncryption.parse_arg(
-					arch_config.disk_config,
-					args_config['disk_encryption'],
-					Password(plaintext=args_config.get('encryption_password', '')),
-				)
-
-				if disk_encryption:
-					arch_config.disk_config.disk_encryption = disk_encryption
-
 		if profile_config := args_config.get('profile_config', None):
 			arch_config.profile_config = ProfileConfiguration.parse_arg(profile_config)
 
 		if mirror_config := args_config.get('mirror_config', None):
-			backwards_compatible_repo = []
-			if additional_repositories := args_config.get('additional-repositories', []):
-				backwards_compatible_repo = [Repository(r) for r in additional_repositories]
-
-			arch_config.mirror_config = MirrorConfiguration.parse_args(
-				mirror_config,
-				backwards_compatible_repo,
-			)
+			arch_config.mirror_config = MirrorConfiguration.parse_args(mirror_config)
 
 		if net_config := args_config.get('network_config', None):
 			arch_config.network_config = NetworkConfiguration.parse_arg(net_config)
 
 		if bootloader_config_dict := args_config.get('bootloader_config', None):
 			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader_config_dict, args.skip_boot)
-		# DEPRECATED: separate bootloader and uki fields (backward compatibility)
-		elif bootloader_str := args_config.get('bootloader', None):
-			bootloader = Bootloader.from_arg(bootloader_str, args.skip_boot)
-			uki = args_config.get('uki', False)
-			if uki and not bootloader.has_uki_support():
-				uki = False
-			arch_config.bootloader_config = BootloaderConfiguration(bootloader=bootloader, uki=uki, removable=True)
 
-		# deprecated: backwards compatibility
-		audio_config_args = args_config.get('audio_config', None)
-		app_config_args = args_config.get('app_config', None)
-
-		if audio_config_args is not None or app_config_args is not None:
-			arch_config.app_config = ApplicationConfiguration.parse_arg(app_config_args, audio_config_args)
+		if app_config_args := args_config.get('app_config', None):
+			arch_config.app_config = ApplicationConfiguration.parse_arg(app_config_args)
 
 		if auth_config_args := args_config.get('auth_config', None):
 			arch_config.auth_config = AuthenticationConfiguration.parse_arg(auth_config_args)
@@ -221,32 +187,6 @@ class ArchConfig:
 
 		if services := args_config.get('services', []):
 			arch_config.services = services
-
-		# DEPRECATED: backwards compatibility
-		root_password = None
-		if root_password := args_config.get('!root-password', None):
-			root_password = Password(plaintext=root_password)
-
-		if enc_password := args_config.get('root_enc_password', None):
-			root_password = Password(enc_password=enc_password)
-
-		if root_password is not None:
-			if arch_config.auth_config is None:
-				arch_config.auth_config = AuthenticationConfiguration()
-			arch_config.auth_config.root_enc_password = root_password
-
-		# DEPRECATED: backwards compatibility
-		users: list[User] = []
-		if args_users := args_config.get('!users', None):
-			users = User.parse_arguments(args_users)
-
-		if args_users := args_config.get('users', None):
-			users = User.parse_arguments(args_users)
-
-		if users:
-			if arch_config.auth_config is None:
-				arch_config.auth_config = AuthenticationConfiguration()
-			arch_config.auth_config.users = users
 
 		if custom_commands := args_config.get('custom_commands', []):
 			arch_config.custom_commands = custom_commands

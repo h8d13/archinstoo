@@ -49,5 +49,6 @@ repos:
       args: ['--init-hook', 'import sys; sys.path.insert(0, ".")']
       additional_dependencies:
         - pydantic==2.12.5
+        - pytest
       fail_fast: true
       require_serial: true
