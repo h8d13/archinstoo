@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstall.lib.translationhandler import tr
 
-from ...default_profiles.profile import GreeterType, Profile
+from ...default_profiles.profile import DisplayServer, GreeterType, Profile
 from ..hardware import GfxDriver
 from ..models.profile import ProfileConfiguration
 from ..networking import fetch_data_from_url, list_interfaces
@@ -226,7 +226,7 @@ class ProfileHandler:
 			with open(path, 'w') as file:
 				file.write(filedata)
 
-	def install_gfx_driver(self, install_session: 'Installer', driver: GfxDriver) -> None:
+	def install_gfx_driver(self, install_session: 'Installer', driver: GfxDriver, profile: Profile | None = None) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
 
 		if driver in [GfxDriver.NvidiaOpenKernel, GfxDriver.NvidiaProprietary]:
@@ -234,7 +234,9 @@ class ProfileHandler:
 			# Fixes https://github.com/archlinux/archinstall/issues/585
 			install_session.add_additional_packages(headers)
 
-		driver_pkgs = driver.gfx_packages()
+		# Determine display server requirements from profile
+		display_servers = profile.display_servers() if profile else None
+		driver_pkgs = driver.gfx_packages(display_servers)
 		pkg_names = [p.value for p in driver_pkgs]
 		install_session.add_additional_packages(pkg_names)
 
@@ -247,7 +249,7 @@ class ProfileHandler:
 		profile.install(install_session)
 
 		if profile_config.gfx_driver and (profile.is_xorg_type_profile() or profile.is_desktop_profile()):
-			self.install_gfx_driver(install_session, profile_config.gfx_driver)
+			self.install_gfx_driver(install_session, profile_config.gfx_driver, profile)
 
 		if profile_config.greeter:
 			self.install_greeter(install_session, profile_config.greeter)
@@ -364,6 +366,20 @@ class ProfileHandler:
 		for profile in self.get_top_level_profiles():
 			if profile.name not in excluded_profiles:
 				profile.reset()
+
+	def display_servers(self, profile: Profile) -> set[DisplayServer]:
+		"""
+		Returns the set of display servers required by this profile.
+		Aggregates requirements from sub-profiles if present.
+		Profiles inherit from XorgProfile or WaylandProfile to specify their display server.
+		"""
+		if profile.current_selection:
+			# Aggregate requirements from sub-profiles
+			servers = set()
+			for sub_profile in profile.current_selection:
+				servers.update(sub_profile.display_servers())
+			return servers
+		return set()
 
 
 profile_handler = ProfileHandler()
