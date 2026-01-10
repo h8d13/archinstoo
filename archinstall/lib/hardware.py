@@ -78,8 +78,8 @@ class GfxDriver(Enum):
 			case _:
 				return False
 
-	def packages_text(self, servers: set[DisplayServer] | None = None) -> str:
-		pkg_names = [p.value for p in self.gfx_packages(servers)]
+	def packages_text(self, servers: set[DisplayServer] | None = None, kernels: list[str] | None = None) -> str:
+		pkg_names = [p.value for p in self.gfx_packages(servers, kernels)]
 		text = tr('Installed packages') + ':\n'
 
 		for p in sorted(pkg_names):
@@ -87,7 +87,7 @@ class GfxDriver(Enum):
 
 		return text
 
-	def gfx_packages(self, servers: set[DisplayServer] | None = None) -> list[GfxPackage]:
+	def gfx_packages(self, servers: set[DisplayServer] | None = None, kernels: list[str] | None = None) -> list[GfxPackage]:
 		packages = []
 
 		if servers is None or DisplayServer.X11 in servers:
@@ -125,10 +125,15 @@ class GfxDriver(Enum):
 					GfxPackage.VulkanIntel,
 				]
 			case GfxDriver.NvidiaOpenKernel:
+				# Use dkms variant for non-standard kernels (those with a dash like linux-zen, linux-lts)
+				needs_dkms = kernels is not None and any('-' in k for k in kernels)
+				nvidia_pkg = GfxPackage.NvidiaOpenDkms if needs_dkms else GfxPackage.NvidiaOpen
 				packages += [
-					GfxPackage.NvidiaOpen,
+					nvidia_pkg,
 					GfxPackage.LibvaNvidiaDriver,
 				]
+				if needs_dkms:
+					packages.append(GfxPackage.Dkms)
 			case GfxDriver.NvidiaOpenSource:
 				packages += [
 					GfxPackage.Mesa,

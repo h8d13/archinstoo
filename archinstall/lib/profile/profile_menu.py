@@ -19,11 +19,14 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 	def __init__(
 		self,
 		preset: ProfileConfiguration | None = None,
+		kernels: list[str] | None = None,
 	):
 		if preset:
 			self._profile_config = preset
 		else:
 			self._profile_config = ProfileConfiguration()
+
+		self._kernels = kernels
 
 		menu_options = self._define_menu_options()
 		self._item_group = MenuItemGroup(menu_options, checkmarks=True)
@@ -45,7 +48,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			),
 			MenuItem(
 				text=tr('Graphics driver'),
-				action=self._select_gfx_driver,
+				action=self.select_gfx_driver,
 				value=self._profile_config.gfx_driver if self._profile_config.profile else None,
 				preview_action=self._prev_gfx,
 				enabled=bool(self._profile_config.profile and self._profile_config.profile.display_servers()),
@@ -91,12 +94,12 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 
 		return profile
 
-	def _select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
+	def select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
 		driver = preset
 		profile: Profile | None = self._item_group.find_by_key('profile').value
 
 		if profile:
-			driver = select_driver(preset=preset, profile=profile)
+			driver = select_driver(preset=preset, profile=profile, kernels=self._kernels)
 
 		return driver
 
@@ -105,7 +108,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			driver = item.get_value().value
 			profile: Profile | None = self._item_group.find_by_key('profile').value
 			servers = profile.display_servers() if profile else None
-			packages = item.get_value().packages_text(servers)
+			packages = item.get_value().packages_text(servers, self._kernels)
 			return f'Driver: {driver}\n{packages}'
 		return None
 

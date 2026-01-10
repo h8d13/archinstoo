@@ -549,7 +549,8 @@ class GlobalMenu(AbstractMenu[None]):
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu
 
-		profile_config = ProfileMenu(preset=current_profile).run()
+		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
+		profile_config = ProfileMenu(preset=current_profile, kernels=kernels).run()
 		return profile_config
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:

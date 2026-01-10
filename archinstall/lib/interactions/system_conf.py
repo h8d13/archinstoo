@@ -48,7 +48,12 @@ def select_kernel(preset: list[str] = []) -> list[str]:
 			return result.get_values()
 
 
-def select_driver(options: list[GfxDriver] = [], preset: GfxDriver | None = None, profile: Profile | None = None) -> GfxDriver | None:
+def select_driver(
+	options: list[GfxDriver] = [],
+	preset: GfxDriver | None = None,
+	profile: Profile | None = None,
+	kernels: list[str] | None = None,
+) -> GfxDriver | None:
 	"""
 	Somewhat convoluted function, whose job is simple.
 	Select a graphics driver from a pre-defined set of popular options.
@@ -60,7 +65,14 @@ def select_driver(options: list[GfxDriver] = [], preset: GfxDriver | None = None
 		options = [driver for driver in GfxDriver]
 
 	servers = profile.display_servers() if profile else None
-	items = [MenuItem(o.value, value=o, preview_action=lambda x: x.value.packages_text(servers)) for o in options]
+
+	def preview_driver(x: MenuItem, k: list[str] | None = kernels) -> str | None:
+		if x.value is None:
+			return None
+		driver: GfxDriver = x.value
+		return driver.packages_text(servers, k)
+
+	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	group = MenuItemGroup(items, sort_items=True)
 	group.set_default_by_value(GfxDriver.AllOpenSource)
 

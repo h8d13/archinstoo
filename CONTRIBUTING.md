@@ -1,5 +1,9 @@
 # Contributing to archinstall
 
+### Get a nice overview of the project
+
+`tree -I '*.po|*.pyc|*.mo|*.png|*.psd|*.svg|locales|docs|__pycache__'`
+
 Any contributions through pull requests are welcome as this project aims to be a community based project to ease some Arch Linux installation steps.
 Bear in mind that in the future this repo might be transferred to the official [GitLab repo under Arch Linux](http://gitlab.archlinux.org/archlinux/) *(if GitLab becomes open to the general public)*.
 
