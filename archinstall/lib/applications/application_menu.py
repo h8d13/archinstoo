@@ -7,6 +7,8 @@ from archinstall.lib.models.application import (
 	Audio,
 	AudioConfiguration,
 	BluetoothConfiguration,
+	Editor,
+	EditorConfiguration,
 	Firewall,
 	FirewallConfiguration,
 	Management,
@@ -94,6 +96,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				preview_action=self._prev_monitor,
 				key='monitor_config',
 			),
+			MenuItem(
+				text=tr('Editor'),
+				action=select_editor,
+				preview_action=self._prev_editor,
+				key='editor_config',
+			),
 		]
 
 	def _prev_power_management(self, item: MenuItem) -> str | None:
@@ -143,6 +151,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: MonitorConfiguration = item.value
 			return f'{tr("Monitor")}: {config.monitor.value}'
+		return None
+
+	def _prev_editor(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: EditorConfiguration = item.value
+			return f'{tr("Editor")}: {config.editor.value}'
 		return None
 
 
@@ -317,5 +331,28 @@ def select_monitor(preset: MonitorConfiguration | None = None) -> MonitorConfigu
 			return preset
 		case ResultType.Selection:
 			return MonitorConfiguration(monitor=result.get_value())
+		case ResultType.Reset:
+			return None
+
+
+def select_editor(preset: EditorConfiguration | None = None) -> EditorConfiguration | None:
+	group = MenuItemGroup.from_enum(Editor)
+
+	if preset:
+		group.set_focus_by_value(preset.editor)
+
+	result = SelectMenu[Editor](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Editor')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return EditorConfiguration(editor=result.get_value())
 		case ResultType.Reset:
 			return None

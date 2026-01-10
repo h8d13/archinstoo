@@ -58,6 +58,19 @@ class MonitorConfigSerialization(TypedDict):
 	monitor: str
 
 
+class Editor(StrEnum):
+	NANO = auto()
+	MICRO = auto()
+	VI = auto()
+	VIM = auto()
+	NEOVIM = auto()
+	EMACS = auto()
+
+
+class EditorConfigSerialization(TypedDict):
+	editor: str
+
+
 class ZramAlgorithm(StrEnum):
 	ZSTD = 'zstd'
 	LZO_RLE = 'lzo-rle'
@@ -74,6 +87,7 @@ class ApplicationSerialization(TypedDict):
 	firewall_config: NotRequired[FirewallConfigSerialization]
 	management_config: NotRequired[ManagementConfigSerialization]
 	monitor_config: NotRequired[MonitorConfigSerialization]
+	editor_config: NotRequired[EditorConfigSerialization]
 
 
 @dataclass
@@ -180,6 +194,22 @@ class MonitorConfiguration:
 		)
 
 
+@dataclass
+class EditorConfiguration:
+	editor: Editor
+
+	def json(self) -> EditorConfigSerialization:
+		return {
+			'editor': self.editor.value,
+		}
+
+	@staticmethod
+	def parse_arg(arg: dict[str, Any]) -> 'EditorConfiguration':
+		return EditorConfiguration(
+			Editor(arg['editor']),
+		)
+
+
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
@@ -204,6 +234,7 @@ class ApplicationConfiguration:
 	firewall_config: FirewallConfiguration | None = None
 	management_config: ManagementConfiguration | None = None
 	monitor_config: MonitorConfiguration | None = None
+	editor_config: EditorConfiguration | None = None
 
 	@staticmethod
 	def parse_arg(
@@ -237,6 +268,9 @@ class ApplicationConfiguration:
 		if args and (monitor_config := args.get('monitor_config')) is not None:
 			app_config.monitor_config = MonitorConfiguration.parse_arg(monitor_config)
 
+		if args and (editor_config := args.get('editor_config')) is not None:
+			app_config.editor_config = EditorConfiguration.parse_arg(editor_config)
+
 		return app_config
 
 	def json(self) -> ApplicationSerialization:
@@ -262,5 +296,8 @@ class ApplicationConfiguration:
 
 		if self.monitor_config:
 			config['monitor_config'] = self.monitor_config.json()
+
+		if self.editor_config:
+			config['editor_config'] = self.editor_config.json()
 
 		return config

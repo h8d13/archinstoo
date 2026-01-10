@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from archinstall.applications.audio import AudioApp
 from archinstall.applications.bluetooth import BluetoothApp
+from archinstall.applications.editor import EditorApp
 from archinstall.applications.firewall import FirewallApp
 from archinstall.applications.management import ManagementApp
 from archinstall.applications.monitor import MonitorApp
@@ -55,6 +56,12 @@ class ApplicationHandler:
 			MonitorApp().install(
 				install_session,
 				app_config.monitor_config,
+			)
+
+		if app_config.editor_config:
+			EditorApp().install(
+				install_session,
+				app_config.editor_config,
 			)
 
 
