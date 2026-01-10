@@ -2,7 +2,7 @@
 
 0. Get internet access
 
-Ethernet cable is plug and play
+Ethernet cable is plug and play **for Wifi**:
 ```
 iwctl station wlan0 connect "SSID"
 # where SSID is the name of your wifi
