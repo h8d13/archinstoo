@@ -26,7 +26,7 @@ jobs:
         run: uv build --wheel
       - name: Install archinstall
         run: |
-          uv pip install dist/*.whl --break-system-packages --system --no-build --no-deps
+          uv pip install dist/*.whl --break-system-packages --system
       - name: Run archinstall
         run: |
           python -V
