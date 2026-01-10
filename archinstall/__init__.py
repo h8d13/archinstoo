@@ -10,7 +10,6 @@ from archinstall.lib.args import arch_config_handler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.networking import ping
 from archinstall.lib.packages.packages import check_package_upgrade
-from archinstall.tui.ui.components import tui as ttui
 
 from .lib.general import running_from_host
 from .lib.hardware import SysInfo
@@ -95,8 +94,6 @@ def main() -> int:
 
 	_log_sys_info()
 
-	ttui.global_header = 'Archinstall'
-
 	if not arch_config_handler.args.offline:
 		_check_online()
 		_fetch_arch_db()
@@ -105,7 +102,6 @@ def main() -> int:
 			new_version = check_version_upgrade()
 
 			if new_version:
-				ttui.global_header = f'{ttui.global_header} {new_version}'
 				info(new_version)
 				time.sleep(3)
 
