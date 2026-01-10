@@ -247,7 +247,7 @@ def test_encrypted_creds_with_arg(
 			'--creds',
 			str(encrypted_creds_fixture),
 			'--creds-decryption-key',
-			'master',
+			'cygn3',
 		],
 	)
 
@@ -270,7 +270,7 @@ def test_encrypted_creds_with_env_var(
 	monkeypatch: MonkeyPatch,
 	encrypted_creds_fixture: Path,
 ) -> None:
-	os.environ['ARCHINSTALL_CREDS_DECRYPTION_KEY'] = 'master'
+	os.environ['ARCHINSTALL_CREDS_DECRYPTION_KEY'] = 'cygn3'
 	monkeypatch.setattr(
 		'sys.argv',
 		[
