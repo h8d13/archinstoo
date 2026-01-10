@@ -23,7 +23,7 @@ jobs:
         run: 
           uv pip uninstall archinstall --break-system-packages --system
       - name: Build archinstall
-        run: uv build --no-build-isolation --wheel
+        run: uv build --wheel
       - name: Install archinstall
         run: |
           uv pip install dist/*.whl --break-system-packages --system --no-build --no-deps
