@@ -1397,6 +1397,14 @@ class Installer:
 			except SysCallError as err:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 
+		if uki_enabled and SysInfo.has_uefi():
+			# Add native UKI support (GRUB 2.14+)
+			# Create a grub.d script so grub-mkconfig includes the uki command
+			grub_d = self.target / 'etc/grub.d'
+			uki_script = grub_d / '15_uki'
+			uki_script.write_text('#!/bin/sh\n# Load Unified Kernel Images from /EFI/Linux\necho "uki"\n')
+			uki_script.chmod(0o755)
+
 		try:
 			self.arch_chroot(
 				f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',
