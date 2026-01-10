@@ -17,16 +17,14 @@ jobs:
           pacman-key --init
           pacman --noconfirm -Sy archlinux-keyring
           pacman --noconfirm -Syyu
-          pacman --noconfirm -Sy python-uv python-setuptools python-pip
+          pacman --noconfirm -Sy python-setuptools python-pip python-build
           pacman --noconfirm -Sy python-pyparted python-pydantic python-cryptography
       - name: Remove existing archinstall (if any)
-        run: 
-          uv pip uninstall archinstall --break-system-packages --system
+        run: pip uninstall -y archinstall --break-system-packages || true
       - name: Build archinstall
-        run: uv build --wheel
+        run: python -m build --wheel
       - name: Install archinstall
-        run: |
-          uv pip install dist/*.whl --break-system-packages --system --no-deps
+        run: pip install dist/*.whl --break-system-packages --no-deps
       - name: Run archinstall
         run: |
           python -V
