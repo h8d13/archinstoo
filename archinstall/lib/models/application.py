@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import Any, NotRequired, TypedDict
+from typing import NotRequired, TypedDict
 
 
 class PowerManagement(StrEnum):
@@ -50,9 +50,9 @@ class ManagementConfigSerialization(TypedDict):
 
 
 class Monitor(StrEnum):
-	HTOP = 'htop'
-	BTOP = 'btop'
-	BOTTOM = 'bottom'
+	HTOP = auto()
+	BTOP = auto()
+	BOTTOM = auto()
 
 
 class MonitorConfigSerialization(TypedDict):
@@ -80,6 +80,11 @@ class ZramAlgorithm(StrEnum):
 	LZ4HC = 'lz4hc'
 
 
+class ZramConfigSerialization(TypedDict):
+	enabled: bool
+	algorithm: NotRequired[str]
+
+
 class ApplicationSerialization(TypedDict):
 	bluetooth_config: NotRequired[BluetoothConfigSerialization]
 	audio_config: NotRequired[AudioConfigSerialization]
@@ -101,7 +106,7 @@ class AudioConfiguration:
 		}
 
 	@staticmethod
-	def parse_arg(arg: dict[str, Any]) -> 'AudioConfiguration':
+	def parse_arg(arg: AudioConfigSerialization) -> 'AudioConfiguration':
 		return AudioConfiguration(
 			Audio(arg['audio']),
 		)
@@ -157,7 +162,7 @@ class FirewallConfiguration:
 		}
 
 	@staticmethod
-	def parse_arg(arg: dict[str, Any]) -> 'FirewallConfiguration':
+	def parse_arg(arg: FirewallConfigSerialization) -> 'FirewallConfiguration':
 		return FirewallConfiguration(
 			Firewall(arg['firewall']),
 		)
@@ -205,7 +210,7 @@ class EditorConfiguration:
 		}
 
 	@staticmethod
-	def parse_arg(arg: dict[str, Any]) -> 'EditorConfiguration':
+	def parse_arg(arg: EditorConfigSerialization) -> 'EditorConfiguration':
 		return EditorConfiguration(
 			Editor(arg['editor']),
 		)
@@ -217,12 +222,12 @@ class ZramConfiguration:
 	algorithm: ZramAlgorithm = ZramAlgorithm.ZSTD
 
 	@staticmethod
-	def parse_arg(arg: bool | dict[str, Any]) -> 'ZramConfiguration':
+	def parse_arg(arg: bool | ZramConfigSerialization) -> 'ZramConfiguration':
 		if isinstance(arg, bool):
 			return ZramConfiguration(enabled=arg)
 
 		enabled = arg.get('enabled', True)
-		algo = arg.get('algorithm', arg.get('algo', ZramAlgorithm.ZSTD.value))
+		algo = arg.get('algorithm', ZramAlgorithm.ZSTD.value)
 		return ZramConfiguration(enabled=enabled, algorithm=ZramAlgorithm(algo))
 
 
@@ -239,8 +244,8 @@ class ApplicationConfiguration:
 
 	@staticmethod
 	def parse_arg(
-		args: dict[str, Any] | None = None,
-		old_audio_config: dict[str, Any] | None = None,
+		args: ApplicationSerialization | None = None,
+		old_audio_config: AudioConfigSerialization | None = None,
 	) -> 'ApplicationConfiguration':
 		app_config = ApplicationConfiguration()
 
