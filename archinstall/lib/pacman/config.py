@@ -1,7 +1,9 @@
+import atexit
 import re
 from pathlib import Path
 from shutil import copy2
 
+from ..general import running_from_host
 from ..models.packages import Repository
 
 
@@ -46,9 +48,14 @@ class PacmanConfig:
 				if row + 1 < len(content) and content[row + 1].lstrip().startswith('#'):
 					content[row + 1] = re.sub(r'^#\s*', '', content[row + 1])
 
-		# Write the modified content back to the file
-		with open(self._config_path, 'w') as f:
-			f.writelines(content)
+		# Apply temp using backup then revert on exit handler
+		if running_from_host():
+			temp_copy = self._config_path.with_suffix('.bak')
+			copy2(self._config_path, temp_copy)
+			atexit.register(lambda: copy2(temp_copy, self._config_path))
+		else:  # Apply directly
+			with open(self._config_path, 'w') as f:
+				f.writelines(content)
 
 	def persist(self) -> None:
 		if self._repositories and self._config_remote_path:
