@@ -32,6 +32,7 @@ class DisplayServer(Enum):
 
 
 class GreeterType(Enum):
+	NoGreeter = ''
 	Lightdm = 'lightdm-gtk-greeter'
 	LightdmSlick = 'lightdm-slick-greeter'
 	Sddm = 'sddm'
