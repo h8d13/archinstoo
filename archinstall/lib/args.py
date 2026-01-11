@@ -385,14 +385,11 @@ class ArchConfigHandler:
 			creds_data = self._fetch_from_url(self._args.creds_url)
 
 		if creds_data is not None:
-			config.update(self._process_creds_data(creds_data))
+			config.update(json.loads(creds_data))
 
 		config = self._cleanup_config(config)
 
 		return config
-
-	def _process_creds_data(self, creds_data: str) -> dict[str, Any]:
-		return json.loads(creds_data)
 
 	def _fetch_from_url(self, url: str) -> str:
 		if urllib.parse.urlparse(url).scheme:
