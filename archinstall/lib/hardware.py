@@ -2,6 +2,7 @@ import os
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
+from typing import Self
 
 from archinstall.default_profiles.profile import DisplayServer
 
@@ -17,7 +18,7 @@ class CpuVendor(Enum):
 	_Unknown = 'unknown'
 
 	@classmethod
-	def get_vendor(cls, name: str) -> 'CpuVendor':
+	def get_vendor(cls, name: str) -> Self:
 		if vendor := getattr(cls, name, None):
 			return vendor
 		else:

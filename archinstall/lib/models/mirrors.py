@@ -5,7 +5,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, TypedDict, override
+from typing import Any, Self, TypedDict, override
 
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -181,7 +181,7 @@ class ArchLinuxDeMirrorList(BaseModel):
 	items: list[ArchLinuxDeMirrorEntry]
 
 	@classmethod
-	def fetch_all(cls, base_url: str) -> 'ArchLinuxDeMirrorList':
+	def fetch_all(cls, base_url: str) -> Self:
 		"""Fetch all paginated results from archlinux.de API"""
 
 		limit = 100
@@ -266,7 +266,7 @@ class CustomRepository:
 		}
 
 	@classmethod
-	def parse_args(cls, args: list[dict[str, str]]) -> list['CustomRepository']:
+	def parse_args(cls, args: list[dict[str, str]]) -> list[Self]:
 		configs = []
 		for arg in args:
 			configs.append(
@@ -292,7 +292,7 @@ class CustomServer:
 		return {'url': self.url}
 
 	@classmethod
-	def parse_args(cls, args: list[dict[str, str]]) -> list['CustomServer']:
+	def parse_args(cls, args: list[dict[str, str]]) -> list[Self]:
 		configs = []
 		for arg in args:
 			configs.append(
@@ -378,7 +378,7 @@ class MirrorConfiguration:
 	def parse_args(
 		cls,
 		args: dict[str, Any],
-	) -> 'MirrorConfiguration':
+	) -> Self:
 		config = cls()
 
 		mirror_regions = args.get('mirror_regions', [])
