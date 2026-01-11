@@ -4,7 +4,6 @@ import urllib.error
 import urllib.parse
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass, field
-from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 from urllib.request import Request, urlopen
@@ -48,7 +47,6 @@ class Arguments:
 
 @dataclass
 class ArchConfig:
-	version: str | None = None
 	script: str | None = None
 	locale_config: LocaleConfiguration | None = None
 	archinstall_language: Language = field(default_factory=lambda: translation_handler.get_language_by_abbr('en'))
@@ -88,7 +86,6 @@ class ArchConfig:
 
 	def safe_json(self) -> dict[str, Any]:
 		config: Any = {
-			'version': self.version,
 			'script': self.script,
 			'archinstall-language': self.archinstall_language.json(),
 			'hostname': self.hostname,
@@ -199,7 +196,6 @@ class ArchConfigHandler:
 
 		try:
 			self._config = ArchConfig.from_config(config, args)
-			self._config.version = self._get_version()
 		except ValueError as err:
 			warn(str(err))
 			exit(1)
@@ -224,21 +220,8 @@ class ArchConfigHandler:
 	def print_help(self) -> None:
 		self._parser.print_help()
 
-	def _get_version(self) -> str:
-		try:
-			return version('archinstall')
-		except Exception:
-			return 'Archinstall version not found'
-
 	def _define_arguments(self) -> ArgumentParser:
 		parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-		parser.add_argument(
-			'-v',
-			'--version',
-			action='version',
-			default=False,
-			version='%(prog)s ' + self._get_version(),
-		)
 		parser.add_argument(
 			'--config',
 			type=Path,

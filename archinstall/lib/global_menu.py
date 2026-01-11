@@ -36,7 +36,7 @@ from .models.mirrors import MirrorConfiguration
 from .models.network import NetworkConfiguration, NicType
 from .models.packages import Repository
 from .models.profile import ProfileConfiguration
-from .output import FormattedOutput, info, warn
+from .output import FormattedOutput
 from .pacman.config import PacmanConfig
 from .translationhandler import Language, tr, translation_handler
 
@@ -631,15 +631,7 @@ class GlobalMenu(AbstractMenu[None]):
 				# Sync current selections to config before saving
 				self.sync_all_to_config()
 				config_output = ConfigurationHandler(self._arch_config)
-				success, _ = config_output.auto_save_config()
-				if success:
-					# Check if credentials are actually present (not just empty JSON)
-					creds_json = config_output.user_credentials_to_json()
-					has_creds = creds_json and creds_json.strip() != '{}'
-					creds_status = 'saved' if has_creds else 'empty'
-					info(f'Configuration saved: user_configuration.json, user_credentials.json ({creds_status}).')
-				else:
-					warn('Failed to save selections.')
+				config_output.save()
 				exit(1)
 			elif choice == 'abort_only':
 				ConfigurationHandler.delete_saved_config()
