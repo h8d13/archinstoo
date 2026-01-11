@@ -1,5 +1,4 @@
 import json
-import readline
 import stat
 from pathlib import Path
 from typing import Any
@@ -7,14 +6,12 @@ from typing import Any
 from archinstall.lib.translationhandler import tr
 from archinstall.tui.curses_menu import SelectMenu, Tui
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
 from archinstall.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from .args import ArchConfig
 from .crypt import encrypt
 from .general import JSON, UNSAFE_JSON
 from .output import debug, logger, warn
-from .utils.util import get_password, prompt_dir
 
 
 class ConfigurationHandler:
@@ -178,125 +175,3 @@ class ConfigurationHandler:
 		except Exception as e:
 			debug(f'Failed to auto-save config: {e}')
 			return False, []
-
-
-def save_config(config: ArchConfig) -> None:
-	def preview(item: MenuItem) -> str | None:
-		match item.value:
-			case 'user_config':
-				serialized = config_output.user_config_to_json()
-				return f'{config_output.user_configuration_file}\n{serialized}'
-			case 'user_creds':
-				if maybe_serial := config_output.user_credentials_to_json():
-					return f'{config_output.user_credentials_file}\n{maybe_serial}'
-				return tr('No configuration')
-			case 'all':
-				output = [str(config_output.user_configuration_file)]
-				config_output.user_credentials_to_json()
-				output.append(str(config_output.user_credentials_file))
-				return '\n'.join(output)
-		return None
-
-	config_output = ConfigurationHandler(config)
-
-	items = [
-		MenuItem(
-			tr('Save user configuration (including disk layout)'),
-			value='user_config',
-			preview_action=preview,
-		),
-		MenuItem(
-			tr('Save user credentials'),
-			value='user_creds',
-			preview_action=preview,
-		),
-		MenuItem(
-			tr('Save all'),
-			value='all',
-			preview_action=preview,
-		),
-	]
-
-	group = MenuItemGroup(items)
-	result = SelectMenu[str](
-		group,
-		allow_skip=True,
-		preview_frame=FrameProperties.max(tr('Configuration')),
-		preview_size='auto',
-		preview_style=PreviewStyle.RIGHT,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return
-		case ResultType.Selection:
-			save_option = result.get_value()
-		case _:
-			raise ValueError('Unhandled return type')
-
-	readline.set_completer_delims('\t\n=')
-	readline.parse_and_bind('tab: complete')
-
-	dest_path = prompt_dir(
-		tr('Directory'),
-		tr('Enter a directory for the configuration(s) to be saved (tab completion enabled)') + '\n',
-		allow_skip=True,
-	)
-
-	if not dest_path:
-		return
-
-	header = tr('Do you want to save the configuration file(s) to {}?').format(dest_path)
-
-	group = MenuItemGroup.yes_no()
-	group.focus_item = MenuItem.yes()
-
-	result = SelectMenu(
-		group,
-		header=header,
-		allow_skip=False,
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			if result.item() == MenuItem.no():
-				return
-
-	debug(f'Saving configuration files to {dest_path.absolute()}')
-
-	header = tr('Do you want to encrypt the user_credentials.json file?')
-
-	group = MenuItemGroup.yes_no()
-	group.focus_item = MenuItem.no()
-
-	result = SelectMenu(
-		group,
-		header=header,
-		allow_skip=False,
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-	).run()
-
-	enc_password: str | None = None
-	match result.type_:
-		case ResultType.Selection:
-			if result.item() == MenuItem.yes():
-				password = get_password(
-					text=tr('Credentials file encryption password'),
-					allow_skip=True,
-				)
-
-				if password:
-					enc_password = password.plaintext
-
-	match save_option:
-		case 'user_config':
-			config_output.save_user_config(dest_path)
-		case 'user_creds':
-			config_output.save_user_creds(dest_path, password=enc_password)
-		case 'all':
-			config_output.save(dest_path, creds=True, password=enc_password)

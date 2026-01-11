@@ -16,7 +16,7 @@ from .applications.application_menu import ApplicationMenu
 from .args import ArchConfig
 from .authentication.authentication_menu import AuthenticationMenu
 from .bootloader.bootloader_menu import BootloaderMenu
-from .configuration import ConfigurationHandler, save_config
+from .configuration import ConfigurationHandler
 from .hardware import SysInfo
 from .interactions.general_conf import (
 	add_number_of_parallel_downloads,
@@ -168,11 +168,6 @@ class GlobalMenu(AbstractMenu[None]):
 				text='',
 			),
 			MenuItem(
-				text=tr('Save configuration'),
-				action=lambda x: self._safe_config(),
-				key=f'{CONFIG_KEY}_save',
-			),
-			MenuItem(
 				text=tr('Install'),
 				preview_action=self._prev_install_invalid_config,
 				key=f'{CONFIG_KEY}_install',
@@ -185,15 +180,6 @@ class GlobalMenu(AbstractMenu[None]):
 		]
 
 		return menu_options
-
-	def _safe_config(self) -> None:
-		# data: dict[str, Any] = {}
-		# for item in self._item_group.items:
-		# 	if item.key is not None:
-		# 		data[item.key] = item.value
-
-		self.sync_all_to_config()
-		save_config(self._arch_config)
 
 	def _missing_configs(self) -> list[str]:
 		item: MenuItem = self._item_group.find_by_key('auth_config')

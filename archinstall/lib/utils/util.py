@@ -6,7 +6,7 @@ from archinstall.tui.result import ResultType
 from archinstall.tui.types import Alignment
 
 from ..models.users import Password, PasswordStrength
-from ..output import FormattedOutput, info
+from ..output import FormattedOutput
 
 
 def get_password(
@@ -39,17 +39,17 @@ def get_password(
 				return None
 
 		password = Password(plaintext=result.text())
-
 		strength = PasswordStrength.strength(result.text())
-		info(f'{tr("Password strength")}: {strength.value}', fg=strength.color())
 
 		if skip_confirmation:
 			return password
 
+		strength_line = f'{tr("Password strength")}: {strength.value}'
+
 		if header is not None:
-			confirmation_header = f'{header}{tr("Password")}: {password.hidden()}\n'
+			confirmation_header = f'{header}{tr("Password")}: {password.hidden()}\n{strength_line}\n'
 		else:
-			confirmation_header = f'{tr("Password")}: {password.hidden()}\n'
+			confirmation_header = f'{tr("Password")}: {password.hidden()}\n{strength_line}\n'
 
 		result = EditMenu(
 			tr('Confirm password'),
