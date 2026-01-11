@@ -28,3 +28,8 @@ python -m archinstall [args]
 ```
 
 2. Enjoy your new system(s)
+
+
+---
+
+**Philosophy:** Simplify, No backwards-compat, Move fast.
