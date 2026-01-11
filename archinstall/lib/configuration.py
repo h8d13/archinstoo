@@ -9,7 +9,6 @@ from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from .args import ArchConfig
-from .crypt import encrypt
 from .general import JSON, UNSAFE_JSON
 from .output import debug, logger, warn
 
@@ -94,33 +93,21 @@ class ConfigurationHandler:
 			target.write_text(self.user_config_to_json())
 			target.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
 
-	def save_user_creds(
-		self,
-		dest_path: Path,
-		password: str | None = None,
-	) -> None:
+	def save_user_creds(self, dest_path: Path) -> None:
 		data = self.user_credentials_to_json()
-
-		if password:
-			data = encrypt(password, data)
 
 		if self._is_valid_path(dest_path):
 			target = dest_path / self._user_creds_file
 			target.write_text(data)
 			target.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
 
-	def save(
-		self,
-		dest_path: Path | None = None,
-		creds: bool = False,
-		password: str | None = None,
-	) -> None:
+	def save(self, dest_path: Path | None = None, creds: bool = False) -> None:
 		save_path = dest_path or self._default_save_path
 
 		if self._is_valid_path(save_path):
 			self.save_user_config(save_path)
 			if creds:
-				self.save_user_creds(save_path, password=password)
+				self.save_user_creds(save_path)
 
 	@classmethod
 	def has_saved_config(cls) -> bool:
@@ -168,7 +155,7 @@ class ConfigurationHandler:
 			saved_files.append(str(save_path / self._user_config_file))
 
 			# Save credentials
-			self.save_user_creds(save_path, password=None)
+			self.save_user_creds(save_path)
 			saved_files.append(str(save_path / self._user_creds_file))
 
 			return True, saved_files
