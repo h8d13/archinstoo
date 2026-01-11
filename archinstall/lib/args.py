@@ -28,8 +28,6 @@ from archinstall.lib.translationhandler import Language, translation_handler
 class Arguments:
 	config: Path | None = None
 	config_url: str | None = None
-	creds: Path | None = None
-	creds_url: str | None = None
 	silent: bool = False
 	dry_run: bool = False
 	script: str | None = None
@@ -42,7 +40,6 @@ class Arguments:
 	no_pkg_lookups: bool = False
 	plugin: str | None = None
 	advanced: bool = False
-	verbose: bool = False
 
 
 @dataclass
@@ -340,7 +337,6 @@ class ArchConfigHandler:
 	def _parse_config(self) -> dict[str, Any]:
 		config: dict[str, Any] = {}
 		config_data: str | None = None
-		creds_data: str | None = None
 
 		if self._args.config is not None:
 			config_data = self._read_file(self._args.config)
@@ -349,14 +345,6 @@ class ArchConfigHandler:
 
 		if config_data is not None:
 			config.update(json.loads(config_data))
-
-		if self._args.creds is not None:
-			creds_data = self._read_file(self._args.creds)
-		elif self._args.creds_url is not None:
-			creds_data = self._fetch_from_url(self._args.creds_url)
-
-		if creds_data is not None:
-			config.update(json.loads(creds_data))
 
 		config = self._cleanup_config(config)
 
