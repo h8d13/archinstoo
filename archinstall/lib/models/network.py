@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, NotRequired, TypedDict
+from typing import TYPE_CHECKING, NotRequired, Self, TypedDict
 
 from archinstall.lib.translationhandler import tr
 
@@ -64,9 +64,9 @@ class Nic:
 			'dns': self.dns,
 		}
 
-	@staticmethod
-	def parse_arg(arg: _NicSerialization) -> Nic:
-		return Nic(
+	@classmethod
+	def parse_arg(cls, arg: _NicSerialization) -> Self:
+		return cls(
 			iface=arg.get('iface', None),
 			ip=arg.get('ip', None),
 			dhcp=arg.get('dhcp', True),
@@ -119,22 +119,22 @@ class NetworkConfiguration:
 
 		return config
 
-	@staticmethod
-	def parse_arg(config: _NetworkConfigurationSerialization) -> NetworkConfiguration | None:
+	@classmethod
+	def parse_arg(cls, config: _NetworkConfigurationSerialization) -> Self | None:
 		nic_type = config.get('type', None)
 		if not nic_type:
 			return None
 
 		match NicType(nic_type):
 			case NicType.ISO:
-				return NetworkConfiguration(NicType.ISO)
+				return cls(NicType.ISO)
 			case NicType.NM:
-				return NetworkConfiguration(NicType.NM)
+				return cls(NicType.NM)
 			case NicType.MANUAL:
 				nics_arg = config.get('nics', [])
 				if nics_arg:
 					nics = [Nic.parse_arg(n) for n in nics_arg]
-					return NetworkConfiguration(NicType.MANUAL, nics)
+					return cls(NicType.MANUAL, nics)
 
 		return None
 

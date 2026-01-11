@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, NotRequired, TypedDict
+from typing import NotRequired, Self, TypedDict
 
-from archinstall.lib.models.users import Password, User
+from archinstall.lib.models.users import Password, User, UserSerialization
 from archinstall.lib.translationhandler import tr
 
 
@@ -14,6 +14,8 @@ class U2FLoginConfigSerialization(TypedDict):
 class AuthenticationSerialization(TypedDict):
 	u2f_config: NotRequired[U2FLoginConfigSerialization]
 	lock_root_account: NotRequired[bool]
+	root_enc_password: NotRequired[str]
+	users: NotRequired[list[UserSerialization]]
 
 
 class U2FLoginMethod(Enum):
@@ -41,14 +43,14 @@ class U2FLoginConfiguration:
 			'passwordless_sudo': self.passwordless_sudo,
 		}
 
-	@staticmethod
-	def parse_arg(args: U2FLoginConfigSerialization) -> 'U2FLoginConfiguration | None':
+	@classmethod
+	def parse_arg(cls, args: U2FLoginConfigSerialization) -> Self | None:
 		u2f_login_method = args.get('u2f_login_method')
 
 		if not u2f_login_method:
 			return None
 
-		u2f_config = U2FLoginConfiguration(u2f_login_method=U2FLoginMethod(u2f_login_method))
+		u2f_config = cls(u2f_login_method=U2FLoginMethod(u2f_login_method))
 
 		u2f_config.u2f_login_method = U2FLoginMethod(u2f_login_method)
 
@@ -65,9 +67,9 @@ class AuthenticationConfiguration:
 	u2f_config: U2FLoginConfiguration | None = None
 	lock_root_account: bool = False
 
-	@staticmethod
-	def parse_arg(args: dict[str, Any]) -> 'AuthenticationConfiguration':
-		auth_config = AuthenticationConfiguration()
+	@classmethod
+	def parse_arg(cls, args: AuthenticationSerialization) -> Self:
+		auth_config = cls()
 
 		if (u2f_config := args.get('u2f_config')) is not None:
 			auth_config.u2f_config = U2FLoginConfiguration.parse_arg(u2f_config)

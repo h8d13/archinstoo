@@ -378,7 +378,6 @@ class MirrorConfiguration:
 	def parse_args(
 		cls,
 		args: dict[str, Any],
-		backwards_compatible_repo: list[Repository] = [],
 	) -> 'MirrorConfiguration':
 		config = cls()
 
@@ -398,10 +397,5 @@ class MirrorConfiguration:
 
 		if 'optional_repositories' in args:
 			config.optional_repositories = [Repository(r) for r in args['optional_repositories']]
-
-		if backwards_compatible_repo:
-			for r in backwards_compatible_repo:
-				if r not in config.optional_repositories:
-					config.optional_repositories.append(r)
 
 		return config
