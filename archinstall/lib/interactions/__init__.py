@@ -1,9 +1,8 @@
 from .disk_conf import (
 	get_default_partition_layout,
-	select_devices,
+	select_device,
 	select_disk_config,
 	select_main_filesystem_format,
-	suggest_multi_disk_layout,
 	suggest_single_disk_layout,
 )
 from .general_conf import (
@@ -31,11 +30,10 @@ __all__ = [
 	'ask_to_configure_network',
 	'get_default_partition_layout',
 	'select_archinstall_language',
-	'select_devices',
+	'select_device',
 	'select_disk_config',
 	'select_driver',
 	'select_kernel',
 	'select_main_filesystem_format',
-	'suggest_multi_disk_layout',
 	'suggest_single_disk_layout',
 ]
