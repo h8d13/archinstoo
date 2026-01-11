@@ -1,4 +1,3 @@
-from importlib.metadata import version
 from pathlib import Path
 
 from pytest import MonkeyPatch
@@ -129,7 +128,6 @@ def test_config_file_parsing(
 	arch_config.disk_config.device_modifications = []  # type: ignore[union-attr]
 
 	assert arch_config == ArchConfig(
-		version=version('archinstall'),
 		script='test_script',
 		app_config=ApplicationConfiguration(
 			bluetooth_config=BluetoothConfiguration(enabled=True),
