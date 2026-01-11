@@ -56,8 +56,7 @@ def _fetch_arch_db() -> None:
 
 def main() -> int:
 	"""
-	This can either be run as the compiled and installed application: python setup.py install
-	OR straight as a module: python -m archinstall
+	Usually ran straight as a module: python -m archinstall or compiled as a package.
 	In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	"""
 	if '--help' in sys.argv or '-h' in sys.argv:
