@@ -16,10 +16,6 @@ def test_user_config_roundtrip(
 	handler = ArchConfigHandler()
 	arch_config = handler.config
 
-	# the version is retrieved dynamically from an installed archinstall package
-	# as there is no version present in the test environment we'll set it manually
-	arch_config.version = '3.0.2'
-
 	config_output = ConfigurationHandler(arch_config)
 
 	test_out_dir = Path('/tmp/')
@@ -60,7 +56,7 @@ def test_creds_roundtrip(
 	test_out_dir = Path('/tmp/')
 	test_out_file = test_out_dir / config_output.user_credentials_file
 
-	config_output.save(test_out_dir, creds=True)
+	config_output.save(test_out_dir)
 
 	result = json.loads(test_out_file.read_text())
 	expected = json.loads(creds_fixture.read_text())
