@@ -10,6 +10,7 @@ from archinstall.lib.packages import list_available_packages
 from archinstall.tui.curses_menu import SelectMenu
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.result import ResultType
+from archinstall.tui.script_editor import edit_script
 from archinstall.tui.types import Alignment
 
 from .applications.application_menu import ApplicationMenu
@@ -163,6 +164,13 @@ class GlobalMenu(AbstractMenu[None]):
 				value=True,
 				preview_action=self._prev_ntp,
 				key='ntp',
+			),
+			MenuItem(
+				text=tr('Custom commands'),
+				action=self._edit_custom_commands,
+				value=[],
+				preview_action=self._prev_custom_commands,
+				key='custom_commands',
 			),
 			MenuItem(
 				text='',
@@ -363,6 +371,27 @@ class GlobalMenu(AbstractMenu[None]):
 		if item.value is not None:
 			output = f'{tr("NTP")}: '
 			output += tr('Enabled') if item.value else tr('Disabled')
+			return output
+		return None
+
+	def _edit_custom_commands(self, preset: list[str]) -> list[str]:
+		current_script = '\n'.join(preset) if preset else ''
+		result = edit_script(preset=current_script, title=tr('Custom Commands'))
+		if result is not None:
+			# Split by newlines and filter empty lines
+			commands = [line for line in result.split('\n') if line.strip()]
+			return commands
+		return preset
+
+	def _prev_custom_commands(self, item: MenuItem) -> str | None:
+		commands: list[str] = item.value or []
+		if commands:
+			output = f'{tr("Commands")}: {len(commands)}\n'
+			for i, cmd in enumerate(commands[:5]):
+				display = cmd[:50] + '...' if len(cmd) > 50 else cmd
+				output += f'  {i + 1}. {display}\n'
+			if len(commands) > 5:
+				output += f'  ... +{len(commands) - 5} more'
 			return output
 		return None
 
