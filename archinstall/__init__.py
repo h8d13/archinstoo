@@ -13,15 +13,8 @@ from .lib.general import running_from_host
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, warn
 from .lib.pacman import Pacman
-from .lib.plugins import load_plugin, plugins
 from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
-
-
-# @archinstall.plugin decorator hook to programmatically add
-# plugins in runtime. Useful in profiles_bck and other things.
-def plugin(f, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-	plugins[f.__name__] = f
 
 
 def _log_sys_info() -> None:
@@ -135,9 +128,7 @@ __all__ = [
 	'disk_layouts',
 	'error',
 	'info',
-	'load_plugin',
 	'log',
-	'plugin',
 	'translation_handler',
 	'warn',
 ]
