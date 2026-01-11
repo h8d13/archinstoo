@@ -66,7 +66,12 @@ class ArchConfig:
 	parallel_downloads: int = 0
 	timezone: str = 'UTC'
 	services: list[str] = field(default_factory=list)
-	custom_commands: list[str] = field(default_factory=list)
+	custom_commands: list[str] = field(
+		default_factory=lambda: [
+			'#cd /home/user; git clone <url>',
+			'#chown -R user:user /home/user/repo',
+		]
+	)
 	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
 
 	def unsafe_json(self) -> dict[str, Any]:
