@@ -87,20 +87,14 @@ class ProfileHandler:
 		invalid_sub_profiles: list[str] = []
 		details: list[str] = profile_config.get('details', [])
 
-		if details:
-			for detail in filter(None, details):
-				# [2024-04-19] TODO: Backwards compatibility after naming change: https://github.com/archlinux/archinstall/pull/2421
-				#                    'Kde' is deprecated, remove this block in a future version
-				if detail == 'Kde':
-					detail = 'KDE Plasma'
+		for detail in filter(None, details):
+			if sub_profile := self.get_profile_by_name(detail):
+				valid_sub_profiles.append(sub_profile)
+			else:
+				invalid_sub_profiles.append(detail)
 
-				if sub_profile := self.get_profile_by_name(detail):
-					valid_sub_profiles.append(sub_profile)
-				else:
-					invalid_sub_profiles.append(detail)
-
-			if invalid_sub_profiles:
-				info('No profile definition found: {}'.format(', '.join(invalid_sub_profiles)))
+		if invalid_sub_profiles:
+			info('No profile definition found: {}'.format(', '.join(invalid_sub_profiles)))
 
 		custom_settings = profile_config.get('custom_settings', {})
 		profile.current_selection = valid_sub_profiles
