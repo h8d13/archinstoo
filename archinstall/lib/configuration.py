@@ -138,6 +138,15 @@ class ConfigurationHandler:
 			warn(f'Failed to load saved config: {e}')
 		return None
 
+	@classmethod
+	def delete_saved_config(cls) -> None:
+		config_file = logger.directory / cls._USER_CONFIG_FILENAME
+		creds_file = logger.directory / cls._USER_CREDS_FILENAME
+		if config_file.exists():
+			config_file.unlink()
+		if creds_file.exists():
+			creds_file.unlink()
+
 	def auto_save_config(self) -> tuple[bool, list[str]]:
 		"""Automatically save config to /var/log/archinstall without prompts
 
