@@ -78,36 +78,24 @@ class ConfigurationHandler:
 
 		return True
 
-	def _is_valid_path(self, dest_path: Path) -> bool:
-		dest_path_ok = dest_path.exists() and dest_path.is_dir()
-		if not dest_path_ok:
-			warn(
-				f'Destination directory {dest_path.resolve()} does not exist or is not a directory\n.',
-				'Configuration files can not be saved',
-			)
-		return dest_path_ok
+	def _save_file(self, path: Path, content: str) -> None:
+		path.write_text(content)
+		path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
+		info(f'Saved {path}')
 
-	def save_user_config(self, dest_path: Path) -> None:
-		if self._is_valid_path(dest_path):
-			target = dest_path / self._user_config_file
-			target.write_text(self.user_config_to_json())
-			target.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
-
-	def save_user_creds(self, dest_path: Path) -> None:
-		data = self.user_credentials_to_json()
-
-		if self._is_valid_path(dest_path):
-			target = dest_path / self._user_creds_file
-			target.write_text(data)
-			target.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
-
-	def save(self, dest_path: Path | None = None, creds: bool = False) -> None:
+	def save(self, dest_path: Path | None = None) -> bool:
 		save_path = dest_path or self._default_save_path
 
-		if self._is_valid_path(save_path):
-			self.save_user_config(save_path)
-			if creds:
-				self.save_user_creds(save_path)
+		try:
+			save_path.mkdir(exist_ok=True, parents=True)
+
+			self._save_file(save_path / self._user_config_file, self.user_config_to_json())
+			self._save_file(save_path / self._user_creds_file, self.user_credentials_to_json())
+
+			return True
+		except Exception as e:
+			warn(f'Failed to save config: {e}')
+			return False
 
 	@classmethod
 	def has_saved_config(cls) -> bool:
@@ -148,28 +136,3 @@ class ConfigurationHandler:
 		if creds_file.exists():
 			creds_file.unlink()
 			info(f'Deleted {creds_file}')
-
-	def auto_save_config(self) -> tuple[bool, list[str]]:
-		"""Automatically save config to /var/log/archinstall without prompts
-
-		Returns:
-			tuple[bool, list[str]]: (success, list of saved files)
-		"""
-		try:
-			save_path = logger.directory
-			save_path.mkdir(exist_ok=True, parents=True)
-
-			saved_files: list[str] = []
-
-			# Save configuration
-			self.save_user_config(save_path)
-			saved_files.append(str(save_path / self._user_config_file))
-
-			# Save credentials
-			self.save_user_creds(save_path)
-			saved_files.append(str(save_path / self._user_creds_file))
-
-			return True, saved_files
-		except Exception as e:
-			debug(f'Failed to auto-save config: {e}')
-			return False, []
