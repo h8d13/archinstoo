@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import NotRequired, TypedDict
+from typing import NotRequired, Self, TypedDict
 
 
 class PowerManagement(StrEnum):
-	POWER_PROFILES_DAEMON = 'power-profiles-daemon'
+	PPD = 'power-profiles-daemon'
 	TUNED = 'tuned'
 
 
@@ -107,9 +107,9 @@ class AudioConfiguration:
 			'audio': self.audio.value,
 		}
 
-	@staticmethod
-	def parse_arg(arg: AudioConfigSerialization) -> 'AudioConfiguration':
-		return AudioConfiguration(
+	@classmethod
+	def parse_arg(cls, arg: AudioConfigSerialization) -> Self:
+		return cls(
 			Audio(arg['audio']),
 		)
 
@@ -121,9 +121,9 @@ class BluetoothConfiguration:
 	def json(self) -> BluetoothConfigSerialization:
 		return {'enabled': self.enabled}
 
-	@staticmethod
-	def parse_arg(arg: BluetoothConfigSerialization) -> 'BluetoothConfiguration':
-		return BluetoothConfiguration(arg['enabled'])
+	@classmethod
+	def parse_arg(cls, arg: BluetoothConfigSerialization) -> Self:
+		return cls(arg['enabled'])
 
 
 @dataclass
@@ -135,9 +135,9 @@ class PowerManagementConfiguration:
 			'power_management': self.power_management.value,
 		}
 
-	@staticmethod
-	def parse_arg(arg: PowerManagementConfigSerialization) -> 'PowerManagementConfiguration':
-		return PowerManagementConfiguration(
+	@classmethod
+	def parse_arg(cls, arg: PowerManagementConfigSerialization) -> Self:
+		return cls(
 			PowerManagement(arg['power_management']),
 		)
 
@@ -149,9 +149,9 @@ class PrintServiceConfiguration:
 	def json(self) -> PrintServiceConfigSerialization:
 		return {'enabled': self.enabled}
 
-	@staticmethod
-	def parse_arg(arg: PrintServiceConfigSerialization) -> 'PrintServiceConfiguration':
-		return PrintServiceConfiguration(arg['enabled'])
+	@classmethod
+	def parse_arg(cls, arg: PrintServiceConfigSerialization) -> Self:
+		return cls(arg['enabled'])
 
 
 @dataclass
@@ -163,9 +163,9 @@ class FirewallConfiguration:
 			'firewall': self.firewall.value,
 		}
 
-	@staticmethod
-	def parse_arg(arg: FirewallConfigSerialization) -> 'FirewallConfiguration':
-		return FirewallConfiguration(
+	@classmethod
+	def parse_arg(cls, arg: FirewallConfigSerialization) -> Self:
+		return cls(
 			Firewall(arg['firewall']),
 		)
 
@@ -179,9 +179,9 @@ class ManagementConfiguration:
 			'tools': [t.value for t in self.tools],
 		}
 
-	@staticmethod
-	def parse_arg(arg: ManagementConfigSerialization) -> 'ManagementConfiguration':
-		return ManagementConfiguration(
+	@classmethod
+	def parse_arg(cls, arg: ManagementConfigSerialization) -> Self:
+		return cls(
 			tools=[Management(t) for t in arg['tools']],
 		)
 
@@ -195,9 +195,9 @@ class MonitorConfiguration:
 			'monitor': self.monitor.value,
 		}
 
-	@staticmethod
-	def parse_arg(arg: MonitorConfigSerialization) -> 'MonitorConfiguration':
-		return MonitorConfiguration(
+	@classmethod
+	def parse_arg(cls, arg: MonitorConfigSerialization) -> Self:
+		return cls(
 			Monitor(arg['monitor']),
 		)
 
@@ -211,9 +211,9 @@ class EditorConfiguration:
 			'editor': self.editor.value,
 		}
 
-	@staticmethod
-	def parse_arg(arg: EditorConfigSerialization) -> 'EditorConfiguration':
-		return EditorConfiguration(
+	@classmethod
+	def parse_arg(cls, arg: EditorConfigSerialization) -> Self:
+		return cls(
 			Editor(arg['editor']),
 		)
 
@@ -223,14 +223,14 @@ class ZramConfiguration:
 	enabled: bool
 	algorithm: ZramAlgorithm = ZramAlgorithm.ZSTD
 
-	@staticmethod
-	def parse_arg(arg: bool | ZramConfigSerialization) -> 'ZramConfiguration':
+	@classmethod
+	def parse_arg(cls, arg: bool | ZramConfigSerialization) -> Self:
 		if isinstance(arg, bool):
-			return ZramConfiguration(enabled=arg)
+			return cls(enabled=arg)
 
 		enabled = arg.get('enabled', True)
 		algo = arg.get('algorithm', ZramAlgorithm.ZSTD.value)
-		return ZramConfiguration(enabled=enabled, algorithm=ZramAlgorithm(algo))
+		return cls(enabled=enabled, algorithm=ZramAlgorithm(algo))
 
 
 @dataclass
@@ -244,12 +244,13 @@ class ApplicationConfiguration:
 	monitor_config: MonitorConfiguration | None = None
 	editor_config: EditorConfiguration | None = None
 
-	@staticmethod
+	@classmethod
 	def parse_arg(
+		cls,
 		args: ApplicationSerialization | None = None,
 		old_audio_config: AudioConfigSerialization | None = None,
-	) -> 'ApplicationConfiguration':
-		app_config = ApplicationConfiguration()
+	) -> Self:
+		app_config = cls()
 
 		if args and (bluetooth_config := args.get('bluetooth_config')) is not None:
 			app_config.bluetooth_config = BluetoothConfiguration.parse_arg(bluetooth_config)

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Self
 
 from archinstall.lib.translationhandler import tr
 
@@ -12,12 +12,12 @@ class LocaleConfiguration:
 	sys_lang: str
 	sys_enc: str
 
-	@staticmethod
-	def default() -> 'LocaleConfiguration':
+	@classmethod
+	def default(cls) -> Self:
 		layout = get_kb_layout()
 		if layout == '':
 			layout = 'us'
-		return LocaleConfiguration(layout, 'en_US.UTF-8', 'UTF-8')
+		return cls(layout, 'en_US.UTF-8', 'UTF-8')
 
 	def json(self) -> dict[str, str]:
 		return {
@@ -41,7 +41,7 @@ class LocaleConfiguration:
 			self.kb_layout = args['kb_layout']
 
 	@classmethod
-	def parse_arg(cls, args: dict[str, Any]) -> 'LocaleConfiguration':
+	def parse_arg(cls, args: dict[str, Any]) -> Self:
 		default = cls.default()
 
 		if 'locale_config' in args:

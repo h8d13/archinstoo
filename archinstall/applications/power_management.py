@@ -29,7 +29,7 @@ class PowerManagementApp:
 		debug(f'Installing power management daemon: {power_management_config.power_management.value}')
 
 		match power_management_config.power_management:
-			case PowerManagement.POWER_PROFILES_DAEMON:
+			case PowerManagement.PPD:
 				install_session.add_additional_packages(self.ppd_packages)
 			case PowerManagement.TUNED:
 				install_session.add_additional_packages(self.tuned_packages)
