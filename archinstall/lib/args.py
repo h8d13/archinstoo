@@ -326,6 +326,7 @@ class ArchConfigHandler:
 			help='Enabled advanced options',
 		)
 		parser.add_argument(
+			'-v',
 			'--verbose',
 			action='store_true',
 			default=False,
