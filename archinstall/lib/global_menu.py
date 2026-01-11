@@ -668,7 +668,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _handle_abort(self, preset: None) -> None:
 		items = []
-
+		# Without saving properly deletes cfg/creds
 		items.append(MenuItem(text=tr('Save selections and abort'), value='save_abort'))
 		items.append(MenuItem(text=tr('Abort without saving'), value='abort_only'))
 		items.append(MenuItem(text=tr('Cancel'), value='cancel'))

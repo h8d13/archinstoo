@@ -36,8 +36,9 @@ from archinstall.lib.translationhandler import tr
 from archinstall.tui.curses_menu import Tui
 
 from .args import arch_config_handler
+from .configuration import ConfigurationHandler
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
-from .general import SysCommand, run
+from .general import SysCommand, run, running_from_host
 from .hardware import SysInfo
 from .locale.utils import verify_keyboard_layout, verify_x11_keyboard_layout
 from .luks import Luks2
@@ -130,10 +131,6 @@ class Installer:
 		if exc_type is not None:
 			error(str(exc_value))
 
-			self.sync_log_to_install_medium()
-
-			# We avoid printing /mnt/<log path> because that might confuse people if they note it down
-			# and then reboot, and an identical log file will be found in the ISO medium anyway.
 			Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
 			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(arch_config_handler.config.bug_report_url))
 
@@ -142,10 +139,15 @@ class Installer:
 
 		self.sync()
 
+		if running_from_host() and not arch_config_handler.args.silent:
+			response = input('\nDelete saved config files? [y/N]: ').strip().lower()
+			if response == 'y':
+				ConfigurationHandler.delete_saved_config()
+
 		if not (missing_steps := self.post_install_check()):
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
 			log(msg, fg='green')
-			self.sync_log_to_install_medium()
+
 			return True
 		else:
 			warn('Some required steps were not successfully installed/configured before leaving the installer:')
@@ -156,7 +158,6 @@ class Installer:
 			warn(f'Detailed error logs can be found at: {logger.directory}')
 			warn(f'Submit this zip file as an issue to {arch_config_handler.config.bug_report_url}/issues')
 
-			self.sync_log_to_install_medium()
 			return False
 
 	def sync(self) -> None:
@@ -482,48 +483,6 @@ class Installer:
 							vol.safe_dev_path,
 							self._disk_encryption.encryption_password,
 						)
-
-	def sync_log_to_install_medium(self) -> bool:
-		# Copy over the install log (if there is one) to the install medium if
-		# at least the base has been strapped in, otherwise we won't have a filesystem/structure to copy to.
-		if self._helper_flags.get('base-strapped', False) is True:
-			absolute_logfile = logger.path
-
-			if not os.path.isdir(f'{self.target}/{os.path.dirname(absolute_logfile)}'):
-				os.makedirs(f'{self.target}/{os.path.dirname(absolute_logfile)}')
-
-			shutil.copy2(absolute_logfile, f'{self.target}/{absolute_logfile}')
-
-		return True
-
-	def add_swapfile(self, size: str = '4G', enable_resume: bool = True, file: str = '/swapfile') -> None:
-		if file[:1] != '/':
-			file = f'/{file}'
-		if len(file.strip()) <= 0 or file == '/':
-			raise ValueError(f'The filename for the swap file has to be a valid path, not: {self.target}{file}')
-
-		SysCommand(f'dd if=/dev/zero of={self.target}{file} bs={size} count=1')
-		SysCommand(f'chmod 0600 {self.target}{file}')
-		SysCommand(f'mkswap {self.target}{file}')
-
-		self._fstab_entries.append(f'{file} none swap defaults 0 0')
-
-		if enable_resume:
-			resume_uuid = SysCommand(f'findmnt -no UUID -T {self.target}{file}').decode()
-			resume_offset = (
-				SysCommand(
-					f'filefrag -v {self.target}{file}',
-				)
-				.decode()
-				.split('0:', 1)[1]
-				.split(':', 1)[1]
-				.split('..', 1)[0]
-				.strip()
-			)
-
-			self._hooks.append('resume')
-			self._kernel_params.append(f'resume=UUID={resume_uuid}')
-			self._kernel_params.append(f'resume_offset={resume_offset}')
 
 	def post_install_check(self, *args: str, **kwargs: str) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
