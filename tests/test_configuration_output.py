@@ -40,25 +40,3 @@ def test_user_config_roundtrip(
 		expected['mirror_config'],
 		sort_keys=True,
 	)
-
-
-def test_creds_roundtrip(
-	monkeypatch: MonkeyPatch,
-	creds_fixture: Path,
-) -> None:
-	monkeypatch.setattr('sys.argv', ['archinstall', '--creds', str(creds_fixture)])
-
-	handler = ArchConfigHandler()
-	arch_config = handler.config
-
-	config_output = ConfigurationHandler(arch_config)
-
-	test_out_dir = Path('/tmp/')
-	test_out_file = test_out_dir / config_output.user_credentials_file
-
-	config_output.save(test_out_dir)
-
-	result = json.loads(test_out_file.read_text())
-	expected = json.loads(creds_fixture.read_text())
-
-	assert sorted(result.items()) == sorted(expected.items())

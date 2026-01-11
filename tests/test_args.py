@@ -53,7 +53,6 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 def test_correct_parsing_args(
 	monkeypatch: MonkeyPatch,
 	config_fixture: Path,
-	creds_fixture: Path,
 ) -> None:
 	monkeypatch.setattr(
 		'sys.argv',
@@ -63,8 +62,6 @@ def test_correct_parsing_args(
 			str(config_fixture),
 			'--config-url',
 			'https://example.com',
-			'--creds',
-			str(creds_fixture),
 			'--script',
 			'execution_script',
 			'--mountpoint',
@@ -89,7 +86,6 @@ def test_correct_parsing_args(
 	assert args == Arguments(
 		config=config_fixture,
 		config_url='https://example.com',
-		creds=creds_fixture,
 		silent=True,
 		dry_run=True,
 		script='execution_script',
@@ -108,7 +104,6 @@ def test_correct_parsing_args(
 def test_config_file_parsing(
 	monkeypatch: MonkeyPatch,
 	config_fixture: Path,
-	creds_fixture: Path,
 ) -> None:
 	monkeypatch.setattr(
 		'sys.argv',
@@ -116,8 +111,6 @@ def test_config_file_parsing(
 			'archinstall',
 			'--config',
 			str(config_fixture),
-			'--creds',
-			str(creds_fixture),
 		],
 	)
 
