@@ -32,7 +32,7 @@ class LocaleConfiguration:
 		output += '{}: {}'.format(tr('Locale encoding'), self.sys_enc)
 		return output
 
-	@classmethod
+
 	def _load_config(self, args: dict[str, str]) -> None:
 		if 'sys_lang' in args:
 			self.sys_lang = args['sys_lang']
