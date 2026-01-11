@@ -11,14 +11,13 @@ from urllib.request import Request, urlopen
 from pydantic.dataclasses import dataclass as p_dataclass
 
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
-from archinstall.lib.models.authentication import AuthenticationConfiguration, U2FLoginConfigSerialization
+from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.bootloader import BootloaderConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration
 from archinstall.lib.models.locale import LocaleConfiguration
 from archinstall.lib.models.mirrors import MirrorConfiguration
 from archinstall.lib.models.network import NetworkConfiguration
 from archinstall.lib.models.profile import ProfileConfiguration
-from archinstall.lib.models.users import UserSerialization
 from archinstall.lib.output import error, warn
 from archinstall.lib.plugins import load_plugin
 from archinstall.lib.translationhandler import Language, translation_handler
@@ -70,22 +69,6 @@ class ArchConfig:
 		]
 	)
 	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
-
-	def unsafe_json(self) -> dict[str, Any]:
-		config: dict[str, Any] = {}
-
-		if self.auth_config:
-			auth: dict[str, list[UserSerialization] | str | U2FLoginConfigSerialization] = {}
-			if self.auth_config.users:
-				auth['users'] = [user.json() for user in self.auth_config.users]
-			if self.auth_config.root_enc_password and self.auth_config.root_enc_password.enc_password:
-				auth['root_enc_password'] = self.auth_config.root_enc_password.enc_password
-			if self.auth_config.u2f_config:
-				auth['u2f_config'] = self.auth_config.u2f_config.json()
-			if auth:
-				config['auth_config'] = auth
-
-		return config
 
 	def safe_json(self) -> dict[str, Any]:
 		config: Any = {

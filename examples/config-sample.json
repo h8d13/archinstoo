@@ -1,7 +1,16 @@
 {
   "archinstall-language": "English",
   "auth_config": {
-    "lock_root_account": false
+    "lock_root_account": false,
+    "root_enc_password": "$y$j9T$...",
+    "users": [
+      {
+        "username": "myuser",
+        "enc_password": "$y$j9T$...",
+        "sudo": true,
+        "groups": ["wheel"]
+      }
+    ]
   },
   "audio_config": {
     "audio": "pipewire"
