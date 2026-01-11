@@ -60,6 +60,7 @@ class ArchConfig:
 	swap: ZramConfiguration | None = None
 	hostname: str = 'archlinux'
 	kernels: list[str] = field(default_factory=lambda: ['linux'])
+	kernel_headers: bool = False
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	parallel_downloads: int = 0
@@ -90,6 +91,7 @@ class ArchConfig:
 			'archinstall-language': self.archinstall_language.json(),
 			'hostname': self.hostname,
 			'kernels': self.kernels,
+			'kernel_headers': self.kernel_headers,
 			'ntp': self.ntp,
 			'packages': self.packages,
 			'parallel_downloads': self.parallel_downloads,
@@ -158,6 +160,8 @@ class ArchConfig:
 
 		if kernels := args_config.get('kernels', []):
 			arch_config.kernels = kernels
+
+		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 
 		arch_config.ntp = args_config.get('ntp', True)
 

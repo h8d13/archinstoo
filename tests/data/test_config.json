@@ -133,6 +133,7 @@
   "kernels": [
     "linux-zen"
   ],
+  "kernel_headers": false,
   "locale_config": {
     "kb_layout": "us",
     "sys_enc": "UTF-8",
@@ -204,6 +205,5 @@
     "echo 'Hello, World!'"
   ],
   "swap": false,
-  "timezone": "UTC",
-  "version": "3.0.2"
+  "timezone": "UTC"
 }

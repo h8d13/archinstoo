@@ -89,6 +89,7 @@
   "kernels": [
     "linux"
   ],
+  "kernel_headers": false,
   "locale_config": {
     "kb_layout": "us",
     "sys_enc": "UTF-8",

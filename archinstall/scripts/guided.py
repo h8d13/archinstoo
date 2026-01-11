@@ -125,6 +125,10 @@ def perform_installation(mountpoint: Path) -> None:
 		if config.packages and config.packages[0] != '':
 			installation.add_additional_packages(config.packages)
 
+		if config.kernel_headers:
+			headers = [f'{kernel}-headers' for kernel in config.kernels]
+			installation.add_additional_packages(headers)
+
 		if timezone := config.timezone:
 			installation.set_timezone(timezone)
 
