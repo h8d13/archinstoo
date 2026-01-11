@@ -21,8 +21,8 @@ from archinstall.lib.models.locale import LocaleConfiguration
 from archinstall.lib.models.mirrors import MirrorConfiguration
 from archinstall.lib.models.network import NetworkConfiguration
 from archinstall.lib.models.profile import ProfileConfiguration
-from archinstall.lib.models.users import Password, UserSerialization
-from archinstall.lib.output import debug, error, logger, warn
+from archinstall.lib.models.users import UserSerialization
+from archinstall.lib.output import debug, error, warn
 from archinstall.lib.plugins import load_plugin
 from archinstall.lib.translationhandler import Language, tr, translation_handler
 from archinstall.lib.utils.util import get_password
@@ -89,11 +89,6 @@ class ArchConfig:
 			if auth:
 				config['auth_config'] = auth
 
-		if self.disk_config:
-			disk_encryption = self.disk_config.disk_encryption
-			if disk_encryption and disk_encryption.encryption_password:
-				config['encryption_password'] = disk_encryption.encryption_password.plaintext
-
 		return config
 
 	def safe_json(self) -> dict[str, Any]:
@@ -146,9 +141,7 @@ class ArchConfig:
 			arch_config.archinstall_language = translation_handler.get_language_by_name(archinstall_lang)
 
 		if disk_config := args_config.get('disk_config', {}):
-			enc_password = args_config.get('encryption_password', '')
-			password = Password(plaintext=enc_password) if enc_password else None
-			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(disk_config, password)
+			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(disk_config)
 
 		if profile_config := args_config.get('profile_config', None):
 			arch_config.profile_config = ProfileConfiguration.parse_arg(profile_config)
@@ -378,9 +371,6 @@ class ArchConfigHandler:
 		# Installation can't be silent if config is not passed
 		if args.config is None and args.config_url is None:
 			args.silent = False
-
-		if args.debug:
-			warn(f'Warning: --debug mode will write certain credentials to {logger.path}!')
 
 		if args.plugin:
 			plugin_path = Path(args.plugin)
