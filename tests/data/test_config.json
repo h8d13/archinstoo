@@ -13,6 +13,15 @@
       }
   },
   "auth_config": {
+      "root_enc_password": "password_hash",
+      "users": [
+          {
+              "username": "user_name",
+              "enc_password": "password_hash",
+              "sudo": true,
+              "groups": ["wheel"]
+          }
+      ],
       "u2f_config": {
           "passwordless_sudo": true,
           "u2f_login_method": "passwordless"
