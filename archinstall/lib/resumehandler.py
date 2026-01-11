@@ -1,6 +1,6 @@
 from archinstall.lib.args import ArchConfig, arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
-from archinstall.lib.output import error, info, logger
+from archinstall.lib.output import error, info
 from archinstall.tui import Tui
 from archinstall.tui.curses_menu import SelectMenu
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
@@ -42,11 +42,4 @@ def _check_for_saved_config() -> None:
 					except Exception as e:
 						error(f'Failed to load saved selections: {e}')
 			elif choice == 'fresh':
-				# Remove both saved config files
-				config_file = logger.directory / ConfigurationHandler._USER_CONFIG_FILENAME
-				creds_file = logger.directory / ConfigurationHandler._USER_CREDS_FILENAME
-
-				if config_file.exists():
-					config_file.unlink()
-				if creds_file.exists():
-					creds_file.unlink()
+				ConfigurationHandler.delete_saved_config()

@@ -642,6 +642,7 @@ class GlobalMenu(AbstractMenu[None]):
 					warn('Failed to save selections.')
 				exit(1)
 			elif choice == 'abort_only':
+				ConfigurationHandler.delete_saved_config()
 				exit(1)
 			# If 'cancel', just return to menu
 
