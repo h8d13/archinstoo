@@ -95,7 +95,7 @@ class DiskLayoutConfiguration:
 		if not config_type:
 			raise ValueError('Missing disk layout configuration: config_type')
 
-		config = DiskLayoutConfiguration(
+		config = cls(
 			config_type=DiskLayoutType(config_type),
 			device_modifications=device_modifications,
 		)
@@ -1433,10 +1433,10 @@ class EncryptionType(Enum):
 	@classmethod
 	def _encryption_type_mapper(cls) -> dict[str, 'EncryptionType']:
 		return {
-			tr('No Encryption'): EncryptionType.NoEncryption,
-			tr('LUKS'): EncryptionType.Luks,
-			tr('LVM on LUKS'): EncryptionType.LvmOnLuks,
-			tr('LUKS on LVM'): EncryptionType.LuksOnLvm,
+			tr('No Encryption'): cls.NoEncryption,
+			tr('LUKS'): cls.Luks,
+			tr('LVM on LUKS'): cls.LvmOnLuks,
+			tr('LUKS on LVM'): cls.LuksOnLvm,
 		}
 
 	@classmethod
