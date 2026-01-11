@@ -8,7 +8,6 @@ from ..crypt import crypt_yescrypt
 
 
 class PasswordStrength(Enum):
-	VERY_WEAK = 'very weak'
 	WEAK = 'weak'
 	MODERATE = 'moderate'
 	STRONG = 'strong'
@@ -17,8 +16,6 @@ class PasswordStrength(Enum):
 	@override
 	def value(self) -> str:  # pylint: disable=invalid-overridden-method
 		match self:
-			case PasswordStrength.VERY_WEAK:
-				return tr('very weak')
 			case PasswordStrength.WEAK:
 				return tr('weak')
 			case PasswordStrength.MODERATE:
@@ -28,8 +25,6 @@ class PasswordStrength(Enum):
 
 	def color(self) -> str:
 		match self:
-			case PasswordStrength.VERY_WEAK:
-				return 'red'
 			case PasswordStrength.WEAK:
 				return 'red'
 			case PasswordStrength.MODERATE:
@@ -64,8 +59,6 @@ class PasswordStrength(Enum):
 					return cls.MODERATE
 				case num if 7 <= num <= 10:
 					return cls.WEAK
-				case num if num <= 6:
-					return cls.VERY_WEAK
 		elif digit and upper and lower:
 			match length:
 				case num if 14 <= num:
@@ -74,8 +67,6 @@ class PasswordStrength(Enum):
 					return cls.MODERATE
 				case num if 7 <= num <= 10:
 					return cls.WEAK
-				case num if num <= 6:
-					return cls.VERY_WEAK
 		elif upper and lower:
 			match length:
 				case num if 15 <= num:
@@ -84,8 +75,6 @@ class PasswordStrength(Enum):
 					return cls.MODERATE
 				case num if 7 <= num <= 11:
 					return cls.WEAK
-				case num if num <= 6:
-					return cls.VERY_WEAK
 		elif lower or upper:
 			match length:
 				case num if 18 <= num:
@@ -94,10 +83,8 @@ class PasswordStrength(Enum):
 					return cls.MODERATE
 				case num if 9 <= num <= 13:
 					return cls.WEAK
-				case num if num <= 8:
-					return cls.VERY_WEAK
 
-		return cls.VERY_WEAK
+		return cls.WEAK
 
 
 UserSerialization = TypedDict(
@@ -192,13 +179,9 @@ class User:
 			username = entry.get('username')
 			password: Password | None = None
 			groups = entry.get('groups', [])
-			plaintext = entry.get('!password')
 			enc_password = entry.get('enc_password')
 
-			# DEPRECATED: backwards compatibility
-			if plaintext:
-				password = Password(plaintext=plaintext)
-			elif enc_password:
+			if enc_password:
 				password = Password(enc_password=enc_password)
 
 			if not username or password is None:

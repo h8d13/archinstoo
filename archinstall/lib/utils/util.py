@@ -5,8 +5,8 @@ from archinstall.tui.curses_menu import EditMenu
 from archinstall.tui.result import ResultType
 from archinstall.tui.types import Alignment
 
-from ..models.users import Password
-from ..output import FormattedOutput
+from ..models.users import Password, PasswordStrength
+from ..output import FormattedOutput, info
 
 
 def get_password(
@@ -39,6 +39,9 @@ def get_password(
 				return None
 
 		password = Password(plaintext=result.text())
+
+		strength = PasswordStrength.strength(result.text())
+		info(f'{tr("Password strength")}: {strength.value}', fg=strength.color())
 
 		if skip_confirmation:
 			return password
