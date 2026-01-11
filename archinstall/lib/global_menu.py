@@ -76,25 +76,18 @@ class GlobalMenu(AbstractMenu[None]):
 				key='mirror_config',
 			),
 			MenuItem(
-				text=tr('Disk configuration'),
-				action=self._select_disk_config,
-				preview_action=self._prev_disk_config,
-				mandatory=True,
-				key='disk_config',
-			),
-			MenuItem(
-				text=tr('Swap'),
-				value=ZramConfiguration(enabled=True),
-				action=ask_for_swap,
-				preview_action=self._prev_swap,
-				key='swap',
-			),
-			MenuItem(
 				text=tr('Bootloader'),
 				value=BootloaderConfiguration.get_default(),
 				action=self._select_bootloader_config,
 				preview_action=self._prev_bootloader_config,
 				key='bootloader_config',
+			),
+			MenuItem(
+				text=tr('Disk configuration'),
+				action=self._select_disk_config,
+				preview_action=self._prev_disk_config,
+				mandatory=True,
+				key='disk_config',
 			),
 			MenuItem(
 				text=tr('Kernels'),
@@ -103,6 +96,13 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_kernel,
 				mandatory=True,
 				key='kernels',
+			),
+			MenuItem(
+				text=tr('Swap'),
+				value=ZramConfiguration(enabled=True),
+				action=ask_for_swap,
+				preview_action=self._prev_swap,
+				key='swap',
 			),
 			MenuItem(
 				text=tr('Hostname'),
@@ -145,13 +145,6 @@ class GlobalMenu(AbstractMenu[None]):
 				key='parallel_downloads',
 			),
 			MenuItem(
-				text=tr('Additional packages'),
-				action=self._select_additional_packages,
-				value=[],
-				preview_action=self._prev_additional_pkgs,
-				key='packages',
-			),
-			MenuItem(
 				text=tr('Timezone'),
 				action=ask_for_a_timezone,
 				value='UTC',
@@ -164,6 +157,13 @@ class GlobalMenu(AbstractMenu[None]):
 				value=True,
 				preview_action=self._prev_ntp,
 				key='ntp',
+			),
+			MenuItem(
+				text=tr('Additional packages'),
+				action=self._select_additional_packages,
+				value=[],
+				preview_action=self._prev_additional_pkgs,
+				key='packages',
 			),
 			MenuItem(
 				text=tr('Custom commands'),
