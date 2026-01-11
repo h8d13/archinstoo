@@ -11,7 +11,7 @@ from archinstall.tui.curses_menu import SelectMenu
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.result import ResultType
 from archinstall.tui.script_editor import edit_script
-from archinstall.tui.types import Alignment
+from archinstall.tui.types import Alignment, Orientation
 
 from .applications.application_menu import ApplicationMenu
 from .args import ArchConfig
@@ -96,6 +96,13 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_kernel,
 				mandatory=True,
 				key='kernels',
+			),
+			MenuItem(
+				text=tr('Kernel headers'),
+				value=False,
+				action=self._ask_kernel_headers,
+				preview_action=self._prev_kernel_headers,
+				key='kernel_headers',
 			),
 			MenuItem(
 				text=tr('Swap'),
@@ -442,6 +449,37 @@ class GlobalMenu(AbstractMenu[None]):
 		if item.value:
 			kernel = ', '.join(item.value)
 			return f'{tr("Kernel")}: {kernel}'
+		return None
+
+	def _ask_kernel_headers(self, preset: bool) -> bool:
+		header = tr('Install kernel headers?') + '\n\n'
+		header += tr('Useful for building out-of-tree drivers or DKMS modules,') + '\n'
+		header += tr('especially for non-standard kernel variants.') + '\n'
+
+		group = MenuItemGroup.yes_no()
+		group.set_focus_by_value(preset)
+
+		result = SelectMenu[bool](
+			group,
+			header=header,
+			columns=2,
+			orientation=Orientation.HORIZONTAL,
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
+
+		match result.type_:
+			case ResultType.Skip:
+				return preset
+			case ResultType.Selection:
+				return result.item() == MenuItem.yes()
+			case _:
+				return preset
+
+	def _prev_kernel_headers(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			status = tr('Enabled') if item.value else tr('Disabled')
+			return f'{tr("Kernel headers")}: {status}'
 		return None
 
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:
