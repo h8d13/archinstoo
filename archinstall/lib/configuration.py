@@ -18,9 +18,7 @@ class ConfigurationHandler:
 
 	def __init__(self, config: ArchConfig):
 		"""
-		Configuration output handler to parse the existing
-		configuration data structure and prepare for output on the
-		console and for saving it to configuration files
+		Consolidated into one file
 
 		:param config: Archinstall configuration object
 		:type config: ArchConfig
