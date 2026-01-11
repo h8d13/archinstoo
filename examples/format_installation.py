@@ -1,0 +1,1 @@
+../archinstall/scripts/format.py
