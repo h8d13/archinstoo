@@ -246,20 +246,6 @@ class ArchConfigHandler:
 			help='Url to a JSON configuration file',
 		)
 		parser.add_argument(
-			'--creds',
-			type=Path,
-			nargs='?',
-			default=None,
-			help='JSON credentials configuration file',
-		)
-		parser.add_argument(
-			'--creds-url',
-			type=str,
-			nargs='?',
-			default=None,
-			help='Url to a JSON credentials configuration file',
-		)
-		parser.add_argument(
 			'--silent',
 			action='store_true',
 			default=False,
@@ -267,7 +253,6 @@ class ArchConfigHandler:
 		)
 		parser.add_argument(
 			'--dry-run',
-			'--dry_run',
 			action='store_true',
 			default=False,
 			help='Generates a configuration file and then exits instead of performing an installation',
@@ -333,13 +318,6 @@ class ArchConfigHandler:
 			action='store_true',
 			default=False,
 			help='Enabled advanced options',
-		)
-		parser.add_argument(
-			'-v',
-			'--verbose',
-			action='store_true',
-			default=False,
-			help='Enabled verbose options',
 		)
 
 		return parser

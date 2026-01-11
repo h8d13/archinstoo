@@ -667,18 +667,10 @@ class GlobalMenu(AbstractMenu[None]):
 		return output.strip()
 
 	def _handle_abort(self, preset: None) -> None:
-		"""Handle abort with option to save selections"""
-		from .args import arch_config_handler
-
 		items = []
 
-		# Only show save option in debug mode
-		if arch_config_handler.args.debug:
-			items.append(MenuItem(text=tr('Save selections and abort'), value='save_abort'))
-			items.append(MenuItem(text=tr('Abort without saving'), value='abort_only'))
-		else:
-			items.append(MenuItem(text=tr('Abort'), value='abort_only'))
-
+		items.append(MenuItem(text=tr('Save selections and abort'), value='save_abort'))
+		items.append(MenuItem(text=tr('Abort without saving'), value='abort_only'))
 		items.append(MenuItem(text=tr('Cancel'), value='cancel'))
 
 		group = MenuItemGroup(items)
