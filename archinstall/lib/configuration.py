@@ -9,13 +9,12 @@ from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from .args import ArchConfig
-from .general import JSON, UNSAFE_JSON
+from .general import JSON
 from .output import debug, info, logger, warn
 
 
 class ConfigurationHandler:
 	_USER_CONFIG_FILENAME = 'user_configuration.json'
-	_USER_CREDS_FILENAME = 'user_credentials.json'
 
 	def __init__(self, config: ArchConfig):
 		"""
@@ -30,23 +29,14 @@ class ConfigurationHandler:
 		self._config = config
 		self._default_save_path = logger.directory
 		self._user_config_file = Path(self._USER_CONFIG_FILENAME)
-		self._user_creds_file = Path(self._USER_CREDS_FILENAME)
 
 	@property
 	def user_configuration_file(self) -> Path:
 		return self._user_config_file
 
-	@property
-	def user_credentials_file(self) -> Path:
-		return self._user_creds_file
-
 	def user_config_to_json(self) -> str:
 		out = self._config.safe_json()
 		return json.dumps(out, indent=4, sort_keys=True, cls=JSON)
-
-	def user_credentials_to_json(self) -> str:
-		out = self._config.unsafe_json()
-		return json.dumps(out, indent=4, sort_keys=True, cls=UNSAFE_JSON)
 
 	def write_debug(self) -> None:
 		debug(' -- Chosen configuration --')
@@ -88,10 +78,7 @@ class ConfigurationHandler:
 
 		try:
 			save_path.mkdir(exist_ok=True, parents=True)
-
 			self._save_file(save_path / self._user_config_file, self.user_config_to_json())
-			self._save_file(save_path / self._user_creds_file, self.user_credentials_to_json())
-
 			return True
 		except Exception as e:
 			warn(f'Failed to save config: {e}')
@@ -105,23 +92,10 @@ class ConfigurationHandler:
 	@classmethod
 	def load_saved_config(cls) -> dict[str, Any] | None:
 		try:
-			config_data: dict[str, Any] = {}
-
-			# Load main config
 			config_file = logger.directory / cls._USER_CONFIG_FILENAME
 			if config_file.exists():
 				with open(config_file) as f:
-					config_data.update(json.load(f))
-
-			# Load credentials
-			creds_file = logger.directory / cls._USER_CREDS_FILENAME
-			if creds_file.exists():
-				with open(creds_file) as f:
-					creds_data = json.load(f)
-					config_data.update(creds_data)
-
-			return config_data if config_data else None
-
+					return json.load(f)
 		except Exception as e:
 			warn(f'Failed to load saved config: {e}')
 		return None
@@ -129,10 +103,6 @@ class ConfigurationHandler:
 	@classmethod
 	def delete_saved_config(cls) -> None:
 		config_file = logger.directory / cls._USER_CONFIG_FILENAME
-		creds_file = logger.directory / cls._USER_CREDS_FILENAME
 		if config_file.exists():
 			config_file.unlink()
 			info(f'Deleted {config_file}')
-		if creds_file.exists():
-			creds_file.unlink()
-			info(f'Deleted {creds_file}')
