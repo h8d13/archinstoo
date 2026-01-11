@@ -19,7 +19,6 @@ from archinstall.lib.models.mirrors import MirrorConfiguration
 from archinstall.lib.models.network import NetworkConfiguration
 from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.output import error, warn
-from archinstall.lib.plugins import load_plugin
 from archinstall.lib.translationhandler import Language, translation_handler
 
 
@@ -287,13 +286,6 @@ class ArchConfigHandler:
 			help='Disabled package validation specifically prior to starting installation.',
 		)
 		parser.add_argument(
-			'--plugin',
-			nargs='?',
-			type=str,
-			default=None,
-			help='File path to a plugin to load',
-		)
-		parser.add_argument(
 			'--advanced',
 			action='store_true',
 			default=False,
@@ -310,10 +302,6 @@ class ArchConfigHandler:
 		# Installation can't be silent if config is not passed
 		if args.config is None and args.config_url is None:
 			args.silent = False
-
-		if args.plugin:
-			plugin_path = Path(args.plugin)
-			load_plugin(plugin_path)
 
 		return args
 
