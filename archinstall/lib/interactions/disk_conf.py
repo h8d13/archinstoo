@@ -162,12 +162,12 @@ def select_disk_config(preset: DiskLayoutConfiguration | None = None) -> DiskLay
 				)
 			elif result.get_value() == manual_mode:
 				preset_mod = preset.device_modifications[0] if preset and preset.device_modifications else None
-				modification = _manual_partitioning(preset_mod, device)
+				manual_modification = _manual_partitioning(preset_mod, device)
 
-				if modification:
+				if manual_modification is not None:
 					return DiskLayoutConfiguration(
 						config_type=DiskLayoutType.Manual,
-						device_modifications=[modification],
+						device_modifications=[manual_modification],
 					)
 
 	return None
