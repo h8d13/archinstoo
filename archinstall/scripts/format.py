@@ -17,7 +17,6 @@ def ask_user_questions() -> None:
 
 		global_menu.set_enabled('archinstall_language', True)
 		global_menu.set_enabled('disk_config', True)
-		global_menu.set_enabled('swap', True)
 		global_menu.set_enabled('__config__', True)
 
 		global_menu.run()

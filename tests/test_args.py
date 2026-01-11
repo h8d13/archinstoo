@@ -43,7 +43,6 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 		debug=False,
 		offline=False,
 		no_pkg_lookups=False,
-		plugin=None,
 		advanced=False,
 	)
 
@@ -70,8 +69,6 @@ def test_correct_parsing_args(
 			'--debug',
 			'--offline',
 			'--no-pkg-lookups',
-			'--plugin',
-			'pytest_plugin.py',
 			'--advanced',
 			'--dry-run',
 			'--silent',
@@ -94,7 +91,6 @@ def test_correct_parsing_args(
 		debug=True,
 		offline=True,
 		no_pkg_lookups=True,
-		plugin='pytest_plugin.py',
 		advanced=True,
 	)
 
