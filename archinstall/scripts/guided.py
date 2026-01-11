@@ -19,10 +19,8 @@ from archinstall.lib.models.device import (
 )
 from archinstall.lib.models.users import User
 from archinstall.lib.output import debug, error, info
-from archinstall.lib.packages.packages import check_package_upgrade
 from archinstall.lib.profile.profiles_handler import profile_handler
 from archinstall.lib.resumehandler import _check_for_saved_config
-from archinstall.lib.translationhandler import tr
 from archinstall.tui import Tui
 
 
@@ -34,11 +32,6 @@ def ask_user_questions() -> None:
 	"""
 
 	title_text = None
-
-	upgrade = check_package_upgrade('archinstall')
-	if upgrade:
-		text = tr('New version available') + f': {upgrade}'
-		title_text = f'  ({text})'
 
 	with Tui():
 		global_menu = GlobalMenu(arch_config_handler.config)

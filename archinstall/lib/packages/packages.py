@@ -117,17 +117,6 @@ def installed_package(package: str) -> LocalPackage | None:
 	return None
 
 
-@lru_cache
-def check_package_upgrade(package: str) -> str | None:
-	try:
-		for line in Pacman.run(f'-Qu {package}'):
-			return line.decode().strip()
-	except SysCallError:
-		debug(f'Failed to check for package upgrades: {package}')
-
-	return None
-
-
 def _create_package_stub(repo: str, name: str, version: str) -> AvailablePackage:
 	defaults = {field_name: '' for field_name in AvailablePackage.model_fields.keys()}
 	defaults.update({'repository': repo, 'name': name, 'version': version})

@@ -10,7 +10,7 @@ from archinstall.tui.types import Alignment, FrameProperties, Orientation, Previ
 
 from .args import ArchConfig
 from .general import JSON, UNSAFE_JSON
-from .output import debug, logger, warn
+from .output import debug, info, logger, warn
 
 
 class ConfigurationHandler:
@@ -144,8 +144,10 @@ class ConfigurationHandler:
 		creds_file = logger.directory / cls._USER_CREDS_FILENAME
 		if config_file.exists():
 			config_file.unlink()
+			info(f'Deleted {config_file}')
 		if creds_file.exists():
 			creds_file.unlink()
+			info(f'Deleted {creds_file}')
 
 	def auto_save_config(self) -> tuple[bool, list[str]]:
 		"""Automatically save config to /var/log/archinstall without prompts
