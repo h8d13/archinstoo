@@ -33,8 +33,6 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 	assert args == Arguments(
 		config=None,
 		config_url=None,
-		creds=None,
-		creds_url=None,
 		silent=False,
 		dry_run=False,
 		script=None,
