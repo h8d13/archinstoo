@@ -55,7 +55,6 @@ class Profile:
 		current_selection: list[Profile] = [],
 		packages: list[str] = [],
 		services: list[str] = [],
-		support_gfx_driver: bool = False,
 		support_greeter: bool = False,
 		advanced: bool = False,
 	) -> None:

@@ -32,7 +32,6 @@ class LocaleConfiguration:
 		output += '{}: {}'.format(tr('Locale encoding'), self.sys_enc)
 		return output
 
-
 	def _load_config(self, args: dict[str, str]) -> None:
 		if 'sys_lang' in args:
 			self.sys_lang = args['sys_lang']
@@ -40,7 +39,6 @@ class LocaleConfiguration:
 			self.sys_enc = args['sys_enc']
 		if 'kb_layout' in args:
 			self.kb_layout = args['kb_layout']
-
 
 	@classmethod
 	def parse_arg(cls, args: dict[str, Any]) -> 'LocaleConfiguration':
