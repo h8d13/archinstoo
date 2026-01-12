@@ -72,6 +72,11 @@ class GfxDriver(Enum):
 			case _:
 				return False
 
+	def use_dkms(self, kernels: list[str] | None) -> bool:
+		if not self.has_dkms_variant():
+			return False
+		return kernels is not None and any('-' in k for k in kernels)
+
 	def packages_text(self, servers: set[DisplayServer] | None = None, kernels: list[str] | None = None) -> str:
 		pkg_names = [p.value for p in self.gfx_packages(servers, kernels)]
 		text = tr('Installed packages') + ':\n'
@@ -119,14 +124,12 @@ class GfxDriver(Enum):
 					GfxPackage.VulkanIntel,
 				]
 			case GfxDriver.NvidiaOpenKernel:
-				# Use dkms variant for non-standard kernels (those with a dash like linux-zen, linux-lts)
-				needs_dkms = kernels is not None and any('-' in k for k in kernels)
-				nvidia_pkg = GfxPackage.NvidiaOpenDkms if needs_dkms else GfxPackage.NvidiaOpen
+				nvidia_pkg = GfxPackage.NvidiaOpenDkms if self.use_dkms(kernels) else GfxPackage.NvidiaOpen
 				packages += [
 					nvidia_pkg,
 					GfxPackage.LibvaNvidiaDriver,
 				]
-				if needs_dkms:
+				if self.use_dkms(kernels):
 					packages.append(GfxPackage.Dkms)
 			case GfxDriver.NvidiaOpenSource:
 				packages += [
