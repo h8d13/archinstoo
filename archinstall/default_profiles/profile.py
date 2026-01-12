@@ -52,7 +52,7 @@ class Profile:
 		self,
 		name: str,
 		profile_type: ProfileType,
-		current_selection: list[Profile] = [],
+		current_selection: list['Profile'] = [],
 		packages: list[str] = [],
 		services: list[str] = [],
 		support_greeter: bool = False,

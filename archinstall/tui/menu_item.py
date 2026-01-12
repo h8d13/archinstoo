@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -25,8 +23,8 @@ class MenuItem:
 	preview_action: Callable[[Any], str | None] | None = None
 	key: str | None = None
 
-	_yes: ClassVar[MenuItem | None] = None
-	_no: ClassVar[MenuItem | None] = None
+	_yes: ClassVar['MenuItem | None'] = None
+	_no: ClassVar['MenuItem | None'] = None
 
 	def get_value(self) -> Any:
 		assert self.value is not None

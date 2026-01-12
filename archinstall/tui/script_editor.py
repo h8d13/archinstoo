@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import curses
 
 from .curses_menu import Tui
