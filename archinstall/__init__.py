@@ -3,7 +3,6 @@
 import importlib
 import os
 import sys
-import time
 import traceback
 
 from archinstall.lib.args import arch_config_handler
@@ -51,10 +50,9 @@ def _check_online() -> None:
 
 
 def _fetch_deps() -> None:
-	Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-	# Refresh python last this ensures that linked modules are loaded properly
-	time.sleep(1)
 	Pacman.run('-Sy --noconfirm python', peek_output=True)
+	Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+	# Refresh python first
 
 
 def _fetch_arch_db() -> None:
