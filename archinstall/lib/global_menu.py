@@ -153,8 +153,9 @@ class GlobalMenu(AbstractMenu[None]):
 			MenuItem(
 				text=tr('Timezone'),
 				action=ask_for_a_timezone,
-				value='UTC',
+				value=None,
 				preview_action=self._prev_tz,
+				mandatory=True,
 				key='timezone',
 			),
 			MenuItem(
@@ -668,9 +669,9 @@ class GlobalMenu(AbstractMenu[None]):
 	def _handle_abort(self, preset: None) -> None:
 		items = []
 		# Without saving properly deletes cfg/creds
-		items.append(MenuItem(text=tr('Save selections and abort'), value='save_abort'))
-		items.append(MenuItem(text=tr('Abort without saving'), value='abort_only'))
-		items.append(MenuItem(text=tr('Cancel'), value='cancel'))
+		items.append(MenuItem(text=tr('save selections and abort'), value='save_abort'))
+		items.append(MenuItem(text=tr('exit delete selections'), value='abort_only'))
+		items.append(MenuItem(text=tr('cancel'), value='cancel'))
 
 		group = MenuItemGroup(items)
 		group.focus_item = group.items[0]  # Focus on first option

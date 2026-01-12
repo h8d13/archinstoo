@@ -74,7 +74,7 @@ class ArchConfig:
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	parallel_downloads: int = 0
-	timezone: str = 'UTC'
+	timezone: str | None = None
 	services: list[str] = field(default_factory=list)
 	custom_commands: list[str] = field(
 		default_factory=lambda: [
@@ -174,7 +174,7 @@ class ArchConfig:
 		if swap_arg is not None:
 			arch_config.swap = ZramConfiguration.parse_arg(swap_arg)
 
-		if timezone := args_config.get('timezone', 'UTC'):
+		if timezone := args_config.get('timezone'):
 			arch_config.timezone = timezone
 
 		if services := args_config.get('services', []):
