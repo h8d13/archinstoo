@@ -45,8 +45,6 @@ def _check_online() -> None:
 		ping('1.1.1.1')
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
-			info('No network connection detected.')
-			info('Run "archinstall wifi" to connect to a wireless network.')
 			info('Or use iwctl/nmcli to connect manually.')
 			sys.exit(0)
 
