@@ -142,12 +142,11 @@ class Installer:
 			if not arch_config_handler.args.silent:
 				response = input('\nDelete saved log files? [y/N]: ').strip().lower()
 				if response == 'y':
-					if logger.directory.exists():
-						for item in logger.directory.iterdir():
-							if item.is_dir():
-								shutil.rmtree(item)
-							else:
-								item.unlink()
+					for item in logger.directory.iterdir():
+						if item.is_dir():
+							shutil.rmtree(item)
+						else:
+							item.unlink()
 
 			return True
 		else:
