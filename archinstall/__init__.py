@@ -18,27 +18,10 @@ from .tui.curses_menu import Tui
 
 depends = (
 	'arch-install-scripts',
-	'btrfs-progs',
-	'coreutils',
-	'cryptsetup',
-	'dosfstools',
-	'e2fsprogs',
-	'glibc',
-	'kbd',
-	'libxcrypt',
-	'pciutils',
-	'procps-ng',
 	'python',
 	'python-cryptography',
 	'python-pydantic',
 	'python-pyparted',
-	'systemd',
-	'util-linux',
-	'xfsprogs',
-	'lvm2',
-	'f2fs-tools',
-	'ntfs-3g',
-	'libfido2',
 )
 
 
