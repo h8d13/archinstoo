@@ -14,7 +14,6 @@ from archinstall.tui.types import Alignment, FrameProperties, Orientation, Previ
 
 from ..locale.utils import list_timezones
 from ..models.packages import AvailablePackage, PackageGroup
-from ..output import warn
 from ..translationhandler import Language
 
 
@@ -99,19 +98,6 @@ def ask_for_a_timezone(preset: str | None = None) -> str | None:
 			return default
 		case ResultType.Selection:
 			return result.get_value()
-
-
-def select_language(preset: str | None = None) -> str | None:
-	from ..locale.locale_menu import select_kb_layout
-
-	# We'll raise an exception in an upcoming version.
-	# from ..exceptions import Deprecated
-	# raise Deprecated("select_language() has been deprecated, use select_kb_layout() instead.")
-
-	# No need to translate this i feel, as it's a short lived message.
-	warn('select_language() is deprecated, use select_kb_layout() instead. select_language() will be removed in a future version')
-
-	return select_kb_layout(preset)
 
 
 def select_archinstall_language(languages: list[Language], preset: Language) -> Language:

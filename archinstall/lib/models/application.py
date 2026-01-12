@@ -248,16 +248,11 @@ class ApplicationConfiguration:
 	def parse_arg(
 		cls,
 		args: ApplicationSerialization | None = None,
-		old_audio_config: AudioConfigSerialization | None = None,
 	) -> Self:
 		app_config = cls()
 
 		if args and (bluetooth_config := args.get('bluetooth_config')) is not None:
 			app_config.bluetooth_config = BluetoothConfiguration.parse_arg(bluetooth_config)
-
-		# deprecated: backwards compatibility
-		if old_audio_config is not None:
-			app_config.audio_config = AudioConfiguration.parse_arg(old_audio_config)
 
 		if args and (audio_config := args.get('audio_config')) is not None:
 			app_config.audio_config = AudioConfiguration.parse_arg(audio_config)
