@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class _ProfileConfigurationSerialization(TypedDict):
-	profile: ProfileSerialization
+	profile: 'ProfileSerialization'
 	gfx_driver: str | None
 	greeter: str | None
 

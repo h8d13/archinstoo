@@ -138,7 +138,7 @@ class NetworkConfiguration:
 
 	def install_network_config(
 		self,
-		installation: Installer,
+		installation: 'Installer',
 		profile_config: ProfileConfiguration | None = None,
 	) -> None:
 		match self.type:
