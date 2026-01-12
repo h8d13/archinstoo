@@ -109,23 +109,6 @@ class FormattedOutput:
 
 		return output
 
-	@staticmethod
-	def as_columns(entries: list[str], cols: int) -> str:
-		"""
-		Will format a list into a given number of columns
-		"""
-		chunks = []
-		output = ''
-
-		for i in range(0, len(entries), cols):
-			chunks.append(entries[i : i + cols])
-
-		for row in chunks:
-			out_fmt = '{: <30} ' * len(row)
-			output += out_fmt.format(*row) + '\n'
-
-		return output
-
 
 class Journald:
 	@staticmethod

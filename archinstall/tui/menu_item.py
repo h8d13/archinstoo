@@ -222,10 +222,6 @@ class MenuItemGroup:
 			return tr(' (default)')
 		return ''
 
-	def set_action_for_all(self, action: Callable[[Any], Any]) -> None:
-		for item in self.items:
-			item.action = action
-
 	@cached_property
 	def items(self) -> list[MenuItem]:
 		pattern = self._filter_pattern.lower()
@@ -260,13 +256,6 @@ class MenuItemGroup:
 		self._filter_pattern = self._filter_pattern[:-1]
 		delattr(self, 'items')  # resetting the cache
 		self.focus_first()
-
-	def _reload_focus_item(self) -> None:
-		if len(self.items) > 0:
-			if self.focus_item not in self.items:
-				self.focus_first()
-		else:
-			self.focus_item = None
 
 	def is_item_selected(self, item: MenuItem) -> bool:
 		return item in self.selected_items
@@ -306,7 +295,7 @@ class MenuItemGroup:
 		if last_item is not None:
 			self.focus_item = last_item
 
-	def focus_prev(self, skip_empty: bool = True) -> None:
+	def focus_prev(self) -> None:
 		# e.g. when filter shows no items
 		if self.focus_item is None:
 			return
@@ -316,7 +305,7 @@ class MenuItemGroup:
 		if item is not None:
 			self.focus_item = item
 
-	def focus_next(self, skip_not_enabled: bool = True) -> None:
+	def focus_next(self) -> None:
 		# e.g. when filter shows no items
 		if self.focus_item is None:
 			return
@@ -349,12 +338,6 @@ class MenuItemGroup:
 			if item.mandatory and not item.value:
 				return False
 		return True
-
-	def max_item_width(self) -> int:
-		spaces = [len(str(it.text)) for it in self.items]
-		if spaces:
-			return max(spaces)
-		return 0
 
 	def _is_selectable(self, item: MenuItem) -> bool:
 		if item.is_empty():
@@ -469,12 +452,3 @@ class MenuItemsState:
 			)
 
 		return groups
-
-	def _max_visible_items(self) -> int:
-		return self._total_cols * self._total_rows
-
-	def _remaining_next_spots(self) -> int:
-		return self._max_visible_items() - self._prev_row_idx
-
-	def _remaining_prev_spots(self) -> int:
-		return self._max_visible_items() - self._remaining_next_spots()
