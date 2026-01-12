@@ -53,10 +53,12 @@ def _fetch_deps() -> None:
 	if os.environ.get('ARCHINSTALL_DEPS_FETCHED'):
 		return
 	Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-	# Refresh python last then refresh exec
+	# Refresh python last then re-exec to load new libraries
 	Pacman.run('-Sy --noconfirm python', peek_output=True)
+
+	# Re-exec as module to pick up new Python libraries
 	os.environ['ARCHINSTALL_DEPS_FETCHED'] = '1'
-	os.execv(sys.executable, [sys.executable] + sys.argv)
+	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
 
 
 def _fetch_arch_db() -> None:
