@@ -3,6 +3,7 @@
 # Maintainer: Anton Hvornum <torxed@archlinux.org>
 # Contributor: Anton Hvornum <anton@hvornum.se>
 # Contributor: demostanis worlds <demostanis@protonmail.com>
+# Contributor: Hadean Eon <hadean-eon-dev@proton.me>
 
 pkgname=archinstall
 pkgver=3.0.15
