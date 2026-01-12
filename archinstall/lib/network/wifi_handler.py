@@ -106,21 +106,6 @@ class WifiHandler:
 			debug('No wifi interface found')
 			return False
 
-		prompt = tr('No network connection found') + '\n\n'
-		prompt += tr('Would you like to connect to a Wifi?')
-
-		result = SelectMenu[bool](
-			MenuItemGroup.yes_no(),
-			header=prompt,
-			allow_skip=True,
-		).run()
-
-		if result.type_ != ResultType.Selection:
-			return False
-
-		if result.item() == MenuItem.no():
-			return False
-
 		return self._setup_wifi(wifi_iface)
 
 	def _find_wifi_interface(self) -> str | None:
@@ -199,7 +184,7 @@ class WifiHandler:
 
 		result = SelectMenu[WifiNetwork](
 			group,
-			header=tr('Select wifi network to connect to'),
+			header=tr('Select wifi network to connect to\n'),
 			allow_skip=True,
 		).run()
 
