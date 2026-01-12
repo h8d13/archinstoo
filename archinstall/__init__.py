@@ -16,6 +16,32 @@ from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
 
+depends = (
+	'arch-install-scripts',
+	'btrfs-progs',
+	'coreutils',
+	'cryptsetup',
+	'dosfstools',
+	'e2fsprogs',
+	'glibc',
+	'kbd',
+	'libcrypt.so',
+	'libxcrypt',
+	'pciutils',
+	'procps-ng',
+	'python',
+	'python-cryptography',
+	'python-pydantic',
+	'python-pyparted',
+	'systemd',
+	'util-linux',
+	'xfsprogs',
+	'lvm2',
+	'f2fs-tools',
+	'ntfs-3g',
+	'libfido2',
+)
+
 
 def _log_sys_info() -> None:
 	# Log various information about hardware before starting the installation. This might assist in troubleshooting
@@ -40,9 +66,9 @@ def _check_online() -> None:
 
 
 def _fetch_arch_db() -> None:
-	info('Fetching Arch Linux package database...')
+	info('Fetching Arch Linux package database and deps...')
 	try:
-		Pacman.run('-Sy')
+		Pacman.run(f'-Sy {" ".join(depends)}')
 	except Exception as e:
 		error('Failed to sync Arch Linux package database.')
 		if 'could not resolve host' in str(e).lower():
