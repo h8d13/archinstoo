@@ -51,7 +51,6 @@ class Arguments:
 	skip_boot: bool = False
 	debug: bool = False
 	offline: bool = False
-	no_pkg_lookups: bool = False
 	advanced: bool = False
 
 

@@ -142,7 +142,6 @@
       }
     ]
   },
-  "no_pkg_lookups": false,
   "ntp": true,
   "offline": false,
   "packages": [],
