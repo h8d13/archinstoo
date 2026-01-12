@@ -25,7 +25,6 @@ depends = (
 	'e2fsprogs',
 	'glibc',
 	'kbd',
-	'libcrypt.so',
 	'libxcrypt',
 	'pciutils',
 	'procps-ng',
@@ -66,17 +65,17 @@ def _check_online() -> None:
 
 
 def _fetch_arch_db() -> None:
-	info('Fetching Arch Linux package database and deps...')
+	info('Fetching Arch Linux package db and deps...')
 	try:
 		Pacman.run(f'-Sy --needed --noconfirm {" ".join(depends)}', peek_output=True)
 	except Exception as e:
-		error('Failed to sync Arch Linux package database.')
+		error('Failed to sync package database.')
 		if 'could not resolve host' in str(e).lower():
 			error('Most likely due to a missing network connection or DNS issue.')
 
 		error('Run archinstall --debug and check /var/log/archinstall/install.log for details.')
 
-		debug(f'Failed to sync Arch Linux package database: {e}')
+		debug(f'Failed to sync package database: {e}')
 		exit(1)
 
 
