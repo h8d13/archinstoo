@@ -81,7 +81,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			return False
 
 	def help_text(self) -> str:
-		return tr('Press Ctrl+h for help')
+		return tr('Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help')
 
 	def _show_help(self) -> None:
 		help_text = Help.get_help_text()
