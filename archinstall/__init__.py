@@ -16,11 +16,12 @@ from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
 
-depends = (
+hard_depends = (
 	'arch-install-scripts',
 	'python',
 	'python-cryptography',
 	'python-pydantic',
+	'python-pydantic-core',
 	'python-pyparted',
 )
 
@@ -50,7 +51,7 @@ def _check_online() -> None:
 def _fetch_arch_db() -> None:
 	info('Fetching Arch Linux package db and deps...')
 	try:
-		Pacman.run(f'-Sy --needed --noconfirm {" ".join(depends)}', peek_output=True)
+		Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
 	except Exception as e:
 		error('Failed to sync package database.')
 		if 'could not resolve host' in str(e).lower():

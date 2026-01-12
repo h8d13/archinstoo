@@ -92,7 +92,7 @@ def list_interfaces(skip_loopback: bool = True) -> dict[str, str]:
 def update_keyring() -> bool:
 	info('Updating archlinux-keyring ...')
 	try:
-		Pacman.run('-Sy --noconfirm archlinux-keyring')
+		Pacman.run('-Sy --noconfirm archlinux-keyring', peek_output=True)
 		return True
 	except SysCallError:
 		if os.geteuid() != 0:
