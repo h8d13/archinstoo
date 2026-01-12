@@ -40,7 +40,7 @@ from .configuration import ConfigurationHandler
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run, running_from_host
 from .hardware import SysInfo
-from .locale.utils import verify_keyboard_layout, verify_x11_keyboard_layout
+from .locale.utils import verify_keyboard_layout
 from .luks import Luks2
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration
@@ -1910,32 +1910,6 @@ class Installer:
 				info(f'Keyboard language for this installation is now set to: {language}')
 		else:
 			info('Keyboard language was not changed from default (no language specified)')
-
-		return True
-
-	def set_x11_keyboard_language(self, language: str) -> bool:
-		"""
-		A fallback function to set x11 layout specifically and separately from console layout.
-		This isn't strictly necessary since .set_keyboard_language() does this as well.
-		"""
-		info(f'Setting x11 keyboard language to {language}')
-
-		if len(language.strip()):
-			if not verify_x11_keyboard_layout(language):
-				error(f'Invalid x11-keyboard language specified: {language}')
-				return False
-
-			from .boot import Boot
-
-			with Boot(self) as session:
-				session.SysCommand(['localectl', 'set-x11-keymap', '""'])
-
-				try:
-					session.SysCommand(['localectl', 'set-x11-keymap', language])
-				except SysCallError as err:
-					raise ServiceException(f"Unable to set locale '{language}' for X11: {err}")
-		else:
-			info('X11-Keyboard language was not changed from default (no language specified)')
 
 		return True
 

@@ -281,14 +281,6 @@ class SysInfo:
 			return None
 
 	@staticmethod
-	def mem_available() -> int:
-		return _sys_info.mem_info_by_key('MemAvailable')
-
-	@staticmethod
-	def mem_free() -> int:
-		return _sys_info.mem_info_by_key('MemFree')
-
-	@staticmethod
 	def mem_total() -> int:
 		return _sys_info.mem_info_by_key('MemTotal')
 
