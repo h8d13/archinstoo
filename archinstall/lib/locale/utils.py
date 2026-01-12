@@ -43,13 +43,6 @@ def verify_keyboard_layout(layout: str) -> bool:
 	return False
 
 
-def verify_x11_keyboard_layout(layout: str) -> bool:
-	for language in list_x11_keyboard_languages():
-		if layout.lower() == language.lower():
-			return True
-	return False
-
-
 def get_kb_layout() -> str:
 	try:
 		lines = (
