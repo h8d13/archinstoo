@@ -18,7 +18,6 @@ from .tui.curses_menu import Tui
 
 hard_depends = (
 	'arch-install-scripts',
-	'python',
 	'python-cryptography',
 	'python-pydantic',
 	'python-pyparted',
@@ -56,6 +55,9 @@ def _fetch_arch_db() -> None:
 	try:
 		Pacman.run('-Sy', peek_output=True)
 		Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+		# Refresh python + exec
+		Pacman.run('-Sy python')
+		os.execv(sys.executable, [sys.executable] + sys.argv)
 	except Exception as e:
 		error('Failed to sync package database.')
 		if 'could not resolve host' in str(e).lower():
