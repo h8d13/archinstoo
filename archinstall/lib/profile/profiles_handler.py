@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, NotRequired, TypedDict
 from archinstall.lib.translationhandler import tr
 
 from ...default_profiles.profile import DisplayServer, GreeterType, Profile
-from ..hardware import GfxDriver, GfxPackage
+from ..hardware import GfxDriver
 from ..models.profile import ProfileConfiguration
 from ..networking import fetch_data_from_url, list_interfaces
 from ..output import debug, error, info
@@ -198,25 +198,13 @@ class ProfileHandler:
 	def install_gfx_driver(self, install_session: 'Installer', driver: GfxDriver, profile: Profile | None = None) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
 
-		# Determine display server requirements from profile
 		display_servers = profile.display_servers() if profile else None
-		driver_pkgs = driver.gfx_packages(display_servers)
-		# All non-standard kernel packages have a '-' in their name.
-		# ex: 'linux-zen' and 'linux-lts'
-		are_dkms_needed = any('-' in s for s in install_session.kernels)
+		driver_pkgs = driver.gfx_packages(display_servers, install_session.kernels)
 
-		if driver.has_dkms_variant() and are_dkms_needed:
-			debug(f'A non-standard kernel was selected, installing DKMS variant of {driver.value}')
-
-			install_session.add_additional_packages(GfxPackage.Dkms.value)
-
+		if driver.use_dkms(install_session.kernels):
+			debug(f'Non-standard kernel selected, installing DKMS variant of {driver.value}')
 			headers = [f'{kernel}-headers' for kernel in install_session.kernels]
 			install_session.add_additional_packages(headers)
-
-			match driver:
-				case GfxDriver.NvidiaOpenKernel:
-					driver_pkgs.remove(GfxPackage.NvidiaOpen)
-					driver_pkgs.append(GfxPackage.NvidiaOpenDkms)
 
 		pkg_names = [p.value for p in driver_pkgs]
 		install_session.add_additional_packages(pkg_names)
