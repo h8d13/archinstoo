@@ -45,7 +45,7 @@ def _check_online() -> None:
 		ping('1.1.1.1')
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
-			info('Or use iwctl/nmcli to connect manually.')
+			info('Use iwctl/nmcli to connect manually.')
 			sys.exit(0)
 
 
