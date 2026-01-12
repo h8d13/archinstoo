@@ -60,17 +60,6 @@ class AbstractMenu[ValueT]:
 			if item.key:
 				setattr(self._config, item.key, item.value)
 
-	def _sync(self, item: MenuItem) -> None:
-		if not item.key or item.key.startswith(CONFIG_KEY):
-			return
-
-		config_value = getattr(self._config, item.key)
-
-		if config_value is not None:
-			item.value = config_value
-		elif item.value is not None:
-			setattr(self._config, item.key, item.value)
-
 	def set_enabled(self, key: str, enabled: bool) -> None:
 		# the __config__ is associated with multiple items
 		found = False

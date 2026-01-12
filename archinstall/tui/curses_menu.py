@@ -465,8 +465,6 @@ class EditMenu(AbstractCurses[str]):
 
 		self._max_height, self._max_width = Tui.t().max_yx
 
-		self._header = header
-
 		self._header_entries = []
 		if header:
 			self._header_entries = self.get_header_entries(header)

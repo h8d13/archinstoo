@@ -25,17 +25,6 @@ def list_locales() -> list[str]:
 	return locales
 
 
-def list_x11_keyboard_languages() -> list[str]:
-	return (
-		SysCommand(
-			'localectl --no-pager list-x11-keymap-layouts',
-			environment_vars={'SYSTEMD_COLORS': '0'},
-		)
-		.decode()
-		.splitlines()
-	)
-
-
 def verify_keyboard_layout(layout: str) -> bool:
 	for language in list_keyboard_languages():
 		if layout.lower() == language.lower():
