@@ -28,9 +28,7 @@ cd archinstoo
 
 Check deps are up to date (ISO is built 1st of each month)
 
-`. PKGBUILD && pacman -Q ${depends[@]}`
-
-If not you can run the same with `-Sy` on the packages that are not up to date.
+`. PKGBUILD && pacman -Sy --needed ${depends[@]}`
 
 Then finally run the archinstall module
 
