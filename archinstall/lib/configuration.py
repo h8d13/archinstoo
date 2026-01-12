@@ -25,12 +25,10 @@ class ConfigurationHandler:
 		"""
 
 		self._config = config
-		self._default_save_path = logger.directory
-		self._user_config_file = Path(self._USER_CONFIG_FILENAME)
 
-	@property
-	def user_configuration_file(self) -> Path:
-		return self._user_config_file
+	@classmethod
+	def _saved_config_path(cls) -> Path:
+		return logger.directory / cls._USER_CONFIG_FILENAME
 
 	def user_config_to_json(self) -> str:
 		out = self._config.safe_json()
@@ -71,12 +69,11 @@ class ConfigurationHandler:
 		path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
 		info(f'Saved {path}')
 
-	def save(self, dest_path: Path | None = None) -> bool:
-		save_path = dest_path or self._default_save_path
-
+	def save(self) -> bool:
 		try:
-			save_path.mkdir(exist_ok=True, parents=True)
-			self._save_file(save_path / self._user_config_file, self.user_config_to_json())
+			config_file = self._saved_config_path()
+			config_file.parent.mkdir(exist_ok=True, parents=True)
+			self._save_file(config_file, self.user_config_to_json())
 			return True
 		except Exception as e:
 			warn(f'Failed to save config: {e}')
@@ -84,13 +81,12 @@ class ConfigurationHandler:
 
 	@classmethod
 	def has_saved_config(cls) -> bool:
-		config_file = logger.directory / cls._USER_CONFIG_FILENAME
-		return config_file.exists()
+		return cls._saved_config_path().exists()
 
 	@classmethod
 	def load_saved_config(cls) -> dict[str, Any] | None:
+		config_file = cls._saved_config_path()
 		try:
-			config_file = logger.directory / cls._USER_CONFIG_FILENAME
 			if config_file.exists():
 				with open(config_file) as f:
 					return json.load(f)
@@ -100,6 +96,6 @@ class ConfigurationHandler:
 
 	@classmethod
 	def delete_saved_config(cls) -> None:
-		config_file = logger.directory / cls._USER_CONFIG_FILENAME
+		config_file = cls._saved_config_path()
 		if config_file.exists():
 			config_file.unlink()
