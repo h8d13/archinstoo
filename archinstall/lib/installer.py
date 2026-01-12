@@ -36,7 +36,6 @@ from archinstall.lib.translationhandler import tr
 from archinstall.tui.curses_menu import Tui
 
 from .args import arch_config_handler
-from .configuration import ConfigurationHandler
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run, running_from_host
 from .hardware import SysInfo
@@ -137,14 +136,18 @@ class Installer:
 
 		self.sync()
 
-		if running_from_host() and not arch_config_handler.args.silent:
-			response = input('\nDelete saved config files? [y/N]: ').strip().lower()
-			if response == 'y':
-				ConfigurationHandler.delete_saved_config()
-
 		if not (missing_steps := self.post_install_check()):
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
 			log(msg, fg='green')
+			if running_from_host() and not arch_config_handler.args.silent:
+				response = input('\nDelete saved log files? [y/N]: ').strip().lower()
+				if response == 'y':
+					if logger.directory.exists():
+						for item in logger.directory.iterdir():
+							if item.is_dir():
+								shutil.rmtree(item)
+							else:
+								item.unlink()
 
 			return True
 		else:
