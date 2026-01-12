@@ -14,9 +14,6 @@ class Result[ValueT]:
 	type_: ResultType
 	_data: ValueT | list[ValueT] | None
 
-	def has_data(self) -> bool:
-		return self._data is not None
-
 	def value(self) -> ValueT:
 		assert type(self._data) is not list and self._data is not None
 		return cast(ValueT, self._data)

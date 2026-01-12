@@ -1,4 +1,3 @@
-import os
 import random
 import select
 import signal
@@ -86,26 +85,6 @@ def list_interfaces(skip_loopback: bool = True) -> dict[str, str]:
 		interfaces[mac] = iface
 
 	return interfaces
-
-
-def enrich_iface_types(interfaces: list[str]) -> dict[str, str]:
-	result = {}
-
-	for iface in interfaces:
-		if os.path.isdir(f'/sys/class/net/{iface}/bridge/'):
-			result[iface] = 'BRIDGE'
-		elif os.path.isfile(f'/sys/class/net/{iface}/tun_flags'):
-			# ethtool -i {iface}
-			result[iface] = 'TUN/TAP'
-		elif os.path.isdir(f'/sys/class/net/{iface}/device'):
-			if os.path.isdir(f'/sys/class/net/{iface}/wireless/'):
-				result[iface] = 'WIRELESS'
-			else:
-				result[iface] = 'PHYSICAL'
-		else:
-			result[iface] = 'UNKNOWN'
-
-	return result
 
 
 def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout: int = 30) -> str:

@@ -477,7 +477,6 @@ class EditMenu(AbstractCurses[str]):
 		self._interrupt_warning = reset_warning_msg
 		self._alignment = alignment
 		self._edit_width = edit_width
-		self._default_text = default_text
 		self._hide_input = hide_input
 
 		if self._interrupt_warning is None:
@@ -712,7 +711,6 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		self._orientation = orientation
 		self._column_spacing = column_spacing
 		self._alignment = alignment
-		self._footers = self._footer_entries()
 		self._frame = frame
 		self._interrupt_warning = reset_warning_msg
 		self._header = header
@@ -732,7 +730,6 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 
 		self._prev_scroll_pos: int = 0
 
-		self._visible_entries: list[ViewportEntry] = []
 		self._max_height, self._max_width = Tui.t().max_yx
 
 		self._title_vp: Viewport | None = None
@@ -1353,9 +1350,6 @@ class Tui:
 	def _main_loop[ValueT](self, component: AbstractCurses[ValueT]) -> Result[ValueT]:
 		self._screen.refresh()
 		return component.kickoff(self._screen)
-
-	def _reset_terminal(self) -> None:
-		os.system('reset')
 
 	def _set_up_colors(self) -> None:
 		curses.init_pair(STYLE.NORMAL.value, curses.COLOR_WHITE, curses.COLOR_BLACK)
