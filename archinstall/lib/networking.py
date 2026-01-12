@@ -12,9 +12,8 @@ from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-from .exceptions import DownloadTimeout, SysCallError
-from .output import debug, error, info
-from .pacman import Pacman
+from .exceptions import DownloadTimeout
+from .output import debug
 
 
 class DownloadTimer:
@@ -87,18 +86,6 @@ def list_interfaces(skip_loopback: bool = True) -> dict[str, str]:
 		interfaces[mac] = iface
 
 	return interfaces
-
-
-def update_keyring() -> bool:
-	info('Updating archlinux-keyring ...')
-	try:
-		Pacman.run('-Sy --noconfirm archlinux-keyring', peek_output=True)
-		return True
-	except SysCallError:
-		if os.geteuid() != 0:
-			error("update_keyring() uses 'pacman -Sy archlinux-keyring' which requires root.")
-
-	return False
 
 
 def enrich_iface_types(interfaces: list[str]) -> dict[str, str]:
