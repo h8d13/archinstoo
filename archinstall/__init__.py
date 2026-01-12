@@ -68,7 +68,7 @@ def _check_online() -> None:
 def _fetch_arch_db() -> None:
 	info('Fetching Arch Linux package database and deps...')
 	try:
-		Pacman.run(f'-Sy --needed {" ".join(depends)}')
+		Pacman.run(f'-Sy --needed --noconfirm {" ".join(depends)}', peek_output=True)
 	except Exception as e:
 		error('Failed to sync Arch Linux package database.')
 		if 'could not resolve host' in str(e).lower():
