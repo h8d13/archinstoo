@@ -25,6 +25,7 @@ hard_depends = (
 	'python-annotated-types',
 	'python-pydantic-core',
 	'python-typing_extensions',
+	'python-typing-inspection',
 )
 
 
@@ -51,10 +52,10 @@ def _check_online() -> None:
 
 
 def _fetch_arch_db() -> None:
-	info('Fetching sync then deps...')
+	info('Fetching sync db then hard deps...')
 	try:
 		Pacman.run('-Sy', peek_output=True)
-		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+		Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
 	except Exception as e:
 		error('Failed to sync package database.')
 		if 'could not resolve host' in str(e).lower():
