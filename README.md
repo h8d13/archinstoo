@@ -21,7 +21,7 @@ nmcli dev wifi connect "SSID" -a
 
 ```
 pacman-key --init
-pacman -Sy git
+pacman -Sy archlinux-keyring git
 git clone -b alpha https://github.com/h8d13/archinstoo
 cd archinstoo
 ```
@@ -33,8 +33,6 @@ Check deps are up to date (ISO is built 1st of each month)
 Then finally run the archinstall module
 
 `python -m archinstall [args]`
-
-One liner to do all the above `bash <(curl -sSL evoquus.com/co) -a`
 
 2. Enjoy your new system(s)
 

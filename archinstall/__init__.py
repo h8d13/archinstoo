@@ -50,9 +50,13 @@ def _check_online() -> None:
 
 
 def _fetch_deps() -> None:
-	Pacman.run('-Sy --noconfirm python', peek_output=True)
+	if os.environ.get('ARCHINSTALL_DEPS_FETCHED'):
+		return
 	Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-	# Refresh python first
+	# Refresh python last then refresh exec
+	Pacman.run('-Sy --noconfirm python', peek_output=True)
+	os.environ['ARCHINSTALL_DEPS_FETCHED'] = '1'
+	os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 def _fetch_arch_db() -> None:
