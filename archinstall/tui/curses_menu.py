@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import curses
 import os
 import signal
@@ -1240,7 +1238,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 
 
 class Tui:
-	_t: Tui | None = None
+	_t: 'Tui | None' = None
 
 	def __enter__(self) -> None:
 		if Tui._t is None:
