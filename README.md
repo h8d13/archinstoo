@@ -24,11 +24,21 @@ pacman-key --init
 pacman -Sy git
 git clone -b alpha https://github.com/h8d13/archinstoo
 cd archinstoo
-python -m archinstall [args]
 ```
 
-2. Enjoy your new system(s)
+Check deps are up to date (ISO is built 1st of each month)
 
+`. PKGBUILD && pacman -Q ${depends[@]}`
+
+If not you can run the same with `-Sy` on the packages that are not up to date.
+
+Then finally run the archinstall module
+
+`python -m archinstall [args]`
+
+One liner to do all the above `bash <(curl -sSL evoquus.com/co) -a`
+
+2. Enjoy your new system(s)
 
 ---
 
