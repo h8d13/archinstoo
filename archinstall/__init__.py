@@ -7,7 +7,6 @@ import traceback
 
 from archinstall.lib.args import arch_config_handler
 from archinstall.lib.disk.utils import disk_layouts
-from archinstall.lib.network import wifi_handler
 from archinstall.lib.networking import ping
 
 from .lib.general import running_from_host
@@ -46,16 +45,9 @@ def _check_online() -> None:
 		ping('1.1.1.1')
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
-			if wifi_handler.setup():
-				# Retry ping after wifi setup
-				try:
-					ping('1.1.1.1')
-					return
-				except OSError:
-					pass
-
-			info('Use iwctl or nmcli to connect to internet.')
-			info('Then ping -c 3 google.com to make sure it works.')
+			info('No network connection detected.')
+			info('Run "archinstall wifi" to connect to a wireless network.')
+			info('Or use iwctl/nmcli to connect manually.')
 			sys.exit(0)
 
 
