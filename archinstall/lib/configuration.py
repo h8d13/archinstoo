@@ -103,4 +103,3 @@ class ConfigurationHandler:
 		config_file = logger.directory / cls._USER_CONFIG_FILENAME
 		if config_file.exists():
 			config_file.unlink()
-			info(f'Deleted {config_file}')
