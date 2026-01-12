@@ -50,13 +50,18 @@ def _check_online() -> None:
 			exit(0)
 
 
+def _fetch_deps() -> None:
+	Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+	# Refresh python last this ensures that linked modules are loaded properly
+	Pacman.run('-Sy --needed --noconfirm python', peek_output=True)
+
+
 def _fetch_arch_db() -> None:
 	info('Fetching sync db then hard deps...')
 	try:
 		Pacman.run('-Sy', peek_output=True)
-		Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-		# Refresh python last this ensures that linked modules are loaded properly
-		Pacman.run('-Sy --needed --noconfirm python', peek_output=True)
+		_fetch_deps()
+
 	except Exception as e:
 		error('Failed to sync package database.')
 		if 'could not resolve host' in str(e).lower():
