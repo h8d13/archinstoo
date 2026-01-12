@@ -7,6 +7,7 @@ import traceback
 
 from archinstall.lib.args import arch_config_handler
 from archinstall.lib.disk.utils import disk_layouts
+from archinstall.lib.network import wifi_handler
 from archinstall.lib.networking import ping
 
 from .lib.general import running_from_host
@@ -45,9 +46,17 @@ def _check_online() -> None:
 		ping('1.1.1.1')
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
+			if wifi_handler.setup():
+				# Retry ping after wifi setup
+				try:
+					ping('1.1.1.1')
+					return
+				except OSError:
+					pass
+
 			info('Use iwctl or nmcli to connect to internet.')
 			info('Then ping -c 3 google.com to make sure it works.')
-			exit(0)
+			sys.exit(0)
 
 
 def _fetch_deps() -> None:
@@ -70,7 +79,7 @@ def _fetch_arch_db() -> None:
 		error('Run archinstall --debug and check /var/log/archinstall/install.log for details.')
 
 		debug(f'Failed to sync package database: {e}')
-		exit(1)
+		sys.exit(1)
 
 
 def main() -> int:
@@ -132,7 +141,7 @@ def run_as_a_module() -> None:
 			warn(text)
 			rc = 1
 
-		exit(rc)
+		sys.exit(rc)
 
 
 __all__ = [
