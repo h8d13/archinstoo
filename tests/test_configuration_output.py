@@ -18,9 +18,8 @@ def test_user_config_roundtrip(
 
 	config_output = ConfigurationHandler(arch_config)
 
-	test_out_dir = Path('/tmp/')
-	monkeypatch.setattr('archinstall.lib.configuration.logger.directory', test_out_dir)
-	test_out_file = test_out_dir / ConfigurationHandler._USER_CONFIG_FILENAME
+	test_out_file = Path('/tmp/') / ConfigurationHandler._USER_CONFIG_FILENAME
+	monkeypatch.setattr(ConfigurationHandler, '_saved_config_path', classmethod(lambda cls: test_out_file))
 
 	config_output.save()
 
