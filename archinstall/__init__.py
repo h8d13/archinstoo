@@ -32,7 +32,7 @@ def _log_sys_info() -> None:
 	# Log various information about hardware before starting the installation. This might assist in troubleshooting
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
-	debug(f'Memory statistics: {SysInfo.mem_available()} available out of {SysInfo.mem_total()} total installed')
+	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	debug(f'Virtualization detected: {SysInfo.virtualization()}; is VM: {SysInfo.is_vm()}')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
 

@@ -71,9 +71,6 @@ class Profile:
 		self._packages = packages
 		self._services = services
 
-		# Only used for custom default_profiles
-		self.custom_enabled = False
-
 	@property
 	def packages(self) -> list[str]:
 		return self._packages
