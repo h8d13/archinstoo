@@ -56,7 +56,7 @@ def _fetch_arch_db() -> None:
 		Pacman.run('-Sy', peek_output=True)
 		Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
 		# Refresh python + exec
-		Pacman.run('-Sy python', peek_output=True)
+		Pacman.run('-Sy --needed --noconfirm python', peek_output=True)
 	except Exception as e:
 		error('Failed to sync package database.')
 		if 'could not resolve host' in str(e).lower():
