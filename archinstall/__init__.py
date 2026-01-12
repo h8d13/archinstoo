@@ -18,7 +18,6 @@ from .tui.curses_menu import Tui
 
 hard_depends = (
 	'arch-install-scripts',
-	'python-cryptography',
 	'python-pydantic',
 	'python-pyparted',
 	'python-annotated-types',
