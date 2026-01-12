@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import time
 from collections.abc import Iterable
@@ -38,7 +37,7 @@ from ..models.device import (
 	_PartitionInfo,
 )
 from ..models.users import Password
-from ..output import debug, error, info, log
+from ..output import debug, error, info
 from ..utils.util import is_subpath
 from .utils import (
 	find_lsblk_info,
@@ -172,13 +171,6 @@ class DeviceHandler:
 	def get_device(self, path: Path) -> BDevice | None:
 		return self._devices.get(path, None)
 
-	def get_device_by_partition_path(self, partition_path: Path) -> BDevice | None:
-		partition = self.find_partition(partition_path)
-		if partition:
-			device: Device = partition.disk.device
-			return self.get_device(Path(device.path))
-		return None
-
 	def find_partition(self, path: Path) -> _PartitionInfo | None:
 		for device in self._devices.values():
 			part = next(filter(lambda x: str(x.path) == str(path), device.partition_infos), None)
@@ -202,10 +194,6 @@ class DeviceHandler:
 			return linked_targets[dev_path]
 
 		return None
-
-	def get_uuid_for_path(self, path: Path) -> str | None:
-		partition = self.find_partition(path)
-		return partition.partuuid if partition else None
 
 	def get_btrfs_info(
 		self,
@@ -453,12 +441,6 @@ class DeviceHandler:
 		cmd = f'lvchange -a {active_flag} {vol.safe_dev_path}'
 
 		debug(f'lvchange volume: {cmd}')
-		SysCommand(cmd)
-
-	def lvm_export_vg(self, vg: LvmVolumeGroup) -> None:
-		cmd = f'vgexport {vg.name}'
-
-		debug(f'vgexport: {cmd}')
 		SysCommand(cmd)
 
 	def lvm_import_vg(self, vg: LvmVolumeGroup) -> None:
@@ -831,21 +813,6 @@ class DeviceHandler:
 			device_mods.append(device_mod)
 
 		return device_mods
-
-	def partprobe(self, path: Path | None = None) -> None:
-		if path is not None:
-			command = f'partprobe {path}'
-		else:
-			command = 'partprobe'
-
-		try:
-			debug(f'Calling partprobe: {command}')
-			SysCommand(command)
-		except SysCallError as err:
-			if 'have been written, but we have been unable to inform the kernel of the change' in str(err):
-				log(f'Partprobe was not able to inform the kernel of the new disk state (ignoring error): {err}', fg='gray', level=logging.INFO)
-			else:
-				error(f'"{command}" failed to run (continuing anyway): {err}')
 
 	def _wipe(self, dev_path: Path) -> None:
 		"""
