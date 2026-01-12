@@ -1,136 +1,136 @@
-# from dataclasses import dataclass, field
-# from pathlib import Path
+from dataclasses import dataclass, field
+from pathlib import Path
 
-# from archinstall.lib.models.network import WifiNetwork
-# from archinstall.lib.output import debug
-
-
-# @dataclass
-# class WpaSupplicantNetwork:
-# 	mappings: dict[str, str] = field(default_factory=dict)
-
-# 	@property
-# 	def psk(self) -> str:
-# 		return self.mappings['psk'].strip('"')
-
-# 	@property
-# 	def ssid(self) -> str:
-# 		return self.mappings['ssid'].strip('"')
-
-# 	def to_config_entry(self) -> str:
-# 		wpa_net_config = '\n'
-# 		wpa_net_config += 'network={\n'
-
-# 		for key, value in self.mappings.items():
-# 			wpa_net_config += f'\t{key}={value}\n'
-
-# 		if 'mesh_fwding' not in self.mappings:
-# 			wpa_net_config += '\tmesh_fwding=1\n'
-
-# 		wpa_net_config += '}\n\n'
-# 		return wpa_net_config
+from archinstall.lib.output import debug
 
 
-# class WpaSupplicantConfig:
-# 	def __init__(self) -> None:
-# 		self.config_file = Path('/etc/wpa_supplicant/wpa_supplicant.conf')
-# 		self._wpa_networks: list[WpaSupplicantNetwork] = []
+@dataclass
+class WpaSupplicantNetwork:
+	mappings: dict[str, str] = field(default_factory=dict)
 
-# 	def load_config(self) -> None:
-# 		if not self.config_file.is_file():
-# 			debug('wpa_supplicant.conf not found, creating')
-# 			self._create_config()
-# 		else:
-# 			debug('wpa_supplicant.conf found')
-# 			content = self.config_file.read_text()
+	@property
+	def psk(self) -> str:
+		return self.mappings.get('psk', '').strip('"')
 
-# 			config_header = ''
-# 			if 'ctrl_interface' not in content:
-# 				config_header += 'ctrl_interface=/run/wpa_supplicant\n'
-# 			if 'update_config' not in content:
-# 				config_header += 'update_config=1\n\n'
+	@property
+	def ssid(self) -> str:
+		return self.mappings.get('ssid', '').strip('"')
 
-# 			if config_header:
-# 				config = config_header + content
-# 				self.config_file.write_text(config)
+	def to_config_entry(self) -> str:
+		wpa_net_config = '\n'
+		wpa_net_config += 'network={\n'
 
-# 		self._wpa_networks = self._parse_config()
+		for key, value in self.mappings.items():
+			wpa_net_config += f'\t{key}={value}\n'
 
-# 	def _config_header(self) -> str:
-# 		return 'ctrl_interface=/run/wpa_supplicant\nupdate_config=1'
+		if 'mesh_fwding' not in self.mappings:
+			wpa_net_config += '\tmesh_fwding=1\n'
 
-# 	def get_existing_network(self, ssid: str) -> WpaSupplicantNetwork | None:
-# 		ssid = f'"{ssid}"'
+		wpa_net_config += '}\n\n'
+		return wpa_net_config
 
-# 		for network in self._wpa_networks:
-# 			if network.mappings['ssid'] == ssid:
-# 				return network
 
-# 		return None
+class WpaSupplicantConfig:
+	def __init__(self) -> None:
+		self.config_file = Path('/etc/wpa_supplicant/wpa_supplicant.conf')
+		self._wpa_networks: list[WpaSupplicantNetwork] = []
 
-# 	def set_network(self, network: WifiNetwork, psk: str) -> None:
-# 		debug('setting new wifi network')
+	def load_config(self) -> None:
+		if not self.config_file.is_file():
+			debug('wpa_supplicant.conf not found, creating')
+			self._create_config()
+		else:
+			debug('wpa_supplicant.conf found')
+			content = self.config_file.read_text()
 
-# 		existing_network = self.get_existing_network(network.ssid)
+			config_header = ''
+			if 'ctrl_interface' not in content:
+				config_header += 'ctrl_interface=/run/wpa_supplicant\n'
+			if 'update_config' not in content:
+				config_header += 'update_config=1\n\n'
 
-# 		if not existing_network:
-# 			wpa_net_config = WpaSupplicantNetwork(
-# 				mappings={
-# 					'ssid': f'"{network.ssid}"',
-# 					'psk': f'"{psk}"',
-# 				}
-# 			)
-# 			self._wpa_networks.append(wpa_net_config)
-# 		else:
-# 			existing_network.mappings['psk'] = f'"{psk}"'
+			if config_header:
+				config = config_header + content
+				self.config_file.write_text(config)
 
-# 	def write_config(self) -> None:
-# 		debug('writing wpa_supplicant config')
+		self._wpa_networks = self._parse_config()
 
-# 		config = self._config_header()
-# 		config += '\n\n'
+	def _config_header(self) -> str:
+		return 'ctrl_interface=/run/wpa_supplicant\nupdate_config=1'
 
-# 		for network in self._wpa_networks:
-# 			config += network.to_config_entry()
+	def get_existing_network(self, ssid: str) -> WpaSupplicantNetwork | None:
+		ssid = f'"{ssid}"'
 
-# 		self.config_file.write_text(config)
+		for network in self._wpa_networks:
+			if network.mappings.get('ssid') == ssid:
+				return network
 
-# 	def _create_config(self) -> None:
-# 		self.config_file.touch()
+		return None
 
-# 		header = self._config_header()
-# 		self.config_file.write_text(header)
+	def set_network(self, ssid: str, psk: str) -> None:
+		debug('setting new wifi network')
 
-# 	def _parse_config(self) -> list[WpaSupplicantNetwork]:
-# 		content = self.config_file.read_text()
+		existing_network = self.get_existing_network(ssid)
 
-# 		networks: list[WpaSupplicantNetwork] = []
-# 		in_network_block = False
-# 		cur_net_data: dict[str, str] = {}
+		if not existing_network:
+			wpa_net_config = WpaSupplicantNetwork(
+				mappings={
+					'ssid': f'"{ssid}"',
+					'psk': f'"{psk}"',
+				}
+			)
+			self._wpa_networks.append(wpa_net_config)
+		else:
+			existing_network.mappings['psk'] = f'"{psk}"'
 
-# 		for line in content.splitlines():
-# 			line = line.strip()
+	def write_config(self) -> None:
+		debug('writing wpa_supplicant config')
 
-# 			if not line or line.startswith('#'):
-# 				continue
+		config = self._config_header()
+		config += '\n\n'
 
-# 			if line == 'network={':
-# 				in_network_block = True
-# 				cur_net_data = {}
-# 				continue
+		for network in self._wpa_networks:
+			config += network.to_config_entry()
 
-# 			if in_network_block and line == '}':
-# 				new_network = WpaSupplicantNetwork(
-# 					mappings=cur_net_data,
-# 				)
+		self.config_file.write_text(config)
 
-# 				networks.append(new_network)
-# 				in_network_block = False
-# 				continue
+	def _create_config(self) -> None:
+		self.config_file.parent.mkdir(parents=True, exist_ok=True)
+		self.config_file.touch()
 
-# 			if in_network_block:
-# 				if '=' in line:
-# 					key, value = line.split('=', 1)
-# 					cur_net_data[key.strip()] = value.strip()
+		header = self._config_header()
+		self.config_file.write_text(header)
 
-# 		return networks
+	def _parse_config(self) -> list[WpaSupplicantNetwork]:
+		content = self.config_file.read_text()
+
+		networks: list[WpaSupplicantNetwork] = []
+		in_network_block = False
+		cur_net_data: dict[str, str] = {}
+
+		for line in content.splitlines():
+			line = line.strip()
+
+			if not line or line.startswith('#'):
+				continue
+
+			if line == 'network={':
+				in_network_block = True
+				cur_net_data = {}
+				continue
+
+			if in_network_block and line == '}':
+				new_network = WpaSupplicantNetwork(
+					mappings=cur_net_data,
+				)
+
+				networks.append(new_network)
+				in_network_block = False
+				continue
+
+			if in_network_block:
+				if '=' in line:
+					key, value = line.split('=', 1)
+					cur_net_data[key.strip()] = value.strip()
+
+		return networks

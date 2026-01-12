@@ -1,3 +1,4 @@
+import sys
 from typing import override
 
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
@@ -689,10 +690,10 @@ class GlobalMenu(AbstractMenu[None]):
 				self.sync_all_to_config()
 				config_output = ConfigurationHandler(self._arch_config)
 				config_output.save()
-				exit(1)
+				sys.exit(1)
 			elif choice == 'abort_only':
 				ConfigurationHandler.delete_saved_config()
-				exit(1)
+				sys.exit(1)
 			# If 'cancel', just return to menu
 
 		return None
