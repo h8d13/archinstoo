@@ -42,7 +42,6 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 		skip_boot=False,
 		debug=False,
 		offline=False,
-		no_pkg_lookups=False,
 		advanced=False,
 	)
 
@@ -90,7 +89,6 @@ def test_correct_parsing_args(
 		skip_boot=True,
 		debug=True,
 		offline=True,
-		no_pkg_lookups=True,
 		advanced=True,
 	)
 

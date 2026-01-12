@@ -216,7 +216,6 @@ The contents of :code:`https://domain.lan/config.json`:
        ]
      },
      "network_config": {},
-     "no_pkg_lookups": false,
      "ntp": true,
      "offline": false,
      "packages": [],
