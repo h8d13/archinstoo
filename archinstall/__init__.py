@@ -55,7 +55,7 @@ def _fetch_arch_db() -> None:
 	try:
 		Pacman.run('-Sy', peek_output=True)
 		Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-		# Refresh python + exec
+		# Refresh python last this ensures that linked modules are loaded properly
 		Pacman.run('-Sy --needed --noconfirm python', peek_output=True)
 	except Exception as e:
 		error('Failed to sync package database.')
