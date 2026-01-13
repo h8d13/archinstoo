@@ -13,7 +13,7 @@ from archinstall.lib.models.application import (
 	PrintServiceConfiguration,
 	ZramConfiguration,
 )
-from archinstall.lib.models.authentication import AuthenticationConfiguration, U2FLoginConfiguration, U2FLoginMethod
+from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstall.lib.models.locale import LocaleConfiguration
@@ -129,10 +129,6 @@ def test_config_file_parsing(
 					groups=['wheel'],
 				),
 			],
-			u2f_config=U2FLoginConfiguration(
-				u2f_login_method=U2FLoginMethod.Passwordless,
-				passwordless_sudo=True,
-			),
 		),
 		locale_config=LocaleConfiguration(
 			kb_layout='us',

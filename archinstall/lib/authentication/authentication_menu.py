@@ -1,9 +1,8 @@
 from typing import override
 
-from archinstall.lib.disk.fido import Fido2
 from archinstall.lib.interactions.manage_users_conf import ask_for_additional_users
 from archinstall.lib.menu.abstract_menu import AbstractSubMenu
-from archinstall.lib.models.authentication import AuthenticationConfiguration, U2FLoginConfiguration, U2FLoginMethod
+from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.users import Password, User
 from archinstall.lib.output import FormattedOutput
 from archinstall.lib.translationhandler import tr
@@ -11,7 +10,7 @@ from archinstall.lib.utils.util import get_password
 from archinstall.tui.curses_menu import SelectMenu
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment, FrameProperties, Orientation
+from archinstall.tui.types import Alignment, Orientation
 
 
 class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
@@ -50,13 +49,6 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 				key='users',
 			),
 			MenuItem(
-				text=tr('U2F login setup'),
-				action=select_u2f_login,
-				value=self._auth_config.u2f_config,
-				preview_action=self._prev_u2f_login,
-				key='u2f_config',
-			),
-			MenuItem(
 				text=tr('Lock root account'),
 				action=select_lock_root_account,
 				value=self._auth_config.lock_root_account,
@@ -84,36 +76,12 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 			return f'{tr("Root password")}: {password.hidden()}'
 		return None
 
-	def _depends_on_u2f(self) -> bool:
-		devices = Fido2.get_fido2_devices()
-		if not devices:
-			return False
-		return True
-
 	def _check_dep_sudo_users(self) -> bool:
 		"""Check if at least one sudo user exists"""
 		users: list[User] | None = self._item_group.find_by_key('users').value
 		if users:
 			return any(user.sudo for user in users)
 		return False
-
-	def _prev_u2f_login(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			u2f_config: U2FLoginConfiguration = item.value
-
-			login_method = u2f_config.u2f_login_method.display_value()
-			output = tr('U2F login method: ') + login_method
-
-			output += '\n'
-			output += tr('Passwordless sudo: ') + (tr('Enabled') if u2f_config.passwordless_sudo else tr('Disabled'))
-
-			return output
-
-		devices = Fido2.get_fido2_devices()
-		if not devices:
-			return tr('No U2F devices found')
-
-		return None
 
 	def _prev_lock_root(self, item: MenuItem) -> str | None:
 		if item.value is True:
@@ -124,59 +92,6 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 def select_root_password(preset: str | None = None) -> Password | None:
 	password = get_password(text=tr('Root password'), allow_skip=True)
 	return password
-
-
-def select_u2f_login(preset: U2FLoginConfiguration) -> U2FLoginConfiguration | None:
-	devices = Fido2.get_fido2_devices()
-	if not devices:
-		return None
-
-	items = []
-	for method in U2FLoginMethod:
-		items.append(MenuItem(method.display_value(), value=method))
-
-	group = MenuItemGroup(items)
-
-	if preset is not None:
-		group.set_selected_by_value(preset.u2f_login_method)
-
-	result = SelectMenu[U2FLoginMethod](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('U2F Login Method')),
-		allow_skip=True,
-		allow_reset=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			u2f_method = result.get_value()
-
-			group = MenuItemGroup.yes_no()
-			group.focus_item = MenuItem.no()
-			header = tr('Enable passwordless sudo?')
-
-			result_sudo = SelectMenu[bool](
-				group,
-				header=header,
-				alignment=Alignment.CENTER,
-				columns=2,
-				orientation=Orientation.HORIZONTAL,
-				allow_skip=True,
-			).run()
-
-			passwordless_sudo = result_sudo.item() == MenuItem.yes()
-
-			return U2FLoginConfiguration(
-				u2f_login_method=u2f_method,
-				passwordless_sudo=passwordless_sudo,
-			)
-		case ResultType.Skip:
-			return preset
-		case ResultType.Reset:
-			return None
-		case _:
-			raise ValueError('Unhandled result type')
 
 
 def select_lock_root_account(preset: bool) -> bool:

@@ -6,7 +6,6 @@ from pathlib import Path
 from archinstall import SysInfo
 from archinstall.lib.applications.application_handler import application_handler
 from archinstall.lib.args import arch_config_handler
-from archinstall.lib.authentication.authentication_handler import auth_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
@@ -115,7 +114,6 @@ def perform_installation(mountpoint: Path) -> None:
 		if config.auth_config:
 			if config.auth_config.users:
 				installation.create_users(config.auth_config.users)
-				auth_handler.setup_auth(installation, config.auth_config, config.hostname)
 
 		if app_config := config.app_config:
 			application_handler.install_applications(installation, app_config)
