@@ -285,15 +285,6 @@ class SysInfo:
 		return _sys_info.mem_info_by_key('MemTotal')
 
 	@staticmethod
-	def virtualization() -> str | None:
-		try:
-			return str(SysCommand('systemd-detect-virt')).strip('\r\n')
-		except SysCallError as err:
-			debug(f'Could not detect virtual system: {err}')
-
-		return None
-
-	@staticmethod
 	def is_vm() -> bool:
 		try:
 			result = SysCommand('systemd-detect-virt')
