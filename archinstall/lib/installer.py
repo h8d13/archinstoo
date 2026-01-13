@@ -11,7 +11,7 @@ from collections.abc import Callable
 from pathlib import Path
 from subprocess import CalledProcessError
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 from archinstall.lib.disk.device_handler import device_handler
 from archinstall.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info
@@ -124,7 +124,7 @@ class Installer:
 
 		self.pacman = Pacman(self.target, arch_config_handler.args.silent)
 
-	def __enter__(self) -> 'Installer':
+	def __enter__(self) -> Self:
 		return self
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
