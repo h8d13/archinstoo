@@ -32,21 +32,21 @@ makedepends=(
   'ruff'
 )
 optdepends=(
-  'arch-install-scripts: For pacstrap and genfstab'
-  'btrfs-progs: For btrfs filesystem support'
+  'arch-install-scripts: For pacstrap, genfstab, chroot'
   'coreutils: Basic utilities'
+  'systemd: For systemd-based operations'
+  'util-linux: For partition utilities'
+  'pciutils: For PCI device detection'
+  'kbd: For keyboard layout configuration'
   'cryptsetup: For LUKS encryption support'
+  'btrfs-progs: For btrfs filesystem support'
   'dosfstools: For FAT/EFI filesystem support'
   'e2fsprogs: For ext4 filesystem support'
   'f2fs-tools: For f2fs filesystem support'
-  'kbd: For keyboard layout configuration'
-  'lvm2: For LVM support'
   'ntfs-3g: For NTFS filesystem support'
-  'pciutils: For PCI device detection'
-  'python-systemd: For journald logging'
-  'systemd: For systemd-based operations'
-  'util-linux: For partition utilities'
   'xfsprogs: For XFS filesystem support'
+  'lvm2: For LVM FS layout support'
+  'python-systemd: For journald logging'
 )
 provides=(archinstoo)
 conflicts=()
