@@ -1,6 +1,6 @@
 # Alpha
 
-0. Get internet access
+**0. Get internet access**
 
 Ethernet cable is plug and play.
 
@@ -17,7 +17,7 @@ nmcli dev wifi connect "SSID" -a
 # you can also use nmcli if you prefer
 ```
 
-1. Get and run the source code or specific branch/fork
+**1. Get and run the source code or specific branch/fork**
 
 ```
 pacman-key --init
@@ -34,7 +34,9 @@ Then finally run the archinstall module
 
 `python -m archinstall [args]`
 
-2. Enjoy your new system(s)
+Make your pizza.
+
+**2. Enjoy your new system(s)**
 
 ---
 
