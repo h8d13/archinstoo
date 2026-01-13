@@ -36,7 +36,7 @@ It controls both how the `/var/log/archinstall/user_configuration.json` file is 
 Another good way to see how it all works is to check out the guided script itself [guided.py](../master/archinstall/scripts/guided.py)
 And the main menu [global_menu.py](master/archinstall/lib/global_menu.py)
 
-The rest of classes/defs/files are all called from these and can be followed using global search inside `./archinstall/*`
+The rest of classes/defs/files can be traced using global search inside `./archinstall/*`
 
 - Actual installer(s)
 
