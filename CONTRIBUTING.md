@@ -102,6 +102,9 @@ pre-commit install
 
 This will install the pre-commit hook and run it every time a `git commit` is executed.
 
+You can also use tools directly locally or in IDEs extensions. These might include stuff like: `ruff vulture mypy` etc. 
+Can be consulted within [PCH](./.pre-commit-config.yaml)
+
 ## Documentation
 
 If you'd like to contribute to the documentation, refer to [this guide](docs/README.md) on how to build the documentation locally.

@@ -10,4 +10,4 @@ else
     . .venv/bin/activate
 fi
 
-"$priv" python -B -m archinstall "$@"
+"$priv" .venv/bin/python -B -m archinstall "$@"

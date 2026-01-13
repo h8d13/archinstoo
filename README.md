@@ -53,3 +53,5 @@ Make your pizza.
 To test fixes see: [Contributing](./CONTRIBUTING.md) 
 
 The process would be the same with `git clone -b <branch> <url>`
+
+For dev purposes: we also have a `venv` setup script under `run`
