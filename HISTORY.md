@@ -6,6 +6,7 @@
         - Remove python-cryptography
         - Add __init__ check of deps
     - Simplify creds file to be inside config
+        - Offer choice to delete all of contents post-install
     - Add resume/abort features with proper deletions of cfg
     - Wayland/x11 major refactor
         - Nvidia fixes
@@ -14,6 +15,7 @@
     - Custom commands handler
         - Replaced plugins system
     - Explicit --script utils
+        - Rescue/Format/Minimal/...
     - More bootloader/UKI fixes
     - More applications menus, less hardcoded defaults
     - Update user facing instructions
