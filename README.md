@@ -50,8 +50,8 @@ Make your pizza.
 
 **Philosophy:** Simplify, No backwards-compat, Move fast.
 
-To test fixes see: [Contributing](./CONTRIBUTING.md) 
+To test fixes see: [Contributing](./CONTRIBUTING.md) to see latest changes [Changelog](./HISTORY.md)
 
 The process would be the same with `git clone -b <branch> <url>`
 
-For dev purposes: we also have a `venv` setup script under `run`
+For dev purposes: See `run`
