@@ -33,7 +33,7 @@ Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st o
 
 `. PKGBUILD && pacman -Sy --needed ${depends[@]}`
 
-Then finally run the archinstall module
+Then finally run the `archinstall` module
 
 `python -m archinstall [args]`
 
