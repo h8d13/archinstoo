@@ -1685,11 +1685,6 @@ class Installer:
 
 		info(f'Adding bootloader {bootloader.value} to {boot_partition.dev_path}')
 
-		# validate UKI support
-		if uki_enabled and not bootloader.has_uki_support():
-			warn(f'Bootloader {bootloader.value} does not support UKI; disabling.')
-			uki_enabled = False
-
 		# validate removable bootloader option
 		if bootloader_removable:
 			if not SysInfo.has_uefi():
