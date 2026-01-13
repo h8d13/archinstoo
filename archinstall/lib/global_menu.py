@@ -308,14 +308,6 @@ class GlobalMenu(AbstractMenu[None]):
 			if auth_config.users:
 				output += FormattedOutput.as_table(auth_config.users) + '\n'
 
-			if auth_config.u2f_config:
-				u2f_config = auth_config.u2f_config
-				login_method = u2f_config.u2f_login_method.display_value()
-				output = tr('U2F login method: ') + login_method
-
-				output += '\n'
-				output += tr('Passwordless sudo: ') + (tr('Enabled') if u2f_config.passwordless_sudo else tr('Disabled'))
-
 			return output
 
 		return None

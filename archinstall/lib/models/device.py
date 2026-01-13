@@ -1446,7 +1446,6 @@ class _DiskEncryptionSerialization(TypedDict):
 	encryption_type: str
 	partitions: list[str]
 	lvm_volumes: list[str]
-	hsm_device: NotRequired[_Fido2DeviceSerialization]
 	iter_time: NotRequired[int]
 
 
@@ -1456,7 +1455,6 @@ class DiskEncryption:
 	encryption_password: Password | None = None
 	partitions: list[PartitionModification] = field(default_factory=list)
 	lvm_volumes: list[LvmVolume] = field(default_factory=list)
-	hsm_device: Fido2Device | None = None
 	iter_time: int = DEFAULT_ITER_TIME
 
 	def __post_init__(self) -> None:
@@ -1478,9 +1476,6 @@ class DiskEncryption:
 			'partitions': [p.obj_id for p in self.partitions],
 			'lvm_volumes': [vol.obj_id for vol in self.lvm_volumes],
 		}
-
-		if self.hsm_device:
-			obj['hsm_device'] = self.hsm_device.json()
 
 		if self.iter_time != DEFAULT_ITER_TIME:  # Only include if not default
 			obj['iter_time'] = self.iter_time
@@ -1537,48 +1532,10 @@ class DiskEncryption:
 			volumes,
 		)
 
-		if hsm := disk_encryption.get('hsm_device', None):
-			enc.hsm_device = Fido2Device.parse_arg(hsm)
-
 		if iter_time := disk_encryption.get('iter_time', None):
 			enc.iter_time = iter_time
 
 		return enc
-
-
-class _Fido2DeviceSerialization(TypedDict):
-	path: str
-	manufacturer: str
-	product: str
-
-
-@dataclass
-class Fido2Device:
-	path: Path
-	manufacturer: str
-	product: str
-
-	def json(self) -> _Fido2DeviceSerialization:
-		return {
-			'path': str(self.path),
-			'manufacturer': self.manufacturer,
-			'product': self.product,
-		}
-
-	def table_data(self) -> dict[str, str]:
-		return {
-			'Path': str(self.path),
-			'Manufacturer': self.manufacturer,
-			'Product': self.product,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: _Fido2DeviceSerialization) -> Self:
-		return cls(
-			Path(arg['path']),
-			arg['manufacturer'],
-			arg['product'],
-		)
 
 
 class LsblkInfo(BaseModel):

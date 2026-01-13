@@ -17,11 +17,10 @@ from archinstall.tui.result import ResultType
 from archinstall.tui.types import Alignment, FrameProperties
 
 from ..menu.abstract_menu import AbstractSubMenu
-from ..models.device import DEFAULT_ITER_TIME, Fido2Device
+from ..models.device import DEFAULT_ITER_TIME
 from ..models.users import Password
 from ..output import FormattedOutput
 from ..utils.util import get_password
-from .fido import Fido2
 
 
 class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
@@ -89,14 +88,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				preview_action=self._preview,
 				key='lvm_volumes',
 			),
-			MenuItem(
-				text=tr('HSM'),
-				action=select_hsm,
-				value=self._enc_config.hsm_device,
-				dependencies=[self._check_dep_enc_type],
-				preview_action=self._preview,
-				key='hsm_device',
-			),
 		]
 
 	def _select_lvm_vols(self, preset: list[LvmVolume]) -> list[LvmVolume]:
@@ -148,7 +139,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				encryption_type=enc_type,
 				partitions=enc_partitions,
 				lvm_volumes=enc_lvm_vols,
-				hsm_device=self._enc_config.hsm_device,
 				iter_time=iter_time or DEFAULT_ITER_TIME,
 			)
 
@@ -165,9 +155,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if (iter_time := self._prev_iter_time()) is not None:
 			output += f'\n{iter_time}'
-
-		if (fido_device := self._prev_hsm()) is not None:
-			output += f'\n{fido_device}'
 
 		if (partitions := self._prev_partitions()) is not None:
 			output += f'\n\n{partitions}'
@@ -216,16 +203,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			return output.rstrip()
 
 		return None
-
-	def _prev_hsm(self) -> str | None:
-		fido_device: Fido2Device | None = self._item_group.find_by_key('hsm_device').value
-
-		if not fido_device:
-			return None
-
-		output = str(fido_device.path)
-		output += f' ({fido_device.manufacturer}, {fido_device.product})'
-		return f'{tr("HSM device")}: {output}'
 
 	def _prev_iter_time(self) -> str | None:
 		iter_time = self._item_group.find_by_key('iter_time').value
@@ -284,35 +261,6 @@ def select_encrypted_password() -> Password | None:
 	)
 
 	return password
-
-
-def select_hsm(preset: Fido2Device | None = None) -> Fido2Device | None:
-	header = tr('Select a FIDO2 device to use for HSM') + '\n'
-
-	try:
-		fido_devices = Fido2.get_cryptenroll_devices()
-	except ValueError:
-		return None
-
-	if fido_devices:
-		group = MenuHelper(data=fido_devices).create_menu_group()
-
-		result = SelectMenu[Fido2Device](
-			group,
-			header=header,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Reset:
-				return None
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.get_value()
-
-	return None
 
 
 def select_partitions_to_encrypt(

@@ -84,7 +84,6 @@ disk_encryption = DiskEncryption(
 	encryption_password=Password(plaintext='enc_password'),
 	encryption_type=EncryptionType.Luks,
 	partitions=[home_partition],
-	hsm_device=None,
 )
 
 disk_config.disk_encryption = disk_encryption
