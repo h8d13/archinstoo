@@ -48,6 +48,8 @@ Make your pizza.
 
 ---
 
+## Testing
+
 **Philosophy:** Simplify, No backwards-compat, Move fast.
 
 To test fixes see: [Contributing](./CONTRIBUTING.md) to see latest changes [Changelog](./HISTORY.md)
