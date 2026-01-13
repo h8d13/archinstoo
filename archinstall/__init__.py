@@ -25,6 +25,7 @@ hard_depends = (
 	'python-typing-inspection',
 )
 
+
 def _log_sys_info() -> None:
 	# Log various information about hardware before starting the installation. This might assist in troubleshooting
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
