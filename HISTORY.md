@@ -13,7 +13,7 @@
         - Explicit nogreeter type
     - Custom commands handler
         - Replaced plugins system
-    - Explicit `--script` utils
+    - Explicit --script utils
     - More bootloader/UKI fixes
     - More applications menus, less hardcoded defaults
     - Update user facing instructions
