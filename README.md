@@ -29,7 +29,7 @@ git clone -b alpha https://github.com/h8d13/archinstoo
 cd archinstoo
 ```
 
-Check deps are up to date (ISO is built 1st of each month)
+Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st of each month)
 
 `. PKGBUILD && pacman -Sy --needed ${depends[@]}`
 
