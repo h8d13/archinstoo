@@ -1,7 +1,7 @@
 # Alpha
 
 > [!TIP]
-> In the ISO you are root by default. Use sudo or equivalent if running from an existing system.
+> In the ISO, you are root by default. Use sudo or equivalent, if running from an existing system.
 
 **0. Get internet access**
 
