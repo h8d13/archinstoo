@@ -1,0 +1,13 @@
+#!/bin/bash
+priv="sudo"
+# shellcheck disable=SC1091
+
+if [ ! -d ".venv" ]; then
+    python -m venv .venv
+    . .venv/bin/activate
+    pip install -e .
+else
+    . .venv/bin/activate
+fi
+
+"$priv" python -B -m archinstall "$@"
