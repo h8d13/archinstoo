@@ -2,7 +2,7 @@
 # Maintainer: Giancarlo Razzolini <grazzolini@archlinux.org>
 # Maintainer: Anton Hvornum <torxed@archlinux.org>
 # Contributor: Anton Hvornum <anton@hvornum.se>
-# Contributor: demostanis worlds <demostanis@protonmail.com>
+# Contributor: Demostanis Worlds <demostanis@protonmail.com>
 # Contributor: Hadean Eon <hadean-eon-dev@proton.me>
 
 pkgname=archinstoo
@@ -31,6 +31,10 @@ makedepends=(
   'python-wheel'
   'ruff'
 )
+# marked as optional because they depend
+# on choices made during installation
+# also because they are expected on ISO
+# in a 'stable' state of release
 optdepends=(
   'arch-install-scripts: For pacstrap, genfstab, chroot'
   'coreutils: Basic utilities'
