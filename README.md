@@ -22,9 +22,14 @@ $ nmcli dev wifi connect "SSID" -a
 
 **1. Get and run the source code or specific branch/fork**
 
+Prep:
 ```
 pacman-key --init
 pacman -Sy archlinux-keyring git
+pacman-key --populate archlinux 
+```
+Get source:
+```
 git clone -b alpha https://github.com/h8d13/archinstoo
 cd archinstoo
 ```
@@ -33,9 +38,9 @@ Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st o
 
 `. PKGBUILD && pacman -Sy --needed ${depends[@]}`
 
-**2. Then finally run the `archinstall` module**
+**2. Then finally run the module** `archinstall`
 
-`python -m archinstall [args]`
+`python -m archinstall [args]` try `-h` or `--help`
 
 Make your pizza.
 
