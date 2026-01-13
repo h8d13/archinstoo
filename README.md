@@ -33,13 +33,13 @@ Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st o
 
 `. PKGBUILD && pacman -Sy --needed ${depends[@]}`
 
-Then finally run the `archinstall` module
+**2. Then finally run the `archinstall` module**
 
 `python -m archinstall [args]`
 
 Make your pizza.
 
-**2. Enjoy your new system(s)**
+**3. Enjoy your new system(s)**
 
 ---
 
