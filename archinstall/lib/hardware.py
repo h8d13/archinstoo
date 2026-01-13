@@ -298,8 +298,8 @@ class SysInfo:
 		try:
 			result = SysCommand('systemd-detect-virt')
 			return b'none' not in b''.join(result).lower()
-		except SysCallError as err:
-			debug(f'System is not running in a VM: {err}')
+		except SysCallError:
+			pass
 
 		return False
 
