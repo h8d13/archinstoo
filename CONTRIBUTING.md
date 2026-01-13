@@ -39,8 +39,7 @@ The main installer file is [installer.py](../archinstall/lib/installer.py)
 
 This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
 
-
-
+## Contrib
 
 Any contributions through pull requests are welcome as this project aims to be a community based project to ease some Arch Linux installation steps.
 
