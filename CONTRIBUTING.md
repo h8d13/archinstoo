@@ -1,11 +1,48 @@
-# Contributing to archinstall
+# Contributing to archinstoo
 
-### Get a nice overview of the project
+## The project
+
+### Get an overview
 
 `tree -I '*.po|*.pyc|*.mo|*.png|*.psd|*.svg|locales|docs|__pycache__'`
 
+### Code standards
+
+Small patches are preferred, and need to be tested from scratch (ISO env + Host-2-Target)
+
+### Structure
+
+- Scripts
+
+```
+│   ├── scripts
+│   │   ├── format.py
+│   │   ├── guided.py
+│   │   ├── __init__.py
+│   │   ├── list.py
+│   │   ├── minimal.py
+│   │   └── rescue.py
+```
+
+These are used as a mods system, that can be used to run different kinds of installs/utilities. 
+Default being `guided` and `--script list` just returns all files in this dir.
+
+- Config files
+
+The main overview file would be [args.py](../archinstall/lib/args.py)
+
+It controls both how the `/var/log/archinstall/user_configuration.json` file is handled and command line arguments that are accepted.
+
+- Actual installer(s)
+
+The main installer file is [installer.py](../archinstall/lib/installer.py)
+
+This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
+
+
+
+
 Any contributions through pull requests are welcome as this project aims to be a community based project to ease some Arch Linux installation steps.
-Bear in mind that in the future this repo might be transferred to the official [GitLab repo under Arch Linux](http://gitlab.archlinux.org/archlinux/) *(if GitLab becomes open to the general public)*.
 
 Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions.
 
