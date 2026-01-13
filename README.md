@@ -8,13 +8,16 @@ Test: `ping -c 3 google.com`
 
 **For Wifi**:
 ```
-iwctl station wlan0 connect "SSID"
+# check devices
+$ ip link
+
+$ iwctl station wlan0 connect "SSID"
 # where SSID is the name of your wifi
 # where wlan0 is your device name
 # case sensitive and will prompt for password
 
-nmcli dev wifi connect "SSID" -a
-# you can also use nmcli if you prefer
+$ nmcli dev wifi connect "SSID" -a
+# alternative
 ```
 
 **1. Get and run the source code or specific branch/fork**
