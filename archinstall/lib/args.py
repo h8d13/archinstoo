@@ -56,7 +56,7 @@ class Arguments:
 
 @dataclass
 class ArchConfig:
-	script: str | None = None
+	script: str = 'guided'
 	locale_config: LocaleConfiguration | None = None
 	archinstall_language: Language = field(default_factory=lambda: translation_handler.get_language_by_abbr('en'))
 	disk_config: DiskLayoutConfiguration | None = None
@@ -211,13 +211,7 @@ class ArchConfigHandler:
 		return self._args
 
 	def get_script(self) -> str:
-		if script := self.args.script:
-			return script
-
-		if script := self.config.script:
-			return script
-
-		return 'guided'
+		return self.args.script or self.config.script
 
 	def print_help(self) -> None:
 		self._parser.print_help()

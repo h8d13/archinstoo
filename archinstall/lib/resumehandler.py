@@ -15,8 +15,8 @@ def _check_for_saved_config() -> None:
 
 	with Tui():
 		items = [
-			MenuItem(text=('Resume from saved selections'), value='resume'),
-			MenuItem(text=('Start fresh'), value='fresh'),
+			MenuItem(text=('resume from saved'), value='resume'),
+			MenuItem(text=('start fresh'), value='fresh'),
 		]
 
 		group = MenuItemGroup(items)
