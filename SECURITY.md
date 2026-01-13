@@ -51,13 +51,14 @@ Root account can optionally be locked in the TUI.
 ## Guest users
 
 Ex: sybling using the same system as you can set a user to have access to the same apps yet no terminal.
+In the menu you can simply create the user without sudo access.
 
-`useradd -m -s /bin/rbash guest`
+`useradd -m -s /bin/rbash guestname`
 
 Or with a password 
 
 ```
-useradd -m -s /bin/rbash guest
-passwd guest
+useradd -m -s /bin/rbash guestname
+passwd guestname
 ```
 
