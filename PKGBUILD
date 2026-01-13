@@ -12,6 +12,15 @@ pkgdesc="Just another guided/automated Arch Linux installer with a twist"
 arch=(any)
 url="https://github.com/archlinux/archinstall"
 license=(GPL-3.0-only)
+py_depends=(
+  'python-pydantic'
+	'python-pydantic-core'
+  'python-annotated-types'
+	'python-typing_extensions'
+	'python-typing-inspection'
+  'python-pyparted'
+  'python'
+)
 depends=(
   'arch-install-scripts'
   'btrfs-progs'
@@ -25,13 +34,6 @@ depends=(
   'libxcrypt'
   'pciutils'
   'procps-ng'
-  'python'
-  'python-pydantic'
-	'python-pydantic-core'
-  'python-annotated-types'
-	'python-typing_extensions'
-	'python-typing-inspection'
-  'python-pyparted'
   'systemd'
   'util-linux'
   'xfsprogs'

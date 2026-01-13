@@ -36,7 +36,7 @@ cd archinstoo
 
 Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st of each month)
 
-`. PKGBUILD && pacman -Sy --needed ${depends[@]}`
+`. PKGBUILD && pacman -Sy --needed ${py_depends[@]}`
 
 **2. Then finally run the module** `archinstall`
 
