@@ -56,4 +56,4 @@ To test fixes see: [Contributing](./CONTRIBUTING.md) to see latest changes [Chan
 
 The process would be the same with `git clone -b <branch> <url>`
 
-For dev purposes: See `run` to setup the same inside a venv.
+For dev purposes: See [`run`](./run) to setup the same inside a venv.
