@@ -29,13 +29,13 @@ Default being `guided` and `--script list` just returns all files in this dir.
 
 - Config files
 
-The main overview file would be [args.py](../archinstall/lib/args.py)
+The main overview file would be [args.py](../master/archinstall/lib/args.py)
 
 It controls both how the `/var/log/archinstall/user_configuration.json` file is handled and command line arguments that are accepted.
 
 - Actual installer(s)
 
-The main installer file is [installer.py](../archinstall/lib/installer.py)
+The main installer file is [installer.py](../master/archinstall/lib/installer.py)
 
 This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
 
@@ -52,6 +52,17 @@ For stable releases, please see the tagged commits.
 
 Patch releases will be done against their own branches, branched from stable tagged releases and will be named according to the version it will become on release.
   *(Patches to `v2.1.4` will be done on branch `v2.1.5` for instance)*.
+
+For your submitted patches you'll likely need to accomodate yourself with branches easily:
+```
+git checkout <existing>
+git checkout -b <new>
+git add <file(s)>
+git commit 
+# describe what this commit fixes, ideally one fix per commit
+git push
+```
+Then open the PR with explenations too.
 
 ## Discussions
 
