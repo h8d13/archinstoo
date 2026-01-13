@@ -17,15 +17,13 @@ from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
 
 hard_depends = (
-	'arch-install-scripts',
-	'python-pydantic',
 	'python-pyparted',
+	'python-pydantic',
 	'python-annotated-types',
 	'python-pydantic-core',
 	'python-typing_extensions',
 	'python-typing-inspection',
 )
-
 
 def _log_sys_info() -> None:
 	# Log various information about hardware before starting the installation. This might assist in troubleshooting

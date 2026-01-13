@@ -5,58 +5,52 @@
 # Contributor: demostanis worlds <demostanis@protonmail.com>
 # Contributor: Hadean Eon <hadean-eon-dev@proton.me>
 
-pkgname=archinstall
-pkgver=3.0.15
-pkgrel=1
-pkgdesc="Just another guided/automated Arch Linux installer with a twist"
+pkgname=archinstoo
+pkgver=0.0.01
+pkgrel=0
+pkgdesc="Archinstall revamped"
 arch=(any)
-url="https://github.com/archlinux/archinstall"
+url="https://github.com/h8d13/archinstoo"
 license=(GPL-3.0-only)
-py_depends=(
-  'python-pydantic'
-	'python-pydantic-core'
-  'python-annotated-types'
-	'python-typing_extensions'
-	'python-typing-inspection'
-  'python-pyparted'
-  'python'
-)
 depends=(
-  'arch-install-scripts'
-  'btrfs-progs'
-  'coreutils'
-  'cryptsetup'
-  'dosfstools'
-  'e2fsprogs'
-  'glibc'
-  'kbd'
-  'libcrypt.so'
-  'libxcrypt'
-  'pciutils'
-  'procps-ng'
-  'systemd'
-  'util-linux'
-  'xfsprogs'
-  'lvm2'
-  'f2fs-tools'
-  'ntfs-3g'
+  'python-pyparted'
+  'python-pydantic'
+  'python-pydantic-core'
+  'python-annotated-types'
+  'python-typing_extensions'
+  'python-typing-inspection'
+  'python'
 )
 makedepends=(
   'python-build'
   'python-installer'
+  'python-pylint'
   'python-setuptools'
   'python-sphinx'
-  'python-wheel'
   'python-sphinx_rtd_theme'
-  'python-pylint'
+  'python-wheel'
   'ruff'
 )
 optdepends=(
-  'python-systemd: Adds journald logging'
+  'arch-install-scripts: For pacstrap and genfstab'
+  'btrfs-progs: For btrfs filesystem support'
+  'coreutils: Basic utilities'
+  'cryptsetup: For LUKS encryption support'
+  'dosfstools: For FAT/EFI filesystem support'
+  'e2fsprogs: For ext4 filesystem support'
+  'f2fs-tools: For f2fs filesystem support'
+  'kbd: For keyboard layout configuration'
+  'lvm2: For LVM support'
+  'ntfs-3g: For NTFS filesystem support'
+  'pciutils: For PCI device detection'
+  'python-systemd: For journald logging'
+  'systemd: For systemd-based operations'
+  'util-linux: For partition utilities'
+  'xfsprogs: For XFS filesystem support'
 )
-provides=(python-archinstall archinstall)
-conflicts=(python-archinstall archinstall-git)
-replaces=(python-archinstall archinstall-git)
+provides=(archinstoo)
+conflicts=()
+replaces=()
 source=(
   $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
   $pkgname-$pkgver.tar.gz.sig::$url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz.sig
