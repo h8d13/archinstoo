@@ -4,7 +4,7 @@
 
 ### Get an overview
 
-`tree -I '*.po|*.pyc|*.mo|*.png|*.psd|*.svg|locales|docs|__pycache__'`
+`tree -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|__pycache__'`
 
 ### Code standards
 
