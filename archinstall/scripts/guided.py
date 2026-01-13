@@ -113,7 +113,10 @@ def perform_installation(mountpoint: Path) -> None:
 
 		if config.auth_config:
 			if config.auth_config.users:
-				installation.create_users(config.auth_config.users)
+				installation.create_users(
+					config.auth_config.users,
+					config.auth_config.privilege_escalation,
+				)
 
 		if app_config := config.app_config:
 			application_handler.install_applications(installation, app_config)

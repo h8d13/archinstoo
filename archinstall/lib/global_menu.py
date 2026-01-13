@@ -307,6 +307,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 			if auth_config.users:
 				output += FormattedOutput.as_table(auth_config.users) + '\n'
+				output += f'{tr("Privilege escalation")}: {auth_config.privilege_escalation.value}\n'
 
 			return output
 

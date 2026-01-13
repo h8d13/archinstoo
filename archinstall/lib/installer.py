@@ -40,6 +40,7 @@ from .general import SysCommand, run
 from .hardware import SysInfo
 from .locale.utils import verify_keyboard_layout
 from .luks import Luks2
+from .models.authentication import PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration
 from .models.mirrors import MirrorConfiguration
@@ -50,8 +51,11 @@ from .pacman import Pacman
 from .pacman.config import PacmanConfig
 from .storage import storage
 
-# Packages that the Installer() is responsible for (optional and the default ones)
-__packages__ = ['base', 'sudo', 'linux-firmware', 'linux', 'linux-lts', 'linux-zen', 'linux-hardened']
+# Base packages installed by default
+__base_packages__ = ['base', 'linux-firmware']
+
+# Available kernel options
+__kernels__ = ['linux', 'linux-lts', 'linux-zen', 'linux-hardened']
 
 # Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
@@ -69,7 +73,7 @@ class Installer:
 		`Installer()` is the wrapper for most basic installation steps.
 		It also wraps :py:func:`~archinstall.Installer.pacstrap` among other things.
 		"""
-		self._base_packages = base_packages or __packages__[:3]
+		self._base_packages = base_packages or __base_packages__.copy()
 		self.kernels = kernels or ['linux']
 		self._disk_config = disk_config
 
@@ -1743,14 +1747,38 @@ class Installer:
 		# Guarantees sudoer conf file recommended perms
 		rule_file.chmod(0o440)
 
-	def create_users(self, users: User | list[User]) -> None:
+	def enable_doas(self, user: User) -> None:
+		info(f'Enabling doas permissions for {user.username}')
+
+		doas_conf = self.target / 'etc/doas.conf'
+
+		with doas_conf.open('a') as doas:
+			doas.write(f'permit {user.username} as root\n')
+
+		# doas.conf must be owned by root and not writable by others
+		doas_conf.chmod(0o644)
+
+	def create_users(
+		self,
+		users: User | list[User],
+		privilege_escalation: PrivilegeEscalation = PrivilegeEscalation.Sudo,
+	) -> None:
 		if not isinstance(users, list):
 			users = [users]
 
-		for user in users:
-			self._create_user(user)
+		# Install the privilege escalation package
+		has_sudo_user = any(user.sudo for user in users)
+		if has_sudo_user:
+			self.pacman.strap(privilege_escalation.packages())
 
-	def _create_user(self, user: User) -> None:
+		for user in users:
+			self._create_user(user, privilege_escalation)
+
+	def _create_user(
+		self,
+		user: User,
+		privilege_escalation: PrivilegeEscalation = PrivilegeEscalation.Sudo,
+	) -> None:
 		# This plugin hook allows for the plugin to handle the creation of the user.
 		# Password and Group management is still handled by user_create()
 		info(f'Creating user {user.username}')
@@ -1773,7 +1801,11 @@ class Installer:
 			self.arch_chroot(f'gpasswd -a {user.username} {group}')
 
 		if user.sudo:
-			self.enable_sudo(user)
+			match privilege_escalation:
+				case PrivilegeEscalation.Sudo:
+					self.enable_sudo(user)
+				case PrivilegeEscalation.Doas:
+					self.enable_doas(user)
 
 	def set_user_password(self, user: User) -> bool:
 		info(f'Setting password for {user.username}')

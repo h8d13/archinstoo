@@ -2,7 +2,7 @@ from typing import override
 
 from archinstall.lib.interactions.manage_users_conf import ask_for_additional_users
 from archinstall.lib.menu.abstract_menu import AbstractSubMenu
-from archinstall.lib.models.authentication import AuthenticationConfiguration
+from archinstall.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstall.lib.models.users import Password, User
 from archinstall.lib.output import FormattedOutput
 from archinstall.lib.translationhandler import tr
@@ -10,7 +10,7 @@ from archinstall.lib.utils.util import get_password
 from archinstall.tui.curses_menu import SelectMenu
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment, Orientation
+from archinstall.tui.types import Alignment, FrameProperties, Orientation
 
 
 class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
@@ -49,6 +49,14 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 				key='users',
 			),
 			MenuItem(
+				text=tr('Privilege escalation'),
+				action=select_privilege_escalation,
+				value=self._auth_config.privilege_escalation,
+				preview_action=self._prev_priv_esc,
+				dependencies=[self._check_dep_sudo_users],
+				key='privilege_escalation',
+			),
+			MenuItem(
 				text=tr('Lock root account'),
 				action=select_lock_root_account,
 				value=self._auth_config.lock_root_account,
@@ -83,6 +91,12 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 			return any(user.sudo for user in users)
 		return False
 
+	def _prev_priv_esc(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			priv_esc: PrivilegeEscalation = item.value
+			return f'{tr("Privilege escalation")}: {priv_esc.value}'
+		return None
+
 	def _prev_lock_root(self, item: MenuItem) -> str | None:
 		if item.value is True:
 			return tr('Root account will be locked after installation')
@@ -92,6 +106,27 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 def select_root_password(preset: str | None = None) -> Password | None:
 	password = get_password(text=tr('Root password'), allow_skip=True)
 	return password
+
+
+def select_privilege_escalation(preset: PrivilegeEscalation) -> PrivilegeEscalation:
+	items = [MenuItem(method.value, value=method) for method in PrivilegeEscalation]
+	group = MenuItemGroup(items)
+	group.set_selected_by_value(preset)
+
+	result = SelectMenu[PrivilegeEscalation](
+		group,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Privilege escalation')),
+		allow_skip=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			return result.get_value()
+		case ResultType.Skip:
+			return preset
+		case _:
+			return PrivilegeEscalation.Sudo
 
 
 def select_lock_root_account(preset: bool) -> bool:
