@@ -20,7 +20,7 @@ $ nmcli dev wifi connect "SSID" -a
 # alternative
 ```
 
-**1. Get and run the source code or specific branch/fork**
+**1. Get and run the source code**
 
 Prep:
 ```
@@ -30,7 +30,7 @@ pacman-key --populate archlinux
 ```
 Get source:
 ```
-git clone -b alpha https://github.com/h8d13/archinstoo
+git clone https://github.com/h8d13/archinstoo
 cd archinstoo
 ```
 
@@ -49,3 +49,7 @@ Make your pizza.
 ---
 
 **Philosophy:** Simplify, No backwards-compat, Move fast.
+
+To test fixes see: [Contributing](./CONTRIBUTING.md) 
+
+The process would be the same with `git clone -b <branch> <url>`
