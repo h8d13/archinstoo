@@ -21,7 +21,8 @@
               "sudo": true,
               "groups": ["wheel"]
           }
-      ]
+      ],
+      "privilege_escalation": "doas"
   },
   "audio_config": {
     "audio": "pipewire"

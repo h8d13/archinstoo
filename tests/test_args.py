@@ -13,7 +13,7 @@ from archinstall.lib.models.application import (
 	PrintServiceConfiguration,
 	ZramConfiguration,
 )
-from archinstall.lib.models.authentication import AuthenticationConfiguration
+from archinstall.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstall.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstall.lib.models.locale import LocaleConfiguration
@@ -129,6 +129,7 @@ def test_config_file_parsing(
 					groups=['wheel'],
 				),
 			],
+			privilege_escalation=PrivilegeEscalation.Doas,
 		),
 		locale_config=LocaleConfiguration(
 			kb_layout='us',
