@@ -37,16 +37,6 @@ git clone https://github.com/h8d13/archinstoo
 cd archinstoo
 ```
 
-> **Issues with dependencies**
-
-> [ISO](https://archlinux.org/download/) is built 1st of each month:
-> Do also note that the ISO has limited `cow_space` and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks). Usually build a `1GB` ISO to test dev builds (vs the original `256M`).
-
-> Check: `. ./PKGBUILD && echo "${depends[@]}"` or the same with `"${opt_depends[@]}"`
-
-> Update: `. ./PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
-
-
 **2. Then finally run the module** `archinstall`
 
 `python -m archinstall [args]` try `-h` or `--help`
@@ -57,6 +47,19 @@ Make your pizza.
 
 ---
 
+## Known issues
+
+> **Issues with dependencies**
+
+> [ISO](https://archlinux.org/download/) is built 1st of each month:
+> Do also note that the ISO has limited `cow_space` and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks). Usually build a `1GB` ISO to test dev builds (vs the original `256M`).
+
+Check: `. ./PKGBUILD && echo "${depends[@]}"` or the same with `"${opt_depends[@]}"`
+
+Update: `. ./PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
+
+You can also use a `venv` and `pip install -e .` or for dev purposes: See [`run`](./run) to automate this.
+
 ## Testing
 
 **Philosophy:** Simplify, No backwards-compat, Move fast.
@@ -65,4 +68,3 @@ To test fixes see: [Contributing](./CONTRIBUTING.md) to see latest changes [Chan
 
 The process would be the same with `git clone -b <branch> <url>`
 
-For dev purposes: See [`run`](./run) to setup the same inside a venv.
