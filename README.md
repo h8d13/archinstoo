@@ -37,11 +37,10 @@ git clone https://github.com/h8d13/archinstoo
 cd archinstoo
 ```
 
-(Issues with dependencies)
+> **Issues with dependencies**
 
-Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st of each month)
-
-`. PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
+> Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st of each month)
+> Source the PKGBUILD:`. PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
 
 Do also note that the ISO has limited cow-space and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks)
 I usually build a 1GB ISO cow_space to test dev builds.
