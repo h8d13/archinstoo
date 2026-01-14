@@ -5,7 +5,7 @@
 
 **0. Get internet access**
 
-Ethernet cable is plug and play.
+Ethernet cable is plug and play. (Skip section bellow)
 
 Test: `ping -c 3 google.com`
 
@@ -37,9 +37,11 @@ git clone https://github.com/h8d13/archinstoo
 cd archinstoo
 ```
 
+(Issues with dependencies)
+
 Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st of each month)
 
-`. PKGBUILD && pacman -Sy --needed "${depends[@]}"`
+`. PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
 
 **2. Then finally run the module** `archinstall`
 
