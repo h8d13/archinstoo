@@ -69,7 +69,7 @@ class GlobalMenu(AbstractMenu[None]):
 				key='locale_config',
 			),
 			MenuItem(
-				text=tr('Mirrors and repositories'),
+				text=tr('Mirrors and repos'),
 				action=self._mirror_configuration,
 				preview_action=self._prev_mirror_config,
 				key='mirror_config',
@@ -82,7 +82,7 @@ class GlobalMenu(AbstractMenu[None]):
 				key='bootloader_config',
 			),
 			MenuItem(
-				text=tr('Disk configuration'),
+				text=tr('Disk config'),
 				action=self._select_disk_config,
 				preview_action=self._prev_disk_config,
 				mandatory=True,
@@ -137,7 +137,7 @@ class GlobalMenu(AbstractMenu[None]):
 				key='app_config',
 			),
 			MenuItem(
-				text=tr('Network configuration'),
+				text=tr('Network config'),
 				action=ask_to_configure_network,
 				value={},
 				preview_action=self._prev_network_config,
@@ -307,7 +307,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 			if auth_config.users:
 				output += FormattedOutput.as_table(auth_config.users) + '\n'
-				output += f'{tr("Privilege escalation")}: {auth_config.privilege_escalation.value}\n'
+				output += f'{tr("Privilege esc")}: {auth_config.privilege_escalation.value}\n'
 
 			return output
 
