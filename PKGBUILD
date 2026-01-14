@@ -19,6 +19,7 @@ depends=(
   'python-annotated-types'
   'python-typing_extensions'
   'python-typing-inspection'
+  'python-systemd'
   'python'
 )
 makedepends=(
@@ -36,21 +37,20 @@ makedepends=(
 # also because they are expected on ISO
 # in a 'stable' state of release
 optdepends=(
-  'arch-install-scripts: For pacstrap, genfstab, chroot'
-  'coreutils: Basic utilities'
-  'systemd: For systemd-based operations'
-  'util-linux: For partition utilities'
-  'pciutils: For PCI device detection'
-  'kbd: For keyboard layout configuration'
-  'btrfs-progs: For btrfs filesystem support'
-  'dosfstools: For FAT/EFI filesystem support'
-  'e2fsprogs: For ext4 filesystem support'
-  'f2fs-tools: For f2fs filesystem support'
-  'ntfs-3g: For NTFS filesystem support'
-  'xfsprogs: For XFS filesystem support'
-  'cryptsetup: For LUKS encryption support'
-  'lvm2: For LVM FS layout support'
-  'python-systemd: For journald logging'
+  'arch-install-scripts' #For pacstrap, genfstab, chroot
+  'coreutils' #Basic utilities
+  'systemd' #For systemd-based operations
+  'util-linux' #For partition utilities
+  'pciutils' #For PCI device detection
+  'kbd' #For keyboard layout configuration
+  'btrfs-progs' #For btrfs filesystem support
+  'dosfstools' #For FAT/EFI filesystem support
+  'e2fsprogs' #For ext4 filesystem support
+  'f2fs-tools' #For f2fs filesystem support
+  'ntfs-3g' #For NTFS filesystem support
+  'xfsprogs' #For XFS filesystem support
+  'cryptsetup' #For LUKS encryption support
+  'lvm2' #For LVM FS layout support
 )
 provides=(archinstoo)
 conflicts=()
