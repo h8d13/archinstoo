@@ -39,7 +39,7 @@ cd archinstoo
 
 > **Issues with dependencies**
 
-> Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st of each month) Source the PKGBUILD and update the problematic dep:
+> [ISO](https://archlinux.org/download/) is built 1st of each month:
 
 > Check: `. ./PKGBUILD && echo "${depends[@]}"` or the same with `"${opt_depends[@]}"`
 
