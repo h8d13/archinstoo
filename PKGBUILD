@@ -19,7 +19,6 @@ depends=(
   'python-annotated-types'
   'python-typing_extensions'
   'python-typing-inspection'
-  'python-systemd'
   'python'
 )
 makedepends=(
@@ -40,6 +39,7 @@ optdepends=(
   'arch-install-scripts' #For pacstrap, genfstab, chroot
   'coreutils' #Basic utilities
   'systemd' #For systemd-based operations
+  'python-systemd' #System journal logging
   'util-linux' #For partition utilities
   'pciutils' #For PCI device detection
   'kbd' #For keyboard layout configuration
