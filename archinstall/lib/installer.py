@@ -1934,6 +1934,7 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 		script_path = f'/var/tmp/user-command.{index}.sh'
 		chroot_path = f'{installation.target}/{script_path}'
 
+		# Do not throw error instead warn
 		info(f'Executing custom command "{command}" ...')
 		with open(chroot_path, 'w') as user_script:
 			user_script.write(command)
