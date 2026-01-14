@@ -52,7 +52,7 @@ Make your pizza.
 > **Issues with dependencies**
 
 > [ISO](https://archlinux.org/download/) is built 1st of each month:
-> Do also note that the ISO has limited `cow_space` and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks). Usually build a `1GB` ISO to test dev builds (vs the original `256M`).
+> Do also note that the ISO has limited `cow_space` and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks). Usually build a `1GB` ISO to test dev builds (vs the original `256M`). See [`iso_mod`](./iso_mod)
 
 Check: `. ./PKGBUILD && pacman -Qu "${depends[@]}"` or the same with `"${opt_depends[@]}"`
 

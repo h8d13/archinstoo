@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# # Requires 'archiso' to build custom ISOs
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROFILE_DIR="$SCRIPT_DIR/archiso_profile"
+WORK_DIR="$SCRIPT_DIR/archiso_work" # tmp
+OUTPUT_DIR="$SCRIPT_DIR/a"
+BUILD_DATE=$(date '+%Y.%m.%d')
+THREADS="${THREADS:-$(nproc)}"
+SILENT_MODE="${SILENT_MODE:-0}"
+CLEANUP="${CLEANUP:-1}"  # Set to 0 to preserve build files for debugging
+
+# Cleanup function
+cleanup() {
+    if [ "$CLEANUP" = "1" ]; then
+        echo "Cleaning up build directories..."
+        [ -d "$PROFILE_DIR" ] && rm -rf "$PROFILE_DIR"
+        [ -d "$WORK_DIR" ] && sudo rm -rf "$WORK_DIR"
+        echo "Cleanup complete."
+    else
+        echo "CLEANUP=0, preserving build directories for inspection."
+    fi
+}
+
+# Error handler - cleanup and exit
+error_exit() {
+    echo "ERROR: $1" >&2
+    cleanup
+    exit 1
+}
+
+# Cleanup on interrupt or error
+trap 'echo "Script interrupted!"; cleanup; exit 130' INT TERM
+trap 'cleanup; exit 1' ERR
+
+echo "Setting up archiso profile..."
+mkdir -p "$PROFILE_DIR" || error_exit "Failed to create profile directory"
+
+echo "Creating root FS..."
+mkdir -p "$PROFILE_DIR/airootfs/root" || error_exit "Failed to create airootfs"
+
+echo "Copy releng profile..."
+cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed to copy releng profile"
+
+echo "Mod ISO name..."
+sed -i 's/^iso_name=.*/iso_name="ArchMod"/' "$PROFILE_DIR/profiledef.sh"
+
+echo "Modifying COW overlay size to 1G in boot configs..."
+
+# Modify systemd-boot (efiboot) configs - add cow_spacesize=1G to options lines
+find "$PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i 's|\(options.*\)|\1 cow_spacesize=1G|' {} \;
+# Modify GRUB config - add cow_spacesize=1G to kernel boot parameters
+sed -i 's|\(linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux.*\)|\1 cow_spacesize=1G|' "$PROFILE_DIR/grub/grub.cfg"
+# Modify SYSLINUX configs - add cow_spacesize=1G to APPEND lines
+find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i 's|\(APPEND.*archiso.*\)|\1 cow_spacesize=1G|' {} \;
+
+echo "Mod pkg list..."
+{
+    echo "git"
+} >> "$PROFILE_DIR/packages.x86_64"
+
+# Append custom MOTD
+cat >> "$PROFILE_DIR/airootfs/etc/motd" << EOF
+
+        Archinstoo Mods Projects
+        Media Gen: ${BUILD_DATE}
+
+EOF
+
+# add git clone command to zsh history 
+# allows for arrow up fatser testing
+echo "Adding git clone to zsh history..."
+cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
+: 1728000000:0;pacman-key --init && git clone https://github.com/h8d13/archinstoo && cd archinstoo && python -m archinstall
+HISTEOF
+
+echo "Styling pacman.conf (Color + ILoveCandy)..."
+
+# Ensure pacman.conf exists in airootfs/etc
+mkdir -p "$PROFILE_DIR/airootfs/etc"
+if [ ! -f "$PROFILE_DIR/airootfs/etc/pacman.conf" ]; then
+    # Copy from the build profile's pacman.conf
+    cp "$PROFILE_DIR/pacman.conf" "$PROFILE_DIR/airootfs/etc/pacman.conf"
+fi
+# fun stuff
+PACMAN_CONF="$PROFILE_DIR/airootfs/etc/pacman.conf"
+sed -i 's/^#Color$/Color/' "$PACMAN_CONF"
+if ! grep -q "ILoveCandy" "$PACMAN_CONF"; then
+    sed -i '/^# Misc options$/a ILoveCandy' "$PACMAN_CONF"
+fi
+
+# show pre info
+echo "Building ISO with mkarchiso..."
+echo "Silent mode: $SILENT_MODE"
+echo "Using $THREADS threads for build"
+
+# tmp dir
+mkdir -p "$WORK_DIR"
+ISO_LABEL="int_archlinux-${BUILD_DATE}"
+
+# Will prompt to build
+if [ "$SILENT_MODE" = "1" ]; then
+    sudo taskset -c 0-$((THREADS-1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" >/dev/null 2>&1 || error_exit "mkarchiso failed"
+else
+    sudo taskset -c 0-$((THREADS-1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" || error_exit "mkarchiso failed"
+fi
+
+echo ""
+echo "✓ SUCCESS! ISO created in: $OUTPUT_DIR"
+echo ""
+
+cleanup
+exit 0
