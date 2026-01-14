@@ -40,8 +40,8 @@ cd archinstoo
 > **Issues with dependencies**
 
 > Check deps are up to date ([ISO](https://archlinux.org/download/) is built 1st of each month) Source the PKGBUILD and update the problematic dep:
-
-> `. PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
+> `. ./PKGBUILD && echo "${depends[@]}"` or the same with `"${opt_depends[@]}"`
+> `. ./PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
 
 Do also note that the ISO has limited cow-space and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks)
 I usually build a 1GB ISO cow_space to test dev builds.
