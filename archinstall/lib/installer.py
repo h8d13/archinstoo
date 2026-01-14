@@ -1938,6 +1938,9 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 		with open(chroot_path, 'w') as user_script:
 			user_script.write(command)
 
-		SysCommand(f'arch-chroot -S {installation.target} bash {script_path}')
-
-		os.unlink(chroot_path)
+		try:
+			SysCommand(f'arch-chroot -S {installation.target} bash {script_path}')
+		except SysCallError as e:
+			warn(f'Custom command "{command}" failed: {e}')
+		finally:
+			os.unlink(chroot_path)
