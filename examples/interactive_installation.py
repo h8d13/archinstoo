@@ -1,1 +1,0 @@
-../archinstall/scripts/guided.py
