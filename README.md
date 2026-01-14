@@ -40,13 +40,12 @@ cd archinstoo
 > **Issues with dependencies**
 
 > [ISO](https://archlinux.org/download/) is built 1st of each month:
+> Do also note that the ISO has limited `cow_space` and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks). Usually build a 1GB ISO to test dev builds.
 
 > Check: `. ./PKGBUILD && echo "${depends[@]}"` or the same with `"${opt_depends[@]}"`
 
 > Update: `. ./PKGBUILD && pacman -Sy --needed "${depends[@]}"` or the same with `"${opt_depends[@]}"`
 
-Do also note that the ISO has limited cow-space and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks)
-I usually build a 1GB ISO cow_space to test dev builds.
 
 **2. Then finally run the module** `archinstall`
 
