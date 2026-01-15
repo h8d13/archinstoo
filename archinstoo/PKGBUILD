@@ -38,7 +38,6 @@ makedepends=(
   'python-sphinx_rtd_theme'
   'python-wheel'
   'ruff'
-  'tree'
 )
 # marked as optional because they depend
 # on choices made during installation
@@ -54,6 +53,8 @@ optdepends=(
   'cryptsetup' #For LUKS encryption support
   'lvm2' #For LVM FS layout support
   'python-systemd' #System journal logging
+  'archiso' #Dev ISO more cow_space
+  'tree' #For project tree output
 )
 provides=(archinstoo)
 conflicts=()
