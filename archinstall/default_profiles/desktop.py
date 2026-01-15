@@ -18,7 +18,6 @@ class DesktopProfile(Profile):
 			'Desktop',
 			ProfileType.Desktop,
 			current_selection=current_selection,
-			support_greeter=True,
 		)
 
 	@property
