@@ -12,6 +12,10 @@ clean () {
     rm -rf pkg src dist build ./*.egg-info ../*.egg-info 
 }
 
+sign () {
+    gpg --detach-sign archinstoo-*.pkg.tar.zst
+}
+
 for i in "$@"; do
 	case $i in
         -t | --tree)
@@ -36,6 +40,7 @@ for i in "$@"; do
         go_to
         pre_build
         makepkg -Cf
+        sign
         clean
         exit 0
         ;;
