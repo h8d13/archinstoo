@@ -4,6 +4,13 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 > Aims to simplify reading/maintaining the codebase while keeping MORE options available.
 
+## 0.0.01-2
+
+    - Fix vgs not closing properly
+    - Fix menu/ Add dynamic resize
+    - Chores use walrus op where available
+    - Work on DEV / BUILD utils
+
 ## 0.0.01-1
 
     - Change structure to be more readable
