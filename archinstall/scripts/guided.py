@@ -38,6 +38,7 @@ def ask_user_questions() -> None:
 
 		if not arch_config_handler.args.advanced:
 			global_menu.set_enabled('parallel_downloads', False)
+			global_menu.set_enabled('custom_commands', False)
 
 		global_menu.run(additional_title=title_text)
 
