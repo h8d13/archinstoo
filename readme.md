@@ -49,10 +49,14 @@ There is also a `--script list` where you can make plugins for easily for `archi
 
 **3. Enjoy your new system(s)**
 
-Make your pizzas.
+Make your pizzas. Una pizza con funghi e prosciutto.
 
 > You can create any profile in `archinstall/default_profiles/` following convention, which you can then use directly.
 Or modify existing ones.
+
+The full structure of the project can be consulted through [`TREE`](./archinstoo)
+
+Core modifications you can also perform in `installer.py` and related defs (here search/find/replace is your friend).
 
 ---
 
