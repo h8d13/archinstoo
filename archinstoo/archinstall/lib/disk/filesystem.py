@@ -117,8 +117,7 @@ class FilesystemHandler:
 		}
 
 		for check, exc in checks.items():
-			found = next(filter(check, partitions), None)
-			if found is not None:
+			if next(filter(check, partitions), None) is not None:
 				raise exc
 
 	def perform_lvm_operations(self) -> None:
@@ -203,8 +202,7 @@ class FilesystemHandler:
 
 				while True:
 					debug('Fetching LVM volume info')
-					lv_info = device_handler.lvm_vol_info(lv.name)
-					if lv_info is not None:
+					if device_handler.lvm_vol_info(lv.name) is not None:
 						break
 
 					time.sleep(1)

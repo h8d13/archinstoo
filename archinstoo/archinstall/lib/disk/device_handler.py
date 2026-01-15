@@ -171,8 +171,7 @@ class DeviceHandler:
 
 	def find_partition(self, path: Path) -> _PartitionInfo | None:
 		for device in self._devices.values():
-			part = next(filter(lambda x: str(x.path) == str(path), device.partition_infos), None)
-			if part is not None:
+			if (part := next(filter(lambda x: str(x.path) == str(path), device.partition_infos), None)) is not None:
 				return part
 		return None
 
