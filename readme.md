@@ -50,6 +50,7 @@ There is also a `--script list` where you can make plugins for easily for `archi
 Make your pizzas.
 
 > You can create any profile in `archinstall/default_profiles/` following convention, which you can then use directly.
+Or modify existing ones.
 
 ---
 
