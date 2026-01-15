@@ -234,3 +234,6 @@ ignore = [
 
 [tool.ruff.lint.mccabe]
 max-complexity = 40
+
+[tool.ruff.lint.isort]
+known-first-party = ["archinstall"]
