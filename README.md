@@ -58,12 +58,12 @@ Make your pizza.
 Check: 
 ```
 . ./PKGBUILD && pacman -Qu "${depends[@]}"
-# or the same with `"${opt_depends[@]}"
+# or the same with "${opt_depends[@]}"
 ```
 Update:
 ```
 . ./PKGBUILD && pacman -Sy --needed "${depends[@]}" 
-# or the same with `"${opt_depends[@]}"
+# or the same with "${opt_depends[@]}"
 ```
 
 You can also use a `venv` and `pip install -e .` or for dev purposes: See [`RUN`](./RUN) to automate this.
