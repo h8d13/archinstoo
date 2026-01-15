@@ -9,6 +9,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
     - Change structure to be more readable
         - Editor/PCH goes to top level
         - Rest fo checks are specific to archinstall
+        - Seperate into DEV / ONLINE PKGBUILDS
     - Add dev/run helpers bash
     - Remove UV from runners
     - Change more PKGBUILD/workflows for new structure
