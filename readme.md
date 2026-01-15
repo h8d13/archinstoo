@@ -58,6 +58,20 @@ The full structure of the project can be consulted through [`TREE`](./archinstoo
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
+## Building source from local
+
+Modify what you like inside the repo, then inside `archinstoo/`
+
+`makepkg -Cf` force and clean for rebuilds.
+
+You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
+
+*and skip building with base-devel*
+
+`sudo pacman -U archinstoo-*.pkg.tar.zst` install directly.
+
+You can now use `archinstall` globally with this local version.
+
 ---
 
 ## Known issues
@@ -91,16 +105,4 @@ To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest chang
 
 The process would be the same with `git clone -b <branch> <url>`
 
-## Building source from local
 
-Modify what you like inside the repo, then inside `archinstoo/`
-
-`makepkg -Cf` force and clean for rebuilds.
-
-You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
-
-`sudo pacman -U archinstoo-*.pkg.tar.zst` install the output file.
-
-You can now use `archinstall` globally with this local version.
-
----
