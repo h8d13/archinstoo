@@ -62,7 +62,7 @@ b2sums=()
 
 check() {
   cd "$srcdir/.." || exit
-  ruff check
+  ruff check --config pyproject.toml
 }
 
 build() {
