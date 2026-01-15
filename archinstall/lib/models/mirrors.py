@@ -105,12 +105,12 @@ class MirrorStatusEntryV3(BaseModel):
 
 	@model_validator(mode='after')
 	def debug_output(self) -> 'MirrorStatusEntryV3':
-		from ..args import arch_config_handler
+		from ..args import get_arch_config_handler
 
 		self._hostname, *port = urllib.parse.urlparse(self.url).netloc.split(':', 1)
 		self._port = int(port[0]) if port and len(port) >= 1 else None
 
-		if arch_config_handler.args.debug:
+		if get_arch_config_handler().args.debug:
 			debug(f'Loaded mirror {self._hostname}' + (f' with current score of {self.score}' if self.score else ''))
 		return self
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from archinstall import SysInfo
 from archinstall.lib.applications.application_handler import application_handler
-from archinstall.lib.args import arch_config_handler
+from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
@@ -34,9 +34,9 @@ def ask_user_questions() -> None:
 	title_text = None
 
 	with Tui():
-		global_menu = GlobalMenu(arch_config_handler.config)
+		global_menu = GlobalMenu(get_arch_config_handler().config)
 
-		if not arch_config_handler.args.advanced:
+		if not get_arch_config_handler().args.advanced:
 			global_menu.set_enabled('parallel_downloads', False)
 			global_menu.set_enabled('custom_commands', False)
 
@@ -52,7 +52,7 @@ def perform_installation(mountpoint: Path) -> None:
 	start_time = time.time()
 	info('Starting installation...')
 
-	config = arch_config_handler.config
+	config = get_arch_config_handler().config
 
 	if not config.disk_config:
 		error('No disk configuration provided')
@@ -86,7 +86,7 @@ def perform_installation(mountpoint: Path) -> None:
 		installation.minimal_installation(
 			optional_repositories=optional_repositories,
 			mkinitcpio=run_mkinitcpio,
-			hostname=arch_config_handler.config.hostname,
+			hostname=get_arch_config_handler().config.hostname,
 			locale_config=locale_config,
 		)
 
@@ -172,7 +172,7 @@ def perform_installation(mountpoint: Path) -> None:
 
 		debug(f'Disk states after installing:\n{disk_layouts()}')
 
-		if not arch_config_handler.args.silent:
+		if not get_arch_config_handler().args.silent:
 			with Tui():
 				elapsed_time = time.time() - start_time
 				action = ask_post_installation(elapsed_time)
@@ -190,18 +190,18 @@ def perform_installation(mountpoint: Path) -> None:
 
 
 def guided() -> None:
-	if not arch_config_handler.args.silent:
+	if not get_arch_config_handler().args.silent:
 		_check_for_saved_config()
 		ask_user_questions()
 
-	config = ConfigurationHandler(arch_config_handler.config)
+	config = ConfigurationHandler(get_arch_config_handler().config)
 	config.write_debug()
 	config.save()
 
-	if arch_config_handler.args.dry_run:
+	if get_arch_config_handler().args.dry_run:
 		sys.exit(0)
 
-	if not arch_config_handler.args.silent:
+	if not get_arch_config_handler().args.silent:
 		aborted = False
 		with Tui():
 			if not config.confirm_config():
@@ -211,11 +211,11 @@ def guided() -> None:
 		if aborted:
 			return guided()
 
-	if arch_config_handler.config.disk_config:
-		fs_handler = FilesystemHandler(arch_config_handler.config.disk_config)
+	if disk_config := get_arch_config_handler().config.disk_config:
+		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(arch_config_handler.args.mountpoint)
+	perform_installation(get_arch_config_handler().args.mountpoint)
 
 
 guided()

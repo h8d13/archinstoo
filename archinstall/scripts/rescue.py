@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from archinstall.lib.args import arch_config_handler
+from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.disk.utils import get_all_lsblk_info
 from archinstall.lib.models.device import LsblkInfo, Unit
 from archinstall.lib.output import error, info, warn
@@ -206,7 +206,7 @@ def rescue() -> None:
 	info(f'Selected partition: {selected_partition.path}')
 
 	# Create temporary mount point
-	mount_point = arch_config_handler.args.mountpoint
+	mount_point = get_arch_config_handler().args.mountpoint
 
 	# Ensure mount point exists
 	mount_point.mkdir(parents=True, exist_ok=True)

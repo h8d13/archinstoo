@@ -34,7 +34,7 @@ from archinstall.lib.packages import installed_package
 from archinstall.lib.translationhandler import tr
 from archinstall.tui.curses_menu import Tui
 
-from .args import arch_config_handler
+from .args import get_arch_config_handler
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
@@ -119,7 +119,7 @@ class Installer:
 		self._zram_enabled = False
 		self._disable_fstrim = False
 
-		self.pacman = Pacman(self.target, arch_config_handler.args.silent)
+		self.pacman = Pacman(self.target, get_arch_config_handler().args.silent)
 
 	def __enter__(self) -> Self:
 		return self
@@ -129,7 +129,7 @@ class Installer:
 			error(str(exc_value))
 
 			Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
-			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(arch_config_handler.config.bug_report_url))
+			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(get_arch_config_handler().config.bug_report_url))
 
 			# Return None to propagate the exception
 			return None
@@ -139,10 +139,10 @@ class Installer:
 		if not (missing_steps := self.post_install_check()):
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
 			log(msg, fg='green')
-			if not arch_config_handler.args.silent:
+			if not get_arch_config_handler().args.silent:
 				response = input('\nDelete saved log files/cfg? [y/N]: ').strip().lower()
 				if response == 'y':
-					arch_config_handler.clean_up()
+					get_arch_config_handler().clean_up()
 
 			return True
 		else:
@@ -152,7 +152,7 @@ class Installer:
 				warn(f' - {step}')
 
 			warn(f'Detailed error logs can be found at: {logger.directory}')
-			warn(f'Submit this zip file as an issue to {arch_config_handler.config.bug_report_url}/issues')
+			warn(f'Submit this zip file as an issue to {get_arch_config_handler().config.bug_report_url}/issues')
 
 			return False
 
@@ -175,7 +175,7 @@ class Installer:
 		We need to wait for it before we continue since we opted in to use a custom mirror/region.
 		"""
 
-		if not arch_config_handler.args.skip_ntp:
+		if not get_arch_config_handler().args.skip_ntp:
 			info(tr('Waiting for time sync (timedatectl show) to complete.'))
 
 			started_wait = time.time()
@@ -192,7 +192,7 @@ class Installer:
 		else:
 			info(tr('Skipping waiting for automatic time sync (this can cause issues if time is out of sync during installation)'))
 
-		if not arch_config_handler.args.offline:
+		if not get_arch_config_handler().args.offline:
 			info('Waiting for automatic mirror selection (reflector) to complete.')
 			for _ in range(60):
 				if self._service_state('reflector') in ('dead', 'failed', 'exited'):
@@ -207,7 +207,7 @@ class Installer:
 		# while self._service_state('pacman-init') not in ('dead', 'failed', 'exited'):
 		# 	time.sleep(1)
 
-		if not arch_config_handler.args.skip_wkd:
+		if not get_arch_config_handler().args.skip_wkd:
 			info(tr('Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete.'))
 			# Wait for the timer to kick in
 			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:

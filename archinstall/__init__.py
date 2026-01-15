@@ -5,7 +5,7 @@ import os
 import sys
 import traceback
 
-from archinstall.lib.args import arch_config_handler
+from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.networking import ping
 
@@ -82,10 +82,10 @@ def main() -> int:
 	In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	"""
 	if '--help' in sys.argv or '-h' in sys.argv:
-		arch_config_handler.print_help()
+		get_arch_config_handler().print_help()
 		return 0
 
-	script = arch_config_handler.get_script()
+	script = get_arch_config_handler().get_script()
 	# plugins that do not need root
 	if script == 'list':
 		mod_name = f'archinstall.scripts.{script}'
@@ -98,7 +98,7 @@ def main() -> int:
 
 	_log_sys_info()
 
-	if not arch_config_handler.args.offline:
+	if not get_arch_config_handler().args.offline:
 		_check_online()
 		_prepare()
 
@@ -134,7 +134,7 @@ def run_as_a_module() -> None:
 
 			text = (
 				f'Archinstall experienced the above error. If you think this is a bug, please report it to\n'
-				f'{arch_config_handler.config.bug_report_url} and include the log file "/var/log/archinstall/install.log".\n\n'
+				f'{get_arch_config_handler().config.bug_report_url} and include the log file "/var/log/archinstall/install.log".\n\n'
 				f"Hint: To extract the log from a live ISO \ncurl -F 'file=@/var/log/archinstall/install.log' https://0x0.st\n"
 			)
 
@@ -150,10 +150,10 @@ __all__ = [
 	'Pacman',
 	'SysInfo',
 	'Tui',
-	'arch_config_handler',
 	'debug',
 	'disk_layouts',
 	'error',
+	'get_arch_config_handler',
 	'info',
 	'log',
 	'translation_handler',

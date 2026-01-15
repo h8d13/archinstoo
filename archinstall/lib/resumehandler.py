@@ -1,4 +1,4 @@
-from archinstall.lib.args import ArchConfig, arch_config_handler
+from archinstall.lib.args import ArchConfig, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.output import error, info
 from archinstall.tui import Tui
@@ -10,7 +10,7 @@ from archinstall.tui.types import Alignment
 
 def _check_for_saved_config() -> None:
 	# Start fresh actually deletes both cfg and auth
-	if not ConfigurationHandler.has_saved_config() or arch_config_handler.args.silent:
+	if not ConfigurationHandler.has_saved_config() or get_arch_config_handler().args.silent:
 		return
 
 	with Tui():
@@ -36,8 +36,8 @@ def _check_for_saved_config() -> None:
 				cached_config = ConfigurationHandler.load_saved_config()
 				if cached_config:
 					try:
-						new_config = ArchConfig.from_config(cached_config, arch_config_handler.args)
-						arch_config_handler._config = new_config
+						new_config = ArchConfig.from_config(cached_config, get_arch_config_handler().args)
+						get_arch_config_handler()._config = new_config
 						info('Saved selections loaded successfully')
 					except Exception as e:
 						error(f'Failed to load saved selections: {e}')
