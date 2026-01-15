@@ -11,7 +11,7 @@ authors = [
     {name = "Hadean Eon", email = "hadean-eon-dev@proton.me"},
 ]
 license = "GPL-3.0-only"
-readme = "README.md"
+readme = "readme.md"
 requires-python = ">=3.12"
 keywords = ["linux", "arch", "archinstall", "installer"]
 classifiers = [
@@ -42,9 +42,6 @@ doc = ["sphinx"]
 
 [project.scripts]
 archinstall = "archinstall:run_as_a_module"
-
-[tool.setuptools.dynamic]
-readme = {file = ["README.rst", "USAGE.rst"]}
 
 [tool.setuptools]
 include-package-data = true
