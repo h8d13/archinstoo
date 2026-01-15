@@ -23,6 +23,7 @@ SAFETY_LOCK
 **/**.qcow2
 **/**.log
 **/**.fd
+**/*-git
 /test*.py
 **/archiso
 /guided.py
