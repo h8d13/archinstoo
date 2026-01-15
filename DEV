@@ -47,7 +47,7 @@ for i in "$@"; do
         -i|--install)
         shift
         go_to
-        sudo pacman -U archinstoo-*.pkg.tar.zst
+        sudo pacman -U --overwrite '*' archinstoo-*.pkg.tar.zst
         exit 0
         ;;
         -v|venv)
