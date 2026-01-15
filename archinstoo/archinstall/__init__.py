@@ -12,6 +12,7 @@ script = get_arch_config_handler().get_script()
 if script == 'list':
 	_list_mod = f'archinstall.scripts.{script}'
 	importlib.import_module(_list_mod)
+	sys.exit(0)
 
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.networking import ping
