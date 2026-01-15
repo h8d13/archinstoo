@@ -1,119 +1,195 @@
 {
-  "archinstall-language": "English",
-  "locale_config": {
-    "kb_layout": "us",
-    "sys_enc": "UTF-8",
-    "sys_lang": "en_US"
-  },
-  "mirror_config": {
-    "mirror_regions": {
-      "Worldwide": [
-        "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
-      ]
-    }
-  },
-  "bootloader_config": {
-    "bootloader": "Systemd-boot",
-    "uki": false,
-    "removable": false
-  },
-  "disk_config": {
-    "config_type": "default_layout",
-    "device_modifications": [
-      {
-        "device": "/dev/sda",
-        "partitions": [
-          {
-            "btrfs": [],
-            "flags": ["boot"],
-            "fs_type": "fat32",
-            "size": {
-              "sector_size": null,
-              "unit": "MiB",
-              "value": 512
-            },
-            "mount_options": [],
-            "mountpoint": "/boot",
-            "start": {
-              "sector_size": null,
-              "unit": "MiB",
-              "value": 1
-            },
-            "status": "create",
-            "type": "primary"
-          },
-          {
-            "btrfs": [],
-            "flags": [],
-            "fs_type": "ext4",
-            "size": {
-              "sector_size": null,
-              "unit": "GiB",
-              "value": 20
-            },
-            "mount_options": [],
-            "mountpoint": "/",
-            "start": {
-              "sector_size": null,
-              "unit": "MiB",
-              "value": 513
-            },
-            "status": "create",
-            "type": "primary"
-          },
-          {
-            "btrfs": [],
-            "flags": [],
-            "fs_type": "ext4",
-            "size": {
-              "sector_size": null,
-              "unit": "Percent",
-              "value": 100
-            },
-            "mount_options": [],
-            "mountpoint": "/home",
-            "start": {
-              "sector_size": null,
-              "unit": "GiB",
-              "value": 20
-            },
-            "status": "create",
-            "type": "primary"
-          }
+    "bug_report_url": "https://github.com/h8d13/archinstoo",
+    "script": "guided",
+    "archinstall-language": "English",
+    "locale_config": {
+        "kb_layout": "us",
+        "sys_lang": "en_US.UTF-8",
+        "sys_enc": "UTF-8"
+    },
+    "mirror_config": {
+        "mirror_regions": {
+            "Germany": [
+                "https://frankfurt.mirror.pkgbuild.com/$repo/os/$arch",
+                "https://berlin.mirror.pkgbuild.com/$repo/os/$arch"
+            ]
+        },
+        "custom_servers": [],
+        "optional_repositories": [
+            "multilib"
         ],
-        "wipe": true
-      }
+        "custom_repositories": []
+    },
+    "bootloader_config": {
+        "bootloader": "Grub",
+        "uki": true,
+        "removable": true
+    },
+    "disk_config": {
+        "config_type": "manual_partitioning",
+        "device_modifications": [
+            {
+                "device": "/dev/nvme0n1",
+                "wipe": true,
+                "partitions": [
+                    {
+                        "obj_id": "1ecdde34-7db9-4a7d-acfc-850e8d5bffce",
+                        "status": "create",
+                        "type": "primary",
+                        "start": {
+                            "value": 1,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "size": {
+                            "value": 1,
+                            "unit": "GiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "fs_type": "fat32",
+                        "mountpoint": "/efi",
+                        "mount_options": [],
+                        "flags": [
+                            "boot",
+                            "esp"
+                        ],
+                        "dev_path": null,
+                        "btrfs": []
+                    },
+                    {
+                        "obj_id": "3c8d43a0-d8b8-41df-8839-0e7b2554906f",
+                        "status": "create",
+                        "type": "primary",
+                        "start": {
+                            "value": 1074790400,
+                            "unit": "B",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "size": {
+                            "value": 499031998464,
+                            "unit": "B",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "fs_type": "btrfs",
+                        "mountpoint": null,
+                        "mount_options": [
+                            "compress=zstd"
+                        ],
+                        "flags": [],
+                        "dev_path": null,
+                        "btrfs": [
+                            {
+                                "name": "@",
+                                "mountpoint": "/"
+                            },
+                            {
+                                "name": "@home",
+                                "mountpoint": "/home"
+                            },
+                            {
+                                "name": "@log",
+                                "mountpoint": "/var/log"
+                            },
+                            {
+                                "name": "@pkg",
+                                "mountpoint": "/var/cache/pacman/pkg"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "disk_encryption": {
+            "encryption_type": "luks",
+            "partitions": [
+                "f96d0333-81b5-43d3-9ff6-f70b2fd35c1d"
+            ],
+            "lvm_volumes": []
+        },
+        "btrfs_options": {
+            "snapshot_config": {
+                "type": "Snapper"
+            }
+        }
+    },
+    "swap": {
+        "enabled": true,
+        "algorithm": "lz4"
+    },
+    "kernels": [
+        "linux-zen"
+    ],
+    "kernel_headers": true,
+    "profile_config": {
+        "profile": {
+            "main": "Desktop",
+            "details": [
+                "KDE Plasma"
+            ],
+            "custom_settings": {
+                "KDE Plasma": {}
+            }
+        },
+        "gfx_driver": "Intel (open-source)",
+        "greeter": "gdm"
+    },
+    "hostname": "archinstoo",
+    "auth_config": {
+        "lock_root_account": true,
+        "privilege_escalation": "doas"
+    },
+    "app_config": {
+        "bluetooth_config": {
+            "enabled": true
+        },
+        "audio_config": {
+            "audio": "pipewire"
+        },
+        "print_service_config": {
+            "enabled": true
+        },
+        "firewall_config": {
+            "firewall": "ufw"
+        },
+        "management_config": {
+            "tools": [
+                "git",
+                "base-devel",
+                "man-db",
+                "pacman-contrib",
+                "reflector"
+            ]
+        },
+        "monitor_config": {
+            "monitor": "bottom"
+        },
+        "editor_config": {
+            "editor": "micro"
+        }
+    },
+    "network_config": null,
+    "parallel_downloads": 0,
+    "timezone": "Europe/Berlin",
+    "ntp": true,
+    "packages": [
+        "gnome-2048",
+        "chromium"
+    ],
+    "services": [],
+    "custom_commands": [
+        "#cd /home/user; git clone <url>",
+        "#chown -R user:user /home/user/repo"
     ]
-  },
-  "swap": {
-    "enabled": true,
-    "algorithm": "zstd"
-  },
-  "kernels": ["linux"],
-  "kernel_headers": false,
-  "hostname": "archlinux",
-  "auth_config": {
-    "lock_root_account": false,
-    "privilege_escalation": "sudo"
-  },
-  "app_config": {
-    "audio_config": {
-      "audio": "pipewire"
-    }
-  },
-  "profile_config": {
-    "gfx_driver": "All open-source (default)",
-    "greeter": "sddm",
-    "profile": {
-      "details": ["KDE Plasma"],
-      "main": "Desktop"
-    }
-  },
-  "network_config": {},
-  "parallel_downloads": 0,
-  "timezone": "UTC",
-  "ntp": true,
-  "packages": [],
-  "services": [],
-  "custom_commands": []
 }
