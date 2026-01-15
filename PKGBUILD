@@ -25,7 +25,6 @@ depends=(
   'python'
   'arch-install-scripts' #For pacstrap, genfstab, chroot
   'coreutils' #Basic utilities
-  'systemd' #For systemd-based operations
   'util-linux' #For partition utilities
   'pciutils' #For PCI device detection
   'kbd' #For keyboard layout configuration
@@ -45,6 +44,7 @@ makedepends=(
 # also because they are expected on ISO
 # in a 'stable' state of release
 optdepends=(
+  'systemd' #For systemd-based operations
   'btrfs-progs' #For btrfs filesystem support
   'dosfstools' #For FAT/EFI filesystem support
   'e2fsprogs' #For ext4 filesystem support

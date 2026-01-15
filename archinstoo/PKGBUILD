@@ -22,7 +22,6 @@ depends=(
   'python'
   'arch-install-scripts'
   'coreutils'
-  'systemd'
   'util-linux'
   'pciutils'
   'kbd'
@@ -37,6 +36,7 @@ makedepends=(
   'python-wheel'
 )
 optdepends=(
+  'systemd: systemd-based operations'
   'btrfs-progs: btrfs filesystem support'
   'dosfstools: FAT/EFI filesystem support'
   'e2fsprogs: ext4 filesystem support'
