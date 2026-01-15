@@ -136,22 +136,16 @@
 │   ├── config-sample.json
 │   ├── disk_layouts-sample.json
 │   └── full_automated_installation.py
-├── ISOMOD
 ├── PKGBUILD
+├── pyproject.toml
 ├── renovate.json
-├── RUN
 ├── schema.json
 └── tests
     ├── conftest.py
     ├── data
-    │   ├── mirrorlists
-    │   │   ├── test_multiple_countries
-    │   │   ├── test_no_country
-    │   │   └── test_with_country
     │   └── test_config.json
     ├── test_args.py
-    ├── test_configuration_output.py
-    └── test_mirrorlist.py
+    └── test_configuration_output.py
 
-26 directories, 126 files
+25 directories, 121 files
 ```
