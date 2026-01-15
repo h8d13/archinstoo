@@ -31,6 +31,8 @@ makedepends=(
   'python-sphinx_rtd_theme'
   'python-wheel'
   'ruff'
+  'base-devel'
+  'tree'
 )
 # marked as optional because they depend
 # on choices made during installation
