@@ -668,6 +668,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		if disk_config is not None or profile_config is not None or app_config:
 			items.append(MenuItem(text=tr('save selections and abort'), value='save_abort'))
+
 		items.append(MenuItem(text=tr('exit delete selections'), value='abort_only'))
 		items.append(MenuItem(text=tr('cancel'), value='cancel'))
 
