@@ -9,11 +9,13 @@ repos:
     hooks:
         # fix unused imports and sort them
       - id: ruff
-        args: ["--extend-select", "I", "--fix"]
+        args: ["--config", "archinstoo/pyproject.toml", "--extend-select", "I", "--fix"]
         # format the code
       - id: ruff-format
+        args: ["--config", "archinstoo/pyproject.toml"]
         # run the linter
       - id: ruff
+        args: ["--config", "archinstoo/pyproject.toml"]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
