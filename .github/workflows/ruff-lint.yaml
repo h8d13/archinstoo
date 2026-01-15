@@ -8,4 +8,4 @@ jobs:
             - uses: astral-sh/ruff-action@57714a7c8a2e59f32539362ba31877a1957dded1  # v3.5.1
               with:
                 src: archinstoo
-                args: --config archinstoo/pyproject.toml
+                args: check --config archinstoo/pyproject.toml

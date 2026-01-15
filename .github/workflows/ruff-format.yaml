@@ -6,4 +6,6 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: astral-sh/ruff-action@57714a7c8a2e59f32539362ba31877a1957dded1  # v3.5.1
-      - run: ruff format --config archinstoo/pyproject.toml --diff archinstoo
+        with:
+          src: archinstoo
+          args: format --config archinstoo/pyproject.toml --diff
