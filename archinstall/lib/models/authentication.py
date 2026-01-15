@@ -49,6 +49,8 @@ class AuthenticationConfiguration:
 		return auth_config
 
 	def json(self) -> AuthenticationSerialization:
+		# We keep only these 2 as json
+		# Users or pws are never stored
 		config: AuthenticationSerialization = {}
 
 		if self.lock_root_account:
