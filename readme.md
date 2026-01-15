@@ -68,7 +68,7 @@ You can also get this file from [releases](https://github.com/h8d13/archinstoo/r
 
 *and skip building with `base-devel`*
 
-`sudo pacman -U archinstoo-*.pkg.tar.zst` install directly.
+`sudo pacman -U archinstoo-*.pkg.tar.zst` install directly fromn where you have the tar file.
 
 You can now use `archinstall` globally with this local version.
 
