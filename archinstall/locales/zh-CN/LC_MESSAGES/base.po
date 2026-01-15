@@ -14,9 +14,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] 一份日志文件已在此处创建：{} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    请将此问题（和文件）提交到 https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "您真的要中止吗？"
 
@@ -53,6 +50,9 @@ msgstr "请选择一个音频服务器（audio server）"
 msgid "Only packages such as base, base-devel, linux, linux-firmware, efibootmgr and optional profile packages are installed."
 msgstr "仅安装基本软件包（base）、基本开发软件包（base-devel）、Linux 内核（linux）、Linux 固件（linux-firmware）、efibootmgr 和可选的配置文件软件包（profile packages）。"
 
+msgid "Note: base-devel is no longer installed by default. Add it here if you need build tools."
+msgstr ""
+
 msgid "If you desire a web browser, such as firefox or chromium, you may specify it in the following prompt."
 msgstr "如果您需要一个网络浏览器，例如 firefox 或 chromium，您可以在下面的提示中指定它。"
 
@@ -71,6 +71,7 @@ msgstr "选择要配置的网络接口"
 msgid "Select which mode to configure for \"{}\" or skip to use default mode \"{}\""
 msgstr "选择要为“{}”配置的模式或跳过以使用默认模式“{}”"
 
+#, python-brace-format
 msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
 msgstr "输入 {} 的 IP 和子网（例如：192.168.0.5/24）："
 
@@ -584,6 +585,7 @@ msgstr "选择所需的子卷选项 "
 msgid "Define users with sudo privilege, by username: "
 msgstr "通过用户名定义具有 sudo 权限的用户："
 
+#, python-brace-format
 msgid "[!] A log file has been created here: {}"
 msgstr "[!] 已在此处创建一份日志文件：{}"
 
@@ -840,9 +842,11 @@ msgstr "Archinstall 需要 root 权限才能运行。有关更多信息，请参
 msgid "Select an execution mode"
 msgstr "选择执行模式"
 
+#, python-brace-format
 msgid "Unable to fetch profile from specified url: {}"
 msgstr "无法从指定的 URL 获取配置文件：{}"
 
+#, python-brace-format
 msgid "Profiles must have unique name, but profile definitions with duplicate name found: {}"
 msgstr "配置文件必须具有唯一的名称，但找到了具有重复名称的配置文件定义：{}"
 
@@ -861,9 +865,11 @@ msgstr "选择分区选项"
 msgid "Enter the root directory of the mounted devices: "
 msgstr "输入已挂载设备的根目录："
 
+#, python-brace-format
 msgid "Minimum capacity for /home partition: {}GiB\n"
 msgstr "/home 分区的最小容量为：{}GB\n"
 
+#, python-brace-format
 msgid "Minimum capacity for Arch Linux partition: {}GiB"
 msgstr "Arch Linux 分区的最小容量为：{}GB"
 
@@ -927,14 +933,40 @@ msgstr "输入分区的结束扇区（百分比或块号，默认：{}）："
 msgid "This will remove all newly added partitions, continue?"
 msgstr "这将删除所有新添加的分区，是否继续？"
 
+#, python-brace-format
 msgid "Partition management: {}"
 msgstr "分区管理：{}"
 
+#, python-brace-format
 msgid "Total length: {}"
 msgstr "总长度：{}"
 
 msgid "Encryption type"
 msgstr "加密类型"
+
+msgid "Iteration time"
+msgstr ""
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr ""
+
+msgid "Higher values increase security but slow down boot time"
+msgstr ""
+
+msgid "Default: 10000ms, Recommended range: 1000-60000"
+msgstr ""
+
+msgid "Iteration time cannot be empty"
+msgstr ""
+
+msgid "Iteration time must be at least 100ms"
+msgstr ""
+
+msgid "Iteration time must be at most 120000ms"
+msgstr ""
+
+msgid "Please enter a valid number"
+msgstr ""
 
 msgid "Partitions"
 msgstr "分区"
@@ -966,6 +998,7 @@ msgstr "未知"
 msgid "Partition encryption"
 msgstr "分区加密"
 
+#, python-brace-format
 msgid " ! Formatting {} in "
 msgstr " ! 正在格式化 {} 为 "
 
@@ -990,6 +1023,7 @@ msgstr "返回"
 msgid "Please chose which greeter to install for the chosen profiles: {}"
 msgstr "请选择要为所选配置文件安装的登录管理器：{}"
 
+#, python-brace-format
 msgid "Environment type: {}"
 msgstr "环境类型：{}"
 
@@ -1183,6 +1217,7 @@ msgstr ""
 "\n"
 "提示：\n"
 
+#, python-brace-format
 msgid " - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
 msgstr "- 最大推荐值：{}（每次同时允许 {} 个并行下载）"
 
@@ -1246,6 +1281,7 @@ msgstr "禁用写时复制"
 msgid "Provides a selection of desktop environments and tiling window managers, e.g. GNOME, KDE Plasma, Sway"
 msgstr "提供一个桌面环境和平铺窗口管理器的选集，例如 GNOME、KDE Plasma、Sway"
 
+#, python-brace-format
 msgid "Configuration type: {}"
 msgstr "配置类型：{}"
 
@@ -1372,6 +1408,7 @@ msgstr "您输入的用户名无效"
 msgid "Username"
 msgstr "用户名"
 
+#, python-brace-format
 msgid "Should \"{}\" be a superuser (sudo)?\n"
 msgstr "是否将“{}”设置为超级用户（sudo）？\n"
 
@@ -1438,6 +1475,7 @@ msgstr "目录"
 msgid "Enter a directory for the configuration(s) to be saved (tab completion enabled)"
 msgstr "输入一个要保存配置的目录（可按 TAB 补全）"
 
+#, python-brace-format
 msgid "Do you want to save the configuration file(s) to {}?"
 msgstr "您想将配置文件保存到 {} 吗？"
 
@@ -1483,12 +1521,15 @@ msgstr "名称"
 msgid "Signature check"
 msgstr "签名检查"
 
+#, python-brace-format
 msgid "Selected free space segment on device {}:"
 msgstr "设备 {} 上已选的可用扇区："
 
+#, python-brace-format
 msgid "Size: {} / {}"
 msgstr "总大小：{} / {}"
 
+#, python-brace-format
 msgid "Size (default: {}): "
 msgstr "大小（默认：{}）："
 
@@ -1651,6 +1692,7 @@ msgstr "安装已完成"
 msgid "What would you like to do next?"
 msgstr "您接下来想做什么？"
 
+#, python-brace-format
 msgid "Select which mode to configure for \"{}\""
 msgstr "选择要为“{}”配置的模式"
 
@@ -1674,6 +1716,309 @@ msgstr "您想将配置文件保存到 {} 吗？"
 msgid "Credentials file encryption password"
 msgstr "磁盘加密密码"
 
-#, fuzzy
+#, fuzzy, python-brace-format
 msgid "Repositories: {}"
 msgstr "仓库名称"
+
+#, fuzzy
+msgid "New version available"
+msgstr "没有可用的 HSM 设备"
+
+#, fuzzy
+msgid "Passwordless login"
+msgstr "密码"
+
+msgid "Second factor login"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to configure Bluetooth?"
+msgstr "您想继续吗？"
+
+msgid "Print service"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "您想继续吗？"
+
+#, fuzzy
+msgid "Power management"
+msgstr "分区管理：{}"
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Applications"
+msgstr ""
+
+msgid "U2F login method: "
+msgstr ""
+
+msgid "Passwordless sudo: "
+msgstr ""
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr ""
+
+msgid "Syncing the system..."
+msgstr ""
+
+msgid "Value cannot be empty"
+msgstr ""
+
+msgid "Snapshot type"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "环境类型：{}"
+
+msgid "U2F login setup"
+msgstr ""
+
+msgid "No U2F devices found"
+msgstr ""
+
+msgid "U2F Login Method"
+msgstr ""
+
+#, fuzzy
+msgid "Enable passwordless sudo?"
+msgstr "输入密码："
+
+#, fuzzy, python-brace-format
+msgid "Setting up U2F device for user: {}"
+msgstr "选择要用于 HSM 的 FIDO2 设备"
+
+msgid "You may need to enter the PIN and then touch your U2F device to register it"
+msgstr ""
+
+msgid "Starting device modifications in "
+msgstr ""
+
+#, fuzzy
+msgid "No network connection found"
+msgstr "无网络配置"
+
+#, fuzzy
+msgid "Would you like to connect to a Wifi?"
+msgstr "您想继续吗？"
+
+#, fuzzy
+msgid "No wifi interface found"
+msgstr "配置接口"
+
+#, fuzzy
+msgid "Select wifi network to connect to"
+msgstr "选择要配置的网络接口"
+
+msgid "Scanning wifi networks..."
+msgstr ""
+
+#, fuzzy
+msgid "No wifi networks found"
+msgstr "无网络配置"
+
+msgid "Failed setting up wifi"
+msgstr ""
+
+#, fuzzy
+msgid "Enter wifi password"
+msgstr "输入密码："
+
+msgid "Ok"
+msgstr ""
+
+msgid "Removable"
+msgstr ""
+
+msgid "Install to removable location"
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location)"
+msgstr ""
+
+msgid "Will install to standard location with NVRAM entry"
+msgstr ""
+
+msgid "Would you like to install the bootloader to the default removable media search location?"
+msgstr ""
+
+msgid "This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is useful for:"
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr ""
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+
+msgid "Firmware that does not properly support NVRAM boot entries."
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr ""
+
+msgid "Firmware that does not properly support NVRAM boot entries like most MSI motherboards,"
+msgstr ""
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+#, fuzzy
+msgid "Language"
+msgstr "语言环境"
+
+msgid "Compression algorithm"
+msgstr ""
+
+#, fuzzy
+msgid "Only packages such as base, sudo, linux, linux-firmware, efibootmgr and optional profile packages are installed."
+msgstr "仅安装基本软件包（base）、基本开发软件包（base-devel）、Linux 内核（linux）、Linux 固件（linux-firmware）、efibootmgr 和可选的配置文件软件包（profile packages）。"
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "选择一个挂载点："
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "niri 需要访问您的 seat（硬件设备的集合，例如键盘、鼠标等）"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "选择一个选项来给 niri 提供对您硬件的访问权限"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "用户帐户"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "是否启用此配置文件进行安装？"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "退出 archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "重启系统"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+msgid "Management"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "编辑"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "您想继续吗？"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "密码"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "镜像源与仓库"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "磁盘配置"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "内核"
+
+#, fuzzy
+msgid "Network config"
+msgstr "网络配置"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "自定义镜像源"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "自定义镜像源"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "当前配置文件选择"
+
+#, fuzzy
+msgid "cancel"
+msgstr "取消"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "请输入安装后期望使用的主机名（hostname）："
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "请将此问题（和文件）提交到 https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    请将此问题（和文件）提交到 https://github.com/archlinux/archinstall/issues"

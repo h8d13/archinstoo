@@ -19,9 +19,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] مِلَف سِجِل أُنشِأ هُنا: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    يُرجى تسليم تقرير عن هذا الخلل (مع المِلَف) إلى https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "هل تُريدُ حقًا إجهاضَ العَملِيَّة؟"
 
@@ -1940,3 +1937,133 @@ msgstr ""
 
 msgid "Use Network Manager (iwd backend)"
 msgstr ""
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "يحتاج Sway إلى الوصول إلى مقعدك (مجموعة من الأجهزة مثل لوحة المفاتيح والماوس وغيرها)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "حدد خياراً لمنح Sway إمكانية الوصول إلى أجهزتك"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "حساب المستخدم"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "هل يجب تمكين ملف التعريف هذا للتثبيت؟"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "مساعدة Archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "نظام الملفات"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "إدارة التقسيم: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "تعديل"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "هل ترغب في الاستمرار؟"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "كلمة المرور"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "المستودعات الاختيارية"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "ضبط القرص"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "الأنوية"
+
+#, fuzzy
+msgid "Network config"
+msgstr "ضبط الشبكة"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "مرايا مخصصة"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "مرايا مخصصة"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "اختيار الملف الشخصي الحالي"
+
+#, fuzzy
+msgid "cancel"
+msgstr "إلغاء"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "اسم المضيف المُراد للتثبيت: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "يُرجى تسليم تقرير عن هذا الخلل (مع المِلَف) إلى https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    يُرجى تسليم تقرير عن هذا الخلل (مع المِلَف) إلى https://github.com/archlinux/archinstall/issues"

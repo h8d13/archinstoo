@@ -14,9 +14,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] Cruthaíodh logchomhad anseo: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    Cuir isteach an tsaincheist seo (agus an comhad) chuig https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "Ar mhaith leat tobscoir?"
 
@@ -1983,3 +1980,136 @@ msgstr ""
 
 msgid "Use Network Manager (iwd backend)"
 msgstr ""
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "Teastaíonn rochtain ó Sway ar do shuíochán (bailiúchán de ghléasanna crua-earraí i.e. méarchlár, luch, srl)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"Roghnaigh rogha chun rochtain a thabhairt do Sway ar do chrua-earraí"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Cuntas úsáideora"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Ar cheart an phróifíl seo a chumasú le haghaidh suiteáil?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Cabhair Archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Athraigh córas comhaid"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Bainistíocht críochdheighilte: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Cuir in eagar"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Ar mhaith leat comhbhrú BTRFS a úsáid?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Pasfhocal"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Taisclanna roghnacha"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Cumraíocht diosca"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Eithne"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Cumraíocht líonra"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Scátháin saincheaptha"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Scátháin saincheaptha"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Roghnú próifíle reatha"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Cealaigh"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "An t-óstainm inmhianaithe don suiteáil: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "    Cuir isteach an tsaincheist seo (agus an comhad) chuig https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    Cuir isteach an tsaincheist seo (agus an comhad) chuig https://github.com/archlinux/archinstall/issues"

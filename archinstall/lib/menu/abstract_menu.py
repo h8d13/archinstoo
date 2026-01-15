@@ -41,7 +41,7 @@ class AbstractMenu[ValueT]:
 		# TODO: skip processing when it comes from a planified exit
 		if exc_type is not None:
 			error(str(exc_value))
-			Tui.print(f'Please submit this issue (and file) to {arch_config_handler.config.bug_report_url}/issues')
+			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(arch_config_handler.config.bug_report_url))
 
 			# Return None to propagate the exception
 			return None

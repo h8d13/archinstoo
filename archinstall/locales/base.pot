@@ -7,11 +7,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr ""
 
-msgid ""
-"    Please submit this issue (and file) to https://github.com/archlinux/"
-"archinstall/issues"
-msgstr ""
-
 msgid "Do you really want to abort?"
 msgstr ""
 
@@ -1935,4 +1930,115 @@ msgid "Use Network Manager (default backend)"
 msgstr ""
 
 msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+
+msgid ""
+"Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+msgid "Lock root account"
+msgstr ""
+
+msgid "Root account will be locked after installation"
+msgstr ""
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "exit archinstall"
+msgstr ""
+
+msgid "reboot system"
+msgstr ""
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+msgid "Management"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Editor"
+msgstr ""
+
+msgid "Would you like to install management tools?"
+msgstr ""
+
+msgid "Password strength"
+msgstr ""
+
+msgid "Mirrors and repos"
+msgstr ""
+
+msgid "Disk config"
+msgstr ""
+
+msgid "Kernel headers"
+msgstr ""
+
+msgid "Network config"
+msgstr ""
+
+msgid "Custom commands"
+msgstr ""
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "Custom Commands"
+msgstr ""
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+msgid "exit delete selections"
+msgstr ""
+
+msgid "cancel"
+msgstr ""
+
+msgid "Abort the installation? \n"
+msgstr ""
+
+#, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
 msgstr ""
