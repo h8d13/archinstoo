@@ -66,7 +66,7 @@ Modify what you like inside the repo, from where `PKGBUILD` is situated:
 
 You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
 
-*and skip building with base-devel*
+*and skip building with `base-devel`*
 
 `sudo pacman -U archinstoo-*.pkg.tar.zst` install directly.
 
