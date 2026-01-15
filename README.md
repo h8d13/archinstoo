@@ -41,6 +41,8 @@ cd archinstoo
 
 `python -m archinstall [args]` try `-h` or `--help`
 
+Some options are behind `--advanced`
+
 Make your pizza.
 
 **3. Enjoy your new system(s)**
