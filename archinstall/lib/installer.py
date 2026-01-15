@@ -1767,8 +1767,6 @@ class Installer:
 		user: User,
 		privilege_escalation: PrivilegeEscalation = PrivilegeEscalation.Sudo,
 	) -> None:
-		# This plugin hook allows for the plugin to handle the creation of the user.
-		# Password and Group management is still handled by user_create()
 		info(f'Creating user {user.username}')
 
 		cmd = 'useradd -m'
