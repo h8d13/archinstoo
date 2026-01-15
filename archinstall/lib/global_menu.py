@@ -104,6 +104,12 @@ class GlobalMenu(AbstractMenu[None]):
 				key='kernel_headers',
 			),
 			MenuItem(
+				text=tr('Profile'),
+				action=self._select_profile,
+				preview_action=self._prev_profile,
+				key='profile_config',
+			),
+			MenuItem(
 				text=tr('Swap'),
 				value=ZramConfiguration(enabled=True),
 				action=ask_for_swap,
@@ -122,12 +128,6 @@ class GlobalMenu(AbstractMenu[None]):
 				action=self._select_authentication,
 				preview_action=self._prev_authentication,
 				key='auth_config',
-			),
-			MenuItem(
-				text=tr('Profile'),
-				action=self._select_profile,
-				preview_action=self._prev_profile,
-				key='profile_config',
 			),
 			MenuItem(
 				text=tr('Applications'),
