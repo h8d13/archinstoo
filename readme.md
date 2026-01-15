@@ -5,9 +5,11 @@
 
 **0. Get internet access**
 
-Ethernet cable is plug and play. (Skip section bellow)
+Ethernet cable is plug and play. 
 
-Test: `ping -c 3 google.com`
+Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms`
+
+*You can then skip wifi setup bellow*
 
 **For Wifi**:
 ```
@@ -60,8 +62,6 @@ Or modify existing ones.
 
 [ISO](https://archlinux.org/download/) is built 1st of each month.
 
-> Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues, and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks). Usually build a `1GB` ISO to test dev builds (vs the original `256M`). See [`ISOMOD`](./ISOMOD)
-
 Check: 
 ```
 . ./PKGBUILD && pacman -Qu "${depends[@]}"
@@ -77,6 +77,8 @@ The full list can be seen here [`PKGBUILD`](./archinstoo/PKGBUILD)
 
 You can also use a `venv` and `pip install -e .` or for dev purposes: See [`RUN`](./RUN) to automate this.
 
+> Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues, and needs to be rebuilt with more space for certain breaking updates (especially ones with pacman hooks). Usually build a `1GB` ISO to test dev builds (vs the original `256M`). See [`ISOMOD`](./ISOMOD)
+
 ## Testing
 
 **Philosophy:** Simplify, No backwards-compat, Move fast.
@@ -87,11 +89,11 @@ The process would be the same with `git clone -b <branch> <url>`
 
 ## Building source from local
 
-Modify what you like inside the repo, then:
+Modify what you like inside the repo, then inside `archinstoo/`
 
 `makepkg -Cf` force and clean for rebuilds.
 
-(You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page)
+You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
 
 `sudo pacman -U archinstoo-*.pkg.tar.zst` install the output file.
 
