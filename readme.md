@@ -85,7 +85,8 @@ You can now use `archinstall` anyway you like.
 [ISO](https://archlinux.org/download/) is built 1st of each month.
 Using the latest version is often safer bet.
 
-The full non-dev case list can be seen here [`PKGBUILD`](./PKGBUILD) then for dev case see inside `archinstoo/PKGBUILD`
+The full non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
+In the case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
 
 Check: 
 ```
