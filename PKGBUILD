@@ -56,28 +56,24 @@ optdepends=(
 provides=(archinstoo)
 conflicts=()
 replaces=()
-source=(
-  $pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz
-  $pkgname-$pkgver.tar.gz.sig::$url/releases/download/$pkgver/$pkgname-$pkgver.tar.gz.sig
-)
+source=()
 sha512sums=()
 b2sums=()
-validpgpkeys=('8AA2213C8464C82D879C8127D4B58E897A929F2E') # torxed@archlinux.org
 
 check() {
-  cd $pkgname-$pkgver || exit
+  cd "$srcdir/.." || exit
   ruff check
 }
 
 build() {
-  cd $pkgname-$pkgver || exit
+  cd "$srcdir/.." || exit
 
   python -m build --wheel --no-isolation
   PYTHONDONTWRITEBYTECODE=1 make man -C docs
 }
 
 package() {
-  cd "$pkgname-$pkgver" || exit
+  cd "$srcdir/.." || exit
 
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 docs/_build/man/archinstall.1 -t "$pkgdir/usr/share/man/man1/"

@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from archinstall.default_profiles.minimal import MinimalProfile
-from archinstall.lib.args import arch_config_handler
+from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.disk.filesystem import FilesystemHandler
@@ -16,7 +16,7 @@ from archinstall.tui import Tui
 
 
 def perform_installation(mountpoint: Path) -> None:
-	config = arch_config_handler.config
+	config = get_arch_config_handler().config
 
 	if not config.disk_config:
 		error('No disk configuration provided')
@@ -63,16 +63,16 @@ def perform_installation(mountpoint: Path) -> None:
 def _minimal() -> None:
 	with Tui():
 		disk_config = DiskLayoutConfigurationMenu(disk_layout_config=None).run()
-		arch_config_handler.config.disk_config = disk_config
+		get_arch_config_handler().config.disk_config = disk_config
 
-	config = ConfigurationHandler(arch_config_handler.config)
+	config = ConfigurationHandler(get_arch_config_handler().config)
 	config.write_debug()
 	config.save()
 
-	if arch_config_handler.args.dry_run:
+	if get_arch_config_handler().args.dry_run:
 		sys.exit(0)
 
-	if not arch_config_handler.args.silent:
+	if not get_arch_config_handler().args.silent:
 		aborted = False
 		with Tui():
 			if not config.confirm_config():
@@ -82,11 +82,11 @@ def _minimal() -> None:
 		if aborted:
 			return _minimal()
 
-	if arch_config_handler.config.disk_config:
-		fs_handler = FilesystemHandler(arch_config_handler.config.disk_config)
+	if disk_config := get_arch_config_handler().config.disk_config:
+		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(arch_config_handler.args.mountpoint)
+	perform_installation(get_arch_config_handler().args.mountpoint)
 
 
 _minimal()

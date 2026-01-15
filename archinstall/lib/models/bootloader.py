@@ -32,9 +32,9 @@ class Bootloader(Enum):
 
 	@classmethod
 	def get_default(cls) -> Self:
-		from ..args import arch_config_handler
+		from ..args import get_arch_config_handler
 
-		if arch_config_handler.args.skip_boot:
+		if get_arch_config_handler().args.skip_boot:
 			return cls.NO_BOOTLOADER
 		else:
 			return cls.Grub

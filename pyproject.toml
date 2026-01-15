@@ -3,16 +3,17 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "archinstall"
-version = "3.0.15"
+name = "archinstoo"
+version = "0.0.01"
 description = "Arch Linux installer - guided, templates etc."
 authors = [
     {name = "Anton Hvornum", email = "anton@hvornum.se"},
+    {name = "Hadean Eon", email = "hadean-eon-dev@proton.me"},
 ]
 license = "GPL-3.0-only"
 readme = "README.md"
 requires-python = ">=3.12"
-keywords = ["linux", "arch", "archinstall", "installer"]
+keywords = ["linux", "arch", "archinstoo", "installer"]
 classifiers = [
     "Programming Language :: Python :: 3.12",
     "Operating System :: POSIX :: Linux",
@@ -25,7 +26,7 @@ dependencies = [
 [project.urls]
 Home = "https://archlinux.org"
 Documentation = "https://archinstall.readthedocs.io/"
-Source = "https://github.com/archlinux/archinstall"
+Source = "https://github.com/h8d13/archinstoo"
 
 [project.optional-dependencies]
 log = ["systemd_python==235"]

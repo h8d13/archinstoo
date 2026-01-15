@@ -361,4 +361,11 @@ class ArchConfigHandler:
 		return clean_args
 
 
-arch_config_handler: ArchConfigHandler = ArchConfigHandler()
+class _ArchConfigHandlerHolder:
+	instance: ArchConfigHandler | None = None
+
+
+def get_arch_config_handler() -> ArchConfigHandler:
+	if _ArchConfigHandlerHolder.instance is None:
+		_ArchConfigHandlerHolder.instance = ArchConfigHandler()
+	return _ArchConfigHandlerHolder.instance
