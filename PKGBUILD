@@ -68,12 +68,6 @@ check() {
   ruff check
 }
 
-pkgver() {
-  cd $pkgname-$pkgver
-
-  awk '$1 ~ /^__version__/ {gsub("\"", ""); print $3}' archinstall/__init__.py
-}
-
 build() {
   cd $pkgname-$pkgver
 
