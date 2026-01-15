@@ -4,7 +4,13 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 > Aims to simplify reading/maintaining the codebase while keeping MORE options available.
 
-## 0.0.01
+## 0.0.01-1
+
+    - Change structure to be more readable
+    - Add dev/run helpers bash
+    - Remove UV from runners
+
+## 0.0.01-0
 
     - Change PKGBUILD strucs for proper dependency mngmnt
         - Remove python-cryptography

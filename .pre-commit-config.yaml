@@ -1,5 +1,9 @@
 default_stages: ['pre-commit']
 repos:
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+    - id: shellcheck
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.11
     hooks:
@@ -28,27 +32,27 @@ repos:
     rev: 7.3.0
     hooks:
     - id: flake8
-      args: [--config=.flake8]
+      args: [--config=archinstoo/.flake8]
       fail_fast: true
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.19.1
     hooks:
     - id: mypy
       args: [
-        '--config-file=pyproject.toml'
+        '--config-file=archinstoo/pyproject.toml'
       ]
+      exclude: ^archinstoo/tests/
       fail_fast: true
       additional_dependencies:
         - pydantic
-        - pytest
   - repo: https://github.com/pycqa/pylint
     rev: v4.0.4
     hooks:
     - id: pylint
-      args: ['--init-hook', 'import sys; sys.path.insert(0, ".")']
+      args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, ".")']
+      exclude: ^archinstoo/tests/
       additional_dependencies:
         - pydantic==2.12.5
         - pyparted>=3.13.0
-        - pytest
       fail_fast: true
       require_serial: true
