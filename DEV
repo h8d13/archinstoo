@@ -44,6 +44,12 @@ for i in "$@"; do
         clean
         exit 0
         ;;
+        -i|--install)
+        shift
+        go_to
+        sudo pacman -U archinstoo-*.pkg.tar.zst
+        exit 0
+        ;;
         -v|venv)
         shift
         ./RUN

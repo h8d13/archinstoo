@@ -58,8 +58,7 @@ optdepends=(
   'tree' #For project tree output
 )
 provides=(archinstoo)
-conflicts=()
-replaces=()
+replaces=(archinstoo)
 source=()
 sha512sums=()
 b2sums=()

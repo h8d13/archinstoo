@@ -48,6 +48,7 @@ optdepends=(
   'python-systemd: system journal logging'
 )
 provides=(archinstoo)
+replaces=(archinstoo)
 source=("$pkgname::git+$url.git")
 sha512sums=('SKIP')
 
