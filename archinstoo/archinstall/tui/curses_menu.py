@@ -1368,7 +1368,8 @@ class Tui:
 		self._component = component
 		self._screen.refresh()
 		result = component.kickoff(self._screen)
-		del self._component
+		if hasattr(self, '_component'):
+			del self._component
 		return result
 
 	def _set_up_colors(self) -> None:
