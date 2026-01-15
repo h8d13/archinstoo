@@ -285,20 +285,6 @@ class DeviceHandler:
 		try:
 			SysCommand(cmd)
 		except SysCallError as err:
-			# Try to deactivate any LVM VG holding the device
-			try:
-				result = SysCommand(f'pvs --noheadings -o vg_name {path}')
-				vg_name = result.decode().strip()
-				if vg_name:
-					debug(f'Deactivating LVM VG blocking format: {vg_name}')
-					SysCommand(f'vgchange -an {vg_name}')
-					self.udev_sync()
-					# Retry format after deactivating VG
-					SysCommand(cmd)
-					return
-			except SysCallError:
-				pass  # Not an LVM issue, raise original error
-
 			msg = f'Could not format {path} with {fs_type.value}: {err.message}'
 			error(msg)
 			raise DiskError(msg) from err
@@ -453,6 +439,24 @@ class DeviceHandler:
 
 		debug(f'lvchange volume: {cmd}')
 		SysCommand(cmd)
+
+	def lvm_vg_deactivate(self, vg_name: str) -> None:
+		cmd = f'vgchange -an {vg_name}'
+
+		debug(f'Deactivating VG: {cmd}')
+		SysCommand(cmd)
+
+	def lvm_deactivate_vgs_on_device(self, device: BDevice) -> None:
+		"""Deactivate any LVM VGs using partitions on this device."""
+		for partition in device.partition_infos:
+			try:
+				result = SysCommand(f'pvs --noheadings -o vg_name {partition.path}')
+				vg_name = result.decode().strip()
+				if vg_name:
+					debug(f'Found LVM VG {vg_name} on {partition.path}')
+					self.lvm_vg_deactivate(vg_name)
+			except SysCallError:
+				pass  # Not an LVM PV
 
 	def lvm_import_vg(self, vg: LvmVolumeGroup) -> None:
 		# Check if the VG is actually exported before trying to import it
@@ -744,16 +748,12 @@ class DeviceHandler:
 
 		disk.commit()
 
-		# Let kernel settle before accessing new partitions
-		if filtered_part:
-			self.udev_sync()
-
 		# Wipe filesystem/LVM signatures from newly created partitions
 		# to prevent "signature detected" errors
 		for part_mod in filtered_part:
 			if part_mod.dev_path:
 				debug(f'Wiping signatures from: {part_mod.dev_path}')
-				SysCommand(f'wipefs --all --force {part_mod.dev_path}')
+				SysCommand(f'wipefs --all {part_mod.dev_path}')
 
 		# Sync with udev after wiping signatures
 		if filtered_part:
@@ -846,16 +846,8 @@ class DeviceHandler:
 		"""
 		info(f'Wiping partitions and metadata: {block_device.device_info.path}')
 
-		# Deactivate any LVM VGs using partitions on this device
-		for partition in block_device.partition_infos:
-			try:
-				result = SysCommand(f'pvs --noheadings -o vg_name {partition.path}')
-				vg_name = result.decode().strip()
-				if vg_name:
-					debug(f'Deactivating LVM VG: {vg_name}')
-					SysCommand(f'vgchange -an {vg_name}')
-			except SysCallError:
-				pass  # Not an LVM PV or already inactive
+		# Deactivate any LVM VGs first to release device
+		self.lvm_deactivate_vgs_on_device(block_device)
 
 		for partition in block_device.partition_infos:
 			luks = Luks2(partition.path)
