@@ -6,3 +6,4 @@ max-line-length = 160
 show-source = True
 statistics = True
 exclude = .git,__pycache__,build,docs,actions-runner
+per-file-ignores = __init__.py:E402
