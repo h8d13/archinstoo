@@ -25,14 +25,17 @@ $ nmcli dev wifi connect "SSID" -a
 # alternative
 ```
 
-**1. Get and run the source code**
+**0.1. Prep**
 
-Prep:
+*If on the ISO instead of a live system*
 ```
 pacman-key --init
 pacman -Sy archlinux-keyring git
 pacman-key --populate archlinux 
 ```
+
+**1. Run the source code**
+
 Get source:
 ```
 git clone https://github.com/h8d13/archinstoo
