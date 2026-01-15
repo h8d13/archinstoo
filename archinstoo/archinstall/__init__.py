@@ -99,9 +99,10 @@ def main() -> int:
 
 	# catch all plugins that do need root
 	mod_name = f'archinstall.scripts.{script}'
-	# by loading the module we'll automatically run the script
+	# by loading the module we'll automatically run it
 	importlib.import_module(mod_name)
 
+	# if we do not receive one we continue with 'guided'
 	if not get_arch_config_handler().args.offline:
 		_check_online()
 		_prepare()
