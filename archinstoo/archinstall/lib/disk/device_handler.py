@@ -285,6 +285,20 @@ class DeviceHandler:
 		try:
 			SysCommand(cmd)
 		except SysCallError as err:
+			# Try to deactivate any LVM VG holding the device
+			try:
+				result = SysCommand(f'pvs --noheadings -o vg_name {path}')
+				vg_name = result.decode().strip()
+				if vg_name:
+					debug(f'Deactivating LVM VG blocking format: {vg_name}')
+					SysCommand(f'vgchange -an {vg_name}')
+					self.udev_sync()
+					# Retry format after deactivating VG
+					SysCommand(cmd)
+					return
+			except SysCallError:
+				pass  # Not an LVM issue, raise original error
+
 			msg = f'Could not format {path} with {fs_type.value}: {err.message}'
 			error(msg)
 			raise DiskError(msg) from err
