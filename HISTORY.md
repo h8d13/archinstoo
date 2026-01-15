@@ -15,7 +15,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
     - Wayland/x11 major refactor
         - Nvidia fixes
         - Sway, River, Niri fixes
-        - Explicit nogreeter type
+        - Explicit Nogreeter type
     - Custom commands handler
         - Replaced plugins system
     - Explicit --script utils
