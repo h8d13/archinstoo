@@ -60,7 +60,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				enabled=uki_enabled,
 			),
 			MenuItem(
-				text=tr('Install to removable location'),
+				text=tr('Removable location'),
 				action=self._select_removable,
 				value=self._bootloader_conf.removable,
 				preview_action=self._prev_removable,
