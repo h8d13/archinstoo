@@ -68,7 +68,7 @@ check() {
 build() {
   cd "$srcdir/.." || exit
 
-  rm -rf dist/ && rm -rf *.egg
+  rm -rf dist/ && rm -rf ./*.egg
   python -m build --wheel --no-isolation
   PYTHONDONTWRITEBYTECODE=1 make man -C docs
 }
