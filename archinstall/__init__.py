@@ -66,13 +66,13 @@ def _prepare() -> None:
 		_fetch_deps()
 
 	except Exception as e:
-		error('Failed to sync package database.')
+		error('Failed to prepare app.')
 		if 'could not resolve host' in str(e).lower():
-			error('Most likely due to a missing network connection or DNS issue.')
+			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
 
 		error('Run archinstall --debug and check /var/log/archinstall/install.log for details.')
 
-		debug(f'Failed to sync package database: {e}')
+		debug(f'Failed to prepare app: {e}')
 		sys.exit(1)
 
 
