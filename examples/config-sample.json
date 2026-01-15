@@ -1,26 +1,22 @@
 {
   "archinstall-language": "English",
-  "auth_config": {
-    "lock_root_account": false,
-    "root_enc_password": "$y$j9T$...",
-    "users": [
-      {
-        "username": "myuser",
-        "enc_password": "$y$j9T$...",
-        "sudo": true,
-        "groups": ["wheel"]
-      }
-    ]
+  "locale_config": {
+    "kb_layout": "us",
+    "sys_enc": "UTF-8",
+    "sys_lang": "en_US"
   },
-  "audio_config": {
-    "audio": "pipewire"
+  "mirror_config": {
+    "mirror_regions": {
+      "Worldwide": [
+        "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
+      ]
+    }
   },
   "bootloader_config": {
     "bootloader": "Systemd-boot",
     "uki": false,
     "removable": false
   },
-  "debug": false,
   "disk_config": {
     "config_type": "default_layout",
     "device_modifications": [
@@ -29,9 +25,7 @@
         "partitions": [
           {
             "btrfs": [],
-            "flags": [
-              "boot"
-            ],
+            "flags": ["boot"],
             "fs_type": "fat32",
             "size": {
               "sector_size": null,
@@ -40,7 +34,6 @@
             },
             "mount_options": [],
             "mountpoint": "/boot",
-            "obj_id": "2c3fa2d5-2c79-4fab-86ec-22d0ea1543c0",
             "start": {
               "sector_size": null,
               "unit": "MiB",
@@ -60,7 +53,6 @@
             },
             "mount_options": [],
             "mountpoint": "/",
-            "obj_id": "3e7018a0-363b-4d05-ab83-8e82d13db208",
             "start": {
               "sector_size": null,
               "unit": "MiB",
@@ -80,7 +72,6 @@
             },
             "mount_options": [],
             "mountpoint": "/home",
-            "obj_id": "ce58b139-f041-4a06-94da-1f8bad775d3f",
             "start": {
               "sector_size": null,
               "unit": "GiB",
@@ -94,74 +85,35 @@
       }
     ]
   },
-  "hostname": "archlinux",
-  "kernels": [
-    "linux"
-  ],
-  "kernel_headers": false,
-  "locale_config": {
-    "kb_layout": "us",
-    "sys_enc": "UTF-8",
-    "sys_lang": "en_US"
-  },
-  "mirror_config": {
-    "custom_servers": [
-      {
-        "url": "https://mymirror.com/$repo/os/$arch"
-      }
-    ],
-    "mirror_regions": {
-      "Australia": [
-        "http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch"
-      ]
-    },
-    "optional_repositories": [
-      "testing"
-    ],
-    "custom_repositories": [
-      {
-        "name": "myrepo",
-        "url": "https://myrepo.com/$repo/os/$arch",
-        "sign_check": "Required",
-        "sign_option": "TrustAll"
-      }
-    ]
-  },
-  "network_config": {
-    "type": "manual",
-    "nics": [
-      {
-        "iface": "eno1",
-        "ip": "192.168.1.15/24",
-        "dhcp": true,
-        "gateway": "192.168.1.1",
-        "dns": [
-          "192.168.1.1",
-          "9.9.9.9"
-        ]
-      }
-    ]
-  },
-  "ntp": true,
-  "offline": false,
-  "packages": [],
-  "parallel downloads": 0,
-  "profile_config": {
-    "gfx_driver": "All open-source (default)",
-    "greeter": "sddm",
-    "profile": {
-      "details": [
-        "KDE Plasma"
-      ],
-      "main": "Desktop"
-    }
-  },
-  "script": "guided",
-  "silent": false,
   "swap": {
     "enabled": true,
     "algorithm": "zstd"
   },
+  "kernels": ["linux"],
+  "kernel_headers": false,
+  "hostname": "archlinux",
+  "auth_config": {
+    "lock_root_account": false,
+    "privilege_escalation": "sudo"
+  },
+  "app_config": {
+    "audio_config": {
+      "audio": "pipewire"
+    }
+  },
+  "profile_config": {
+    "gfx_driver": "All open-source (default)",
+    "greeter": "sddm",
+    "profile": {
+      "details": ["KDE Plasma"],
+      "main": "Desktop"
+    }
+  },
+  "network_config": {},
+  "parallel_downloads": 0,
   "timezone": "UTC",
-  "bug_report_url": "https://github.com/archlinux/archinstall"
+  "ntp": true,
+  "packages": [],
+  "services": [],
+  "custom_commands": []
 }
