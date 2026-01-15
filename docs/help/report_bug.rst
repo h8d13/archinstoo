@@ -3,7 +3,7 @@
 Report Issues & Bugs
 ====================
 
-Issues and bugs should be reported over at `https://github.com/archlinux/archinstall/issues <https://github.com/archlinux/archinstall/issues>`_.
+Issues and bugs should be reported on the project's Issue Tracker.
 
 General questions, enhancements and security issues can be reported over there too.
 For quick issues or if you need help, head over to the Discord server which has a help channel.
@@ -21,7 +21,6 @@ It can be found both on the live ISO but also in the installed filesystem if the
 There are additional log files under ``/var/log/archinstall/`` that can be useful:
 
  - ``/var/log/archinstall/user_configuration.json`` - Stores most of the guided answers in the installer
- - ``/var/log/archinstall/user_credentials.json`` - Stores any usernames or passwords, can be passed to ``--creds``
  - ``/var/log/archinstall/user_disk_layouts.json`` - Stores the chosen disks and their layouts
  - ``/var/log/archinstall/install.log`` - A log file over what steps were taken by archinstall
  - ``/var/log/archinstall/cmd_history.txt`` - A complete command history, command by command in order

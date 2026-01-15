@@ -30,7 +30,7 @@ Running ``archinstall --conf your.json --silent`` where the above JSON is config
 
 .. note::
 
-   Some disk layouts can be too complicated to detect, such as RAID setups. Please do report those setups on the `Issue Tracker <https://github.com/archlinux/archinstall>`__ so we can support them.
+   Some disk layouts can be too complicated to detect, such as RAID setups. Please do report those setups on the Issue Tracker so we can support them.
 
 Best Effort
 -----------

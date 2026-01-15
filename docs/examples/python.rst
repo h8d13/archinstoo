@@ -94,4 +94,4 @@ That means your script is in the right place, and ``archinstall`` is working as 
    Most calls, including the one above requires `root <https://en.wikipedia.org/wiki/Superuser>`_ privileges.
 
 
-.. _scripts: https://github.com/archlinux/archinstall/tree/master/archinstall/scripts
+.. _scripts: ../archinstall/scripts

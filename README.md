@@ -84,3 +84,14 @@ To test fixes see: [Contributing](./CONTRIBUTING.md) to see latest changes [Chan
 
 The process would be the same with `git clone -b <branch> <url>`
 
+## Building source from local
+
+Modify what you like inside the repo, then:
+
+`makepkg -Cf` force and clean for rebuilds.
+
+`sudo pacman -U archinstoo-*.pkg.tar.zst` install the output file.
+
+You can now use `archinstall` globally with this local version.
+
+---
