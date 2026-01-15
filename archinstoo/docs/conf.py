@@ -35,7 +35,7 @@ def setup(app) -> None:  # type: ignore[no-untyped-def]
 # -- Project information -----------------------------------------------------
 
 project = 'python-archinstall'
-copyright = '2022, Anton Hvornum'
+copyright = '2022, Anton Hvornum'  # pylint: disable=redefined-builtin
 author = 'Anton Hvornum'
 
 # The full version, including alpha/beta/rc tags

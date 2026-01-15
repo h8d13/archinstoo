@@ -1,0 +1,32 @@
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+go_to () {
+	cd "$SCRIPT_DIR/archinstoo" || exit 1
+}
+
+clean () {
+    rm -rf pkg src dist build ./*.egg-info
+}
+
+for i in "$@"; do
+	case $i in
+        -c | --clean)
+        shift
+        go_to
+        clean
+        exit 0
+        ;;
+        -b | --build)
+        shift
+        go_to
+        makepkg -Cf
+        clean
+        exit 0
+        ;;
+        *)
+        go_to
+        python -B -m archinstall "$@"
+        exit 0
+        ;;
+	esac
+done
