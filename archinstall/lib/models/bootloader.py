@@ -36,8 +36,6 @@ class Bootloader(Enum):
 
 		if arch_config_handler.args.skip_boot:
 			return cls.NO_BOOTLOADER
-		elif SysInfo.has_uefi():
-			return cls.Systemd
 		else:
 			return cls.Grub
 
