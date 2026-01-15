@@ -1,4 +1,5 @@
 # shellcheck disable=SC2148,SC2206,SC2034,SC2154
+# Local build/dev
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Giancarlo Razzolini <grazzolini@archlinux.org>
 # Maintainer: Anton Hvornum <torxed@archlinux.org>

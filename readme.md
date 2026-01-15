@@ -58,19 +58,23 @@ The full structure of the project can be consulted through [`TREE`](./archinstoo
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
-## Building source from local
+## Building sources
 
-Modify what you like inside the repo, from where `PKGBUILD` is situated:
+Assumes `base-devel`
 
-`makepkg -Cf` force and clean for rebuilds.
+1. From online source (this repo)
 
-You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
+`makepkg -sCf` in repo root.
 
-*and skip building with `base-devel`*
+2. From local source where you make changes
+
+`cd archinstoo && makepkg -sCf`
+
+> You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
 
 `sudo pacman -U archinstoo-*.pkg.tar.zst` install directly fromn where you have the tar file.
 
-You can now use `archinstall` globally with this local version.
+You can now use `archinstall` anyway you like.
 
 ---
 
@@ -80,6 +84,8 @@ You can now use `archinstall` globally with this local version.
 
 [ISO](https://archlinux.org/download/) is built 1st of each month.
 Using the latest version is often safer bet.
+
+The full non-dev case list can be seen here [`PKGBUILD`](./PKGBUILD) then for dev case see inside `archinstoo/PKGBUILD`
 
 Check: 
 ```
@@ -91,8 +97,6 @@ Update:
 . ./PKGBUILD && pacman -Sy --needed "${depends[@]}" 
 # or the same with "${optdepends[@]}"
 ```
-
-The full list can be seen here [`PKGBUILD`](./archinstoo/PKGBUILD)
 
 You can also use a `venv` and `pip install -e .` or for dev purposes: See [`RUN`](./RUN) to automate this.
 
