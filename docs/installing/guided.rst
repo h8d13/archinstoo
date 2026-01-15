@@ -121,8 +121,8 @@ The contents of :code:`https://domain.lan/config.json`:
      },
      "mirror_config": {
        "mirror_regions": {
-         "Worldwide": [
-           "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
+         "Australia": [
+           "http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch"
          ]
        }
      },
@@ -132,7 +132,7 @@ The contents of :code:`https://domain.lan/config.json`:
        "removable": false
      },
      "disk_config": {
-       "config_type": "manual_partitioning",
+       "config_type": "default_layout",
        "device_modifications": [
          {
            "device": "/dev/sda",
@@ -141,13 +141,15 @@ The contents of :code:`https://domain.lan/config.json`:
                "btrfs": [],
                "flags": ["boot"],
                "fs_type": "fat32",
-               "length": {
+               "size": {
+                 "sector_size": null,
                  "unit": "MiB",
                  "value": 512
                },
                "mount_options": [],
                "mountpoint": "/boot",
                "start": {
+                 "sector_size": null,
                  "unit": "MiB",
                  "value": 1
                },
@@ -158,13 +160,15 @@ The contents of :code:`https://domain.lan/config.json`:
                "btrfs": [],
                "flags": [],
                "fs_type": "ext4",
-               "length": {
+               "size": {
+                 "sector_size": null,
                  "unit": "Percent",
                  "value": 100
                },
                "mount_options": [],
                "mountpoint": "/",
                "start": {
+                 "sector_size": null,
                  "unit": "MiB",
                  "value": 513
                },
@@ -176,31 +180,25 @@ The contents of :code:`https://domain.lan/config.json`:
          }
        ]
      },
-     "swap": {
-       "enabled": true,
-       "algorithm": "zstd"
-     },
-     "hostname": "archlinux",
+     "swap": true,
      "kernels": ["linux"],
      "kernel_headers": false,
+     "hostname": "archlinux",
      "auth_config": {
-       "lock_root_account": true,
+       "lock_root_account": false,
        "privilege_escalation": "sudo"
      },
      "app_config": {
        "audio_config": {
          "audio": "pipewire"
-       },
-       "bluetooth_config": {
-         "enabled": false
        }
      },
      "network_config": {},
-     "parallel_downloads": 5,
+     "parallel_downloads": 0,
      "timezone": "UTC",
      "ntp": true,
-     "packages": ["vim", "git"],
-     "services": ["sshd"],
+     "packages": [],
+     "services": [],
      "custom_commands": []
    }
 
