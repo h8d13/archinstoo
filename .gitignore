@@ -34,7 +34,7 @@ venv
 **/cmd_history.txt
 **/*.*~
 /*.sig
-/*.json
+user-*.json
 requirements.txt
 /.gitconfig
 /actions-runner
