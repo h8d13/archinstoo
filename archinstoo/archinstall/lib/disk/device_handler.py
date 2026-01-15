@@ -832,6 +832,17 @@ class DeviceHandler:
 		"""
 		info(f'Wiping partitions and metadata: {block_device.device_info.path}')
 
+		# Deactivate any LVM VGs using partitions on this device
+		for partition in block_device.partition_infos:
+			try:
+				result = SysCommand(f'pvs --noheadings -o vg_name {partition.path}')
+				vg_name = result.decode().strip()
+				if vg_name:
+					debug(f'Deactivating LVM VG: {vg_name}')
+					SysCommand(f'vgchange -an {vg_name}')
+			except SysCallError:
+				pass  # Not an LVM PV or already inactive
+
 		for partition in block_device.partition_infos:
 			luks = Luks2(partition.path)
 			if luks.isLuks():
