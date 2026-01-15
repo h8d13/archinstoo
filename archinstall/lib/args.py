@@ -85,26 +85,27 @@ class ArchConfig:
 	)
 
 	def safe_json(self) -> dict[str, Any]:
+		# Order matches global menu
 		config: Any = {
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
-			'locale_config': self.locale_config.json() if self.locale_config else None,
 			'archinstall-language': self.archinstall_language.json(),
-			'disk_config': self.disk_config.json() if self.disk_config else None,
-			'profile_config': self.profile_config.json() if self.profile_config else None,
+			'locale_config': self.locale_config.json() if self.locale_config else None,
 			'mirror_config': self.mirror_config.json() if self.mirror_config else None,
-			'network_config': self.network_config.json() if self.network_config else None,
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
-			'app_config': self.app_config.json() if self.app_config else None,
-			'auth_config': self.auth_config.json() if self.auth_config else None,
+			'disk_config': self.disk_config.json() if self.disk_config else None,
 			'swap': self.swap,
-			'hostname': self.hostname,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
-			'ntp': self.ntp,
-			'packages': self.packages,
+			'profile_config': self.profile_config.json() if self.profile_config else None,
+			'hostname': self.hostname,
+			'auth_config': self.auth_config.json() if self.auth_config else None,
+			'app_config': self.app_config.json() if self.app_config else None,
+			'network_config': self.network_config.json() if self.network_config else None,
 			'parallel_downloads': self.parallel_downloads,
 			'timezone': self.timezone,
+			'ntp': self.ntp,
+			'packages': self.packages,
 			'services': self.services,
 			'custom_commands': self.custom_commands,
 		}
