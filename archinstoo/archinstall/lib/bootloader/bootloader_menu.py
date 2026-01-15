@@ -95,9 +95,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return self._bootloader_conf
 
 	def _select_bootloader(self, preset: Bootloader | None) -> Bootloader | None:
-		bootloader = ask_for_bootloader(preset)
-
-		if bootloader:
+		if bootloader := ask_for_bootloader(preset):
 			# Update UKI option based on bootloader
 			uki_item = self._menu_item_group.find_by_key('uki')
 			if not SysInfo.has_uefi() or not bootloader.has_uki_support():

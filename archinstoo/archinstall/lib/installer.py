@@ -1131,10 +1131,8 @@ class Installer:
 
 		# TODO: This is a temporary workaround to deal with https://github.com/archlinux/archinstall/pull/3396#issuecomment-2996862019
 		# the systemd_version check can be removed once `--variables=BOOL` is merged into systemd.
-		systemd_pkg = installed_package('systemd')
-
 		# keep the version as a str as it can be something like 257.8-2
-		if systemd_pkg is not None:
+		if (systemd_pkg := installed_package('systemd')) is not None:
 			systemd_version = systemd_pkg.version
 		else:
 			systemd_version = '257'  # This works as a safety workaround for this hot-fix

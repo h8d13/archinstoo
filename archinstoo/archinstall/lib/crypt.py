@@ -48,8 +48,7 @@ def crypt_yescrypt(plaintext: str) -> str:
 	shows that the hashing rounds are determined from YESCRYPT_COST_FACTOR in /etc/login.defs
 	If no value was specified (or commented out) a default of 5 is chosen
 	"""
-	value = _search_login_defs('YESCRYPT_COST_FACTOR')
-	if value is not None:
+	if (value := _search_login_defs('YESCRYPT_COST_FACTOR')) is not None:
 		rounds = int(value)
 		if rounds < 3:
 			rounds = 3
