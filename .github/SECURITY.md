@@ -62,3 +62,6 @@ useradd -m -s /bin/rbash guestname
 passwd guestname
 ```
 
+### Releases
+
+Releases files are signed and can be verified with: `gpg --verify archinstoo-*.pkg.tar.zst.sig`

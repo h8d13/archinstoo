@@ -1,0 +1,71 @@
+# shellcheck disable=SC2148,SC2206,SC2034,SC2154
+# Release-Online / Non-dev
+# Maintainer: Hadean Eon <hadean-eon-dev@proton.me>
+# Contributor: David Runge <dvzrv@archlinux.org>
+# Contributor: Giancarlo Razzolini <grazzolini@archlinux.org>
+# Contributor: Anton Hvornum <torxed@archlinux.org>
+
+pkgname=archinstoo-git
+pkgver=r4805.07733b78
+pkgrel=1
+pkgdesc="Archinstall revamped"
+arch=(any)
+url="https://github.com/h8d13/archinstoo"
+license=(GPL-3.0-only)
+depends=(
+  'python-pyparted'
+  'python-pydantic'
+  'python-pydantic-core'
+  'python-annotated-types'
+  'python-typing_extensions'
+  'python-typing-inspection'
+  'python'
+  'arch-install-scripts'
+  'coreutils'
+  'systemd'
+  'util-linux'
+  'pciutils'
+  'kbd'
+)
+makedepends=(
+  'git'
+  'python-build'
+  'python-installer'
+  'python-setuptools'
+  'python-sphinx'
+  'python-sphinx_rtd_theme'
+  'python-wheel'
+)
+optdepends=(
+  'btrfs-progs: btrfs filesystem support'
+  'dosfstools: FAT/EFI filesystem support'
+  'e2fsprogs: ext4 filesystem support'
+  'f2fs-tools: f2fs filesystem support'
+  'ntfs-3g: NTFS filesystem support'
+  'xfsprogs: XFS filesystem support'
+  'cryptsetup: LUKS encryption support'
+  'lvm2: LVM layout support'
+  'python-systemd: system journal logging'
+)
+provides=(archinstoo)
+source=("$pkgname::git+$url.git")
+sha512sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname" || exit
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+  cd "$pkgname/archinstoo" || exit
+
+  python -m build --wheel --no-isolation
+  PYTHONDONTWRITEBYTECODE=1 make man -C docs
+}
+
+package() {
+  cd "$pkgname/archinstoo" || exit
+
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -vDm 644 docs/_build/man/archinstall.1 -t "$pkgdir/usr/share/man/man1/"
+}
