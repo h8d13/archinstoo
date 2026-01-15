@@ -62,7 +62,7 @@ Check:
 ```
 Update:
 ```
-`. ./PKGBUILD && pacman -Sy --needed "${depends[@]}" 
+. ./PKGBUILD && pacman -Sy --needed "${depends[@]}" 
 # or the same with `"${opt_depends[@]}"
 ```
 
