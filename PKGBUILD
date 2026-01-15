@@ -1,3 +1,4 @@
+# shellcheck disable=SC2148,SC2206,SC2034,SC2154
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Giancarlo Razzolini <grazzolini@archlinux.org>
 # Maintainer: Anton Hvornum <torxed@archlinux.org>
@@ -64,19 +65,19 @@ b2sums=()
 validpgpkeys=('8AA2213C8464C82D879C8127D4B58E897A929F2E') # torxed@archlinux.org
 
 check() {
-  cd $pkgname-$pkgver
+  cd $pkgname-$pkgver || exit
   ruff check
 }
 
 build() {
-  cd $pkgname-$pkgver
+  cd $pkgname-$pkgver || exit
 
   python -m build --wheel --no-isolation
   PYTHONDONTWRITEBYTECODE=1 make man -C docs
 }
 
 package() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname-$pkgver" || exit
 
   python -m installer --destdir="$pkgdir" dist/*.whl
   install -vDm 644 docs/_build/man/archinstall.1 -t "$pkgdir/usr/share/man/man1/"
