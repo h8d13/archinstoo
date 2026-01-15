@@ -34,7 +34,7 @@ pacman-key --populate archlinux
 Get source:
 ```
 git clone https://github.com/h8d13/archinstoo
-cd archinstoo
+cd archinstoo/archinstall
 ```
 
 **2. Then finally run the module** `archinstall`
