@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from pytest import MonkeyPatch
-
 from archinstall.default_profiles.profile import GreeterType
 from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments
 from archinstall.lib.hardware import GfxDriver
@@ -24,6 +22,7 @@ from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.models.users import Password, User
 from archinstall.lib.profile.profiles_handler import profile_handler
 from archinstall.lib.translationhandler import translation_handler
+from pytest import MonkeyPatch
 
 
 def test_default_args(monkeypatch: MonkeyPatch) -> None:
