@@ -4,6 +4,10 @@ go_to () {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
 }
 
+pre_build () {
+    rm -f ./*-any.pkg.tar.zst
+}
+
 clean () {
     rm -rf pkg src dist build ./*.egg-info ../*.egg-info 
 }
@@ -30,6 +34,7 @@ for i in "$@"; do
         -b | --build)
         shift
         go_to
+        pre_build
         makepkg -Cf
         clean
         exit 0
