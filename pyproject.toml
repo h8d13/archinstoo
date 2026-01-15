@@ -60,7 +60,7 @@ include-package-data = true
 ]
 
 [tool.setuptools.package-dir]
-archinstall = "archinstall"
+archinstall = "archinstoo/archinstall"
 
 [tool.mypy]
 python_version = "3.12"
@@ -119,7 +119,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.bandit]
-targets = ["archinstall"]
+targets = ["archinstoo/archinstall"]
 exclude = ["/tests"]
 
 [tool.pytest]
@@ -128,12 +128,13 @@ addopts = [
     "-s",
     "--strict",
 ]
-testpaths = ["tests"]
+testpaths = ["archinstoo/tests"]
 
 [tool.pylint.main]
 ignore-paths = [
     "^build/",
     "^docs/",
+    "^archinstoo/docs/",
     "^node_modules/",
 ]
 persistent = false

@@ -10,6 +10,17 @@ clean () {
 
 for i in "$@"; do
 	case $i in
+        -t | --tree)
+        shift
+        go_to
+        {
+            echo '# Project Structure'
+            echo '```'
+            tree -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|__pycache__|__init__.py'
+            echo '```'
+        } > docs/README.md
+        exit 0
+        ;;
         -c | --clean)
         shift
         go_to
