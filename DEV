@@ -34,10 +34,19 @@ for i in "$@"; do
         clean
         exit 0
         ;;
+        -v|venv)
+        shift
+        ./RUN
+        exit 0
+        ;;
         *)
+        # Catch all with options
         go_to
         python -B -m archinstall "$@"
         exit 0
         ;;
 	esac
 done
+
+# No arguments - run archinstall directly
+go_to && python -B -m archinstall

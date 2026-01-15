@@ -16,8 +16,8 @@ jobs:
             - run: pip install --break-system-packages --upgrade pip
             # this will install the exact version of flake8 that is in the pyproject.toml file
             - name: Install archinstall dependencies
-              run: pip install --break-system-packages .[dev]
+              run: pip install --break-system-packages ./archinstoo[dev]
             - run: python --version
             - run: flake8 --version
             - name: Lint with flake8
-              run: flake8
+              run: flake8 --config=archinstoo/.flake8 archinstoo/archinstall

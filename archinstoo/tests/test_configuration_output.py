@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
 
+from pytest import MonkeyPatch
+
 from archinstall.lib.args import ArchConfigHandler
 from archinstall.lib.configuration import ConfigurationHandler
-from pytest import MonkeyPatch
 
 
 def test_user_config_roundtrip(

@@ -80,7 +80,7 @@ You can also use a `venv` and `pip install -e .` or for dev purposes: See [`RUN`
 
 **Philosophy:** Simplify, No backwards-compat, Move fast.
 
-To test fixes see: [Contributing](./CONTRIBUTING.md) to see latest changes [Changelog](./HISTORY.md)
+To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest changes [Changelog](./.github/HISTORY.md)
 
 The process would be the same with `git clone -b <branch> <url>`
 

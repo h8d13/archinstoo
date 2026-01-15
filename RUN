@@ -1,5 +1,4 @@
 #!/bin/bash
-priv="sudo"
 # shellcheck disable=SC1091
 
 if [ ! -d ".venv" ]; then
@@ -10,4 +9,4 @@ else
     . .venv/bin/activate
 fi
 
-"$priv" .venv/bin/python -B -m archinstall "$@"
+.venv/bin/python -B -m archinstall "$@"
