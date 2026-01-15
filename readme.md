@@ -62,11 +62,11 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 Assumes `base-devel`
 
-1. From online source (this repo)
+1. From local source where you make changes
 
 `makepkg -sCf` in repo root.
 
-2. From local source where you make changes
+2. From online source (this repo)
 
 `cd archinstoo && makepkg -sCf`
 
