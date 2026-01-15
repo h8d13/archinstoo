@@ -209,13 +209,18 @@ class MenuItemGroup:
 			if item.has_value():
 				if item.get_value() is not False:
 					text = f'{text}{spacing}{Chars.Check}'
+				else:
+					text = f'{text}{spacing}{Chars.Empty}'
 			else:
-				text = item.text
+				text = f'{text}{spacing}{Chars.Empty}'
 
 		if default_text:
 			text = f'{text} {default_text}'
 
-		return text.rstrip(' ')
+		if not self._checkmarks:
+			text = text.rstrip(' ')
+
+		return text
 
 	def _default_suffix(self, item: MenuItem) -> str:
 		if self.default_item == item:
