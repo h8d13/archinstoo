@@ -85,6 +85,13 @@ def main() -> int:
 		arch_config_handler.print_help()
 		return 0
 
+	script = arch_config_handler.get_script()
+	# plugins that do not need root
+	if script == 'list':
+		mod_name = f'archinstall.scripts.{script}'
+		importlib.import_module(mod_name)
+		return 0
+
 	if os.getuid() != 0:
 		print(tr('Archinstall requires root privileges to run. See --help for more.'))
 		return 1
@@ -101,8 +108,7 @@ def main() -> int:
 	else:
 		debug('Running from ISO (Live Mode)...')
 
-	script = arch_config_handler.get_script()
-
+	# catch all plugins that do need root
 	mod_name = f'archinstall.scripts.{script}'
 	# by loading the module we'll automatically run the script
 	importlib.import_module(mod_name)
