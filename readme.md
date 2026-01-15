@@ -60,7 +60,7 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 ## Building source from local
 
-Modify what you like inside the repo, then inside `archinstoo/`
+Modify what you like inside the repo, from where `PKGBUILD` is situated:
 
 `makepkg -Cf` force and clean for rebuilds.
 
