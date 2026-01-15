@@ -138,7 +138,7 @@ def select_greeter(
 	preset: GreeterType | None = None,
 ) -> GreeterType | None:
 	if not profile or profile.is_greeter_supported():
-		items = [MenuItem(greeter.name if greeter == GreeterType.NoGreeter else greeter.value, value=greeter) for greeter in GreeterType]
+		items = [MenuItem(greeter.name if greeter == GreeterType.Nogreeter else greeter.value, value=greeter) for greeter in GreeterType]
 		group = MenuItemGroup(items, sort_items=True)
 
 		default: GreeterType | None = None

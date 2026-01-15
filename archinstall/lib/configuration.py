@@ -32,7 +32,7 @@ class ConfigurationHandler:
 
 	def user_config_to_json(self) -> str:
 		out = self._config.safe_json()
-		return json.dumps(out, indent=4, sort_keys=True, cls=JSON)
+		return json.dumps(out, indent=4, cls=JSON)  # Note remove the sort so that we keep "menu order"
 
 	def write_debug(self) -> None:
 		debug(' -- Chosen configuration --')

@@ -31,7 +31,7 @@ class DisplayServer(Enum):
 
 
 class GreeterType(Enum):
-	NoGreeter = ''
+	Nogreeter = ''
 	Lightdm = 'lightdm-gtk-greeter'
 	LightdmSlick = 'lightdm-slick-greeter'
 	Sddm = 'sddm'
@@ -54,17 +54,12 @@ class Profile:
 		current_selection: list[Self] = [],
 		packages: list[str] = [],
 		services: list[str] = [],
-		support_greeter: bool = False,
 		advanced: bool = False,
 	) -> None:
 		self.name = name
 		self.profile_type = profile_type
 		self.custom_settings: dict[str, str | None] = {}
 		self.advanced = advanced
-
-		self._support_greeter = support_greeter
-
-		# self.gfx_driver: str | None = None
 
 		self.current_selection = current_selection
 		self._packages = packages
@@ -136,7 +131,7 @@ class Profile:
 		return self.profile_type == ProfileType.CustomType
 
 	def is_greeter_supported(self) -> bool:
-		return self._support_greeter
+		return self.profile_type == ProfileType.Desktop
 
 	def display_servers(self) -> set[DisplayServer]:
 		from ..lib.profile.profiles_handler import profile_handler
