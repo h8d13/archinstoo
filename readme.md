@@ -73,7 +73,7 @@ Update:
 # or the same with "${opt_depends[@]}"
 ```
 
-The full list can be seen here [`PKGBUILD`](./PKGBUILD)
+The full list can be seen here [`PKGBUILD`](./archinstoo/PKGBUILD)
 
 You can also use a `venv` and `pip install -e .` or for dev purposes: See [`RUN`](./RUN) to automate this.
 
@@ -90,6 +90,8 @@ The process would be the same with `git clone -b <branch> <url>`
 Modify what you like inside the repo, then:
 
 `makepkg -Cf` force and clean for rebuilds.
+
+(You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page)
 
 `sudo pacman -U archinstoo-*.pkg.tar.zst` install the output file.
 
