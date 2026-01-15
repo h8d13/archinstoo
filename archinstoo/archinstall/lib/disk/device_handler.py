@@ -448,6 +448,7 @@ class DeviceHandler:
 
 	def lvm_deactivate_vgs_on_device(self, device: BDevice) -> None:
 		"""Deactivate any LVM VGs using partitions on this device."""
+		# First try using partition_infos
 		for partition in device.partition_infos:
 			try:
 				result = SysCommand(f'pvs --noheadings -o vg_name {partition.path}')
@@ -457,6 +458,19 @@ class DeviceHandler:
 					self.lvm_vg_deactivate(vg_name)
 			except SysCallError:
 				pass  # Not an LVM PV
+
+		# Also check using device path directly (catches VGs after partition table changes)
+		try:
+			result = SysCommand('pvs --noheadings -o vg_name,pv_name')
+			for line in result.decode().strip().split('\n'):
+				parts = line.split()
+				if len(parts) >= 2:
+					vg_name, pv_path = parts[0], parts[1]
+					if pv_path.startswith(str(device.device_info.path)):
+						debug(f'Found LVM VG {vg_name} on {pv_path}')
+						self.lvm_vg_deactivate(vg_name)
+		except SysCallError:
+			pass
 
 	def lvm_import_vg(self, vg: LvmVolumeGroup) -> None:
 		# Check if the VG is actually exported before trying to import it
