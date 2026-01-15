@@ -748,6 +748,9 @@ class DeviceHandler:
 
 		disk.commit()
 
+		# Deactivate any LVM VGs that may be holding the partitions
+		self.lvm_deactivate_vgs_on_device(modification.device)
+
 		# Wipe filesystem/LVM signatures from newly created partitions
 		# to prevent "signature detected" errors
 		for part_mod in filtered_part:
