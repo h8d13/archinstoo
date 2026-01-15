@@ -1,6 +1,7 @@
 import argparse
 import difflib
 import json
+import shutil
 import sys
 import urllib.error
 import urllib.parse
@@ -20,7 +21,7 @@ from archinstall.lib.models.locale import LocaleConfiguration
 from archinstall.lib.models.mirrors import MirrorConfiguration
 from archinstall.lib.models.network import NetworkConfiguration
 from archinstall.lib.models.profile import ProfileConfiguration
-from archinstall.lib.output import error, warn
+from archinstall.lib.output import error, logger, warn
 from archinstall.lib.translationhandler import Language, translation_handler
 
 
@@ -215,6 +216,13 @@ class ArchConfigHandler:
 
 	def print_help(self) -> None:
 		self._parser.print_help()
+
+	def clean_up(self) -> None:
+		for item in logger.directory.iterdir():
+			if item.is_dir():
+				shutil.rmtree(item)
+			else:
+				item.unlink()
 
 	def _define_arguments(self) -> SuggestArgumentParser:
 		parser = SuggestArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)

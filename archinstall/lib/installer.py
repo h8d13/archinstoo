@@ -140,13 +140,9 @@ class Installer:
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
 			log(msg, fg='green')
 			if not arch_config_handler.args.silent:
-				response = input('\nDelete saved log files? [y/N]: ').strip().lower()
+				response = input('\nDelete saved log files/cfg? [y/N]: ').strip().lower()
 				if response == 'y':
-					for item in logger.directory.iterdir():
-						if item.is_dir():
-							shutil.rmtree(item)
-						else:
-							item.unlink()
+					arch_config_handler.clean_up()
 
 			return True
 		else:
