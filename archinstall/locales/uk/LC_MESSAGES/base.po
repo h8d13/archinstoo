@@ -14,9 +14,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] Тут було створено файл журналу: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    Будь ласка, надішліть цю проблему (та файл) за адресою https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "Ви дійсно хочете припинити?"
 
@@ -1877,3 +1874,134 @@ msgstr "Використовувати NetworkManager (типовий)"
 
 msgid "Use Network Manager (iwd backend)"
 msgstr "Використовувати NetworkManager (з iwd)"
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "niri потребує доступ до вашого місця (набору апаратних пристроїв, таких як клавіатура, миша тощо)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Оберіть опцію для надання niri доступу до вашого обладнання"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Обліковий запис користувача"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Чи повинен цей профіль бути увімкненим для встановлення?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Покинути Archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Перезавантажити систему"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+#, fuzzy
+msgid "Removable location"
+msgstr "Встановити на знімний накопичувач"
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Керування живленням"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Редагувати"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Бажаєте підключитись до Wi-Fi?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Пароль"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Дзеркала та репозиторії"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Конфігурація диску"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Ядра"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Конфігурація мережі"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Користувацькі дзеркала"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Користувацькі дзеркала"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Поточний вибір профілів"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Скасувати"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Бажане ім'я хоста: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "Будь ласка, надішліть цю проблему (та файл) за адресою https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    Будь ласка, надішліть цю проблему (та файл) за адресою https://github.com/archlinux/archinstall/issues"

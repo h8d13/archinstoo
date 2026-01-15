@@ -14,9 +14,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] ஒரு பதிவு கோப்பு இங்கே உருவாக்கப்பட்டது: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr " இந்த சிக்கல் (மற்றும் கோப்பை) https://github.com/archlinux/archinstall/issues க்கு சமர்ப்பிக்கவும்"
-
 msgid "Do you really want to abort?"
 msgstr "நீங்கள் உண்மையிலேயே கைவிட விரும்புகிறீர்களா?"
 
@@ -1985,3 +1982,136 @@ msgstr ""
 
 msgid "Use Network Manager (iwd backend)"
 msgstr ""
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "ஸ்வேக்கு உங்கள் இருக்கைக்கான அணுகல் தேவை (வன்பொருள் சாதனங்களின் சேகரிப்பு அதாவது விசைப்பலகை, சுட்டி போன்றவை)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"உங்கள் வன்பொருளுக்கான அணுகலை வழங்குவதற்கான விருப்பத்தைத் தேர்வுசெய்யவும்"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "பயனர் கணக்கு"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "நிறுவலுக்கு இந்த சுயவிவரம் இயக்கப்பட வேண்டுமா?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Archinstall உதவி"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "கோப்பு முறைமையை மாற்றவும்"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "பகிர்வு மேலாண்மை: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "தொகு"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "BTRFS சுருக்கத்தைப் பயன்படுத்த விரும்புகிறீர்களா?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "கடவுச்சொல்"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "விருப்ப களஞ்சியங்கள்"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "வட்டு கட்டமைப்பு"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "கர்னல்கள்"
+
+#, fuzzy
+msgid "Network config"
+msgstr "பிணைய கட்டமைப்பு"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "தனிப்பயன் கண்ணாடிகள்"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "தனிப்பயன் கண்ணாடிகள்"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "தற்போதைய சுயவிவரத் தேர்வு"
+
+#, fuzzy
+msgid "cancel"
+msgstr "ரத்து செய்"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "நிறுவலுக்கு விரும்பிய ஹோஸ்ட்பெயர்: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr " இந்த சிக்கல் (மற்றும் கோப்பை) https://github.com/archlinux/archinstall/issues க்கு சமர்ப்பிக்கவும்"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr " இந்த சிக்கல் (மற்றும் கோப்பை) https://github.com/archlinux/archinstall/issues க்கு சமர்ப்பிக்கவும்"

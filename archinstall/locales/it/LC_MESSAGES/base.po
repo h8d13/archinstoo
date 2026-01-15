@@ -17,9 +17,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] Un file di log è stato creato qui: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    Invia questo problema (e il file) a https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "Vuoi davvero interrompere?"
 
@@ -1880,3 +1877,134 @@ msgstr "Usa NetworkManager (backend predefinito)"
 
 msgid "Use Network Manager (iwd backend)"
 msgstr "Usa NetworkManager (backend iwd)"
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "niri ha bisogno dell’accesso al tuo posto (insieme di dispositivi hardware, ad esempio tastiera, mouse, ecc.)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Scegli un’opzione per concedere a niri l’accesso al tuo hardware"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Account utente"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Questo profilo dovrebbe essere abilitato per l’installazione?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Esci da archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Riavvia il sistema"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+#, fuzzy
+msgid "Removable location"
+msgstr "Installa in una posizione rimovibile"
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Gestione energetica"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Modifica"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Desideri connetterti ad una Wi-FI?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Password"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Mirror e repository"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Configurazione disco"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Kernel"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Configurazione di rete"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Mirror personalizzati"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Mirror personalizzati"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Selezione profilo corrente"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Annulla"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Nome host desiderato per l'installazione: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "Invia questo problema (e il file) a https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    Invia questo problema (e il file) a https://github.com/archlinux/archinstall/issues"

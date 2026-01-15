@@ -14,9 +14,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] Eine Logdatei wurde hier erstellt: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    Bitte melden Sie das Problem mit der erstellten Datei auf https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "Wollen Sie wirklich abbrechen?"
 
@@ -1890,6 +1887,136 @@ msgstr ""
 
 msgid "Use Network Manager (iwd backend)"
 msgstr ""
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "niri benötigt Zugriff auf ihren Seat (Sammlung von Hardwaregeräten wie Tastatur, Maus, usw.)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Option auswählen, um niri Zugriff auf Ihre Hardware zu geben"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Benutzerkonto"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Soll dieses Profil für die Installation aktiviert werden?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Archinstall verlassen"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "System neustarten"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Partitionsverwaltung: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Bearbeiten"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Möchten Sie fortfahren?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Passwort"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Spiegelserver und Paketrepositorien"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Laufwerkskonfiguration"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Kernel"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Netzwerkkonfiguration"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Benutzerdefinierte Spiegelserver"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Benutzerdefinierte Spiegelserver"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Momentane Profilauswahl"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Abbrechen"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Gewünschter Gerätename/Hostname für die Installation: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "Bitte melden Sie das Problem mit der erstellten Datei auf https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    Bitte melden Sie das Problem mit der erstellten Datei auf https://github.com/archlinux/archinstall/issues"
 
 #~ msgid "All open-source"
 #~ msgstr "Alle quelloffene"

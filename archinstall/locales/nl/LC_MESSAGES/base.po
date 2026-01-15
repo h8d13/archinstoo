@@ -15,9 +15,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] Er is een logboek aangemaakt: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    Meld dit voorval (inclusief het logboek) op https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "Weet u zeker dat u wilt afbreken?"
 
@@ -2024,6 +2021,131 @@ msgstr ""
 
 msgid "Use Network Manager (iwd backend)"
 msgstr ""
+
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr ""
+
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Gebruikersaccount"
+
+msgid "Root account will be locked after installation"
+msgstr ""
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Archinstall-taal"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Systeem opnieuw opstarten"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+#, fuzzy
+msgid "Removable location"
+msgstr "Verwijderbaar"
+
+msgid "Firewall"
+msgstr ""
+
+msgid "Management"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Bewerken"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Wilt u wisselgeheugen i.c.m. zram gebruiken?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Rootwachtwoord"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Aanvullende pakketbronnen"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Geen configuratie"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Kernels"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Netwerk instellen"
+
+msgid "Custom commands"
+msgstr ""
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "Custom Commands"
+msgstr ""
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Huidige partitie-indeling"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Annuleren"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Standaard hostnaam van installatie: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "Meld dit voorval (inclusief het logboek) op https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    Meld dit voorval (inclusief het logboek) op https://github.com/archlinux/archinstall/issues"
 
 #, fuzzy, python-brace-format
 #~ msgid "Default: {DEFAULT_ITER_TIME}ms, Recommended range: 1000-60000"

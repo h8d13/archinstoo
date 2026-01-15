@@ -15,9 +15,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] Здесь был создан файл журнала: {} {}"
 
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "    Пожалуйста, отправьте эту проблему (и файл) по адресу https://github.com/archlinux/archinstall/issues"
-
 msgid "Do you really want to abort?"
 msgstr "Вы действительно хотите прекратить?"
 
@@ -1927,3 +1924,133 @@ msgstr ""
 
 msgid "Use Network Manager (iwd backend)"
 msgstr ""
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "Sway необходим доступ к вашему компьютеру (набор аппаратных устройств, т.е. клавиатура, мышь и т.д.)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Выберите опцию, чтобы предоставить Sway доступ к вашему оборудованию"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Учетная запись пользователя"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Должен ли этот профиль быть включен для установки?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Справка Archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Файловая система"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Управление разделом: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Редактировать"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Вы хотите продолжить?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Пароль"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Дополнительные репозитории"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Конфигурация диска"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Ядра"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Настройка сети"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Пользовательские зеркала"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Пользовательские зеркала"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Текущий выбор профиля"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Отменить"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Желаемое имя хоста для установки: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "Пожалуйста, отправьте эту проблему (и файл) по адресу https://github.com/archlinux/archinstall/issues"
+
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "    Пожалуйста, отправьте эту проблему (и файл) по адресу https://github.com/archlinux/archinstall/issues"

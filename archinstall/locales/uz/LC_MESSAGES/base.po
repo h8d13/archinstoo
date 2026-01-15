@@ -20,10 +20,6 @@ msgstr ""
 msgid "[!] A log file has been created here: {} {}"
 msgstr "[!] Log fayl bu yerda yaratildi: {} {}"
 
-#, fuzzy
-msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
-msgstr "Iltimos, ushbu muammo (va fayl) haqida https://github.com/archlinux/archinstall/issues manziliga xabar bering"
-
 msgid "Do you really want to abort?"
 msgstr "Haqiqatan ham to'xtatmoqchimisiz?"
 
@@ -59,6 +55,9 @@ msgstr "Audio serverni tanlang"
 
 msgid "Only packages such as base, base-devel, linux, linux-firmware, efibootmgr and optional profile packages are installed."
 msgstr "Faqat base, base-devel, linux, linux-firmware, efibootmgr va ixtiyoriy profil paketlari o'rnatiladi."
+
+msgid "Note: base-devel is no longer installed by default. Add it here if you need build tools."
+msgstr ""
 
 msgid "If you desire a web browser, such as firefox or chromium, you may specify it in the following prompt."
 msgstr "Agar Firefox yoki Chromium kabi veb-brauzer kerak bo'lsa, uni keyingi qadamda belgilashingiz mumkin."
@@ -1742,6 +1741,17 @@ msgstr "Bluetooth"
 msgid "Would you like to configure Bluetooth?"
 msgstr "Bluetooth'ni sozlashni xohlaysizmi?"
 
+msgid "Print service"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "Bluetooth'ni sozlashni xohlaysizmi?"
+
+#, fuzzy
+msgid "Power management"
+msgstr "Bo'limlarni boshqarish: {}"
+
 msgid "Authentication"
 msgstr "Autentifikatsiya"
 
@@ -1789,6 +1799,232 @@ msgstr "Foydalanuvchi {} uchun U2F qurilmasi sozlanmoqda"
 
 msgid "You may need to enter the PIN and then touch your U2F device to register it"
 msgstr "Ro'yxatdan o'tkazish uchun PIN-kodni kiritib, U2F qurilmangizga teginishingiz kerak bo'lishi mumkin"
+
+msgid "Starting device modifications in "
+msgstr ""
+
+#, fuzzy
+msgid "No network connection found"
+msgstr "Tarmoq konfiguratsiyasi yo'q"
+
+#, fuzzy
+msgid "Would you like to connect to a Wifi?"
+msgstr "Davom etishni xohlaysizmi?"
+
+#, fuzzy
+msgid "No wifi interface found"
+msgstr "Interfeyslarni sozlash"
+
+#, fuzzy
+msgid "Select wifi network to connect to"
+msgstr "Sozlash uchun bitta tarmoq interfeysini tanlang"
+
+msgid "Scanning wifi networks..."
+msgstr ""
+
+#, fuzzy
+msgid "No wifi networks found"
+msgstr "Tarmoq konfiguratsiyasi yo'q"
+
+msgid "Failed setting up wifi"
+msgstr ""
+
+#, fuzzy
+msgid "Enter wifi password"
+msgstr "Parolni kiriting: "
+
+msgid "Ok"
+msgstr ""
+
+msgid "Removable"
+msgstr ""
+
+msgid "Install to removable location"
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location)"
+msgstr ""
+
+msgid "Will install to standard location with NVRAM entry"
+msgstr ""
+
+msgid "Would you like to install the bootloader to the default removable media search location?"
+msgstr ""
+
+msgid "This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is useful for:"
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr ""
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+
+msgid "Firmware that does not properly support NVRAM boot entries."
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr ""
+
+msgid "Firmware that does not properly support NVRAM boot entries like most MSI motherboards,"
+msgstr ""
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+#, fuzzy
+msgid "Language"
+msgstr "Lokal tili"
+
+msgid "Compression algorithm"
+msgstr ""
+
+#, fuzzy
+msgid "Only packages such as base, sudo, linux, linux-firmware, efibootmgr and optional profile packages are installed."
+msgstr "Faqat base, base-devel, linux, linux-firmware, efibootmgr va ixtiyoriy profil paketlari o'rnatiladi."
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "Biriktirish nuqtasini tanlang:"
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+#, fuzzy
+msgid "River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr "niri sizning seat'ingizga (klaviatura, sichqoncha kabi qurilmalar to'plami) kirish huquqiga muhtoj"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "niri'ga qurilmalaringizga kirish huquqini berish variantini tanlang"
+
+msgid "Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Foydalanuvchi hisobi"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Bu profil o'rnatish uchun yoqilsinmi?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstall"
+msgstr "Archinstall'dan chiqish"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Tizimni qayta yuklash"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+msgid "Management"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Tahrirlash"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Davom etishni xohlaysizmi?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Parol"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Ko'zgular va repozitoriylar"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Disk konfiguratsiyasi"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Yadrolar"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Tarmoq konfiguratsiyasi"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Maxsus ko'zgular"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Maxsus ko'zgular"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Joriy profil tanlovi"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Bekor qilish"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "O'rnatish uchun host nomini kiriting: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr "Iltimos, ushbu muammo (va fayl) haqida https://github.com/archlinux/archinstall/issues manziliga xabar bering"
+
+#, fuzzy
+#~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
+#~ msgstr "Iltimos, ushbu muammo (va fayl) haqida https://github.com/archlinux/archinstall/issues manziliga xabar bering"
 
 #~ msgid "    Please submit this issue (and file) to https://github.com/archlinux/archinstall/issues"
 #~ msgstr "    Iltimos, ushbu muammo (va fayl) haqida https://github.com/archlinux/archinstall/issues manziliga xabar bering"
