@@ -89,6 +89,13 @@ class GlobalMenu(AbstractMenu[None]):
 				key='disk_config',
 			),
 			MenuItem(
+				text=tr('Swap'),
+				value=ZramConfiguration(enabled=True),
+				action=ask_for_swap,
+				preview_action=self._prev_swap,
+				key='swap',
+			),
+			MenuItem(
 				text=tr('Kernels'),
 				value=['linux'],
 				action=select_kernel,
@@ -108,13 +115,6 @@ class GlobalMenu(AbstractMenu[None]):
 				action=self._select_profile,
 				preview_action=self._prev_profile,
 				key='profile_config',
-			),
-			MenuItem(
-				text=tr('Swap'),
-				value=ZramConfiguration(enabled=True),
-				action=ask_for_swap,
-				preview_action=self._prev_swap,
-				key='swap',
 			),
 			MenuItem(
 				text=tr('Hostname'),
