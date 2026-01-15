@@ -2,6 +2,8 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+> Aims to simplify reading/maintaining the codebase while keeping MORE options available.
+
 ## 0.0.01
 
     - Change PKGBUILD strucs for proper dependency mngmnt
