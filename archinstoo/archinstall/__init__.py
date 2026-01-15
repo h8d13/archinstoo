@@ -94,8 +94,13 @@ def main() -> int:
 		return 0
 
 	if os.getuid() != 0:
-		print(tr('Archinstall requires root privileges to run. See --help for more.'))
+		print(tr('Archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
 		return 1
+
+	# catch all plugins that do need root
+	mod_name = f'archinstall.scripts.{script}'
+	# by loading the module we'll automatically run the script
+	importlib.import_module(mod_name)
 
 	if not get_arch_config_handler().args.offline:
 		_check_online()
@@ -109,11 +114,6 @@ def main() -> int:
 
 	# note log info after prepare
 	_log_sys_info()
-
-	# catch all plugins that do need root
-	mod_name = f'archinstall.scripts.{script}'
-	# by loading the module we'll automatically run the script
-	importlib.import_module(mod_name)
 
 	return 0
 
