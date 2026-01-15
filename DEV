@@ -18,7 +18,7 @@ for i in "$@"; do
             echo '```'
             tree -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|__pycache__|__init__.py'
             echo '```'
-        } > docs/README.md
+        } > docs/readme.md
         exit 0
         ;;
         -c | --clean)

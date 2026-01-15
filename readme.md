@@ -79,16 +79,17 @@ You can now use `archinstall` globally with this local version.
 > **Issues with dependencies**
 
 [ISO](https://archlinux.org/download/) is built 1st of each month.
+Using the latest version is often safer bet.
 
 Check: 
 ```
 . ./PKGBUILD && pacman -Qu "${depends[@]}"
-# or the same with "${opt_depends[@]}"
+# or the same with "${optdepends[@]}"
 ```
 Update:
 ```
 . ./PKGBUILD && pacman -Sy --needed "${depends[@]}" 
-# or the same with "${opt_depends[@]}"
+# or the same with "${optdepends[@]}"
 ```
 
 The full list can be seen here [`PKGBUILD`](./archinstoo/PKGBUILD)
