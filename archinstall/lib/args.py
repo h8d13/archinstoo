@@ -114,9 +114,11 @@ class ArchConfig:
 
 	@classmethod
 	def from_config(cls, args_config: dict[str, Any], args: Arguments) -> Self:
+		# Order matches safe_json / global menu
 		arch_config = cls()
 
-		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config)
+		if bug_report_url := args_config.get('bug_report_url', None):
+			arch_config.bug_report_url = bug_report_url
 
 		if script := args_config.get('script', None):
 			arch_config.script = script
@@ -124,58 +126,57 @@ class ArchConfig:
 		if archinstall_lang := args_config.get('archinstall-language', None):
 			arch_config.archinstall_language = translation_handler.get_language_by_name(archinstall_lang)
 
-		if disk_config := args_config.get('disk_config', {}):
-			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(disk_config)
-
-		if profile_config := args_config.get('profile_config', None):
-			arch_config.profile_config = ProfileConfiguration.parse_arg(profile_config)
+		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config)
 
 		if mirror_config := args_config.get('mirror_config', None):
 			arch_config.mirror_config = MirrorConfiguration.parse_args(mirror_config)
 
-		if net_config := args_config.get('network_config', None):
-			arch_config.network_config = NetworkConfiguration.parse_arg(net_config)
-
 		if bootloader_config_dict := args_config.get('bootloader_config', None):
 			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader_config_dict, args.skip_boot)
 
-		if app_config_args := args_config.get('app_config', None):
-			arch_config.app_config = ApplicationConfiguration.parse_arg(app_config_args)
+		if disk_config := args_config.get('disk_config', {}):
+			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(disk_config)
 
-		if auth_config_args := args_config.get('auth_config', None):
-			arch_config.auth_config = AuthenticationConfiguration.parse_arg(auth_config_args)
-
-		if hostname := args_config.get('hostname', ''):
-			arch_config.hostname = hostname
+		swap_arg = args_config.get('swap')
+		if swap_arg is not None:
+			arch_config.swap = ZramConfiguration.parse_arg(swap_arg)
 
 		if kernels := args_config.get('kernels', []):
 			arch_config.kernels = kernels
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 
-		arch_config.ntp = args_config.get('ntp', True)
+		if profile_config := args_config.get('profile_config', None):
+			arch_config.profile_config = ProfileConfiguration.parse_arg(profile_config)
 
-		if packages := args_config.get('packages', []):
-			arch_config.packages = packages
+		if hostname := args_config.get('hostname', ''):
+			arch_config.hostname = hostname
+
+		if auth_config_args := args_config.get('auth_config', None):
+			arch_config.auth_config = AuthenticationConfiguration.parse_arg(auth_config_args)
+
+		if app_config_args := args_config.get('app_config', None):
+			arch_config.app_config = ApplicationConfiguration.parse_arg(app_config_args)
+
+		if net_config := args_config.get('network_config', None):
+			arch_config.network_config = NetworkConfiguration.parse_arg(net_config)
 
 		if parallel_downloads := args_config.get('parallel_downloads', 0):
 			arch_config.parallel_downloads = parallel_downloads
 
-		swap_arg = args_config.get('swap')
-		if swap_arg is not None:
-			arch_config.swap = ZramConfiguration.parse_arg(swap_arg)
-
 		if timezone := args_config.get('timezone'):
 			arch_config.timezone = timezone
+
+		arch_config.ntp = args_config.get('ntp', True)
+
+		if packages := args_config.get('packages', []):
+			arch_config.packages = packages
 
 		if services := args_config.get('services', []):
 			arch_config.services = services
 
 		if custom_commands := args_config.get('custom_commands', []):
 			arch_config.custom_commands = custom_commands
-
-		if bug_report_url := args_config.get('bug_report_url', None):
-			arch_config.bug_report_url = bug_report_url
 
 		return arch_config
 
