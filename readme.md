@@ -45,14 +45,14 @@ cd archinstoo/archinstall
 
 Some options are behind `--advanced` others help to skip.
 
-There is also a `--script list` where you can make plugins for easily for `archinstoo`
+There is also a `--script list` where you can make plugins easily for `archinstoo`
 
 **3. Enjoy your new system(s)**
 
 Make your pizzas. Una pizza con funghi e prosciutto.
 
-> You can create any profile in `archinstall/default_profiles/` following convention, which you can then use directly.
-Or modify existing ones.
+> You can create any profile in `archinstall/default_profiles/` following convention, which will be imported automatically.
+Or modify existing ones direcly.
 
 The full structure of the project can be consulted through [`TREE`](./archinstoo)
 
