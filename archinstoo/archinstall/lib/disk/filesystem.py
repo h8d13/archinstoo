@@ -86,6 +86,9 @@ class FilesystemHandler:
 		self._validate_partitions(create_or_modify_parts)
 
 		for part_mod in create_or_modify_parts:
+			# ensure device is released before formatting
+			device_handler.udev_sync()
+
 			# partition will be encrypted
 			if self._enc_config is not None and part_mod in self._enc_config.partitions:
 				device_handler.format_encrypted(
