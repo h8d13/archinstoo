@@ -17,6 +17,58 @@ Archinstall ships with a pre-programmed `Guided Installer`_ guiding you through 
 .. warning::
     The installer will not configure WiFi before the installation begins. You need to read up on `Arch Linux networking <https://wiki.archlinux.org/index.php/Network_configuration>`_ before you continue.
 
+CLI Arguments
+-------------
+
+The following command-line arguments are available:
+
+.. list-table:: CLI Arguments
+   :widths: 25 50 10
+   :header-rows: 1
+
+   * - Argument
+     - Description
+     - Default
+   * - ``--config``
+     - Path to a local JSON configuration file
+     - None
+   * - ``--config-url``
+     - URL to a remote JSON configuration file
+     - None
+   * - ``--silent``
+     - Disables all prompts (requires config)
+     - false
+   * - ``--dry-run``
+     - Generate config and exit without installing
+     - false
+   * - ``--script``
+     - Script to run for installation
+     - guided
+   * - ``--mountpoint``
+     - Alternate mount point for installation
+     - /mnt
+   * - ``--skip-ntp``
+     - Disable NTP checks during installation
+     - false
+   * - ``--skip-wkd``
+     - Skip archlinux keyring WKD sync check
+     - false
+   * - ``--skip-boot``
+     - Skip bootloader installation
+     - false
+   * - ``--debug``
+     - Enable debug output in logs
+     - false
+   * - ``--offline``
+     - Disable online services (package search, keyring update)
+     - false
+   * - ``--no-pkg-lookups``
+     - Disable package validation before installation
+     - false
+   * - ``--advanced``
+     - Enable advanced options in menus
+     - false
+
 Running the guided installation
 -------------------------------
 
@@ -31,15 +83,13 @@ Since the `Guided Installer`_ is the default script, this is the equivalent of r
 
 The guided installation also supports installing with pre-configured answers to all the guided steps. This can be a quick and convenient way to re-run one or several installations.
 
-There are two configuration files, both are optional.
-
 ``--config``
 ------------
 
 This parameter takes a local :code:`.json` file as argument and contains the overall configuration and menu answers for the guided installer.
 
 ``--config-url``
-------------
+----------------
 
 This parameter takes a remote :code:`.json` file as argument and contains the overall configuration and menu answers for the guided installer.
 
@@ -63,16 +113,24 @@ The contents of :code:`https://domain.lan/config.json`:
 .. code-block:: json
 
    {
-     "additional-repositories": [],
      "archinstall-language": "English",
-     "audio_config": null,
+     "locale_config": {
+       "kb_layout": "us",
+       "sys_enc": "UTF-8",
+       "sys_lang": "en_US"
+     },
+     "mirror_config": {
+       "mirror_regions": {
+         "Worldwide": [
+           "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
+         ]
+       }
+     },
      "bootloader_config": {
        "bootloader": "Systemd-boot",
        "uki": false,
        "removable": false
      },
-     "bootloader": "Systemd-boot",
-     "debug": false,
      "disk_config": {
        "config_type": "manual_partitioning",
        "device_modifications": [
@@ -81,61 +139,17 @@ The contents of :code:`https://domain.lan/config.json`:
            "partitions": [
              {
                "btrfs": [],
-               "flags": [
-                 "boot"
-               ],
+               "flags": ["boot"],
                "fs_type": "fat32",
                "length": {
-                 "sector_size": null,
-                 "total_size": null,
-                 "unit": "B",
-                 "value": 99982592
+                 "unit": "MiB",
+                 "value": 512
                },
                "mount_options": [],
                "mountpoint": "/boot",
-               "obj_id": "369f31a8-2781-4d6b-96e7-75680552b7c9",
                "start": {
-                 "sector_size": {
-                   "sector_size": null,
-                   "total_size": null,
-                   "unit": "B",
-                   "value": 512
-                 },
-                 "total_size": null,
-                 "unit": "sectors",
-                 "value": 34
-               },
-               "status": "create",
-               "type": "primary"
-             },
-             {
-               "btrfs": [],
-               "flags": [],
-               "fs_type": "fat32",
-               "length": {
-                 "sector_size": null,
-                 "total_size": null,
-                 "unit": "B",
-                 "value": 100000000
-               },
-               "mount_options": [],
-               "mountpoint": "/efi",
-               "obj_id": "13cf2c96-8b0f-4ade-abaa-c530be589aad",
-               "start": {
-                 "sector_size": {
-                   "sector_size": null,
-                   "total_size": null,
-                   "unit": "B",
-                   "value": 512
-                 },
-                 "total_size": {
-                   "sector_size": null,
-                   "total_size": null,
-                   "unit": "B",
-                   "value": 16106127360
-                 },
-                 "unit": "MB",
-                 "value": 100
+                 "unit": "MiB",
+                 "value": 1
                },
                "status": "create",
                "type": "primary"
@@ -145,88 +159,49 @@ The contents of :code:`https://domain.lan/config.json`:
                "flags": [],
                "fs_type": "ext4",
                "length": {
-                 "sector_size": null,
-                 "total_size": null,
-                 "unit": "B",
-                 "value": 15805127360
+                 "unit": "Percent",
+                 "value": 100
                },
                "mount_options": [],
                "mountpoint": "/",
-               "obj_id": "3e75d045-21a4-429d-897e-8ec19a006e8b",
                "start": {
-                 "sector_size": {
-                   "sector_size": null,
-                   "total_size": null,
-                   "unit": "B",
-                   "value": 512
-                 },
-                 "total_size": {
-                   "sector_size": null,
-                   "total_size": null,
-                   "unit": "B",
-                   "value": 16106127360
-                 },
-                 "unit": "MB",
-                 "value": 301
+                 "unit": "MiB",
+                 "value": 513
                },
                "status": "create",
                "type": "primary"
              }
            ],
-           "wipe": false
+           "wipe": true
          }
        ]
      },
-     "disk_encryption": {
-       "encryption_type": "luks",
-       "partitions": [
-         "3e75d045-21a4-429d-897e-8ec19a006e8b"
-       ]
+     "swap": {
+       "enabled": true,
+       "algorithm": "zstd"
      },
      "hostname": "archlinux",
-     "kernels": [
-       "linux"
-     ],
-     "locale_config": {
-       "kb_layout": "us",
-       "sys_enc": "UTF-8",
-       "sys_lang": "en_US"
+     "kernels": ["linux"],
+     "kernel_headers": false,
+     "auth_config": {
+       "lock_root_account": true,
+       "privilege_escalation": "sudo"
      },
-     "mirror_config": {
-       "custom_servers": [
-         {
-           "url": "https://mymirror.com/$repo/os/$arch"
-         }
-       ],
-       "mirror_regions": {
-         "Australia": [
-           "http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch"
-         ]
+     "app_config": {
+       "audio_config": {
+         "audio": "pipewire"
        },
-       "optional_repositories": [
-         "testing"
-       ],
-       "custom_repositories": [
-         {
-           "name": "myrepo",
-           "url": "https://myrepo.com/$repo/os/$arch",
-           "sign_check": "Required",
-           "sign_option": "TrustAll"
-         }
-       ]
+       "bluetooth_config": {
+         "enabled": false
+       }
      },
      "network_config": {},
-     "ntp": true,
-     "offline": false,
-     "packages": [],
-     "parallel downloads": 0,
-     "profile_config": null,
-     "save_config": null,
-     "script": "guided",
-     "silent": false,
-     "swap": true,
+     "parallel_downloads": 5,
      "timezone": "UTC",
-     "version": "2.6.0"
+     "ntp": true,
+     "packages": ["vim", "git"],
+     "services": ["sshd"],
+     "custom_commands": []
    }
 
 ``--config`` options
@@ -251,51 +226,95 @@ The contents of :code:`https://domain.lan/config.json`:
 
    If no entries are found in ``disk_config``, archinstall guided installation will use whatever is mounted currently under ``/mnt/archinstall`` without performing any disk operations.
 
-Options for ``--creds``
------------------------
+Authentication Configuration
+----------------------------
 
-Creds is a separate configuration file to separate normal options from more sensitive data like passwords.
-Below is an example of how to set the root password and below that are description of other values that can be set.
+The ``auth_config`` section handles user authentication setup.
+
+.. warning::
+
+   For security reasons, passwords and user credentials are **never stored** in configuration files.
+   Only ``lock_root_account`` and ``privilege_escalation`` are saved. You will always be prompted
+   for passwords during installation.
 
 .. code-block:: json
 
     {
-        "root_enc_password" : "SecretSanta2022"
+        "auth_config": {
+            "lock_root_account": true,
+            "privilege_escalation": "sudo"
+        }
     }
 
-.. list-table:: ``--creds`` options
-   :widths: 25 25 40 10
+.. list-table:: ``auth_config`` options (stored in config)
+   :widths: 25 25 50
    :header-rows: 1
 
    * - Key
      - Values
      - Description
-     - Required
-   * - ``!encryption-password``
-     - ``str``
-     - Password to encrypt disk, not encrypted if password not provided
-     - No
-   * - ``root_enc_password``
-     - ``str``
-     - The root account password
-     - No
-   * - ``users``
-     - .. code-block:: json
-
-          {
-              "username": "<USERNAME>",
-              "enc_password": "<PASSWORD_HASH>",
-              "sudo": false
-          }
-     - List of regular user credentials, see configuration for reference
-     - Maybe
-
+   * - ``lock_root_account``
+     - ``true``/``false``
+     - Whether to lock the root account (recommended if users have sudo)
+   * - ``privilege_escalation``
+     - ``sudo``/``doas``
+     - Which privilege escalation tool to install
 
 .. note::
 
-   ``users`` is optional only if ``root_enc_password`` was set. ``users`` will be enforced otherwise and the minimum amount of users with sudo privileges required will be set to 1.
+   At least one of a root password or a user with sudo privileges must be configured during installation.
 
-.. note::
+Application Configuration
+-------------------------
 
-.. _scripts: https://github.com/archlinux/archinstall/tree/master/archinstall/scripts
-.. _Guided Installer: https://github.com/archlinux/archinstall/blob/master/archinstall/scripts/guided.py
+The ``app_config`` section configures optional system applications:
+
+.. code-block:: json
+
+    {
+        "app_config": {
+            "audio_config": {"audio": "pipewire"},
+            "bluetooth_config": {"enabled": true},
+            "power_management_config": {"power_management": "power-profiles-daemon"},
+            "print_service_config": {"enabled": false},
+            "firewall_config": {"firewall": "ufw"},
+            "management_config": {"tools": ["git", "base-devel"]},
+            "monitor_config": {"monitor": "htop"},
+            "editor_config": {"editor": "vim"}
+        }
+    }
+
+.. list-table:: ``app_config`` sub-options
+   :widths: 30 40 30
+   :header-rows: 1
+
+   * - Key
+     - Values
+     - Description
+   * - ``audio_config.audio``
+     - ``pipewire``, ``pulseaudio``, ``No audio server``
+     - Audio server to install
+   * - ``bluetooth_config.enabled``
+     - ``true``/``false``
+     - Enable bluetooth support
+   * - ``power_management_config.power_management``
+     - ``power-profiles-daemon``, ``tuned``
+     - Power management daemon
+   * - ``print_service_config.enabled``
+     - ``true``/``false``
+     - Enable CUPS print service
+   * - ``firewall_config.firewall``
+     - ``ufw``, ``firewalld``
+     - Firewall to install
+   * - ``management_config.tools``
+     - list of: ``git``, ``base-devel``, ``man-db``, ``pacman-contrib``, ``reflector``
+     - System management tools
+   * - ``monitor_config.monitor``
+     - ``htop``, ``btop``, ``bottom``
+     - System monitor tool
+   * - ``editor_config.editor``
+     - ``nano``, ``micro``, ``vi``, ``vim``, ``neovim``, ``emacs``
+     - Default text editor
+
+.. _scripts: ../archinstall/scripts
+.. _Guided Installer: ../archinstall/scripts/guided.py

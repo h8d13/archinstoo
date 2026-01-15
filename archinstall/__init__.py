@@ -96,8 +96,6 @@ def main() -> int:
 		print(tr('Archinstall requires root privileges to run. See --help for more.'))
 		return 1
 
-	_log_sys_info()
-
 	if not get_arch_config_handler().args.offline:
 		_check_online()
 		_prepare()
@@ -107,6 +105,9 @@ def main() -> int:
 		debug('Running from Host (H2T Mode)...')
 	else:
 		debug('Running from ISO (Live Mode)...')
+
+	# note log info after prepare
+	_log_sys_info()
 
 	# catch all plugins that do need root
 	mod_name = f'archinstall.scripts.{script}'

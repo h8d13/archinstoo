@@ -68,6 +68,7 @@ check() {
 build() {
   cd "$srcdir/.." || exit
 
+  rm -rf dist/
   python -m build --wheel --no-isolation
   PYTHONDONTWRITEBYTECODE=1 make man -C docs
 }
