@@ -10,9 +10,10 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Remove python-cryptography
         - Remove python-textual
         - Add __init__ check of deps
-    - Simplify creds file to be inside config
+    - Simplify auth config to be inside global config
         - Never output passwords/FDE related
         - Offer choice to delete all of contents post-install
+        - Lock root and doas alternative
     - Add resume/abort features with proper deletions of cfg
     - Wayland/x11 major refactor
         - Nvidia fixes
