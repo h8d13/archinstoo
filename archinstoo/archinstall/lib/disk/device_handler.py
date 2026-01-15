@@ -774,8 +774,28 @@ class DeviceHandler:
 
 		disk.commit()
 
+		# Force kernel to re-read partition table and release old references
+		try:
+			SysCommand(f'partprobe {modification.device_path}')
+		except SysCallError:
+			pass
+
 		# Deactivate any LVM VGs that may be holding the partitions
 		self.lvm_deactivate_vgs_on_device(modification.device)
+
+		# Remove any remaining dm devices on this device
+		try:
+			result = SysCommand('dmsetup ls')
+			for line in result.decode().strip().split('\n'):
+				if line and not line.startswith('No devices'):
+					dm_name = line.split()[0]
+					try:
+						SysCommand(f'dmsetup remove --force {dm_name}')
+					except SysCallError:
+						pass
+		except SysCallError:
+			pass
+
 		self.udev_sync()
 
 		# Wipe filesystem/LVM signatures from newly created partitions
@@ -783,7 +803,7 @@ class DeviceHandler:
 		for part_mod in filtered_part:
 			if part_mod.dev_path:
 				debug(f'Wiping signatures from: {part_mod.dev_path}')
-				SysCommand(f'wipefs --all {part_mod.dev_path}')
+				SysCommand(f'wipefs --all --force {part_mod.dev_path}')
 
 		# Sync with udev after wiping signatures
 		if filtered_part:
