@@ -13,6 +13,7 @@ pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"
 license=(GPL-3.0-only)
+#internals first
 depends=(
   'python-pyparted'
   'python-pydantic'
