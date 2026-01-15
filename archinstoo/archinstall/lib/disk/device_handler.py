@@ -730,6 +730,10 @@ class DeviceHandler:
 
 		disk.commit()
 
+		# Let kernel settle before accessing new partitions
+		if filtered_part:
+			self.udev_sync()
+
 		# Wipe filesystem/LVM signatures from newly created partitions
 		# to prevent "signature detected" errors
 		for part_mod in filtered_part:
