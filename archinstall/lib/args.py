@@ -57,6 +57,7 @@ class Arguments:
 
 @dataclass
 class ArchConfig:
+	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
 	script: str = 'guided'
 	locale_config: LocaleConfiguration | None = None
 	archinstall_language: Language = field(default_factory=lambda: translation_handler.get_language_by_abbr('en'))
@@ -82,42 +83,31 @@ class ArchConfig:
 			'#chown -R user:user /home/user/repo',
 		]
 	)
-	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
 
 	def safe_json(self) -> dict[str, Any]:
 		config: Any = {
+			'bug_report_url': self.bug_report_url,
 			'script': self.script,
+			'locale_config': self.locale_config.json() if self.locale_config else None,
 			'archinstall-language': self.archinstall_language.json(),
+			'disk_config': self.disk_config.json() if self.disk_config else None,
+			'profile_config': self.profile_config.json() if self.profile_config else None,
+			'mirror_config': self.mirror_config.json() if self.mirror_config else None,
+			'network_config': self.network_config.json() if self.network_config else None,
+			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
+			'app_config': self.app_config.json() if self.app_config else None,
+			'auth_config': self.auth_config.json() if self.auth_config else None,
+			'swap': self.swap,
 			'hostname': self.hostname,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
 			'ntp': self.ntp,
 			'packages': self.packages,
 			'parallel_downloads': self.parallel_downloads,
-			'swap': self.swap,
 			'timezone': self.timezone,
 			'services': self.services,
 			'custom_commands': self.custom_commands,
-			'bug_report_url': self.bug_report_url,
-			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
-			'app_config': self.app_config.json() if self.app_config else None,
-			'auth_config': self.auth_config.json() if self.auth_config else None,
 		}
-
-		if self.locale_config:
-			config['locale_config'] = self.locale_config.json()
-
-		if self.disk_config:
-			config['disk_config'] = self.disk_config.json()
-
-		if self.profile_config:
-			config['profile_config'] = self.profile_config.json()
-
-		if self.mirror_config:
-			config['mirror_config'] = self.mirror_config.json()
-
-		if self.network_config:
-			config['network_config'] = self.network_config.json()
 
 		return config
 
