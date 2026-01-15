@@ -5,7 +5,7 @@ go_to () {
 }
 
 clean () {
-    rm -rf pkg src dist build ./*-any.pkg.tar.zst ./*.egg-info ../*.egg-info 
+    rm -rf pkg src dist build ./*.egg-info ../*.egg-info 
 }
 
 for i in "$@"; do
