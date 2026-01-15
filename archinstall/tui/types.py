@@ -117,6 +117,7 @@ class Chars:
 	Triangle_up = '▲'
 	Triangle_down = '▼'
 	Check = '+'
+	Empty = ' '
 	Right_arrow = '←'
 
 
