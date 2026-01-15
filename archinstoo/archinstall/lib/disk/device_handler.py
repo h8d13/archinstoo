@@ -444,7 +444,19 @@ class DeviceHandler:
 		cmd = f'vgchange -an {vg_name}'
 
 		debug(f'Deactivating VG: {cmd}')
-		SysCommand(cmd)
+		try:
+			SysCommand(cmd)
+		except SysCallError:
+			# Try force removing dm devices if vgchange fails
+			try:
+				result = SysCommand('dmsetup ls --target linear')
+				for line in result.decode().strip().split('\n'):
+					if line.startswith(f'{vg_name}-'):
+						dm_name = line.split()[0]
+						debug(f'Force removing dm device: {dm_name}')
+						SysCommand(f'dmsetup remove --force {dm_name}')
+			except SysCallError:
+				pass
 
 	def lvm_deactivate_vgs_on_device(self, device: BDevice) -> None:
 		"""Deactivate any LVM VGs using partitions on this device."""
@@ -764,6 +776,7 @@ class DeviceHandler:
 
 		# Deactivate any LVM VGs that may be holding the partitions
 		self.lvm_deactivate_vgs_on_device(modification.device)
+		self.udev_sync()
 
 		# Wipe filesystem/LVM signatures from newly created partitions
 		# to prevent "signature detected" errors
