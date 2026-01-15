@@ -30,8 +30,7 @@ $ nmcli dev wifi connect "SSID" -a
 *If on the ISO instead of a live system*
 ```
 pacman-key --init
-pacman -Sy archlinux-keyring git
-pacman-key --populate archlinux 
+pacman -Sy git
 ```
 
 **1. Run the source code**
