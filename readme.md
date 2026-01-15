@@ -56,7 +56,7 @@ Or modify existing ones direcly.
 
 The full structure of the project can be consulted through [`TREE`](./archinstoo)
 
-Core modifications you can also perform in `installer.py` and related defs (here search/find/replace is your friend).
+Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
 ---
 
