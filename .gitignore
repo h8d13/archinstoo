@@ -33,7 +33,7 @@ venv
 .DS_Store
 **/cmd_history.txt
 **/*.*~
-/*.sig
+**/*.sig
 user*.json
 requirements.txt
 /.gitconfig
