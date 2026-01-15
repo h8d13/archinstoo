@@ -661,8 +661,13 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _handle_abort(self, preset: None) -> None:
 		items = []
-		# Without saving properly deletes cfg/creds
-		items.append(MenuItem(text=tr('save selections and abort'), value='save_abort'))
+		# Only offer to save if meaningful config has been set
+		disk_config = self._item_group.find_by_key('disk_config').value
+		profile_config = self._item_group.find_by_key('profile_config').value
+		app_config = self._item_group.find_by_key('app_config').value
+
+		if disk_config is not None or profile_config is not None or app_config:
+			items.append(MenuItem(text=tr('save selections and abort'), value='save_abort'))
 		items.append(MenuItem(text=tr('exit delete selections'), value='abort_only'))
 		items.append(MenuItem(text=tr('cancel'), value='cancel'))
 
