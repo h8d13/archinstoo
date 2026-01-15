@@ -72,6 +72,10 @@ Assumes `base-devel`
 
 `cd archinstoo && makepkg -sCf`
 
+The full non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
+
+In the case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
+
 > You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
 
 `sudo pacman -U archinstoo-*.pkg.tar.zst` install directly fromn where you have the tar file.
@@ -86,9 +90,6 @@ You can now use `archinstall` anyway you like.
 
 [ISO](https://archlinux.org/download/) is built 1st of each month.
 Using the latest version is often safer bet.
-
-The full non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
-In the case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
 
 Check: 
 ```
