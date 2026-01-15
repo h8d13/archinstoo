@@ -72,7 +72,7 @@ EOF
 # allows for arrow up fatser testing
 echo "Adding git clone to zsh history..."
 cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
-: 1728000000:0;pacman-key --init && git clone https://github.com/h8d13/archinstoo && cd archinstoo && python -m archinstall
+: 1728000000:0;pacman-key --init && git clone https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstall
 HISTEOF
 
 echo "Styling pacman.conf (Color + ILoveCandy)..."
