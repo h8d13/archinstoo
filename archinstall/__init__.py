@@ -59,7 +59,7 @@ def _fetch_deps() -> None:
 	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
 
 
-def _fetch_arch_db() -> None:
+def _prepare() -> None:
 	info('Fetching sync db then hard deps...')
 	try:
 		Pacman.run('-Sy', peek_output=True)
@@ -100,7 +100,7 @@ def main() -> int:
 
 	if not arch_config_handler.args.offline:
 		_check_online()
-		_fetch_arch_db()
+		_prepare()
 
 	if running_from_host():
 		# log which mode we are using
