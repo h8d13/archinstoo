@@ -6,6 +6,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
     - Change PKGBUILD strucs for proper dependency mngmnt
         - Remove python-cryptography
+        - Remove python-textual
         - Add __init__ check of deps
     - Simplify creds file to be inside config
         - Never output passwords/FDE related
