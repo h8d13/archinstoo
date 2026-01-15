@@ -66,6 +66,8 @@ Update:
 # or the same with "${opt_depends[@]}"
 ```
 
+The full list can be seen here [`PKGBUILD`](./PKGBUILD)
+
 You can also use a `venv` and `pip install -e .` or for dev purposes: See [`RUN`](./RUN) to automate this.
 
 ## Testing
