@@ -9,7 +9,7 @@ pre_build () {
 }
 
 clean () {
-    rm -rf pkg src dist build ./*.egg-info ../*.egg-info 
+    rm -rf pkg src dist ./*.pkg.tar.zst.sig build ./*.egg-info ../*.egg-info ./*-git
 }
 
 sign () {
