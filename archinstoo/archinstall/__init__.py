@@ -6,6 +6,13 @@ import sys
 import traceback
 
 from archinstall.lib.args import get_arch_config_handler
+
+script = get_arch_config_handler().get_script()
+# plugins that do not need root or any imported to run
+if script == 'list':
+	_list_mod = f'archinstall.scripts.{script}'
+	importlib.import_module(_list_mod)
+
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.networking import ping
 
@@ -83,13 +90,6 @@ def main() -> int:
 	"""
 	if '--help' in sys.argv or '-h' in sys.argv:
 		get_arch_config_handler().print_help()
-		return 0
-
-	script = get_arch_config_handler().get_script()
-	# plugins that do not need root
-	if script == 'list':
-		mod_name = f'archinstall.scripts.{script}'
-		importlib.import_module(mod_name)
 		return 0
 
 	if os.getuid() != 0:
