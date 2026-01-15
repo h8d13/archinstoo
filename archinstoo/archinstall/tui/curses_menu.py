@@ -535,6 +535,9 @@ class EditMenu(AbstractCurses[str]):
 
 	@override
 	def resize_win(self) -> None:
+		self._clear_all()
+		self._max_height, self._max_width = Tui.t().max_yx
+		self._init_viewports()
 		self._draw()
 
 	def _clear_all(self) -> None:
@@ -713,6 +716,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		self._interrupt_warning = reset_warning_msg
 		self._header = header
 		self._additional_title = additional_title
+		self._preview_size = preview_size
 
 		self._header_entries = []
 		if header:
@@ -736,7 +740,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		self._menu_vp: Viewport | None = None
 		self._preview_vp: Viewport | None = None
 
-		self._init_viewports(preview_size)
+		self._init_viewports(self._preview_size)
 
 		assert self._menu_vp is not None
 		self._items_state: MenuItemsState = MenuItemsState(  # type: ignore[unreachable]
@@ -774,6 +778,16 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 
 	@override
 	def resize_win(self) -> None:
+		self._clear_all()
+		self._max_height, self._max_width = Tui.t().max_yx
+		self._init_viewports(self._preview_size)
+		assert self._menu_vp is not None
+		self._items_state = MenuItemsState(
+			self._item_group,
+			total_cols=self._horizontal_cols,
+			total_rows=self._menu_vp.height,
+			with_frame=self._frame is not None,
+		)
 		self._draw()
 
 	def _clear_all(self) -> None:
@@ -1342,12 +1356,20 @@ class Tui:
 			return Tui.t()._main_loop(component)
 
 	def _sig_win_resize(self, signum: int, frame: FrameType | None) -> None:
+		curses.endwin()
+		self._screen = curses.initscr()
+		curses.resizeterm(*self._screen.getmaxyx())
+		self._screen.clear()
+		self._screen.refresh()
 		if hasattr(self, '_component') and self._component is not None:  # pylint: disable=no-member
 			self._component.resize_win()  # pylint: disable=no-member
 
 	def _main_loop[ValueT](self, component: AbstractCurses[ValueT]) -> Result[ValueT]:
+		self._component = component
 		self._screen.refresh()
-		return component.kickoff(self._screen)
+		result = component.kickoff(self._screen)
+		del self._component
+		return result
 
 	def _set_up_colors(self) -> None:
 		curses.init_pair(STYLE.NORMAL.value, curses.COLOR_WHITE, curses.COLOR_BLACK)
