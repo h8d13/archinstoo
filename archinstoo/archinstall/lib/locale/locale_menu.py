@@ -68,8 +68,7 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		return self._locale_conf
 
 	def _select_kb_layout(self, preset: str | None) -> str | None:
-		kb_lang = select_kb_layout(preset)
-		if kb_lang:
+		if kb_lang := select_kb_layout(preset):
 			set_kb_layout(kb_lang)
 		return kb_lang
 

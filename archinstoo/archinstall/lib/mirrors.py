@@ -54,13 +54,11 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		data: list[CustomRepository],
 	) -> list[CustomRepository]:
 		if action == self._actions[0]:  # add
-			new_repo = self._add_custom_repository()
-			if new_repo is not None:
+			if (new_repo := self._add_custom_repository()) is not None:
 				data = [d for d in data if d.name != new_repo.name]
 				data += [new_repo]
 		elif action == self._actions[1] and entry:  # modify repo
-			new_repo = self._add_custom_repository(entry)
-			if new_repo is not None:
+			if (new_repo := self._add_custom_repository(entry)) is not None:
 				data = [d for d in data if d.name != entry.name]
 				data += [new_repo]
 		elif action == self._actions[2] and entry:  # delete
@@ -176,13 +174,11 @@ class CustomMirrorServersList(ListManager[CustomServer]):
 		data: list[CustomServer],
 	) -> list[CustomServer]:
 		if action == self._actions[0]:  # add
-			new_server = self._add_custom_server()
-			if new_server is not None:
+			if (new_server := self._add_custom_server()) is not None:
 				data = [d for d in data if d.url != new_server.url]
 				data += [new_server]
 		elif action == self._actions[1] and entry:  # modify repo
-			new_server = self._add_custom_server(entry)
-			if new_server is not None:
+			if (new_server := self._add_custom_server(entry)) is not None:
 				data = [d for d in data if d.url != entry.url]
 				data += [new_server]
 		elif action == self._actions[2] and entry:  # delete

@@ -35,8 +35,7 @@ class UserList(ListManager[User]):
 	@override
 	def handle_action(self, action: str, entry: User | None, data: list[User]) -> list[User]:
 		if action == self._actions[0]:  # add
-			new_user = self._add_user()
-			if new_user is not None:
+			if (new_user := self._add_user()) is not None:
 				# in case a user with the same username as an existing user
 				# was created we'll replace the existing one
 				data = [d for d in data if d.username != new_user.username]

@@ -137,8 +137,7 @@ class ArchConfig:
 		if disk_config := args_config.get('disk_config', {}):
 			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(disk_config)
 
-		swap_arg = args_config.get('swap')
-		if swap_arg is not None:
+		if (swap_arg := args_config.get('swap')) is not None:
 			arch_config.swap = ZramConfiguration.parse_arg(swap_arg)
 
 		if kernels := args_config.get('kernels', []):

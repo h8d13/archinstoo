@@ -74,9 +74,7 @@ class DeviceHandler:
 		archiso_mountpoint = Path('/run/archiso/airootfs')
 
 		for device in devices:
-			dev_lsblk_info = find_lsblk_info(device.path, all_lsblk_info)
-
-			if not dev_lsblk_info:
+			if not (dev_lsblk_info := find_lsblk_info(device.path, all_lsblk_info)):
 				debug(f'Device lsblk info not found: {device.path}')
 				continue
 
