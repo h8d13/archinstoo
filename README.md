@@ -41,11 +41,15 @@ cd archinstoo
 
 `python -m archinstall [args]` try `-h` or `--help`
 
-Some options are behind `--advanced`
+Some options are behind `--advanced` others help to skip.
 
-Make your pizza.
+There is also a `--script list` where you can make plugins for easily for `archinstoo`
 
 **3. Enjoy your new system(s)**
+
+Make your pizzas.
+
+> You can create any profile in `archinstall/default_profiles/` following convention, which you can then use directly.
 
 ---
 
