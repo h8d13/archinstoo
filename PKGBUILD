@@ -18,10 +18,6 @@ license=(GPL-3.0-only)
 depends=(
   'python-pyparted'
   'python-pydantic'
-  'python-pydantic-core'
-  'python-annotated-types'
-  'python-typing_extensions'
-  'python-typing-inspection'
   'python'
   'arch-install-scripts' #For pacstrap, genfstab, chroot
   'coreutils' #Basic utilities
