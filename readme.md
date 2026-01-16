@@ -27,7 +27,7 @@ $ nmcli dev wifi connect "SSID" -a
 
 **0.1. Prep**
 
-> [!INFO]
+> [!NOTE]
 > **For the lazy ones:** `bash <(curl -sSl https://evoquus.com/co)` *Does the same as bellow.*
 
 *If on the ISO instead of a live system*
