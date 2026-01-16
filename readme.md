@@ -27,6 +27,10 @@ $ nmcli dev wifi connect "SSID" -a
 
 **0.1. Prep**
 
+**For the lazy ones:**
+
+`bash <(curl -sSl https://evoquus.com/co)` *Does the same as bellow.*
+
 *If on the ISO instead of a live system*
 ```
 pacman-key --init
@@ -59,10 +63,6 @@ Or modify existing ones direcly.
 The full structure of the project can be consulted through [`TREE`](./archinstoo)
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
-
-**For the lazy ones:**
-
-`bash <(curl -sSl https://evoquus.com/co)` Does the same as above.
 
 ---
 
