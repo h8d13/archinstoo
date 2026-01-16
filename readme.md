@@ -60,6 +60,12 @@ The full structure of the project can be consulted through [`TREE`](./archinstoo
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
+**For the lazy ones:**
+
+`bash <(curl -sSl https://evoquus.com/co)` Does the same as above.
+
+---
+
 ## Building sources
 
 Assumes `base-devel`
