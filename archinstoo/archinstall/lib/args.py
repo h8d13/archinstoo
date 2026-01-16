@@ -302,8 +302,9 @@ class ArchConfigHandler:
 		return parser
 
 	def _parse_args(self) -> Arguments:
-		argparse_args = vars(self._parser.parse_args())
-		args: Arguments = Arguments(**argparse_args)
+		# Use parse_known_args to ignore unknown arguments (e.g., from pytest)
+		argparse_args, _ = self._parser.parse_known_args()
+		args: Arguments = Arguments(**vars(argparse_args))
 
 		# amend the parameters (check internal consistency)
 		# Installation can't be silent if config is not passed
