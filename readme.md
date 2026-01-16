@@ -106,6 +106,8 @@ You can also use a `venv` and `pip install -e ./archinstoo` or for dev purposes:
 
 > Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues, and needs to be rebuilt with more space for certain breaking updates. Usually build a `1GB` ISO to test dev builds (vs the original `256M`). See [`ISOMOD`](./ISOMOD)
 
+You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace`
+
 ## Testing
 
 **Philosophy:** Simplify, No backwards-compat, Move fast.
