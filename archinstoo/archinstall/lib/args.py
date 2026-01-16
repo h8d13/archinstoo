@@ -1,5 +1,4 @@
 import argparse
-import difflib
 import json
 import shutil
 import sys
@@ -8,7 +7,7 @@ import urllib.parse
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, NoReturn, Self, override
+from typing import Any, Self
 from urllib.request import Request, urlopen
 
 from pydantic.dataclasses import dataclass as p_dataclass
@@ -23,20 +22,6 @@ from archinstall.lib.models.network import NetworkConfiguration
 from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.output import error, logger, warn
 from archinstall.lib.translationhandler import Language, translation_handler
-
-
-class SuggestArgumentParser(ArgumentParser):
-	# use difflib to suggest on typos with args
-
-	@override
-	def error(self, message: str) -> NoReturn:
-		if 'unrecognized arguments' in message:
-			bad_arg = message.split(':')[-1].strip().split()[0]
-			valid_options = [opt for a in self._actions for opt in a.option_strings]
-			suggestions = difflib.get_close_matches(bad_arg, valid_options, n=1, cutoff=0.6)
-			if suggestions:
-				message += f'\n\nDid you mean: {suggestions[0]}'
-		super().error(message)
 
 
 @p_dataclass
@@ -182,7 +167,7 @@ class ArchConfig:
 
 class ArchConfigHandler:
 	def __init__(self) -> None:
-		self._parser: SuggestArgumentParser = self._define_arguments()
+		self._parser: ArgumentParser = self._define_arguments()
 		args: Arguments = self._parse_args()
 		self._args = args
 
@@ -215,8 +200,8 @@ class ArchConfigHandler:
 			else:
 				item.unlink()
 
-	def _define_arguments(self) -> SuggestArgumentParser:
-		parser = SuggestArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	def _define_arguments(self) -> ArgumentParser:
+		parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 		parser.add_argument(
 			'--config',
 			type=Path,
