@@ -5,7 +5,7 @@ repos:
     hooks:
     - id: shellcheck
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.11
+    rev: v0.14.13
     hooks:
         # fix unused imports and sort them
       - id: ruff
