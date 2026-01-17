@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, NotRequired, Self, TypedDict
@@ -138,7 +140,7 @@ class NetworkConfiguration:
 
 	def install_network_config(
 		self,
-		installation: 'Installer',
+		installation: Installer,
 		profile_config: ProfileConfiguration | None = None,
 	) -> None:
 		match self.type:

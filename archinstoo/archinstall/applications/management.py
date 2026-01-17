@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from archinstall.lib.models.application import ManagementConfiguration
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
 class ManagementApp:
 	def install(
 		self,
-		install_session: 'Installer',
+		install_session: Installer,
 		management_config: ManagementConfiguration,
 	) -> None:
 		debug(f'Installing management tools: {[t.value for t in management_config.tools]}')
