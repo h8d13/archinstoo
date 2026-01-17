@@ -67,6 +67,8 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 ## Building sources
 
+The idea being to promote **option 2** to use archinstall latest. Always, since fixes are often time ctritical.
+
 Assumes `base-devel`
 
 1. From local source where you make changes (for devs)
@@ -77,15 +79,11 @@ Assumes `base-devel`
 
 `cd archinstoo && makepkg -sCf`
 
+---
+
 The full non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
 
 In the case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
-
-> You can also get this file from [releases](https://github.com/h8d13/archinstoo/releases/) page
-
-`sudo pacman -U archinstoo-*.pkg.tar.zst` install directly fromn where you have the tar file.
-
-You can now use `archinstall` anyway you like.
 
 ---
 
