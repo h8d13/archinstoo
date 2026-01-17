@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from archinstall.lib.models.application import Editor, EditorConfiguration
@@ -14,7 +16,7 @@ class EditorApp:
 
 	def install(
 		self,
-		install_session: 'Installer',
+		install_session: Installer,
 		editor_config: EditorConfiguration,
 	) -> None:
 		debug(f'Installing editor: {editor_config.editor.value}')

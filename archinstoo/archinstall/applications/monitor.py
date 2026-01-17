@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from archinstall.lib.models.application import Monitor, MonitorConfiguration
@@ -22,7 +24,7 @@ class MonitorApp:
 
 	def install(
 		self,
-		install_session: 'Installer',
+		install_session: Installer,
 		monitor_config: MonitorConfiguration,
 	) -> None:
 		debug(f'Installing monitor: {monitor_config.monitor.value}')
