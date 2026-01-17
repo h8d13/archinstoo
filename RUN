@@ -1,8 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
 
-[ "$(id -u)" -eq 0 ] && echo "Error: Sudo not required." && exit 1
-
 . ./PKGBUILD && sudo pacman -S --needed "${depends[@]}"
 cd archinstoo || exit 1
 
