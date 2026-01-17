@@ -119,7 +119,7 @@ You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace`
 
 ## Testing
 
-**Philosophy:** Simplify, No backwards-compat, Move fast.
+**Philosophy:** Simplify, No backwards-compat, Move fast. Host to target testing (without ISOs).
 
 To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest changes [Changelog](./.github/HISTORY.md)
 
