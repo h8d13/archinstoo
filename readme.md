@@ -108,9 +108,10 @@ Update:
 See [`RUN`](./RUN) to automate this.
 
 > [!IMPORTANT]
-> Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues,
-and needs to be rebuilt with more space for certain breaking updates. Usually build a `1GB` ISO to test dev builds (vs the original `256M`). 
+> Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues/or partial updates,
+and needs to be rebuilt with more space for certain breaking updates. 
 
+Usually build a `1GB` ISO to test dev builds (vs the original `256M`). And can be released more frequently.
 
 See [`ISOMOD`](./ISOMOD) to create custom ones directly. 
 
