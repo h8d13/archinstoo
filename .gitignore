@@ -1,7 +1,9 @@
 **/**__pycache__
 SAFETY_LOCK
+**/archiso
 **/**old.*
 **/**.img
+**/**.iso
 **/**pwfile
 **/**build
 **/**dist
@@ -25,7 +27,6 @@ SAFETY_LOCK
 **/**.fd
 **/*-git
 /test*.py
-**/archiso
 /guided.py
 venv
 .venv

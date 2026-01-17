@@ -1,0 +1,110 @@
+#!/bin/bash
+# Stage 2: Add cached packages to existing profile
+# Called from ISOMOD before build
+# Requires 'pacman-contrib' for pactree resolution
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Use exported vars from ISOMOD or set defaults
+PROFILE_DIR="${PROFILE_DIR:-$SCRIPT_DIR/archiso_profile}"
+SILENT_MODE="${SILENT_MODE:-0}"
+
+# Load profile config
+iso_profile="${iso_profile:-ISOMOD_CACHE}"
+
+PROFILE_LIST="$SCRIPT_DIR/$iso_profile.conf"
+
+# Check for system updates
+command -v checkupdates >/dev/null 2>&1 && [ -n "$(checkupdates 2>/dev/null)" ] && \
+    echo "System has pending updates." && exit 1
+
+# Verify profile directory exists
+if [ ! -d "$PROFILE_DIR" ]; then
+    echo "ERROR: Profile directory not found."
+    exit 1
+fi
+
+if [ ! -f "$PROFILE_LIST" ]; then
+    echo "No profile found at $PROFILE_LIST, skipping package cache"
+    exit 0
+fi
+
+echo "Creating local package repository for $iso_profile packages..."
+
+# Read packages from profile (skip comments and empty lines)
+packages=$(grep -v '^#' "$PROFILE_LIST" | grep -v '^$' | tr '\n' ' ')
+
+if [ -z "$packages" ]; then
+    echo "No packages defined in profile, skipping"
+    exit 0
+fi
+
+# Create local repo directory in airootfs
+REPO_DIR="$PROFILE_DIR/airootfs/root/local_packages"
+mkdir -p "$REPO_DIR"
+
+echo "Downloading packages with dependencies: $packages"
+
+# Download packages
+# shellcheck disable=SC2086 # Word splitting intentional for package list
+if [ "$SILENT_MODE" = "1" ]; then
+    if ! sudo pacman -Sw --noconfirm $packages >/dev/null 2>&1; then
+        echo "Failed to download packages, continuing without cache"
+        exit 0
+    fi
+else
+    if ! sudo pacman -Sw --noconfirm $packages; then
+        echo "Failed to download packages, continuing without cache"
+        exit 0
+    fi
+fi
+
+# Recursively get ALL dependencies using pactree
+echo "Resolving complete dependency tree..."
+# shellcheck disable=SC2086 # Word splitting intentional for package list
+all_packages=$(
+    for pkg in $packages; do
+        pactree -u -l "$pkg" 2>/dev/null || echo "$pkg"
+    done | sed 's/[<>=].*$//' | sort -u | grep -v "^$"
+)
+dep_count=$(echo "$all_packages" | wc -l)
+echo "Copying $dep_count packages to ISO repository..."
+
+# Copy all packages from cache
+for pkg_name in $all_packages; do
+    latest=$(find /var/cache/pacman/pkg -name "${pkg_name}-*.pkg.tar.zst" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n1 | cut -d' ' -f2-)
+    if [ -n "$latest" ]; then
+        cp "$latest" "$REPO_DIR/" 2>/dev/null || true
+    fi
+done
+
+# Create local repository database
+echo "Creating repository database..."
+if [ -n "$(ls -A "$REPO_DIR"/*.pkg.tar.zst 2>/dev/null)" ]; then
+    repo-add "$REPO_DIR/local_repo.db.tar.gz" "$REPO_DIR"/*.pkg.tar.zst >/dev/null 2>&1
+else
+    echo "No packages found to add to repository"
+    exit 0
+fi
+
+pkg_count=$(find "$REPO_DIR" -name "*.pkg.tar.zst" | wc -l)
+cache_size=$(du -sh "$REPO_DIR" | cut -f1)
+
+# Insert local_repo BEFORE [core] so it has priority
+echo "Configuring pacman to use local repository with priority..."
+PACMAN_CONF="$PROFILE_DIR/airootfs/etc/pacman.conf"
+
+awk '
+    /^\[core\]/ && !inserted {
+        print "# Local repository for pre-cached packages"
+        print "[local_repo]"
+        print "SigLevel = Optional TrustAll"
+        print "Server = file:///root/local_packages"
+        print ""
+        inserted=1
+    }
+    {print}
+' "$PACMAN_CONF" > "$PACMAN_CONF.tmp" && mv "$PACMAN_CONF.tmp" "$PACMAN_CONF"
+
+echo "✓ Added local repo with $pkg_count packages ($cache_size)"
+exit 0
