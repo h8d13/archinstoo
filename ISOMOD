@@ -7,12 +7,12 @@ set -e #uo pipefail
 
 # Build stage 1 ISO with slight modifs
 # Requires 'archiso' 
-
 # Requires 'pacman-contrib' if this is enabled
 CACHING="${CACHING:-1}"
 
 SILENT_MODE="${SILENT_MODE:-0}"
 CLEANUP="${CLEANUP:-1}"
+PRECLEAN="${PRECLEAN:-0}"
 THREADS="${THREADS:-$(nproc)}"
 LOG_FILE="${LOG_FILE:-1}"
 
@@ -36,7 +36,14 @@ cleanup() {
     if [ "$CLEANUP" = "1" ]; then
         echo "Cleaning up build directories..."
         [ -d "$PROFILE_DIR" ] && rm -rf "$PROFILE_DIR"
-        [ -d "$WORK_DIR" ] && sudo rm -rf "$WORK_DIR"
+
+        if [ -d "$WORK_DIR" ]; then
+            # Kill any processes using the work dir
+            sudo fuser -sk "$WORK_DIR" 2>/dev/null || true
+            # Force lazy recursive unmount
+            sudo umount -lR "$WORK_DIR" 2>/dev/null || true
+            sudo rm -rf "$WORK_DIR"
+        fi
         echo "Cleanup complete."
     else
         echo "CLEANUP=0, preserving build directories."
@@ -46,6 +53,7 @@ cleanup() {
 # Error handler - cleanup and exit
 error_exit() {
     echo "ERROR: $1" >&2
+    # Special handle for the usual
     cleanup
     exit 1
 }
@@ -53,6 +61,13 @@ error_exit() {
 # Cleanup on interrupt or error
 trap 'echo "Script interrupted!"; cleanup; exit 130' INT TERM
 trap 'cleanup; exit 1' ERR
+
+# Pre-clean if requested
+if [ "$PRECLEAN" = "1" ]; then
+    echo "Pre-cleaning previous build artifacts..."
+    cleanup
+    echo "Pre-clean complete."
+fi
 
 echo "Setting up archiso profile..."
 mkdir -p "$PROFILE_DIR" || error_exit "Failed to create profile directory"
@@ -132,6 +147,9 @@ fi
 
 echo ""
 echo "✓ SUCCESS! ISO created in: $OUTPUT_DIR"
+echo "Restoring permissions..."
+# restores both folder and any file within to correct permissions
+sudo chown -R "$USER":"$USER" "$OUTPUT_DIR"
 echo ""
 
 cleanup

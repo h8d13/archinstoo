@@ -1,5 +1,7 @@
 #!/bin/bash
 # Stage 2: Add cached packages to existing profile
+# Note: You probably want to make sure you do not have any stale cache
+# using something like 'paccache -r' we only check up to date
 # Called from ISOMOD before build
 # Requires 'pacman-contrib' for pactree resolution
 
