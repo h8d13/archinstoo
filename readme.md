@@ -105,11 +105,16 @@ Update:
 # or the same with "${optdepends[@]}"
 ```
 
-You can also use a `venv` and `pip install -e ./archinstoo` or for dev purposes: See [`RUN`](./RUN) to automate this.
+See [`RUN`](./RUN) to automate this.
 
-> Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues, and needs to be rebuilt with more space for certain breaking updates. Usually build a `1GB` ISO to test dev builds (vs the original `256M`). See [`ISOMOD`](./ISOMOD)
+> [!WARN]
+> Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues,
+and needs to be rebuilt with more space for certain breaking updates. Usually build a `1GB` ISO to test dev builds (vs the original `256M`). 
 
-You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace`
+
+See [`ISOMOD`](./ISOMOD) to create custom ones directly.
+
+You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace` on the ISO directly.
 
 ## Testing
 
@@ -118,5 +123,3 @@ You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace`
 To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest changes [Changelog](./.github/HISTORY.md)
 
 The process would be the same with `git clone -b <branch> <url>`
-
-
