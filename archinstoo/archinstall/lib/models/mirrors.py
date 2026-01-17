@@ -131,7 +131,7 @@ class MirrorStatusListV3(BaseModel):
 		if data.get('version') == 3:
 			return data
 
-		raise ValueError('MirrorStatusListV3 only accepts version 3 data from https://archlinux.org/mirrors/status/json/')
+		raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
 
 class ArchLinuxDeCountry(BaseModel):
