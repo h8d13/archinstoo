@@ -1,13 +1,18 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-. ./PKGBUILD && pacman -S --needed "${depends[@]}"
+
+[ "$(id -u)" -eq 0 ] && echo "Error: Sudo not required." && exit 1
+
+. ./PKGBUILD && sudo pacman -S --needed "${depends[@]}"
+cd archinstoo || exit 1
+
 # update deps launch venv and run archinstall
 if [ ! -d ".venv" ]; then
     python -m venv --system-site-packages .venv
+    
     . .venv/bin/activate
-    pip install -e ./archinstoo
 else
     . .venv/bin/activate
 fi
 
-.venv/bin/python -B -m archinstall "$@"
+sudo .venv/bin/python -B -m archinstall "$@"

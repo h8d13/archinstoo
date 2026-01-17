@@ -9,6 +9,7 @@ from archinstall.lib.args import get_arch_config_handler
 
 script = get_arch_config_handler().get_script()
 # plugins that do not need root or any imported to run
+# for example just listing them
 if script == 'list':
 	_list_mod = f'archinstall.scripts.{script}'
 	importlib.import_module(_list_mod)
@@ -60,6 +61,10 @@ def _fetch_deps() -> None:
 
 	# Re-exec as module to pick up new Python libraries
 	os.environ['ARCHINSTALL_DEPS_FETCHED'] = '1'
+	is_venv = sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
+	info(f'{sys.executable} is_venv={is_venv}')
+	info('Reloading python...')
+
 	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
 
 
