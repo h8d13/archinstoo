@@ -1,5 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PKG_GLOB="archinstoo-*.pkg.tar.zst"
+
 go_to () {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
 }
@@ -10,10 +12,13 @@ pre_build () {
 
 clean () {
     rm -rf pkg src dist ./*.pkg.tar.zst.sig build ./*.egg-info ../*.egg-info ./*-git
-}
+} # make sure no old sigs
 
 sign () {
-    gpg --detach-sign archinstoo-*.pkg.tar.zst
+    gpg --detach-sign "$PKG_GLOB"
+}
+verif() {
+    gpg --verify "$PKG_GLOB".sig
 }
 
 for i in "$@"; do
@@ -40,14 +45,25 @@ for i in "$@"; do
         go_to
         pre_build
         makepkg -Cf
-        sign
         clean
         exit 0
         ;;
+        -s | --sign)
+        shift
+        go_to
+        sign
+        exit 0
+        ;;
+        -sv | --verify-sig)
+        shift
+        go_to
+        verif
+        exit 0
+        ;;        
         -i|--install)
         shift
         go_to
-        sudo pacman -U --overwrite '*' archinstoo-*.pkg.tar.zst
+        sudo pacman -U --overwrite '*' "$PKG_GLOB"
         exit 0
         ;;
         -v|venv)
