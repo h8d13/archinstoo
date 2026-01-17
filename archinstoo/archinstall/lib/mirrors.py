@@ -233,18 +233,18 @@ class MirrorMenu(AbstractSubMenu[MirrorConfiguration]):
 				key='mirror_regions',
 			),
 			MenuItem(
-				text=tr('Add custom servers'),
-				action=add_custom_mirror_servers,
-				value=self._mirror_config.custom_servers,
-				preview_action=self._prev_custom_servers,
-				key='custom_servers',
-			),
-			MenuItem(
 				text=tr('Optional repositories'),
 				action=select_optional_repositories,
 				value=[],
 				preview_action=self._prev_additional_repos,
 				key='optional_repositories',
+			),
+			MenuItem(
+				text=tr('Add custom servers'),
+				action=add_custom_mirror_servers,
+				value=self._mirror_config.custom_servers,
+				preview_action=self._prev_custom_servers,
+				key='custom_servers',
 			),
 			MenuItem(
 				text=tr('Add custom repository'),
