@@ -69,7 +69,7 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 Assumes `base-devel`
 
-1. From local source where you make changes
+1. From local source where you make changes (for devs)
 
 `makepkg -sCf` in repo root.
 

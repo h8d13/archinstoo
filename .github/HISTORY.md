@@ -2,7 +2,17 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
-> Aims to simplify reading/maintaining the codebase while keeping MORE options available.
+> Aims to simplify reading/maintaining the codebase while keeping MORE options available, with LESS dependencies/flags BUT more control especially to create media, modify inner workings, without headaches.
+
+## 0.0.01-3
+
+    - Change menu order for mirrors
+    - Work on ISOMOD scripts to add pre-caching
+        - Profile system/cow space mods
+        - Logging etc
+    - Work on init scripts debugging
+        - Add is_venv check
+    - More formatting
 
 ## 0.0.01-2
 
