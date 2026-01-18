@@ -1061,10 +1061,17 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 			self._preview_vp.update([])
 			return
 
-		preview_text = action_text.split('\n')
-		entries = [ViewportEntry(e, idx, 0, STYLE.NORMAL) for idx, e in enumerate(preview_text)]
+		max_width = self._preview_vp.width - 4  # frame borders + padding
+		wrapped = [
+			chunk
+			for line in action_text.split('\n')
+			for chunk in (
+				[line[i:i + max_width] for i in range(0, len(line), max_width)] if len(line) > max_width else [line]
+			)
+		]
+		entries = [ViewportEntry(line, idx, 0, STYLE.NORMAL) for idx, line in enumerate(wrapped)]
 
-		total_prev_rows = max([e.row for e in entries]) + 1  # rows start with 0 and we need the count
+		total_prev_rows = len(entries)
 		available_rows = self._preview_vp.height - 2  # for the preview frame
 
 		self._calc_prev_scroll_pos(entries, total_prev_rows)

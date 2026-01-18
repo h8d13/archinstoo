@@ -27,6 +27,7 @@ SAFETY_LOCK
 **/**.fd
 **/*-git
 /test*.py
+test_*/
 /guided.py
 venv
 .venv
