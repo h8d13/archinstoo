@@ -371,7 +371,8 @@ class EditViewport(AbstractViewport):
 		self._edit_win.erase()
 
 		if default_text is not None and len(default_text) > 0:
-			self._edit_win.addstr(0, 0, default_text)
+			_, max_x = self._edit_win.getmaxyx()
+			self._edit_win.addstr(0, 0, default_text[:max_x - 1])
 
 		# if this gets initialized multiple times it will be an overlay
 		# and ENTER has to be pressed multiple times to accept
