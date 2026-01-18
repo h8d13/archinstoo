@@ -1383,10 +1383,10 @@ class Tui:
 		return result
 
 	def _set_up_colors(self) -> None:
-		curses.init_pair(STYLE.NORMAL.value, curses.COLOR_WHITE, curses.COLOR_BLACK)
-		curses.init_pair(STYLE.CURSOR_STYLE.value, curses.COLOR_CYAN, curses.COLOR_BLACK)
-		curses.init_pair(STYLE.MENU_STYLE.value, curses.COLOR_WHITE, curses.COLOR_BLUE)
-		curses.init_pair(STYLE.MENU_STYLE.value, curses.COLOR_WHITE, curses.COLOR_BLUE)
+		curses.init_pair(STYLE.NORMAL.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
+		curses.init_pair(STYLE.CURSOR_STYLE.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
+		curses.init_pair(STYLE.MENU_STYLE.value, curses.COLOR_BLACK, curses.COLOR_GREEN)
+		curses.init_pair(STYLE.MENU_STYLE.value, curses.COLOR_BLACK, curses.COLOR_GREEN)
 		curses.init_pair(STYLE.HELP.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
 		curses.init_pair(STYLE.ERROR.value, curses.COLOR_RED, curses.COLOR_BLACK)
 
