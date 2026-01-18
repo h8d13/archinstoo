@@ -40,6 +40,23 @@ My goal is this, to keep reducing hard-coded "standard" to choices/logic options
 The same is true with `base-devel` that used to be installed by default in archinstall.
 But also pulled in `sudo` instead of giving liberty of choice there again.
 
+But for 5 years makepkg and similar major upstream projects support alternatives and so should any code really.
+
+```
+  Commit: 2535611d6c3cbf951408c50ab35953efaf32f686
+  Date: 2021-04-05
+  Author: Eli Schwartz
+  Subject: makepkg: add PACMAN_AUTH configurable setting for sudo elevation
+
+  Bug tracker: Implements FS#32621
+
+  Full commit message:
+  If specified, this will be used no matter what. If not, then we check if sudo exists and use that, or else fall back on su.
+
+  The feature request (FS#32621) is at: https://bugs.archlinux.org/task/32621
+```
+Anyways you start seeing the pattern... What is a 'standard' because it's actually needed, or what is a 'standard' because someone said it should be and left it in a file somewhere.
+
 Withstanding to-dos
 ---
 
