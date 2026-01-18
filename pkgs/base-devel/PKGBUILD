@@ -1,6 +1,6 @@
 # Maintainer: Arch Linux Team
 # Contributor: Levente Polyak <anthraxx[at]archlinux[dot]org>
-# Contributor: Hadean Eeon <hadean-eon-dev@proton.me>
+# Contributor: Hadean Eeon <hadean-eon-dev[at]proton[dot]me>
 
 pkgname=base-devel
 pkgver=1
