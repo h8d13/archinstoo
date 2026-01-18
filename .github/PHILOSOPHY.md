@@ -11,9 +11,34 @@ This is a powerful idea because it would allow for standards to compete in bette
 
 Providing choice should always be a priority, this makes for why, arch is arch.
 
-Archinstall in its essence should behave similarly, giving all the options makes them all "right" to one's eyes.
+Archinstall in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
 
 This is also to illustrate that for example a feature that only 1% of users actually use should not be given priorities over modular architecture.
+
+Some better examples:
+
+Historically this list from `default_profiles/desktop.py`
+
+```
+	@property
+	@override
+	def packages(self) -> list[str]:
+		return [
+			'vi',
+			'openssh',
+			'wget',
+			'iwd',
+			'wireless_tools',
+			'smartmontools',
+			'xdg-utils',
+		]
+```
+(Which I have already been tearing appart) 
+Used to hardcode stuff like `htop vim wpa_supplicant ...`
+
+My goal is this, to keep reducing hard-coded "standard" to choices/logic options.
+The same is true with `base-devel` that used to be installed by default in archinstall.
+But also pulled in `sudo` instead of giving liberty of choice there again.
 
 Withstanding to-dos
 ---
