@@ -27,9 +27,12 @@ from .tui.curses_menu import Tui
 
 hard_depends = (
 	'python-pyparted',
+	'python-annotated-types',
+	'python-pydantic-core',
+	'python-typing_extensions',
+	'python-typing-inspection',
 	'python-pydantic',
 )
-
 
 def _log_sys_info() -> None:
 	# Log various information about hardware before starting the installation. This might assist in troubleshooting
