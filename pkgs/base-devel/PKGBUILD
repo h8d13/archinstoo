@@ -2,7 +2,7 @@
 # Contributor: Levente Polyak <anthraxx[at]archlinux[dot]org>
 # Contributor: Hadean Eeon <hadean-eon-dev[at]proton[dot]me>
 
-pkgname=base-devel
+pkgname=base-devel-flex
 pkgver=1
 pkgrel=2
 pkgdesc='Basic tools to build Arch Linux packages'
