@@ -62,7 +62,8 @@ class ArchConfig:
 	services: list[str] = field(default_factory=list)
 	custom_commands: list[str] = field(
 		default_factory=lambda: [
-			'#su - user -c "bash ~/.stash/repo/install.sh"',
+			'#arch-chroot via bash tmp files # lines are ignored',
+			'#ex: su - user -c "bash ~/.stash/repo/install.sh"',
 		]
 	)
 
