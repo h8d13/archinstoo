@@ -79,11 +79,11 @@ def select_driver(
 
 	header = ''
 	if SysInfo.has_amd_graphics():
-		header += tr('For the best compatibility with your AMD hardware, you may want to use either the all open-source or AMD / ATI options.') + '\n'
+		header += tr('For the best compat with your AMD hardware, you may want to use either the all open-source or AMD / ATI options.') + '\n'
 	if SysInfo.has_intel_graphics():
-		header += tr('For the best compatibility with your Intel hardware, you may want to use either the all open-source or Intel options.\n')
+		header += tr('For the best compat with your Intel hardware, you may want to use either the all open-source or Intel options.\n')
 	if SysInfo.has_nvidia_graphics():
-		header += tr('For the best compatibility with your Nvidia hardware, you may want to use the Nvidia proprietary driver.\n')
+		header += tr('For the best compat with your Nvidia hardware, if recent use open-kernel, otherwise you might need to use the AUR later.\n')
 
 	result = SelectMenu[GfxDriver](
 		group,
