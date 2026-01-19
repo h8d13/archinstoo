@@ -148,7 +148,16 @@
     "hostname": "archinstoo",
     "auth_config": {
         "lock_root_account": true,
-        "privilege_escalation": "doas"
+        "privilege_escalation": "doas",
+        "users": [
+            {
+                "username": "user",
+                "enc_password": null,
+                "sudo": true,
+                "groups": [],
+                "stash_url": null
+            }
+        ]
     },
     "app_config": {
         "bluetooth_config": {
@@ -179,7 +188,9 @@
             "editor": "micro"
         }
     },
-    "network_config": null,
+    "network_config": {
+        "type": "nm"
+    },
     "parallel_downloads": 0,
     "timezone": "Europe/Berlin",
     "ntp": true,
@@ -189,7 +200,7 @@
     ],
     "services": [],
     "custom_commands": [
-        "#cd /home/user; git clone <url>",
-        "#chown -R user:user /home/user/repo"
+        "#arch-chroot via bash tmp files # lines are ignored",
+        "#ex: su - user -c \"bash ~/.stash/repo/install.sh\""
     ]
 }

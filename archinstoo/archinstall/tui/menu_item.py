@@ -22,6 +22,7 @@ class MenuItem:
 	display_action: Callable[[Any], str] | None = None
 	preview_action: Callable[[Any], str | None] | None = None
 	key: str | None = None
+	value_validator: Callable[[Any], bool] | None = None
 
 	_yes: ClassVar[Self | None] = None
 	_no: ClassVar[Self | None] = None
@@ -54,6 +55,8 @@ class MenuItem:
 			return False
 		elif isinstance(self.value, dict) and len(self.value) == 0:
 			return False
+		elif self.value_validator is not None:
+			return self.value_validator(self.value)
 		else:
 			return True
 
