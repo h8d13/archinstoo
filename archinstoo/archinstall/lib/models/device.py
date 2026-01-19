@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import builtins
+import json
 import math
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import NotRequired, Self, TypedDict, override
+from typing import Any, NotRequired, Self, TypedDict, override
 from uuid import UUID
 
 import parted
 from parted import Disk, Geometry, Partition
-from pydantic import BaseModel, Field, ValidationInfo, field_serializer, field_validator
 
 from archinstall.lib.translationhandler import tr
 
@@ -1538,11 +1538,12 @@ class DiskEncryption:
 		return enc
 
 
-class LsblkInfo(BaseModel):
+@dataclass
+class LsblkInfo:
 	name: str
 	path: Path
 	pkname: str | None
-	log_sec: int = Field(alias='log-sec')
+	log_sec: int
 	size: Size
 	pttype: str | None
 	ptuuid: str | None
@@ -1555,28 +1556,99 @@ class LsblkInfo(BaseModel):
 	fstype: str | None
 	fsver: str | None
 	fsavail: int | None
-	fsuse_percentage: str | None = Field(alias='fsuse%')
+	fsuse_percentage: str | None
 	type: str | None  # may be None for strange behavior with md devices
 	mountpoint: Path | None
 	mountpoints: list[Path]
 	fsroots: list[Path]
-	children: list[LsblkInfo] = Field(default_factory=list)
+	children: list[LsblkInfo] = field(default_factory=list)
 
-	@field_validator('size', mode='before')
 	@classmethod
-	def convert_size(cls, v: int, info: ValidationInfo) -> Size:
-		sector_size = SectorSize(info.data['log_sec'], Unit.B)
-		return Size(v, Unit.B, sector_size)
+	def from_dict(cls, data: dict[str, Any]) -> Self:
+		log_sec = data.get('log-sec', 512)
+		sector_size = SectorSize(log_sec, Unit.B)
+		size = Size(data.get('size', 0), Unit.B, sector_size)
+		mountpoints = [Path(m) for m in data.get('mountpoints', []) if m is not None]
+		fsroots = [Path(f) for f in data.get('fsroots', []) if f is not None]
+		children: list[LsblkInfo] = [LsblkInfo.from_dict(c) for c in data.get('children', [])]
 
-	@field_validator('mountpoints', 'fsroots', mode='before')
-	@classmethod
-	def remove_none(cls, v: list[Path | None]) -> list[Path]:
-		return [item for item in v if item is not None]
+		return cls(
+			name=data['name'],
+			path=Path(data['path']),
+			pkname=data.get('pkname'),
+			log_sec=log_sec,
+			size=size,
+			pttype=data.get('pttype'),
+			ptuuid=data.get('ptuuid'),
+			rota=data.get('rota', False),
+			tran=data.get('tran'),
+			partn=data.get('partn'),
+			partuuid=data.get('partuuid'),
+			parttype=data.get('parttype'),
+			uuid=data.get('uuid'),
+			fstype=data.get('fstype'),
+			fsver=data.get('fsver'),
+			fsavail=data.get('fsavail'),
+			fsuse_percentage=data.get('fsuse%'),
+			type=data.get('type'),
+			mountpoint=Path(data['mountpoint']) if data.get('mountpoint') else None,
+			mountpoints=mountpoints,
+			fsroots=fsroots,
+			children=children,
+		)
 
-	@field_serializer('size', when_used='json')
-	def serialize_size(self, size: Size) -> str:
-		return size.format_size(Unit.MiB)
+	def to_json(self) -> str:
+		return json.dumps(self._to_dict(), indent=4)
+
+	def _to_dict(self) -> dict[str, Any]:
+		return {
+			'name': self.name,
+			'path': str(self.path),
+			'pkname': self.pkname,
+			'log-sec': self.log_sec,
+			'size': self.size.format_size(Unit.MiB),
+			'pttype': self.pttype,
+			'ptuuid': self.ptuuid,
+			'rota': self.rota,
+			'tran': self.tran,
+			'partn': self.partn,
+			'partuuid': self.partuuid,
+			'parttype': self.parttype,
+			'uuid': self.uuid,
+			'fstype': self.fstype,
+			'fsver': self.fsver,
+			'fsavail': self.fsavail,
+			'fsuse%': self.fsuse_percentage,
+			'type': self.type,
+			'mountpoint': str(self.mountpoint) if self.mountpoint else None,
+			'mountpoints': [str(m) for m in self.mountpoints],
+			'fsroots': [str(f) for f in self.fsroots],
+			'children': [c._to_dict() for c in self.children],
+		}
 
 	@classmethod
 	def fields(cls) -> list[str]:
-		return [field.alias or name for name, field in cls.model_fields.items() if name != 'children']
+		# Fields expected by lsblk --output
+		return [
+			'name',
+			'path',
+			'pkname',
+			'log-sec',
+			'size',
+			'pttype',
+			'ptuuid',
+			'rota',
+			'tran',
+			'partn',
+			'partuuid',
+			'parttype',
+			'uuid',
+			'fstype',
+			'fsver',
+			'fsavail',
+			'fsuse%',
+			'type',
+			'mountpoint',
+			'mountpoints',
+			'fsroots',
+		]

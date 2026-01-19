@@ -1,6 +1,6 @@
+import json
+from dataclasses import dataclass
 from pathlib import Path
-
-from pydantic import BaseModel
 
 from archinstall.lib.exceptions import DiskError, SysCallError
 from archinstall.lib.general import SysCommand
@@ -8,8 +8,18 @@ from archinstall.lib.models.device import LsblkInfo
 from archinstall.lib.output import debug, warn
 
 
-class LsblkOutput(BaseModel):
+@dataclass
+class LsblkOutput:
 	blockdevices: list[LsblkInfo]
+
+	@classmethod
+	def from_json(cls, data: str) -> 'LsblkOutput':
+		parsed = json.loads(data)
+		devices = [LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])]
+		return cls(blockdevices=devices)
+
+	def to_json(self) -> str:
+		return json.dumps({'blockdevices': [d._to_dict() for d in self.blockdevices]}, indent=4)
 
 
 def _fetch_lsblk_info(
@@ -41,7 +51,7 @@ def _fetch_lsblk_info(
 		raise err
 
 	output = worker.output(remove_cr=False)
-	return LsblkOutput.model_validate_json(output)
+	return LsblkOutput.from_json(output.decode())
 
 
 def get_lsblk_info(
@@ -107,7 +117,7 @@ def disk_layouts() -> str:
 		warn(f'Could not return disk layouts: {err}')
 		return ''
 
-	return lsblk_output.model_dump_json(indent=4)
+	return lsblk_output.to_json()
 
 
 def umount(mountpoint: Path, recursive: bool = False) -> None:

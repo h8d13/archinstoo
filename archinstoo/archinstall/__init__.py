@@ -25,14 +25,7 @@ from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
 
-hard_depends = (
-	'python-pyparted',
-	'python-annotated-types',
-	'python-pydantic-core',
-	'python-typing_extensions',
-	'python-typing-inspection',
-	'python-pydantic',
-)
+hard_depends = ('python-pyparted',)
 
 
 def _log_sys_info() -> None:

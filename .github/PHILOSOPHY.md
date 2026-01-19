@@ -57,7 +57,7 @@ But for 5 years makepkg and similar major upstream projects support alternatives
 ```
 Anyways you start seeing the pattern... What is a 'standard' because it's actually needed, or what is a 'standard' because someone said it should be and left it in a file somewhere.
 
-The same is true by removing `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted` and `python-pydantic`
+The same is true by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted`.
 
 Without losing any functionality.
 

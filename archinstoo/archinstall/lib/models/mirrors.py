@@ -1,20 +1,32 @@
 import datetime
 import http.client
+import json
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, Self, TypedDict, override
-
-from pydantic import BaseModel, field_validator, model_validator
 
 from ..models.packages import Repository
 from ..networking import DownloadTimer, fetch_data_from_url, ping
 from ..output import debug
 
 
-class MirrorStatusEntryV3(BaseModel):
+def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
+	"""Parse ISO datetime string, handling Z suffix and already-parsed values."""
+	if value is None:
+		return None
+	if isinstance(value, datetime.datetime):
+		return value
+	try:
+		return datetime.datetime.fromisoformat(value.replace('Z', '+00:00'))
+	except (ValueError, AttributeError):
+		return None
+
+
+@dataclass
+class MirrorStatusEntryV3:
 	url: str
 	protocol: str
 	active: bool
@@ -30,11 +42,44 @@ class MirrorStatusEntryV3(BaseModel):
 	duration_stddev: float | None = None
 	completion_pct: float | None = None
 	score: float | None = None
-	_latency: float | None = None
-	_speed: float | None = None
-	_hostname: str | None = None
-	_port: int | None = None
-	_speedtest_retries: int | None = None
+	_latency: float | None = field(default=None, repr=False)
+	_speed: float | None = field(default=None, repr=False)
+	_hostname: str | None = field(default=None, repr=False)
+	_port: int | None = field(default=None, repr=False)
+	_speedtest_retries: int | None = field(default=None, repr=False)
+
+	def __post_init__(self) -> None:
+		if self.score is not None:
+			self.score = round(self.score)
+			debug(f'    score: {self.score}')
+
+		self._hostname, *port = urllib.parse.urlparse(self.url).netloc.split(':', 1)
+		self._port = int(port[0]) if port else None
+
+		from ..args import get_arch_config_handler
+
+		if get_arch_config_handler().args.debug:
+			debug(f'Loaded mirror {self._hostname}' + (f' with current score of {self.score}' if self.score else ''))
+
+	@classmethod
+	def from_dict(cls, data: dict[str, Any]) -> Self:
+		return cls(
+			url=data['url'],
+			protocol=data['protocol'],
+			active=data['active'],
+			country=data['country'],
+			country_code=data['country_code'],
+			isos=data['isos'],
+			ipv4=data['ipv4'],
+			ipv6=data['ipv6'],
+			details=data['details'],
+			delay=data.get('delay'),
+			last_sync=_parse_datetime(data.get('last_sync')),
+			duration_avg=data.get('duration_avg'),
+			duration_stddev=data.get('duration_stddev'),
+			completion_pct=data.get('completion_pct'),
+			score=data.get('score'),
+		)
 
 	@property
 	def server_url(self) -> str:
@@ -81,11 +126,6 @@ class MirrorStatusEntryV3(BaseModel):
 
 	@property
 	def latency(self) -> float | None:
-		"""
-		Latency measures the milliseconds between one ICMP request & response.
-		It only does so once because we check if self._latency is None, and a ICMP timeout result in -1
-		We do this because some hosts blocks ICMP so we'll have to rely on .speed() instead which is slower.
-		"""
 		if self._latency is None:
 			debug(f'Checking latency for {self.url}')
 			assert self._hostname is not None
@@ -94,53 +134,62 @@ class MirrorStatusEntryV3(BaseModel):
 
 		return self._latency
 
-	@classmethod
-	@field_validator('score', mode='before')
-	def validate_score(cls, value: float) -> int | None:
-		if value is not None:
-			value = round(value)
-			debug(f'    score: {value}')
 
-		return value
-
-	@model_validator(mode='after')
-	def debug_output(self) -> Self:
-		from ..args import get_arch_config_handler
-
-		self._hostname, *port = urllib.parse.urlparse(self.url).netloc.split(':', 1)
-		self._port = int(port[0]) if port and len(port) >= 1 else None
-
-		if get_arch_config_handler().args.debug:
-			debug(f'Loaded mirror {self._hostname}' + (f' with current score of {self.score}' if self.score else ''))
-		return self
-
-
-class MirrorStatusListV3(BaseModel):
+@dataclass
+class MirrorStatusListV3:
 	cutoff: int
 	last_check: datetime.datetime
 	num_checks: int
 	urls: list[MirrorStatusEntryV3]
 	version: int
 
-	@model_validator(mode='before')
+	def __post_init__(self) -> None:
+		if self.version != 3:
+			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
+
 	@classmethod
-	def check_model(
-		cls,
-		data: dict[str, int | datetime.datetime | list[MirrorStatusEntryV3]],
-	) -> dict[str, int | datetime.datetime | list[MirrorStatusEntryV3]]:
-		if data.get('version') == 3:
-			return data
+	def from_dict(cls, data: dict[str, Any]) -> Self:
+		if data.get('version') != 3:
+			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
-		raise ValueError('MirrorStatusListV3 only accepts version 3 data')
+		return cls(
+			cutoff=data['cutoff'],
+			last_check=_parse_datetime(data['last_check']) or datetime.datetime.now(datetime.UTC),
+			num_checks=data['num_checks'],
+			urls=[MirrorStatusEntryV3.from_dict(u) for u in data['urls']],
+			version=data['version'],
+		)
+
+	@classmethod
+	def from_json(cls, data: str) -> Self:
+		return cls.from_dict(json.loads(data))
+
+	def to_json(self) -> str:
+		return json.dumps(
+			{
+				'cutoff': self.cutoff,
+				'last_check': self.last_check.isoformat(),
+				'num_checks': self.num_checks,
+				'urls': [asdict(u) for u in self.urls],
+				'version': self.version,
+			}
+		)
 
 
-class ArchLinuxDeCountry(BaseModel):
+@dataclass
+class ArchLinuxDeCountry:
 	code: str
 	name: str
 
+	@classmethod
+	def from_dict(cls, data: dict[str, Any]) -> Self:
+		return cls(code=data['code'], name=data['name'])
 
-class ArchLinuxDeMirrorEntry(BaseModel):
+
+@dataclass
+class ArchLinuxDeMirrorEntry:
 	url: str
+	host: str
 	country: ArchLinuxDeCountry | None = None
 	durationAvg: float | None = None
 	delay: int | None = None
@@ -150,7 +199,22 @@ class ArchLinuxDeMirrorEntry(BaseModel):
 	lastSync: datetime.datetime | None = None
 	ipv4: bool = True
 	ipv6: bool = False
-	host: str
+
+	@classmethod
+	def from_dict(cls, data: dict[str, Any]) -> Self:
+		return cls(
+			url=data['url'],
+			host=data['host'],
+			country=ArchLinuxDeCountry.from_dict(data['country']) if data.get('country') else None,
+			durationAvg=data.get('durationAvg'),
+			delay=data.get('delay'),
+			durationStddev=data.get('durationStddev'),
+			completionPct=data.get('completionPct'),
+			score=data.get('score'),
+			lastSync=_parse_datetime(data.get('lastSync')),
+			ipv4=data.get('ipv4', True),
+			ipv6=data.get('ipv6', False),
+		)
 
 	def to_v3_entry(self) -> dict[str, Any]:
 		"""Convert to MirrorStatusEntryV3 compatible format"""
@@ -173,7 +237,8 @@ class ArchLinuxDeMirrorEntry(BaseModel):
 		}
 
 
-class ArchLinuxDeMirrorList(BaseModel):
+@dataclass
+class ArchLinuxDeMirrorList:
 	offset: int
 	limit: int
 	total: int
@@ -181,15 +246,28 @@ class ArchLinuxDeMirrorList(BaseModel):
 	items: list[ArchLinuxDeMirrorEntry]
 
 	@classmethod
+	def from_dict(cls, data: dict[str, Any]) -> Self:
+		return cls(
+			offset=data['offset'],
+			limit=data['limit'],
+			total=data['total'],
+			count=data['count'],
+			items=[ArchLinuxDeMirrorEntry.from_dict(i) for i in data['items']],
+		)
+
+	@classmethod
+	def from_json(cls, data: str) -> Self:
+		return cls.from_dict(json.loads(data))
+
+	@classmethod
 	def fetch_all(cls, base_url: str) -> Self:
 		"""Fetch all paginated results from archlinux.de API"""
-
 		limit = 100
-		first_page = cls.model_validate_json(fetch_data_from_url(f'{base_url}?offset=0&limit={limit}'))
+		first_page = cls.from_json(fetch_data_from_url(f'{base_url}?offset=0&limit={limit}'))
 		all_items = list(first_page.items)
 
 		for offset in range(limit, first_page.total, limit):
-			page = cls.model_validate_json(fetch_data_from_url(f'{base_url}?offset={offset}&limit={limit}'))
+			page = cls.from_json(fetch_data_from_url(f'{base_url}?offset={offset}&limit={limit}'))
 			all_items.extend(page.items)
 			debug(f'Fetched {len(all_items)}/{first_page.total} mirrors')
 
@@ -198,7 +276,7 @@ class ArchLinuxDeMirrorList(BaseModel):
 	def to_v3(self) -> MirrorStatusListV3:
 		"""Convert to MirrorStatusListV3 format"""
 		urls = [item.to_v3_entry() for item in self.items]
-		return MirrorStatusListV3.model_validate(
+		return MirrorStatusListV3.from_dict(
 			{
 				'version': 3,
 				'cutoff': 3600,
