@@ -51,7 +51,7 @@ def _fetch_lsblk_info(
 		raise err
 
 	output = worker.output(remove_cr=False)
-	return LsblkOutput.from_json(output)
+	return LsblkOutput.from_json(output.decode())
 
 
 def get_lsblk_info(

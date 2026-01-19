@@ -426,7 +426,7 @@ class MirrorListHandler:
 			try:
 				de_list = ArchLinuxDeMirrorList.fetch_all('https://www.archlinux.de/api/mirrors')
 				v3_list = de_list.to_v3()
-				self._status_mappings = self._parse_remote_mirror_list(v3_list.model_dump_json())
+				self._status_mappings = self._parse_remote_mirror_list(v3_list.to_json())
 				return True
 			except Exception as e:
 				debug(f'Error fetching from archlinux.de: {e}')
@@ -465,7 +465,7 @@ class MirrorListHandler:
 		return region_list
 
 	def _parse_remote_mirror_list(self, mirrorlist: str) -> dict[str, list[MirrorStatusEntryV3]]:
-		mirror_status = MirrorStatusListV3.model_validate_json(mirrorlist)
+		mirror_status = MirrorStatusListV3.from_json(mirrorlist)
 
 		sorting_placeholder: dict[str, list[MirrorStatusEntryV3]] = {}
 
