@@ -49,14 +49,12 @@ class MirrorStatusEntryV3:
 	_speedtest_retries: int | None = field(default=None, repr=False)
 
 	def __post_init__(self) -> None:
-		# Round score if present
 		if self.score is not None:
 			self.score = round(self.score)
 			debug(f'    score: {self.score}')
 
-		# Parse hostname from url
 		self._hostname, *port = urllib.parse.urlparse(self.url).netloc.split(':', 1)
-		self._port = int(port[0]) if port and len(port) >= 1 else None
+		self._port = int(port[0]) if port else None
 
 		from ..args import get_arch_config_handler
 		if get_arch_config_handler().args.debug:
