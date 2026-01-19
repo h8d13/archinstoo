@@ -1,9 +1,7 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from enum import Enum
 from functools import cached_property
 from typing import Self, TypedDict, override
-
-from pydantic import BaseModel
 
 from archinstall.lib.translationhandler import tr
 
@@ -127,7 +125,8 @@ class PackageSearch:
 		)
 
 
-class LocalPackage(BaseModel):
+@dataclass
+class LocalPackage:
 	name: str
 	version: str
 	description: str
@@ -147,7 +146,8 @@ class LocalPackage(BaseModel):
 		return self.version < other.version
 
 
-class AvailablePackage(BaseModel):
+@dataclass
+class AvailablePackage:
 	name: str
 	architecture: str
 	build_date: str
@@ -168,12 +168,11 @@ class AvailablePackage(BaseModel):
 
 	@cached_property
 	def longest_key(self) -> int:
-		return max(len(key) for key in self.model_dump().keys())
+		return max(len(key) for key in asdict(self).keys())
 
-	# return all package info line by line
 	def info(self) -> str:
 		output = ''
-		for key, value in self.model_dump().items():
+		for key, value in asdict(self).items():
 			key = key.replace('_', ' ').capitalize()
 			key = key.ljust(self.longest_key)
 			output += f'{key} : {value}\n'

@@ -17,7 +17,6 @@ license=(GPL-3.0-only)
 #internals first
 depends=(
   'python-pyparted'
-  'python-pydantic'
   'python'
   'arch-install-scripts' #For pacstrap, genfstab, chroot
   'coreutils' #Basic utilities
