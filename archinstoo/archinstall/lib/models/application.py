@@ -74,6 +74,16 @@ class EditorConfigSerialization(TypedDict):
 	editor: str
 
 
+class Shell(StrEnum):
+	BASH = auto()
+	ZSH = auto()
+	FISH = auto()
+
+
+class ShellConfigSerialization(TypedDict):
+	shell: str
+
+
 class ZramAlgorithm(StrEnum):
 	ZSTD = 'zstd'
 	LZO_RLE = 'lzo-rle'
@@ -96,6 +106,7 @@ class ApplicationSerialization(TypedDict):
 	management_config: NotRequired[ManagementConfigSerialization]
 	monitor_config: NotRequired[MonitorConfigSerialization]
 	editor_config: NotRequired[EditorConfigSerialization]
+	shell_config: NotRequired[ShellConfigSerialization]
 
 
 @dataclass
@@ -218,6 +229,22 @@ class EditorConfiguration:
 		)
 
 
+@dataclass
+class ShellConfiguration:
+	shell: Shell
+
+	def json(self) -> ShellConfigSerialization:
+		return {
+			'shell': self.shell.value,
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: ShellConfigSerialization) -> Self:
+		return cls(
+			Shell(arg['shell']),
+		)
+
+
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
@@ -243,6 +270,7 @@ class ApplicationConfiguration:
 	management_config: ManagementConfiguration | None = None
 	monitor_config: MonitorConfiguration | None = None
 	editor_config: EditorConfiguration | None = None
+	shell_config: ShellConfiguration | None = None
 
 	_config_parsers: ClassVar[dict[str, type]] = {
 		'bluetooth_config': BluetoothConfiguration,
@@ -253,6 +281,7 @@ class ApplicationConfiguration:
 		'management_config': ManagementConfiguration,
 		'monitor_config': MonitorConfiguration,
 		'editor_config': EditorConfiguration,
+		'shell_config': ShellConfiguration,
 	}
 
 	@classmethod
