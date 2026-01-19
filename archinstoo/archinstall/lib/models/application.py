@@ -267,6 +267,9 @@ class ApplicationConfiguration:
 				if (value := args.get(attr)) is not None:
 					setattr(app_config, attr, parser_cls.parse_arg(value))  # type: ignore[attr-defined]
 					# general rule of thumb if copy pasting more than 5x, abstract
+					# dev can add to _config and to dataclass to import a new structure
+					# then make the appropriate changes in applications/application_type.py
+					# and archinstall/lib/applications
 
 		return app_config
 
