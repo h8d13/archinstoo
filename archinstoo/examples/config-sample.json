@@ -188,7 +188,9 @@
             "editor": "micro"
         }
     },
-    "network_config": null,
+    "network_config": {
+        "type": "nm"
+    },
     "parallel_downloads": 0,
     "timezone": "Europe/Berlin",
     "ntp": true,
