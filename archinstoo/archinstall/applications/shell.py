@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 
 # any special handling for a shell can go here bellow
+# TODO: peak elitism busybox shell and remove bash
 class ShellApp:
 	def install(
 		self,
