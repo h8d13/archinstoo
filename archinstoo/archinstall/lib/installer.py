@@ -1200,14 +1200,6 @@ class Installer:
 
 		self.pacman.strap('grub')
 
-		grub_default = self.target / 'etc/default/grub'
-		config = grub_default.read_text()
-
-		kernel_parameters = ' '.join(self._get_kernel_params(root, False, False))
-		config = re.sub(r'(GRUB_CMDLINE_LINUX=")("\n)', rf'\1{kernel_parameters}\2', config, count=1)
-
-		grub_default.write_text(config)
-
 		info(f'GRUB boot partition: {boot_partition.dev_path}')
 
 		boot_dir = Path('/boot')
@@ -1266,17 +1258,35 @@ class Installer:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 
 		if uki_enabled and SysInfo.has_uefi():
-			# Pattern follows 25_bli.in from upstream GRUB
 			grub_d = self.target / 'etc/grub.d'
-
+			
+			# case configured through _config_uki()
 			# Disable 10_linux to prevent duplicate/broken entries
-			# UKI entries from 15_uki replace traditional kernel entries
 			linux_script = grub_d / '10_linux'
 			linux_script.chmod(0o644)
 
+			# UKI entries via 15_uki using blsuki module
 			uki_script = grub_d / '15_uki'
-			uki_script.write_text('#!/bin/sh\nset -e\ncat << EOF\nif [ "\\$grub_platform" = "efi" ]; then\n  insmod blsuki\n  uki\nfi\nEOF\n')
+			uki_script.write_text(textwrap.dedent('''\
+				#!/bin/sh
+				set -e
+				cat << EOF
+				if [ "$grub_platform" = "efi" ]; then
+				  insmod blsuki
+				  uki
+				fi
+				EOF
+				'''))
 			uki_script.chmod(0o755)
+		else:
+			grub_default = self.target / 'etc/default/grub'
+			config = grub_default.read_text()
+
+			# non-UKI needs to edit /etc/default/grub does not use /etc/kernel/cmdline
+			kernel_parameters = ' '.join(self._get_kernel_params(root, False, False))
+			config = re.sub(r'(GRUB_CMDLINE_LINUX=")("\n)', rf'\1{kernel_parameters}\2', config, count=1)
+
+			grub_default.write_text(config)
 
 		try:
 			self.arch_chroot(
