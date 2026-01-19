@@ -10,6 +10,7 @@ from archinstall.applications.management import ManagementApp
 from archinstall.applications.monitor import MonitorApp
 from archinstall.applications.power_management import PowerManagementApp
 from archinstall.applications.print_service import PrintServiceApp
+from archinstall.applications.shell import ShellApp
 from archinstall.lib.models import Audio
 from archinstall.lib.models.application import ApplicationConfiguration
 from archinstall.lib.models.users import User
@@ -64,6 +65,13 @@ class ApplicationHandler:
 			EditorApp().install(
 				install_session,
 				app_config.editor_config,
+			)
+
+		if app_config.shell_config:
+			ShellApp().install(
+				install_session,
+				app_config.shell_config,
+				users,
 			)
 
 
