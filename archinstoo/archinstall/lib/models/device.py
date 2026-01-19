@@ -7,7 +7,7 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import NotRequired, Self, TypedDict, override
+from typing import Any, NotRequired, Self, TypedDict, override
 from uuid import UUID
 
 import parted
@@ -1564,7 +1564,7 @@ class LsblkInfo:
 	children: list[Self] = field(default_factory=list)
 
 	@classmethod
-	def from_dict(cls, data: dict) -> Self:
+	def from_dict(cls, data: dict[str, Any]) -> Self:
 		log_sec = data.get('log-sec', 512)
 		sector_size = SectorSize(log_sec, Unit.B)
 		size = Size(data.get('size', 0), Unit.B, sector_size)
@@ -1600,7 +1600,7 @@ class LsblkInfo:
 	def to_json(self) -> str:
 		return json.dumps(self._to_dict(), indent=4)
 
-	def _to_dict(self) -> dict:
+	def _to_dict(self) -> dict[str, Any]:
 		return {
 			'name': self.name,
 			'path': str(self.path),

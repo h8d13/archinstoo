@@ -4,7 +4,7 @@ import json
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, Self, TypedDict, override
 
@@ -62,7 +62,7 @@ class MirrorStatusEntryV3:
 			debug(f'Loaded mirror {self._hostname}' + (f' with current score of {self.score}' if self.score else ''))
 
 	@classmethod
-	def from_dict(cls, data: dict) -> Self:
+	def from_dict(cls, data: dict[str, Any]) -> Self:
 		return cls(
 			url=data['url'],
 			protocol=data['protocol'],
@@ -148,7 +148,7 @@ class MirrorStatusListV3:
 			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
 	@classmethod
-	def from_dict(cls, data: dict) -> Self:
+	def from_dict(cls, data: dict[str, Any]) -> Self:
 		if data.get('version') != 3:
 			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
@@ -164,6 +164,15 @@ class MirrorStatusListV3:
 	def from_json(cls, data: str) -> Self:
 		return cls.from_dict(json.loads(data))
 
+	def to_json(self) -> str:
+		return json.dumps({
+			'cutoff': self.cutoff,
+			'last_check': self.last_check.isoformat() if self.last_check else None,
+			'num_checks': self.num_checks,
+			'urls': [asdict(u) for u in self.urls],
+			'version': self.version,
+		})
+
 
 @dataclass
 class ArchLinuxDeCountry:
@@ -171,7 +180,7 @@ class ArchLinuxDeCountry:
 	name: str
 
 	@classmethod
-	def from_dict(cls, data: dict) -> Self:
+	def from_dict(cls, data: dict[str, Any]) -> Self:
 		return cls(code=data['code'], name=data['name'])
 
 
@@ -190,7 +199,7 @@ class ArchLinuxDeMirrorEntry:
 	ipv6: bool = False
 
 	@classmethod
-	def from_dict(cls, data: dict) -> Self:
+	def from_dict(cls, data: dict[str, Any]) -> Self:
 		return cls(
 			url=data['url'],
 			host=data['host'],
@@ -235,7 +244,7 @@ class ArchLinuxDeMirrorList:
 	items: list[ArchLinuxDeMirrorEntry]
 
 	@classmethod
-	def from_dict(cls, data: dict) -> Self:
+	def from_dict(cls, data: dict[str, Any]) -> Self:
 		return cls(
 			offset=data['offset'],
 			limit=data['limit'],

@@ -270,12 +270,6 @@ class ArchConfigHandler:
 			help='Disabled online upstream services such as package search and key-ring auto update.',
 		)
 		parser.add_argument(
-			'--no-pkg-lookups',
-			action='store_true',
-			default=False,
-			help='Disabled package validation specifically prior to starting installation.',
-		)
-		parser.add_argument(
 			'--advanced',
 			action='store_true',
 			default=False,
