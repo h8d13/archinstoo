@@ -287,8 +287,8 @@ class GlobalMenu(AbstractMenu[None]):
 		if result.type_ == ResultType.Selection:
 			if theme := result.get_value():
 				Tui.set_theme(theme)
-				if Tui._t is not None:
-					Tui._t._set_up_colors()
+				if t := Tui._t:
+					t._set_up_colors()
 
 	def _prev_archinstall_settings(self, item: MenuItem) -> str | None:
 		output = ''
