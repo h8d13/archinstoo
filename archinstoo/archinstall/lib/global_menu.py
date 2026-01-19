@@ -288,6 +288,7 @@ class GlobalMenu(AbstractMenu[None]):
 		theme_items = [
 			MenuItem(text=tr('Default'), value='default'),
 			MenuItem(text=tr('Green'), value='green'),
+			MenuItem(text=tr('Red'), value='red'),
 		]
 
 		group = MenuItemGroup(theme_items, sort_items=False)
@@ -297,8 +298,6 @@ class GlobalMenu(AbstractMenu[None]):
 			group,
 			header=tr('Select theme'),
 			alignment=Alignment.CENTER,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
 			allow_skip=True,
 		).run()
 
