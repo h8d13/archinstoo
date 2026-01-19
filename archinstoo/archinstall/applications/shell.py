@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 	from archinstall.lib.installer import Installer
 
 
+# any special handling for a shell can go here bellow
 class ShellApp:
 	def install(
 		self,
