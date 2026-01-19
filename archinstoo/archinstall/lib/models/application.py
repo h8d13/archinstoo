@@ -78,6 +78,7 @@ class Shell(StrEnum):
 	BASH = auto()
 	ZSH = auto()
 	FISH = auto()
+	BUSYBOX = auto()
 
 
 class ShellConfigSerialization(TypedDict):
