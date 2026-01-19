@@ -1630,7 +1630,25 @@ class LsblkInfo:
 	def fields(cls) -> list[str]:
 		# Fields expected by lsblk --output
 		return [
-			'name', 'path', 'pkname', 'log-sec', 'size', 'pttype', 'ptuuid',
-			'rota', 'tran', 'partn', 'partuuid', 'parttype', 'uuid', 'fstype',
-			'fsver', 'fsavail', 'fsuse%', 'type', 'mountpoint', 'mountpoints', 'fsroots',
+			'name',
+			'path',
+			'pkname',
+			'log-sec',
+			'size',
+			'pttype',
+			'ptuuid',
+			'rota',
+			'tran',
+			'partn',
+			'partuuid',
+			'parttype',
+			'uuid',
+			'fstype',
+			'fsver',
+			'fsavail',
+			'fsuse%',
+			'type',
+			'mountpoint',
+			'mountpoints',
+			'fsroots',
 		]
