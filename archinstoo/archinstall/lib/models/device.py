@@ -1360,8 +1360,7 @@ class BtrfsOptions:
 
 	@classmethod
 	def parse_arg(cls, arg: _BtrfsOptionsSerialization) -> Self | None:
-		snapshot_args = arg.get('snapshot_config')
-		if snapshot_args:
+		if snapshot_args := arg.get('snapshot_config'):
 			snapshot_config = SnapshotConfig.parse_args(snapshot_args)
 			return cls(snapshot_config)
 

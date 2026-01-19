@@ -9,7 +9,7 @@ from archinstall.lib.args import get_arch_config_handler
 
 script = get_arch_config_handler().get_script()
 # plugins that do not need root or any imported to run
-# for example just listing them
+# for example just listing them is early
 if script == 'list':
 	_list_mod = f'archinstall.scripts.{script}'
 	importlib.import_module(_list_mod)
