@@ -165,13 +165,15 @@ class MirrorStatusListV3:
 		return cls.from_dict(json.loads(data))
 
 	def to_json(self) -> str:
-		return json.dumps({
-			'cutoff': self.cutoff,
-			'last_check': self.last_check.isoformat() if self.last_check else None,
-			'num_checks': self.num_checks,
-			'urls': [asdict(u) for u in self.urls],
-			'version': self.version,
-		})
+		return json.dumps(
+			{
+				'cutoff': self.cutoff,
+				'last_check': self.last_check.isoformat() if self.last_check else None,
+				'num_checks': self.num_checks,
+				'urls': [asdict(u) for u in self.urls],
+				'version': self.version,
+			}
+		)
 
 
 @dataclass
