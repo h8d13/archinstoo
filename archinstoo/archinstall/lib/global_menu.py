@@ -4,7 +4,7 @@ from typing import override
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstall.lib.models.authentication import AuthenticationConfiguration
-from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, FilesystemType, PartitionModification
+from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, FilesystemType, PartitionModification
 from archinstall.lib.packages import list_available_packages
 from archinstall.tui.curses_menu import SelectMenu, Tui
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
@@ -82,11 +82,19 @@ class GlobalMenu(AbstractMenu[None]):
 				key='bootloader_config',
 			),
 			MenuItem(
+				text=tr('Authentication'),
+				action=self._select_authentication,
+				preview_action=self._prev_authentication,
+				key='auth_config',
+				value_validator=self._validate_auth_config,
+			),
+			MenuItem(
 				text=tr('Disk config'),
 				action=self._select_disk_config,
 				preview_action=self._prev_disk_config,
 				mandatory=True,
 				key='disk_config',
+				value_validator=self._validate_disk_config,
 			),
 			MenuItem(
 				text=tr('Swap'),
@@ -122,12 +130,6 @@ class GlobalMenu(AbstractMenu[None]):
 				action=ask_hostname,
 				preview_action=self._prev_hostname,
 				key='hostname',
-			),
-			MenuItem(
-				text=tr('Authentication'),
-				action=self._select_authentication,
-				preview_action=self._prev_authentication,
-				key='auth_config',
 			),
 			MenuItem(
 				text=tr('Applications'),
@@ -362,6 +364,15 @@ class GlobalMenu(AbstractMenu[None]):
 			return output
 
 		return None
+
+	def _validate_auth_config(self, auth_config: AuthenticationConfiguration) -> bool:
+		return auth_config.root_enc_password is not None or len(auth_config.users) > 0
+
+	def _validate_disk_config(self, disk_config: DiskLayoutConfiguration) -> bool:
+		if enc := disk_config.disk_encryption:
+			if enc.encryption_type != EncryptionType.NoEncryption:
+				return enc.encryption_password is not None
+		return True
 
 	def _prev_applications(self, item: MenuItem) -> str | None:
 		if item.value:

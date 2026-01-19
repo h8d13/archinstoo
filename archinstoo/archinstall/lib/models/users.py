@@ -163,15 +163,13 @@ class User:
 		}
 
 	def json(self) -> UserSerialization:
-		data: UserSerialization = {
+		return {
 			'username': self.username,
 			'enc_password': self.password.enc_password,
 			'sudo': self.sudo,
 			'groups': self.groups,
+			'stash_url': self.stash_url,
 		}
-		if self.stash_url:
-			data['stash_url'] = self.stash_url
-		return data
 
 	@classmethod
 	def parse_arguments(
