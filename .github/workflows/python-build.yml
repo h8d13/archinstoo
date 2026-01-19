@@ -18,7 +18,7 @@ jobs:
           pacman --noconfirm -Sy archlinux-keyring
           pacman --noconfirm -Syyu
           pacman --noconfirm -Sy python-setuptools python-pip python-build
-          pacman --noconfirm -Sy python-pyparted python-pydantic python-cryptography
+          pacman --noconfirm -Sy python-pyparted
       - name: Remove existing archinstall (if any)
         run: pip uninstall -y archinstall --break-system-packages || true
       - name: Build archinstall

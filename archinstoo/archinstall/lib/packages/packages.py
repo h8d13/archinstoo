@@ -1,5 +1,6 @@
 import json
 import ssl
+from dataclasses import fields
 from functools import lru_cache
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -118,14 +119,14 @@ def installed_package(package: str) -> LocalPackage | None:
 
 
 def _create_package_stub(repo: str, name: str, version: str) -> AvailablePackage:
-	defaults = {field_name: '' for field_name in AvailablePackage.model_fields.keys()}
+	defaults = {f.name: '' for f in fields(AvailablePackage)}
 	defaults.update({'repository': repo, 'name': name, 'version': version})
 	return AvailablePackage(**defaults)
 
 
 def _update_package(pkg: AvailablePackage, detailed: AvailablePackage) -> None:
-	for field_name in AvailablePackage.model_fields.keys():
-		setattr(pkg, field_name, getattr(detailed, field_name))
+	for f in fields(AvailablePackage):
+		setattr(pkg, f.name, getattr(detailed, f.name))
 
 
 def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] = []) -> None:
@@ -207,4 +208,4 @@ def _parse_package_output[PackageType: (AvailablePackage, LocalPackage)](
 			key = _normalize_key_name(key)
 			package[key] = value.strip()
 
-	return cls.model_validate(package)
+	return cls(**package)

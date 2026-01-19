@@ -10,8 +10,6 @@ from pathlib import Path
 from typing import Any, Self
 from urllib.request import Request, urlopen
 
-from pydantic.dataclasses import dataclass as p_dataclass
-
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.bootloader import BootloaderConfiguration
@@ -24,7 +22,7 @@ from archinstall.lib.output import error, logger, warn
 from archinstall.lib.translationhandler import Language, translation_handler
 
 
-@p_dataclass
+@dataclass
 class Arguments:
 	config: Path | None = None
 	config_url: str | None = None
@@ -270,12 +268,6 @@ class ArchConfigHandler:
 			action='store_true',
 			default=False,
 			help='Disabled online upstream services such as package search and key-ring auto update.',
-		)
-		parser.add_argument(
-			'--no-pkg-lookups',
-			action='store_true',
-			default=False,
-			help='Disabled package validation specifically prior to starting installation.',
 		)
 		parser.add_argument(
 			'--advanced',

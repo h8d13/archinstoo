@@ -67,7 +67,6 @@ def test_correct_parsing_args(
 			'--skip-boot',
 			'--debug',
 			'--offline',
-			'--no-pkg-lookups',
 			'--advanced',
 			'--dry-run',
 			'--silent',

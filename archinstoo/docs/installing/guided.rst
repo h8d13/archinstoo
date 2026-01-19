@@ -62,9 +62,6 @@ The following command-line arguments are available:
    * - ``--offline``
      - Disable online services (package search, keyring update)
      - false
-   * - ``--no-pkg-lookups``
-     - Disable package validation before installation
-     - false
    * - ``--advanced``
      - Enable advanced options in menus
      - false
