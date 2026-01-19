@@ -6,7 +6,7 @@ from archinstall.lib.models.application import ApplicationConfiguration, ZramCon
 from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, FilesystemType, PartitionModification
 from archinstall.lib.packages import list_available_packages
-from archinstall.tui.curses_menu import SelectMenu
+from archinstall.tui.curses_menu import SelectMenu, Tui
 from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.result import ResultType
 from archinstall.tui.script_editor import edit_script
@@ -57,10 +57,10 @@ class GlobalMenu(AbstractMenu[None]):
 	def _get_menu_options(self) -> list[MenuItem]:
 		menu_options = [
 			MenuItem(
-				text=tr('Archinstall language'),
-				action=self._select_archinstall_language,
-				preview_action=self._prev_archinstall_language,
-				key='archinstall_language',
+				text=tr('Archinstall settings'),
+				action=self._select_archinstall_settings,
+				preview_action=self._prev_archinstall_settings,
+				key='archinstall_language',  # syncs language to config, theme is session-only
 			),
 			MenuItem(
 				text=tr('Locales'),
@@ -233,6 +233,49 @@ class GlobalMenu(AbstractMenu[None]):
 			return False
 		return self._validate_bootloader() is None
 
+	def _select_archinstall_settings(self, preset: Language) -> Language:
+		"""Open the archinstall settings submenu for language and theme selection."""
+		while True:
+			settings_items = [
+				MenuItem(
+					text=tr('Language'),
+					key='settings_language',
+				),
+				MenuItem(
+					text=tr('Theme'),
+					key='settings_theme',
+				),
+				MenuItem(
+					text='',
+				),
+				MenuItem(
+					text=tr('Back'),
+					key='settings_back',
+				),
+			]
+
+			group = MenuItemGroup(settings_items, sort_items=False)
+
+			result = SelectMenu[None](
+				group,
+				header=tr('Archinstall Settings'),
+				alignment=Alignment.CENTER,
+				allow_skip=True,
+			).run()
+
+			if result.type_ == ResultType.Skip:
+				break
+
+			if result.type_ == ResultType.Selection:
+				if (selected := result.item()).key == 'settings_language':
+					preset = self._select_archinstall_language(preset)
+				elif selected.key == 'settings_theme':
+					self._select_theme()
+				elif selected.key == 'settings_back':
+					break
+
+		return preset
+
 	def _select_archinstall_language(self, preset: Language) -> Language:
 		from .interactions.general_conf import select_archinstall_language
 
@@ -243,12 +286,40 @@ class GlobalMenu(AbstractMenu[None]):
 
 		return language
 
-	def _prev_archinstall_language(self, item: MenuItem) -> str | None:
-		if not item.value:
-			return None
+	def _select_theme(self) -> None:
+		"""Select a theme for the TUI (session-only, not persisted)."""
+		theme_items = [
+			MenuItem(text=tr('Default'), value='default'),
+			MenuItem(text=tr('Green'), value='green'),
+		]
 
-		lang: Language = item.value
-		return f'{tr("Language")}: {lang.display_name}'
+		group = MenuItemGroup(theme_items, sort_items=False)
+		group.set_focus_by_value(Tui._theme)
+
+		result = SelectMenu[str](
+			group,
+			header=tr('Select theme'),
+			alignment=Alignment.CENTER,
+			columns=2,
+			orientation=Orientation.HORIZONTAL,
+			allow_skip=True,
+		).run()
+
+		if result.type_ == ResultType.Selection:
+			if theme := result.get_value():
+				Tui.set_theme(theme)
+				if Tui._t is not None:
+					Tui._t._set_up_colors()
+
+	def _prev_archinstall_settings(self, item: MenuItem) -> str | None:
+		output = ''
+
+		if lang := item.value:
+			output += f'{tr("Language")}: {lang.display_name}\n'
+
+		output += f'{tr("Theme")}: {Tui._theme.capitalize()}'
+
+		return output
 
 	def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
 		app_config = ApplicationMenu(preset).run()
