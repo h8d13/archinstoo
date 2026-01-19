@@ -372,7 +372,7 @@ class EditViewport(AbstractViewport):
 
 		if default_text is not None and len(default_text) > 0:
 			_, max_x = self._edit_win.getmaxyx()
-			self._edit_win.addstr(0, 0, default_text[:max_x - 1])
+			self._edit_win.addstr(0, 0, default_text[: max_x - 1])
 
 		# if this gets initialized multiple times it will be an overlay
 		# and ENTER has to be pressed multiple times to accept
@@ -1066,9 +1066,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		wrapped = [
 			chunk
 			for line in action_text.split('\n')
-			for chunk in (
-				[line[i:i + max_width] for i in range(0, len(line), max_width)] if len(line) > max_width else [line]
-			)
+			for chunk in ([line[i : i + max_width] for i in range(0, len(line), max_width)] if len(line) > max_width else [line])
 		]
 		entries = [ViewportEntry(line, idx, 0, STYLE.NORMAL) for idx, line in enumerate(wrapped)]
 
