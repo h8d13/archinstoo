@@ -25,9 +25,7 @@ from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
 
-hard_depends = (
-	'python-pyparted',
-)
+hard_depends = ('python-pyparted',)
 
 
 def _log_sys_info() -> None:

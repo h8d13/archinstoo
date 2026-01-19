@@ -1267,7 +1267,8 @@ class Installer:
 
 			# UKI entries via 15_uki using blsuki module
 			uki_script = grub_d / '15_uki'
-			uki_script.write_text(textwrap.dedent('''\
+			uki_script.write_text(
+				textwrap.dedent("""\
 				#!/bin/sh
 				set -e
 				cat << EOF
@@ -1276,7 +1277,8 @@ class Installer:
 					uki
 				fi
 				EOF
-				'''))
+				""")
+			)
 			uki_script.chmod(0o755)
 		else:
 			grub_default = self.target / 'etc/default/grub'
