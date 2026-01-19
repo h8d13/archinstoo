@@ -246,9 +246,6 @@ class GlobalMenu(AbstractMenu[None]):
 					key='settings_theme',
 				),
 				MenuItem(
-					text='',
-				),
-				MenuItem(
 					text=tr('Back'),
 					key='settings_back',
 				),
