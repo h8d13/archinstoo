@@ -486,8 +486,7 @@ class Installer:
 		mirrorlist_config = root / 'etc/pacman.d/mirrorlist'
 		pacman_config = root / 'etc/pacman.conf'
 
-		repositories_config = mirror_config.repositories_config()
-		if repositories_config:
+		if repositories_config := mirror_config.repositories_config():
 			debug(f'Pacman config: {repositories_config}')
 
 			with open(pacman_config, 'a') as fp:
@@ -498,8 +497,7 @@ class Installer:
 			debug(f'Mirrorlist:\n{regions_config}')
 			mirrorlist_config.write_text(regions_config)
 
-		custom_servers = mirror_config.custom_servers_config()
-		if custom_servers:
+		if custom_servers := mirror_config.custom_servers_config():
 			debug(f'Custom servers:\n{custom_servers}')
 
 			content = mirrorlist_config.read_text()
