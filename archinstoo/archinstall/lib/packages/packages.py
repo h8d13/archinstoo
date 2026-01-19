@@ -201,11 +201,13 @@ def _parse_package_output[PackageType: (AvailablePackage, LocalPackage)](
 	cls: type[PackageType],
 ) -> PackageType:
 	package = {}
+	valid_fields = {f.name for f in fields(cls)}
 
 	for line in package_meta:
 		if ':' in line:
 			key, value = line.split(':', 1)
 			key = _normalize_key_name(key)
-			package[key] = value.strip()
+			if key in valid_fields:
+				package[key] = value.strip()
 
 	return cls(**package)

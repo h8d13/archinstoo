@@ -151,6 +151,7 @@ class AvailablePackage:
 	name: str
 	architecture: str
 	build_date: str
+	conflicts_with: str
 	depends_on: str
 	description: str
 	download_size: str

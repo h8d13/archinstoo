@@ -73,7 +73,6 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		if (profile := select_profile(preset)) is not None:
 			if profile.display_servers():
 				self._item_group.find_by_key('gfx_driver').enabled = True
-				self._item_group.find_by_key('gfx_driver').value = GfxDriver.AllOpenSource
 			else:
 				self._item_group.find_by_key('gfx_driver').enabled = False
 				self._item_group.find_by_key('gfx_driver').value = None
