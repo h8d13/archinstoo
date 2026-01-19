@@ -459,8 +459,7 @@ class MirrorConfiguration:
 	) -> Self:
 		config = cls()
 
-		mirror_regions = args.get('mirror_regions', [])
-		if mirror_regions:
+		if mirror_regions := args.get('mirror_regions', []):
 			for region, urls in mirror_regions.items():
 				config.mirror_regions.append(MirrorRegion(region, urls))
 

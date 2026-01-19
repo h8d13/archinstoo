@@ -167,18 +167,14 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return output
 
 	def _prev_type(self) -> str | None:
-		enc_type = self._item_group.find_by_key('encryption_type').value
-
-		if enc_type:
+		if enc_type := self._item_group.find_by_key('encryption_type').value:
 			enc_text = enc_type.type_to_text()
 			return f'{tr("Encryption type")}: {enc_text}'
 
 		return None
 
 	def _prev_password(self) -> str | None:
-		enc_pwd = self._item_group.find_by_key('encryption_password').value
-
-		if enc_pwd:
+		if enc_pwd := self._item_group.find_by_key('encryption_password').value:
 			return f'{tr("Encryption password")}: {enc_pwd.hidden()}'
 
 		return None
