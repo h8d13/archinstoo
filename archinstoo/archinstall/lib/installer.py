@@ -4,6 +4,7 @@ import platform
 import re
 import shlex
 import shutil
+import stat
 import subprocess
 import textwrap
 import time
@@ -1257,36 +1258,47 @@ class Installer:
 			except SysCallError as err:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 
-		if uki_enabled and SysInfo.has_uefi():
+		if SysInfo.has_uefi() and uki_enabled:
 			grub_d = self.target / 'etc/grub.d'
+			linux_file = grub_d / '10_linux'
+			uki_file = grub_d / '15_uki'
 
-			# case configured through _config_uki()
-			# Disable 10_linux to prevent duplicate/broken entries
-			linux_script = grub_d / '10_linux'
-			linux_script.chmod(0o644)
-
-			# UKI entries via 15_uki using blsuki module
-			uki_script = grub_d / '15_uki'
-			uki_script.write_text(
-				textwrap.dedent("""\
-				#!/bin/sh
+			raw_str_platform = r'\$grub_platform'
+			space_indent_cmd = '  uki'
+			content = textwrap.dedent(
+				f"""\
+				#! /bin/sh
 				set -e
+
 				cat << EOF
-				if [ "$grub_platform" = "efi" ]; then
-					insmod blsuki
-					uki
+				if [ "{raw_str_platform}" = "efi" ]; then
+				{space_indent_cmd}
 				fi
 				EOF
-				""")
+				""",
 			)
-			uki_script.chmod(0o755)
+
+			try:
+				mode = linux_file.stat().st_mode
+				linux_file.chmod(mode & ~(stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
+				uki_file.write_text(content)
+				uki_file.chmod(mode)
+			except OSError:
+				error('Failed to enable UKI menu entries')
 		else:
 			grub_default = self.target / 'etc/default/grub'
 			config = grub_default.read_text()
 
-			# non-UKI needs to edit /etc/default/grub does not use /etc/kernel/cmdline
-			kernel_parameters = ' '.join(self._get_kernel_params(root, False, False))
-			config = re.sub(r'(GRUB_CMDLINE_LINUX=")("\n)', rf'\1{kernel_parameters}\2', config, count=1)
+			kernel_parameters = ' '.join(
+				self._get_kernel_params(root, id_root=False, partuuid=False),
+			)
+			config = re.sub(
+				r'^(GRUB_CMDLINE_LINUX=")(")$',
+				rf'\1{kernel_parameters}\2',
+				config,
+				count=1,
+				flags=re.MULTILINE,
+			)
 
 			grub_default.write_text(config)
 
