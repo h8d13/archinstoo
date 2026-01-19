@@ -235,41 +235,24 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _select_archinstall_settings(self, preset: Language) -> Language:
 		"""Open the archinstall settings submenu for language and theme selection."""
-		while True:
-			settings_items = [
-				MenuItem(
-					text=tr('Language'),
-					key='settings_language',
-				),
-				MenuItem(
-					text=tr('Theme'),
-					key='settings_theme',
-				),
-				MenuItem(
-					text=tr('Back'),
-					key='settings_back',
-				),
-			]
+		items = [
+			MenuItem(text=tr('Language'), key='lang'),
+			MenuItem(text=tr('Theme'), key='theme'),
+		]
 
-			group = MenuItemGroup(settings_items, sort_items=False)
+		result = SelectMenu[None](
+			MenuItemGroup(items, sort_items=False),
+			header=tr('Archinstall Settings'),
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
 
-			result = SelectMenu[None](
-				group,
-				header=tr('Archinstall Settings'),
-				alignment=Alignment.CENTER,
-				allow_skip=True,
-			).run()
-
-			if result.type_ == ResultType.Skip:
-				break
-
-			if result.type_ == ResultType.Selection:
-				if (selected := result.item()).key == 'settings_language':
+		if result.type_ == ResultType.Selection:
+			match result.item().key:
+				case 'lang':
 					preset = self._select_archinstall_language(preset)
-				elif selected.key == 'settings_theme':
+				case 'theme':
 					self._select_theme()
-				elif selected.key == 'settings_back':
-					break
 
 		return preset
 
