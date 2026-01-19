@@ -28,6 +28,8 @@ SAFETY_LOCK
 **/*-git
 /test*.py
 test_*/
+.idea
+.idea/
 /guided.py
 venv
 .venv
