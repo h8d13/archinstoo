@@ -1254,9 +1254,28 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._item_group.focus_last()
 
 
+THEMES: dict[str, dict[STYLE, tuple[int, int]]] = {
+	'default': {
+		STYLE.NORMAL: (curses.COLOR_WHITE, curses.COLOR_BLACK),
+		STYLE.CURSOR_STYLE: (curses.COLOR_CYAN, curses.COLOR_BLACK),
+		STYLE.MENU_STYLE: (curses.COLOR_WHITE, curses.COLOR_BLUE),
+	},
+	'green': {
+		STYLE.NORMAL: (curses.COLOR_GREEN, curses.COLOR_BLACK),
+		STYLE.CURSOR_STYLE: (curses.COLOR_GREEN, curses.COLOR_BLACK),
+		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_GREEN),
+	},
+	'red': {
+		STYLE.NORMAL: (curses.COLOR_RED, curses.COLOR_BLACK),
+		STYLE.CURSOR_STYLE: (curses.COLOR_RED, curses.COLOR_BLACK),
+		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_RED),
+	},
+}
+
+
 class Tui:
 	_t: ClassVar[Self | None] = None
-	_theme: ClassVar[str] = 'default'  # 'default' or 'green'
+	_theme: ClassVar[str] = 'default'
 
 	def __enter__(self) -> None:
 		if Tui._t is None:
@@ -1383,28 +1402,12 @@ class Tui:
 
 	@classmethod
 	def set_theme(cls, theme: str) -> None:
-		"""Set the theme before initializing the TUI. Valid themes: 'default', 'green'"""
 		cls._theme = theme
 
 	def _set_up_colors(self) -> None:
-		if Tui._theme == 'green':
-			self._theme_green()
-		else:
-			self._theme_default()
-
-		self._common()
-
-	def _theme_default(self) -> None:
-		curses.init_pair(STYLE.NORMAL.value, curses.COLOR_WHITE, curses.COLOR_BLACK)
-		curses.init_pair(STYLE.CURSOR_STYLE.value, curses.COLOR_CYAN, curses.COLOR_BLACK)
-		curses.init_pair(STYLE.MENU_STYLE.value, curses.COLOR_WHITE, curses.COLOR_BLUE)
-
-	def _theme_green(self) -> None:
-		curses.init_pair(STYLE.NORMAL.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
-		curses.init_pair(STYLE.CURSOR_STYLE.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
-		curses.init_pair(STYLE.MENU_STYLE.value, curses.COLOR_BLACK, curses.COLOR_GREEN)
-
-	def _common(self) -> None:
+		theme = THEMES.get(Tui._theme, THEMES['default'])
+		for style, (fg, bg) in theme.items():
+			curses.init_pair(style.value, fg, bg)
 		curses.init_pair(STYLE.HELP.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
 		curses.init_pair(STYLE.ERROR.value, curses.COLOR_RED, curses.COLOR_BLACK)
 
