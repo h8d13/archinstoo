@@ -1561,7 +1561,7 @@ class LsblkInfo:
 	mountpoint: Path | None
 	mountpoints: list[Path]
 	fsroots: list[Path]
-	children: list['LsblkInfo'] = field(default_factory=list)
+	children: list[LsblkInfo] = field(default_factory=list)
 
 	@classmethod
 	def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -1570,7 +1570,7 @@ class LsblkInfo:
 		size = Size(data.get('size', 0), Unit.B, sector_size)
 		mountpoints = [Path(m) for m in data.get('mountpoints', []) if m is not None]
 		fsroots = [Path(f) for f in data.get('fsroots', []) if f is not None]
-		children = [cls.from_dict(c) for c in data.get('children', [])]
+		children: list[LsblkInfo] = [LsblkInfo.from_dict(c) for c in data.get('children', [])]
 
 		return cls(
 			name=data['name'],
