@@ -55,8 +55,3 @@ repos:
         - pyparted>=3.13.0
       fail_fast: true
       require_serial: true
-  - repo: https://github.com/MarcoGorelli/auto-walrus
-    rev: 0.3.4
-    hooks:
-      - id: auto-walrus
-        args: [--line-length, "160"]
