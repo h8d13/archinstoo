@@ -1259,7 +1259,7 @@ class Installer:
 
 		if uki_enabled and SysInfo.has_uefi():
 			grub_d = self.target / 'etc/grub.d'
-			
+
 			# case configured through _config_uki()
 			# Disable 10_linux to prevent duplicate/broken entries
 			linux_script = grub_d / '10_linux'
@@ -1287,7 +1287,8 @@ class Installer:
 			config = re.sub(r'(GRUB_CMDLINE_LINUX=")("\n)', rf'\1{kernel_parameters}\2', config, count=1)
 
 			grub_default.write_text(config)
-
+		
+		# ideally we can configure other grubber stuff here that is not part of kernel args
 		try:
 			self.arch_chroot(
 				f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',

@@ -45,8 +45,6 @@ repos:
       ]
       exclude: ^archinstoo/tests/
       fail_fast: true
-      additional_dependencies:
-        - pydantic
   - repo: https://github.com/pycqa/pylint
     rev: v4.0.4
     hooks:
@@ -54,7 +52,6 @@ repos:
       args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, ".")']
       exclude: ^archinstoo/tests/
       additional_dependencies:
-        - pydantic==2.12.5
         - pyparted>=3.13.0
       fail_fast: true
       require_serial: true

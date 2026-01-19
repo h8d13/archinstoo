@@ -14,7 +14,6 @@ url="https://github.com/h8d13/archinstoo"
 license=(GPL-3.0-only)
 depends=(
   'python-pyparted'
-  'python-pydantic'
   'python'
   'arch-install-scripts'
   'coreutils'
