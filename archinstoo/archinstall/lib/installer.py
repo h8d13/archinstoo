@@ -1272,8 +1272,8 @@ class Installer:
 				set -e
 				cat << EOF
 				if [ "$grub_platform" = "efi" ]; then
-				  insmod blsuki
-				  uki
+					insmod blsuki
+					uki
 				fi
 				EOF
 				'''))
@@ -1287,7 +1287,7 @@ class Installer:
 			config = re.sub(r'(GRUB_CMDLINE_LINUX=")("\n)', rf'\1{kernel_parameters}\2', config, count=1)
 
 			grub_default.write_text(config)
-		
+
 		# ideally we can configure other grubber stuff here that is not part of kernel args
 		try:
 			self.arch_chroot(

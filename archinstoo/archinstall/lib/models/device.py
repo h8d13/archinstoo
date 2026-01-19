@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import builtins
+import json
 import math
 import uuid
 from dataclasses import dataclass, field
@@ -11,7 +12,6 @@ from uuid import UUID
 
 import parted
 from parted import Disk, Geometry, Partition
-import json
 
 from archinstall.lib.translationhandler import tr
 
