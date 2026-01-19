@@ -271,10 +271,4 @@ class ApplicationConfiguration:
 		return app_config
 
 	def json(self) -> ApplicationSerialization:
-		config: ApplicationSerialization = {}
-
-		for attr in self._config_parsers:
-			if obj := getattr(self, attr):
-				config[attr] = obj.json()  # type: ignore[literal-required]
-
-		return config
+		return {attr: obj.json() for attr in self._config_parsers if (obj := getattr(self, attr))}  # type: ignore[return-value]
