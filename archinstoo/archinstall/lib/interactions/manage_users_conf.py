@@ -18,6 +18,7 @@ class UserList(ListManager[User]):
 			tr('Add a user'),
 			tr('Change password'),
 			tr('Promote/Demote user'),
+			tr('Set stash URL'),
 			tr('Delete User'),
 		]
 
@@ -50,7 +51,10 @@ class UserList(ListManager[User]):
 		elif action == self._actions[2] and entry:  # promote/demote
 			user = next(filter(lambda x: x == entry, data))
 			user.sudo = False if user.sudo else True
-		elif action == self._actions[3] and entry:  # delete
+		elif action == self._actions[3] and entry:  # set stash url
+			user = next(filter(lambda x: x == entry, data))
+			user.stash_url = self._get_stash_url(user)
+		elif action == self._actions[4] and entry:  # delete
 			data = [d for d in data if d != entry]
 
 		return data
@@ -60,6 +64,37 @@ class UserList(ListManager[User]):
 			if re.match(r'^[a-z_][a-z0-9_-]*\$?$', username) and len(username) <= 32:
 				return None
 		return tr('The username you entered is invalid')
+
+	def _validate_stash_url(self, url: str | None) -> str | None:
+		if not url:
+			return None  # allow empty to clear
+		# Strip optional #branch suffix before validating
+		url = url.partition('#')[0]
+		# Accept git URLs: https://, git@, git://
+		if re.match(r'^(https?://|git@|git://)', url):
+			return None
+		return tr('Invalid git URL')
+
+	def _get_stash_url(self, user: User) -> str | None:
+		header = f'{tr("User")}: {user.username}\n'
+		header += tr('Format: https://provider.com/user/repo#branch') + '\n'
+		header += tr('Branch is optional') + '\n'
+		result = EditMenu(
+			tr('Stash URL'),
+			header=header,
+			allow_skip=True,
+			allow_reset=True,
+			validator=self._validate_stash_url,
+			default_text=user.stash_url or '',
+		).input()
+
+		match result.type_:
+			case ResultType.Skip:
+				return user.stash_url
+			case ResultType.Reset:
+				return None
+			case ResultType.Selection:
+				return result.text() or None
 
 	def _add_user(self) -> User | None:
 		editResult = EditMenu(

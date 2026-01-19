@@ -95,6 +95,7 @@ UserSerialization = TypedDict(
 		'sudo': bool,
 		'groups': list[str],
 		'enc_password': str | None,
+		'stash_url': NotRequired[str | None],
 	},
 )
 
@@ -146,6 +147,7 @@ class User:
 	password: Password
 	sudo: bool
 	groups: list[str] = field(default_factory=list)
+	stash_url: str | None = None
 
 	@override
 	def __str__(self) -> str:
@@ -161,12 +163,15 @@ class User:
 		}
 
 	def json(self) -> UserSerialization:
-		return {
+		data: UserSerialization = {
 			'username': self.username,
 			'enc_password': self.password.enc_password,
 			'sudo': self.sudo,
 			'groups': self.groups,
 		}
+		if self.stash_url:
+			data['stash_url'] = self.stash_url
+		return data
 
 	@classmethod
 	def parse_arguments(
@@ -180,6 +185,7 @@ class User:
 			password: Password | None = None
 			groups = entry.get('groups', [])
 			enc_password = entry.get('enc_password')
+			stash_url = entry.get('stash_url')
 
 			if enc_password:
 				password = Password(enc_password=enc_password)
@@ -192,6 +198,7 @@ class User:
 				password=password,
 				sudo=entry.get('sudo', False) is True,
 				groups=groups,
+				stash_url=stash_url,
 			)
 
 			users.append(user)

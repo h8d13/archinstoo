@@ -1816,6 +1816,32 @@ class Installer:
 				case PrivilegeEscalation.Doas:
 					self.enable_doas(user)
 
+		if user.stash_url:
+			self._clone_user_stash(user)
+
+	def _clone_user_stash(self, user: User) -> None:
+		if not user.stash_url:
+			return
+
+		info(f'Cloning stash for {user.username}')
+
+		# Parse URL and optional branch (url#branch)
+		url, _, branch = user.stash_url.partition('#')
+
+		# Extract repo name from URL (e.g., github.com/user/dotfiles.git -> dotfiles)
+		repo_name = url.rstrip('/').split('/')[-1].removesuffix('.git')
+		home_path = f'/home/{user.username}'
+		stash_path = f'{home_path}/.stash/{repo_name}'
+
+		clone_cmd = f'git clone -b {branch} {url}' if branch else f'git clone {url}'
+
+		try:
+			self.arch_chroot(f'mkdir -p {home_path}/.stash')
+			self.arch_chroot(f'{clone_cmd} {stash_path}')
+			self.arch_chroot(f'chown -R {user.username}:{user.username} {home_path}/.stash')
+		except SysCallError as err:
+			error(f'Failed to clone stash for {user.username}: {err}')
+
 	def set_user_password(self, user: User) -> bool:
 		info(f'Setting password for {user.username}')
 
