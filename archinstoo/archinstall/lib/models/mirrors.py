@@ -168,7 +168,7 @@ class MirrorStatusListV3:
 		return json.dumps(
 			{
 				'cutoff': self.cutoff,
-				'last_check': self.last_check.isoformat() if self.last_check else None,
+				'last_check': self.last_check.isoformat(),
 				'num_checks': self.num_checks,
 				'urls': [asdict(u) for u in self.urls],
 				'version': self.version,

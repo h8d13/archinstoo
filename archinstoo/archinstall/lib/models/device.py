@@ -1561,7 +1561,7 @@ class LsblkInfo:
 	mountpoint: Path | None
 	mountpoints: list[Path]
 	fsroots: list[Path]
-	children: list[Self] = field(default_factory=list)
+	children: list['LsblkInfo'] = field(default_factory=list)
 
 	@classmethod
 	def from_dict(cls, data: dict[str, Any]) -> Self:
