@@ -123,9 +123,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_partitions = self._item_group.find_by_key('partitions').value
 		enc_lvm_vols = self._item_group.find_by_key('lvm_volumes').value
 
-		assert enc_type is not None
-		assert enc_partitions is not None
-		assert enc_lvm_vols is not None
+		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
+			return None
 
 		if enc_type in [EncryptionType.Luks, EncryptionType.LvmOnLuks] and enc_partitions:
 			enc_lvm_vols = []

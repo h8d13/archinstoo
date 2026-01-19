@@ -62,8 +62,8 @@ class ArchConfig:
 	services: list[str] = field(default_factory=list)
 	custom_commands: list[str] = field(
 		default_factory=lambda: [
-			'#cd /home/user; git clone <url>',
-			'#chown -R user:user /home/user/repo',
+			'#arch-chroot via bash tmp files # lines are ignored',
+			'#ex: su - user -c "bash ~/.stash/repo/install.sh"',
 		]
 	)
 
