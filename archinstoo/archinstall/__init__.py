@@ -5,6 +5,7 @@ import os
 import sys
 import traceback
 
+from archinstall.lib.args import ROOTLESS_SCRIPTS, get_arch_config_handler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.networking import ping
 
@@ -19,47 +20,55 @@ hard_depends = ('python-pyparted',)
 
 
 def _log_sys_info() -> None:
-	# Log various information about hardware before starting the installation. This might assist in troubleshooting
+	# for support reasons, we'll log the disk layout pre installation to match against post-installation layout
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
 	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
+	if get_arch_config_handler().args.debug:
+		debug(f'Disk states before installing:\n{disk_layouts()}')
 
-	# For support reasons, we'll log the disk layout pre installation to match against post-installation layout
-	debug(f'Disk states before installing:\n{disk_layouts()}')
 
-
-def _check_online() -> None:
+def _check_online() -> int:
 	try:
 		ping('1.1.1.1')
+		return 0
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
 			info('Use iwctl/nmcli to connect manually.')
-			sys.exit(0)
+			return 1
+		raise
 
 
-def _fetch_deps() -> None:
-	if os.environ.get('ARCHINSTALL_DEPS_FETCHED'):
-		return
-	Pacman.run(f'-Sy --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-	# Refresh python last then re-exec to load new libraries
-	Pacman.run('-Sy --noconfirm python', peek_output=True)
-
-	# Re-exec as module to pick up new Python libraries
-	os.environ['ARCHINSTALL_DEPS_FETCHED'] = '1'
+def _reload() -> None:
 	is_venv = sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
 	info(f'{sys.executable} is_venv={is_venv}')
 	info('Reloading python...')
-
+	# dirty python trick to reload any changed library modules
 	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
 
 
-def _prepare() -> None:
+def _fetch_deps() -> int:
+	if os.environ.get('ARCHINSTALL_DEPS_FETCHED'):
+		return 0
+	try:
+		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+		# refresh python last then re-exec to load new libraries
+		Pacman.run('-S --needed --noconfirm python', peek_output=True)
+	except Exception:
+		return 1
+	os.environ['ARCHINSTALL_DEPS_FETCHED'] = '1'
+	_reload()
+	return 0
+
+
+def _prepare() -> int:
 	info('Fetching sync db then hard deps...')
 	try:
 		Pacman.run('-Sy', peek_output=True)
 		_fetch_deps()
+		return 0
 
 	except Exception as e:
 		error('Failed to prepare app.')
@@ -69,7 +78,7 @@ def _prepare() -> None:
 		error('Run archinstall --debug and check /var/log/archinstall/install.log for details.')
 
 		debug(f'Failed to prepare app: {e}')
-		sys.exit(1)
+		return 1
 
 
 def _run_script(script: str) -> None:
@@ -81,8 +90,6 @@ def main(script: str) -> int:
 	Usually ran straight as a module: python -m archinstall or compiled as a package.
 	In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	"""
-	from archinstall.lib.args import get_arch_config_handler
-
 	handler = get_arch_config_handler()
 	if '-h' in sys.argv or '--help' in sys.argv:
 		handler.print_help()
@@ -94,9 +101,12 @@ def main(script: str) -> int:
 
 	# check online and prepare deps BEFORE running the script
 	if not handler.args.offline:
-		_check_online()
-		_prepare()
+		if rc := _check_online():
+			return rc
+		if rc := _prepare():
+			return rc
 
+	# default 'guided' from /lib/args
 	_run_script(script)
 
 	# note log infos after prepare and script type
@@ -112,9 +122,7 @@ def main(script: str) -> int:
 
 
 def run_as_a_module() -> None:
-	from archinstall.lib.args import ROOTLESS_SCRIPTS, get_arch_config_handler
-
-	# Handle scripts that don't need root early (before main())
+	# handle scripts that don't need root early before main(script)
 	script = get_arch_config_handler().get_script()
 	if script in ROOTLESS_SCRIPTS:
 		_run_script(script)
@@ -124,7 +132,7 @@ def run_as_a_module() -> None:
 	exc = None
 
 	try:
-		# By defaul this is 'guided' from /lib/args
+		# now run any script that does need root
 		rc = main(script)
 	except Exception as e:
 		exc = e
