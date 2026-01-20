@@ -88,7 +88,7 @@ def _minimal() -> None:
 		if aborted:
 			return _minimal()
 
-	if disk_config := config.disk_config:
+	if (disk_config := config.disk_config) is not None:
 		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
