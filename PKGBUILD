@@ -9,7 +9,7 @@
 
 pkgname=archinstoo
 pkgver=0.0.01
-pkgrel=3
+pkgrel=4
 pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"

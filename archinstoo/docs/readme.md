@@ -10,7 +10,8 @@
 │   │   ├── management.py
 │   │   ├── monitor.py
 │   │   ├── power_management.py
-│   │   └── print_service.py
+│   │   ├── print_service.py
+│   │   └── shell.py
 │   ├── default_profiles
 │   │   ├── custom.py
 │   │   ├── desktop.py
@@ -138,8 +139,7 @@
 │   └── full_automated_installation.py
 ├── PKGBUILD
 ├── pyproject.toml
-├── renovate.json
-├── schema.json
+├── test_lib_import.py
 └── tests
     ├── conftest.py
     ├── data
