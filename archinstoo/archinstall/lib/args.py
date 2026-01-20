@@ -280,7 +280,11 @@ class ArchConfigHandler:
 
 	def _parse_args(self) -> Arguments:
 		# Use parse_known_args to ignore unknown arguments (e.g., from pytest)
-		argparse_args, _ = self._parser.parse_known_args()
+		argparse_args, _remaining = self._parser.parse_known_args()
+
+		# Update sys.argv so sub-scripts can parse their own args
+		sys.argv = [sys.argv[0]] + _remaining
+
 		args: Arguments = Arguments(**vars(argparse_args))
 
 		# amend the parameters (check internal consistency)

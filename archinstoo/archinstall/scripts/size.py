@@ -5,7 +5,7 @@ import argparse
 from archinstall.lib.models.device import SectorSize, Size, Unit
 
 
-def main() -> None:
+def size() -> None:
 	unit_choices = [u.name for u in Unit]
 
 	parser = argparse.ArgumentParser()
@@ -22,18 +22,17 @@ def main() -> None:
 
 	sector = SectorSize(args.sector_size, Unit.B)
 	src_unit = Unit[args.unit]
-	size = Size(args.value, src_unit, sector)
+	sz = Size(args.value, src_unit, sector)
 
 	if args.to:
 		target_unit = Unit[args.to]
-		converted = size.convert(target_unit, sector)
+		converted = sz.convert(target_unit, sector)
 		print(converted.format_size(target_unit))
 	elif args.highest:
-		print(size.format_highest())
+		print(sz.format_highest())
 	else:
-		sectors = size.convert(Unit.sectors, sector)
+		sectors = sz.convert(Unit.sectors, sector)
 		print(f'sectors: {sectors.value}')
 
 
-if __name__ == '__main__':
-	main()
+size()
