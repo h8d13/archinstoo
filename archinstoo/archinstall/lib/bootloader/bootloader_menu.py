@@ -7,7 +7,6 @@ from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.result import ResultType
 from archinstall.tui.types import Alignment, FrameProperties, Orientation
 
-from ..args import get_arch_config_handler
 from ..hardware import SysInfo
 from ..menu.abstract_menu import AbstractSubMenu
 from ..models.bootloader import Bootloader, BootloaderConfiguration
@@ -195,13 +194,13 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				raise ValueError('Unhandled result type')
 
 
-def ask_for_bootloader(preset: Bootloader | None) -> Bootloader | None:
+def ask_for_bootloader(preset: Bootloader | None, skip_boot: bool = False) -> Bootloader | None:
 	options = []
 	hidden_options = []
 	default = None
 	header = None
 
-	if get_arch_config_handler().args.skip_boot:
+	if skip_boot:
 		default = Bootloader.NO_BOOTLOADER
 	else:
 		hidden_options += [Bootloader.NO_BOOTLOADER]

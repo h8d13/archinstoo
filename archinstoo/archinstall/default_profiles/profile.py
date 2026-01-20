@@ -77,14 +77,12 @@ class Profile:
 	def default_greeter_type(self) -> GreeterType | None:
 		return None
 
-	def _advanced_check(self) -> bool:
+	def _advanced_check(self, advanced_mode: bool = False) -> bool:
 		"""
 		Used to control if the Profile() should be visible or not in different contexts.
-		Returns True if --advanced is given on a Profile(advanced=True) instance.
+		Returns True if the profile is not marked advanced, or if advanced_mode is enabled.
 		"""
-		from archinstall.lib.args import get_arch_config_handler
-
-		return self.advanced is False or get_arch_config_handler().args.advanced is True
+		return self.advanced is False or advanced_mode is True
 
 	def install(self, install_session: Installer) -> None: ...
 
@@ -115,17 +113,17 @@ class Profile:
 		top_levels = [ProfileType.Desktop, ProfileType.Server, ProfileType.Xorg, ProfileType.Minimal, ProfileType.Custom]
 		return self.profile_type in top_levels
 
-	def is_desktop_profile(self) -> bool:
-		return self.profile_type == ProfileType.Desktop if self._advanced_check() else False
+	def is_desktop_profile(self, advanced_mode: bool = False) -> bool:
+		return self.profile_type == ProfileType.Desktop if self._advanced_check(advanced_mode) else False
 
 	def is_server_type_profile(self) -> bool:
 		return self.profile_type == ProfileType.ServerType
 
-	def is_desktop_type_profile(self) -> bool:
-		return (self.profile_type == ProfileType.DesktopEnv or self.profile_type == ProfileType.WindowMgr) if self._advanced_check() else False
+	def is_desktop_type_profile(self, advanced_mode: bool = False) -> bool:
+		return (self.profile_type == ProfileType.DesktopEnv or self.profile_type == ProfileType.WindowMgr) if self._advanced_check(advanced_mode) else False
 
-	def is_xorg_type_profile(self) -> bool:
-		return self.profile_type == ProfileType.Xorg if self._advanced_check() else False
+	def is_xorg_type_profile(self, advanced_mode: bool = False) -> bool:
+		return self.profile_type == ProfileType.Xorg if self._advanced_check(advanced_mode) else False
 
 	def is_custom_type_profile(self) -> bool:
 		return self.profile_type == ProfileType.CustomType

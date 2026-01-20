@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from archinstall import debug, error
-from archinstall.lib.args import get_arch_config_handler
+from archinstall.lib.args import ArchConfig, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
@@ -11,9 +11,9 @@ from archinstall.lib.installer import Installer
 from archinstall.tui import Tui
 
 
-def ask_user_questions() -> None:
+def ask_user_questions(config: ArchConfig) -> None:
 	with Tui():
-		global_menu = GlobalMenu(get_arch_config_handler().config)
+		global_menu = GlobalMenu(config)
 		global_menu.disable_all()
 
 		global_menu.set_enabled('archinstall_language', True)
@@ -23,14 +23,12 @@ def ask_user_questions() -> None:
 		global_menu.run()
 
 
-def perform_installation(mountpoint: Path) -> None:
+def perform_installation(mountpoint: Path, config: ArchConfig) -> None:
 	"""
 	Performs the installation steps on a block device.
 	Only requirement is that the block devices are
 	formatted and setup prior to entering this function.
 	"""
-	config = get_arch_config_handler().config
-
 	if not config.disk_config:
 		error('No disk configuration provided')
 		return
@@ -57,31 +55,35 @@ def perform_installation(mountpoint: Path) -> None:
 
 
 def format_disk() -> None:
-	if not get_arch_config_handler().args.silent:
-		ask_user_questions()
+	handler = get_arch_config_handler()
+	config = handler.config
+	args = handler.args
 
-	config = ConfigurationHandler(get_arch_config_handler().config)
-	config.write_debug()
-	config.save()
+	if not args.silent:
+		ask_user_questions(config)
 
-	if get_arch_config_handler().args.dry_run:
+	config_handler = ConfigurationHandler(config)
+	config_handler.write_debug()
+	config_handler.save()
+
+	if args.dry_run:
 		sys.exit(0)
 
-	if not get_arch_config_handler().args.silent:
+	if not args.silent:
 		aborted = False
 		with Tui():
-			if not config.confirm_config():
+			if not config_handler.confirm_config():
 				debug('Installation aborted')
 				aborted = True
 
 		if aborted:
 			return format_disk()
 
-	if disk_config := get_arch_config_handler().config.disk_config:
+	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(get_arch_config_handler().args.mountpoint)
+	perform_installation(args.mountpoint, config)
 
 
 format_disk()

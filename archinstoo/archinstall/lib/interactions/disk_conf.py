@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.disk.device_handler import device_handler
 from archinstall.lib.disk.partitioning_menu import manual_partitioning
 from archinstall.lib.menu.menu_helper import MenuHelper
@@ -222,7 +221,7 @@ def _boot_partition(sector_size: SectorSize, using_gpt: bool) -> PartitionModifi
 	)
 
 
-def select_main_filesystem_format() -> FilesystemType:
+def select_main_filesystem_format(advanced: bool = False) -> FilesystemType:
 	items = [
 		MenuItem('btrfs', value=FilesystemType.Btrfs),
 		MenuItem('ext4', value=FilesystemType.Ext4),
@@ -230,7 +229,7 @@ def select_main_filesystem_format() -> FilesystemType:
 		MenuItem('f2fs', value=FilesystemType.F2fs),
 	]
 
-	if get_arch_config_handler().args.advanced:
+	if advanced:
 		items.append(MenuItem('ntfs', value=FilesystemType.Ntfs))
 
 	group = MenuItemGroup(items, sort_items=False)
