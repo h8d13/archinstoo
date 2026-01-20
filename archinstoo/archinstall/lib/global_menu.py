@@ -57,7 +57,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _get_menu_options(self) -> list[MenuItem]:
 		menu_options = [
 			MenuItem(
-				text=tr('Archinstall settings'),
+				text=tr('Archinstoo settings'),
 				action=self._select_archinstall_settings,
 				preview_action=self._prev_archinstall_settings,
 				key='archinstall_language',  # syncs language to config, theme is session-only
@@ -236,7 +236,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return self._validate_bootloader() is None
 
 	def _select_archinstall_settings(self, preset: Language) -> Language:
-		"""Open the archinstall settings submenu for language and theme selection."""
+		"""Open settings submenu for language and theme selection."""
 		items = [
 			MenuItem(text=tr('Language'), key='lang'),
 			MenuItem(text=tr('Theme'), key='theme'),
@@ -244,7 +244,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		result = SelectMenu[None](
 			MenuItemGroup(items, sort_items=False),
-			header=tr('Archinstall Settings'),
+			header=tr('Archinstoo Settings'),
 			alignment=Alignment.CENTER,
 			allow_skip=True,
 		).run()
