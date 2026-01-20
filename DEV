@@ -15,10 +15,12 @@ clean () {
 } # make sure no old sigs
 
 sign () {
-    gpg --detach-sign "$PKG_GLOB"
+    # shellcheck disable=SC2086
+    gpg --detach-sign $PKG_GLOB
 }
 verif() {
-    gpg --verify "$PKG_GLOB".sig
+    # shellcheck disable=SC2086
+    gpg --verify $PKG_GLOB.sig
 }
 
 for i in "$@"; do
@@ -63,7 +65,8 @@ for i in "$@"; do
         -i|--install)
         shift
         go_to
-        sudo pacman -U --overwrite '*' "$PKG_GLOB"
+        # shellcheck disable=SC2086
+        sudo pacman -U --overwrite '*' $PKG_GLOB
         exit 0
         ;;
         -v|venv)
