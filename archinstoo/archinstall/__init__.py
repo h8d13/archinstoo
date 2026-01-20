@@ -16,6 +16,7 @@ from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
 
 hard_depends = ('python-pyparted',)
+rootless_scripts = {'list', 'size'}
 
 
 def _log_sys_info() -> None:
@@ -72,6 +73,10 @@ def _prepare() -> None:
 		sys.exit(1)
 
 
+def _run_script(script: str) -> None:
+	importlib.import_module(f'archinstall.scripts.{script}')
+
+
 def main(script: str) -> int:
 	"""
 	Usually ran straight as a module: python -m archinstall or compiled as a package.
@@ -92,18 +97,15 @@ def main(script: str) -> int:
 		_check_online()
 		_prepare()
 
-	# catch all plugins that do need root
-	mod_name = f'archinstall.scripts.{script}'
-	# by loading the module we'll automatically run it
-	importlib.import_module(mod_name)
+	_run_script(script)
 
+	# note log infos after prepare and script type
 	if running_from_host():
 		# log which mode we are using
 		debug('Running from Host (H2T Mode)...')
 	else:
 		debug('Running from ISO (Live Mode)...')
 
-	# note log info after prepare
 	_log_sys_info()
 
 	return 0
@@ -114,14 +116,15 @@ def run_as_a_module() -> None:
 
 	# Handle scripts that don't need root early (before main())
 	script = get_arch_config_handler().get_script()
-	if script == 'list':
-		importlib.import_module(f'archinstall.scripts.{script}')
+	if script in rootless_scripts:
+		_run_script(script)
 		sys.exit(0)
 
 	rc = 0
 	exc = None
 
 	try:
+		# By defaul this is 'guided' from /lib/args
 		rc = main(script)
 	except Exception as e:
 		exc = e
