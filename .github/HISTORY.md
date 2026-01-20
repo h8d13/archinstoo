@@ -4,6 +4,27 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 > Aims to simplify reading/maintaining the codebase while keeping MORE options available, with LESS dependencies/flags BUT more control especially to create media, modify inner workings, without headaches.
 
+## 0.0.01-4
+
+    - Remove `python-pydantic` dataclasses dependency
+        - Use ClassVar abstractions reduce copy/paste
+    - Fixes #3717 enable cryptodisk in grub cfg + More UKI
+    - Fix #4148 pass script to main and handle non-root commands early
+    - Add stash module for git dotfiles
+        - Allow multiple stashes per user (clones to `.stash/repo`)
+        - Branch parsing with #branch format
+    - New settings submenu with color themes
+    - Nvidia driver better hints
+    - Fix config assertion error on reload
+    - Add validators for checkmark and config loading
+    - Fix input cursor not being shown and various UI
+    - Rework menu sections/orders
+    - Simplify bootloader entry naming
+        - Remove init_time timestamp mechanism
+    - Add examples (custom commands, priv esc, deps)
+    - Docs refresh
+    - Create `base-devel-flex` pkg for `doas` alternative
+
 ## 0.0.01-3
 
     - Change menu order for mirrors
@@ -40,6 +61,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Add __init__ check of deps
     - Simplify auth config to be inside global config
         - Never output passwords/FDE related
+        - Load config but never creds (disk/auth config to do only)
         - Offer choice to delete all of contents post-install
         - Lock root and doas alternative
     - Add resume/abort features with proper deletions of cfg
