@@ -102,6 +102,7 @@ def main(script: str) -> int:
 	Usually ran straight as a module: python -m archinstall or compiled as a package.
 	In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	"""
+	# handle global help
 	handler = get_arch_config_handler()
 	if '-h' in sys.argv or '--help' in sys.argv:
 		handler.print_help()
@@ -121,6 +122,7 @@ def main(script: str) -> int:
 	# default 'guided' from /lib/args
 	_log_env_info()
 	_run_script(script)
+	# note only log once install started
 	_log_sys_info()
 
 	return 0
