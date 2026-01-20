@@ -8,7 +8,7 @@ cd archinstoo || exit 1
 if [ ! -d ".venv" ]; then
     python -m venv --system-site-packages .venv
     . .venv/bin/activate
-    pip install -e ./archinstoo
+    pip install -e .
 else
     . .venv/bin/activate
 fi

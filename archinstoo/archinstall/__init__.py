@@ -49,8 +49,6 @@ def _check_online() -> int:
 
 
 def _reload() -> None:
-	is_venv = sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
-	info(f'{sys.executable} is_venv={is_venv}')
 	info('Reloading python...')
 	# dirty python trick to reload any changed library modules
 	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
@@ -121,6 +119,9 @@ def main(script: str) -> int:
 
 
 def run_as_a_module() -> None:
+	is_venv = sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
+	info(f'{sys.executable} is_venv={is_venv}')
+
 	# handle scripts that don't need root early before main(script)
 	script = get_arch_config_handler().get_script()
 	if script in ROOTLESS_SCRIPTS:
