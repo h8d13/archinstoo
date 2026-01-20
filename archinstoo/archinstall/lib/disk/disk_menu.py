@@ -98,9 +98,6 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 	def run(self, additional_title: str | None = None) -> DiskLayoutConfiguration | None:
 		super().run(additional_title=additional_title)
 
-		if self._was_reset:
-			return None
-
 		if self._disk_menu_config.disk_config:
 			self._disk_menu_config.disk_config.lvm_config = self._disk_menu_config.lvm_config
 			self._disk_menu_config.disk_config.btrfs_options = BtrfsOptions(snapshot_config=self._disk_menu_config.btrfs_snapshot_config)
