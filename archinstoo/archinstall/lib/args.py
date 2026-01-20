@@ -38,7 +38,6 @@ class Arguments:
 	debug: bool = False
 	offline: bool = False
 	advanced: bool = False
-	help: bool = False
 
 
 @dataclass
@@ -203,7 +202,6 @@ class ArchConfigHandler:
 
 	def _define_arguments(self) -> ArgumentParser:
 		parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False)
-		parser.add_argument('-h', '--help', action='store_true', default=False, help='Show help message and exit')
 		parser.add_argument(
 			'--config',
 			type=Path,
@@ -286,15 +284,10 @@ class ArchConfigHandler:
 		# Use parse_known_args to ignore unknown arguments (e.g., from pytest)
 		argparse_args, _remaining = self._parser.parse_known_args()
 
-		args: Arguments = Arguments(**vars(argparse_args))
-
-		# For rootless scripts, pass -h through to sub-script
-		if args.help and args.script in ROOTLESS_SCRIPTS:
-			_remaining.append('-h')
-			args.help = False
-
 		# Update sys.argv so sub-scripts can parse their own args
 		sys.argv = [sys.argv[0]] + _remaining
+
+		args: Arguments = Arguments(**vars(argparse_args))
 
 		# amend the parameters (check internal consistency)
 		# Installation can't be silent if config is not passed
