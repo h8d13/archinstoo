@@ -84,7 +84,7 @@ def main(script: str) -> int:
 	from archinstall.lib.args import get_arch_config_handler
 
 	handler = get_arch_config_handler()
-	if handler.args.help:
+	if '-h' in sys.argv or '--help' in sys.argv:
 		handler.print_help()
 		return 0
 
