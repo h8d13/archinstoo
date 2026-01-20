@@ -5,7 +5,7 @@ import os
 import sys
 import traceback
 
-from archinstall.lib.args import ROOTLESS_SCRIPTS, get_arch_config_handler
+from archinstall.lib.args import ArchConfigHandler, Arguments, ROOTLESS_SCRIPTS, get_arch_config_handler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.networking import ping
 
@@ -33,13 +33,13 @@ def _log_env_info() -> None:
 		info('Running from ISO (USB Mode)...')
 
 
-def _log_sys_info() -> None:
+def _log_sys_info(args: Arguments) -> None:
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
 	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
-	if get_arch_config_handler().args.debug:
+	if args.debug:
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 
 
@@ -97,13 +97,13 @@ def _run_script(script: str) -> None:
 	importlib.import_module(f'archinstall.scripts.{script}')
 
 
-def main(script: str) -> int:
+def main(script: str, handler: ArchConfigHandler) -> int:
 	"""
 	Usually ran straight as a module: python -m archinstall or compiled as a package.
 	In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	"""
 	# handle global help
-	handler = get_arch_config_handler()
+	args = handler.args
 	if '-h' in sys.argv or '--help' in sys.argv:
 		handler.print_help()
 		return 0
@@ -113,7 +113,7 @@ def main(script: str) -> int:
 		return 1
 
 	# check online and prepare deps BEFORE running the script
-	if not handler.args.offline:
+	if not args.offline:
 		if rc := _check_online():
 			return rc
 		if rc := _prepare():
@@ -123,7 +123,7 @@ def main(script: str) -> int:
 	_log_env_info()
 	_run_script(script)
 	# note only log once install started
-	_log_sys_info()
+	_log_sys_info(args)
 
 	return 0
 
@@ -142,7 +142,7 @@ def run_as_a_module() -> None:
 
 	try:
 		# now run any script that does need root
-		rc = main(script)
+		rc = main(script, handler)
 	except Exception as e:
 		exc = e
 	finally:
@@ -155,7 +155,7 @@ def run_as_a_module() -> None:
 
 			text = (
 				f'Archinstall experienced the above error. If you think this is a bug, please report it to\n'
-				f'{get_arch_config_handler().config.bug_report_url} and include the log file "{logger.path}".\n\n'
+				f'{handler.config.bug_report_url} and include the log file "{logger.path}".\n\n'
 				f"Hint: To extract the log from a live ISO \ncurl -F 'file=@{logger.path}' https://0x0.st\n"
 			)
 

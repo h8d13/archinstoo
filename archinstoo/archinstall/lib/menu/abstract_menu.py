@@ -7,7 +7,6 @@ from archinstall.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.tui.result import ResultType
 from archinstall.tui.types import Chars, FrameProperties, FrameStyle, PreviewStyle
 
-from ..args import get_arch_config_handler
 from ..output import error
 
 CONFIG_KEY = '__config__'
@@ -22,11 +21,13 @@ class AbstractMenu[ValueT]:
 		allow_reset: bool = False,
 		reset_warning: str | None = None,
 	):
+		bug_report_url = 'https://github.com/archlinux/archinstall'
 		self._menu_item_group = item_group
 		self._config = config
 		self.auto_cursor = auto_cursor
 		self._allow_reset = allow_reset
 		self._reset_warning = reset_warning
+		self._bug_report_url = bug_report_url
 
 		self.is_context_mgr = False
 
@@ -41,7 +42,7 @@ class AbstractMenu[ValueT]:
 		# TODO: skip processing when it comes from a planified exit
 		if exc_type is not None:
 			error(str(exc_value))
-			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(get_arch_config_handler().config.bug_report_url))
+			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
 
 			# Return None to propagate the exception
 			return None
