@@ -80,7 +80,6 @@ class Installer:
 		self._disk_encryption = disk_config.disk_encryption or DiskEncryption(EncryptionType.NoEncryption)
 		self.target: Path = target
 
-		self.init_time = time.strftime('%Y-%m-%d_%H-%M-%S')
 		self._helper_flags: dict[str, str | bool | None] = {
 			'base': False,
 			'bootloader': None,
@@ -1086,7 +1085,6 @@ class Installer:
 		entry_template = textwrap.dedent(
 			f"""\
 			# Created by: archinstall
-			# Created on: {self.init_time}
 			title   Arch Linux ({{kernel}})
 			linux   /vmlinuz-{{kernel}}
 			initrd  /initramfs-{{kernel}}.img
@@ -1161,7 +1159,7 @@ class Installer:
 		if uki_enabled:
 			default_entry = f'arch-{default_kernel}.efi'
 		else:
-			entry_name = self.init_time + '_{kernel}.conf'
+			entry_name = 'arch_{kernel}.conf'
 			default_entry = entry_name.format(kernel=default_kernel)
 			self._create_bls_entries(boot_partition, root, entry_name)
 
