@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from archinstall import debug, error
-from archinstall.lib.args import ArchConfig, Arguments, get_arch_config_handler
+from archinstall.lib.args import ArchConfig, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
