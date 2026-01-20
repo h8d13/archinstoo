@@ -5,16 +5,6 @@ import os
 import sys
 import traceback
 
-from archinstall.lib.args import get_arch_config_handler
-
-script = get_arch_config_handler().get_script()
-# plugins that do not need root or any imported to run
-# for example just listing them is early
-if script == 'list':
-	_list_mod = f'archinstall.scripts.{script}'
-	importlib.import_module(_list_mod)
-	sys.exit(0)
-
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.networking import ping
 
@@ -82,11 +72,13 @@ def _prepare() -> None:
 		sys.exit(1)
 
 
-def main() -> int:
+def main(script: str) -> int:
 	"""
 	Usually ran straight as a module: python -m archinstall or compiled as a package.
 	In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	"""
+	from archinstall.lib.args import get_arch_config_handler
+
 	if '--help' in sys.argv or '-h' in sys.argv:
 		get_arch_config_handler().print_help()
 		return 0
@@ -118,11 +110,19 @@ def main() -> int:
 
 
 def run_as_a_module() -> None:
+	from archinstall.lib.args import get_arch_config_handler
+
+	# Handle scripts that don't need root early (before main())
+	script = get_arch_config_handler().get_script()
+	if script == 'list':
+		importlib.import_module(f'archinstall.scripts.{script}')
+		sys.exit(0)
+
 	rc = 0
 	exc = None
 
 	try:
-		rc = main()
+		rc = main(script)
 	except Exception as e:
 		exc = e
 	finally:
@@ -154,7 +154,6 @@ __all__ = [
 	'debug',
 	'disk_layouts',
 	'error',
-	'get_arch_config_handler',
 	'info',
 	'log',
 	'translation_handler',
