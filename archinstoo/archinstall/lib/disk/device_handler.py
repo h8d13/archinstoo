@@ -7,6 +7,8 @@ from typing import Literal, overload
 
 from parted import Device, Disk, DiskException, FileSystem, Geometry, IOException, Partition, PartitionException, freshDisk, getAllDevices, getDevice, newDisk
 
+from archinstall.lib.args import get_arch_config_handler
+
 from ..exceptions import DiskError, SysCallError, UnknownFilesystemFormat
 from ..general import SysCommand, SysCommandWorker
 from ..luks import Luks2
@@ -846,7 +848,8 @@ class DeviceHandler:
 
 		command = ' '.join(cmd)
 
-		debug(f'Mounting {dev_path}: {command}')
+		if get_arch_config_handler().args.debug:
+			debug(f'Mounting {dev_path}: {command}')
 
 		try:
 			SysCommand(command)
