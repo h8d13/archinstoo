@@ -49,7 +49,7 @@ repos:
     rev: v4.0.4
     hooks:
     - id: pylint
-      args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, ".")']
+      args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "archinstoo")']
       exclude: ^archinstoo/tests/
       additional_dependencies:
         - pyparted>=3.13.0

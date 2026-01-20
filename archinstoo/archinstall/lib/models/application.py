@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import NotRequired, Self, TypedDict
+from typing import ClassVar, NotRequired, Self, TypedDict
 
 
 class PowerManagement(StrEnum):
@@ -74,6 +74,16 @@ class EditorConfigSerialization(TypedDict):
 	editor: str
 
 
+class Shell(StrEnum):
+	BASH = auto()
+	ZSH = auto()
+	FISH = auto()
+
+
+class ShellConfigSerialization(TypedDict):
+	shell: str
+
+
 class ZramAlgorithm(StrEnum):
 	ZSTD = 'zstd'
 	LZO_RLE = 'lzo-rle'
@@ -96,6 +106,7 @@ class ApplicationSerialization(TypedDict):
 	management_config: NotRequired[ManagementConfigSerialization]
 	monitor_config: NotRequired[MonitorConfigSerialization]
 	editor_config: NotRequired[EditorConfigSerialization]
+	shell_config: NotRequired[ShellConfigSerialization]
 
 
 @dataclass
@@ -218,6 +229,22 @@ class EditorConfiguration:
 		)
 
 
+@dataclass
+class ShellConfiguration:
+	shell: Shell
+
+	def json(self) -> ShellConfigSerialization:
+		return {
+			'shell': self.shell.value,
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: ShellConfigSerialization) -> Self:
+		return cls(
+			Shell(arg['shell']),
+		)
+
+
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
@@ -243,6 +270,19 @@ class ApplicationConfiguration:
 	management_config: ManagementConfiguration | None = None
 	monitor_config: MonitorConfiguration | None = None
 	editor_config: EditorConfiguration | None = None
+	shell_config: ShellConfiguration | None = None
+
+	_config_parsers: ClassVar[dict[str, type]] = {
+		'bluetooth_config': BluetoothConfiguration,
+		'audio_config': AudioConfiguration,
+		'power_management_config': PowerManagementConfiguration,
+		'print_service_config': PrintServiceConfiguration,
+		'firewall_config': FirewallConfiguration,
+		'management_config': ManagementConfiguration,
+		'monitor_config': MonitorConfiguration,
+		'editor_config': EditorConfiguration,
+		'shell_config': ShellConfiguration,
+	}
 
 	@classmethod
 	def parse_arg(
@@ -251,57 +291,16 @@ class ApplicationConfiguration:
 	) -> Self:
 		app_config = cls()
 
-		if args and (bluetooth_config := args.get('bluetooth_config')) is not None:
-			app_config.bluetooth_config = BluetoothConfiguration.parse_arg(bluetooth_config)
-
-		if args and (audio_config := args.get('audio_config')) is not None:
-			app_config.audio_config = AudioConfiguration.parse_arg(audio_config)
-
-		if args and (power_management_config := args.get('power_management_config')) is not None:
-			app_config.power_management_config = PowerManagementConfiguration.parse_arg(power_management_config)
-
-		if args and (print_service_config := args.get('print_service_config')) is not None:
-			app_config.print_service_config = PrintServiceConfiguration.parse_arg(print_service_config)
-
-		if args and (firewall_config := args.get('firewall_config')) is not None:
-			app_config.firewall_config = FirewallConfiguration.parse_arg(firewall_config)
-
-		if args and (management_config := args.get('management_config')) is not None:
-			app_config.management_config = ManagementConfiguration.parse_arg(management_config)
-
-		if args and (monitor_config := args.get('monitor_config')) is not None:
-			app_config.monitor_config = MonitorConfiguration.parse_arg(monitor_config)
-
-		if args and (editor_config := args.get('editor_config')) is not None:
-			app_config.editor_config = EditorConfiguration.parse_arg(editor_config)
+		if args:
+			for attr, parser_cls in cls._config_parsers.items():
+				if (value := args.get(attr)) is not None:
+					setattr(app_config, attr, parser_cls.parse_arg(value))  # type: ignore[attr-defined]
+					# general rule of thumb if copy pasting more than 5x, abstract
+					# dev can add to _config and to dataclass to import a new structure
+					# then make the appropriate changes in applications/application_type.py
+					# and archinstall/lib/applications
 
 		return app_config
 
 	def json(self) -> ApplicationSerialization:
-		config: ApplicationSerialization = {}
-
-		if self.bluetooth_config:
-			config['bluetooth_config'] = self.bluetooth_config.json()
-
-		if self.audio_config:
-			config['audio_config'] = self.audio_config.json()
-
-		if self.power_management_config:
-			config['power_management_config'] = self.power_management_config.json()
-
-		if self.print_service_config:
-			config['print_service_config'] = self.print_service_config.json()
-
-		if self.firewall_config:
-			config['firewall_config'] = self.firewall_config.json()
-
-		if self.management_config:
-			config['management_config'] = self.management_config.json()
-
-		if self.monitor_config:
-			config['monitor_config'] = self.monitor_config.json()
-
-		if self.editor_config:
-			config['editor_config'] = self.editor_config.json()
-
-		return config
+		return {attr: obj.json() for attr in self._config_parsers if (obj := getattr(self, attr))}  # type: ignore[return-value]
