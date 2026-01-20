@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 from types import ModuleType
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstall.lib.args import get_arch_config_handler
+from archinstall.lib.args import _ArchConfigHandlerHolder, get_arch_config_handler
 from archinstall.lib.translationhandler import tr
 
 from ...default_profiles.profile import DisplayServer, GreeterType, Profile
@@ -289,7 +289,7 @@ class ProfileHandler:
 			return []
 
 		name = file.name.removesuffix(file.suffix)
-		if get_arch_config_handler().args.debug:
+		if _ArchConfigHandlerHolder.instance is not None and get_arch_config_handler().args.debug:
 			debug(f'Importing profile: {file}')
 
 		try:
