@@ -106,17 +106,10 @@ class GlobalMenu(AbstractMenu[None]):
 			MenuItem(
 				text=tr('Kernels'),
 				value=['linux'],
-				action=select_kernel,
+				action=self._select_kernel,
 				preview_action=self._prev_kernel,
 				mandatory=True,
 				key='kernels',
-			),
-			MenuItem(
-				text=tr('Kernel headers'),
-				value=False,
-				action=self._ask_kernel_headers,
-				preview_action=self._prev_kernel_headers,
-				key='kernel_headers',
 			),
 			MenuItem(
 				text=tr('Profile'),
@@ -499,23 +492,22 @@ class GlobalMenu(AbstractMenu[None]):
 			return f'{tr("Parallel Downloads")}: {item.value}'
 		return None
 
-	def _prev_kernel(self, item: MenuItem) -> str | None:
-		if item.value:
-			kernel = ', '.join(item.value)
-			return f'{tr("Kernel")}: {kernel}'
-		return None
+	def _select_kernel(self, preset: list[str]) -> list[str]:
+		"""Select kernels and then ask about kernel headers."""
+		selected_kernels = select_kernel(preset)
 
-	def _ask_kernel_headers(self, preset: bool) -> bool:
-		header = tr('Install kernel headers?') + '\n\n'
-		header += tr('Useful for building out-of-tree drivers or DKMS modules,') + '\n'
-		header += tr('especially for non-standard kernel variants.') + '\n'
+		# Ask about kernel headers
+		current_headers = self._arch_config.kernel_headers
+		header_text = tr('Install kernel headers?') + '\n\n'
+		header_text += tr('Useful for building out-of-tree drivers or DKMS modules,') + '\n'
+		header_text += tr('especially for non-standard kernel variants.') + '\n'
 
 		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
+		group.set_focus_by_value(current_headers)
 
 		result = SelectMenu[bool](
 			group,
-			header=header,
+			header=header_text,
 			columns=2,
 			orientation=Orientation.HORIZONTAL,
 			alignment=Alignment.CENTER,
@@ -524,16 +516,19 @@ class GlobalMenu(AbstractMenu[None]):
 
 		match result.type_:
 			case ResultType.Skip:
-				return preset
+				pass
 			case ResultType.Selection:
-				return result.item() == MenuItem.yes()
-			case _:
-				return preset
+				self._arch_config.kernel_headers = result.item() == MenuItem.yes()
 
-	def _prev_kernel_headers(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			status = tr('Enabled') if item.value else tr('Disabled')
-			return f'{tr("Kernel headers")}: {status}'
+		return selected_kernels
+
+	def _prev_kernel(self, item: MenuItem) -> str | None:
+		if item.value:
+			kernel = ', '.join(item.value)
+			output = f'{tr("Kernels")}: {kernel}\n'
+			status = tr('Enabled') if self._arch_config.kernel_headers else tr('Disabled')
+			output += f'{tr("Headers")}: {status}'
+			return output
 		return None
 
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:
