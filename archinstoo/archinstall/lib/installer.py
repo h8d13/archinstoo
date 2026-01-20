@@ -1256,6 +1256,8 @@ class Installer:
 			except SysCallError as err:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 
+		grub_default = self.target / 'etc/default/grub'
+
 		if SysInfo.has_uefi() and uki_enabled:
 			grub_d = self.target / 'etc/grub.d'
 			linux_file = grub_d / '10_linux'
@@ -1284,7 +1286,6 @@ class Installer:
 			except OSError:
 				error('Failed to enable UKI menu entries')
 		else:
-			grub_default = self.target / 'etc/default/grub'
 			config = grub_default.read_text()
 
 			kernel_parameters = ' '.join(
@@ -1298,6 +1299,13 @@ class Installer:
 				flags=re.MULTILINE,
 			)
 
+			grub_default.write_text(config)
+
+		# See #3717 enable GRUB cryptodisk support when encryption is used
+		# regardless uefi or uki or other options
+		if self._disk_encryption.encryption_type != EncryptionType.NoEncryption:
+			config = grub_default.read_text()
+			config = re.sub(r'^#(GRUB_ENABLE_CRYPTODISK=y)', r'\1', config, flags=re.MULTILINE)
 			grub_default.write_text(config)
 
 		# ideally we can configure other grubber stuff here that is not part of kernel args
