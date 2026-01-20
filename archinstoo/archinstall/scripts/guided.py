@@ -5,7 +5,7 @@ from pathlib import Path
 
 from archinstall import SysInfo
 from archinstall.lib.applications.application_handler import application_handler
-from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstall.lib.args import ArchConfig, Arguments, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts

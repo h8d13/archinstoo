@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from archinstall.default_profiles.minimal import MinimalProfile
-from archinstall.lib.args import ArchConfig, Arguments, get_arch_config_handler
+from archinstall.lib.args import ArchConfig, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.disk.filesystem import FilesystemHandler

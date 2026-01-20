@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from archinstall.lib.args import Arguments, get_arch_config_handler
+from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.disk.utils import get_all_lsblk_info
 from archinstall.lib.models.device import LsblkInfo, Unit
 from archinstall.lib.output import error, info, warn

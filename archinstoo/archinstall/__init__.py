@@ -5,12 +5,16 @@ import os
 import sys
 import traceback
 
-from archinstall.lib.args import ArchConfigHandler, Arguments, ROOTLESS_SCRIPTS, get_arch_config_handler
-from archinstall.lib.disk.utils import disk_layouts
-from archinstall.lib.networking import ping
-
+from .lib.args import (
+	ArchConfigHandler,
+	Arguments,
+	ROOTLESS_SCRIPTS,
+	get_arch_config_handler,
+)
+from .lib.disk.utils import disk_layouts
 from .lib.general import running_from_host
 from .lib.hardware import SysInfo
+from .lib.networking import ping
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
