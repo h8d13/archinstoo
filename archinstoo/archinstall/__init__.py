@@ -6,9 +6,9 @@ import sys
 import traceback
 
 from .lib.args import (
+	ROOTLESS_SCRIPTS,
 	ArchConfigHandler,
 	Arguments,
-	ROOTLESS_SCRIPTS,
 	get_arch_config_handler,
 )
 from .lib.disk.utils import disk_layouts
