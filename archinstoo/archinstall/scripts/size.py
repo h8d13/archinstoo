@@ -8,10 +8,10 @@ from archinstall.lib.models.device import SectorSize, Size, Unit
 def size() -> None:
 	unit_choices = [u.name for u in Unit]
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument('value', type=int)
-	parser.add_argument('unit', choices=unit_choices)
-	parser.add_argument('--sector-size', type=int, default=512)
+	parser = argparse.ArgumentParser(description='Convert between storage size units')
+	parser.add_argument('value', type=int, help='Size value to convert')
+	parser.add_argument('unit', choices=unit_choices, help='Source unit')
+	parser.add_argument('--sector-size', type=int, default=512, help='Sector size in bytes')
 
 	mode = parser.add_mutually_exclusive_group()
 
