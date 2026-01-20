@@ -180,6 +180,9 @@ def select_partition(partitions: list[LsblkInfo]) -> LsblkInfo | None:
 
 def rescue() -> None:
 	"""Main rescue mode entry point."""
+	handler = get_arch_config_handler()
+	args = handler.args
+
 	info('This utility will help you mount and chroot into an existing installation.')
 
 	# Get all block devices
@@ -206,7 +209,7 @@ def rescue() -> None:
 	info(f'Selected partition: {selected_partition.path}')
 
 	# Create temporary mount point
-	mount_point = get_arch_config_handler().args.mountpoint
+	mount_point = args.mountpoint
 
 	# Ensure mount point exists
 	mount_point.mkdir(parents=True, exist_ok=True)

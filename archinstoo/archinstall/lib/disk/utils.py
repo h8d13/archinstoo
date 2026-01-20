@@ -2,7 +2,6 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.exceptions import DiskError, SysCallError
 from archinstall.lib.general import SysCommand
 from archinstall.lib.models.device import LsblkInfo
@@ -121,13 +120,13 @@ def disk_layouts() -> str:
 	return lsblk_output.to_json()
 
 
-def umount(mountpoint: Path, recursive: bool = False) -> None:
+def umount(mountpoint: Path, recursive: bool = False, debug_mode: bool = False) -> None:
 	lsblk_info = get_lsblk_info(mountpoint)
 
 	if not lsblk_info.mountpoints:
 		return
 
-	if get_arch_config_handler().args.debug:
+	if debug_mode:
 		debug(f'Partition {mountpoint} is currently mounted at: {[str(m) for m in lsblk_info.mountpoints]}')
 
 	cmd = ['umount']
@@ -136,6 +135,6 @@ def umount(mountpoint: Path, recursive: bool = False) -> None:
 		cmd.append('-R')
 
 	for path in lsblk_info.mountpoints:
-		if get_arch_config_handler().args.debug:
+		if debug_mode:
 			debug(f'Unmounting mountpoint: {path}')
 		SysCommand(cmd + [str(path)])

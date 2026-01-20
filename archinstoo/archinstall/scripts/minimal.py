@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from archinstall.default_profiles.minimal import MinimalProfile
-from archinstall.lib.args import get_arch_config_handler
+from archinstall.lib.args import ArchConfig, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.disk.filesystem import FilesystemHandler
@@ -15,9 +15,7 @@ from archinstall.lib.profile.profiles_handler import profile_handler
 from archinstall.tui import Tui
 
 
-def perform_installation(mountpoint: Path) -> None:
-	config = get_arch_config_handler().config
-
+def perform_installation(mountpoint: Path, config: ArchConfig) -> None:
 	if not config.disk_config:
 		error('No disk configuration provided')
 		return
@@ -61,6 +59,10 @@ def perform_installation(mountpoint: Path) -> None:
 
 
 def _minimal() -> None:
+	handler = get_arch_config_handler()
+	config = handler.config
+	args = handler.args
+
 	with Tui():
 		disk_config = DiskLayoutConfigurationMenu(disk_layout_config=None).run()
 
@@ -68,29 +70,29 @@ def _minimal() -> None:
 		info('Installation cancelled.')
 		return
 
-	get_arch_config_handler().config.disk_config = disk_config
-	config = ConfigurationHandler(get_arch_config_handler().config)
-	config.write_debug()
-	config.save()
+	config.disk_config = disk_config
+	config_handler = ConfigurationHandler(config)
+	config_handler.write_debug()
+	config_handler.save()
 
-	if get_arch_config_handler().args.dry_run:
+	if args.dry_run:
 		sys.exit(0)
 
-	if not get_arch_config_handler().args.silent:
+	if not args.silent:
 		aborted = False
 		with Tui():
-			if not config.confirm_config():
+			if not config_handler.confirm_config():
 				debug('Installation aborted')
 				aborted = True
 
 		if aborted:
 			return _minimal()
 
-	if disk_config := get_arch_config_handler().config.disk_config:
+	if (disk_config := config.disk_config) is not None:
 		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(get_arch_config_handler().args.mountpoint)
+	perform_installation(args.mountpoint, config)
 
 
 _minimal()

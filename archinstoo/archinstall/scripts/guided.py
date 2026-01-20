@@ -5,7 +5,7 @@ from pathlib import Path
 
 from archinstall import SysInfo
 from archinstall.lib.applications.application_handler import application_handler
-from archinstall.lib.args import get_arch_config_handler
+from archinstall.lib.args import ArchConfig, Arguments, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
@@ -24,7 +24,7 @@ from archinstall.lib.resumehandler import _check_for_saved_config
 from archinstall.tui import Tui
 
 
-def ask_user_questions() -> None:
+def ask_user_questions(config: ArchConfig, args: Arguments) -> None:
 	"""
 	First, we'll ask the user for a bunch of user input.
 	Not until we're satisfied with what we want to install
@@ -34,16 +34,16 @@ def ask_user_questions() -> None:
 	title_text = None
 
 	with Tui():
-		global_menu = GlobalMenu(get_arch_config_handler().config)
+		global_menu = GlobalMenu(config)
 
-		if not get_arch_config_handler().args.advanced:
+		if not args.advanced:
 			global_menu.set_enabled('parallel_downloads', False)
 			global_menu.set_enabled('custom_commands', False)
 
 		global_menu.run(additional_title=title_text)
 
 
-def perform_installation(mountpoint: Path) -> None:
+def perform_installation(mountpoint: Path, config: ArchConfig, args: Arguments) -> None:
 	"""
 	Performs the installation steps on a block device.
 	Only requirement is that the block devices are
@@ -51,8 +51,6 @@ def perform_installation(mountpoint: Path) -> None:
 	"""
 	start_time = time.time()
 	info('Starting installation...')
-
-	config = get_arch_config_handler().config
 
 	if not config.disk_config:
 		error('No disk configuration provided')
@@ -86,7 +84,7 @@ def perform_installation(mountpoint: Path) -> None:
 		installation.minimal_installation(
 			optional_repositories=optional_repositories,
 			mkinitcpio=run_mkinitcpio,
-			hostname=get_arch_config_handler().config.hostname,
+			hostname=config.hostname,
 			locale_config=locale_config,
 		)
 
@@ -172,7 +170,7 @@ def perform_installation(mountpoint: Path) -> None:
 
 		debug(f'Disk states after installing:\n{disk_layouts()}')
 
-		if not get_arch_config_handler().args.silent:
+		if not args.silent:
 			with Tui():
 				elapsed_time = time.time() - start_time
 				action = ask_post_installation(elapsed_time)
@@ -190,32 +188,36 @@ def perform_installation(mountpoint: Path) -> None:
 
 
 def guided() -> None:
-	if not get_arch_config_handler().args.silent:
-		_check_for_saved_config()
-		ask_user_questions()
+	handler = get_arch_config_handler()
+	config = handler.config
+	args = handler.args
 
-	config = ConfigurationHandler(get_arch_config_handler().config)
-	config.write_debug()
-	config.save()
+	if not args.silent:
+		_check_for_saved_config(args)
+		ask_user_questions(config, args)
 
-	if get_arch_config_handler().args.dry_run:
+	config_handler = ConfigurationHandler(config)
+	config_handler.write_debug()
+	config_handler.save()
+
+	if args.dry_run:
 		sys.exit(0)
 
-	if not get_arch_config_handler().args.silent:
+	if not args.silent:
 		aborted = False
 		with Tui():
-			if not config.confirm_config():
+			if not config_handler.confirm_config():
 				debug('Installation aborted')
 				aborted = True
 
 		if aborted:
 			return guided()
 
-	if disk_config := get_arch_config_handler().config.disk_config:
+	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(get_arch_config_handler().args.mountpoint)
+	perform_installation(args.mountpoint, config, args)
 
 
 guided()
