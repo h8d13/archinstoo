@@ -190,6 +190,10 @@ class ArchConfigHandler:
 	def get_script(self) -> str:
 		return self.args.script or self.config.script
 
+	def pass_args_to_subscript(self) -> None:
+		"""Update sys.argv with remaining args for sub-scripts to parse."""
+		sys.argv = [sys.argv[0]] + self._remaining
+
 	def print_help(self) -> None:
 		self._parser.print_help()
 
@@ -282,10 +286,7 @@ class ArchConfigHandler:
 
 	def _parse_args(self) -> Arguments:
 		# Use parse_known_args to ignore unknown arguments (e.g., from pytest)
-		argparse_args, _remaining = self._parser.parse_known_args()
-
-		# Update sys.argv so sub-scripts can parse their own args
-		sys.argv = [sys.argv[0]] + _remaining
+		argparse_args, self._remaining = self._parser.parse_known_args()
 
 		args: Arguments = Arguments(**vars(argparse_args))
 
