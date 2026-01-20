@@ -16,7 +16,6 @@ from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
 
 hard_depends = ('python-pyparted',)
-rootless_scripts = {'list', 'size'}
 
 
 def _log_sys_info() -> None:
@@ -84,8 +83,9 @@ def main(script: str) -> int:
 	"""
 	from archinstall.lib.args import get_arch_config_handler
 
-	if '--help' in sys.argv or '-h' in sys.argv:
-		get_arch_config_handler().print_help()
+	handler = get_arch_config_handler()
+	if handler.args.help:
+		handler.print_help()
 		return 0
 
 	if os.getuid() != 0:
@@ -93,7 +93,7 @@ def main(script: str) -> int:
 		return 1
 
 	# check online and prepare deps BEFORE running the script
-	if not get_arch_config_handler().args.offline:
+	if not handler.args.offline:
 		_check_online()
 		_prepare()
 
@@ -112,11 +112,11 @@ def main(script: str) -> int:
 
 
 def run_as_a_module() -> None:
-	from archinstall.lib.args import get_arch_config_handler
+	from archinstall.lib.args import ROOTLESS_SCRIPTS, get_arch_config_handler
 
 	# Handle scripts that don't need root early (before main())
 	script = get_arch_config_handler().get_script()
-	if script in rootless_scripts:
+	if script in ROOTLESS_SCRIPTS:
 		_run_script(script)
 		sys.exit(0)
 
