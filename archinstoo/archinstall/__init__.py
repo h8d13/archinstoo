@@ -64,7 +64,6 @@ def _fetch_deps() -> int:
 
 
 def _prepare() -> int:
-	info('Fetching sync db then hard deps...')
 	try:
 		Pacman.run('-Sy', peek_output=True)
 		_fetch_deps()
