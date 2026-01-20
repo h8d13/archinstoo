@@ -56,7 +56,7 @@ def perform_installation(mountpoint: Path) -> None:
 	debug(f'Disk states after installing:\n{disk_layouts()}')
 
 
-def _only_hd() -> None:
+def format_disk() -> None:
 	if not get_arch_config_handler().args.silent:
 		ask_user_questions()
 
@@ -75,7 +75,7 @@ def _only_hd() -> None:
 				aborted = True
 
 		if aborted:
-			return _only_hd()
+			return format_disk()
 
 	if disk_config := get_arch_config_handler().config.disk_config:
 		fs_handler = FilesystemHandler(disk_config)
@@ -84,4 +84,4 @@ def _only_hd() -> None:
 	perform_installation(get_arch_config_handler().args.mountpoint)
 
 
-_only_hd()
+format_disk()
