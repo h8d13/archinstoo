@@ -7,8 +7,6 @@ from typing import Literal, overload
 
 from parted import Device, Disk, DiskException, FileSystem, Geometry, IOException, Partition, PartitionException, freshDisk, getAllDevices, getDevice, newDisk
 
-from archinstall.lib.args import get_arch_config_handler
-
 from ..exceptions import DiskError, SysCallError, UnknownFilesystemFormat
 from ..general import SysCommand, SysCommandWorker
 from ..luks import Luks2
@@ -825,6 +823,7 @@ class DeviceHandler:
 		mount_fs: str | None = None,
 		create_target_mountpoint: bool = True,
 		options: list[str] = [],
+		debug_mode: bool = False,
 	) -> None:
 		if create_target_mountpoint and not target_mountpoint.exists():
 			target_mountpoint.mkdir(parents=True, exist_ok=True)
@@ -848,7 +847,7 @@ class DeviceHandler:
 
 		command = ' '.join(cmd)
 
-		if get_arch_config_handler().args.debug:
+		if debug_mode:
 			debug(f'Mounting {dev_path}: {command}')
 
 		try:
