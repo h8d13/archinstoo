@@ -56,9 +56,9 @@ class MirrorStatusEntryV3:
 		self._hostname, *port = urllib.parse.urlparse(self.url).netloc.split(':', 1)
 		self._port = int(port[0]) if port else None
 
-		from ..args import _ArchConfigHandlerHolder, get_arch_config_handler
+		from ..args import get_arch_config_handler
 
-		if _ArchConfigHandlerHolder.instance is not None and get_arch_config_handler().args.debug:
+		if get_arch_config_handler().args.debug:
 			debug(f'Loaded mirror {self._hostname}' + (f' with current score of {self.score}' if self.score else ''))
 
 	@classmethod
