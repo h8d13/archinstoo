@@ -380,7 +380,9 @@ class EditViewport(AbstractViewport):
 			self._textbox = Textbox(self._edit_win)
 			self._main_win.refresh()
 
+		curses.curs_set(1)
 		self._textbox.edit(self._process_key_cb)
+		curses.curs_set(0)
 
 
 class Viewport(AbstractViewport):

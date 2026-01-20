@@ -16,7 +16,7 @@ class UserList(ListManager[User]):
 	def __init__(self, prompt: str, lusers: list[User]):
 		self._actions = [
 			tr('Add a user'),
-			tr('Set stash URL'),
+			tr('Manage stash URLs'),
 			tr('Change password'),
 			tr('Promote/Demote user'),
 			tr('Delete User'),
@@ -43,9 +43,9 @@ class UserList(ListManager[User]):
 				data += [new_user]
 				self._data = data  # update before showing sub-menu
 				self._run_actions_on_entry(new_user)
-		elif action == self._actions[1] and entry:  # set stash url
+		elif action == self._actions[1] and entry:  # manage stash urls
 			user = next(filter(lambda x: x == entry, data))
-			user.stash_url = self._get_stash_url(user)
+			user.stash_urls = self._manage_stash_urls(user)
 		elif action == self._actions[2] and entry:  # change password
 			header = f'{tr("User")}: {entry.username}\n'
 			new_password = get_password(tr('Password'), header=header)
@@ -75,24 +75,49 @@ class UserList(ListManager[User]):
 			return None
 		return tr('Invalid git URL')
 
-	def _get_stash_url(self, user: User) -> str | None:
-		header = f'{tr("User")}: {user.username}\n{tr("Format")}: https://provider.com/user/repo#branch\n{tr("Branch is optional")}\n'
+	def _manage_stash_urls(self, user: User) -> list[str]:
+		urls = list(user.stash_urls)
+
+		items = [MenuItem(url, url) for url in urls]
+		items.append(MenuItem(tr('Add new stash URL'), '__add__'))
+
+		if urls:
+			header = f'{tr("User")}: {user.username}\n{tr("Select URL to remove, or add new")}\n'
+		else:
+			header = f'{tr("User")}: {user.username}\n{tr("No stash URLs configured")}\n'
+
+		group = MenuItemGroup(items)
+		result = SelectMenu[str](group, header=header, allow_skip=True, alignment=Alignment.CENTER).run()
+
+		match result.type_:
+			case ResultType.Skip:
+				return urls
+			case ResultType.Selection:
+				selected = str(result.item().value)
+				if selected == '__add__':
+					if new_url := self._get_stash_url():
+						urls.append(new_url)
+				else:
+					urls.remove(selected)
+
+		return urls
+
+	def _get_stash_url(self) -> str | None:
+		header = f'{tr("Format")}: https://provider.com/user/repo#branch\n{tr("Branch is optional")}\n'
 		result = EditMenu(
 			tr('Stash URL'),
 			header=header,
 			allow_skip=True,
-			allow_reset=True,
 			validator=self._validate_stash_url,
-			default_text=user.stash_url or '',
 		).input()
 
 		match result.type_:
 			case ResultType.Skip:
-				return user.stash_url
-			case ResultType.Reset:
 				return None
 			case ResultType.Selection:
 				return result.text() or None
+			case _:
+				return None
 
 	def _add_user(self) -> User | None:
 		editResult = EditMenu(

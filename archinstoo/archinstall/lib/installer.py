@@ -1822,7 +1822,7 @@ class Installer:
 				case PrivilegeEscalation.Doas:
 					self.enable_doas(user)
 
-		if stash_url := user.stash_url:
+		for stash_url in user.stash_urls:
 			self._clone_user_stash(user.username, stash_url)
 
 	def _clone_user_stash(self, username: str, stash_url: str) -> None:
