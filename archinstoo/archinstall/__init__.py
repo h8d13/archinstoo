@@ -11,7 +11,7 @@ from archinstall.lib.networking import ping
 
 from .lib.general import running_from_host
 from .lib.hardware import SysInfo
-from .lib.output import FormattedOutput, debug, error, info, log, warn
+from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .tui.curses_menu import Tui
@@ -87,7 +87,7 @@ def _prepare() -> int:
 		if 'could not resolve host' in str(e).lower():
 			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
 
-		error('Run archinstall --debug and check /var/log/archinstall/install.log for details.')
+		error(f'Run archinstall --debug and check {logger.path} for details.')
 
 		debug(f'Failed to prepare app: {e}')
 		return 1
@@ -153,8 +153,8 @@ def run_as_a_module() -> None:
 
 			text = (
 				f'Archinstall experienced the above error. If you think this is a bug, please report it to\n'
-				f'{get_arch_config_handler().config.bug_report_url} and include the log file "/var/log/archinstall/install.log".\n\n'
-				f"Hint: To extract the log from a live ISO \ncurl -F 'file=@/var/log/archinstall/install.log' https://0x0.st\n"
+				f'{get_arch_config_handler().config.bug_report_url} and include the log file "{logger.path}".\n\n'
+				f"Hint: To extract the log from a live ISO \ncurl -F 'file=@{logger.path}' https://0x0.st\n"
 			)
 
 			warn(text)

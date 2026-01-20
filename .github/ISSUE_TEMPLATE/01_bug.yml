@@ -25,7 +25,7 @@ body:
     id: bug-report
     attributes:
       label: The installation log
-      description: 'note: located at `/var/log/archinstall/install.log`'
+      description: 'note: located at `/var/log/archinstoo/install.log`'
       placeholder: |
         Hardware model detected: Dell Inc. Precision 7670; UEFI mode: True
         Processor model detected: 12th Gen Intel(R) Core(TM) i7-12850HX
@@ -42,7 +42,7 @@ body:
       value: >
         **Note**: Assuming you have network connectivity,
         you can easily post the installation log using the following command:
-        `curl -F'file=@/var/log/archinstall/install.log' https://0x0.st`
+        `curl -F'file=@/var/log/archinstoo/install.log' https://0x0.st`
 
   - type: textarea
     id: freeform
