@@ -19,8 +19,14 @@ from .tui.curses_menu import Tui
 hard_depends = ('python-pyparted',)
 
 
+def is_venv() -> bool:
+	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
+
+
 def _log_env_info() -> None:
 	# log which mode we are using
+	info(f'{sys.executable} is_venv={is_venv()}')
+
 	if running_from_host():
 		info('Running from Host (H2T Mode)...')
 	else:
@@ -69,6 +75,8 @@ def _fetch_deps() -> int:
 
 
 def _prepare() -> int:
+	if is_venv():
+		return 0
 	try:
 		Pacman.run('-Sy', peek_output=True)
 		_fetch_deps()
@@ -119,9 +127,6 @@ def main(script: str) -> int:
 
 
 def run_as_a_module() -> None:
-	is_venv = sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
-	info(f'{sys.executable} is_venv={is_venv}')
-
 	# handle scripts that don't need root early before main(script)
 	script = get_arch_config_handler().get_script()
 	if script in ROOTLESS_SCRIPTS:
