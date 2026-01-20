@@ -95,7 +95,7 @@ UserSerialization = TypedDict(
 		'sudo': bool,
 		'groups': list[str],
 		'enc_password': str | None,
-		'stash_url': NotRequired[str | None],
+		'stash_urls': NotRequired[list[str]],
 	},
 )
 
@@ -147,7 +147,7 @@ class User:
 	password: Password
 	sudo: bool
 	groups: list[str] = field(default_factory=list)
-	stash_url: str | None = None
+	stash_urls: list[str] = field(default_factory=list)
 
 	@override
 	def __str__(self) -> str:
@@ -168,7 +168,7 @@ class User:
 			'enc_password': self.password.enc_password,
 			'sudo': self.sudo,
 			'groups': self.groups,
-			'stash_url': self.stash_url,
+			'stash_urls': self.stash_urls,
 		}
 
 	@classmethod
@@ -183,7 +183,7 @@ class User:
 			password: Password | None = None
 			groups = entry.get('groups', [])
 			enc_password = entry.get('enc_password')
-			stash_url = entry.get('stash_url')
+			stash_urls = entry.get('stash_urls', [])
 
 			if enc_password:
 				password = Password(enc_password=enc_password)
@@ -196,7 +196,7 @@ class User:
 				password=password,
 				sudo=entry.get('sudo', False) is True,
 				groups=groups,
-				stash_url=stash_url,
+				stash_urls=stash_urls,
 			)
 
 			users.append(user)
