@@ -19,8 +19,15 @@ from .tui.curses_menu import Tui
 hard_depends = ('python-pyparted',)
 
 
+def _log_env_info() -> None:
+	# log which mode we are using
+	if running_from_host():
+		info('Running from Host (H2T Mode)...')
+	else:
+		info('Running from ISO (USB Mode)...')
+
+
 def _log_sys_info() -> None:
-	# for support reasons, we'll log the disk layout pre installation to match against post-installation layout
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
 	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
@@ -106,15 +113,8 @@ def main(script: str) -> int:
 			return rc
 
 	# default 'guided' from /lib/args
+	_log_env_info()
 	_run_script(script)
-
-	# note log infos after prepare and script type
-	if running_from_host():
-		# log which mode we are using
-		debug('Running from Host (H2T Mode)...')
-	else:
-		debug('Running from ISO (Live Mode)...')
-
 	_log_sys_info()
 
 	return 0
