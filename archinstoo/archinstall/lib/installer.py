@@ -1306,7 +1306,6 @@ class Installer:
 			config = re.sub(r'^#(GRUB_ENABLE_CRYPTODISK=y)', r'\1', config, flags=re.MULTILINE)
 			grub_default.write_text(config)
 
-		# ideally we can configure other grubber stuff here that is not part of kernel args
 		try:
 			self.arch_chroot(
 				f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',
