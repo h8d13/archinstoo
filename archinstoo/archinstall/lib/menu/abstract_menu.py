@@ -27,6 +27,7 @@ class AbstractMenu[ValueT]:
 		self.auto_cursor = auto_cursor
 		self._allow_reset = allow_reset
 		self._reset_warning = reset_warning
+		self._was_reset = False
 
 		self.is_context_mgr = False
 
@@ -87,6 +88,7 @@ class AbstractMenu[ValueT]:
 		additional_title: str | None = None,
 	) -> ValueT | None:
 		self._sync_from_config()
+		self._was_reset = False
 
 		while True:
 			result = SelectMenu[ValueT](
@@ -109,6 +111,7 @@ class AbstractMenu[ValueT]:
 							continue
 						break
 				case ResultType.Reset:
+					self._was_reset = True
 					return None
 
 		self.sync_all_to_config()

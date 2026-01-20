@@ -63,8 +63,12 @@ def perform_installation(mountpoint: Path) -> None:
 def _minimal() -> None:
 	with Tui():
 		disk_config = DiskLayoutConfigurationMenu(disk_layout_config=None).run()
-		get_arch_config_handler().config.disk_config = disk_config
 
+	if disk_config is None:
+		info('Installation cancelled.')
+		return
+
+	get_arch_config_handler().config.disk_config = disk_config
 	config = ConfigurationHandler(get_arch_config_handler().config)
 	config.write_debug()
 	config.save()
