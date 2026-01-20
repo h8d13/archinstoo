@@ -130,8 +130,10 @@ def main(script: str) -> int:
 
 def run_as_a_module() -> None:
 	# handle scripts that don't need root early before main(script)
-	script = get_arch_config_handler().get_script()
+	handler = get_arch_config_handler()
+	script = handler.get_script()
 	if script in ROOTLESS_SCRIPTS:
+		handler.pass_args_to_subscript()
 		_run_script(script)
 		sys.exit(0)
 
