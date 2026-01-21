@@ -82,7 +82,7 @@ def _prepare() -> int:
 	if is_venv():
 		return 0
 	try:
-		info('Fetching db + dependancies...')
+		info('Fetching db + dependencies...')
 		Pacman.run('-Sy', peek_output=True)
 		_fetch_deps()
 		return 0
