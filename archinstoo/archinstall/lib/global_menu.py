@@ -154,7 +154,7 @@ class GlobalMenu(AbstractMenu[None]):
 				key='timezone',
 			),
 			MenuItem(
-				text=tr('Automatic time sync (NTP)'),
+				text=tr('Automatic time sync'),
 				action=ask_ntp,
 				value=True,
 				preview_action=self._prev_ntp,
