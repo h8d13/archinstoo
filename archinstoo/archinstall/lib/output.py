@@ -9,7 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from .utils.env import running_from_host
+from .utils.env import Os, running_from_host
 from .utils.unicode import unicode_ljust, unicode_rjust
 
 if TYPE_CHECKING:
@@ -135,7 +135,7 @@ def restore_perms(path: Path, recursive: bool = False) -> None:
 	if not running_from_host():
 		return
 
-	orig_user = os.environ.get('SUDO_USER') or os.environ.get('DOAS_USER')
+	orig_user = Os.get_env('SUDO_USER') or Os.get_env('DOAS_USER')
 	if not orig_user:
 		return
 
@@ -197,7 +197,7 @@ def _supports_color() -> bool:
 	Return True if the running system's terminal supports color,
 	and False otherwise.
 	"""
-	supported_platform = sys.platform != 'win32' or 'ANSICON' in os.environ
+	supported_platform = sys.platform != 'win32' or Os.has_env('ANSICON')
 
 	# isatty is not always implemented, #6223.
 	is_a_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()

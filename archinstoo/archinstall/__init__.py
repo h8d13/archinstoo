@@ -22,7 +22,7 @@ from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import is_venv, running_from_host
+from .lib.utils.env import Os, is_venv, running_from_host
 
 hard_depends = ('python-pyparted',)
 
@@ -65,7 +65,7 @@ def _reload() -> None:
 
 
 def _fetch_deps() -> int:
-	if os.environ.get('ARCHINSTALL_DEPS_FETCHED'):
+	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
 		return 0
 	try:
 		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
@@ -73,7 +73,7 @@ def _fetch_deps() -> int:
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
 	except Exception:
 		return 1
-	os.environ['ARCHINSTALL_DEPS_FETCHED'] = '1'
+	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
 	_reload()
 	return 0
 
