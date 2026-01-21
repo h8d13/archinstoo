@@ -68,11 +68,13 @@ class PacmanConfig:
 				if row + 1 < len(content) and content[row + 1].lstrip().startswith('#'):
 					content[row + 1] = re.sub(r'^#\s*', '', content[row + 1])
 
-		# Append custom repositories
+		# Append custom repositories (skip if already exists)
+		content_str = ''.join(content)
 		for custom in self._custom_repositories:
-			content.append(f'\n[{custom.name}]\n')
-			content.append(f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n')
-			content.append(f'Server = {custom.url}\n')
+			if f'[{custom.name}]' not in content_str:
+				content.append(f'\n[{custom.name}]\n')
+				content.append(f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n')
+				content.append(f'Server = {custom.url}\n')
 
 		# Apply temp using backup then revert on exit handler
 		if running_from_host():

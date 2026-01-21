@@ -370,8 +370,10 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_additional_pkgs(self, item: MenuItem) -> str | None:
 		if item.value:
-			output = '\n'.join(sorted(item.value))
-			return output
+			title = tr('Additionals')
+			divider = '-' * len(title)
+			packages = '\n'.join(sorted(item.value))
+			return f'{title}\n{divider}\n{packages}'
 		return None
 
 	def _prev_authentication(self, item: MenuItem) -> str | None:
