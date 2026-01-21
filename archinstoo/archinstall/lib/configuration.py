@@ -10,7 +10,7 @@ from archinstall.tui.types import Alignment, FrameProperties, Orientation, Previ
 
 from .args import ArchConfig
 from .general import JSON
-from .output import debug, info, logger, warn
+from .output import debug, info, logger, restore_perms, warn
 
 
 class ConfigurationHandler:
@@ -67,6 +67,7 @@ class ConfigurationHandler:
 	def _save_file(self, path: Path, content: str) -> None:
 		path.write_text(content)
 		path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
+		restore_perms(path.parent, recursive=True)
 		info(f'Saved {path}')
 
 	def save(self) -> bool:

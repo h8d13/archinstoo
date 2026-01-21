@@ -4,9 +4,9 @@ from pathlib import Path
 from shutil import copy2
 from typing import TYPE_CHECKING
 
-from ..general import running_from_host
 from ..models.mirrors import CustomRepository
 from ..models.packages import Repository
+from ..utils.env import running_from_host
 
 if TYPE_CHECKING:
 	from ..models.mirrors import PacmanConfiguration

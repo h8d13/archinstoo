@@ -1,6 +1,7 @@
 from ..exceptions import ServiceException, SysCallError
-from ..general import SysCommand, running_from_host
+from ..general import SysCommand
 from ..output import error
+from ..utils.env import running_from_host
 
 
 def list_keyboard_languages() -> list[str]:
