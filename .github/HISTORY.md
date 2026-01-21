@@ -5,8 +5,11 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 > Aims to simplify reading/maintaining the codebase while keeping MORE options available, with LESS dependencies/flags BUT more control especially to create media, modify inner workings, without headaches.
 
 ## 0.0.01-5
-
+    
     - New `logs/` dir for outputs restored on h2t mode
+    - Move `tui/` into `lib/` for more readable imports / flat lib / honest architecture
+        - A lot of UI code is called from lib interactions or similar
+        - Having them as syblings when they are interlaced is misleading
     - Separate `env` module in utils for these types of checks
     - Rename `MirrorConfiguration` to `PacmanConfiguration`
         - Add pacman misc options (Color, ILoveCandy, VerbosePkgLists)
