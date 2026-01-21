@@ -9,6 +9,7 @@ import traceback
 
 from .lib import output
 from .lib.args import (
+	PREPARE_SCRIPTS,
 	ROOTLESS_SCRIPTS,
 	ArchConfigHandler,
 	Arguments,
@@ -119,17 +120,16 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 		print(tr('Archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
 		return 1
 
-	# check online and prepare deps BEFORE running the script
-	if not args.offline:
+	# check online and prepare deps only for core installer scripts
+	if script in PREPARE_SCRIPTS and not args.offline:
 		if rc := _check_online():
 			return rc
 		if rc := _prepare():
 			return rc
-
-	# default 'guided' from /lib/args
 	_log_env_info()
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
+	# usually 'guided' from default lib/args
 	_run_script(script)
 	# note only log once install started
 	_log_sys_info(args)
