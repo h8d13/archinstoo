@@ -1283,7 +1283,7 @@ def _build_theme(mode: str, accent: str) -> dict[STYLE, tuple[int, int]]:
 		return {
 			STYLE.NORMAL: (curses.COLOR_WHITE, curses.COLOR_BLACK),
 			STYLE.CURSOR_STYLE: (accent_color, curses.COLOR_BLACK),
-			STYLE.MENU_STYLE: (curses.COLOR_BLACK, accent_color),
+			STYLE.MENU_STYLE: (curses.COLOR_WHITE, accent_color),  # white text on accent bg
 		}
 
 
