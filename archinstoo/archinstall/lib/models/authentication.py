@@ -30,6 +30,10 @@ class AuthenticationConfiguration:
 	lock_root_account: bool = False
 	privilege_escalation: PrivilegeEscalation = PrivilegeEscalation.Sudo
 
+	@property
+	def has_elevated_users(self) -> bool:
+		return User.any_elevated(self.users)
+
 	@classmethod
 	def parse_arg(cls, args: AuthenticationSerialization) -> Self:
 		auth_config = cls()

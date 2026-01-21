@@ -17,7 +17,7 @@ from archinstall.lib.models.authentication import AuthenticationConfiguration, P
 from archinstall.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstall.lib.models.locale import LocaleConfiguration
-from archinstall.lib.models.mirrors import CustomRepository, CustomServer, MirrorConfiguration, MirrorRegion, SignCheck, SignOption
+from archinstall.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
 from archinstall.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstall.lib.models.packages import Repository
 from archinstall.lib.models.profile import ProfileConfiguration
@@ -124,7 +124,7 @@ def test_config_file_parsing(
 				User(
 					username='user_name',
 					password=Password(enc_password='password_hash'),
-					sudo=True,
+					elev=True,
 					groups=['wheel'],
 				),
 			],
@@ -163,7 +163,7 @@ def test_config_file_parsing(
 			gfx_driver=GfxDriver.AllOpenSource,
 			greeter=GreeterType.Lightdm,
 		),
-		mirror_config=MirrorConfiguration(
+		pacman_config=PacmanConfiguration(
 			mirror_regions=[
 				MirrorRegion(
 					name='Australia',

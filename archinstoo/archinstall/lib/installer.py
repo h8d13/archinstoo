@@ -1799,8 +1799,7 @@ class Installer:
 			users = [users]
 
 		# Install the privilege escalation package
-		has_sudo_user = any(user.sudo for user in users)
-		if has_sudo_user:
+		if User.any_elevated(users):
 			self.pacman.strap(privilege_escalation.packages())
 
 		for user in users:
@@ -1815,7 +1814,7 @@ class Installer:
 
 		cmd = 'useradd -m'
 
-		if user.sudo:
+		if user.elev:
 			cmd += ' -G wheel'
 
 		cmd += f' {user.username}'
@@ -1830,7 +1829,7 @@ class Installer:
 		for group in user.groups:
 			self.arch_chroot(f'gpasswd -a {user.username} {group}')
 
-		if user.sudo:
+		if user.elev:
 			match privilege_escalation:
 				case PrivilegeEscalation.Sudo:
 					self.enable_sudo(user)
