@@ -35,7 +35,7 @@ from archinstall.lib.packages import installed_package
 from archinstall.lib.translationhandler import tr
 from archinstall.tui.curses_menu import Tui
 
-from .args import ArchConfigHandler, get_arch_config_handler
+from .args import ArchConfigHandler
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
@@ -68,13 +68,14 @@ class Installer:
 		disk_config: DiskLayoutConfiguration,
 		base_packages: list[str] = [],
 		kernels: list[str] | None = None,
-		handler: ArchConfigHandler | None = None,
+		*,
+		handler: ArchConfigHandler,
 	):
 		"""
 		`Installer()` is the wrapper for most basic installation steps.
 		It also wraps :py:func:`~archinstall.Installer.pacstrap` among other things.
 		"""
-		self._handler = handler or get_arch_config_handler()
+		self._handler = handler
 		self._args = self._handler.args
 		self._bug_report_url = self._handler.config.bug_report_url
 

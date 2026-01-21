@@ -51,15 +51,11 @@ class MirrorStatusEntryV3:
 	def __post_init__(self) -> None:
 		if self.score is not None:
 			self.score = round(self.score)
-			debug(f'    score: {self.score}')
 
 		self._hostname, *port = urllib.parse.urlparse(self.url).netloc.split(':', 1)
 		self._port = int(port[0]) if port else None
 
-		from ..args import get_arch_config_handler
-
-		if get_arch_config_handler().args.debug:
-			debug(f'Loaded mirror {self._hostname}' + (f' with current score of {self.score}' if self.score else ''))
+		debug(f'Loaded mirror {self._hostname}' + (f' with score {self.score}' if self.score else ''))
 
 	@classmethod
 	def from_dict(cls, data: dict[str, Any]) -> Self:

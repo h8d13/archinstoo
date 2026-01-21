@@ -27,8 +27,6 @@ class DockerProfile(Profile):
 
 	@override
 	def post_install(self, install_session: Installer) -> None:
-		from archinstall.lib.args import get_arch_config_handler
-
-		if auth_config := get_arch_config_handler().config.auth_config:
+		if auth_config := install_session._handler.config.auth_config:
 			for user in auth_config.users:
 				install_session.arch_chroot(f'usermod -a -G docker {user.username}')

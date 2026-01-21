@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from archinstall.default_profiles.minimal import MinimalProfile
-from archinstall.lib.args import ArchConfig, get_arch_config_handler
+from archinstall.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.disk.filesystem import FilesystemHandler
@@ -15,7 +15,7 @@ from archinstall.lib.profile.profiles_handler import profile_handler
 from archinstall.tui import Tui
 
 
-def perform_installation(mountpoint: Path, config: ArchConfig) -> None:
+def perform_installation(mountpoint: Path, config: ArchConfig, handler: ArchConfigHandler) -> None:
 	if not config.disk_config:
 		error('No disk configuration provided')
 		return
@@ -27,6 +27,7 @@ def perform_installation(mountpoint: Path, config: ArchConfig) -> None:
 		mountpoint,
 		disk_config,
 		kernels=config.kernels,
+		handler=handler,
 	) as installation:
 		# Strap in the base system, add a bootloader and configure
 		# some other minor details as specified by this profile and user.
@@ -92,7 +93,7 @@ def _minimal() -> None:
 		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(args.mountpoint, config)
+	perform_installation(args.mountpoint, config, handler)
 
 
 _minimal()

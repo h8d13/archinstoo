@@ -1,4 +1,4 @@
-from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.output import error, info
 from archinstall.tui import Tui
@@ -8,10 +8,8 @@ from archinstall.tui.result import ResultType
 from archinstall.tui.types import Alignment
 
 
-def _check_for_saved_config(args: Arguments, handler: ArchConfigHandler | None = None) -> None:
+def _check_for_saved_config(args: Arguments, handler: ArchConfigHandler) -> None:
 	# Start fresh actually deletes both cfg and auth
-	if handler is None:
-		handler = get_arch_config_handler()
 
 	if not ConfigurationHandler.has_saved_config() or args.silent:
 		return
