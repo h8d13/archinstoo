@@ -1272,6 +1272,16 @@ THEMES: dict[str, dict[STYLE, tuple[int, int]]] = {
 		STYLE.CURSOR_STYLE: (curses.COLOR_RED, curses.COLOR_BLACK),
 		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_RED),
 	},
+	'orange': {
+		STYLE.NORMAL: (curses.COLOR_YELLOW, curses.COLOR_BLACK),
+		STYLE.CURSOR_STYLE: (curses.COLOR_YELLOW, curses.COLOR_BLACK),
+		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_YELLOW),
+	},
+	'cyan': {
+		STYLE.NORMAL: (curses.COLOR_CYAN, curses.COLOR_BLACK),
+		STYLE.CURSOR_STYLE: (curses.COLOR_CYAN, curses.COLOR_BLACK),
+		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_CYAN),
+	},
 }
 
 

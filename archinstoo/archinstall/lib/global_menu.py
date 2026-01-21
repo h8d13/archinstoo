@@ -267,6 +267,8 @@ class GlobalMenu(AbstractMenu[None]):
 			MenuItem(text=tr('Default'), value='default'),
 			MenuItem(text=tr('Green'), value='green'),
 			MenuItem(text=tr('Red'), value='red'),
+			MenuItem(text=tr('Orange'), value='orange'),
+			MenuItem(text=tr('Cyan'), value='cyan'),
 		]
 
 		group = MenuItemGroup(theme_items, sort_items=False)
@@ -746,10 +748,10 @@ class GlobalMenu(AbstractMenu[None]):
 				self.sync_all_to_config()
 				config_output = ConfigurationHandler(self._arch_config)
 				config_output.save()
-				sys.exit(1)
+				sys.exit(0)  # User-initiated abort is not an error
 			elif choice == 'abort_only':
 				ConfigurationHandler.delete_saved_config()
-				sys.exit(1)
+				sys.exit(0)  # User-initiated abort is not an error
 			# If 'cancel', just return to menu
 
 		return None
