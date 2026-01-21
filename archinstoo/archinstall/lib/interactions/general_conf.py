@@ -134,16 +134,19 @@ def select_archinstall_language(languages: list[Language], preset: Language) -> 
 def ask_additional_packages_to_install(
 	preset: list[str] = [],
 	repositories: set[Repository] = set(),
+	custom_repos: list[str] = [],
 ) -> list[str]:
 	repositories |= {Repository.Core, Repository.Extra}
 
-	respos_text = ', '.join(r.value for r in repositories)
-	output = tr('Repositories: {}').format(respos_text) + '\n'
+	repos_text = ', '.join(r.value for r in repositories)
+	if custom_repos:
+		repos_text += ', ' + ', '.join(custom_repos)
+	output = tr('Repositories: {}').format(repos_text) + '\n'
 
 	output += tr('Loading packages...')
 	Tui.print(output, clear_screen=True)
 
-	packages = list_available_packages(tuple(repositories))
+	packages = list_available_packages(tuple(repositories), tuple(custom_repos))
 	package_groups = PackageGroup.from_available_packages(packages)
 
 	# Additional packages (with some light weight error handling for invalid package names)
