@@ -1,11 +1,11 @@
 from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.output import error, info
-from archinstall.tui import Tui
-from archinstall.tui.curses_menu import SelectMenu
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment
+from archinstall.lib.tui import Tui
+from archinstall.lib.tui.curses_menu import SelectMenu
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment
 
 
 def _check_for_saved_config(args: Arguments, handler: ArchConfigHandler) -> None:

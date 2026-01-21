@@ -21,8 +21,8 @@ from .lib.networking import ping
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
+from .lib.tui.curses_menu import Tui
 from .lib.utils.env import is_venv, running_from_host
-from .tui.curses_menu import Tui
 
 hard_depends = ('python-pyparted',)
 

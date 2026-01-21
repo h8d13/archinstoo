@@ -2,10 +2,10 @@ from types import TracebackType
 from typing import Any, Self
 
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import SelectMenu, Tui
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Chars, FrameProperties, FrameStyle, PreviewStyle
+from archinstall.lib.tui.curses_menu import SelectMenu, Tui
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Chars, FrameProperties, FrameStyle, PreviewStyle
 
 from ..output import error
 

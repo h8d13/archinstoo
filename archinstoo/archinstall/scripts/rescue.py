@@ -5,11 +5,11 @@ from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.disk.utils import get_all_lsblk_info
 from archinstall.lib.models.device import LsblkInfo, Unit
 from archinstall.lib.output import error, info, warn
-from archinstall.tui import Tui
-from archinstall.tui.curses_menu import SelectMenu
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment
+from archinstall.lib.tui import Tui
+from archinstall.lib.tui.curses_menu import SelectMenu
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment
 
 
 def find_linux_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:

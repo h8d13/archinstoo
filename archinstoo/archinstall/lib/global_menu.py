@@ -6,11 +6,11 @@ from archinstall.lib.models.application import ApplicationConfiguration, ZramCon
 from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, FilesystemType, PartitionModification
 from archinstall.lib.packages import list_available_packages
-from archinstall.tui.curses_menu import SelectMenu, Tui
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.script_editor import edit_script
-from archinstall.tui.types import Alignment, Orientation
+from archinstall.lib.tui.curses_menu import SelectMenu, Tui
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.script_editor import edit_script
+from archinstall.lib.tui.types import Alignment, Orientation
 
 from .applications.application_menu import ApplicationMenu
 from .args import ArchConfig

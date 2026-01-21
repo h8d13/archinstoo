@@ -19,7 +19,7 @@ class Result[ValueT]:
 		return self._item is not None
 
 	def get_value(self) -> ValueT:
-		return self.item().get_value()  # type: ignore[no-any-return]
+		return self.item().get_value()
 
 	def get_values(self) -> list[ValueT]:
 		return [i.get_value() for i in self.items()]

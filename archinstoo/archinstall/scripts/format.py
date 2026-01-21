@@ -8,7 +8,7 @@ from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.global_menu import GlobalMenu
 from archinstall.lib.installer import Installer
-from archinstall.tui import Tui
+from archinstall.lib.tui import Tui
 
 
 def ask_user_questions(config: ArchConfig) -> None:
