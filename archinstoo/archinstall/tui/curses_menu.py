@@ -315,6 +315,7 @@ class EditViewport(AbstractViewport):
 	def _init_wins(self) -> None:
 		self._main_win = curses.newwin(self._edit_height, self._width, self.y_start, 0)
 		self._main_win.nodelay(False)
+		self._main_win.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
 
 		x_offset = 0
 		if self._alignment == Alignment.CENTER:
@@ -326,6 +327,7 @@ class EditViewport(AbstractViewport):
 			self.y_start + 1,
 			self.x_start + x_offset + 1,
 		)
+		self._edit_win.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
 
 	def update(self) -> None:
 		if not self._main_win:
@@ -406,6 +408,7 @@ class Viewport(AbstractViewport):
 
 		self._main_win = curses.newwin(self.height, self.width, self.y_start, self.x_start)
 		self._main_win.nodelay(False)
+		self._main_win.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
 		self._main_win.standout()
 
 	def getch(self) -> int:
@@ -1262,6 +1265,11 @@ THEMES: dict[str, dict[STYLE, tuple[int, int]]] = {
 		STYLE.CURSOR_STYLE: (curses.COLOR_CYAN, curses.COLOR_BLACK),
 		STYLE.MENU_STYLE: (curses.COLOR_WHITE, curses.COLOR_BLUE),
 	},
+	'light': {
+		STYLE.NORMAL: (curses.COLOR_BLACK, curses.COLOR_WHITE),
+		STYLE.CURSOR_STYLE: (curses.COLOR_BLUE, curses.COLOR_WHITE),
+		STYLE.MENU_STYLE: (curses.COLOR_WHITE, curses.COLOR_BLUE),
+	},
 	'green': {
 		STYLE.NORMAL: (curses.COLOR_GREEN, curses.COLOR_BLACK),
 		STYLE.CURSOR_STYLE: (curses.COLOR_GREEN, curses.COLOR_BLACK),
@@ -1326,6 +1334,7 @@ class Tui:
 		if curses.has_colors():
 			curses.start_color()
 			self._set_up_colors()
+			self._screen.clear()
 
 		signal.signal(signal.SIGWINCH, self._sig_win_resize)
 		self._screen.refresh()
@@ -1418,10 +1427,18 @@ class Tui:
 
 	def _set_up_colors(self) -> None:
 		theme = THEMES.get(Tui._theme, THEMES['default'])
+		# Get background color from NORMAL style
+		_, bg_color = theme.get(STYLE.NORMAL, (curses.COLOR_WHITE, curses.COLOR_BLACK))
+
 		for style, (fg, bg) in theme.items():
 			curses.init_pair(style.value, fg, bg)
-		curses.init_pair(STYLE.HELP.value, curses.COLOR_GREEN, curses.COLOR_BLACK)
-		curses.init_pair(STYLE.ERROR.value, curses.COLOR_RED, curses.COLOR_BLACK)
+
+		# Use theme's background for help/error colors
+		curses.init_pair(STYLE.HELP.value, curses.COLOR_GREEN, bg_color)
+		curses.init_pair(STYLE.ERROR.value, curses.COLOR_RED, bg_color)
+
+		# Set the screen background
+		self._screen.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
 
 	def get_color(self, color: STYLE) -> int:
 		return curses.color_pair(color.value)
