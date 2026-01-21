@@ -32,7 +32,7 @@ from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .mirrors import MirrorMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.locale import LocaleConfiguration
-from .models.mirrors import MirrorConfiguration
+from .models.mirrors import PacmanConfiguration
 from .models.network import NetworkConfiguration, NicType
 from .models.packages import Repository
 from .models.profile import ProfileConfiguration
@@ -54,6 +54,10 @@ class GlobalMenu(AbstractMenu[None]):
 
 		super().__init__(self._item_group, config=arch_config)
 
+		# Apply pacman config if loaded from file
+		if arch_config.pacman_config:
+			PacmanConfig.apply_config(arch_config.pacman_config)
+
 	def _get_menu_options(self) -> list[MenuItem]:
 		menu_options = [
 			MenuItem(
@@ -69,10 +73,10 @@ class GlobalMenu(AbstractMenu[None]):
 				key='locale_config',
 			),
 			MenuItem(
-				text=tr('Mirrors and repos'),
-				action=self._mirror_configuration,
-				preview_action=self._prev_mirror_config,
-				key='mirror_config',
+				text=tr('Pacman config'),
+				action=self._pacman_configuration,
+				preview_action=self._prev_pacman_config,
+				key='pacman_config',
 			),
 			MenuItem(
 				text=tr('Bootloader'),
@@ -684,7 +688,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return profile_config
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:
-		config: MirrorConfiguration | None = self._item_group.find_by_key('mirror_config').value
+		config: PacmanConfiguration | None = self._item_group.find_by_key('pacman_config').value
 
 		repositories: set[Repository] = set()
 		custom_repos: list[str] = []
@@ -700,51 +704,56 @@ class GlobalMenu(AbstractMenu[None]):
 
 		return packages
 
-	def _mirror_configuration(self, preset: MirrorConfiguration | None = None) -> MirrorConfiguration:
-		mirror_configuration = MirrorMenu(preset=preset).run()
+	def _pacman_configuration(self, preset: PacmanConfiguration | None = None) -> PacmanConfiguration:
+		pacman_configuration = MirrorMenu(preset=preset).run()
 
-		if mirror_configuration.optional_repositories or mirror_configuration.custom_repositories:
+		needs_apply = pacman_configuration.optional_repositories or pacman_configuration.custom_repositories or pacman_configuration.pacman_options
+
+		if needs_apply:
 			# reset the package list cache in case the repository selection has changed
-			list_available_packages.cache_clear()
+			if pacman_configuration.optional_repositories or pacman_configuration.custom_repositories:
+				list_available_packages.cache_clear()
 
-			# enable the repositories in the config
+			# enable the repositories and options in the config
 			pacman_config = PacmanConfig(None)
-			if mirror_configuration.optional_repositories:
-				pacman_config.enable(mirror_configuration.optional_repositories)
-			if mirror_configuration.custom_repositories:
-				pacman_config.enable_custom(mirror_configuration.custom_repositories)
+			if pacman_configuration.optional_repositories:
+				pacman_config.enable(pacman_configuration.optional_repositories)
+			if pacman_configuration.custom_repositories:
+				pacman_config.enable_custom(pacman_configuration.custom_repositories)
+			if pacman_configuration.pacman_options:
+				pacman_config.enable_options(pacman_configuration.pacman_options)
 			pacman_config.apply()
 
-		return mirror_configuration
+		return pacman_configuration
 
-	def _prev_mirror_config(self, item: MenuItem) -> str | None:
+	def _prev_pacman_config(self, item: MenuItem) -> str | None:
 		if not item.value:
 			return None
 
-		mirror_config: MirrorConfiguration = item.value
+		config: PacmanConfiguration = item.value
 
 		output = ''
-		if mirror_config.mirror_regions:
+		if config.mirror_regions:
 			title = tr('Selected mirror regions')
 			divider = '-' * len(title)
-			regions = mirror_config.region_names
+			regions = config.region_names
 			output += f'{title}\n{divider}\n{regions}\n\n'
 
-		if mirror_config.custom_servers:
+		if config.custom_servers:
 			title = tr('Custom servers')
 			divider = '-' * len(title)
-			servers = mirror_config.custom_server_urls
+			servers = config.custom_server_urls
 			output += f'{title}\n{divider}\n{servers}\n\n'
 
-		if mirror_config.optional_repositories:
+		if config.optional_repositories:
 			title = tr('Optional repositories')
 			divider = '-' * len(title)
-			repos = ', '.join([r.value for r in mirror_config.optional_repositories])
+			repos = ', '.join([r.value for r in config.optional_repositories])
 			output += f'{title}\n{divider}\n{repos}\n\n'
 
-		if mirror_config.custom_repositories:
+		if config.custom_repositories:
 			title = tr('Custom repositories')
-			table = FormattedOutput.as_table(mirror_config.custom_repositories)
+			table = FormattedOutput.as_table(config.custom_repositories)
 			output += f'{title}:\n\n{table}'
 
 		return output.strip()
