@@ -136,59 +136,6 @@
 │       ├── pre_mount_cli.py
 │       ├── rescue.py
 │       └── size.py
-├── docs
-│   ├── archinstall
-│   │   ├── Installer.rst
-│   │   └── plugins.rst
-│   ├── _build
-│   │   ├── doctrees
-│   │   │   ├── archinstall
-│   │   │   │   ├── Installer.doctree
-│   │   │   │   └── plugins.doctree
-│   │   │   ├── cli_parameters
-│   │   │   │   └── config
-│   │   │   │       ├── custom_commands.doctree
-│   │   │   │       ├── disk_config.doctree
-│   │   │   │       └── disk_encryption.doctree
-│   │   │   ├── environment.pickle
-│   │   │   ├── examples
-│   │   │   │   └── python.doctree
-│   │   │   ├── help
-│   │   │   │   ├── discord.doctree
-│   │   │   │   ├── known_issues.doctree
-│   │   │   │   └── report_bug.doctree
-│   │   │   ├── index.doctree
-│   │   │   └── installing
-│   │   │       ├── guided.doctree
-│   │   │       └── python.doctree
-│   │   └── man
-│   │       ├── archinstall.1
-│   │       └── _static
-│   │           ├── jquery.js
-│   │           └── _sphinx_javascript_frameworks_compat.js
-│   ├── cli_parameters
-│   │   └── config
-│   │       ├── config_options.csv
-│   │       ├── custom_commands.rst
-│   │       ├── disk_config.rst
-│   │       ├── disk_encryption.rst
-│   │       └── manual_options.csv
-│   ├── conf.py
-│   ├── examples
-│   │   └── python.rst
-│   ├── help
-│   │   ├── discord.rst
-│   │   ├── known_issues.rst
-│   │   └── report_bug.rst
-│   ├── index.rst
-│   ├── installing
-│   │   ├── guided.rst
-│   │   └── python.rst
-│   ├── Makefile
-│   ├── pull_request_template.md
-│   ├── readme.md
-│   └── _templates
-│       └── layout.html
 ├── examples
 │   ├── config-sample.json
 │   └── full_automated_installation.py
@@ -201,5 +148,5 @@
     ├── test_args.py
     └── test_configuration_output.py
 
-43 directories, 157 files
+25 directories, 122 files
 ```
