@@ -1,7 +1,5 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-
-. ./PKGBUILD && sudo pacman -S --needed "${depends[@]}"
 cd archinstoo || exit 1
 
 # update deps launch venv and run archinstall
