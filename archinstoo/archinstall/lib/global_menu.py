@@ -263,32 +263,55 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _select_theme(self) -> None:
 		"""Select a theme for the TUI (session-only, not persisted)."""
-		theme_items = [
-			MenuItem(text=tr('Default'), value='default'),
+		# Select mode (dark/light)
+		mode_items = [
+			MenuItem(text=tr('Dark'), value='dark'),
 			MenuItem(text=tr('Light'), value='light'),
-			MenuItem(text=tr('Green'), value='green'),
-			MenuItem(text=tr('Red'), value='red'),
-			MenuItem(text=tr('Orange'), value='orange'),
-			MenuItem(text=tr('Cyan'), value='cyan'),
 		]
 
-		group = MenuItemGroup(theme_items, sort_items=False)
-		group.set_focus_by_value(Tui._theme)
+		mode_group = MenuItemGroup(mode_items, sort_items=False)
+		mode_group.set_focus_by_value(Tui._mode)
 
-		result = SelectMenu[str](
-			group,
-			header=tr('Select theme'),
+		mode_result = SelectMenu[str](
+			mode_group,
+			header=tr('Select mode'),
 			alignment=Alignment.CENTER,
 			allow_skip=True,
 		).run()
 
-		if result.type_ == ResultType.Selection:
-			if theme := result.get_value():
-				Tui.set_theme(theme)
-				if t := Tui._t:
-					t._set_up_colors()
-					t.screen.clear()
-					t.screen.refresh()
+		if mode_result.type_ == ResultType.Selection:
+			if mode := mode_result.get_value():
+				Tui.set_mode(mode)
+
+		# Select accent color
+		accent_items = [
+			MenuItem(text=tr('Cyan'), value='cyan'),
+			MenuItem(text=tr('Green'), value='green'),
+			MenuItem(text=tr('Red'), value='red'),
+			MenuItem(text=tr('Orange'), value='orange'),
+			MenuItem(text=tr('Blue'), value='blue'),
+			MenuItem(text=tr('Magenta'), value='magenta'),
+		]
+
+		accent_group = MenuItemGroup(accent_items, sort_items=False)
+		accent_group.set_focus_by_value(Tui._accent)
+
+		accent_result = SelectMenu[str](
+			accent_group,
+			header=tr('Select accent color'),
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
+
+		if accent_result.type_ == ResultType.Selection:
+			if accent := accent_result.get_value():
+				Tui.set_accent(accent)
+
+		# Apply theme changes
+		if t := Tui._t:
+			t._set_up_colors()
+			t.screen.clear()
+			t.screen.refresh()
 
 	def _prev_archinstall_settings(self, item: MenuItem) -> str | None:
 		output = ''
@@ -296,7 +319,7 @@ class GlobalMenu(AbstractMenu[None]):
 		if lang := item.value:
 			output += f'{tr("Language")}: {lang.display_name}\n'
 
-		output += f'{tr("Theme")}: {Tui._theme.capitalize()}'
+		output += f'{tr("Theme")}: {Tui._mode.capitalize()} / {Tui._accent.capitalize()}'
 
 		return output
 
