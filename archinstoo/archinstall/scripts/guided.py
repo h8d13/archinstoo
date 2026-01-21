@@ -21,7 +21,6 @@ from archinstall.lib.models.device import (
 from archinstall.lib.models.users import User
 from archinstall.lib.output import debug, error, info
 from archinstall.lib.profile.profiles_handler import ProfileHandler
-from archinstall.lib.resumehandler import _check_for_saved_config
 from archinstall.lib.tui import Tui
 
 
@@ -200,7 +199,6 @@ def perform_installation(
 
 def guided() -> None:
 	handler = get_arch_config_handler()
-	config = handler.config
 	args = handler.args
 
 	# Create handler instances once at the entry point and pass them through
@@ -209,8 +207,15 @@ def guided() -> None:
 	application_handler = ApplicationHandler()
 
 	if not args.silent:
-		_check_for_saved_config(args, handler)
-		ask_user_questions(config, args)
+		if cached := ConfigurationHandler.prompt_resume(args.silent):
+			try:
+				handler._config = ArchConfig.from_config(cached, args)
+				info('Saved selections loaded successfully')
+			except Exception as e:
+				error(f'Failed to load saved selections: {e}')
+		ask_user_questions(handler.config, args)
+
+	config = handler.config
 
 	config_handler = ConfigurationHandler(config)
 	config_handler.write_debug()
