@@ -1,5 +1,4 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-. ./PKGBUILD && sudo pacman -S --needed "${depends[@]}"
 
 cd archinstoo && sudo python -m archinstall && cd ..
