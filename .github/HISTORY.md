@@ -6,6 +6,8 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 ## 0.0.01-5
 
+    - New `logs/` dir for outputs restored on h2t mode
+    - Separate `env` module in utils for these types of checks
     - Rename `MirrorConfiguration` to `PacmanConfiguration`
         - Add pacman misc options (Color, ILoveCandy, VerbosePkgLists)
         - Rename `mirror_config` field to `pacman_config`
