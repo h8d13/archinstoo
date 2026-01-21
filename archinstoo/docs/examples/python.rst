@@ -33,9 +33,10 @@ To do this, we'll begin by importing :code:`archinstall` in our "`scripts`_:code
 
 .. code-block:: python
 
-    from archinstall.lib.disk.device_handler import device_handler
+    from archinstall.lib.disk.device_handler import DeviceHandler
     from pprint import pprint
 
+    device_handler = DeviceHandler()
     pprint(device_handler.devices)
 
 Now, go ahead and reference the :ref:`installing.python.manual` installation method.
