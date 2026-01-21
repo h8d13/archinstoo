@@ -165,6 +165,7 @@ class Logger:
 
 
 logger = Logger()
+log_level = logging.INFO
 
 
 def _supports_color() -> bool:
@@ -303,6 +304,9 @@ def log(
 	reset: bool = False,
 	font: list[Font] = [],
 ) -> None:
+	if level < log_level:
+		return
+
 	text = ' '.join([str(x) for x in msgs])
 
 	logger.log(level, text)

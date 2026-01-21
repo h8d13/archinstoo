@@ -24,6 +24,18 @@ from archinstall.lib.translationhandler import Language, translation_handler
 ROOTLESS_SCRIPTS = {'list', 'size'}
 
 
+def _set_direct(obj: Any, config: dict[str, Any], mapping: dict[str, str]) -> None:
+	for key, attr in mapping.items():
+		if value := config.get(key):
+			setattr(obj, attr, value)
+
+
+def _set_parsed(obj: Any, config: dict[str, Any], mapping: dict[str, tuple[type, str]]) -> None:
+	for key, (klass, method) in mapping.items():
+		if value := config.get(key):
+			setattr(obj, key, getattr(klass, method)(value))
+
+
 @dataclass
 class Arguments:
 	config: Path | None = None
@@ -99,68 +111,43 @@ class ArchConfig:
 
 	@classmethod
 	def from_config(cls, args_config: dict[str, Any], args: Arguments) -> Self:
-		# Order matches safe_json / global menu
 		arch_config = cls()
 
-		if bug_report_url := args_config.get('bug_report_url', None):
-			arch_config.bug_report_url = bug_report_url
+		_set_direct(arch_config, args_config, {
+			'bug_report_url': 'bug_report_url',
+			'script': 'script',
+			'hostname': 'hostname',
+			'parallel_downloads': 'parallel_downloads',
+			'timezone': 'timezone',
+			'kernels': 'kernels',
+			'packages': 'packages',
+			'services': 'services',
+			'custom_commands': 'custom_commands',
+		})
 
-		if script := args_config.get('script', None):
-			arch_config.script = script
+		_set_parsed(arch_config, args_config, {
+			'mirror_config': (MirrorConfiguration, 'parse_args'),
+			'disk_config': (DiskLayoutConfiguration, 'parse_arg'),
+			'profile_config': (ProfileConfiguration, 'parse_arg'),
+			'auth_config': (AuthenticationConfiguration, 'parse_arg'),
+			'app_config': (ApplicationConfiguration, 'parse_arg'),
+			'network_config': (NetworkConfiguration, 'parse_arg'),
+		})
 
-		if archinstall_lang := args_config.get('archinstall-language', None):
-			arch_config.archinstall_language = translation_handler.get_language_by_name(archinstall_lang)
+		# Special cases that don't fit the pattern
+		if lang := args_config.get('archinstall-language'):
+			arch_config.archinstall_language = translation_handler.get_language_by_name(lang)
 
 		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config)
 
-		if mirror_config := args_config.get('mirror_config', None):
-			arch_config.mirror_config = MirrorConfiguration.parse_args(mirror_config)
+		if bootloader := args_config.get('bootloader_config'):
+			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader, args.skip_boot)
 
-		if bootloader_config_dict := args_config.get('bootloader_config', None):
-			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader_config_dict, args.skip_boot)
-
-		if disk_config := args_config.get('disk_config', {}):
-			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(disk_config)
-
-		if (swap_arg := args_config.get('swap')) is not None:
-			arch_config.swap = ZramConfiguration.parse_arg(swap_arg)
-
-		if kernels := args_config.get('kernels', []):
-			arch_config.kernels = kernels
+		if (swap := args_config.get('swap')) is not None:
+			arch_config.swap = ZramConfiguration.parse_arg(swap)
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
-
-		if profile_config := args_config.get('profile_config', None):
-			arch_config.profile_config = ProfileConfiguration.parse_arg(profile_config)
-
-		if hostname := args_config.get('hostname', ''):
-			arch_config.hostname = hostname
-
-		if auth_config_args := args_config.get('auth_config', None):
-			arch_config.auth_config = AuthenticationConfiguration.parse_arg(auth_config_args)
-
-		if app_config_args := args_config.get('app_config', None):
-			arch_config.app_config = ApplicationConfiguration.parse_arg(app_config_args)
-
-		if net_config := args_config.get('network_config', None):
-			arch_config.network_config = NetworkConfiguration.parse_arg(net_config)
-
-		if parallel_downloads := args_config.get('parallel_downloads', 0):
-			arch_config.parallel_downloads = parallel_downloads
-
-		if timezone := args_config.get('timezone'):
-			arch_config.timezone = timezone
-
 		arch_config.ntp = args_config.get('ntp', True)
-
-		if packages := args_config.get('packages', []):
-			arch_config.packages = packages
-
-		if services := args_config.get('services', []):
-			arch_config.services = services
-
-		if custom_commands := args_config.get('custom_commands', []):
-			arch_config.custom_commands = custom_commands
 
 		return arch_config
 
@@ -191,7 +178,6 @@ class ArchConfigHandler:
 		return self.args.script or self.config.script
 
 	def pass_args_to_subscript(self) -> None:
-		"""Update sys.argv with remaining args for sub-scripts to parse."""
 		sys.argv = [sys.argv[0]] + self._remaining
 
 	def print_help(self) -> None:
@@ -220,6 +206,7 @@ class ArchConfigHandler:
 			default=None,
 			help='Url to a JSON configuration file',
 		)
+		# note no more creds file user always inputs disks/auth for an extra 20 seconds
 		parser.add_argument(
 			'--silent',
 			action='store_true',

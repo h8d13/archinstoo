@@ -1,6 +1,7 @@
 """Arch Linux installer - guided, templates etc."""
 
 import importlib
+import logging
 import os
 import sys
 import textwrap
@@ -16,6 +17,7 @@ from .lib.disk.utils import disk_layouts
 from .lib.general import running_from_host
 from .lib.hardware import SysInfo
 from .lib.networking import ping
+from .lib import output
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
@@ -133,11 +135,9 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 	return 0
 
 
-def _error_message(exc: Exception) -> None:
+def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 	err = ''.join(traceback.format_exception(exc))
 	error(err)
-
-	handler = get_arch_config_handler()
 
 	text = textwrap.dedent(f"""\
 		Archinstall experienced the above error. If you think this is a bug, please report it to
@@ -153,6 +153,10 @@ def _error_message(exc: Exception) -> None:
 def run_as_a_module() -> int:
 	# handle scripts that don't need root early before main(script)
 	handler = get_arch_config_handler()
+
+	if handler.args.debug:
+		output.log_level = logging.DEBUG
+
 	script = handler.get_script()
 	if script in ROOTLESS_SCRIPTS:
 		handler.pass_args_to_subscript()
@@ -172,7 +176,7 @@ def run_as_a_module() -> int:
 		Tui.shutdown()
 
 		if exc:
-			_error_message(exc)
+			_error_message(exc, handler)
 			rc = 1
 
 		return rc

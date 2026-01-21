@@ -5,7 +5,7 @@ from pathlib import Path
 
 from archinstall import SysInfo
 from archinstall.lib.applications.application_handler import application_handler
-from archinstall.lib.args import ArchConfig, Arguments, get_arch_config_handler
+from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
@@ -43,7 +43,7 @@ def ask_user_questions(config: ArchConfig, args: Arguments) -> None:
 		global_menu.run(additional_title=title_text)
 
 
-def perform_installation(mountpoint: Path, config: ArchConfig, args: Arguments) -> None:
+def perform_installation(mountpoint: Path, config: ArchConfig, args: Arguments, handler: ArchConfigHandler) -> None:
 	"""
 	Performs the installation steps on a block device.
 	Only requirement is that the block devices are
@@ -66,6 +66,7 @@ def perform_installation(mountpoint: Path, config: ArchConfig, args: Arguments) 
 		mountpoint,
 		disk_config,
 		kernels=config.kernels,
+		handler=handler,
 	) as installation:
 		# Mount all the drives to the desired mountpoint
 		if disk_config.config_type != DiskLayoutType.Pre_mount:
@@ -193,7 +194,7 @@ def guided() -> None:
 	args = handler.args
 
 	if not args.silent:
-		_check_for_saved_config(args)
+		_check_for_saved_config(args, handler)
 		ask_user_questions(config, args)
 
 	config_handler = ConfigurationHandler(config)
@@ -217,7 +218,7 @@ def guided() -> None:
 		fs_handler = FilesystemHandler(disk_config)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(args.mountpoint, config, args)
+	perform_installation(args.mountpoint, config, args, handler)
 
 
 guided()

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from archinstall.default_profiles.minimal import MinimalProfile
+from archinstall.lib.args import get_arch_config_handler
 from archinstall.lib.disk.device_handler import device_handler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.installer import Installer
@@ -97,10 +98,13 @@ fs_handler.perform_filesystem_operations(show_countdown=False)
 
 mountpoint = Path('/tmp')
 
+handler = get_arch_config_handler()
+
 with Installer(
 	mountpoint,
 	disk_config,
 	kernels=['linux'],
+	handler=handler,
 ) as installation:
 	installation.mount_ordered_layout()
 	installation.minimal_installation(hostname='minimal-arch')
