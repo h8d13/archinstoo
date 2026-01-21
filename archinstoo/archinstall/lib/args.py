@@ -113,26 +113,34 @@ class ArchConfig:
 	def from_config(cls, args_config: dict[str, Any], args: Arguments) -> Self:
 		arch_config = cls()
 
-		_set_direct(arch_config, args_config, {
-			'bug_report_url': 'bug_report_url',
-			'script': 'script',
-			'hostname': 'hostname',
-			'parallel_downloads': 'parallel_downloads',
-			'timezone': 'timezone',
-			'kernels': 'kernels',
-			'packages': 'packages',
-			'services': 'services',
-			'custom_commands': 'custom_commands',
-		})
+		_set_direct(
+			arch_config,
+			args_config,
+			{
+				'bug_report_url': 'bug_report_url',
+				'script': 'script',
+				'hostname': 'hostname',
+				'parallel_downloads': 'parallel_downloads',
+				'timezone': 'timezone',
+				'kernels': 'kernels',
+				'packages': 'packages',
+				'services': 'services',
+				'custom_commands': 'custom_commands',
+			},
+		)
 
-		_set_parsed(arch_config, args_config, {
-			'mirror_config': (MirrorConfiguration, 'parse_args'),
-			'disk_config': (DiskLayoutConfiguration, 'parse_arg'),
-			'profile_config': (ProfileConfiguration, 'parse_arg'),
-			'auth_config': (AuthenticationConfiguration, 'parse_arg'),
-			'app_config': (ApplicationConfiguration, 'parse_arg'),
-			'network_config': (NetworkConfiguration, 'parse_arg'),
-		})
+		_set_parsed(
+			arch_config,
+			args_config,
+			{
+				'mirror_config': (MirrorConfiguration, 'parse_args'),
+				'disk_config': (DiskLayoutConfiguration, 'parse_arg'),
+				'profile_config': (ProfileConfiguration, 'parse_arg'),
+				'auth_config': (AuthenticationConfiguration, 'parse_arg'),
+				'app_config': (ApplicationConfiguration, 'parse_arg'),
+				'network_config': (NetworkConfiguration, 'parse_arg'),
+			},
+		)
 
 		# Special cases that don't fit the pattern
 		if lang := args_config.get('archinstall-language'):
