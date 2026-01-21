@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Self, override
 
 from archinstall.default_profiles.profile import GreeterType, Profile, ProfileType, SelectResult
 from archinstall.lib.output import info
-from archinstall.lib.profile.profiles_handler import profile_handler
+from archinstall.lib.profile.profiles_handler import ProfileHandler
 from archinstall.lib.tui.curses_menu import SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
@@ -55,13 +55,14 @@ class DesktopProfile(Profile):
 
 	@override
 	def do_on_select(self) -> SelectResult:
+		handler = ProfileHandler()
 		items = [
 			MenuItem(
 				p.name,
 				value=p,
 				preview_action=lambda x: x.value.preview_text(),
 			)
-			for p in profile_handler.get_desktop_profiles()
+			for p in handler.get_desktop_profiles()
 		]
 
 		group = MenuItemGroup(items, sort_items=True, sort_case_sensitive=False)

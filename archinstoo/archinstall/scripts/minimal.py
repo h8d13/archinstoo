@@ -4,6 +4,7 @@ from pathlib import Path
 from archinstall.default_profiles.minimal import MinimalProfile
 from archinstall.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
+from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.installer import Installer
@@ -11,11 +12,17 @@ from archinstall.lib.models import Bootloader
 from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.models.users import Password, User
 from archinstall.lib.output import debug, error, info
-from archinstall.lib.profile.profiles_handler import profile_handler
+from archinstall.lib.profile.profiles_handler import ProfileHandler
 from archinstall.lib.tui import Tui
 
 
-def perform_installation(mountpoint: Path, config: ArchConfig, handler: ArchConfigHandler) -> None:
+def perform_installation(
+	mountpoint: Path,
+	config: ArchConfig,
+	handler: ArchConfigHandler,
+	device_handler: DeviceHandler,
+	profile_handler: ProfileHandler,
+) -> None:
 	if not config.disk_config:
 		error('No disk configuration provided')
 		return
@@ -28,6 +35,7 @@ def perform_installation(mountpoint: Path, config: ArchConfig, handler: ArchConf
 		disk_config,
 		kernels=config.kernels,
 		handler=handler,
+		device_handler=device_handler,
 	) as installation:
 		# Strap in the base system, add a bootloader and configure
 		# some other minor details as specified by this profile and user.
@@ -64,6 +72,10 @@ def _minimal() -> None:
 	config = handler.config
 	args = handler.args
 
+	# Create handler instances once at the entry point and pass them through
+	device_handler = DeviceHandler()
+	profile_handler = ProfileHandler()
+
 	with Tui():
 		disk_config = DiskLayoutConfigurationMenu(disk_layout_config=None).run()
 
@@ -90,10 +102,10 @@ def _minimal() -> None:
 			return _minimal()
 
 	if (disk_config := config.disk_config) is not None:
-		fs_handler = FilesystemHandler(disk_config)
+		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(args.mountpoint, config, handler)
+	perform_installation(args.mountpoint, config, handler, device_handler, profile_handler)
 
 
 _minimal()

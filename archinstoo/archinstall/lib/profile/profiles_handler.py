@@ -339,6 +339,3 @@ class ProfileHandler:
 				servers.update(sub_profile.display_servers())
 			return servers
 		return set()
-
-
-profile_handler = ProfileHandler()

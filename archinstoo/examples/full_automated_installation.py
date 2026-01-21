@@ -2,7 +2,7 @@ from pathlib import Path
 
 from archinstall.default_profiles.minimal import MinimalProfile
 from archinstall.lib.args import get_arch_config_handler
-from archinstall.lib.disk.device_handler import device_handler
+from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.installer import Installer
 from archinstall.lib.models.device import (
@@ -21,7 +21,11 @@ from archinstall.lib.models.device import (
 )
 from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.models.users import Password, User
-from archinstall.lib.profile.profiles_handler import profile_handler
+from archinstall.lib.profile.profiles_handler import ProfileHandler
+
+# Create handler instances explicitly
+device_handler = DeviceHandler()
+profile_handler = ProfileHandler()
 
 # we're creating a new ext4 filesystem installation
 fs_type = FilesystemType('ext4')
@@ -90,7 +94,7 @@ disk_encryption = DiskEncryption(
 disk_config.disk_encryption = disk_encryption
 
 # initiate file handler with the disk config and the optional disk encryption config
-fs_handler = FilesystemHandler(disk_config)
+fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
 
 # perform all file operations
 # WARNING: this will potentially format the filesystem and delete all data
@@ -105,6 +109,7 @@ with Installer(
 	disk_config,
 	kernels=['linux'],
 	handler=handler,
+	device_handler=device_handler,
 ) as installation:
 	installation.mount_ordered_layout()
 	installation.minimal_installation(hostname='minimal-arch')

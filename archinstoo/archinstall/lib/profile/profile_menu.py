@@ -1,4 +1,9 @@
-from typing import override
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, override
+
+if TYPE_CHECKING:
+	from archinstall.lib.profile.profiles_handler import ProfileHandler
 
 from archinstall.default_profiles.profile import GreeterType, Profile
 from archinstall.lib.translationhandler import tr
@@ -169,10 +174,12 @@ def select_profile(
 	current_profile: Profile | None = None,
 	header: str | None = None,
 	allow_reset: bool = True,
+	profile_handler: ProfileHandler | None = None,
 ) -> Profile | None:
-	from archinstall.lib.profile.profiles_handler import profile_handler
+	from archinstall.lib.profile.profiles_handler import ProfileHandler
 
-	top_level_profiles = profile_handler.get_top_level_profiles()
+	handler = profile_handler or ProfileHandler()
+	top_level_profiles = handler.get_top_level_profiles()
 
 	if header is None:
 		header = tr('This is a list of pre-programmed default_profiles') + '\n'
@@ -206,10 +213,10 @@ def select_profile(
 			# any stale data laying around
 			match select_result:
 				case select_result.NewSelection:
-					profile_handler.reset_top_level_profiles(exclude=[profile_selection])
+					handler.reset_top_level_profiles(exclude=[profile_selection])
 					current_profile = profile_selection
 				case select_result.ResetCurrent:
-					profile_handler.reset_top_level_profiles()
+					handler.reset_top_level_profiles()
 					current_profile = None
 				case select_result.SameSelection:
 					pass

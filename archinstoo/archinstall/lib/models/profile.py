@@ -22,19 +22,21 @@ class ProfileConfiguration:
 	greeter: GreeterType | None = None
 
 	def json(self) -> _ProfileConfigurationSerialization:
-		from ..profile.profiles_handler import profile_handler
+		from ..profile.profiles_handler import ProfileHandler
 
+		handler = ProfileHandler()
 		return {
-			'profile': profile_handler.to_json(self.profile),
+			'profile': handler.to_json(self.profile),
 			'gfx_driver': self.gfx_driver.value if self.gfx_driver else None,
 			'greeter': self.greeter.value if self.greeter else None,
 		}
 
 	@classmethod
 	def parse_arg(cls, arg: _ProfileConfigurationSerialization) -> Self:
-		from ..profile.profiles_handler import profile_handler
+		from ..profile.profiles_handler import ProfileHandler
 
-		profile = profile_handler.parse_profile_config(arg['profile'])
+		handler = ProfileHandler()
+		profile = handler.parse_profile_config(arg['profile'])
 		greeter = arg.get('greeter', None)
 		gfx_driver = arg.get('gfx_driver', None)
 
