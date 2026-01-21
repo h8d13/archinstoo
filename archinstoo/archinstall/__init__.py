@@ -3,6 +3,7 @@
 import importlib
 import os
 import sys
+import textwrap
 import traceback
 
 from .lib.args import (
@@ -132,14 +133,31 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 	return 0
 
 
-def run_as_a_module() -> None:
+def _error_message(exc: Exception) -> None:
+	err = ''.join(traceback.format_exception(exc))
+	error(err)
+
+	handler = get_arch_config_handler()
+
+	text = textwrap.dedent(f"""\
+		Archinstall experienced the above error. If you think this is a bug, please report it to
+		{handler.config.bug_report_url} and include the log file "{logger.path}".
+
+		Hint: To extract the log from a live ISO
+		curl -F 'file=@{logger.path}' https://0x0.st
+	""")
+
+	warn(text)
+
+
+def run_as_a_module() -> int:
 	# handle scripts that don't need root early before main(script)
 	handler = get_arch_config_handler()
 	script = handler.get_script()
 	if script in ROOTLESS_SCRIPTS:
 		handler.pass_args_to_subscript()
 		_run_script(script)
-		sys.exit(0)
+		return 0
 
 	rc = 0
 	exc = None
@@ -154,19 +172,10 @@ def run_as_a_module() -> None:
 		Tui.shutdown()
 
 		if exc:
-			err = ''.join(traceback.format_exception(exc))
-			error(err)
-
-			text = (
-				f'Archinstall experienced the above error. If you think this is a bug, please report it to\n'
-				f'{handler.config.bug_report_url} and include the log file "{logger.path}".\n\n'
-				f"Hint: To extract the log from a live ISO \ncurl -F 'file=@{logger.path}' https://0x0.st\n"
-			)
-
-			warn(text)
+			_error_message(exc)
 			rc = 1
 
-		sys.exit(rc)
+		return rc
 
 
 __all__ = [
