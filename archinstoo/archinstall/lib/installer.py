@@ -69,15 +69,20 @@ class Installer:
 		base_packages: list[str] = [],
 		kernels: list[str] | None = None,
 		*,
-		handler: ArchConfigHandler,
+		handler: ArchConfigHandler | None = None,
 	):
 		"""
 		`Installer()` is the wrapper for most basic installation steps.
 		It also wraps :py:func:`~archinstall.Installer.pacstrap` among other things.
+
+		The handler parameter is optional - if not provided, sensible defaults are used.
+		This allows using Installer in standalone scripts without ArchConfigHandler.
 		"""
+		from .args import Arguments
+
 		self._handler = handler
-		self._args = self._handler.args
-		self._bug_report_url = self._handler.config.bug_report_url
+		self._args = handler.args if handler else Arguments()
+		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/archlinux/archinstall/issues'
 
 		self._base_packages = base_packages or __base_packages__.copy()
 		self.kernels = kernels or ['linux']
@@ -147,7 +152,7 @@ class Installer:
 			log(msg, fg='green')
 			if not self._args.silent:
 				response = input('\nDelete saved log files/cfg? [y/N]: ').strip().lower()
-				if response == 'y':
+				if response == 'y' and self._handler:
 					self._handler.clean_up()
 
 			return True
