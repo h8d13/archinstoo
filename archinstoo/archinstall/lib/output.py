@@ -129,8 +129,8 @@ class Journald:
 
 
 class Logger:
-	def __init__(self, path: Path = Path('/var/log/archinstoo')) -> None:
-		self._path = path
+	def __init__(self, path: Path = Path('.')) -> None:
+		self._path = path.absolute()
 
 	@property
 	def path(self) -> Path:
@@ -140,23 +140,12 @@ class Logger:
 	def directory(self) -> Path:
 		return self._path
 
-	def _check_permissions(self) -> None:
-		log_file = self.path
-
-		try:
-			self._path.mkdir(exist_ok=True, parents=True)
-			log_file.touch(exist_ok=True)
-
-			with log_file.open('a') as f:
-				f.write('')
-		except PermissionError:
-			# Fallback to creating the log file in the current folder
-			logger._path = Path('./').absolute()
-
-			warn(f'Not enough permission to place log file at {log_file}, creating it in {logger.path} instead')
+	def _ensure_log_file(self) -> None:
+		self._path.mkdir(exist_ok=True, parents=True)
+		self.path.touch(exist_ok=True)
 
 	def log(self, level: int, content: str) -> None:
-		self._check_permissions()
+		self._ensure_log_file()
 
 		with self.path.open('a') as f:
 			ts = _timestamp()
