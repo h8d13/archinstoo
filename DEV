@@ -23,65 +23,41 @@ verif() {
     gpg --verify $PKG_GLOB.sig
 }
 
-for i in "$@"; do
-	case $i in
-        -t | --tree)
-        shift
-        go_to
-        {
-            echo '# Project Structure'
-            echo '```'
-            tree -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|__pycache__|__init__.py'
-            echo '```'
-        } > docs/readme.md
-        exit 0
-        ;;
-        -c | --clean)
-        shift
-        go_to
-        clean && pre_build
-        exit 0
-        ;;
-        -b | --build)
-        shift
-        go_to
-        pre_build
-        makepkg -Cf
-        clean
-        exit 0
-        ;;
-        -s | --sign)
-        shift
-        go_to
-        sign
-        exit 0
-        ;;
-        -sv | --verify-sig)
-        shift
-        go_to
-        verif
-        exit 0
-        ;;        
-        -i|--install)
-        shift
-        go_to
-        # shellcheck disable=SC2086
-        sudo pacman -U --overwrite '*' $PKG_GLOB
-        exit 0
-        ;;
-        -v|venv)
-        shift
-        ./RUN
-        exit 0
-        ;;
-        *)
-        # Catch all with options also to local
-        go_to
-        python -B -m archinstall "$@"
-        exit 0
-        ;;
-	esac
-done
-
-# No arguments - run local archinstall directly
-go_to && python -B -m archinstall
+case "$1" in
+	-t | --tree)
+	go_to
+	{
+		echo '# Project Structure'
+		echo '```'
+		tree -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|__pycache__|__init__.py'
+		echo '```'
+	} > docs/readme.md
+	;;
+	-c | --clean)
+	go_to
+	clean && pre_build
+	;;
+	-b | --build)
+	go_to
+	pre_build
+	makepkg -Cf
+	clean
+	;;
+	-s | --sign)
+	go_to
+	sign
+	;;
+	-sv | --verify-sig)
+	go_to
+	verif
+	;;
+	-i|--install)
+	go_to
+	# shellcheck disable=SC2086
+	sudo pacman -U --overwrite '*' $PKG_GLOB
+	;;
+	*)
+	# Pass through to archinstall
+	./RUN "$@"
+	;;
+esac
