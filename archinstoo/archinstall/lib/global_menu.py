@@ -764,10 +764,10 @@ class GlobalMenu(AbstractMenu[None]):
 		app_config = self._item_group.find_by_key('app_config').value
 
 		if disk_config is not None or profile_config is not None or app_config:
-			items.append(MenuItem(text=tr('save selections and abort'), value='save_abort'))
+			items.append(MenuItem(text=tr('save selections abort'), value='save_abort'))
 
 		items.append(MenuItem(text=tr('exit delete selections'), value='abort_only'))
-		items.append(MenuItem(text=tr('cancel'), value='cancel'))
+		items.append(MenuItem(text=tr('cancel abort'), value='cancel'))
 
 		group = MenuItemGroup(items)
 		group.focus_item = group.items[0]  # Focus on first option
