@@ -4,9 +4,10 @@ import time
 from pathlib import Path
 
 from archinstall import SysInfo
-from archinstall.lib.applications.application_handler import application_handler
+from archinstall.lib.applications.application_handler import ApplicationHandler
 from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstall.lib.configuration import ConfigurationHandler
+from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.global_menu import GlobalMenu
@@ -19,7 +20,7 @@ from archinstall.lib.models.device import (
 )
 from archinstall.lib.models.users import User
 from archinstall.lib.output import debug, error, info
-from archinstall.lib.profile.profiles_handler import profile_handler
+from archinstall.lib.profile.profiles_handler import ProfileHandler
 from archinstall.lib.resumehandler import _check_for_saved_config
 from archinstall.lib.tui import Tui
 
@@ -43,7 +44,15 @@ def ask_user_questions(config: ArchConfig, args: Arguments) -> None:
 		global_menu.run(additional_title=title_text)
 
 
-def perform_installation(mountpoint: Path, config: ArchConfig, args: Arguments, handler: ArchConfigHandler) -> None:
+def perform_installation(
+	mountpoint: Path,
+	config: ArchConfig,
+	args: Arguments,
+	handler: ArchConfigHandler,
+	device_handler: DeviceHandler,
+	profile_handler: ProfileHandler,
+	application_handler: ApplicationHandler,
+) -> None:
 	"""
 	Performs the installation steps on a block device.
 	Only requirement is that the block devices are
@@ -67,6 +76,7 @@ def perform_installation(mountpoint: Path, config: ArchConfig, args: Arguments, 
 		disk_config,
 		kernels=config.kernels,
 		handler=handler,
+		device_handler=device_handler,
 	) as installation:
 		# Mount all the drives to the desired mountpoint
 		if disk_config.config_type != DiskLayoutType.Pre_mount:
@@ -193,6 +203,11 @@ def guided() -> None:
 	config = handler.config
 	args = handler.args
 
+	# Create handler instances once at the entry point and pass them through
+	device_handler = DeviceHandler()
+	profile_handler = ProfileHandler()
+	application_handler = ApplicationHandler()
+
 	if not args.silent:
 		_check_for_saved_config(args, handler)
 		ask_user_questions(config, args)
@@ -215,10 +230,18 @@ def guided() -> None:
 			return guided()
 
 	if disk_config := config.disk_config:
-		fs_handler = FilesystemHandler(disk_config)
+		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(args.mountpoint, config, args, handler)
+	perform_installation(
+		args.mountpoint,
+		config,
+		args,
+		handler,
+		device_handler,
+		profile_handler,
+		application_handler,
+	)
 
 
 guided()

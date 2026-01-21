@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from archinstall.lib.disk.device_handler import device_handler
+from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.partitioning_menu import manual_partitioning
 from archinstall.lib.menu.menu_helper import MenuHelper
 from archinstall.lib.models.device import (
@@ -35,16 +35,21 @@ from ..output import FormattedOutput
 from ..utils.util import prompt_dir
 
 
-def select_device(preset: BDevice | None = None) -> BDevice | None:
+def select_device(
+	preset: BDevice | None = None,
+	device_handler: DeviceHandler | None = None,
+) -> BDevice | None:
+	handler = device_handler or DeviceHandler()
+
 	def _preview_device_selection(item: MenuItem) -> str | None:
 		device = item.get_value()
-		dev = device_handler.get_device(device.path)
+		dev = handler.get_device(device.path)
 
 		if dev and dev.partition_infos:
 			return FormattedOutput.as_table(dev.partition_infos)
 		return None
 
-	devices = device_handler.devices
+	devices = handler.devices
 	options = [d.device_info for d in devices]
 
 	group = MenuHelper(options).create_menu_group()
@@ -92,14 +97,21 @@ def get_default_partition_layout(
 def _manual_partitioning(
 	preset: DeviceModification | None,
 	device: BDevice,
+	device_handler: DeviceHandler | None = None,
 ) -> DeviceModification | None:
+	handler = device_handler or DeviceHandler()
+
 	if not preset:
 		preset = DeviceModification(device, wipe=False)
 
-	return manual_partitioning(preset, device_handler.partition_table)
+	return manual_partitioning(preset, handler.partition_table)
 
 
-def select_disk_config(preset: DiskLayoutConfiguration | None = None) -> DiskLayoutConfiguration | None:
+def select_disk_config(
+	preset: DiskLayoutConfiguration | None = None,
+	device_handler: DeviceHandler | None = None,
+) -> DiskLayoutConfiguration | None:
+	handler = device_handler or DeviceHandler()
 	default_layout = DiskLayoutType.Default.display_msg()
 	manual_mode = DiskLayoutType.Manual.display_msg()
 	pre_mount_mode = DiskLayoutType.Pre_mount.display_msg()
@@ -139,7 +151,7 @@ def select_disk_config(preset: DiskLayoutConfiguration | None = None) -> DiskLay
 				if path is None:
 					return None
 
-				mods = device_handler.detect_pre_mounted_mods(path)
+				mods = handler.detect_pre_mounted_mods(path)
 
 				return DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Pre_mount,
@@ -148,7 +160,7 @@ def select_disk_config(preset: DiskLayoutConfiguration | None = None) -> DiskLay
 				)
 
 			preset_device = preset.device_modifications[0].device if preset and preset.device_modifications else None
-			device = select_device(preset_device)
+			device = select_device(preset_device, device_handler=handler)
 
 			if not device:
 				return None
@@ -307,7 +319,10 @@ def suggest_single_disk_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
 	separate_home: bool | None = None,
+	device_handler: DeviceHandler | None = None,
 ) -> DeviceModification:
+	handler = device_handler or DeviceHandler()
+
 	if not filesystem_type:
 		filesystem_type = select_main_filesystem_format()
 
@@ -337,7 +352,7 @@ def suggest_single_disk_layout(
 
 	device_modification = DeviceModification(device, wipe=True)
 
-	using_gpt = device_handler.partition_table.is_gpt()
+	using_gpt = handler.partition_table.is_gpt()
 
 	if using_gpt:
 		available_space = available_space.gpt_end()

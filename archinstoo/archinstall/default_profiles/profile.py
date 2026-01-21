@@ -132,9 +132,10 @@ class Profile:
 		return self.profile_type == ProfileType.Desktop
 
 	def display_servers(self) -> set[DisplayServer]:
-		from ..lib.profile.profiles_handler import profile_handler
+		from ..lib.profile.profiles_handler import ProfileHandler
 
-		return profile_handler.display_servers(self)
+		handler = ProfileHandler()
+		return handler.display_servers(self)
 
 	def preview_text(self) -> str:
 		"""

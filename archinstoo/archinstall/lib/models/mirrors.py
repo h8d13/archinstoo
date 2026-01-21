@@ -432,12 +432,13 @@ class PacmanConfiguration:
 		return config.strip()
 
 	def regions_config(self, speed_sort: bool = True) -> str:
-		from ..mirrors import mirror_list_handler
+		from ..mirrors import MirrorListHandler
 
+		handler = MirrorListHandler()
 		config = ''
 
 		for mirror_region in self.mirror_regions:
-			sorted_stati = mirror_list_handler.get_status_by_region(
+			sorted_stati = handler.get_status_by_region(
 				mirror_region.name,
 				speed_sort=speed_sort,
 			)

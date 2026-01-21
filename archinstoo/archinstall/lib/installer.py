@@ -14,7 +14,7 @@ from subprocess import CalledProcessError
 from types import TracebackType
 from typing import Any, Self
 
-from archinstall.lib.disk.device_handler import device_handler
+from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info
 from archinstall.lib.models.application import ZramAlgorithm
 from archinstall.lib.models.device import (
@@ -70,6 +70,7 @@ class Installer:
 		kernels: list[str] | None = None,
 		*,
 		handler: ArchConfigHandler | None = None,
+		device_handler: DeviceHandler | None = None,
 	):
 		"""
 		`Installer()` is the wrapper for most basic installation steps.
@@ -77,10 +78,15 @@ class Installer:
 
 		The handler parameter is optional - if not provided, sensible defaults are used.
 		This allows using Installer in standalone scripts without ArchConfigHandler.
+
+		The device_handler parameter follows the dependency injection pattern - if not
+		provided, a new DeviceHandler instance is created. Pass an existing instance
+		if multiple modules need access to the same handler.
 		"""
 		from .args import Arguments
 
 		self._handler = handler
+		self._device_handler = device_handler or DeviceHandler()
 		self._args = handler.args if handler else Arguments()
 		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/archlinux/archinstall/issues'
 
@@ -327,7 +333,7 @@ class Installer:
 		partitions: list[PartitionModification],
 	) -> dict[PartitionModification, Luks2]:
 		return {
-			part_mod: device_handler.unlock_luks2_dev(
+			part_mod: self._device_handler.unlock_luks2_dev(
 				part_mod.dev_path,
 				part_mod.mapper_name,
 				self._disk_encryption.encryption_password,
@@ -344,17 +350,17 @@ class Installer:
 			return
 
 		for vg in lvm_config.vol_groups:
-			device_handler.lvm_import_vg(vg)
+			self._device_handler.lvm_import_vg(vg)
 
 			for vol in vg.volumes:
-				device_handler.lvm_vol_change(vol, True)
+				self._device_handler.lvm_vol_change(vol, True)
 
 	def _prepare_luks_lvm(
 		self,
 		lvm_volumes: list[LvmVolume],
 	) -> dict[LvmVolume, Luks2]:
 		return {
-			vol: device_handler.unlock_luks2_dev(
+			vol: self._device_handler.unlock_luks2_dev(
 				vol.dev_path,
 				vol.mapper_name,
 				self._disk_encryption.encryption_password,
@@ -370,7 +376,7 @@ class Installer:
 		# it would be none if it's btrfs as the subvolumes will have the mountpoints defined
 		if part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
-			device_handler.mount(part_mod.dev_path, target, options=part_mod.mount_options)
+			self._device_handler.mount(part_mod.dev_path, target, options=part_mod.mount_options)
 		elif part_mod.fs_type == FilesystemType.Btrfs:
 			# Only mount BTRFS subvolumes that have mountpoints specified
 			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
@@ -381,13 +387,13 @@ class Installer:
 					part_mod.mount_options,
 				)
 		elif part_mod.is_swap():
-			device_handler.swapon(part_mod.dev_path)
+			self._device_handler.swapon(part_mod.dev_path)
 
 	def _mount_lvm_vol(self, volume: LvmVolume) -> None:
 		if volume.fs_type != FilesystemType.Btrfs:
 			if volume.mountpoint and volume.dev_path:
 				target = self.target / volume.relative_mountpoint
-				device_handler.mount(volume.dev_path, target, options=volume.mount_options)
+				self._device_handler.mount(volume.dev_path, target, options=volume.mount_options)
 
 		if volume.fs_type == FilesystemType.Btrfs and volume.dev_path:
 			# Only mount BTRFS subvolumes that have mountpoints specified
@@ -406,13 +412,13 @@ class Installer:
 				self._mount_btrfs_subvol(luks_handler.mapper_dev, part_mod.btrfs_subvols, part_mod.mount_options)
 		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
-			device_handler.mount(luks_handler.mapper_dev, target, options=part_mod.mount_options)
+			self._device_handler.mount(luks_handler.mapper_dev, target, options=part_mod.mount_options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
 		if volume.fs_type != FilesystemType.Btrfs:
 			if volume.mountpoint and luks_handler.mapper_dev:
 				target = self.target / volume.relative_mountpoint
-				device_handler.mount(luks_handler.mapper_dev, target, options=volume.mount_options)
+				self._device_handler.mount(luks_handler.mapper_dev, target, options=volume.mount_options)
 
 		if volume.fs_type == FilesystemType.Btrfs and luks_handler.mapper_dev:
 			# Only mount BTRFS subvolumes that have mountpoints specified
@@ -431,7 +437,7 @@ class Installer:
 		for subvol in sorted(subvols_with_mountpoints, key=lambda x: x.relative_mountpoint):
 			mountpoint = self.target / subvol.relative_mountpoint
 			options = mount_options + [f'subvol={subvol.name}']
-			device_handler.mount(dev_path, mountpoint, options=options)
+			self._device_handler.mount(dev_path, mountpoint, options=options)
 
 	def generate_key_files(self) -> None:
 		match self._disk_encryption.encryption_type:
@@ -1035,7 +1041,7 @@ class Installer:
 				if not lvm.vg_name:
 					raise ValueError(f'Unable to determine VG name for {lvm.name}')
 
-				pv_seg_info = device_handler.lvm_pvseg_info(lvm.vg_name, lvm.name)
+				pv_seg_info = self._device_handler.lvm_pvseg_info(lvm.vg_name, lvm.name)
 
 				if not pv_seg_info:
 					raise ValueError(f'Unable to determine PV segment info for {lvm.vg_name}/{lvm.name}')
@@ -1259,7 +1265,7 @@ class Installer:
 		else:
 			info(f'GRUB boot partition: {boot_partition.dev_path}')
 
-			parent_dev_path = device_handler.get_parent_device_path(boot_partition.safe_dev_path)
+			parent_dev_path = self._device_handler.get_parent_device_path(boot_partition.safe_dev_path)
 
 			add_options = [
 				'--target=i386-pc',
@@ -1361,7 +1367,7 @@ class Installer:
 
 			info(f'Limine EFI partition: {efi_partition.dev_path}')
 
-			parent_dev_path = device_handler.get_parent_device_path(efi_partition.safe_dev_path)
+			parent_dev_path = self._device_handler.get_parent_device_path(efi_partition.safe_dev_path)
 
 			try:
 				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'
@@ -1424,9 +1430,9 @@ class Installer:
 
 			config_path = boot_limine_path / 'limine.conf'
 
-			parent_dev_path = device_handler.get_parent_device_path(boot_partition.safe_dev_path)
+			parent_dev_path = self._device_handler.get_parent_device_path(boot_partition.safe_dev_path)
 
-			if unique_path := device_handler.get_unique_path_for_device(parent_dev_path):
+			if unique_path := self._device_handler.get_unique_path_for_device(parent_dev_path):
 				parent_dev_path = unique_path
 
 			try:
@@ -1521,7 +1527,7 @@ class Installer:
 			loader = '/EFI/Linux/arch-{kernel}.efi'
 			cmdline = []
 
-		parent_dev_path = device_handler.get_parent_device_path(boot_partition.safe_dev_path)
+		parent_dev_path = self._device_handler.get_parent_device_path(boot_partition.safe_dev_path)
 
 		cmd_template = (
 			'efibootmgr',

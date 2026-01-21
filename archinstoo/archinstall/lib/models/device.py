@@ -7,7 +7,11 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, NotRequired, Self, TypedDict, override
+from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
+
+if TYPE_CHECKING:
+	from archinstall.lib.disk.device_handler import DeviceHandler
+
 from uuid import UUID
 
 import parted
@@ -84,8 +88,11 @@ class DiskLayoutConfiguration:
 		cls,
 		disk_config: _DiskLayoutConfigurationSerialization,
 		enc_password: Password | None = None,
+		device_handler: DeviceHandler | None = None,
 	) -> Self | None:
-		from archinstall.lib.disk.device_handler import device_handler
+		from archinstall.lib.disk.device_handler import DeviceHandler
+
+		handler = device_handler or DeviceHandler()
 
 		device_modifications: list[DeviceModification] = []
 		config_type = disk_config.get('config_type', None)
@@ -104,7 +111,7 @@ class DiskLayoutConfiguration:
 
 			path = Path(str(mountpoint))
 
-			mods = device_handler.detect_pre_mounted_mods(path)
+			mods = handler.detect_pre_mounted_mods(path)
 			device_modifications.extend(mods)
 
 			config.mountpoint = path
@@ -117,7 +124,7 @@ class DiskLayoutConfiguration:
 			if not device_path:
 				continue
 
-			device = device_handler.get_device(device_path)
+			device = handler.get_device(device_path)
 
 			if not device:
 				continue
@@ -179,7 +186,7 @@ class DiskLayoutConfiguration:
 
 			last = create_partitions[-1]
 			total_size = dev_mod.device.device_info.total_size
-			if dev_mod.using_gpt(device_handler.partition_table):
+			if dev_mod.using_gpt(handler.partition_table):
 				if last.end > total_size.gpt_end():
 					raise ValueError('Partition overlaps backup GPT header')
 			elif last.end > total_size.align():

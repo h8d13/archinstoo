@@ -180,6 +180,9 @@ class Logger:
 			f.write(f'[{ts}] - {level_name} - {content}\n')
 
 
+# Intentionally a singleton: logging is a cross-cutting concern used via debug(), info(),
+# etc. throughout the codebase. Follows Python's standard logging.getLogger() pattern.
+# See: https://github.com/archlinux/archinstall/issues/4149
 logger = Logger()
 log_level = logging.INFO
 

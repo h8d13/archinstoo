@@ -916,6 +916,3 @@ class DeviceHandler:
 			SysCommand('udevadm settle')
 		except SysCallError as err:
 			debug(f'Failed to synchronize with udev: {err}')
-
-
-device_handler = DeviceHandler()

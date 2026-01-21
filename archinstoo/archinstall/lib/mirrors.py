@@ -313,11 +313,15 @@ class MirrorMenu(AbstractSubMenu[PacmanConfiguration]):
 		return self._mirror_config
 
 
-def select_mirror_regions(preset: list[MirrorRegion]) -> list[MirrorRegion]:
+def select_mirror_regions(
+	preset: list[MirrorRegion],
+	mirror_list_handler: 'MirrorListHandler | None' = None,
+) -> list[MirrorRegion]:
 	Tui.print(tr('Loading mirror regions...'), clear_screen=True)
 
-	mirror_list_handler.load_mirrors()
-	available_regions = mirror_list_handler.get_mirror_regions()
+	handler = mirror_list_handler or MirrorListHandler()
+	handler.load_mirrors()
+	available_regions = handler.get_mirror_regions()
 
 	if not available_regions:
 		return []
@@ -577,6 +581,3 @@ class MirrorListHandler:
 				mirror_list[current_region].append(mirror_entry)
 
 		return mirror_list
-
-
-mirror_list_handler = MirrorListHandler()

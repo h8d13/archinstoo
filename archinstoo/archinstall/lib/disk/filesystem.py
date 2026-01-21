@@ -22,13 +22,23 @@ from ..models.device import (
 	Unit,
 )
 from ..output import debug, info
-from .device_handler import device_handler
+from .device_handler import DeviceHandler
 
 
 class FilesystemHandler:
-	def __init__(self, disk_config: DiskLayoutConfiguration):
+	def __init__(
+		self,
+		disk_config: DiskLayoutConfiguration,
+		device_handler: DeviceHandler | None = None,
+	):
+		"""
+		The device_handler parameter follows the dependency injection pattern - if not
+		provided, a new DeviceHandler instance is created. Pass an existing instance
+		if multiple modules need access to the same handler.
+		"""
 		self._disk_config = disk_config
 		self._enc_config = disk_config.disk_encryption
+		self._device_handler = device_handler or DeviceHandler()
 
 	def perform_filesystem_operations(self, show_countdown: bool = True) -> None:
 		if self._disk_config.config_type == DiskLayoutType.Pre_mount:
@@ -49,12 +59,12 @@ class FilesystemHandler:
 
 		# make sure all devices are unmounted
 		for mod in device_mods:
-			device_handler.umount_all_existing(mod.device_path)
+			self._device_handler.umount_all_existing(mod.device_path)
 
 		for mod in device_mods:
-			device_handler.partition(mod)
+			self._device_handler.partition(mod)
 
-		device_handler.udev_sync()
+		self._device_handler.udev_sync()
 
 		if self._disk_config.lvm_config:
 			for mod in device_mods:
@@ -69,7 +79,7 @@ class FilesystemHandler:
 
 				for part_mod in mod.partitions:
 					if part_mod.fs_type == FilesystemType.Btrfs and part_mod.is_create_or_modify():
-						device_handler.create_btrfs_volumes(part_mod, enc_conf=self._enc_config)
+						self._device_handler.create_btrfs_volumes(part_mod, enc_conf=self._enc_config)
 
 	def _format_partitions(
 		self,
@@ -88,19 +98,19 @@ class FilesystemHandler:
 		for part_mod in create_or_modify_parts:
 			# partition will be encrypted
 			if self._enc_config is not None and part_mod in self._enc_config.partitions:
-				device_handler.format_encrypted(
+				self._device_handler.format_encrypted(
 					part_mod.safe_dev_path,
 					part_mod.mapper_name,
 					part_mod.safe_fs_type,
 					self._enc_config,
 				)
 			else:
-				device_handler.format(part_mod.safe_fs_type, part_mod.safe_dev_path)
+				self._device_handler.format(part_mod.safe_fs_type, part_mod.safe_dev_path)
 
 			# synchronize with udev before using lsblk
-			device_handler.udev_sync()
+			self._device_handler.udev_sync()
 
-			lsblk_info = device_handler.fetch_part_info(part_mod.safe_dev_path)
+			lsblk_info = self._device_handler.fetch_part_info(part_mod.safe_dev_path)
 
 			part_mod.partn = lsblk_info.partn
 			part_mod.partuuid = lsblk_info.partuuid
@@ -165,10 +175,10 @@ class FilesystemHandler:
 		for vg in lvm_config.vol_groups:
 			pv_dev_paths = self._get_all_pv_dev_paths(vg.pvs, enc_mods)
 
-			device_handler.lvm_vg_create(pv_dev_paths, vg.name)
+			self._device_handler.lvm_vg_create(pv_dev_paths, vg.name)
 
 			# figure out what the actual available size in the group is
-			vg_info = device_handler.lvm_group_info(vg.name)
+			vg_info = self._device_handler.lvm_group_info(vg.name)
 
 			if not vg_info:
 				raise ValueError('Unable to fetch VG info')
@@ -198,11 +208,11 @@ class FilesystemHandler:
 				offset = max_vol_offset if lv == max_vol else None
 
 				debug(f'vg: {vg.name}, vol: {lv.name}, offset: {offset}')
-				device_handler.lvm_vol_create(vg.name, lv, offset)
+				self._device_handler.lvm_vol_create(vg.name, lv, offset)
 
 				while True:
 					debug('Fetching LVM volume info')
-					if device_handler.lvm_vol_info(lv.name) is not None:
+					if self._device_handler.lvm_vol_info(lv.name) is not None:
 						break
 
 					time.sleep(1)
@@ -224,10 +234,10 @@ class FilesystemHandler:
 
 			# wait a bit otherwise the mkfs will fail as it can't
 			# find the mapper device yet
-			device_handler.format(vol.fs_type, path)
+			self._device_handler.format(vol.fs_type, path)
 
 			if vol.fs_type == FilesystemType.Btrfs:
-				device_handler.create_lvm_btrfs_subvolumes(path, vol.btrfs_subvols, vol.mount_options)
+				self._device_handler.create_lvm_btrfs_subvolumes(path, vol.btrfs_subvols, vol.mount_options)
 
 	def _lvm_create_pvs(
 		self,
@@ -239,7 +249,7 @@ class FilesystemHandler:
 		for vg in lvm_config.vol_groups:
 			pv_paths |= self._get_all_pv_dev_paths(vg.pvs, enc_mods)
 
-		device_handler.lvm_pv_create(pv_paths)
+		self._device_handler.lvm_pv_create(pv_paths)
 
 	def _get_all_pv_dev_paths(
 		self,
@@ -267,7 +277,7 @@ class FilesystemHandler:
 
 		for vol in lvm_config.get_all_volumes():
 			if vol in enc_config.lvm_volumes:
-				luks_handler = device_handler.encrypt(
+				luks_handler = self._device_handler.encrypt(
 					vol.safe_dev_path,
 					vol.mapper_name,
 					enc_config.encryption_password,
@@ -298,7 +308,7 @@ class FilesystemHandler:
 
 			for part_mod in filtered_part:
 				if part_mod in enc_config.partitions:
-					luks_handler = device_handler.encrypt(
+					luks_handler = self._device_handler.encrypt(
 						part_mod.safe_dev_path,
 						part_mod.mapper_name,
 						enc_config.encryption_password,
@@ -317,7 +327,7 @@ class FilesystemHandler:
 		if any([vol.fs_type == FilesystemType.Ext4 for vol in vol_gp.volumes]):
 			largest_vol = max(vol_gp.volumes, key=lambda x: x.length)
 
-			device_handler.lvm_vol_reduce(
+			self._device_handler.lvm_vol_reduce(
 				largest_vol.safe_dev_path,
 				Size(256, Unit.MiB, SectorSize.default()),
 			)

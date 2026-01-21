@@ -178,4 +178,7 @@ def tr(message: str) -> str:
 builtins._ = _DeferredTranslation  # type: ignore[attr-defined]
 
 
+# Intentionally a singleton: i18n is a cross-cutting concern used via tr() throughout
+# the codebase. Unlike business logic handlers, this doesn't benefit from DI.
+# See: https://github.com/archlinux/archinstall/issues/4149
 translation_handler = TranslationHandler()

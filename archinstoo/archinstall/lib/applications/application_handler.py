@@ -73,6 +73,3 @@ class ApplicationHandler:
 				app_config.shell_config,
 				users,
 			)
-
-
-application_handler = ApplicationHandler()
