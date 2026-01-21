@@ -53,7 +53,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 				action=select_privilege_escalation,
 				value=self._auth_config.privilege_escalation,
 				preview_action=self._prev_priv_esc,
-				dependencies=[self._check_dep_sudo_users],
+				dependencies=[self.has_elevated_users],
 				key='privilege_escalation',
 			),
 			MenuItem(
@@ -61,7 +61,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 				action=select_lock_root_account,
 				value=self._auth_config.lock_root_account,
 				preview_action=self._prev_lock_root,
-				dependencies=['root_enc_password', self._check_dep_sudo_users],
+				dependencies=['root_enc_password', self.has_elevated_users],
 				key='lock_root_account',
 			),
 		]
@@ -84,12 +84,10 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 			return f'{tr("Root password")}: {password.hidden()}'
 		return None
 
-	def _check_dep_sudo_users(self) -> bool:
-		"""Check if at least one sudo user exists"""
+	def has_elevated_users(self) -> bool:
+		"""Check if at least one elev user exists"""
 		users: list[User] | None = self._item_group.find_by_key('users').value
-		if users:
-			return any(user.sudo for user in users)
-		return False
+		return User.any_elevated(users) if users else False
 
 	def _prev_priv_esc(self, item: MenuItem) -> str | None:
 		if item.value is not None:

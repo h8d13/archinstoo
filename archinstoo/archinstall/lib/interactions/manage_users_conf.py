@@ -55,7 +55,7 @@ class UserList(ListManager[User]):
 				user.password = new_password
 		elif action == self._actions[3] and entry:  # promote/demote
 			user = next(filter(lambda x: x == entry, data))
-			user.sudo = not user.sudo
+			user.elev = not user.elev
 		elif action == self._actions[4] and entry:  # delete
 			data = [d for d in data if d != entry]
 

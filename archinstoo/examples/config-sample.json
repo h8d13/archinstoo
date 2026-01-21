@@ -164,7 +164,7 @@
             {
                 "username": "user",
                 "enc_password": null,
-                "sudo": true,
+                "elev": true,
                 "groups": [],
                 "stash_url": null
             }

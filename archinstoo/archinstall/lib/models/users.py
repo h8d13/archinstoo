@@ -87,17 +87,12 @@ class PasswordStrength(Enum):
 		return cls.WEAK
 
 
-UserSerialization = TypedDict(
-	'UserSerialization',
-	{
-		'username': str,
-		'!password': NotRequired[str],
-		'sudo': bool,
-		'groups': list[str],
-		'enc_password': str | None,
-		'stash_urls': NotRequired[list[str]],
-	},
-)
+class UserSerialization(TypedDict):
+	username: str
+	elev: bool
+	groups: list[str]
+	enc_password: str | None
+	stash_urls: NotRequired[list[str]]
 
 
 class Password:
@@ -119,21 +114,6 @@ class Password:
 	def plaintext(self) -> str:
 		return self._plaintext
 
-	@plaintext.setter
-	def plaintext(self, value: str) -> None:
-		self._plaintext = value
-		self.enc_password = crypt_yescrypt(value)
-
-	@override
-	def __eq__(self, other: object) -> bool:
-		if not isinstance(other, Password):
-			return NotImplemented
-
-		if self._plaintext and other._plaintext:
-			return self._plaintext == other._plaintext
-
-		return self.enc_password == other.enc_password
-
 	def hidden(self) -> str:
 		if self._plaintext:
 			return '*' * len(self._plaintext)
@@ -145,20 +125,20 @@ class Password:
 class User:
 	username: str
 	password: Password
-	sudo: bool
+	elev: bool
 	groups: list[str] = field(default_factory=list)
 	stash_urls: list[str] = field(default_factory=list)
 
 	@override
 	def __str__(self) -> str:
 		# safety overwrite to make sure password is not leaked
-		return f'User({self.username=}, {self.sudo=}, {self.groups=})'
+		return f'User({self.username=}, {self.elev=}, {self.groups=})'
 
 	def table_data(self) -> dict[str, str | bool | list[str]]:
 		return {
 			'username': self.username,
 			'password': self.password.hidden(),
-			'sudo': self.sudo,
+			'elev': self.elev,
 			'groups': self.groups,
 		}
 
@@ -166,10 +146,14 @@ class User:
 		return {
 			'username': self.username,
 			'enc_password': self.password.enc_password,
-			'sudo': self.sudo,
+			'elev': self.elev,
 			'groups': self.groups,
 			'stash_urls': self.stash_urls,
 		}
+
+	@staticmethod
+	def any_elevated(users: list['User']) -> bool:
+		return any(u.elev for u in users)
 
 	@classmethod
 	def parse_arguments(
@@ -194,7 +178,7 @@ class User:
 			user = cls(
 				username=username,
 				password=password,
-				sudo=entry.get('sudo', False) is True,
+				elev=entry.get('elev', False) is True,
 				groups=groups,
 				stash_urls=stash_urls,
 			)
