@@ -14,7 +14,7 @@ Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms`
 *You can then skip wifi setup bellow*
 
 **For Wifi**:
-```
+```shell
 # check devices
 $ ip link
 
@@ -33,7 +33,7 @@ $ nmcli dev wifi connect "SSID" -a
 > **For the lazy ones:** `bash <(curl -sSl https://evoquus.com/co)` *Does the same as bellow.*
 
 *If on the ISO instead of a live system*
-```
+```shell
 pacman-key --init
 pacman -Sy git
 ```
@@ -41,14 +41,16 @@ pacman -Sy git
 **1. Run the source code**
 
 Get source:
-```
+```shell
 git clone https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
 ```
 
 **2. Then finally run the module** `archinstall`
 
-`python -m archinstall [args]` try `-h` or `--help`
+```shell
+python -m archinstall [args]` # try `-h` or `--help`
+```
 
 Some options are behind `--advanced` others help to skip.
 
@@ -97,12 +99,12 @@ In the case of dev the top-level `PKGBUILD` has a few extra tools like `archiso`
 Using the latest version is often safer bet.
 
 Check: 
-```
+```shell
 . ./PKGBUILD && pacman -Qu "${depends[@]}"
 # or the same with "${optdepends[@]}"
 ```
 Update:
-```
+```shell
 . ./PKGBUILD && pacman -Sy --needed "${depends[@]}" 
 # or the same with "${optdepends[@]}"
 ```
