@@ -7,10 +7,10 @@ from typing import assert_never
 from archinstall.lib.models.packages import Repository
 from archinstall.lib.packages.packages import enrich_package_info, list_available_packages
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import EditMenu, SelectMenu, Tui
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
+from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from ..locale.utils import list_timezones
 from ..models.packages import AvailablePackage, PackageGroup

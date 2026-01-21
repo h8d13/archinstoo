@@ -21,7 +21,7 @@ from archinstall.lib.models.users import User
 from archinstall.lib.output import debug, error, info
 from archinstall.lib.profile.profiles_handler import profile_handler
 from archinstall.lib.resumehandler import _check_for_saved_config
-from archinstall.tui import Tui
+from archinstall.lib.tui import Tui
 
 
 def ask_user_questions(config: ArchConfig, args: Arguments) -> None:

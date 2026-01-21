@@ -22,10 +22,10 @@ from archinstall.lib.models.application import (
 	ShellConfiguration,
 )
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import SelectMenu
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment, FrameProperties, Orientation
+from archinstall.lib.tui.curses_menu import SelectMenu
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
 
 
 class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):

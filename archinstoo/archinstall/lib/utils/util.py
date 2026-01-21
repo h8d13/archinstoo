@@ -1,9 +1,9 @@
 from pathlib import Path
 
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import EditMenu
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment
+from archinstall.lib.tui.curses_menu import EditMenu
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment
 
 from ..models.users import Password, PasswordStrength
 

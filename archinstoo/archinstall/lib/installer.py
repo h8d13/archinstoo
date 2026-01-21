@@ -33,7 +33,7 @@ from archinstall.lib.models.device import (
 from archinstall.lib.models.packages import Repository
 from archinstall.lib.packages import installed_package
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import Tui
+from archinstall.lib.tui.curses_menu import Tui
 
 from .args import ArchConfigHandler
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError

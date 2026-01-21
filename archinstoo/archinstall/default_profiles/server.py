@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Self, override
 from archinstall.default_profiles.profile import Profile, ProfileType, SelectResult
 from archinstall.lib.output import info
 from archinstall.lib.profile.profiles_handler import profile_handler
-from archinstall.tui.curses_menu import SelectMenu
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import FrameProperties, PreviewStyle
+from archinstall.lib.tui.curses_menu import SelectMenu
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import FrameProperties, PreviewStyle
 
 if TYPE_CHECKING:
 	from archinstall.lib.installer import Installer

@@ -3,9 +3,9 @@ from typing import assert_never, override
 
 from archinstall.lib.models.device import SubvolumeModification
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import EditMenu
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment
+from archinstall.lib.tui.curses_menu import EditMenu
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment
 
 from ..menu.list_manager import ListManager
 from ..utils.util import prompt_dir

@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Any
 
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import SelectMenu, Tui
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
+from archinstall.lib.tui.curses_menu import SelectMenu, Tui
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from .args import ArchConfig
 from .general import JSON

@@ -3,10 +3,10 @@ from typing import assert_never
 from archinstall.default_profiles.profile import Profile
 from archinstall.lib.models.application import ZramAlgorithm, ZramConfiguration
 from archinstall.lib.translationhandler import tr
-from archinstall.tui.curses_menu import SelectMenu
-from archinstall.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.tui.result import ResultType
-from archinstall.tui.types import Alignment, FrameProperties, FrameStyle, Orientation, PreviewStyle
+from archinstall.lib.tui.curses_menu import SelectMenu
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment, FrameProperties, FrameStyle, Orientation, PreviewStyle
 
 from ..hardware import GfxDriver, SysInfo
 

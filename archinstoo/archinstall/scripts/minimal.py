@@ -12,7 +12,7 @@ from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.models.users import Password, User
 from archinstall.lib.output import debug, error, info
 from archinstall.lib.profile.profiles_handler import profile_handler
-from archinstall.tui import Tui
+from archinstall.lib.tui import Tui
 
 
 def perform_installation(mountpoint: Path, config: ArchConfig, handler: ArchConfigHandler) -> None:
