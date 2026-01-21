@@ -5,7 +5,22 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 > Aims to simplify reading/maintaining the codebase while keeping MORE options available, with LESS dependencies/flags BUT more control especially to create media, modify inner workings, without headaches.
 
 ## 0.0.01-5
-    
+
+    - Dependency Injection refactor (from archinstall issues #4149)
+        - Remove module-level singletons: device_handler, profile_handler, mirror_list_handler, application_handler
+        - Consumer classes accept optional handler params with fallback defaults
+        - Keep logger and translation_handler as singletons
+    - Add `Os` class wrapper for environment variables
+        - `Os.get_env()`, `Os.set_env()`, `Os.has_env()`
+    - Merge `resumehandler.py` into `ConfigurationHandler`
+        - Add `ConfigurationHandler.prompt_resume()` method
+        - Fix resume config loading bug (config was captured before resume check)
+    - Menu UX improvements
+        - Move Disk config and Authentication to top (critical items)
+        - Add `MenuItem.separator()` factory method for visual separators
+        - Change "Cancel" to "Back" in sub-menus (ListManager)
+        - Move Archinstoo settings to bottom with Install/Abort
+    - Update tests and docs for refactors
     - New `logs/` dir for outputs restored on h2t mode
     - Move `tui/` into `lib/` for more readable imports / flat lib / honest architecture
         - A lot of UI code is called from lib interactions or similar

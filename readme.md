@@ -123,6 +123,6 @@ You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace`
 
 **Philosophy:** Simplify, No backwards-compat, Move fast. Host to target testing (without ISOs).
 
-To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest changes [Changelog](./.github/HISTORY.md)
+To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest changes [Changelog](./.github/CHANGELOG.md)
 
 The process would be the same with `git clone -b <branch> <url>`
