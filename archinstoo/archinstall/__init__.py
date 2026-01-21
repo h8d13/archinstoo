@@ -79,6 +79,9 @@ def _fetch_deps() -> int:
 
 
 def _prepare() -> int:
+	# log python/host-2-target
+	_log_env_info()
+
 	if is_venv():
 		return 0
 	try:
@@ -124,8 +127,6 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 		if rc := _prepare():
 			return rc
 
-	# log python/host-2-target
-	_log_env_info()
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
 	# usually 'guided' from default lib/args
