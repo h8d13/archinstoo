@@ -1259,43 +1259,38 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._item_group.focus_last()
 
 
-THEMES: dict[str, dict[STYLE, tuple[int, int]]] = {
-	'default': {
-		STYLE.NORMAL: (curses.COLOR_WHITE, curses.COLOR_BLACK),
-		STYLE.CURSOR_STYLE: (curses.COLOR_CYAN, curses.COLOR_BLACK),
-		STYLE.MENU_STYLE: (curses.COLOR_WHITE, curses.COLOR_BLUE),
-	},
-	'light': {
-		STYLE.NORMAL: (curses.COLOR_BLACK, curses.COLOR_WHITE),
-		STYLE.CURSOR_STYLE: (curses.COLOR_BLUE, curses.COLOR_WHITE),
-		STYLE.MENU_STYLE: (curses.COLOR_WHITE, curses.COLOR_BLUE),
-	},
-	'green': {
-		STYLE.NORMAL: (curses.COLOR_GREEN, curses.COLOR_BLACK),
-		STYLE.CURSOR_STYLE: (curses.COLOR_GREEN, curses.COLOR_BLACK),
-		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_GREEN),
-	},
-	'red': {
-		STYLE.NORMAL: (curses.COLOR_RED, curses.COLOR_BLACK),
-		STYLE.CURSOR_STYLE: (curses.COLOR_RED, curses.COLOR_BLACK),
-		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_RED),
-	},
-	'orange': {
-		STYLE.NORMAL: (curses.COLOR_YELLOW, curses.COLOR_BLACK),
-		STYLE.CURSOR_STYLE: (curses.COLOR_YELLOW, curses.COLOR_BLACK),
-		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_YELLOW),
-	},
-	'cyan': {
-		STYLE.NORMAL: (curses.COLOR_CYAN, curses.COLOR_BLACK),
-		STYLE.CURSOR_STYLE: (curses.COLOR_CYAN, curses.COLOR_BLACK),
-		STYLE.MENU_STYLE: (curses.COLOR_BLACK, curses.COLOR_CYAN),
-	},
+ACCENT_COLORS: dict[str, int] = {
+	'cyan': curses.COLOR_CYAN,
+	'green': curses.COLOR_GREEN,
+	'red': curses.COLOR_RED,
+	'orange': curses.COLOR_YELLOW,
+	'blue': curses.COLOR_BLUE,
+	'magenta': curses.COLOR_MAGENTA,
 }
+
+
+def _build_theme(mode: str, accent: str) -> dict[STYLE, tuple[int, int]]:
+	"""Build theme colors from mode (dark/light) and accent color."""
+	accent_color = ACCENT_COLORS.get(accent, curses.COLOR_CYAN)
+
+	if mode == 'light':
+		return {
+			STYLE.NORMAL: (curses.COLOR_BLACK, curses.COLOR_WHITE),
+			STYLE.CURSOR_STYLE: (accent_color, curses.COLOR_WHITE),
+			STYLE.MENU_STYLE: (curses.COLOR_WHITE, accent_color),
+		}
+	else:  # dark
+		return {
+			STYLE.NORMAL: (curses.COLOR_WHITE, curses.COLOR_BLACK),
+			STYLE.CURSOR_STYLE: (accent_color, curses.COLOR_BLACK),
+			STYLE.MENU_STYLE: (curses.COLOR_BLACK, accent_color),
+		}
 
 
 class Tui:
 	_t: ClassVar[Self | None] = None
-	_theme: ClassVar[str] = 'default'
+	_mode: ClassVar[str] = 'dark'
+	_accent: ClassVar[str] = 'blue'
 
 	def __enter__(self) -> None:
 		if Tui._t is None:
@@ -1422,11 +1417,15 @@ class Tui:
 		return result
 
 	@classmethod
-	def set_theme(cls, theme: str) -> None:
-		cls._theme = theme
+	def set_mode(cls, mode: str) -> None:
+		cls._mode = mode
+
+	@classmethod
+	def set_accent(cls, accent: str) -> None:
+		cls._accent = accent
 
 	def _set_up_colors(self) -> None:
-		theme = THEMES.get(Tui._theme, THEMES['default'])
+		theme = _build_theme(Tui._mode, Tui._accent)
 		# Get background color from NORMAL style
 		_, bg_color = theme.get(STYLE.NORMAL, (curses.COLOR_WHITE, curses.COLOR_BLACK))
 
