@@ -49,7 +49,7 @@ cd archinstoo/archinstoo
 **2. Then finally run the module** `archinstall`
 
 ```shell
-python -m archinstall [args]` # try `-h` or `--help`
+python -m archinstall [args]` # try -h or --help
 ```
 
 Some options are behind `--advanced` others help to skip.
