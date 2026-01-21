@@ -25,17 +25,6 @@ _VT100_ESCAPE_REGEX = r'\x1B\[[?0-9;]*[a-zA-Z]'
 _VT100_ESCAPE_REGEX_BYTES = _VT100_ESCAPE_REGEX.encode()
 
 
-def running_from_host() -> bool:
-	"""
-	Check if running from an installed system.
-
-	Returns True if running from installed system (host mode) for host-to-target install.
-	Returns False if /run/archiso exists (ISO mode).
-	"""
-	is_host = not Path('/run/archiso').exists()
-	return is_host
-
-
 def generate_password(length: int = 64) -> str:
 	haystack = string.printable  # digits, ascii_letters, punctuation (!"#$[] etc) and whitespace
 	return ''.join(secrets.choice(haystack) for _ in range(length))

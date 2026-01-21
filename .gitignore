@@ -30,6 +30,7 @@ SAFETY_LOCK
 test_*/
 .idea
 .idea/
+cmd_*
 /guided.py
 venv
 .venv

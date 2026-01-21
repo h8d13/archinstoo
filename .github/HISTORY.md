@@ -4,6 +4,24 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 > Aims to simplify reading/maintaining the codebase while keeping MORE options available, with LESS dependencies/flags BUT more control especially to create media, modify inner workings, without headaches.
 
+## 0.0.01-5
+
+    - Rename `MirrorConfiguration` to `PacmanConfiguration`
+        - Add pacman misc options (Color, ILoveCandy, VerbosePkgLists)
+        - Rename `mirror_config` field to `pacman_config`
+        - Custom repos browsable in Additional packages
+        - Apply config on GlobalMenu init for loaded configs
+        - Fix repos being added multiple times
+    - Rename `.sudo` to `.elev` across codebase
+        - Add `User.any_elevated()` static helper
+        - Consolidate duplicate elevated user checks
+    - Simplify `Password` class
+        - Remove unused setter
+    - Log to current directory for debugging
+    - Light/dark mode theme selector with accent colors
+    - Separate scripts that need preparation phase
+    - Various test updates for renamed fields
+
 ## 0.0.01-4
 
     - Remove `python-pydantic` dataclasses dependency

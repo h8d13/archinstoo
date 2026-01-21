@@ -37,14 +37,14 @@
         "removable": true
     },
     "disk_config": {
-        "config_type": "manual_partitioning",
+        "config_type": "default_layout",
         "device_modifications": [
             {
                 "device": "/dev/nvme0n1",
                 "wipe": true,
                 "partitions": [
                     {
-                        "obj_id": "1ecdde34-7db9-4a7d-acfc-850e8d5bffce",
+                        "obj_id": "5539394a-042e-4ac3-8861-57ca670bfd4f",
                         "status": "create",
                         "type": "primary",
                         "start": {
@@ -64,7 +64,7 @@
                             }
                         },
                         "fs_type": "fat32",
-                        "mountpoint": "/efi",
+                        "mountpoint": "/boot",
                         "mount_options": [],
                         "flags": [
                             "boot",
@@ -74,7 +74,7 @@
                         "btrfs": []
                     },
                     {
-                        "obj_id": "3c8d43a0-d8b8-41df-8839-0e7b2554906f",
+                        "obj_id": "6454f1e1-5744-40ce-93f3-1a746c3d4d74",
                         "status": "create",
                         "type": "primary",
                         "start": {
@@ -122,16 +122,58 @@
                 ]
             }
         ],
-        "disk_encryption": {
-            "encryption_type": "luks",
-            "partitions": [
-                "f96d0333-81b5-43d3-9ff6-f70b2fd35c1d"
-            ],
-            "lvm_volumes": []
+        "lvm_config": {
+            "config_type": "default",
+            "vol_groups": [
+                {
+                    "name": "ArchinstallVg",
+                    "lvm_pvs": [
+                        "6454f1e1-5744-40ce-93f3-1a746c3d4d74"
+                    ],
+                    "volumes": [
+                        {
+                            "obj_id": "e82fd144-c371-4140-a846-1a1f3f9546e1",
+                            "status": "create",
+                            "name": "root",
+                            "fs_type": "btrfs",
+                            "length": {
+                                "value": 46,
+                                "unit": "GiB",
+                                "sector_size": {
+                                    "value": 512,
+                                    "unit": "B"
+                                }
+                            },
+                            "mountpoint": "/",
+                            "mount_options": [
+                                "compress=zstd"
+                            ],
+                            "btrfs": [
+                                {
+                                    "name": "@",
+                                    "mountpoint": "/"
+                                },
+                                {
+                                    "name": "@home",
+                                    "mountpoint": "/home"
+                                },
+                                {
+                                    "name": "@log",
+                                    "mountpoint": "/var/log"
+                                },
+                                {
+                                    "name": "@pkg",
+                                    "mountpoint": "/var/cache/pacman/pkg"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         },
         "btrfs_options": {
             "snapshot_config": {
-                "type": "Snapper"
+                "type": "Timeshift"
             }
         }
     },
@@ -159,16 +201,7 @@
     "hostname": "archinstoo",
     "auth_config": {
         "lock_root_account": true,
-        "privilege_escalation": "doas",
-        "users": [
-            {
-                "username": "user",
-                "enc_password": null,
-                "elev": true,
-                "groups": [],
-                "stash_url": null
-            }
-        ]
+        "privilege_escalation": "doas"
     },
     "app_config": {
         "bluetooth_config": {

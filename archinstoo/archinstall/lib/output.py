@@ -1,5 +1,6 @@
 import logging
 import os
+import pwd
 import sys
 from collections.abc import Callable
 from dataclasses import asdict, is_dataclass
@@ -8,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from .utils.env import running_from_host
 from .utils.unicode import unicode_ljust, unicode_rjust
 
 if TYPE_CHECKING:
@@ -128,8 +130,32 @@ class Journald:
 		log_adapter.log(level, message)
 
 
+def restore_perms(path: Path, recursive: bool = False) -> None:
+	# no-ops if ISO or run as root directly
+	if not running_from_host():
+		return
+
+	orig_user = os.environ.get('SUDO_USER') or os.environ.get('DOAS_USER')
+	if not orig_user:
+		return
+
+	try:
+		pw = pwd.getpwnam(orig_user)
+		uid, gid = pw.pw_uid, pw.pw_gid
+
+		if recursive and path.is_dir():
+			for root, _dirs, files in os.walk(path):
+				os.chown(root, uid, gid)
+				for f in files:
+					os.chown(Path(root) / f, uid, gid)
+		else:
+			os.chown(path, uid, gid)
+	except (KeyError, PermissionError):
+		pass
+
+
 class Logger:
-	def __init__(self, path: Path = Path.cwd()) -> None:
+	def __init__(self, path: Path = Path.cwd() / 'logs') -> None:
 		self._path = path
 
 	@property
@@ -143,6 +169,7 @@ class Logger:
 	def _ensure_log_file(self) -> None:
 		self._path.mkdir(exist_ok=True, parents=True)
 		self.path.touch(exist_ok=True)
+		restore_perms(self._path, recursive=True)
 
 	def log(self, level: int, content: str) -> None:
 		self._ensure_log_file()

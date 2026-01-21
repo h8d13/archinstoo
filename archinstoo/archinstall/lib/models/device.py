@@ -44,7 +44,6 @@ class _DiskLayoutConfigurationSerialization(TypedDict):
 	lvm_config: NotRequired[_LvmConfigurationSerialization]
 	mountpoint: NotRequired[str]
 	btrfs_options: NotRequired[_BtrfsOptionsSerialization]
-	disk_encryption: NotRequired[_DiskEncryptionSerialization]
 
 
 @dataclass
@@ -73,8 +72,7 @@ class DiskLayoutConfiguration:
 			if self.lvm_config:
 				config['lvm_config'] = self.lvm_config.json()
 
-			if self.disk_encryption:
-				config['disk_encryption'] = self.disk_encryption.json()
+			# disk_encryption is never saved (password not persisted)
 
 			if self.btrfs_options:
 				config['btrfs_options'] = self.btrfs_options.json()
@@ -191,8 +189,7 @@ class DiskLayoutConfiguration:
 		if (lvm_arg := disk_config.get('lvm_config', None)) is not None:
 			config.lvm_config = LvmConfiguration.parse_arg(lvm_arg, config)
 
-		if (enc_config := disk_config.get('disk_encryption', None)) is not None:
-			config.disk_encryption = DiskEncryption.parse_arg(config, enc_config, enc_password)
+		# disk_encryption is not parsed from config (password never saved)
 
 		if config.has_default_btrfs_vols():
 			if (btrfs_arg := disk_config.get('btrfs_options', None)) is not None:
@@ -1444,13 +1441,6 @@ class EncryptionType(Enum):
 		return type_to_text[self]
 
 
-class _DiskEncryptionSerialization(TypedDict):
-	encryption_type: str
-	partitions: list[str]
-	lvm_volumes: list[str]
-	iter_time: NotRequired[int]
-
-
 @dataclass
 class DiskEncryption:
 	encryption_type: EncryptionType = EncryptionType.NoEncryption
@@ -1472,18 +1462,6 @@ class DiskEncryption:
 		else:
 			return dev in self.lvm_volumes and dev.mountpoint != Path('/')
 
-	def json(self) -> _DiskEncryptionSerialization:
-		obj: _DiskEncryptionSerialization = {
-			'encryption_type': self.encryption_type.value,
-			'partitions': [p.obj_id for p in self.partitions],
-			'lvm_volumes': [vol.obj_id for vol in self.lvm_volumes],
-		}
-
-		if self.iter_time != DEFAULT_ITER_TIME:  # Only include if not default
-			obj['iter_time'] = self.iter_time
-
-		return obj
-
 	@classmethod
 	def validate_enc(
 		cls,
@@ -1501,43 +1479,6 @@ class DiskEncryption:
 				return False
 
 		return True
-
-	@classmethod
-	def parse_arg(
-		cls,
-		disk_config: DiskLayoutConfiguration,
-		disk_encryption: _DiskEncryptionSerialization,
-		password: Password | None = None,
-	) -> Self | None:
-		if not cls.validate_enc(disk_config.device_modifications, disk_config.lvm_config):
-			return None
-
-		if not password:
-			return None
-
-		enc_partitions = []
-		for mod in disk_config.device_modifications:
-			for part in mod.partitions:
-				if part.obj_id in disk_encryption.get('partitions', []):
-					enc_partitions.append(part)
-
-		volumes = []
-		if disk_config.lvm_config:
-			for vol in disk_config.lvm_config.get_all_volumes():
-				if vol.obj_id in disk_encryption.get('lvm_volumes', []):
-					volumes.append(vol)
-
-		enc = cls(
-			EncryptionType(disk_encryption['encryption_type']),
-			password,
-			enc_partitions,
-			volumes,
-		)
-
-		if iter_time := disk_encryption.get('iter_time', None):
-			enc.iter_time = iter_time
-
-		return enc
 
 
 @dataclass

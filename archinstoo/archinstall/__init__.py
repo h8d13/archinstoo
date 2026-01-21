@@ -16,19 +16,15 @@ from .lib.args import (
 	get_arch_config_handler,
 )
 from .lib.disk.utils import disk_layouts
-from .lib.general import running_from_host
 from .lib.hardware import SysInfo
 from .lib.networking import ping
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
+from .lib.utils.env import is_venv, running_from_host
 from .tui.curses_menu import Tui
 
 hard_depends = ('python-pyparted',)
-
-
-def is_venv() -> bool:
-	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
 
 
 def _log_env_info() -> None:
