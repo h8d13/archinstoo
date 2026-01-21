@@ -75,13 +75,6 @@ class Installer:
 		"""
 		`Installer()` is the wrapper for most basic installation steps.
 		It also wraps :py:func:`~archinstall.Installer.pacstrap` among other things.
-
-		The handler parameter is optional - if not provided, sensible defaults are used.
-		This allows using Installer in standalone scripts without ArchConfigHandler.
-
-		The device_handler parameter follows the dependency injection pattern - if not
-		provided, a new DeviceHandler instance is created. Pass an existing instance
-		if multiple modules need access to the same handler.
 		"""
 		from .args import Arguments
 

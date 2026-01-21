@@ -31,11 +31,6 @@ class FilesystemHandler:
 		disk_config: DiskLayoutConfiguration,
 		device_handler: DeviceHandler | None = None,
 	):
-		"""
-		The device_handler parameter follows the dependency injection pattern - if not
-		provided, a new DeviceHandler instance is created. Pass an existing instance
-		if multiple modules need access to the same handler.
-		"""
 		self._disk_config = disk_config
 		self._enc_config = disk_config.disk_encryption
 		self._device_handler = device_handler or DeviceHandler()
