@@ -1,4 +1,4 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
 
-cd archinstoo && sudo python -m archinstall && cd ..
+(cd archinstoo && sudo python -m archinstall "$@")

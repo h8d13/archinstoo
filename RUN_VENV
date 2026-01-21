@@ -2,7 +2,7 @@
 # shellcheck disable=SC1091,SC2154
 cd archinstoo || exit 1
 
-# update deps launch venv and run archinstall
+# launch venv and run archinstall
 if [ ! -d ".venv" ]; then
     python -m venv --system-site-packages .venv
     . .venv/bin/activate
