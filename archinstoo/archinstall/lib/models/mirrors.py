@@ -6,7 +6,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Self, TypedDict, override
+from typing import Any, NotRequired, Self, TypedDict, override
 
 from ..models.packages import Repository
 from ..networking import DownloadTimer, fetch_data_from_url, ping
@@ -381,7 +381,7 @@ class _PacmanConfigurationSerialization(TypedDict):
 	custom_servers: list[CustomServer]
 	optional_repositories: list[str]
 	custom_repositories: list[_CustomRepositorySerialization]
-	pacman_options: list[str]
+	pacman_options: NotRequired[list[str]]
 
 
 # Available pacman.conf misc options
@@ -409,13 +409,17 @@ class PacmanConfiguration:
 		for m in self.mirror_regions:
 			regions.update(m.json())
 
-		return {
+		config: _PacmanConfigurationSerialization = {
 			'mirror_regions': regions,
 			'custom_servers': self.custom_servers,
 			'optional_repositories': [r.value for r in self.optional_repositories],
 			'custom_repositories': [c.json() for c in self.custom_repositories],
-			'pacman_options': self.pacman_options,
 		}
+
+		if self.pacman_options:
+			config['pacman_options'] = self.pacman_options
+
+		return config
 
 	def custom_servers_config(self) -> str:
 		config = ''
