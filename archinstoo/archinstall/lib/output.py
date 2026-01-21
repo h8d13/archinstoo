@@ -129,8 +129,8 @@ class Journald:
 
 
 class Logger:
-	def __init__(self, path: Path = Path('.')) -> None:
-		self._path = path.absolute()
+	def __init__(self, path: Path = Path.cwd()) -> None:
+		self._path = path
 
 	@property
 	def path(self) -> Path:
