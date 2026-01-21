@@ -265,6 +265,7 @@ class GlobalMenu(AbstractMenu[None]):
 		"""Select a theme for the TUI (session-only, not persisted)."""
 		theme_items = [
 			MenuItem(text=tr('Default'), value='default'),
+			MenuItem(text=tr('Light'), value='light'),
 			MenuItem(text=tr('Green'), value='green'),
 			MenuItem(text=tr('Red'), value='red'),
 			MenuItem(text=tr('Orange'), value='orange'),
@@ -286,6 +287,8 @@ class GlobalMenu(AbstractMenu[None]):
 				Tui.set_theme(theme)
 				if t := Tui._t:
 					t._set_up_colors()
+					t.screen.clear()
+					t.screen.refresh()
 
 	def _prev_archinstall_settings(self, item: MenuItem) -> str | None:
 		output = ''
