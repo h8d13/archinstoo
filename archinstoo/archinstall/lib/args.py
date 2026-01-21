@@ -22,6 +22,8 @@ from archinstall.lib.output import error, logger, warn
 from archinstall.lib.translationhandler import Language, translation_handler
 
 ROOTLESS_SCRIPTS = {'list', 'size'}
+# Scripts that need full prepare (pacman sync, deps) - core installers only
+PREPARE_SCRIPTS = {'guided', 'minimal'}
 
 
 def _set_direct(obj: Any, config: dict[str, Any], mapping: dict[str, str]) -> None:
