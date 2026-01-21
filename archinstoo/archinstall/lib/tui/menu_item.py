@@ -45,6 +45,10 @@ class MenuItem:
 
 		return cls._no
 
+	@classmethod
+	def separator(cls) -> Self:
+		return cls(text='───────────────────', read_only=True)
+
 	def is_empty(self) -> bool:
 		return self.text == '' or self.text is None
 

@@ -60,12 +60,23 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _get_menu_options(self) -> list[MenuItem]:
 		menu_options = [
+			# Critical - these must be configured
 			MenuItem(
-				text=tr('Archinstoo settings'),
-				action=self._select_archinstall_settings,
-				preview_action=self._prev_archinstall_settings,
-				key='archinstall_language',  # syncs language to config, theme is session-only
+				text=tr('Disk config'),
+				action=self._select_disk_config,
+				preview_action=self._prev_disk_config,
+				mandatory=True,
+				key='disk_config',
+				value_validator=self._validate_disk_config,
 			),
+			MenuItem(
+				text=tr('Authentication'),
+				action=self._select_authentication,
+				preview_action=self._prev_authentication,
+				key='auth_config',
+				value_validator=self._validate_auth_config,
+			),
+			MenuItem.separator(),
 			MenuItem(
 				text=tr('Locales'),
 				action=self._locale_selection,
@@ -84,21 +95,6 @@ class GlobalMenu(AbstractMenu[None]):
 				action=self._select_bootloader_config,
 				preview_action=self._prev_bootloader_config,
 				key='bootloader_config',
-			),
-			MenuItem(
-				text=tr('Authentication'),
-				action=self._select_authentication,
-				preview_action=self._prev_authentication,
-				key='auth_config',
-				value_validator=self._validate_auth_config,
-			),
-			MenuItem(
-				text=tr('Disk config'),
-				action=self._select_disk_config,
-				preview_action=self._prev_disk_config,
-				mandatory=True,
-				key='disk_config',
-				value_validator=self._validate_disk_config,
 			),
 			MenuItem(
 				text=tr('Swap'),
@@ -178,8 +174,12 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_custom_commands,
 				key='custom_commands',
 			),
+			MenuItem.separator(),
 			MenuItem(
-				text='',
+				text=tr('Archinstoo settings'),
+				action=self._select_archinstall_settings,
+				preview_action=self._prev_archinstall_settings,
+				key='archinstall_language',  # syncs language to config, theme is session-only
 			),
 			MenuItem(
 				text=tr('Install'),

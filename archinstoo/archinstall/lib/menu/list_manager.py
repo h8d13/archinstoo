@@ -39,6 +39,7 @@ class ListManager[ValueT]:
 		self._separator = ''
 		self._confirm_action = tr('Confirm and exit')
 		self._cancel_action = tr('Cancel')
+		self._back_action = tr('Back')
 
 		self._terminate_actions = [self._confirm_action, self._cancel_action]
 		self._base_actions = base_actions
@@ -101,7 +102,7 @@ class ListManager[ValueT]:
 			return self._data
 
 	def _run_actions_on_entry(self, entry: ValueT) -> None:
-		options = self.filter_options(entry, self._sub_menu_actions) + [self._cancel_action]
+		options = self.filter_options(entry, self._sub_menu_actions) + [self._back_action]
 
 		items = [MenuItem(o, value=o) for o in options]
 		group = MenuItemGroup(items, sort_items=False)
@@ -122,7 +123,7 @@ class ListManager[ValueT]:
 			case _:
 				raise ValueError('Unhandled return type')
 
-		if value != self._cancel_action:
+		if value != self._back_action:
 			self._data = self.handle_action(value, entry, self._data)
 
 	def selected_action_display(self, selection: ValueT) -> str:
