@@ -22,7 +22,7 @@ from archinstall.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstall.lib.models.packages import Repository
 from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.models.users import Password, User
-from archinstall.lib.profile.profiles_handler import profile_handler
+from archinstall.lib.profile.profiles_handler import ProfileHandler
 from archinstall.lib.translationhandler import translation_handler
 
 
@@ -143,7 +143,7 @@ def test_config_file_parsing(
 			mountpoint=None,
 		),
 		profile_config=ProfileConfiguration(
-			profile=profile_handler.parse_profile_config(
+			profile=ProfileHandler().parse_profile_config(
 				{
 					'custom_settings': {
 						'Hyprland': {
