@@ -126,6 +126,8 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 			return rc
 		if rc := _prepare():
 			return rc
+
+	# log python/host-2-target
 	_log_env_info()
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
