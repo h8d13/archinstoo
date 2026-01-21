@@ -7,6 +7,7 @@ import sys
 import textwrap
 import traceback
 
+from .lib import output
 from .lib.args import (
 	ROOTLESS_SCRIPTS,
 	ArchConfigHandler,
@@ -17,7 +18,6 @@ from .lib.disk.utils import disk_layouts
 from .lib.general import running_from_host
 from .lib.hardware import SysInfo
 from .lib.networking import ping
-from .lib import output
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
@@ -128,6 +128,8 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 
 	# default 'guided' from /lib/args
 	_log_env_info()
+	# fixes #4149 by passing args properly to subscripts
+	handler.pass_args_to_subscript()
 	_run_script(script)
 	# note only log once install started
 	_log_sys_info(args)
@@ -175,11 +177,11 @@ def run_as_a_module() -> int:
 		# restore the terminal to the original state
 		Tui.shutdown()
 
-		if exc:
-			_error_message(exc, handler)
-			rc = 1
+	if exc:
+		_error_message(exc, handler)
+		rc = 1
 
-		return rc
+	return rc
 
 
 __all__ = [
