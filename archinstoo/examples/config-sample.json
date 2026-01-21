@@ -7,7 +7,7 @@
         "sys_lang": "en_US.UTF-8",
         "sys_enc": "UTF-8"
     },
-    "mirror_config": {
+    "pacman_config": {
         "mirror_regions": {
             "Germany": [
                 "https://frankfurt.mirror.pkgbuild.com/$repo/os/$arch",
@@ -18,7 +18,18 @@
         "optional_repositories": [
             "multilib"
         ],
-        "custom_repositories": []
+        "custom_repositories": [
+            {
+                "name": "evoquus",
+                "url": "https://evoquus.com/pkgs/",
+                "sign_check": "Never",
+                "sign_option": "TrustAll"
+            }
+        ],
+        "pacman_options": [
+            "Color",
+            "ILoveCandy"
+        ]
     },
     "bootloader_config": {
         "bootloader": "Grub",

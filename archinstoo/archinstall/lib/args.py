@@ -15,7 +15,7 @@ from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.bootloader import BootloaderConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration
 from archinstall.lib.models.locale import LocaleConfiguration
-from archinstall.lib.models.mirrors import MirrorConfiguration
+from archinstall.lib.models.mirrors import PacmanConfiguration
 from archinstall.lib.models.network import NetworkConfiguration
 from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.output import error, logger, warn
@@ -62,7 +62,7 @@ class ArchConfig:
 	archinstall_language: Language = field(default_factory=lambda: translation_handler.get_language_by_abbr('en'))
 	disk_config: DiskLayoutConfiguration | None = None
 	profile_config: ProfileConfiguration | None = None
-	mirror_config: MirrorConfiguration | None = None
+	pacman_config: PacmanConfiguration | None = None
 	network_config: NetworkConfiguration | None = None
 	bootloader_config: BootloaderConfiguration | None = None
 	app_config: ApplicationConfiguration | None = None
@@ -90,7 +90,7 @@ class ArchConfig:
 			'script': self.script,
 			'archinstall-language': self.archinstall_language.json(),
 			'locale_config': self.locale_config.json() if self.locale_config else None,
-			'mirror_config': self.mirror_config.json() if self.mirror_config else None,
+			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
 			'disk_config': self.disk_config.json() if self.disk_config else None,
 			'swap': self.swap,
@@ -135,7 +135,7 @@ class ArchConfig:
 			arch_config,
 			args_config,
 			{
-				'mirror_config': (MirrorConfiguration, 'parse_args'),
+				'pacman_config': (PacmanConfiguration, 'parse_args'),
 				'disk_config': (DiskLayoutConfiguration, 'parse_arg'),
 				'profile_config': (ProfileConfiguration, 'parse_arg'),
 				'auth_config': (AuthenticationConfiguration, 'parse_arg'),

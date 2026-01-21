@@ -44,7 +44,7 @@ from .luks import Luks2
 from .models.authentication import PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration
-from .models.mirrors import MirrorConfiguration
+from .models.mirrors import PacmanConfiguration
 from .models.network import Nic
 from .models.users import User
 from .output import debug, error, info, log, logger, warn
@@ -478,14 +478,14 @@ class Installer:
 
 	def set_mirrors(
 		self,
-		mirror_config: MirrorConfiguration,
+		pacman_configuration: PacmanConfiguration,
 		on_target: bool = False,
 	) -> None:
 		"""
 		Set the mirror configuration for the installation.
 
-		:param mirror_config: The mirror configuration to use.
-		:type mirror_config: MirrorConfiguration
+		:param pacman_configuration: The pacman configuration to use.
+		:type pacman_configuration: PacmanConfiguration
 
 		:on_target: Whether to set the mirrors on the target system or the live system.
 		:param on_target: bool
@@ -493,25 +493,32 @@ class Installer:
 		debug('Setting mirrors on ' + ('target' if on_target else 'live system'))
 
 		root = self.target if on_target else Path('/')
-		mirrorlist_config = root / 'etc/pacman.d/mirrorlist'
-		pacman_config = root / 'etc/pacman.conf'
+		mirrorlist_path = root / 'etc/pacman.d/mirrorlist'
+		pacman_conf_path = root / 'etc/pacman.conf'
 
-		if repositories_config := mirror_config.repositories_config():
+		if repositories_config := pacman_configuration.repositories_config():
 			debug(f'Pacman config: {repositories_config}')
 
-			with open(pacman_config, 'a') as fp:
+			with open(pacman_conf_path, 'a') as fp:
 				fp.write(repositories_config)
 
-		regions_config = mirror_config.regions_config(speed_sort=True)
+		regions_config = pacman_configuration.regions_config(speed_sort=True)
 		if regions_config:
 			debug(f'Mirrorlist:\n{regions_config}')
-			mirrorlist_config.write_text(regions_config)
+			mirrorlist_path.write_text(regions_config)
 
-		if custom_servers := mirror_config.custom_servers_config():
+		if custom_servers := pacman_configuration.custom_servers_config():
 			debug(f'Custom servers:\n{custom_servers}')
 
-			content = mirrorlist_config.read_text()
-			mirrorlist_config.write_text(f'{custom_servers}\n\n{content}')
+			content = mirrorlist_path.read_text()
+			mirrorlist_path.write_text(f'{custom_servers}\n\n{content}')
+
+		# Persist pacman options (Color, ILoveCandy, etc.) to target
+		if on_target and pacman_configuration.pacman_options:
+			debug(f'Pacman options: {pacman_configuration.pacman_options}')
+			target_config = PacmanConfig(self.target)
+			target_config.enable_options(pacman_configuration.pacman_options)
+			target_config.persist()
 
 	def genfstab(self, flags: str = '-pU') -> None:
 		fstab_path = self.target / 'etc' / 'fstab'

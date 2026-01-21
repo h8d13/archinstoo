@@ -27,7 +27,7 @@ from .device import (
 	_DeviceInfo,
 )
 from .locale import LocaleConfiguration
-from .mirrors import CustomRepository, MirrorConfiguration, MirrorRegion
+from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
 from .packages import LocalPackage, PackageSearch, PackageSearchResult, Repository
 from .profile import ProfileConfiguration
@@ -56,7 +56,6 @@ __all__ = [
 	'LvmVolume',
 	'LvmVolumeGroup',
 	'LvmVolumeStatus',
-	'MirrorConfiguration',
 	'MirrorRegion',
 	'ModificationStatus',
 	'NetworkConfiguration',
@@ -64,6 +63,7 @@ __all__ = [
 	'NicType',
 	'PackageSearch',
 	'PackageSearchResult',
+	'PacmanConfiguration',
 	'PartitionFlag',
 	'PartitionModification',
 	'PartitionTable',

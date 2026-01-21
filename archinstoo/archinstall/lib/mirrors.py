@@ -12,13 +12,14 @@ from archinstall.tui.types import Alignment, FrameProperties
 from .menu.abstract_menu import AbstractSubMenu
 from .menu.list_manager import ListManager
 from .models.mirrors import (
+	PACMAN_OPTIONS,
 	ArchLinuxDeMirrorList,
 	CustomRepository,
 	CustomServer,
-	MirrorConfiguration,
 	MirrorRegion,
 	MirrorStatusEntryV3,
 	MirrorStatusListV3,
+	PacmanConfiguration,
 	SignCheck,
 	SignOption,
 )
@@ -204,15 +205,15 @@ class CustomMirrorServersList(ListManager[CustomServer]):
 		return None
 
 
-class MirrorMenu(AbstractSubMenu[MirrorConfiguration]):
+class MirrorMenu(AbstractSubMenu[PacmanConfiguration]):
 	def __init__(
 		self,
-		preset: MirrorConfiguration | None = None,
+		preset: PacmanConfiguration | None = None,
 	):
 		if preset:
 			self._mirror_config = preset
 		else:
-			self._mirror_config = MirrorConfiguration()
+			self._mirror_config = PacmanConfiguration()
 
 		menu_options = self._define_menu_options()
 		self._item_group = MenuItemGroup(menu_options, checkmarks=True)
@@ -253,6 +254,13 @@ class MirrorMenu(AbstractSubMenu[MirrorConfiguration]):
 				preview_action=self._prev_custom_servers,
 				key='custom_servers',
 			),
+			MenuItem(
+				text=tr('Pacman options'),
+				action=select_pacman_options,
+				value=self._mirror_config.pacman_options,
+				preview_action=self._prev_pacman_options,
+				key='pacman_options',
+			),
 		]
 
 	def _prev_regions(self, item: MenuItem) -> str:
@@ -292,8 +300,15 @@ class MirrorMenu(AbstractSubMenu[MirrorConfiguration]):
 		output = '\n'.join([server.url for server in custom_servers])
 		return output.strip()
 
+	def _prev_pacman_options(self, item: MenuItem) -> str | None:
+		if not item.value:
+			return None
+
+		options: list[str] = item.value
+		return '\n'.join(options)
+
 	@override
-	def run(self, additional_title: str | None = None) -> MirrorConfiguration:
+	def run(self, additional_title: str | None = None) -> PacmanConfiguration:
 		super().run(additional_title=additional_title)
 		return self._mirror_config
 
@@ -365,6 +380,30 @@ def select_optional_repositories(preset: list[Repository]) -> list[Repository]:
 		group,
 		alignment=Alignment.CENTER,
 		frame=FrameProperties.min('Additional repositories'),
+		allow_reset=True,
+		allow_skip=True,
+		multi=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Reset:
+			return []
+		case ResultType.Selection:
+			return result.get_values()
+
+
+def select_pacman_options(preset: list[str]) -> list[str]:
+	"""Select misc pacman.conf options like Color, ILoveCandy, etc."""
+	items = [MenuItem(opt, value=opt) for opt in PACMAN_OPTIONS]
+	group = MenuItemGroup(items, sort_items=False)
+	group.set_selected_by_value(preset)
+
+	result = SelectMenu[str](
+		group,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Pacman options')),
 		allow_reset=True,
 		allow_skip=True,
 		multi=True,

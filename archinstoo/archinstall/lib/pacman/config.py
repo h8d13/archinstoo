@@ -2,10 +2,14 @@ import atexit
 import re
 from pathlib import Path
 from shutil import copy2
+from typing import TYPE_CHECKING
 
 from ..general import running_from_host
 from ..models.mirrors import CustomRepository
 from ..models.packages import Repository
+
+if TYPE_CHECKING:
+	from ..models.mirrors import PacmanConfiguration
 
 
 class PacmanConfig:
@@ -18,6 +22,7 @@ class PacmanConfig:
 
 		self._repositories: list[Repository] = []
 		self._custom_repositories: list[CustomRepository] = []
+		self._misc_options: list[str] = []
 
 	def enable(self, repo: Repository | list[Repository]) -> None:
 		if not isinstance(repo, list):
@@ -28,8 +33,12 @@ class PacmanConfig:
 	def enable_custom(self, repos: list[CustomRepository]) -> None:
 		self._custom_repositories = repos
 
+	def enable_options(self, options: list[str]) -> None:
+		"""Enable misc options like Color, ILoveCandy, VerbosePkgLists"""
+		self._misc_options = options
+
 	def apply(self) -> None:
-		if not self._repositories and not self._custom_repositories:
+		if not self._repositories and not self._custom_repositories and not self._misc_options:
 			return
 
 		repos_to_enable = []
@@ -42,6 +51,12 @@ class PacmanConfig:
 		content = self._config_path.read_text().splitlines(keepends=True)
 
 		for row, line in enumerate(content):
+			# Uncomment misc options (Color, ILoveCandy, etc.)
+			for opt in self._misc_options:
+				if re.match(rf'^#\s*{opt}\b', line):
+					content[row] = re.sub(r'^#\s*', '', line)
+					break
+
 			# Check if this is a commented repository section that needs to be enabled
 			match = re.match(r'^#\s*\[(.*)\]', line)
 
@@ -69,5 +84,20 @@ class PacmanConfig:
 			f.writelines(content)
 
 	def persist(self) -> None:
-		if self._repositories and self._config_remote_path:
+		has_changes = self._repositories or self._custom_repositories or self._misc_options
+		if has_changes and self._config_remote_path:
 			copy2(self._config_path, self._config_remote_path)
+
+	@classmethod
+	def apply_config(cls, config: 'PacmanConfiguration') -> None:
+		"""Apply a PacmanConfiguration to the live system."""
+		if not config.optional_repositories and not config.custom_repositories and not config.pacman_options:
+			return
+		pacman = cls(None)
+		if config.optional_repositories:
+			pacman.enable(config.optional_repositories)
+		if config.custom_repositories:
+			pacman.enable_custom(config.custom_repositories)
+		if config.pacman_options:
+			pacman.enable_options(config.pacman_options)
+		pacman.apply()

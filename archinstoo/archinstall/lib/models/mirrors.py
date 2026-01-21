@@ -376,19 +376,25 @@ class CustomServer:
 		return configs
 
 
-class _MirrorConfigurationSerialization(TypedDict):
+class _PacmanConfigurationSerialization(TypedDict):
 	mirror_regions: dict[str, list[str]]
 	custom_servers: list[CustomServer]
 	optional_repositories: list[str]
 	custom_repositories: list[_CustomRepositorySerialization]
+	pacman_options: list[str]
+
+
+# Available pacman.conf misc options
+PACMAN_OPTIONS = ['Color', 'ILoveCandy', 'VerbosePkgLists']
 
 
 @dataclass
-class MirrorConfiguration:
+class PacmanConfiguration:
 	mirror_regions: list[MirrorRegion] = field(default_factory=list)
 	custom_servers: list[CustomServer] = field(default_factory=list)
 	optional_repositories: list[Repository] = field(default_factory=list)
 	custom_repositories: list[CustomRepository] = field(default_factory=list)
+	pacman_options: list[str] = field(default_factory=list)
 
 	@property
 	def region_names(self) -> str:
@@ -398,7 +404,7 @@ class MirrorConfiguration:
 	def custom_server_urls(self) -> str:
 		return '\n'.join([s.url for s in self.custom_servers])
 
-	def json(self) -> _MirrorConfigurationSerialization:
+	def json(self) -> _PacmanConfigurationSerialization:
 		regions = {}
 		for m in self.mirror_regions:
 			regions.update(m.json())
@@ -408,6 +414,7 @@ class MirrorConfiguration:
 			'custom_servers': self.custom_servers,
 			'optional_repositories': [r.value for r in self.optional_repositories],
 			'custom_repositories': [c.json() for c in self.custom_repositories],
+			'pacman_options': self.pacman_options,
 		}
 
 	def custom_servers_config(self) -> str:
@@ -470,5 +477,8 @@ class MirrorConfiguration:
 
 		if 'optional_repositories' in args:
 			config.optional_repositories = [Repository(r) for r in args['optional_repositories']]
+
+		if 'pacman_options' in args:
+			config.pacman_options = args['pacman_options']
 
 		return config
