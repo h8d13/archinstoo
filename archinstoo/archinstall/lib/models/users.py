@@ -114,6 +114,12 @@ class Password:
 	def plaintext(self) -> str:
 		return self._plaintext
 
+	@override
+	def __eq__(self, other: object) -> bool:
+		if not isinstance(other, Password):
+			return NotImplemented
+		return self.enc_password == other.enc_password
+
 	def hidden(self) -> str:
 		if self._plaintext:
 			return '*' * len(self._plaintext)
