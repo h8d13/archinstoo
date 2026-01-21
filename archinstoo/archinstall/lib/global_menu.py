@@ -687,12 +687,15 @@ class GlobalMenu(AbstractMenu[None]):
 		config: MirrorConfiguration | None = self._item_group.find_by_key('mirror_config').value
 
 		repositories: set[Repository] = set()
+		custom_repos: list[str] = []
 		if config:
 			repositories = set(config.optional_repositories)
+			custom_repos = [r.name for r in config.custom_repositories]
 
 		packages = ask_additional_packages_to_install(
 			preset,
 			repositories=repositories,
+			custom_repos=custom_repos,
 		)
 
 		return packages
@@ -700,13 +703,16 @@ class GlobalMenu(AbstractMenu[None]):
 	def _mirror_configuration(self, preset: MirrorConfiguration | None = None) -> MirrorConfiguration:
 		mirror_configuration = MirrorMenu(preset=preset).run()
 
-		if mirror_configuration.optional_repositories:
+		if mirror_configuration.optional_repositories or mirror_configuration.custom_repositories:
 			# reset the package list cache in case the repository selection has changed
 			list_available_packages.cache_clear()
 
 			# enable the repositories in the config
 			pacman_config = PacmanConfig(None)
-			pacman_config.enable(mirror_configuration.optional_repositories)
+			if mirror_configuration.optional_repositories:
+				pacman_config.enable(mirror_configuration.optional_repositories)
+			if mirror_configuration.custom_repositories:
+				pacman_config.enable_custom(mirror_configuration.custom_repositories)
 			pacman_config.apply()
 
 		return mirror_configuration

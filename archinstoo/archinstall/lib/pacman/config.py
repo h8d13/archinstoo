@@ -4,6 +4,7 @@ from pathlib import Path
 from shutil import copy2
 
 from ..general import running_from_host
+from ..models.mirrors import CustomRepository
 from ..models.packages import Repository
 
 
@@ -16,6 +17,7 @@ class PacmanConfig:
 			self._config_remote_path = target / 'etc' / 'pacman.conf'
 
 		self._repositories: list[Repository] = []
+		self._custom_repositories: list[CustomRepository] = []
 
 	def enable(self, repo: Repository | list[Repository]) -> None:
 		if not isinstance(repo, list):
@@ -23,8 +25,11 @@ class PacmanConfig:
 
 		self._repositories += repo
 
+	def enable_custom(self, repos: list[CustomRepository]) -> None:
+		self._custom_repositories = repos
+
 	def apply(self) -> None:
-		if not self._repositories:
+		if not self._repositories and not self._custom_repositories:
 			return
 
 		repos_to_enable = []
@@ -48,14 +53,20 @@ class PacmanConfig:
 				if row + 1 < len(content) and content[row + 1].lstrip().startswith('#'):
 					content[row + 1] = re.sub(r'^#\s*', '', content[row + 1])
 
+		# Append custom repositories
+		for custom in self._custom_repositories:
+			content.append(f'\n[{custom.name}]\n')
+			content.append(f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n')
+			content.append(f'Server = {custom.url}\n')
+
 		# Apply temp using backup then revert on exit handler
 		if running_from_host():
 			temp_copy = self._config_path.with_suffix('.bak')
 			copy2(self._config_path, temp_copy)
 			atexit.register(lambda: copy2(temp_copy, self._config_path))
-		else:  # Apply directly
-			with open(self._config_path, 'w') as f:
-				f.writelines(content)
+
+		with open(self._config_path, 'w') as f:
+			f.writelines(content)
 
 	def persist(self) -> None:
 		if self._repositories and self._config_remote_path:

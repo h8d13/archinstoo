@@ -69,6 +69,7 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 @lru_cache
 def list_available_packages(
 	repositories: tuple[Repository, ...],
+	custom_repos: tuple[str, ...] = (),
 ) -> dict[str, AvailablePackage]:
 	"""
 	Returns a list of all available packages in the database
@@ -80,7 +81,7 @@ def list_available_packages(
 	except Exception as e:
 		debug(f'Failed to sync Arch Linux package database: {e}')
 
-	# Load package stubs from repositories
+	# Load package stubs from standard repositories
 	for repo in repositories:
 		try:
 			for line in Pacman.run(f'-Sl {repo.value}'):
@@ -89,6 +90,16 @@ def list_available_packages(
 					packages[parts[1]] = _create_package_stub(parts[0], parts[1], parts[2])
 		except Exception as e:
 			debug(f'Failed to list packages from {repo.value}: {e}')
+
+	# Load package stubs from custom repositories
+	for repo_name in custom_repos:
+		try:
+			for line in Pacman.run(f'-Sl {repo_name}'):
+				parts = line.decode().strip().split()
+				if len(parts) >= 3:
+					packages[parts[1]] = _create_package_stub(parts[0], parts[1], parts[2])
+		except Exception as e:
+			debug(f'Failed to list packages from custom repo {repo_name}: {e}')
 
 	return packages
 
