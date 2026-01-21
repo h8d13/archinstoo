@@ -112,7 +112,6 @@
 │   │   ├── profile
 │   │   │   ├── profile_menu.py
 │   │   │   └── profiles_handler.py
-│   │   ├── resumehandler.py
 │   │   ├── translationhandler.py
 │   │   ├── tui
 │   │   │   ├── curses_menu.py
@@ -148,5 +147,5 @@
     ├── test_args.py
     └── test_configuration_output.py
 
-25 directories, 122 files
+25 directories, 121 files
 ```

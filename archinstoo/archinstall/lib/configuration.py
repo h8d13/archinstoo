@@ -100,3 +100,37 @@ class ConfigurationHandler:
 		config_file = cls._saved_config_path()
 		if config_file.exists():
 			config_file.unlink()
+
+	@classmethod
+	def prompt_resume(cls, silent: bool = False) -> dict[str, Any] | None:
+		"""Prompt user to resume from saved config. Returns config dict or None."""
+		from .tui.result import ResultType
+
+		if not cls.has_saved_config() or silent:
+			return None
+
+		with Tui():
+			items = [
+				MenuItem(text='resume from saved', value='resume'),
+				MenuItem(text='start fresh', value='fresh'),
+			]
+
+			group = MenuItemGroup(items)
+			group.focus_item = group.items[0]
+
+			result = SelectMenu[str](
+				group,
+				header=tr('Saved configuration found:') + '\n',
+				alignment=Alignment.CENTER,
+				allow_skip=False,
+			).run()
+
+			if result.type_ == ResultType.Selection:
+				choice = result.get_value()
+
+				if choice == 'resume':
+					return cls.load_saved_config()
+				elif choice == 'fresh':
+					cls.delete_saved_config()
+
+		return None

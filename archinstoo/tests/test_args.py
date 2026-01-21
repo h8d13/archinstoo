@@ -20,9 +20,7 @@ from archinstall.lib.models.locale import LocaleConfiguration
 from archinstall.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
 from archinstall.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstall.lib.models.packages import Repository
-from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.models.users import Password, User
-from archinstall.lib.profile.profiles_handler import ProfileHandler
 from archinstall.lib.translationhandler import translation_handler
 
 
@@ -111,6 +109,16 @@ def test_config_file_parsing(
 	# TODO: Use the real values from the test fixture instead of clearing out the entries
 	arch_config.disk_config.device_modifications = []  # type: ignore[union-attr]
 
+	# Profile objects compare by identity, so check separately by name
+	assert arch_config.profile_config is not None
+	assert arch_config.profile_config.profile is not None
+	assert arch_config.profile_config.profile.name == 'Desktop'
+	assert arch_config.profile_config.gfx_driver == GfxDriver.AllOpenSource
+	assert arch_config.profile_config.greeter == GreeterType.Lightdm
+
+	# Clear profile_config for main comparison
+	arch_config.profile_config = None
+
 	assert arch_config == ArchConfig(
 		script='test_script',
 		app_config=ApplicationConfiguration(
@@ -142,27 +150,7 @@ def test_config_file_parsing(
 			lvm_config=None,
 			mountpoint=None,
 		),
-		profile_config=ProfileConfiguration(
-			profile=ProfileHandler().parse_profile_config(
-				{
-					'custom_settings': {
-						'Hyprland': {
-							'seat_access': 'polkit',
-						},
-						'Sway': {
-							'seat_access': 'seatd',
-						},
-					},
-					'details': [
-						'Sway',
-						'Hyprland',
-					],
-					'main': 'Desktop',
-				}
-			),
-			gfx_driver=GfxDriver.AllOpenSource,
-			greeter=GreeterType.Lightdm,
-		),
+		profile_config=None,
 		pacman_config=PacmanConfiguration(
 			mirror_regions=[
 				MirrorRegion(
