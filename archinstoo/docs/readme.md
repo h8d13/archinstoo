@@ -114,32 +114,37 @@
 │   │   │   └── profiles_handler.py
 │   │   ├── resumehandler.py
 │   │   ├── translationhandler.py
+│   │   ├── tui
+│   │   │   ├── curses_menu.py
+│   │   │   ├── help.py
+│   │   │   ├── menu_item.py
+│   │   │   ├── result.py
+│   │   │   ├── script_editor.py
+│   │   │   ├── types.py
+│   │   │   └── ui
+│   │   │       └── result.py
 │   │   └── utils
+│   │       ├── env.py
 │   │       ├── unicode.py
 │   │       └── util.py
 │   ├── __main__.py
-│   ├── scripts
-│   │   ├── format.py
-│   │   ├── guided.py
-│   │   ├── list.py
-│   │   ├── minimal.py
-│   │   └── rescue.py
-│   └── tui
-│       ├── curses_menu.py
-│       ├── help.py
-│       ├── menu_item.py
-│       ├── result.py
-│       ├── script_editor.py
-│       ├── types.py
-│       └── ui
-│           └── result.py
+│   └── scripts
+│       ├── format.py
+│       ├── guided.py
+│       ├── list.py
+│       ├── minimal.py
+│       ├── pre_mount_cli.py
+│       ├── rescue.py
+│       └── size.py
 ├── examples
 │   ├── config-sample.json
-│   ├── disk_layouts-sample.json
 │   └── full_automated_installation.py
+├── logs
+│   ├── cmd_history.txt
+│   ├── cmd_output.txt
+│   └── install.log
 ├── PKGBUILD
 ├── pyproject.toml
-├── test_lib_import.py
 └── tests
     ├── conftest.py
     ├── data
@@ -147,5 +152,5 @@
     ├── test_args.py
     └── test_configuration_output.py
 
-25 directories, 121 files
+26 directories, 125 files
 ```
