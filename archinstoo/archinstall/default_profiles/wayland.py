@@ -7,7 +7,7 @@ class WaylandProfile(Profile):
 	def __init__(
 		self,
 		name: str = 'Wayland',
-		profile_type: ProfileType = ProfileType.DesktopEnv,
+		profile_type: ProfileType = ProfileType.Wayland,
 		advanced: bool = False,
 	):
 		super().__init__(
