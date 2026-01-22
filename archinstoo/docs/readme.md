@@ -1,11 +1,11 @@
 # Project Structure
 ```
-.
-├── archinstall
-│   ├── default_profiles
+./
+├── archinstall/
+│   ├── default_profiles/
 │   │   ├── custom
 │   │   ├── desktop
-│   │   ├── desktops
+│   │   ├── desktops/
 │   │   │   ├── awesome
 │   │   │   ├── bspwm
 │   │   │   ├── budgie
@@ -30,7 +30,7 @@
 │   │   ├── minimal
 │   │   ├── profile
 │   │   ├── server
-│   │   ├── servers
+│   │   ├── servers/
 │   │   │   ├── cockpit
 │   │   │   ├── docker
 │   │   │   ├── httpd
@@ -42,11 +42,11 @@
 │   │   │   └── tomcat
 │   │   ├── wayland
 │   │   └── xorg
-│   ├── lib
-│   │   ├── applications
+│   ├── lib/
+│   │   ├── applications/
 │   │   │   ├── application_handler
 │   │   │   ├── application_menu
-│   │   │   └── cat
+│   │   │   └── cat/
 │   │   │       ├── audio
 │   │   │       ├── bluetooth
 │   │   │       ├── editor
@@ -57,14 +57,14 @@
 │   │   │       ├── print_service
 │   │   │       └── shell
 │   │   ├── args
-│   │   ├── authentication
+│   │   ├── authentication/
 │   │   │   ├── authentication_menu
 │   │   │   ├── crypt
 │   │   │   └── users_menu
-│   │   ├── bootloader
+│   │   ├── bootloader/
 │   │   │   └── bootloader_menu
 │   │   ├── configuration
-│   │   ├── disk
+│   │   ├── disk/
 │   │   │   ├── conf
 │   │   │   ├── device_handler
 │   │   │   ├── disk_menu
@@ -79,17 +79,17 @@
 │   │   ├── global_menu
 │   │   ├── hardware
 │   │   ├── installer
-│   │   ├── interactions
+│   │   ├── interactions/
 │   │   │   ├── general_conf
 │   │   │   └── system_conf
-│   │   ├── locale
+│   │   ├── locale/
 │   │   │   ├── locale_menu
 │   │   │   └── utils
-│   │   ├── menu
+│   │   ├── menu/
 │   │   │   ├── abstract_menu
 │   │   │   ├── list_manager
 │   │   │   └── menu_helper
-│   │   ├── models
+│   │   ├── models/
 │   │   │   ├── application
 │   │   │   ├── authentication
 │   │   │   ├── bootloader
@@ -100,21 +100,21 @@
 │   │   │   ├── packages
 │   │   │   ├── profile
 │   │   │   └── users
-│   │   ├── network
+│   │   ├── network/
 │   │   │   ├── network_handler
 │   │   │   ├── network_menu
 │   │   │   └── utils
 │   │   ├── output
-│   │   ├── pm
+│   │   ├── pm/
 │   │   │   ├── config
 │   │   │   ├── mirrors
 │   │   │   ├── packages
 │   │   │   └── pacman
-│   │   ├── profile
+│   │   ├── profile/
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
 │   │   ├── translationhandler
-│   │   ├── tui
+│   │   ├── tui/
 │   │   │   ├── curses_menu
 │   │   │   ├── help
 │   │   │   ├── menu_item
@@ -122,11 +122,11 @@
 │   │   │   ├── result
 │   │   │   ├── script_editor
 │   │   │   └── types
-│   │   └── utils
+│   │   └── utils/
 │   │       ├── env
 │   │       └── unicode
 │   ├── __main__
-│   └── scripts
+│   └── scripts/
 │       ├── format
 │       ├── guided
 │       ├── list
@@ -134,14 +134,14 @@
 │       ├── pre_mount_cli
 │       ├── rescue
 │       └── size
-├── examples
+├── examples/
 │   ├── config-sample.json
 │   └── full_automated_installation
 ├── PKGBUILD
 ├── pyproject.toml
-└── tests
+└── tests/
     ├── conftest
-    ├── data
+    ├── data/
     │   └── test_config.json
     ├── test_args
     └── test_configuration_output
