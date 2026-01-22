@@ -2,6 +2,28 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.0.01-6
+
+    - Mirrors module rework
+        - Move mirrors code to `lib/pm/` (package manager)
+        - Use class-level cache for `MirrorListHandler` (fetch once, reuse)
+        - Swap mirror fetch order: archlinux.org first, archlinux.de fallback
+        - Fix "Loading mirror regions..." showing repeatedly
+        - Fix "database already registered" error for custom repos
+        - Skip duplicate repos when writing to pacman.conf
+    - X11 keyboard layout configuration
+        - Auto-write `/etc/X11/xorg.conf.d/00-keyboard.conf` for Xorg profiles
+        - Use `DisplayServer.X11` check instead of profile type checks
+        - Verify layout inside chroot where X11 is installed
+        - Strip vconsole suffixes (-latin1, -nodeadkeys, etc.) for X11 format
+        - Remove Boot module that had complex systemd-spwn logic for setting this
+    - Remove unused `is_xorg_type_profile()` method
+    - Use `profile.display_servers()` for graphics driver installation check
+    - Network refactor with DI pattern
+    - Add accent colors to theme selector
+    - Add menu previews
+    - Various type hints and cleanup
+
 ## 0.0.01-5
 
     - Dependency Injection refactor (from archinstall issues #4149)
@@ -37,6 +59,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Remove unused setter
     - Log to current directory for debugging
     - Light/dark mode theme selector with accent colors
+    - Add resizing and various UI fixes
     - Separate scripts that need preparation phase
     - Various test updates for renamed fields
 
