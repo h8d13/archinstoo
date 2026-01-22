@@ -207,7 +207,7 @@ class ProfileHandler:
 
 		profile.install(install_session)
 
-		if profile_config.gfx_driver and (profile.is_xorg_type_profile() or profile.is_desktop_profile()):
+		if profile_config.gfx_driver and profile.display_servers():
 			self.install_gfx_driver(install_session, profile_config.gfx_driver, profile)
 
 		if profile_config.greeter:

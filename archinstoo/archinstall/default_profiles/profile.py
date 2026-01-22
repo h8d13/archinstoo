@@ -122,12 +122,6 @@ class Profile:
 	def is_desktop_type_profile(self, advanced_mode: bool = False) -> bool:
 		return (self.profile_type == ProfileType.DesktopEnv or self.profile_type == ProfileType.WindowMgr) if self._advanced_check(advanced_mode) else False
 
-	def is_xorg_type_profile(self, advanced_mode: bool = False) -> bool:
-		return self.profile_type == ProfileType.Xorg if self._advanced_check(advanced_mode) else False
-
-	def is_custom_type_profile(self) -> bool:
-		return self.profile_type == ProfileType.CustomType
-
 	def is_greeter_supported(self) -> bool:
 		return self.profile_type == ProfileType.Desktop
 
