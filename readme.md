@@ -56,8 +56,8 @@ cd archinstoo/archinstoo
 
 ```shell
 python -m archinstall [args] # try -h or --help
+# some options are behind --advanced
 ```
-Some options are behind `--advanced` others help to skip.
 
 **3. Enjoy your new system(s)**
 
@@ -68,7 +68,7 @@ Make your pizzas. *Una pizza con funghi e prosciutto.*
 > You can create any profile in `archinstall/default_profiles/` following convention, which will be imported automatically.
 Or modify existing ones direcly. 
 
-You can make plugins easily `--script list` where  for `archinstoo` anything inside `scripts/` is also imported. 
+You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported. 
 
 The full structure of the project can be consulted through [`TREE`](./archinstoo)
 
