@@ -14,6 +14,7 @@ class ProfileType(Enum):
 	Server = 'Server'
 	Desktop = 'Desktop'
 	Xorg = 'Xorg'
+	Wayland = 'Wayland'
 	Minimal = 'Minimal'
 	Custom = 'Custom'
 	# detailed selection default_profiles
@@ -21,10 +22,18 @@ class ProfileType(Enum):
 	WindowMgr = 'Window Manager'
 	DesktopEnv = 'Desktop Environment'
 	CustomType = 'CustomType'
-	# special things
-	Application = 'Application'
+
+	# Custom are place-holders
+	# wayland is hidden in menu
+	# it is not used 'standalone' usually as
+	# deps of a DE/WM, just a base class
+	# 'profile.py' and 'wayland.py' are
+	# hidden by /lib/profile/profiles_handler.py
 
 
+#  XorgProfile: just provides xorg-server package standalone
+# + display_servers() -> X11
+#  WaylandProfile returns nothing, expected to be deps
 class DisplayServer(Enum):
 	X11 = 'x11'
 	Wayland = 'wayland'

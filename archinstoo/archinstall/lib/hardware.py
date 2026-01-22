@@ -93,6 +93,7 @@ class GfxDriver(Enum):
 			packages = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
 		# else: servers is empty set or doesn't contain X11
 		# this is then handled usually by deps of the DE/WM
+		# hidden from menu in default_profiles/profile.py
 
 		match self:
 			case GfxDriver.AllOpenSource:
