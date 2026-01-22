@@ -1951,12 +1951,13 @@ class Installer:
 		xorg_conf_dir = self.target / 'etc/X11/xorg.conf.d'
 		xorg_conf_dir.mkdir(parents=True, exist_ok=True)
 
-		content = f'''Section "InputClass"
-        Identifier "system-keyboard"
-        MatchIsKeyboard "on"
-        Option "XkbLayout" "{layout}"
-		EndSection
-		'''
+		content = f'''\
+Section "InputClass"
+    Identifier "system-keyboard"
+    MatchIsKeyboard "on"
+    Option "XkbLayout" "{layout}"
+EndSection
+'''
 
 		(xorg_conf_dir / '00-keyboard.conf').write_text(content)
 		info(f'Wrote X11 keyboard config with layout: {layout}')
