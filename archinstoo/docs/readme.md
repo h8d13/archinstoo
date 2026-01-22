@@ -3,148 +3,148 @@
 .
 ├── archinstall
 │   ├── default_profiles
-│   │   ├── custom.py
-│   │   ├── desktop.py
+│   │   ├── custom
+│   │   ├── desktop
 │   │   ├── desktops
-│   │   │   ├── awesome.py
-│   │   │   ├── bspwm.py
-│   │   │   ├── budgie.py
-│   │   │   ├── cinnamon.py
-│   │   │   ├── cosmic.py
-│   │   │   ├── cutefish.py
-│   │   │   ├── deepin.py
-│   │   │   ├── enlightenment.py
-│   │   │   ├── gnome.py
-│   │   │   ├── hyprland.py
-│   │   │   ├── i3.py
-│   │   │   ├── labwc.py
-│   │   │   ├── lxqt.py
-│   │   │   ├── mate.py
-│   │   │   ├── niri.py
-│   │   │   ├── plasma.py
-│   │   │   ├── qtile.py
-│   │   │   ├── river.py
-│   │   │   ├── sway.py
-│   │   │   ├── xfce4.py
-│   │   │   └── xmonad.py
-│   │   ├── minimal.py
-│   │   ├── profile.py
-│   │   ├── server.py
+│   │   │   ├── awesome
+│   │   │   ├── bspwm
+│   │   │   ├── budgie
+│   │   │   ├── cinnamon
+│   │   │   ├── cosmic
+│   │   │   ├── cutefish
+│   │   │   ├── deepin
+│   │   │   ├── enlightenment
+│   │   │   ├── gnome
+│   │   │   ├── hyprland
+│   │   │   ├── i3
+│   │   │   ├── labwc
+│   │   │   ├── lxqt
+│   │   │   ├── mate
+│   │   │   ├── niri
+│   │   │   ├── plasma
+│   │   │   ├── qtile
+│   │   │   ├── river
+│   │   │   ├── sway
+│   │   │   ├── xfce4
+│   │   │   └── xmonad
+│   │   ├── minimal
+│   │   ├── profile
+│   │   ├── server
 │   │   ├── servers
-│   │   │   ├── cockpit.py
-│   │   │   ├── docker.py
-│   │   │   ├── httpd.py
-│   │   │   ├── lighttpd.py
-│   │   │   ├── mariadb.py
-│   │   │   ├── nginx.py
-│   │   │   ├── postgresql.py
-│   │   │   ├── sshd.py
-│   │   │   └── tomcat.py
-│   │   ├── wayland.py
-│   │   └── xorg.py
+│   │   │   ├── cockpit
+│   │   │   ├── docker
+│   │   │   ├── httpd
+│   │   │   ├── lighttpd
+│   │   │   ├── mariadb
+│   │   │   ├── nginx
+│   │   │   ├── postgresql
+│   │   │   ├── sshd
+│   │   │   └── tomcat
+│   │   ├── wayland
+│   │   └── xorg
 │   ├── lib
 │   │   ├── applications
-│   │   │   ├── application_handler.py
-│   │   │   ├── application_menu.py
+│   │   │   ├── application_handler
+│   │   │   ├── application_menu
 │   │   │   └── cat
-│   │   │       ├── audio.py
-│   │   │       ├── bluetooth.py
-│   │   │       ├── editor.py
-│   │   │       ├── firewall.py
-│   │   │       ├── management.py
-│   │   │       ├── monitor.py
-│   │   │       ├── power_management.py
-│   │   │       ├── print_service.py
-│   │   │       └── shell.py
-│   │   ├── args.py
+│   │   │       ├── audio
+│   │   │       ├── bluetooth
+│   │   │       ├── editor
+│   │   │       ├── firewall
+│   │   │       ├── management
+│   │   │       ├── monitor
+│   │   │       ├── power_management
+│   │   │       ├── print_service
+│   │   │       └── shell
+│   │   ├── args
 │   │   ├── authentication
-│   │   │   ├── authentication_menu.py
-│   │   │   ├── crypt.py
-│   │   │   └── users_menu.py
+│   │   │   ├── authentication_menu
+│   │   │   ├── crypt
+│   │   │   └── users_menu
 │   │   ├── bootloader
-│   │   │   └── bootloader_menu.py
-│   │   ├── configuration.py
+│   │   │   └── bootloader_menu
+│   │   ├── configuration
 │   │   ├── disk
-│   │   │   ├── conf.py
-│   │   │   ├── device_handler.py
-│   │   │   ├── disk_menu.py
-│   │   │   ├── encryption_menu.py
-│   │   │   ├── filesystem.py
-│   │   │   ├── luks.py
-│   │   │   ├── partitioning_menu.py
-│   │   │   ├── subvolume_menu.py
-│   │   │   └── utils.py
-│   │   ├── exceptions.py
-│   │   ├── general.py
-│   │   ├── global_menu.py
-│   │   ├── hardware.py
-│   │   ├── installer.py
+│   │   │   ├── conf
+│   │   │   ├── device_handler
+│   │   │   ├── disk_menu
+│   │   │   ├── encryption_menu
+│   │   │   ├── filesystem
+│   │   │   ├── luks
+│   │   │   ├── partitioning_menu
+│   │   │   ├── subvolume_menu
+│   │   │   └── utils
+│   │   ├── exceptions
+│   │   ├── general
+│   │   ├── global_menu
+│   │   ├── hardware
+│   │   ├── installer
 │   │   ├── interactions
-│   │   │   ├── general_conf.py
-│   │   │   └── system_conf.py
+│   │   │   ├── general_conf
+│   │   │   └── system_conf
 │   │   ├── locale
-│   │   │   ├── locale_menu.py
-│   │   │   └── utils.py
+│   │   │   ├── locale_menu
+│   │   │   └── utils
 │   │   ├── menu
-│   │   │   ├── abstract_menu.py
-│   │   │   ├── list_manager.py
-│   │   │   └── menu_helper.py
+│   │   │   ├── abstract_menu
+│   │   │   ├── list_manager
+│   │   │   └── menu_helper
 │   │   ├── models
-│   │   │   ├── application.py
-│   │   │   ├── authentication.py
-│   │   │   ├── bootloader.py
-│   │   │   ├── device.py
-│   │   │   ├── locale.py
-│   │   │   ├── mirrors.py
-│   │   │   ├── network.py
-│   │   │   ├── packages.py
-│   │   │   ├── profile.py
-│   │   │   └── users.py
+│   │   │   ├── application
+│   │   │   ├── authentication
+│   │   │   ├── bootloader
+│   │   │   ├── device
+│   │   │   ├── locale
+│   │   │   ├── mirrors
+│   │   │   ├── network
+│   │   │   ├── packages
+│   │   │   ├── profile
+│   │   │   └── users
 │   │   ├── network
-│   │   │   ├── network_handler.py
-│   │   │   ├── network_menu.py
-│   │   │   └── utils.py
-│   │   ├── output.py
+│   │   │   ├── network_handler
+│   │   │   ├── network_menu
+│   │   │   └── utils
+│   │   ├── output
 │   │   ├── pm
-│   │   │   ├── config.py
-│   │   │   ├── mirrors.py
-│   │   │   ├── packages.py
-│   │   │   └── pacman.py
+│   │   │   ├── config
+│   │   │   ├── mirrors
+│   │   │   ├── packages
+│   │   │   └── pacman
 │   │   ├── profile
-│   │   │   ├── profile_menu.py
-│   │   │   └── profiles_handler.py
-│   │   ├── translationhandler.py
+│   │   │   ├── profile_menu
+│   │   │   └── profiles_handler
+│   │   ├── translationhandler
 │   │   ├── tui
-│   │   │   ├── curses_menu.py
-│   │   │   ├── help.py
-│   │   │   ├── menu_item.py
-│   │   │   ├── prompts.py
-│   │   │   ├── result.py
-│   │   │   ├── script_editor.py
-│   │   │   └── types.py
+│   │   │   ├── curses_menu
+│   │   │   ├── help
+│   │   │   ├── menu_item
+│   │   │   ├── prompts
+│   │   │   ├── result
+│   │   │   ├── script_editor
+│   │   │   └── types
 │   │   └── utils
-│   │       ├── env.py
-│   │       └── unicode.py
-│   ├── __main__.py
+│   │       ├── env
+│   │       └── unicode
+│   ├── __main__
 │   └── scripts
-│       ├── format.py
-│       ├── guided.py
-│       ├── list.py
-│       ├── minimal.py
-│       ├── pre_mount_cli.py
-│       ├── rescue.py
-│       └── size.py
+│       ├── format
+│       ├── guided
+│       ├── list
+│       ├── minimal
+│       ├── pre_mount_cli
+│       ├── rescue
+│       └── size
 ├── examples
 │   ├── config-sample.json
-│   └── full_automated_installation.py
+│   └── full_automated_installation
 ├── PKGBUILD
 ├── pyproject.toml
 └── tests
-    ├── conftest.py
+    ├── conftest
     ├── data
     │   └── test_config.json
-    ├── test_args.py
-    └── test_configuration_output.py
+    ├── test_args
+    └── test_configuration_output
 
 24 directories, 121 files
 ```
