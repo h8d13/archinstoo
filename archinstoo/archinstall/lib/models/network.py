@@ -2,14 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, NotRequired, Self, TypedDict
+from typing import NotRequired, Self, TypedDict
 
 from archinstall.lib.translationhandler import tr
-
-from ..models.profile import ProfileConfiguration
-
-if TYPE_CHECKING:
-	from archinstall.lib.installer import Installer
 
 
 class NicType(Enum):
@@ -137,35 +132,3 @@ class NetworkConfiguration:
 					return cls(NicType.MANUAL, nics)
 
 		return None
-
-	def install_network_config(
-		self,
-		installation: Installer,
-		profile_config: ProfileConfiguration | None = None,
-	) -> None:
-		match self.type:
-			case NicType.ISO:
-				installation.copy_iso_network_config(
-					enable_services=True,
-				)
-			case NicType.NM | NicType.NM_IWD:
-				packages = ['networkmanager']
-				if self.type == NicType.NM:
-					packages.append('wpa_supplicant')
-
-				installation.add_additional_packages(packages)
-
-				if profile_config and profile_config.profile:
-					if profile_config.profile.is_desktop_profile():
-						installation.add_additional_packages('network-manager-applet')
-
-				installation.enable_service('NetworkManager.service')
-				if self.type == NicType.NM_IWD:
-					installation.configure_nm_iwd()
-					installation.disable_service('iwd.service')
-
-			case NicType.MANUAL:
-				for nic in self.nics:
-					installation.configure_nic(nic)
-				installation.enable_service('systemd-networkd')
-				installation.enable_service('systemd-resolved')
