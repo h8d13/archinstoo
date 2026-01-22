@@ -7,10 +7,10 @@ from types import TracebackType
 from archinstall.lib.disk.utils import get_lsblk_info, umount
 from archinstall.lib.models.device import DEFAULT_ITER_TIME
 
-from .exceptions import DiskError, SysCallError
-from .general import SysCommand, SysCommandWorker, generate_password, run
-from .models.users import Password
-from .output import debug, info
+from ..exceptions import DiskError, SysCallError
+from ..general import SysCommand, SysCommandWorker, generate_password, run
+from ..models.users import Password
+from ..output import debug, info
 
 
 @dataclass

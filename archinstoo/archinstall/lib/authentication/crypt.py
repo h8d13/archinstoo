@@ -2,7 +2,7 @@ import ctypes
 from pathlib import Path
 from typing import cast
 
-from .output import debug
+from ..output import debug
 
 libcrypt = ctypes.CDLL('libcrypt.so')
 

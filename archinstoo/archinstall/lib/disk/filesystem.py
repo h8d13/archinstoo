@@ -6,7 +6,6 @@ from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import Tui
 
 from ..interactions.general_conf import ask_abort
-from ..luks import Luks2
 from ..models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
@@ -23,6 +22,7 @@ from ..models.device import (
 )
 from ..output import debug, info
 from .device_handler import DeviceHandler
+from .luks import Luks2
 
 
 class FilesystemHandler:

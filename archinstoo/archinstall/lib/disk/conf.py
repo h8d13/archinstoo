@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from archinstall.lib.disk.device_handler import DeviceHandler
-from archinstall.lib.disk.partitioning_menu import manual_partitioning
 from archinstall.lib.menu.menu_helper import MenuHelper
 from archinstall.lib.models.device import (
 	BDevice,
@@ -28,11 +26,13 @@ from archinstall.lib.models.device import (
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.prompts import prompt_dir
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from ..output import FormattedOutput
-from ..tui.prompts import prompt_dir
+from .device_handler import DeviceHandler
+from .partitioning_menu import manual_partitioning
 
 
 def select_device(

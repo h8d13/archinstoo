@@ -14,7 +14,7 @@ from archinstall.lib.translationhandler import tr
 from ...default_profiles.profile import DisplayServer, GreeterType, Profile
 from ..hardware import GfxDriver
 from ..models.profile import ProfileConfiguration
-from ..networking import fetch_data_from_url
+from ..network.utils import fetch_data_from_url
 from ..output import debug, error, info
 
 if TYPE_CHECKING:

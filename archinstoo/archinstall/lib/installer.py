@@ -36,11 +36,11 @@ from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import Tui
 
 from .args import ArchConfigHandler
+from .disk.luks import Luks2
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
 from .locale.utils import verify_keyboard_layout
-from .luks import Luks2
 from .models.authentication import PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration

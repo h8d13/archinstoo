@@ -4,12 +4,12 @@ from typing import override
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.prompts import get_password
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, Orientation
 
 from ..menu.list_manager import ListManager
 from ..models.users import User
-from ..tui.prompts import get_password
 
 
 class UserList(ListManager[User]):

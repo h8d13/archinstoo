@@ -15,7 +15,7 @@ Archinstall ships with a pre-programmed `Guided Installer`_ guiding you through 
 
 
 .. warning::
-    The installer will not configure WiFi before the installation begins. You need to read up on `Arch Linux networking <https://wiki.archlinux.org/index.php/Network_configuration>`_ before you continue.
+    The installer will not configure WiFi before the installation begins. You need to read up on `Arch Linux network.utils <https://wiki.archlinux.org/index.php/Network_configuration>`_ before you continue.
 
 CLI Arguments
 -------------

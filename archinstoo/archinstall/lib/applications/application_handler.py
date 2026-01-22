@@ -2,18 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from archinstall.applications.audio import AudioApp
-from archinstall.applications.bluetooth import BluetoothApp
-from archinstall.applications.editor import EditorApp
-from archinstall.applications.firewall import FirewallApp
-from archinstall.applications.management import ManagementApp
-from archinstall.applications.monitor import MonitorApp
-from archinstall.applications.power_management import PowerManagementApp
-from archinstall.applications.print_service import PrintServiceApp
-from archinstall.applications.shell import ShellApp
 from archinstall.lib.models import Audio
 from archinstall.lib.models.application import ApplicationConfiguration
 from archinstall.lib.models.users import User
+
+from .cat.audio import AudioApp
+from .cat.bluetooth import BluetoothApp
+from .cat.editor import EditorApp
+from .cat.firewall import FirewallApp
+from .cat.management import ManagementApp
+from .cat.monitor import MonitorApp
+from .cat.power_management import PowerManagementApp
+from .cat.print_service import PrintServiceApp
+from .cat.shell import ShellApp
 
 if TYPE_CHECKING:
 	from archinstall.lib.installer import Installer
