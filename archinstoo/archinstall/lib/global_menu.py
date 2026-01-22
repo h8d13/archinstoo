@@ -5,7 +5,7 @@ from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstall.lib.models.authentication import AuthenticationConfiguration
 from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, FilesystemType, PartitionModification
-from archinstall.lib.pacman import list_available_packages
+from archinstall.lib.pm import list_available_packages
 from archinstall.lib.tui.curses_menu import SelectMenu, Tui
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
@@ -37,7 +37,7 @@ from .models.packages import Repository
 from .models.profile import ProfileConfiguration
 from .network.network_menu import ask_to_configure_network
 from .output import FormattedOutput
-from .pacman.config import PacmanConfig
+from .pm.config import PacmanConfig
 from .translationhandler import Language, tr, translation_handler
 
 
