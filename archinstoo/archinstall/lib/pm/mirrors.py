@@ -1,7 +1,8 @@
 import time
 import urllib.parse
+from functools import partial
 from pathlib import Path
-from typing import override
+from typing import ClassVar, override
 
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
@@ -215,6 +216,7 @@ class MirrorMenu(AbstractSubMenu[PacmanConfiguration]):
 		else:
 			self._mirror_config = PacmanConfiguration()
 
+		self._mirror_handler = MirrorListHandler()
 		menu_options = self._define_menu_options()
 		self._item_group = MenuItemGroup(menu_options, checkmarks=True)
 
@@ -228,7 +230,7 @@ class MirrorMenu(AbstractSubMenu[PacmanConfiguration]):
 		return [
 			MenuItem(
 				text=tr('Select regions'),
-				action=select_mirror_regions,
+				action=partial(select_mirror_regions, mirror_list_handler=self._mirror_handler),
 				value=self._mirror_config.mirror_regions,
 				preview_action=self._prev_regions,
 				key='mirror_regions',
@@ -317,9 +319,11 @@ def select_mirror_regions(
 	preset: list[MirrorRegion],
 	mirror_list_handler: 'MirrorListHandler | None' = None,
 ) -> list[MirrorRegion]:
-	Tui.print(tr('Loading mirror regions...'), clear_screen=True)
-
 	handler = mirror_list_handler or MirrorListHandler()
+
+	if not handler.is_loaded():
+		Tui.print(tr('Loading mirror regions...'), clear_screen=True)
+
 	handler.load_mirrors()
 	available_regions = handler.get_mirror_regions()
 
@@ -422,21 +426,29 @@ def select_pacman_options(preset: list[str]) -> list[str]:
 			return result.get_values()
 
 
+class _MirrorCache:
+	data: ClassVar[dict[str, list[MirrorStatusEntryV3]]] = {}
+	is_remote: bool = False
+	sort_info_shown: bool = False
+
+
 class MirrorListHandler:
 	def __init__(
 		self,
 		local_mirrorlist: Path = Path('/etc/pacman.d/mirrorlist'),
 	) -> None:
 		self._local_mirrorlist = local_mirrorlist
-		self._status_mappings: dict[str, list[MirrorStatusEntryV3]] | None = None
-		self._fetched_remote: bool = False
+
+	def is_loaded(self) -> bool:
+		return bool(_MirrorCache.data)
 
 	def _mappings(self) -> dict[str, list[MirrorStatusEntryV3]]:
-		if self._status_mappings is None:
+		if not _MirrorCache.data:
 			self.load_mirrors()
+			if not _MirrorCache.data:
+				raise RuntimeError('Failed to load mirror list')
 
-		assert self._status_mappings is not None
-		return self._status_mappings
+		return _MirrorCache.data
 
 	def get_mirror_regions(self) -> list[MirrorRegion]:
 		available_mirrors = []
@@ -450,37 +462,40 @@ class MirrorListHandler:
 		return available_mirrors
 
 	def load_mirrors(self, offline: bool = False) -> None:
+		if _MirrorCache.data:
+			return
+
 		if offline:
-			self._fetched_remote = False
+			_MirrorCache.is_remote = False
 			self.load_local_mirrors()
 		else:
-			self._fetched_remote = self.load_remote_mirrors()
-			debug(f'load mirrors: {self._fetched_remote}')
-			if not self._fetched_remote:
+			_MirrorCache.is_remote = self.load_remote_mirrors()
+			debug(f'load mirrors: {_MirrorCache.is_remote}')
+			if not _MirrorCache.is_remote:
 				self.load_local_mirrors()
 
 	def load_remote_mirrors(self) -> bool:
 		attempts = 3
 
-		# Try archlinux.de first
+		# Try archlinux.org first
+		for attempt_nr in range(attempts):
+			try:
+				data = fetch_data_from_url('https://archlinux.org/mirrors/status/json/')
+				_MirrorCache.data.update(self._parse_remote_mirror_list(data))
+				return True
+			except Exception as e:
+				debug(f'Error fetching from archlinux.org: {e}')
+				time.sleep(attempt_nr + 1)
+
+		# Fallback to archlinux.de
 		for attempt_nr in range(attempts):
 			try:
 				de_list = ArchLinuxDeMirrorList.fetch_all('https://www.archlinux.de/api/mirrors')
 				v3_list = de_list.to_v3()
-				self._status_mappings = self._parse_remote_mirror_list(v3_list.to_json())
+				_MirrorCache.data.update(self._parse_remote_mirror_list(v3_list.to_json()))
 				return True
 			except Exception as e:
 				debug(f'Error fetching from archlinux.de: {e}')
-				time.sleep(attempt_nr + 1)
-
-		# Fallback to archlinux.org
-		for attempt_nr in range(attempts):
-			try:
-				data = fetch_data_from_url('https://archlinux.org/mirrors/status/json/')
-				self._status_mappings = self._parse_remote_mirror_list(data)
-				return True
-			except Exception as e:
-				debug(f'Error fetching from archlinux.org: {e}')
 				time.sleep(attempt_nr + 1)
 
 		debug('Unable to fetch mirror list remotely, falling back to local mirror list')
@@ -489,7 +504,7 @@ class MirrorListHandler:
 	def load_local_mirrors(self) -> None:
 		with self._local_mirrorlist.open('r') as fp:
 			mirrorlist = fp.read()
-			self._status_mappings = self._parse_locale_mirrors(mirrorlist)
+			_MirrorCache.data.update(self._parse_locale_mirrors(mirrorlist))
 
 	def get_status_by_region(self, region: str, speed_sort: bool) -> list[MirrorStatusEntryV3]:
 		mappings = self._mappings()
@@ -498,8 +513,10 @@ class MirrorListHandler:
 		# Only sort if we have remote mirror data with score/speed info
 		# Local mirrors lack this data and can be modified manually before-hand
 		# Or reflector potentially ran already
-		if self._fetched_remote and speed_sort:
-			info('Sorting your selected mirror list based on the speed between you and the individual mirrors (this might take a while)')
+		if _MirrorCache.is_remote and speed_sort:
+			if not _MirrorCache.sort_info_shown:
+				info('Sorting your selected mirror list based on the speed between you and the individual mirrors (this might take a while)')
+				_MirrorCache.sort_info_shown = True
 			# Sort by speed descending (higher is better in bitrate form core.db download)
 			return sorted(region_list, key=lambda mirror: -mirror.speed)
 		# just return as-is without sorting?
