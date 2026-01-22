@@ -38,11 +38,11 @@ from ..models.device import (
 )
 from ..models.users import Password
 from ..output import debug, error, info
-from ..utils.util import is_subpath
 from .utils import (
 	find_lsblk_info,
 	get_all_lsblk_info,
 	get_lsblk_info,
+	is_subpath,
 	umount,
 )
 

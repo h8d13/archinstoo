@@ -7,7 +7,7 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
+from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, cast, override
 
 if TYPE_CHECKING:
 	from archinstall.lib.disk.device_handler import DeviceHandler
@@ -685,14 +685,14 @@ class DeviceGeometry:
 
 	@property
 	def start(self) -> int:
-		return self._geometry.start
+		return cast(int, self._geometry.start)
 
 	@property
 	def end(self) -> int:
-		return self._geometry.end
+		return cast(int, self._geometry.end)
 
 	def get_length(self, unit: Unit = Unit.sectors) -> int:
-		return self._geometry.getLength(unit.name)
+		return cast(int, self._geometry.getLength(unit.name))
 
 	def table_data(self) -> dict[str, str | int]:
 		start = Size(self._geometry.start, Unit.sectors, self._sector_size)
@@ -737,9 +737,9 @@ class PartitionType(Enum):
 
 	def get_partition_code(self) -> int | None:
 		if self == PartitionType.Primary:
-			return parted.PARTITION_NORMAL
+			return cast(int, parted.PARTITION_NORMAL)
 		elif self == PartitionType.Boot:
-			return parted.PARTITION_BOOT
+			return cast(int, parted.PARTITION_BOOT)
 		return None
 
 
@@ -812,11 +812,11 @@ class FilesystemType(Enum):
 			case FilesystemType.Fat32:
 				return 'vfat'
 			case _:
-				return self.value
+				return cast(str, self.value)
 
 	@property
 	def parted_value(self) -> str:
-		return self.value + '(v1)' if self == FilesystemType.LinuxSwap else self.value
+		return cast(str, self.value) + '(v1)' if self == FilesystemType.LinuxSwap else cast(str, self.value)
 
 	@property
 	def installation_pkg(self) -> str | None:
@@ -1394,7 +1394,7 @@ class DeviceModification:
 		if self.wipe:
 			return partition_table.is_gpt()
 
-		return self.device.disk.type == PartitionTable.GPT.value
+		return cast(bool, self.device.disk.type == PartitionTable.GPT.value)
 
 	def add_partition(self, partition: PartitionModification) -> None:
 		self.partitions.append(partition)

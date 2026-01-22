@@ -32,7 +32,7 @@ from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from ..output import FormattedOutput
-from ..utils.util import prompt_dir
+from ..tui.prompts import prompt_dir
 
 
 def select_device(

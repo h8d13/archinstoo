@@ -20,7 +20,7 @@ from ..menu.abstract_menu import AbstractSubMenu
 from ..models.device import DEFAULT_ITER_TIME
 from ..models.users import Password
 from ..output import FormattedOutput
-from ..utils.util import get_password
+from ..tui.prompts import get_password
 
 
 class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):

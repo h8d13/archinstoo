@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import cast
 
 from .menu_item import MenuItem
 
@@ -19,7 +20,7 @@ class Result[ValueT]:
 		return self._item is not None
 
 	def get_value(self) -> ValueT:
-		return self.item().get_value()
+		return cast(ValueT, self.item().get_value())
 
 	def get_values(self) -> list[ValueT]:
 		return [i.get_value() for i in self.items()]

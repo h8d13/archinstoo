@@ -8,7 +8,7 @@ from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment
 
 from ..menu.list_manager import ListManager
-from ..utils.util import prompt_dir
+from ..tui.prompts import prompt_dir
 
 
 class SubvolumeMenu(ListManager[SubvolumeModification]):

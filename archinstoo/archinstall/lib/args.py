@@ -7,7 +7,7 @@ import urllib.parse
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Self, cast
 from urllib.request import Request, urlopen
 
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
@@ -85,7 +85,7 @@ class ArchConfig:
 
 	def safe_json(self) -> dict[str, Any]:
 		# Order matches global menu
-		config: Any = {
+		config: dict[str, Any] = {
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
 			'archinstall-language': self.archinstall_language.json(),
@@ -315,7 +315,7 @@ class ArchConfigHandler:
 			try:
 				req = Request(url, headers={'User-Agent': 'ArchInstall'})
 				with urlopen(req) as resp:
-					return resp.read().decode('utf-8')
+					return cast(str, resp.read().decode('utf-8'))
 			except urllib.error.HTTPError as err:
 				error(f'Could not fetch JSON from {url}: {err}')
 		else:

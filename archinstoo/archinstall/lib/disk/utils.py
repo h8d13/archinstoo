@@ -54,6 +54,14 @@ def _fetch_lsblk_info(
 	return LsblkOutput.from_json(output.decode())
 
 
+def is_subpath(first: Path, second: Path) -> bool:
+	try:
+		first.relative_to(second)
+		return True
+	except ValueError:
+		return False
+
+
 def get_lsblk_info(
 	dev_path: Path | str,
 	reverse: bool = False,

@@ -1,11 +1,11 @@
 from pathlib import Path
 
 from archinstall.lib.translationhandler import tr
-from archinstall.lib.tui.curses_menu import EditMenu
-from archinstall.lib.tui.result import ResultType
-from archinstall.lib.tui.types import Alignment
 
 from ..models.users import Password, PasswordStrength
+from .curses_menu import EditMenu
+from .result import ResultType
+from .types import Alignment
 
 
 def get_password(
@@ -107,14 +107,3 @@ def prompt_dir(
 			return Path(result.text())
 
 	return None
-
-
-def is_subpath(first: Path, second: Path) -> bool:
-	"""
-	Check if _first_ a subpath of _second_
-	"""
-	try:
-		first.relative_to(second)
-		return True
-	except ValueError:
-		return False
