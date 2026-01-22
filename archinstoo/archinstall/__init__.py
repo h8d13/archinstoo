@@ -19,7 +19,7 @@ from .lib.disk.utils import disk_layouts
 from .lib.hardware import SysInfo
 from .lib.networking import ping
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
-from .lib.pacman import Pacman
+from .lib.pm import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_venv, running_from_host

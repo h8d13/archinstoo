@@ -31,7 +31,7 @@ from archinstall.lib.models.device import (
 	Unit,
 )
 from archinstall.lib.models.packages import Repository
-from archinstall.lib.pacman import installed_package
+from archinstall.lib.pm import installed_package
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import Tui
 
@@ -48,8 +48,8 @@ from .models.mirrors import PacmanConfiguration
 from .models.network import Nic
 from .models.users import User
 from .output import debug, error, info, log, logger, warn
-from .pacman import Pacman
-from .pacman.config import PacmanConfig
+from .pm import Pacman
+from .pm.config import PacmanConfig
 
 # Base packages installed by default
 __base_packages__ = ['base', 'linux-firmware']

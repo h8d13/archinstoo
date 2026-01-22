@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import assert_never
 
 from archinstall.lib.models.packages import Repository
-from archinstall.lib.pacman import enrich_package_info, list_available_packages
+from archinstall.lib.pm import enrich_package_info, list_available_packages
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
