@@ -19,9 +19,9 @@ from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties
 
-from ..interactions.disk_conf import select_disk_config, select_lvm_config
 from ..menu.abstract_menu import AbstractSubMenu
 from ..output import FormattedOutput
+from .conf import select_disk_config, select_lvm_config
 
 
 @dataclass

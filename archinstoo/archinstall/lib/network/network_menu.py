@@ -9,7 +9,7 @@ from archinstall.lib.tui.types import Alignment, FrameProperties
 
 from ..menu.list_manager import ListManager
 from ..models.network import NetworkConfiguration, Nic, NicType
-from ..networking import list_interfaces
+from ..network.utils import list_interfaces
 
 
 class ManualNetworkConfig(ListManager[Nic]):

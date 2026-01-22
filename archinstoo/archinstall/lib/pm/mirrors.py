@@ -9,9 +9,9 @@ from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties
 
-from .menu.abstract_menu import AbstractSubMenu
-from .menu.list_manager import ListManager
-from .models.mirrors import (
+from ..menu.abstract_menu import AbstractSubMenu
+from ..menu.list_manager import ListManager
+from ..models.mirrors import (
 	PACMAN_OPTIONS,
 	ArchLinuxDeMirrorList,
 	CustomRepository,
@@ -23,9 +23,9 @@ from .models.mirrors import (
 	SignCheck,
 	SignOption,
 )
-from .models.packages import Repository
-from .networking import fetch_data_from_url
-from .output import FormattedOutput, debug, info
+from ..models.packages import Repository
+from ..network.utils import fetch_data_from_url
+from ..output import FormattedOutput, debug, info
 
 
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):

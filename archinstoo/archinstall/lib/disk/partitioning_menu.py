@@ -566,7 +566,7 @@ class PartitioningList(ListManager[DiskSegment]):
 			if not self._reset_confirmation():
 				return None
 
-		from ..interactions.disk_conf import suggest_single_disk_layout
+		from .conf import suggest_single_disk_layout
 
 		return suggest_single_disk_layout(self._device)
 

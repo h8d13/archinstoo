@@ -9,7 +9,6 @@ from parted import Device, Disk, DiskException, FileSystem, Geometry, IOExceptio
 
 from ..exceptions import DiskError, SysCallError, UnknownFilesystemFormat
 from ..general import SysCommand, SysCommandWorker
-from ..luks import Luks2
 from ..models.device import (
 	DEFAULT_ITER_TIME,
 	BDevice,
@@ -38,6 +37,7 @@ from ..models.device import (
 )
 from ..models.users import Password
 from ..output import debug, error, info
+from .luks import Luks2
 from .utils import (
 	find_lsblk_info,
 	get_all_lsblk_info,

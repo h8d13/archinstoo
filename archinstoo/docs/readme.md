@@ -105,7 +105,7 @@
 │   │   ├── network
 │   │   │   ├── network_handler.py
 │   │   │   └── network_menu.py
-│   │   ├── networking.py
+│   │   ├── network.utils.py
 │   │   ├── output.py
 │   │   ├── packages
 │   │   │   └── packages.py

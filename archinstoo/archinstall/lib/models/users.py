@@ -4,7 +4,7 @@ from typing import NotRequired, Self, TypedDict, override
 
 from archinstall.lib.translationhandler import tr
 
-from ..crypt import crypt_yescrypt
+from ..authentication.crypt import crypt_yescrypt
 
 
 class PasswordStrength(Enum):

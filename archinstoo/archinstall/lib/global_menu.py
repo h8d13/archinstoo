@@ -28,7 +28,6 @@ from .interactions.general_conf import (
 from .interactions.system_conf import ask_for_swap, select_kernel
 from .locale.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
-from .mirrors import MirrorMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.locale import LocaleConfiguration
 from .models.mirrors import PacmanConfiguration
@@ -38,6 +37,7 @@ from .models.profile import ProfileConfiguration
 from .network.network_menu import ask_to_configure_network
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
+from .pm.mirrors import MirrorMenu
 from .translationhandler import Language, tr, translation_handler
 
 

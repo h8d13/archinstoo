@@ -1,6 +1,5 @@
 from typing import override
 
-from archinstall.lib.interactions.manage_users_conf import ask_for_additional_users
 from archinstall.lib.menu.abstract_menu import AbstractSubMenu
 from archinstall.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstall.lib.models.users import Password, User
@@ -11,6 +10,8 @@ from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.prompts import get_password
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
+
+from .users_menu import ask_for_additional_users
 
 
 class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):

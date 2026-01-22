@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict, override
 
 from ..models.packages import Repository
-from ..networking import DownloadTimer, fetch_data_from_url, ping
+from ..network.utils import DownloadTimer, fetch_data_from_url, ping
 from ..output import debug
 
 
@@ -432,7 +432,7 @@ class PacmanConfiguration:
 		return config.strip()
 
 	def regions_config(self, speed_sort: bool = True) -> str:
-		from ..mirrors import MirrorListHandler
+		from ..pm.mirrors import MirrorListHandler
 
 		handler = MirrorListHandler()
 		config = ''
