@@ -1268,22 +1268,26 @@ ACCENT_COLORS: dict[str, int] = {
 	'magenta': curses.COLOR_MAGENTA,
 }
 
+# Light accents need dark text, dark accents need light text
+LIGHT_ACCENTS: set[str] = {'cyan', 'green', 'orange'}
+
 
 def _build_theme(mode: str, accent: str) -> dict[STYLE, tuple[int, int]]:
 	"""Build theme colors from mode (dark/light) and accent color."""
 	accent_color = ACCENT_COLORS.get(accent, curses.COLOR_CYAN)
+	menu_fg = curses.COLOR_BLACK if accent in LIGHT_ACCENTS else curses.COLOR_WHITE
 
 	if mode == 'light':
 		return {
 			STYLE.NORMAL: (curses.COLOR_BLACK, curses.COLOR_WHITE),
 			STYLE.CURSOR_STYLE: (accent_color, curses.COLOR_WHITE),
-			STYLE.MENU_STYLE: (curses.COLOR_WHITE, accent_color),
+			STYLE.MENU_STYLE: (menu_fg, accent_color),
 		}
 	else:  # dark
 		return {
 			STYLE.NORMAL: (curses.COLOR_WHITE, curses.COLOR_BLACK),
 			STYLE.CURSOR_STYLE: (accent_color, curses.COLOR_BLACK),
-			STYLE.MENU_STYLE: (curses.COLOR_WHITE, accent_color),  # white text on accent bg
+			STYLE.MENU_STYLE: (menu_fg, accent_color),
 		}
 
 
