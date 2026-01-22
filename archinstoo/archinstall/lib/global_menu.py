@@ -25,7 +25,6 @@ from .interactions.general_conf import (
 	ask_hostname,
 	ask_ntp,
 )
-from .network.network_menu import ask_to_configure_network
 from .interactions.system_conf import ask_for_swap, select_kernel
 from .locale.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
@@ -36,6 +35,7 @@ from .models.mirrors import PacmanConfiguration
 from .models.network import NetworkConfiguration, NicType
 from .models.packages import Repository
 from .models.profile import ProfileConfiguration
+from .network.network_menu import ask_to_configure_network
 from .output import FormattedOutput
 from .pacman.config import PacmanConfig
 from .translationhandler import Language, tr, translation_handler
