@@ -31,9 +31,13 @@ class ProfileType(Enum):
 	# hidden by /lib/profile/profiles_handler.py
 
 
-#  XorgProfile: just provides xorg-server package standalone
+# XorgProfile: just provides xorg-server package standalone
 # + display_servers() -> X11
-#  WaylandProfile returns nothing, expected to be deps
+# WaylandProfile returns nothing, expected to be deps
+# this reduces by about 140 pkgs ISSUES#4057
+# which was added in hardware.py regardless
+
+
 class DisplayServer(Enum):
 	X11 = 'x11'
 	Wayland = 'wayland'
