@@ -450,13 +450,14 @@ class PacmanConfiguration:
 
 		return config
 
-	def repositories_config(self) -> str:
+	def repositories_config(self, existing: str = '') -> str:
 		config = ''
 
 		for repo in self.custom_repositories:
-			config += f'\n\n[{repo.name}]\n'
-			config += f'SigLevel = {repo.sign_check.value} {repo.sign_option.value}\n'
-			config += f'Server = {repo.url}\n'
+			if f'[{repo.name}]' not in existing:
+				config += f'\n\n[{repo.name}]\n'
+				config += f'SigLevel = {repo.sign_check.value} {repo.sign_option.value}\n'
+				config += f'Server = {repo.url}\n'
 
 		return config
 

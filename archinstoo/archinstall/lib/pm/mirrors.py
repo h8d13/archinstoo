@@ -515,7 +515,7 @@ class MirrorListHandler:
 		# Or reflector potentially ran already
 		if _MirrorCache.is_remote and speed_sort:
 			if not _MirrorCache.sort_info_shown:
-				info('Sorting your selected mirror list based on the speed between you and the individual mirrors (this might take a while)')
+				info('Waiting speed sort based on the download rate between you and region mirrors servers.')
 				_MirrorCache.sort_info_shown = True
 			# Sort by speed descending (higher is better in bitrate form core.db download)
 			return sorted(region_list, key=lambda mirror: -mirror.speed)

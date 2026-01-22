@@ -494,11 +494,11 @@ class Installer:
 		mirrorlist_path = root / 'etc/pacman.d/mirrorlist'
 		pacman_conf_path = root / 'etc/pacman.conf'
 
-		if repositories_config := pacman_configuration.repositories_config():
-			debug(f'Pacman config: {repositories_config}')
-
+		existing_content = pacman_conf_path.read_text()
+		if repos_config := pacman_configuration.repositories_config(existing_content):
+			debug(f'Pacman config: {repos_config}')
 			with open(pacman_conf_path, 'a') as fp:
-				fp.write(repositories_config)
+				fp.write(repos_config)
 
 		regions_config = pacman_configuration.regions_config(speed_sort=True)
 		if regions_config:
@@ -1924,8 +1924,6 @@ class Installer:
 
 	def set_x11_keyboard(self, vconsole_layout: str) -> bool:
 		"""Write X11 keyboard config directly for Xorg profiles."""
-		from .locale.utils import verify_x11_keyboard_layout
-
 		if not vconsole_layout.strip():
 			debug('X11 keyboard layout not specified, skipping')
 			return False
@@ -1940,9 +1938,15 @@ class Installer:
 			if layout.endswith(suffix):
 				layout = layout[: -len(suffix)]
 
-		if not verify_x11_keyboard_layout(layout):
-			debug(f'No matching X11 layout for vconsole "{vconsole_layout}", skipping')
-			return False
+		# Verify layout exists in target (where X11 is installed)
+		try:
+			layouts = self.run_command('localectl --no-pager list-x11-keymap-layouts').decode().splitlines()
+			if not any(layout.lower() == x11_layout.lower() for x11_layout in layouts):
+				debug(f'No matching X11 layout for vconsole "{vconsole_layout}", skipping')
+				return False
+		except Exception as e:
+			debug(f'Could not verify X11 layout: {e}, proceeding anyway')
+			# Proceed anyway if verification fails
 
 		xorg_conf_dir = self.target / 'etc/X11/xorg.conf.d'
 		xorg_conf_dir.mkdir(parents=True, exist_ok=True)
