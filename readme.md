@@ -90,10 +90,10 @@ The idea being to promote **option 2** to use archinstall latest. Always, since 
 
 ## Known issues
 
-> **Issues with dependencies**
+**Issues with dependencies**
 
-[ISO](https://archlinux.org/download/) is built 1st of each month.
-Using the latest version is often safer bet.
+Arch's [ISO](https://archlinux.org/download/) is built 1st of each month.
+> Using the **latest version** is often safer bet.
 
 Check: 
 ```shell
