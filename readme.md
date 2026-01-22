@@ -15,7 +15,7 @@ A fork of `archinstall` with only `python-parted` as a dependency, many MORE cho
 
 Ethernet cable is plug and play. 
 
-Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms`
+Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms` 3 times...
 
 *You can then skip wifi setup bellow*
 
