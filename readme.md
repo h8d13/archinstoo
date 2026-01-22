@@ -5,7 +5,7 @@
 # What is `archinstoo`:
 
 A fork of `archinstall` with only `python-parted` as a dependency and many MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes/patches.
-Aims to make the code base more readable and maintainable. Contains dev-tools to build ISOs and test them directly.
+*Aims to make the code base more readable, maintainable and modifiable by anyone*. Contains dev-tools to build ISOs and test them directly.
 
 > [!TIP]
 > In the [ISO](https://archlinux.org/download/), you are root by default. Use `sudo` or equivalent, *if running from an existing system.*
