@@ -6,7 +6,6 @@ from pathlib import Path
 from archinstall import SysInfo
 from archinstall.lib.applications.application_handler import ApplicationHandler
 from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
-from archinstall.lib.network.network_handler import network_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
@@ -20,6 +19,7 @@ from archinstall.lib.models.device import (
 	EncryptionType,
 )
 from archinstall.lib.models.users import User
+from archinstall.lib.network.network_handler import NetworkHandler
 from archinstall.lib.output import debug, error, info
 from archinstall.lib.profile.profiles_handler import ProfileHandler
 from archinstall.lib.tui import Tui
@@ -52,6 +52,7 @@ def perform_installation(
 	device_handler: DeviceHandler,
 	profile_handler: ProfileHandler,
 	application_handler: ApplicationHandler,
+	network_handler: NetworkHandler,
 ) -> None:
 	"""
 	Performs the installation steps on a block device.
@@ -205,6 +206,7 @@ def guided() -> None:
 	device_handler = DeviceHandler()
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
+	network_handler = NetworkHandler()
 
 	if not args.silent:
 		if cached := ConfigurationHandler.prompt_resume(args.silent):
@@ -246,6 +248,7 @@ def guided() -> None:
 		device_handler,
 		profile_handler,
 		application_handler,
+		network_handler,
 	)
 
 
