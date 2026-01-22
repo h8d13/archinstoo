@@ -2,16 +2,6 @@
 ```
 .
 ├── archinstall
-│   ├── applications
-│   │   ├── audio.py
-│   │   ├── bluetooth.py
-│   │   ├── editor.py
-│   │   ├── firewall.py
-│   │   ├── management.py
-│   │   ├── monitor.py
-│   │   ├── power_management.py
-│   │   ├── print_service.py
-│   │   └── shell.py
 │   ├── default_profiles
 │   │   ├── custom.py
 │   │   ├── desktop.py
@@ -55,20 +45,33 @@
 │   ├── lib
 │   │   ├── applications
 │   │   │   ├── application_handler.py
-│   │   │   └── application_menu.py
+│   │   │   ├── application_menu.py
+│   │   │   └── cat
+│   │   │       ├── audio.py
+│   │   │       ├── bluetooth.py
+│   │   │       ├── editor.py
+│   │   │       ├── firewall.py
+│   │   │       ├── management.py
+│   │   │       ├── monitor.py
+│   │   │       ├── power_management.py
+│   │   │       ├── print_service.py
+│   │   │       └── shell.py
 │   │   ├── args.py
 │   │   ├── authentication
-│   │   │   └── authentication_menu.py
+│   │   │   ├── authentication_menu.py
+│   │   │   ├── crypt.py
+│   │   │   └── users_menu.py
 │   │   ├── bootloader
 │   │   │   └── bootloader_menu.py
 │   │   ├── boot.py
 │   │   ├── configuration.py
-│   │   ├── crypt.py
 │   │   ├── disk
+│   │   │   ├── conf.py
 │   │   │   ├── device_handler.py
 │   │   │   ├── disk_menu.py
 │   │   │   ├── encryption_menu.py
 │   │   │   ├── filesystem.py
+│   │   │   ├── luks.py
 │   │   │   ├── partitioning_menu.py
 │   │   │   ├── subvolume_menu.py
 │   │   │   └── utils.py
@@ -78,19 +81,15 @@
 │   │   ├── hardware.py
 │   │   ├── installer.py
 │   │   ├── interactions
-│   │   │   ├── disk_conf.py
 │   │   │   ├── general_conf.py
-│   │   │   ├── manage_users_conf.py
 │   │   │   └── system_conf.py
 │   │   ├── locale
 │   │   │   ├── locale_menu.py
 │   │   │   └── utils.py
-│   │   ├── luks.py
 │   │   ├── menu
 │   │   │   ├── abstract_menu.py
 │   │   │   ├── list_manager.py
 │   │   │   └── menu_helper.py
-│   │   ├── mirrors.py
 │   │   ├── models
 │   │   │   ├── application.py
 │   │   │   ├── authentication.py
@@ -104,13 +103,14 @@
 │   │   │   └── users.py
 │   │   ├── network
 │   │   │   ├── network_handler.py
-│   │   │   └── network_menu.py
-│   │   ├── network.utils.py
+│   │   │   ├── network_menu.py
+│   │   │   └── utils.py
 │   │   ├── output.py
-│   │   ├── packages
-│   │   │   └── packages.py
-│   │   ├── pacman
-│   │   │   └── config.py
+│   │   ├── pm
+│   │   │   ├── config.py
+│   │   │   ├── mirrors.py
+│   │   │   ├── packages.py
+│   │   │   └── pacman.py
 │   │   ├── profile
 │   │   │   ├── profile_menu.py
 │   │   │   └── profiles_handler.py
@@ -119,15 +119,13 @@
 │   │   │   ├── curses_menu.py
 │   │   │   ├── help.py
 │   │   │   ├── menu_item.py
+│   │   │   ├── prompts.py
 │   │   │   ├── result.py
 │   │   │   ├── script_editor.py
-│   │   │   ├── types.py
-│   │   │   └── ui
-│   │   │       └── result.py
+│   │   │   └── types.py
 │   │   └── utils
 │   │       ├── env.py
-│   │       ├── unicode.py
-│   │       └── util.py
+│   │       └── unicode.py
 │   ├── __main__.py
 │   └── scripts
 │       ├── format.py
@@ -149,5 +147,5 @@
     ├── test_args.py
     └── test_configuration_output.py
 
-26 directories, 122 files
+24 directories, 122 files
 ```
