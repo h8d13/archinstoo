@@ -33,6 +33,24 @@ def verify_keyboard_layout(layout: str) -> bool:
 	return False
 
 
+def list_x11_keyboard_languages() -> list[str]:
+	return (
+		SysCommand(
+			'localectl --no-pager list-x11-keymap-layouts',
+			environment_vars={'SYSTEMD_COLORS': '0'},
+		)
+		.decode()
+		.splitlines()
+	)
+
+
+def verify_x11_keyboard_layout(layout: str) -> bool:
+	for language in list_x11_keyboard_languages():
+		if layout.lower() == language.lower():
+			return True
+	return False
+
+
 def get_kb_layout() -> str:
 	try:
 		lines = (
@@ -64,7 +82,7 @@ def get_kb_layout() -> str:
 def set_kb_layout(locale: str) -> bool:
 	if running_from_host():
 		# Skip when running from host - no need to change host keymap
-		# The target installation keymap is set via installer.set_keyboard_language()
+		# The target installation keymap is set via installer.set_vconsole()
 		return True
 
 	if len(locale.strip()):

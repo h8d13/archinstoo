@@ -40,7 +40,6 @@ from .disk.luks import Luks2
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
-from .locale.utils import verify_keyboard_layout
 from .models.authentication import PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration
@@ -849,7 +848,6 @@ class Installer:
 
 		if locale_config:
 			self.set_locale(locale_config)
-			self.set_keyboard_language(locale_config.kb_layout)
 
 		# TODO: Use python functions for this
 		self.arch_chroot('chmod 700 /root')
@@ -1924,30 +1922,40 @@ class Installer:
 		vconsole_path.write_text(vconsole_content)
 		info(f'Wrote to {vconsole_path} using {kb_vconsole} and {font_vconsole}')
 
-	def set_keyboard_language(self, language: str) -> bool:
-		info(f'Setting keyboard language to {language}')
+	def set_x11_keyboard(self, vconsole_layout: str) -> bool:
+		"""Write X11 keyboard config directly for Xorg profiles."""
+		from .locale.utils import verify_x11_keyboard_layout
 
-		if len(language.strip()):
-			if not verify_keyboard_layout(language):
-				error(f'Invalid keyboard language specified: {language}')
-				return False
+		if not vconsole_layout.strip():
+			debug('X11 keyboard layout not specified, skipping')
+			return False
 
-			# In accordance with https://github.com/archlinux/archinstall/issues/107#issuecomment-841701968
-			# Setting an empty keymap first, allows the subsequent call to set layout for both console and x11.
-			from .boot import Boot
+		# Normalize vconsole layout to X11 format by stripping common suffixes
+		layout = vconsole_layout
+		for suffix in ('-latin1', '-latin2', '-latin9', '-nodeadkeys', '-mac'):
+			if layout.endswith(suffix):
+				layout = layout[: -len(suffix)]
+		# Handle compound suffixes like de-latin1-nodeadkeys
+		for suffix in ('-latin1', '-latin2', '-latin9'):
+			if layout.endswith(suffix):
+				layout = layout[: -len(suffix)]
 
-			with Boot(self) as session:
-				os.system('systemd-run --machine=archinstall --pty localectl set-keymap ""')
+		if not verify_x11_keyboard_layout(layout):
+			debug(f'No matching X11 layout for vconsole "{vconsole_layout}", skipping')
+			return False
 
-				try:
-					session.SysCommand(['localectl', 'set-keymap', language])
-				except SysCallError as err:
-					raise ServiceException(f"Unable to set locale '{language}' for console: {err}")
+		xorg_conf_dir = self.target / 'etc/X11/xorg.conf.d'
+		xorg_conf_dir.mkdir(parents=True, exist_ok=True)
 
-				info(f'Keyboard language for this installation is now set to: {language}')
-		else:
-			info('Keyboard language was not changed from default (no language specified)')
+		content = f'''Section "InputClass"
+        Identifier "system-keyboard"
+        MatchIsKeyboard "on"
+        Option "XkbLayout" "{layout}"
+		EndSection
+		'''
 
+		(xorg_conf_dir / '00-keyboard.conf').write_text(content)
+		info(f'Wrote X11 keyboard config with layout: {layout}')
 		return True
 
 	def _service_started(self, service_name: str) -> str | None:
