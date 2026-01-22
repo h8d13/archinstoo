@@ -31,7 +31,7 @@ from archinstall.lib.models.device import (
 	Unit,
 )
 from archinstall.lib.models.packages import Repository
-from archinstall.lib.packages import installed_package
+from archinstall.lib.pacman import installed_package
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import Tui
 

@@ -9,6 +9,7 @@ from ..exceptions import RequirementError
 from ..general import SysCommand
 from ..output import error, info, logger, warn
 from .config import PacmanConfig
+from .packages import enrich_package_info, installed_package, list_available_packages
 
 
 class Pacman:
@@ -81,4 +82,7 @@ class Pacman:
 __all__ = [
 	'Pacman',
 	'PacmanConfig',
+	'enrich_package_info',
+	'installed_package',
+	'list_available_packages',
 ]

@@ -1,7 +1,7 @@
 import json
 import stat
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import SelectMenu, Tui
@@ -90,7 +90,7 @@ class ConfigurationHandler:
 		try:
 			if config_file.exists():
 				with open(config_file) as f:
-					return json.load(f)
+					return cast(dict[str, Any], json.load(f))
 		except Exception as e:
 			warn(f'Failed to load saved config: {e}')
 		return None

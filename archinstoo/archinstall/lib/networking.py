@@ -6,7 +6,7 @@ import ssl
 import struct
 import time
 from types import FrameType, TracebackType
-from typing import Self
+from typing import Self, cast
 from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -101,7 +101,7 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 	try:
 		response = urlopen(full_url, context=ssl_context, timeout=timeout)
 		data = response.read().decode('UTF-8')
-		return data
+		return cast(str, data)
 	except URLError as e:
 		raise ValueError(f'Unable to fetch data from url: {url}\n{e}')
 	except Exception as e:

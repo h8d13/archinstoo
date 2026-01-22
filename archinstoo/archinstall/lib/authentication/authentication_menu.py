@@ -8,9 +8,9 @@ from archinstall.lib.output import FormattedOutput
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.prompts import get_password
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
-from archinstall.lib.utils.util import get_password
 
 
 class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):

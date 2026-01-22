@@ -7,7 +7,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .utils.env import Os, running_from_host
 from .utils.unicode import unicode_ljust, unicode_rjust
@@ -32,17 +32,17 @@ class FormattedOutput:
 			# if invoked per reference it has to be a standard function or a classmethod.
 			# A method of an instance does not make sense
 			if callable(class_formatter):
-				return class_formatter(o, filter_list)
+				return cast(dict[str, Any], class_formatter(o, filter_list))
 			# if is invoked by name we restrict it to a method of the class. No need to mess more
 			elif hasattr(o, class_formatter) and callable(getattr(o, class_formatter)):
 				func = getattr(o, class_formatter)
-				return func(filter_list)
+				return cast(dict[str, Any], func(filter_list))
 
 			raise ValueError('Unsupported formatting call')
 		elif hasattr(o, 'table_data'):
-			return o.table_data()
+			return cast(dict[str, Any], o.table_data())
 		elif hasattr(o, 'json'):
-			return o.json()
+			return cast(dict[str, Any], o.json())
 		elif is_dataclass(o):
 			return asdict(o)
 		else:

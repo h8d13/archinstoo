@@ -1,5 +1,6 @@
 import ctypes
 from pathlib import Path
+from typing import cast
 
 from .output import debug
 
@@ -38,7 +39,7 @@ def crypt_gen_salt(prefix: str | bytes, rounds: int) -> bytes:
 	if setting is None:
 		raise ValueError(f'crypt_gensalt() returned NULL for prefix {prefix!r} and rounds {rounds}')
 
-	return setting
+	return cast(bytes, setting)
 
 
 def crypt_yescrypt(plaintext: str) -> str:
@@ -67,4 +68,4 @@ def crypt_yescrypt(plaintext: str) -> str:
 	if crypt_hash is None:
 		raise ValueError('crypt() returned NULL')
 
-	return crypt_hash.decode('utf-8')
+	return cast(bytes, crypt_hash).decode('utf-8')

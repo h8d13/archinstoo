@@ -23,7 +23,7 @@ from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
 
 from ..menu.list_manager import ListManager
 from ..output import FormattedOutput
-from ..utils.util import prompt_dir
+from ..tui.prompts import prompt_dir
 from .subvolume_menu import SubvolumeMenu
 
 

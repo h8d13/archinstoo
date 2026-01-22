@@ -4,7 +4,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import override
+from typing import cast, override
 
 
 @dataclass
@@ -86,7 +86,7 @@ class TranslationHandler:
 		languages = Path.joinpath(locales_dir, self._languages)
 
 		with open(languages) as fp:
-			return json.load(fp)
+			return cast(list[dict[str, str]], json.load(fp))
 
 	def _get_catalog_size(self, translation: gettext.NullTranslations) -> int:
 		"""
@@ -168,7 +168,7 @@ class _DeferredTranslation:
 
 		# builtins._ is changed from _DeferredTranslation to GNUTranslations.gettext after
 		# Language.activate() is called
-		return builtins._(self.message)  # type: ignore[attr-defined]
+		return cast(str, builtins._(self.message))  # type: ignore[attr-defined]
 
 
 def tr(message: str) -> str:

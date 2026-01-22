@@ -9,7 +9,7 @@ from archinstall.lib.tui.types import Alignment, Orientation
 
 from ..menu.list_manager import ListManager
 from ..models.users import User
-from ..utils.util import get_password
+from ..tui.prompts import get_password
 
 
 class UserList(ListManager[User]):
