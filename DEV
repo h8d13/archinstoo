@@ -29,7 +29,7 @@ case "$1" in
 	{
 		echo '# Project Structure'
 		echo '```'
-		tree -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
+		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
 		echo '```'
 	} > docs/readme.md
 	;;
