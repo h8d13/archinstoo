@@ -130,7 +130,9 @@ def perform_installation(
 				)
 
 		if app_config := config.app_config:
-			application_handler.install_applications(installation, app_config)
+			# note some apps might need to know users like changing the shell
+			users = config.auth_config.users if config.auth_config else None
+			application_handler.install_applications(installation, app_config, users)
 
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
