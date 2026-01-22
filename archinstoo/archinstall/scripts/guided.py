@@ -6,6 +6,7 @@ from pathlib import Path
 from archinstall import SysInfo
 from archinstall.lib.applications.application_handler import ApplicationHandler
 from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstall.lib.network.network_handler import network_handler
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
@@ -112,10 +113,9 @@ def perform_installation(
 
 		# If user selected to copy the current ISO network configuration
 		# Perform a copy of the config
-		network_config = config.network_config
-
-		if network_config:
-			network_config.install_network_config(
+		if network_config := config.network_config:
+			network_handler.install_network_config(
+				network_config,
 				installation,
 				config.profile_config,
 			)

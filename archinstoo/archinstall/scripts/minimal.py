@@ -7,6 +7,7 @@ from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.disk.filesystem import FilesystemHandler
+from archinstall.lib.network.network_handler import network_handler
 from archinstall.lib.installer import Installer
 from archinstall.lib.models import Bootloader
 from archinstall.lib.models.profile import ProfileConfiguration
@@ -44,10 +45,9 @@ def perform_installation(
 		installation.set_hostname('minimal-arch')
 		installation.add_bootloader(Bootloader.Systemd)
 
-		network_config = config.network_config
-
-		if network_config:
-			network_config.install_network_config(
+		if network_config := config.network_config:
+			network_handler.install_network_config(
+				network_config,
 				installation,
 				config.profile_config,
 			)

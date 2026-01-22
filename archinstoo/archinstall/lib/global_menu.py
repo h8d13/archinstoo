@@ -25,7 +25,7 @@ from .interactions.general_conf import (
 	ask_hostname,
 	ask_ntp,
 )
-from .interactions.network_menu import ask_to_configure_network
+from .network.network_menu import ask_to_configure_network
 from .interactions.system_conf import ask_for_swap, select_kernel
 from .locale.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
