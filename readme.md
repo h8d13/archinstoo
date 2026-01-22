@@ -124,6 +124,8 @@ You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace`
 
 To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest changes [Changelog](./.github/CHANGELOG.md)
 
-The process would be the same with `git clone -b <branch> <url>` to test a specific fix (reproduced then usually tested on actual hardware). 
+The process would be the same with `git clone -b <branch> <url>` to test a specific fix.
+
+Usually reproduced then tested on actual/appropriate hardware. 
 
 Any help in this regard is deeply appreciated, as testing takes just as long if not longer than coding. 
