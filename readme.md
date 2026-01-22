@@ -82,19 +82,9 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 The idea being to promote **option 2** to use archinstall latest. Always, since fixes are often time critical.
 
-Assumes `base-devel`
+1. In case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
 
-1. From local source where you make changes (for devs)
-
-`makepkg -sCf` in repo root.
-
-2. From online source (this repo)
-
-`cd archinstoo && makepkg -sCf`
-
-The full non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
-
-In the case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
+2. In case of non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
 
 ---
 
