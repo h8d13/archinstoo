@@ -63,7 +63,6 @@
 │   │   │   └── users_menu.py
 │   │   ├── bootloader
 │   │   │   └── bootloader_menu.py
-│   │   ├── boot.py
 │   │   ├── configuration.py
 │   │   ├── disk
 │   │   │   ├── conf.py
@@ -147,5 +146,5 @@
     ├── test_args.py
     └── test_configuration_output.py
 
-24 directories, 122 files
+24 directories, 121 files
 ```
