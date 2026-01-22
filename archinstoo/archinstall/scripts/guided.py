@@ -134,6 +134,10 @@ def perform_installation(
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
 
+			# Set X11 keyboard for Xorg profiles (try vconsole layout, strip, skip if invalid)
+			if profile_config.profile and profile_config.profile.is_xorg_type_profile() and locale_config:
+				installation.set_x11_keyboard(locale_config.kb_layout)
+
 		if config.packages and config.packages[0] != '':
 			installation.add_additional_packages(config.packages)
 
