@@ -81,7 +81,6 @@
 │   │   │   ├── disk_conf.py
 │   │   │   ├── general_conf.py
 │   │   │   ├── manage_users_conf.py
-│   │   │   ├── network_menu.py
 │   │   │   └── system_conf.py
 │   │   ├── locale
 │   │   │   ├── locale_menu.py
@@ -103,6 +102,9 @@
 │   │   │   ├── packages.py
 │   │   │   ├── profile.py
 │   │   │   └── users.py
+│   │   ├── network
+│   │   │   ├── network_handler.py
+│   │   │   └── network_menu.py
 │   │   ├── networking.py
 │   │   ├── output.py
 │   │   ├── packages
@@ -147,5 +149,5 @@
     ├── test_args.py
     └── test_configuration_output.py
 
-25 directories, 121 files
+26 directories, 122 files
 ```
