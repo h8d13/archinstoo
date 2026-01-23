@@ -56,8 +56,11 @@ case "$1" in
 	# shellcheck disable=SC2086
 	sudo pacman -U --overwrite '*' $PKG_GLOB
 	;;
-    -tc | --test-config)
-    ./RUN --config examples/config-sample.json
+    -tf | --test-full)
+    ./RUN --config examples/config-sample-full.json
+    ;;
+    -tm | --test-mini)
+    ./RUN --config examples/config-sample-mini.json
     ;;
 	*)
 	# Pass through to archinstall

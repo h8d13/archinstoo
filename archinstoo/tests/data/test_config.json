@@ -24,9 +24,6 @@
       ],
       "privilege_escalation": "doas"
   },
-  "audio_config": {
-    "audio": "pipewire"
-  },
   "bootloader_config": {
     "bootloader": "Systemd-boot",
     "uki": false,
