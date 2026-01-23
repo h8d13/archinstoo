@@ -2,29 +2,18 @@
 
 import importlib
 import logging
-import os
 import sys
 import textwrap
 import traceback
 
 from .lib import output
-from .lib.args import (
-	PREPARE_SCRIPTS,
-	ROOTLESS_SCRIPTS,
-	ArchConfigHandler,
-	Arguments,
-	get_arch_config_handler,
-)
-from .lib.disk.utils import disk_layouts
 from .lib.hardware import SysInfo
 from .lib.network.utils import ping
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, is_venv, running_from_host
-
-hard_depends = ('python-pyparted',)
+from .lib.utils.env import Os, is_root, is_venv, reload_python, running_from_host
 
 
 def _log_env_info() -> None:
@@ -35,6 +24,58 @@ def _log_env_info() -> None:
 		info('Running from Host (H2T Mode)...')
 	else:
 		info('Running from ISO (USB Mode)...')
+
+
+def _bootstrap() -> int:
+	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
+		return 0
+	try:
+		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+		# refresh python last then re-exec to load new libraries
+		Pacman.run('-S --needed --noconfirm python', peek_output=True)
+	except Exception:
+		return 1
+	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
+	info('Reloading python...')
+	reload_python()
+	return 0
+
+
+def _prepare() -> int:
+	# log python/host-2-target
+	_log_env_info()
+
+	if is_venv() or not is_root():
+		return 0
+	try:
+		info('Fetching db + dependencies...')
+		Pacman.run('-Sy', peek_output=True)
+		_bootstrap()
+		return 0
+
+	except Exception as e:
+		error('Failed to prepare app.')
+		if 'could not resolve host' in str(e).lower():
+			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
+
+		error(f'Run archinstall --debug and check {logger.path} for details.')
+
+		debug(f'Failed to prepare app: {e}')
+		return 1
+
+
+hard_depends = ('python-pyparted',)
+_prepare()
+
+# note we want to load all these after bootstrap
+from .lib.args import (
+	PREPARE_SCRIPTS,
+	ROOTLESS_SCRIPTS,
+	ArchConfigHandler,
+	Arguments,
+	get_arch_config_handler,
+)
+from .lib.disk.utils import disk_layouts
 
 
 def _log_sys_info(args: Arguments) -> None:
@@ -58,49 +99,6 @@ def _check_online() -> int:
 		raise
 
 
-def _reload() -> None:
-	info('Reloading python...')
-	# dirty python trick to reload any changed library modules
-	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
-
-
-def _fetch_deps() -> int:
-	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
-		return 0
-	try:
-		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-		# refresh python last then re-exec to load new libraries
-		Pacman.run('-S --needed --noconfirm python', peek_output=True)
-	except Exception:
-		return 1
-	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
-	_reload()
-	return 0
-
-
-def _prepare() -> int:
-	# log python/host-2-target
-	_log_env_info()
-
-	if is_venv():
-		return 0
-	try:
-		info('Fetching db + dependencies...')
-		Pacman.run('-Sy', peek_output=True)
-		_fetch_deps()
-		return 0
-
-	except Exception as e:
-		error('Failed to prepare app.')
-		if 'could not resolve host' in str(e).lower():
-			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
-
-		error(f'Run archinstall --debug and check {logger.path} for details.')
-
-		debug(f'Failed to prepare app: {e}')
-		return 1
-
-
 def _run_script(script: str) -> None:
 	importlib.import_module(f'archinstall.scripts.{script}')
 
@@ -116,15 +114,13 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 		handler.print_help()
 		return 0
 
-	if os.getuid() != 0:
+	if not is_root():
 		print(tr('Archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
 		return 1
 
 	# check online and prepare deps only for core installer scripts
 	if script in PREPARE_SCRIPTS and not args.offline:
 		if rc := _check_online():
-			return rc
-		if rc := _prepare():
 			return rc
 
 	# fixes #4149 by passing args properly to subscripts
