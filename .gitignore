@@ -38,6 +38,7 @@ venv
 .idea/**
 **/install.log
 .DS_Store
+.cstore/*
 **/cmd_history.txt
 **/*.*~
 **/*.sig
