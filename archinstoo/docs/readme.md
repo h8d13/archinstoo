@@ -105,11 +105,11 @@
 │   │   │   ├── network_menu
 │   │   │   └── utils
 │   │   ├── output
+│   │   ├── pacman
 │   │   ├── pm/
 │   │   │   ├── config
 │   │   │   ├── mirrors
-│   │   │   ├── packages
-│   │   │   └── pacman
+│   │   │   └── packages
 │   │   ├── profile/
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
@@ -124,6 +124,7 @@
 │   │   │   └── types
 │   │   └── utils/
 │   │       ├── env
+│   │       ├── net
 │   │       └── unicode
 │   ├── __main__
 │   └── scripts/
@@ -146,5 +147,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 121 files
+24 directories, 122 files
 ```
