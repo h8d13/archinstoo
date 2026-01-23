@@ -11,7 +11,8 @@ from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, is_root, is_venv, ping, reload_python, running_from_host
+from .lib.utils.env import Os, is_root, is_venv, reload_python, running_from_host
+from .lib.utils.net import ping
 
 
 def _log_env_info() -> None:
