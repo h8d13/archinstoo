@@ -1,9 +1,11 @@
 #!/bin/bash
+ELEV="${ELEV:-"$ELEV"}"
+
 # Strict
 set -e #uo pipefail
 
-# DO NOT RUN AS ROOT // Will prompt for sudo when needed
-[ "$(id -u)" -eq 0 ] && echo "Error: Sudo not required." && exit 1
+# DO NOT RUN AS ROOT // Will prompt when needed
+[ "$(id -u)" -eq 0 ] && echo "Error: Root not required." && exit 1
 
 # Build stage 1 ISO with slight modifs
 # Requires 'archiso' 
@@ -39,10 +41,10 @@ cleanup() {
 
         if [ -d "$WORK_DIR" ]; then
             # Kill any processes using the work dir
-            sudo fuser -sk "$WORK_DIR" 2>/dev/null || true
+            "$ELEV" fuser -sk "$WORK_DIR" 2>/dev/null || true
             # Force lazy recursive unmount
-            sudo umount -lR "$WORK_DIR" 2>/dev/null || true
-            sudo rm -rf "$WORK_DIR"
+            "$ELEV" umount -lR "$WORK_DIR" 2>/dev/null || true
+            "$ELEV" rm -rf "$WORK_DIR"
         fi
         echo "Cleanup complete."
     else
@@ -140,16 +142,16 @@ mkdir -p "$WORK_DIR"
 
 # Will prompt to build
 if [ "$SILENT_MODE" = "1" ]; then
-    sudo taskset -c 0-$((THREADS-1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" >/dev/null 2>&1 || error_exit "mkarchiso failed"
+    "$ELEV" taskset -c 0-$((THREADS-1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" >/dev/null 2>&1 || error_exit "mkarchiso failed"
 else
-    sudo taskset -c 0-$((THREADS-1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" || error_exit "mkarchiso failed"
+    "$ELEV" taskset -c 0-$((THREADS-1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" || error_exit "mkarchiso failed"
 fi
 
 echo ""
 echo "✓ SUCCESS! ISO created in: $OUTPUT_DIR"
 echo "Restoring permissions..."
 # restores both folder and any file within to correct permissions
-sudo chown -R "$USER":"$USER" "$OUTPUT_DIR"
+"$ELEV" chown -R "$USER":"$USER" "$OUTPUT_DIR"
 echo ""
 
 cleanup
