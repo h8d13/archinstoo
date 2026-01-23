@@ -6,6 +6,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
     - Manual partitioning improvements
         - Add "Create empty layout (wipe all)" option for fresh starts
+        - Add "Default layout" option in manual partitioning for brtfs subvolumes
         - Manual partitioning highlighted by default
         - Add udev_sync calls between disk operations for timing issues
         - Remove partprobe (redundant with disk.commit)
