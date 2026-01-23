@@ -213,7 +213,7 @@ def ask_for_bootloader(preset: Bootloader | None, skip_boot: bool = False) -> Bo
 	else:
 		options += [b for b in Bootloader if b not in hidden_options]
 		if not default:
-			default = Bootloader.Systemd
+			default = Bootloader.Grub
 
 	items = [MenuItem(o.value, value=o) for o in options]
 	group = MenuItemGroup(items)
