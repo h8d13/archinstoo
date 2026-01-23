@@ -165,6 +165,7 @@ def run_as_a_module() -> int:
 	exc = None
 
 	try:
+		_prepare()
 		# now run any script that does need root
 		rc = main(script, handler)
 	except Exception as e:
