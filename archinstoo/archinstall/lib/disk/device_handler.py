@@ -846,9 +846,7 @@ class DeviceHandler:
 		cmd.extend((str(dev_path), str(target_mountpoint)))
 
 		command = ' '.join(cmd)
-
-		if debug_mode:
-			debug(f'Mounting {dev_path}: {command}')
+		debug(f'Mounting {dev_path}: {command}')
 
 		try:
 			SysCommand(command)
