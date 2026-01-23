@@ -49,7 +49,7 @@ def clean_cache(root_dir: str) -> None:
 
 	for dirpath, dirnames, _ in os.walk(root_dir):
 		for dirname in dirnames:
-			if dirname.lower() in '__pycache__':
+			if dirname.lower() == '__pycache__':
 				full_path = os.path.join(dirpath, dirname)
 				try:
 					shutil.rmtree(full_path)
