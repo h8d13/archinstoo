@@ -99,6 +99,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		self._actions.update(
 			{
 				'set_filesystem': tr('Change filesystem'),
+				'change_size': tr('Change size'),
 				'btrfs_mark_compressed': tr('Mark/Unmark as compressed'),  # btrfs only
 				'btrfs_mark_nodatacow': tr('Mark/Unmark as nodatacow'),  # btrfs only
 				'btrfs_set_subvolumes': tr('Set subvolumes'),  # btrfs only
@@ -239,6 +240,7 @@ class PartitioningList(ListManager[DiskSegment]):
 				#     how do we know it was the original one?
 				not_filter += [
 					self._actions['set_filesystem'],
+					self._actions['change_size'],
 					self._actions['mark_bootable'],
 				]
 				if self._using_gpt:
@@ -338,6 +340,8 @@ class PartitioningList(ListManager[DiskSegment]):
 					self._toggle_mount_option(partition, BtrfsMountOption.nodatacow)
 				case 'btrfs_set_subvolumes':
 					self._set_btrfs_subvolumes(partition)
+				case 'change_size':
+					data = self._change_partition_size(partition, data)
 				case 'delete_partition':
 					data = self._delete_partition(partition, data)
 		else:
@@ -358,6 +362,38 @@ class PartitioningList(ListManager[DiskSegment]):
 			part_mods = self.get_part_mods(data)
 		else:
 			part_mods = [d.segment for d in data if isinstance(d.segment, PartitionModification) and d.segment != entry]
+
+		return self.as_segments(part_mods)
+
+	def _change_partition_size(
+		self,
+		entry: PartitionModification,
+		data: list[DiskSegment],
+	) -> list[DiskSegment]:
+		part_mods = self.get_part_mods(data)
+		active_parts = sorted(
+			[p for p in part_mods if not p.is_delete()],
+			key=lambda p: p.start.value,
+		)
+
+		# Find max available end (next partition start or disk end)
+		disk_end = self._device.device_info.total_size
+		if self._using_gpt:
+			disk_end = disk_end.gpt_end()
+		disk_end = disk_end.align()
+
+		entry_index = next((i for i, p in enumerate(active_parts) if p == entry), None)
+		if entry_index is None:
+			return data
+
+		if entry_index < len(active_parts) - 1:
+			max_end = active_parts[entry_index + 1].start
+		else:
+			max_end = disk_end
+
+		free_space = FreeSpace(entry.start, max_end)
+		new_length = self._prompt_size(free_space)
+		entry.length = new_length
 
 		return self.as_segments(part_mods)
 
