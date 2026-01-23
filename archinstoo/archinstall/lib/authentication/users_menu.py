@@ -145,7 +145,7 @@ class UserList(ListManager[User]):
 			return None
 
 		header += f'{tr("Password")}: {password.hidden()}\n\n'
-		header += str(tr('Should "{}" be a superuser (sudo)?\n')).format(username)
+		header += str(tr('Should "{}" be a superuser?\n')).format(username)
 
 		group = MenuItemGroup.yes_no()
 		group.focus_item = MenuItem.yes()
