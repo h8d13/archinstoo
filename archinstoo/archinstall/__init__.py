@@ -40,12 +40,29 @@ def _bootstrap() -> int:
 	return 0
 
 
+def _check_online() -> int:
+	try:
+		ping('1.1.1.1')
+		return 0
+	except OSError as ex:
+		if 'Network is unreachable' in str(ex):
+			info('Use iwctl/nmcli to connect manually.')
+			return 1
+		raise
+
+
 def _prepare() -> int:
 	# log python/host-2-target
 	_log_env_info()
 
 	if is_venv() or not is_root():
 		return 0
+
+	# check online (or offline requested) before trying to fetch packages
+	if '--offline' not in sys.argv:
+		if rc := _check_online():
+			return rc
+
 	try:
 		info('Fetching db + dependencies...')
 		Pacman.run('-Sy', peek_output=True)
@@ -68,7 +85,6 @@ _prepare()
 
 # note we want to load all these after bootstrap
 from .lib.args import (
-	PREPARE_SCRIPTS,
 	ROOTLESS_SCRIPTS,
 	ArchConfigHandler,
 	Arguments,
@@ -85,17 +101,6 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
 	if args.debug:
 		debug(f'Disk states before installing:\n{disk_layouts()}')
-
-
-def _check_online() -> int:
-	try:
-		ping('1.1.1.1')
-		return 0
-	except OSError as ex:
-		if 'Network is unreachable' in str(ex):
-			info('Use iwctl/nmcli to connect manually.')
-			return 1
-		raise
 
 
 def _run_script(script: str) -> None:
@@ -116,11 +121,6 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 	if not is_root():
 		print(tr('Archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
 		return 1
-
-	# check online and prepare deps only for core installer scripts
-	if script in PREPARE_SCRIPTS and not args.offline:
-		if rc := _check_online():
-			return rc
 
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
@@ -148,12 +148,13 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 
 
 def run_as_a_module() -> int:
-	# handle scripts that don't need root early before main(script)
 	handler = get_arch_config_handler()
 
 	if handler.args.debug:
 		output.log_level = logging.DEBUG
 
+	# handle scripts that don't need root early before main(script)
+	# anything else is assumed to need root
 	script = handler.get_script()
 	if script in ROOTLESS_SCRIPTS:
 		handler.pass_args_to_subscript()
