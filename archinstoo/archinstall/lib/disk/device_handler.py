@@ -823,7 +823,6 @@ class DeviceHandler:
 		mount_fs: str | None = None,
 		create_target_mountpoint: bool = True,
 		options: list[str] = [],
-		debug_mode: bool = False,
 	) -> None:
 		if create_target_mountpoint and not target_mountpoint.exists():
 			target_mountpoint.mkdir(parents=True, exist_ok=True)
@@ -846,9 +845,7 @@ class DeviceHandler:
 		cmd.extend((str(dev_path), str(target_mountpoint)))
 
 		command = ' '.join(cmd)
-
-		if debug_mode:
-			debug(f'Mounting {dev_path}: {command}')
+		debug(f'Mounting {dev_path}: {command}')
 
 		try:
 			SysCommand(command)
