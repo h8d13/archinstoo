@@ -10,7 +10,7 @@ from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, _run_script, is_root, is_venv, reload_python, running_from_host
+from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, reload_python, running_from_host
 from .lib.utils.net import ping
 
 hard_depends = ('python-pyparted',)
@@ -175,6 +175,7 @@ def run_as_a_module() -> int:
 	finally:
 		# restore the terminal to the original state
 		Tui.shutdown()
+		clean_cache('.')
 
 	if exc:
 		_error_message(exc, handler)

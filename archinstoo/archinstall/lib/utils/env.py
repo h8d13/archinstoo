@@ -1,5 +1,6 @@
 import importlib
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -41,3 +42,22 @@ def is_root() -> bool:
 def running_from_host() -> bool:
 	# returns True when not on the ISO
 	return not Path('/run/archiso').exists()
+
+
+def clean_cache(root_dir: str) -> None:
+	deleted = []
+
+	for dirpath, dirnames, _ in os.walk(root_dir):
+		for dirname in dirnames:
+			if dirname.lower() in '__pycache__':
+				full_path = os.path.join(dirpath, dirname)
+				try:
+					shutil.rmtree(full_path)
+					deleted.append(full_path)
+				except Exception as e:
+					print(f'Failed to delete {full_path}: {e}')
+
+	if not deleted:
+		print('No cache folders found.')
+	else:
+		print(f'Done. {len(deleted)} cache folder(s) deleted.')
