@@ -774,14 +774,14 @@ class DeviceHandler:
 
 		disk.commit()
 
-		# Force kernel to re-read partition table and release old references
-		try:
-			SysCommand(f'partprobe {modification.device_path}')
-		except SysCallError:
-			pass
+		# Wait for kernel to process partition table changes
+		self.udev_sync()
 
 		# Deactivate any LVM VGs that may be holding the partitions
 		self.lvm_deactivate_vgs_on_device(modification.device)
+
+		# Sync after LVM deactivation before removing dm devices
+		self.udev_sync()
 
 		# Remove any remaining dm devices on this device
 		try:
@@ -796,6 +796,7 @@ class DeviceHandler:
 		except SysCallError:
 			pass
 
+		# Sync after dm cleanup
 		self.udev_sync()
 
 		# Wipe filesystem/LVM signatures from newly created partitions
@@ -804,10 +805,7 @@ class DeviceHandler:
 			if part_mod.dev_path:
 				debug(f'Wiping signatures from: {part_mod.dev_path}')
 				SysCommand(f'wipefs --all --force {part_mod.dev_path}')
-
-		# Sync with udev after wiping signatures
-		if filtered_part:
-			self.udev_sync()
+				self.udev_sync()
 
 	@staticmethod
 	def swapon(path: Path) -> None:
