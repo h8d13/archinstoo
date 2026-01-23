@@ -23,6 +23,9 @@ def is_venv() -> bool:
 
 def reload_python() -> None:
 	# dirty python trick to reload any changed library modules
+	# skip reload during testing to avoid running system archinstall
+	if 'pytest' in sys.modules:
+		return
 	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
 
 

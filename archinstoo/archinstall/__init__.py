@@ -81,7 +81,6 @@ def _prepare() -> int:
 
 
 hard_depends = ('python-pyparted',)
-_prepare()
 
 # note we want to load all these after bootstrap
 from .lib.args import (
