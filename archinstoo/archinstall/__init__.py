@@ -1,6 +1,5 @@
 """Arch Linux installer - guided, templates etc."""
 
-import importlib
 import logging
 import sys
 import textwrap
@@ -11,8 +10,10 @@ from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, is_root, is_venv, reload_python, running_from_host
+from .lib.utils.env import Os, _run_script, is_root, is_venv, reload_python, running_from_host
 from .lib.utils.net import ping
+
+hard_depends = ('python-pyparted',)
 
 
 def _log_env_info() -> None:
@@ -86,8 +87,6 @@ def _prepare() -> int:
 	return 0
 
 
-hard_depends = ('python-pyparted',)
-
 # note we want to load all these after bootstrap
 from .lib.args import (
 	ROOTLESS_SCRIPTS,
@@ -106,10 +105,6 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
 	if args.debug:
 		debug(f'Disk states before installing:\n{disk_layouts()}')
-
-
-def _run_script(script: str) -> None:
-	importlib.import_module(f'archinstall.scripts.{script}')
 
 
 def main(script: str, handler: ArchConfigHandler) -> int:

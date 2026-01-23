@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 from pathlib import Path
@@ -19,6 +20,10 @@ class Os:
 
 def is_venv() -> bool:
 	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
+
+
+def _run_script(script: str) -> None:
+	importlib.import_module(f'archinstall.scripts.{script}')
 
 
 def reload_python() -> None:
