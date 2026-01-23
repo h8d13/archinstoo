@@ -136,8 +136,8 @@
 │       ├── rescue
 │       └── size
 ├── examples/
-│   ├── config-sample.json
-│   └── full_automated_installation
+│   ├── config-sample-full.json
+│   └── config-sample-mini.json
 ├── PKGBUILD
 ├── pyproject.toml
 └── tests/
