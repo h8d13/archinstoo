@@ -19,14 +19,15 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 	):
 		self._actions = [
 			tr('Add subvolume'),
+			tr('Default layout'),
 			tr('Edit subvolume'),
 			tr('Delete subvolume'),
 		]
 
 		super().__init__(
 			btrfs_subvols,
-			[self._actions[0]],
-			self._actions[1:],
+			self._actions[:2],
+			self._actions[2:],
 			prompt,
 		)
 
@@ -86,13 +87,17 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 				# was created we'll replace the existing one
 				data = [d for d in data if d.name != new_subvolume.name]
 				data += [new_subvolume]
-		elif entry is not None:  # edit
-			if action == self._actions[1]:  # edit subvolume
+		elif action == self._actions[1]:  # default layout
+			from .conf import get_default_btrfs_subvols
+
+			data = get_default_btrfs_subvols()
+		elif entry is not None:  # edit/delete
+			if action == self._actions[2]:  # edit subvolume
 				if (new_subvolume := self._add_subvolume(entry)) is not None:
 					# we'll remove the original subvolume and add the modified version
 					data = [d for d in data if d.name != entry.name and d.name != new_subvolume.name]
 					data += [new_subvolume]
-			elif action == self._actions[2]:  # delete
+			elif action == self._actions[3]:  # delete
 				data = [d for d in data if d != entry]
 
 		return data
