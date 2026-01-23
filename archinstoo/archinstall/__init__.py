@@ -65,9 +65,10 @@ def _prepare() -> int:
 		# note indent fully offlines installs should be possible
 		# instead of importing full handler use sys.argv directly
 		try:
-			info('Fetching db + dependencies...')
+			info('Fetching db...')
 			Pacman.run('-Sy', peek_output=True)
 			if rc := _bootstrap():
+				info('Bootstrapping...')
 				return rc
 		except Exception as e:
 			error('Failed to prepare app.')
