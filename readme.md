@@ -76,16 +76,6 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 ---
 
-## Building sources
-
-The idea being to promote **option 2** to use archinstall latest. Always, since fixes are often time critical.
-
-1. In case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
-
-2. In case of non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
-
----
-
 ## Known issues
 
 ### **Issues with dependencies**
@@ -142,3 +132,15 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 Usually reproduced then tested on actual/appropriate hardware. 
 
 Any help in this regard is deeply appreciated, as testing takes just as long if not longer than coding. 
+
+---
+
+## Building sources
+
+The idea being to promote **option 2** to use archinstall latest. Always, since fixes are often time critical.
+
+1. In case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
+
+2. In case of non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
+
+---
