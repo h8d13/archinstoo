@@ -21,6 +21,18 @@ def is_venv() -> bool:
 	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
 
 
+def reload_python() -> None:
+	# dirty python trick to reload any changed library modules
+	# skip reload during testing to avoid running system archinstall
+	if 'pytest' in sys.modules:
+		return
+	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
+
+
+def is_root() -> bool:
+	return os.getuid() == 0
+
+
 def running_from_host() -> bool:
 	# returns True when not on the ISO
 	return not Path('/run/archiso').exists()

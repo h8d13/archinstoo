@@ -2,29 +2,17 @@
 
 import importlib
 import logging
-import os
 import sys
 import textwrap
 import traceback
 
-from .lib import output
-from .lib.args import (
-	PREPARE_SCRIPTS,
-	ROOTLESS_SCRIPTS,
-	ArchConfigHandler,
-	Arguments,
-	get_arch_config_handler,
-)
-from .lib.disk.utils import disk_layouts
+from .lib import Pacman, output
 from .lib.hardware import SysInfo
-from .lib.network.utils import ping
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
-from .lib.pm import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, is_venv, running_from_host
-
-hard_depends = ('python-pyparted',)
+from .lib.utils.env import Os, is_root, is_venv, reload_python, running_from_host
+from .lib.utils.net import ping
 
 
 def _log_env_info() -> None:
@@ -37,14 +25,23 @@ def _log_env_info() -> None:
 		info('Running from ISO (USB Mode)...')
 
 
-def _log_sys_info(args: Arguments) -> None:
-	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
-	debug(f'Processor model detected: {SysInfo.cpu_model()}')
-	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
-	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
-	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
-	if args.debug:
-		debug(f'Disk states before installing:\n{disk_layouts()}')
+def _bootstrap() -> int:
+	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
+		info('Already bootstrapped...')
+		return 0
+	try:
+		info('Fetching deps...')
+		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+		# refresh python last then re-exec to load new libraries
+		Pacman.run('-S --needed --noconfirm python', peek_output=True)
+	except Exception:
+		return 1
+	# mark in current env as bootstraped
+	# avoid infinite reloads
+	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
+	info('Reloading python...')
+	reload_python()
+	return 0
 
 
 def _check_online() -> int:
@@ -58,47 +55,57 @@ def _check_online() -> int:
 		raise
 
 
-def _reload() -> None:
-	info('Reloading python...')
-	# dirty python trick to reload any changed library modules
-	os.execv(sys.executable, [sys.executable, '-m', 'archinstall'] + sys.argv[1:])
-
-
-def _fetch_deps() -> int:
-	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
-		return 0
-	try:
-		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
-		# refresh python last then re-exec to load new libraries
-		Pacman.run('-S --needed --noconfirm python', peek_output=True)
-	except Exception:
-		return 1
-	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
-	_reload()
-	return 0
-
-
 def _prepare() -> int:
 	# log python/host-2-target
 	_log_env_info()
 
-	if is_venv():
-		return 0
-	try:
-		info('Fetching db + dependencies...')
-		Pacman.run('-Sy', peek_output=True)
-		_fetch_deps()
+	if is_venv() or not is_root():
 		return 0
 
-	except Exception as e:
-		error('Failed to prepare app.')
-		if 'could not resolve host' in str(e).lower():
-			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
+	# check online (or offline requested) before trying to fetch packages
+	if '--offline' not in sys.argv:
+		if rc := _check_online():
+			return rc
+		# note indent fully offlines installs should be possible
+		# instead of importing full handler use sys.argv directly
+		try:
+			info('Fetching db...')
+			Pacman.run('-Sy', peek_output=True)
+			if rc := _bootstrap():
+				return rc
+		except Exception as e:
+			error('Failed to prepare app.')
+			if 'could not resolve host' in str(e).lower():
+				error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
 
-		error(f'Run archinstall --debug and check {logger.path} for details.')
+			error(f'Run archinstall --debug and check {logger.path} for details.')
 
-		debug(f'Failed to prepare app: {e}')
-		return 1
+			debug(f'Failed to prepare app: {e}')
+			return 1
+
+	return 0
+
+
+hard_depends = ('python-pyparted',)
+
+# note we want to load all these after bootstrap
+from .lib.args import (
+	ROOTLESS_SCRIPTS,
+	ArchConfigHandler,
+	Arguments,
+	get_arch_config_handler,
+)
+from .lib.disk.utils import disk_layouts
+
+
+def _log_sys_info(args: Arguments) -> None:
+	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
+	debug(f'Processor model detected: {SysInfo.cpu_model()}')
+	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
+	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
+	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
+	if args.debug:
+		debug(f'Disk states before installing:\n{disk_layouts()}')
 
 
 def _run_script(script: str) -> None:
@@ -116,16 +123,9 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 		handler.print_help()
 		return 0
 
-	if os.getuid() != 0:
+	if not is_root():
 		print(tr('Archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
 		return 1
-
-	# check online and prepare deps only for core installer scripts
-	if script in PREPARE_SCRIPTS and not args.offline:
-		if rc := _check_online():
-			return rc
-		if rc := _prepare():
-			return rc
 
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
@@ -153,12 +153,13 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 
 
 def run_as_a_module() -> int:
-	# handle scripts that don't need root early before main(script)
 	handler = get_arch_config_handler()
 
 	if handler.args.debug:
 		output.log_level = logging.DEBUG
 
+	# handle scripts that don't need root early before main(script)
+	# anything else is assumed to need root
 	script = handler.get_script()
 	if script in ROOTLESS_SCRIPTS:
 		handler.pass_args_to_subscript()
@@ -169,6 +170,8 @@ def run_as_a_module() -> int:
 	exc = None
 
 	try:
+		if rc := _prepare():
+			return rc
 		# now run any script that does need root
 		rc = main(script, handler)
 	except Exception as e:

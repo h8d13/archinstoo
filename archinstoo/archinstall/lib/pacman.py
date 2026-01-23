@@ -3,11 +3,10 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from archinstall.lib.translationhandler import tr
-
-from ..exceptions import RequirementError
-from ..general import SysCommand
-from ..output import error, info, logger, warn
+from .exceptions import RequirementError
+from .general import SysCommand
+from .output import error, info, logger, warn
+from .translationhandler import tr
 
 
 class Pacman:

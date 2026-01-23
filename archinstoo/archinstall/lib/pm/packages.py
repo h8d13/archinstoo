@@ -4,7 +4,7 @@ from functools import lru_cache
 from ..exceptions import SysCallError
 from ..models.packages import AvailablePackage, LocalPackage, Repository
 from ..output import debug
-from .pacman import Pacman
+from ..pacman import Pacman
 
 
 def installed_package(package: str) -> LocalPackage | None:

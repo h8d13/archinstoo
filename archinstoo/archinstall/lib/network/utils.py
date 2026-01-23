@@ -1,5 +1,3 @@
-import random
-import select
 import signal
 import socket
 import ssl
@@ -12,7 +10,6 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 
 from ..exceptions import DownloadTimeout
-from ..output import debug
 
 
 class DownloadTimer:
@@ -106,59 +103,3 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 		raise ValueError(f'Unable to fetch data from url: {url}\n{e}')
 	except Exception as e:
 		raise ValueError(f'Unexpected error when parsing response: {e}')
-
-
-def calc_checksum(icmp_packet: bytes) -> int:
-	# Calculate the ICMP checksum
-	checksum = 0
-	for i in range(0, len(icmp_packet), 2):
-		checksum += (icmp_packet[i] << 8) + (struct.unpack('B', icmp_packet[i + 1 : i + 2])[0] if len(icmp_packet[i + 1 : i + 2]) else 0)
-
-	checksum = (checksum >> 16) + (checksum & 0xFFFF)
-	checksum = ~checksum & 0xFFFF
-
-	return checksum
-
-
-def build_icmp(payload: bytes) -> bytes:
-	# Define the ICMP Echo Request packet
-	icmp_packet = struct.pack('!BBHHH', 8, 0, 0, 0, 1) + payload
-
-	checksum = calc_checksum(icmp_packet)
-
-	return struct.pack('!BBHHH', 8, 0, checksum, 0, 1) + payload
-
-
-def ping(hostname: str, timeout: int = 5) -> int:
-	watchdog = select.epoll()
-	started = time.time()
-	random_identifier = f'archinstall-{random.randint(1000, 9999)}'.encode()
-
-	# Create a raw socket (requires root, which should be fine on archiso)
-	icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-	watchdog.register(icmp_socket, select.EPOLLIN | select.EPOLLHUP)
-
-	icmp_packet = build_icmp(random_identifier)
-
-	# Send the ICMP packet
-	icmp_socket.sendto(icmp_packet, (hostname, 0))
-	latency = -1
-
-	# Gracefully wait for X amount of time
-	# for a ICMP response or exit with no latency
-	while latency == -1 and time.time() - started < timeout:
-		try:
-			for _fileno, _event in watchdog.poll(0.1):
-				response, _ = icmp_socket.recvfrom(1024)
-				icmp_type = struct.unpack('!B', response[20:21])[0]
-
-				# Check if it's an Echo Reply (ICMP type 0)
-				if icmp_type == 0 and response[-len(random_identifier) :] == random_identifier:
-					latency = round((time.time() - started) * 1000)
-					break
-		except OSError as e:
-			debug(f'Error: {e}')
-			break
-
-	icmp_socket.close()
-	return latency
