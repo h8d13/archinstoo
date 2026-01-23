@@ -22,7 +22,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Remove duplicate audio_config from test config
     - Fixes
         - Fix shell not being set for user
-        - Remove hardcoded sudo mentions (use privilege_escalation)
+        - Remove hardcoded sudo mention
         - Grub as default bootloader
     - Chores
         - Update ruff to v0.14.14
