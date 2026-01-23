@@ -125,8 +125,8 @@ class PartitioningList(ListManager[DiskSegment]):
 		display_actions = list(self._actions.values())
 		super().__init__(
 			self.as_segments(device_partitions),
-			display_actions[:1],
-			display_actions[2:],
+			display_actions[:2],
+			display_actions[3:],
 			self._info + self.wipe_str(),
 		)
 
