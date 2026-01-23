@@ -1,4 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-
-(cd archinstoo && sudo python -B -m archinstall "$@")
+ELEV="${ELEV:-sudo}"
+# help / list / size 
+# do not need root but we append it for most features
+# can be launched with ELEV=doas env var
+(cd archinstoo && "$ELEV" python -B -m archinstall "$@")
