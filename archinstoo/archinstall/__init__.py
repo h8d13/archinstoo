@@ -6,10 +6,9 @@ import sys
 import textwrap
 import traceback
 
-from .lib import output
+from .lib import Pacman, output
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
-from .lib.pm.pacman import Pacman
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, ping, reload_python, running_from_host

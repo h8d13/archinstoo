@@ -1,6 +1,6 @@
+from ..pacman import Pacman
 from .config import PacmanConfig
 from .packages import enrich_package_info, installed_package, list_available_packages
-from .pacman import Pacman
 
 __all__ = [
 	'Pacman',
