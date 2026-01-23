@@ -36,7 +36,8 @@ def _bootstrap() -> int:
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
 	except Exception:
 		return 1
-	# mark in curretn env as bootstraped
+	# mark in current env as bootstraped
+	# avoid infinite reloads
 	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
 	info('Reloading python...')
 	reload_python()
