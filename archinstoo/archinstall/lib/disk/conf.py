@@ -159,6 +159,16 @@ def select_disk_config(
 					mountpoint=path,
 				)
 
+			# skip device selection if re-entering manual mode with existing config
+			if result.get_value() == manual_mode and preset and preset.config_type == DiskLayoutType.Manual and preset.device_modifications:
+				preset_mod = preset.device_modifications[0]
+				if (manual_modification := _manual_partitioning(preset_mod, preset_mod.device, handler)) is not None:
+					return DiskLayoutConfiguration(
+						config_type=DiskLayoutType.Manual,
+						device_modifications=[manual_modification],
+					)
+				return None
+
 			preset_device = preset.device_modifications[0].device if preset and preset.device_modifications else None
 			device = select_device(preset_device, device_handler=handler)
 
@@ -172,9 +182,7 @@ def select_disk_config(
 					device_modifications=[modification],
 				)
 			elif result.get_value() == manual_mode:
-				preset_mod = preset.device_modifications[0] if preset and preset.device_modifications else None
-
-				if (manual_modification := _manual_partitioning(preset_mod, device)) is not None:
+				if (manual_modification := _manual_partitioning(None, device)) is not None:
 					return DiskLayoutConfiguration(
 						config_type=DiskLayoutType.Manual,
 						device_modifications=[manual_modification],
