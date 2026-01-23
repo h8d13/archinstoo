@@ -114,6 +114,21 @@ See [`ISOMOD`](./ISOMOD) to create custom ones directly.
 
 You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace` on the ISO directly.
 
+**Issues with signatures/keyring**
+
+> Check system BIOS clock / timezone
+```shell
+killall gpg-agent
+rm -rf /etc/pacman.d/gnupg
+pacman-key --init
+pacman-key --populate
+pacman -Sy archlinux-keyring
+```
+Then run `archinstoo`
+
+https://github.com/archlinux/archinstall/issues/4018
+https://github.com/archlinux/archinstall/issues/2213
+
 ---
 
 ## Testing
