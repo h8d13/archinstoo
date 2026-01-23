@@ -154,34 +154,37 @@ def run_as_a_module() -> int:
 	if handler.args.debug:
 		output.log_level = logging.DEBUG
 
-	# handle scripts that don't need root early before main(script)
-	# anything else is assumed to need root and be prepared
 	script = handler.get_script()
-	if script in ROOTLESS_SCRIPTS:
-		handler.pass_args_to_subscript()
-		_run_script(script)
-		return 0
-
-	rc = 0
-	exc = None
 
 	try:
-		if rc := _prepare():
-			return rc
-		# now run any script that does need root
-		rc = main(script, handler)
-	except Exception as e:
-		exc = e
+		# handle scripts that don't need root early before main(script)
+		# anything else is assumed to need root and be prepared
+		if script in ROOTLESS_SCRIPTS:
+			handler.pass_args_to_subscript()
+			_run_script(script)
+			return 0
+
+		rc = 0
+		exc = None
+
+		try:
+			if rc := _prepare():
+				return rc
+			# now run any script that does need root
+			rc = main(script, handler)
+		except Exception as e:
+			exc = e
+		finally:
+			# restore the terminal to the original state
+			Tui.shutdown()
+
+		if exc:
+			_error_message(exc, handler)
+			rc = 1
+
+		return rc
 	finally:
-		# restore the terminal to the original state
-		Tui.shutdown()
 		clean_cache('.')
-
-	if exc:
-		_error_message(exc, handler)
-		rc = 1
-
-	return rc
 
 
 __all__ = [
