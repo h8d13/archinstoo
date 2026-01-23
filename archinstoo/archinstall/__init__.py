@@ -103,6 +103,7 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
+	# note only log all disks info on debug flag
 	if args.debug:
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 
@@ -154,7 +155,7 @@ def run_as_a_module() -> int:
 		output.log_level = logging.DEBUG
 
 	# handle scripts that don't need root early before main(script)
-	# anything else is assumed to need root
+	# anything else is assumed to need root and be prepared
 	script = handler.get_script()
 	if script in ROOTLESS_SCRIPTS:
 		handler.pass_args_to_subscript()
