@@ -9,8 +9,9 @@ from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict, override
 
 from ..models.packages import Repository
-from ..network.utils import DownloadTimer, fetch_data_from_url, ping
+from ..network.utils import DownloadTimer, fetch_data_from_url
 from ..output import debug
+from ..utils.env import ping
 
 
 def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
