@@ -45,8 +45,11 @@ def running_from_host() -> bool:
 
 
 def clean_cache(root_dir: str) -> None:
+	from ..output import info
+
 	deleted = []
 
+	info('Cleaning up...')
 	for dirpath, dirnames, _ in os.walk(root_dir):
 		for dirname in dirnames:
 			if dirname.lower() == '__pycache__':
@@ -55,9 +58,9 @@ def clean_cache(root_dir: str) -> None:
 					shutil.rmtree(full_path)
 					deleted.append(full_path)
 				except Exception as e:
-					print(f'Failed to delete {full_path}: {e}')
+					info(f'Failed to delete {full_path}: {e}')
 
 	if not deleted:
-		print('No cache folders found.')
+		info('No cache folders found.')
 	else:
-		print(f'Done. {len(deleted)} cache folder(s) deleted.')
+		info(f'Done. {len(deleted)} cache folder(s) deleted.')
