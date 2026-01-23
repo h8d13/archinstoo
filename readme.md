@@ -88,7 +88,7 @@ The idea being to promote **option 2** to use archinstall latest. Always, since 
 
 ## Known issues
 
-**Issues with dependencies**
+### **Issues with dependencies**
 
 Arch's [ISO](https://archlinux.org/download/) is built 1st of each month.
 > Using the **latest version** is often safer bet.
@@ -114,7 +114,7 @@ See [`ISOMOD`](./ISOMOD) to create custom ones directly.
 
 You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace` on the ISO directly.
 
-**Issues with signatures/keyring**
+### **Issues with signatures/keyring**
 
 > Check system BIOS clock / timezone
 ```shell
