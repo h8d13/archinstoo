@@ -27,13 +27,16 @@ def _log_env_info() -> None:
 
 def _bootstrap() -> int:
 	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
+		info('Already bootstrapped...')
 		return 0
 	try:
+		info('Fetching deps...')
 		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
 		# refresh python last then re-exec to load new libraries
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
 	except Exception:
 		return 1
+	info('Already fetched deps...')
 	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
 	info('Reloading python...')
 	reload_python()
@@ -68,7 +71,6 @@ def _prepare() -> int:
 			info('Fetching db...')
 			Pacman.run('-Sy', peek_output=True)
 			if rc := _bootstrap():
-				info('Bootstrapping...')
 				return rc
 		except Exception as e:
 			error('Failed to prepare app.')
