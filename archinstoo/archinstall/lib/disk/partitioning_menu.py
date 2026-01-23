@@ -84,6 +84,7 @@ class PartitioningList(ListManager[DiskSegment]):
 
 		self._actions = {
 			'suggest_partition_layout': tr('Suggest partition layout'),
+			'create_empty_layout': tr('Create empty layout (wipe all)'),
 			'remove_added_partitions': tr('Remove all newly added partitions'),
 			'assign_mountpoint': tr('Assign mountpoint'),
 			'mark_formatting': tr('Mark/Unmark to be formatted (wipes data)'),
@@ -124,8 +125,8 @@ class PartitioningList(ListManager[DiskSegment]):
 		display_actions = list(self._actions.values())
 		super().__init__(
 			self.as_segments(device_partitions),
-			display_actions[:1],
-			display_actions[2:],
+			display_actions[:2],
+			display_actions[3:],
 			self._info + self.wipe_str(),
 		)
 
@@ -281,6 +282,10 @@ class PartitioningList(ListManager[DiskSegment]):
 						data = self.as_segments(device_mod.partitions)
 						self._wipe = device_mod.wipe
 						self._prompt = self._info + self.wipe_str()
+				case 'create_empty_layout':
+					self._wipe = True
+					data = self.as_segments([])
+					self._prompt = self._info + self.wipe_str()
 				case 'remove_added_partitions':
 					if self._reset_confirmation():
 						data = [s for s in data if isinstance(s.segment, PartitionModification) and s.segment.is_exists_or_modify()]
