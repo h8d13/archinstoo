@@ -62,22 +62,24 @@ def _prepare() -> int:
 	if '--offline' not in sys.argv:
 		if rc := _check_online():
 			return rc
+		# note indent fully offlines installs should be possible
+		# instead of importing full handler use sys.argv directly
+		try:
+			info('Fetching db + dependencies...')
+			Pacman.run('-Sy', peek_output=True)
+			if rc := _bootstrap():
+				return rc
+		except Exception as e:
+			error('Failed to prepare app.')
+			if 'could not resolve host' in str(e).lower():
+				error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
 
-	try:
-		info('Fetching db + dependencies...')
-		Pacman.run('-Sy', peek_output=True)
-		_bootstrap()
-		return 0
+			error(f'Run archinstall --debug and check {logger.path} for details.')
 
-	except Exception as e:
-		error('Failed to prepare app.')
-		if 'could not resolve host' in str(e).lower():
-			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
+			debug(f'Failed to prepare app: {e}')
+			return 1
 
-		error(f'Run archinstall --debug and check {logger.path} for details.')
-
-		debug(f'Failed to prepare app: {e}')
-		return 1
+	return 0
 
 
 hard_depends = ('python-pyparted',)
@@ -164,7 +166,8 @@ def run_as_a_module() -> int:
 	exc = None
 
 	try:
-		_prepare()
+		if rc := _prepare():
+			return rc
 		# now run any script that does need root
 		rc = main(script, handler)
 	except Exception as e:
