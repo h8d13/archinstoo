@@ -2,6 +2,32 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.0.01-7
+
+    - Manual partitioning improvements
+        - Add "Create empty layout (wipe all)" option for fresh starts
+        - Manual partitioning highlighted by default
+        - Add udev_sync calls between disk operations for timing issues
+        - Remove partprobe (redundant with disk.commit)
+        - Add mount_fs to all formatting calls (attempt fixes #4164 vfat mount issues)
+        - Always log mount disk operations
+    - Init/startup refactor
+        - Rework init with cleaner OS imports and lazy args
+        - Separate offline check and wire up rc functions properly
+        - Move prepare hook, separate helper for ping
+        - Bypass unnecessary init steps
+    - Config improvements
+        - Add config-sample-mini.json (no disk/user data)
+        - Add test shortcuts in DEV script (-tf, -tm)
+        - Remove duplicate audio_config from test config
+    - Fixes
+        - Fix shell not being set for user
+        - Remove hardcoded sudo mentions (use privilege_escalation)
+        - Grub as default bootloader
+    - Chores
+        - Update ruff to v0.14.14
+        - Code comments and structure cleanup
+
 ## 0.0.01-6
 
     - Mirrors module rework
