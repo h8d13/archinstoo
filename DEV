@@ -36,7 +36,6 @@ case "$1" in
 	-c | --clean)
 	go_to
 	clean && pre_build
-	sudo find -type f -name "*.pyc" -delete
 	;;
 	-b | --build)
 	go_to
