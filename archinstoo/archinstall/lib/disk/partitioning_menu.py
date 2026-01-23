@@ -371,16 +371,26 @@ class PartitioningList(ListManager[DiskSegment]):
 		data: list[DiskSegment],
 	) -> list[DiskSegment]:
 		part_mods = self.get_part_mods(data)
-		active_parts = sorted(
-			[p for p in part_mods if not p.is_delete()],
-			key=lambda p: p.start.value,
-		)
 
 		# Find max available end (next partition start or disk end)
 		disk_end = self._device.device_info.total_size
 		if self._using_gpt:
 			disk_end = disk_end.gpt_end()
 		disk_end = disk_end.align()
+
+		# For newly created partitions, only other Create partitions block space
+		# (existing partitions would be deleted to make room anyway)
+		# For Modify partitions, respect existing partition boundaries unless disk is wiped
+		if entry.status == ModificationStatus.Create or self._wipe:
+			active_parts = sorted(
+				[p for p in part_mods if p.status == ModificationStatus.Create and not p.is_delete()],
+				key=lambda p: p.start.value,
+			)
+		else:
+			active_parts = sorted(
+				[p for p in part_mods if not p.is_delete()],
+				key=lambda p: p.start.value,
+			)
 
 		entry_index = next((i for i, p in enumerate(active_parts) if p == entry), None)
 		if entry_index is None:
