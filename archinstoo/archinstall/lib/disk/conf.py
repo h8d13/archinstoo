@@ -117,8 +117,8 @@ def select_disk_config(
 	pre_mount_mode = DiskLayoutType.Pre_mount.display_msg()
 
 	items = [
-		MenuItem(default_layout, value=default_layout),
 		MenuItem(manual_mode, value=manual_mode),
+		MenuItem(default_layout, value=default_layout),
 		MenuItem(pre_mount_mode, value=pre_mount_mode),
 	]
 	group = MenuItemGroup(items, sort_items=False)
