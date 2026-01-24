@@ -60,14 +60,13 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _get_menu_options(self) -> list[MenuItem]:
 		menu_options = [
-			# Critical - Assumed empty and mandatory
 			MenuItem(
 				text=tr('Archinstoo settings'),
 				action=self._select_archinstall_settings,
 				preview_action=self._prev_archinstall_settings,
 				key='archinstall_language',  # syncs language to config, theme is session-only
 			),
-			MenuItem.separator(),
+			MenuItem.separator(),  # critical - assumed empty and mandatory
 			MenuItem(
 				text=tr('Disk config'),
 				action=self._select_disk_config,
@@ -83,7 +82,7 @@ class GlobalMenu(AbstractMenu[None]):
 				key='auth_config',
 				value_validator=self._validate_auth_config,
 			),
-			MenuItem.separator(),
+			MenuItem.separator(),  # resumed choices - from cfg json file
 			MenuItem(
 				text=tr('Locales'),
 				action=self._locale_selection,
