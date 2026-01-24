@@ -16,6 +16,7 @@ class ListManager[ValueT]:
 		base_actions: list[str],
 		sub_menu_actions: list[str],
 		prompt: str | None = None,
+		allow_reset: bool = False,
 	):
 		"""
 		:param prompt:  Text which will appear at the header
@@ -30,15 +31,20 @@ class ListManager[ValueT]:
 
 		:param sub_menu_actions: list of actions available for a chosen entry
 		type param: list
+
+		:param allow_reset: if True, Ctrl+C will reset/clear the selection
+		type param: bool
 		"""
 		self._original_data = copy.deepcopy(entries)
 		self._data = copy.deepcopy(entries)
 
 		self._prompt = prompt
+		self._allow_reset = allow_reset
 
 		self._separator = ''
 		self._confirm_action = tr('Confirm and exit')
 		self._cancel_action = tr('Cancel')
+		self._reset_action = '_reset_'
 		self._back_action = tr('Back')
 
 		self._terminate_actions = [self._confirm_action, self._cancel_action]
@@ -54,6 +60,11 @@ class ListManager[ValueT]:
 	def is_last_choice_cancel(self) -> bool:
 		if self._last_choice is not None:
 			return self._last_choice == self._cancel_action
+		return False
+
+	def is_last_choice_reset(self) -> bool:
+		if self._last_choice is not None:
+			return self._last_choice == self._reset_action
 		return False
 
 	def run(self) -> list[ValueT]:
@@ -74,12 +85,16 @@ class ListManager[ValueT]:
 				header=prompt,
 				search_enabled=False,
 				allow_skip=False,
+				allow_reset=self._allow_reset,
 				alignment=Alignment.CENTER,
 			).run()
 
 			match result.type_:
 				case ResultType.Selection:
 					value = result.get_value()
+				case ResultType.Reset:
+					self._last_choice = self._reset_action
+					return []
 				case _:
 					raise ValueError('Unhandled return type')
 

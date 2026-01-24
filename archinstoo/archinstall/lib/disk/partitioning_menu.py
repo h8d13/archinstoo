@@ -128,6 +128,7 @@ class PartitioningList(ListManager[DiskSegment]):
 			display_actions[:2],
 			display_actions[3:],
 			self._info + self.wipe_str(),
+			allow_reset=True,
 		)
 
 	def wipe_str(self) -> str:
@@ -582,6 +583,9 @@ def manual_partitioning(
 ) -> DeviceModification | None:
 	menu_list = PartitioningList(device_mod, partition_table)
 	mod = menu_list.get_device_mod()
+
+	if menu_list.is_last_choice_reset():
+		return None
 
 	if menu_list.is_last_choice_cancel():
 		return device_mod
