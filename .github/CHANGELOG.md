@@ -150,7 +150,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Load config but never creds (disk/auth config to do only)
         - Offer choice to delete all of contents post-install
         - Lock root and doas alternative
-    - Add resume/abort features with proper deletions of cfg
+    - Add resume/abort features with proper deletions of cfg archlinux/archinstall#4035
     - Wayland/x11 major refactor
         - Nvidia fixes
         - Sway, River, Niri fixes
