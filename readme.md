@@ -44,7 +44,7 @@ pacman-key --init
 pacman -Sy git
 ```
 
-**1. Get the source code**
+### **1. Get the source code**
 
 Get source:
 ```shell
@@ -52,14 +52,14 @@ git clone https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
 ```
 
-**2. Run the module** `archinstall`
+### **2. Run the module** `archinstall`
 
 ```shell
 python -m archinstall [args] # try -h or --help
 # some options are behind --advanced
 ```
 
-**3. Enjoy your new system(s)**
+### **3. Enjoy your new system(s)**
 
 <img width="1888" height="915" alt="Screenshot_20260122_110553" src="https://github.com/user-attachments/assets/a2edcd1f-fe68-47d9-96ec-7b7f7a5de524" />
 
