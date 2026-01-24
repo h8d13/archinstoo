@@ -20,9 +20,9 @@ Then when pressing "start" **use dd mode** for full copy.
 ## Languages Compat 🌐
 
 Before running the post install script you can uncomment any of these lines for extended support:
-```
-noto-fonts-cjk"         # Chinese, Japanese, Korean
-noto-fonts-extra"       # Full extended symbols
+```shell
+noto-fonts-cjk         # Chinese, Japanese, Korean
+noto-fonts-extra       # Full extended symbols
 ```
 In additional packages section. 
 
@@ -30,22 +30,24 @@ In additional packages section.
 ## Maintaining your system
 
 I dont know what I'm looking for:
-```
+```shell
 pacman -Qi pkg
 # pacman -Ql pkg
 pacman -Q | grep <pkg>
 ```
 
 I want to learn about something:
-```
-sudo pacman -S man-db
+```shell
+pacman -S man-db
 man <pkg>
 ```
 
 I want to have a clean system:
-```
+```shell
 pacman -S pacman-contrib
+# tools for pacman
 paccache -r
+# cleans cache
 checkupdates   
 bash-completion 2.17.0-1 -> 2.17.0-2
 mkinitcpio 40-3 -> 40-4
@@ -54,7 +56,7 @@ mkinitcpio 40-3 -> 40-4
 ```
 
 I have slow mirrors:
-```
+```shell
 sudo reflector --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
 sudo pacman -Sy
 ```
