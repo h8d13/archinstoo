@@ -114,7 +114,7 @@ pacman-key --init
 pacman-key --populate
 pacman -Sy archlinux-keyring
 ```
-Then run `archinstoo` [Back to Step 1](https://github.com/h8d13/archinstoo#1-get-the-source-code)
+Then run `archinstoo` [Back to Step 1](https://github.com/h8d13/archinstoo?tab=readme-ov-file#1-get-the-source-code)
 
 https://github.com/archlinux/archinstall/issues/4018
 https://github.com/archlinux/archinstall/issues/2213
@@ -125,7 +125,7 @@ https://github.com/archlinux/archinstall/issues/2213
 
 **Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs).
 
-To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see latest changes [Changelog](./.github/CHANGELOG.md)
+To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see historical/latest changes [Changelog](./.github/CHANGELOG.md)
 
 The process would be the same with `git clone -b <branch> <url>` to test a specific fix.
 
