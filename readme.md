@@ -114,7 +114,7 @@ pacman-key --init
 pacman-key --populate
 pacman -Sy archlinux-keyring
 ```
-Then run `archinstoo` [Back to Step 1](https://github.com/h8d13/archinstoo#setup--usage)
+Then run `archinstoo` [Back to Step 1](https://github.com/h8d13/archinstoo#1-get-the-source-code)
 
 https://github.com/archlinux/archinstall/issues/4018
 https://github.com/archlinux/archinstall/issues/2213
