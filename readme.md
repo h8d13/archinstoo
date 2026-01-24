@@ -11,6 +11,8 @@ A fork of `archinstall` with only `python-parted` as a dependency, many MORE cho
 
 ## Setup / Usage
 
+[Newb-Corner](.github/NEWB_CORNER.md)
+
 **0. Get internet access**
 
 Ethernet cable is plug and play. 
