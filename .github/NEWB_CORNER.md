@@ -3,7 +3,9 @@
 ## Flashing the USB
 
 You can use [rufus](https://rufus.ie/) for Winslows or [KDEImageWriter](https://apps.kde.org/isoimagewriter/) from Linux (or dd)
-> Select mbr/gpt according to your hardware (usually gpt for newer hardware) And then when pressing "start" **use dd mode** for full copy.
+> Select mbr/gpt according to your hardware (usually gpt for newer hardware) 
+
+Then when pressing "start" **use dd mode** for full copy.
 
 ## More tips in the menu 
 
