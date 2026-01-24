@@ -125,6 +125,8 @@ class NetworkConfiguration:
 				return cls(NicType.ISO)
 			case NicType.NM:
 				return cls(NicType.NM)
+			case NicType.NM_IWD:
+				return cls(NicType.NM_IWD)
 			case NicType.MANUAL:
 				nics_arg = config.get('nics', [])
 				if nics_arg:
