@@ -148,10 +148,6 @@ class Installer:
 		if not (missing_steps := self.post_install_check()):
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
 			log(msg, fg='green')
-			if not self._args.silent:
-				response = input('\nDelete saved log files/cfg? [y/N]: ').strip().lower()
-				if response == 'y' and self._handler:
-					self._handler.clean_up()
 
 			return True
 		else:
