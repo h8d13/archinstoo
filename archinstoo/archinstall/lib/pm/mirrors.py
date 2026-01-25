@@ -26,7 +26,7 @@ from ..models.mirrors import (
 )
 from ..models.packages import Repository
 from ..network.utils import fetch_data_from_url
-from ..output import FormattedOutput, debug, info
+from ..output import FormattedOutput, debug
 
 
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
@@ -514,9 +514,17 @@ class MirrorListHandler:
 		# Local mirrors lack this data and can be modified manually before-hand
 		# Or reflector potentially ran already
 		if _MirrorCache.is_remote and speed_sort:
-			if not _MirrorCache.sort_info_shown:
-				info('Waiting speed sort based on the download rate between you and region mirrors servers.')
-				_MirrorCache.sort_info_shown = True
+			# simple counter to show progress
+			# and current best to show another useful info
+			total = len(region_list)
+			best = 0.0
+			for i, mirror in enumerate(region_list, 1):
+				_ = mirror.speed
+				best = max(best, mirror.speed)
+				print(f'\rTesting mirror speeds {i}/{total} - best: {best / 1024 / 1024:.1f} MiB/s', end='', flush=True)
+				# do note that current best is based of a small db download and should get more bitrate on larger dls
+			print()
+
 			# Sort by speed descending (higher is better in bitrate form core.db download)
 			return sorted(region_list, key=lambda mirror: -mirror.speed)
 		# just return as-is without sorting?
