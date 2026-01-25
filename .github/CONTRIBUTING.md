@@ -27,20 +27,13 @@ Small patches are preferred, and need to be tested from scratch (ISO env + Host-
 These are used as a mods system, that can be used to run different kinds of installs/utilities. 
 Default being `guided` and `--script list` just returns all files in this dir.
 
-- Config files
-
-The main overview file would be [args.py](../master/archinstall/lib/args.py)
-
-It controls both how the `/var/log/archinstoo/user_configuration.json` file is handled and command line arguments that are accepted.
-
-Another good way to see how it all works is to check out the guided script itself [guided.py](../master/archinstall/scripts/guided.py)
-And the main menu [global_menu.py](master/archinstall/lib/global_menu.py)
+- Config files only ever store all but encryption / auth info
 
 The rest of classes/defs/files can be traced using global search inside `./archinstall/*`
 
 - Actual installer(s)
 
-The main installer file is [installer.py](../master/archinstall/lib/installer.py)
+The main installer file is [installer.py](../master/archinstoo/archinstall/lib/installer.py)
 
 This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
 
