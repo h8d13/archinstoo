@@ -13,6 +13,8 @@ class PlasmaProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'plasma-desktop',
+			'plasma-pa',
+			'kscreen',
 			'konsole',
 			'kate',
 			'dolphin',
