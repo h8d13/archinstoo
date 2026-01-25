@@ -128,14 +128,13 @@ def disk_layouts() -> str:
 	return lsblk_output.to_json()
 
 
-def umount(mountpoint: Path, recursive: bool = False, debug_mode: bool = False) -> None:
+def umount(mountpoint: Path, recursive: bool = False) -> None:
 	lsblk_info = get_lsblk_info(mountpoint)
 
 	if not lsblk_info.mountpoints:
 		return
 
-	if debug_mode:
-		debug(f'Partition {mountpoint} is currently mounted at: {[str(m) for m in lsblk_info.mountpoints]}')
+	debug(f'Partition {mountpoint} is currently mounted at: {[str(m) for m in lsblk_info.mountpoints]}')
 
 	cmd = ['umount']
 
@@ -143,8 +142,7 @@ def umount(mountpoint: Path, recursive: bool = False, debug_mode: bool = False) 
 		cmd.append('-R')
 
 	for path in lsblk_info.mountpoints:
-		if debug_mode:
-			debug(f'Unmounting mountpoint: {path}')
+		debug(f'Unmounting mountpoint: {path}')
 		try:
 			SysCommand(cmd + [str(path)])
 		except SysCallError as e:
