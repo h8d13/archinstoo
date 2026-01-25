@@ -17,6 +17,8 @@ Then when pressing "start" **use dd mode** for full copy.
 
 `CTRL + H` shows the full help
 
+When setting up a user you can also clone dotfiles directly and will be in `/home/user/.stash`
+
 ## Languages Compat 🌐
 
 Before running the post install script you can uncomment any of these lines for extended support:
@@ -28,6 +30,13 @@ In additional packages section.
 
 
 ## Maintaining your system
+
+I am stuck:
+```shell
+CTRL + ALT + Fx
+# x being an F key nbr
+```
+This should let you access a tty
 
 I dont know what I'm looking for:
 ```shell
