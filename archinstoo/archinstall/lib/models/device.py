@@ -14,8 +14,11 @@ if TYPE_CHECKING:
 
 from uuid import UUID
 
-import parted
-from parted import Disk, Geometry, Partition
+try:
+	import parted
+	from parted import Disk, Geometry, Partition
+except ImportError:
+	raise ImportError('Dep python-parted not found. Please install it with: pacman -S python-parted')
 
 from archinstall.lib.translationhandler import tr
 
