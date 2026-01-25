@@ -33,7 +33,7 @@ The rest of classes/defs/files can be traced using global search inside `./archi
 
 - Actual installer(s)
 
-The main installer file is [installer.py](../master/archinstoo/archinstall/lib/installer.py)
+The main installer file is [installer.py](../master/archinstall/lib/installer.py)
 
 This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
 
