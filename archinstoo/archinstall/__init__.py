@@ -120,7 +120,7 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 		return 0
 
 	if not is_root():
-		print(tr('Archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
+		print(tr('archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
 		return 1
 
 	# fixes #4149 by passing args properly to subscripts
@@ -159,6 +159,9 @@ def run_as_a_module() -> int:
 		# handle scripts that don't need root early before main(script)
 		# anything else is assumed to need root and be prepared
 		if script in ROOTLESS_SCRIPTS:
+			if is_root():
+				warn(f'archinstall {script} does not need root privileges.')
+				return 1
 			handler.pass_args_to_subscript()
 			_run_script(script)
 			return 0
