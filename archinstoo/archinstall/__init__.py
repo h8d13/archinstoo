@@ -94,7 +94,6 @@ from .lib.args import (
 	Arguments,
 	get_arch_config_handler,
 )
-from .lib.disk.utils import disk_layouts
 
 
 def _log_sys_info(args: Arguments) -> None:
@@ -103,8 +102,9 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
-	# note only log all disks info on debug flag
 	if args.debug:
+		from .lib.disk.utils import disk_layouts
+
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 
 
@@ -125,10 +125,9 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
+	_log_sys_info(args)
 	# usually 'guided' from default lib/args
 	_run_script(script)
-	# note only log once install started
-	_log_sys_info(args)
 
 	return 0
 
@@ -196,7 +195,6 @@ __all__ = [
 	'SysInfo',
 	'Tui',
 	'debug',
-	'disk_layouts',
 	'error',
 	'info',
 	'log',
