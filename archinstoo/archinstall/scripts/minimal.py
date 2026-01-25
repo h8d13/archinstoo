@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 from archinstall.default_profiles.minimal import MinimalProfile
@@ -91,7 +90,7 @@ def _minimal() -> None:
 	config_handler.save()
 
 	if args.dry_run:
-		sys.exit(0)
+		raise SystemExit(0)
 
 	if not args.silent:
 		aborted = False
