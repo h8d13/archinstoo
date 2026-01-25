@@ -1,4 +1,3 @@
-import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -33,7 +32,7 @@ class Pacman:
 
 			if time.time() - started > (60 * 10):
 				error(tr('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstall.'))
-				sys.exit(1)
+				raise SystemExit(1)
 
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)
 

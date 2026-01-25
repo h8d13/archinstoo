@@ -1,4 +1,3 @@
-import sys
 import threading
 from enum import Enum
 from pathlib import Path
@@ -337,4 +336,4 @@ def ask_abort() -> None:
 	).run()
 
 	if result.item() == MenuItem.yes():
-		sys.exit(0)
+		raise SystemExit(0)

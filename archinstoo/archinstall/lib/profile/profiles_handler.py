@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib.util
 import inspect
-import sys
 from collections import Counter
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -262,7 +261,7 @@ class ProfileHandler:
 		if len(duplicates) > 0:
 			err = tr('Profiles must have unique name, but profile definitions with duplicate name found: {}').format(duplicates[0][0])
 			error(err)
-			sys.exit(1)
+			raise SystemExit(1)
 
 	def _is_legacy(self, file: Path) -> bool:
 		"""
