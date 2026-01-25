@@ -522,6 +522,7 @@ class MirrorListHandler:
 				_ = mirror.speed
 				best = max(best, mirror.speed)
 				print(f'\rTesting mirror speeds {i}/{total} - best: {best / 1024 / 1024:.1f} MiB/s', end='', flush=True)
+				# do note that current best is based of a small db download and should get more bitrate on larger dls
 			print()
 
 			# Sort by speed descending (higher is better in bitrate form core.db download)
