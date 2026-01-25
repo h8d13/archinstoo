@@ -282,12 +282,25 @@ class DeviceHandler:
 
 		debug('Formatting filesystem:', ' '.join(cmd))
 
+		# Try to release the device before formatting
 		try:
-			SysCommand(cmd)
-		except SysCallError as err:
-			msg = f'Could not format {path} with {fs_type.value}: {err.message}'
-			error(msg)
-			raise DiskError(msg) from err
+			SysCommand(['swapoff', str(path)])
+		except SysCallError:
+			pass
+
+		for attempt in range(3):
+			try:
+				SysCommand(cmd)
+				break
+			except SysCallError as err:
+				if 'in use' in err.message.lower() and attempt < 2:
+					debug(f'Device {path} busy, waiting and retrying...')
+					self.udev_sync()
+					time.sleep(1)
+					continue
+				msg = f'Could not format {path} with {fs_type.value}: {err.message}'
+				error(msg)
+				raise DiskError(msg) from err
 
 	def encrypt(
 		self,
@@ -734,11 +747,24 @@ class DeviceHandler:
 		for partition in existing_partitions:
 			debug(f'Unmounting: {partition.path}')
 
+			# Turn off swap if active
+			if partition.fs_type == FilesystemType.LinuxSwap:
+				try:
+					SysCommand(['swapoff', str(partition.path)])
+				except SysCallError:
+					pass  # Swap might not be active
+
 			# un-mount for existing encrypted partitions
 			if partition.fs_type == FilesystemType.Crypto_luks:
 				Luks2(partition.path).lock()
 			else:
 				umount(partition.path, recursive=True)
+
+			# Try swapoff on any partition as a safety measure (fs_type detection might be wrong)
+			try:
+				SysCommand(['swapoff', str(partition.path)])
+			except SysCallError:
+				pass
 
 	def partition(
 		self,

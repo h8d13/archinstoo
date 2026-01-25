@@ -444,6 +444,8 @@ def run(
 
 def _pid_exists(pid: int) -> bool:
 	try:
-		return any(subprocess.check_output(['ps', '--no-headers', '-o', 'pid', '-p', str(pid)]).strip())
-	except subprocess.CalledProcessError:
+		# Use os.kill with signal 0 - portable check if process exists
+		os.kill(pid, 0)
+		return True
+	except OSError:
 		return False

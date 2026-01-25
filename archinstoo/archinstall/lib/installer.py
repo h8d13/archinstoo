@@ -183,8 +183,12 @@ class Installer:
 		One such service is "reflector.service" which updates /etc/pacman.d/mirrorlist
 		We need to wait for it before we continue since we opted in to use a custom mirror/region.
 		"""
+		import shutil
 
-		if not self._args.skip_ntp:
+		# Skip systemd-specific checks on non-systemd systems (Alpine, etc.)
+		if not shutil.which('timedatectl'):
+			debug('timedatectl not found, skipping NTP sync check')
+		elif not self._args.skip_ntp:
 			info(tr('Waiting for time sync (timedatectl show) to complete.'))
 
 			started_wait = time.time()
@@ -201,7 +205,7 @@ class Installer:
 		else:
 			info(tr('Skipping waiting for automatic time sync (this can cause issues if time is out of sync during installation)'))
 
-		if not self._args.offline:
+		if not self._args.offline and shutil.which('systemctl'):
 			info('Waiting for automatic mirror selection (reflector) to complete.')
 			for _ in range(60):
 				if self._service_state('reflector') in ('dead', 'failed', 'exited'):
@@ -216,7 +220,7 @@ class Installer:
 		# while self._service_state('pacman-init') not in ('dead', 'failed', 'exited'):
 		# 	time.sleep(1)
 
-		if not self._args.skip_wkd:
+		if not self._args.skip_wkd and shutil.which('systemctl'):
 			info(tr('Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete.'))
 			# Wait for the timer to kick in
 			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:
@@ -628,7 +632,11 @@ class Installer:
 			info(f'Enabling service {service}')
 
 			try:
-				SysCommand(f'systemctl --root={self.target} enable {service}')
+				# Use systemctl --root= if available on host, otherwise use arch-chroot
+				if shutil.which('systemctl'):
+					SysCommand(f'systemctl --root={self.target} enable {service}')
+				else:
+					self.run_command(f'systemctl enable {service}')
 			except SysCallError as err:
 				raise ServiceException(f'Unable to start service {service}: {err}')
 
@@ -640,12 +648,24 @@ class Installer:
 			info(f'Disabling service {service}')
 
 			try:
-				SysCommand(f'systemctl --root={self.target} disable {service}')
+				# Use systemctl --root= if available on host, otherwise use arch-chroot
+				if shutil.which('systemctl'):
+					SysCommand(f'systemctl --root={self.target} disable {service}')
+				else:
+					self.run_command(f'systemctl disable {service}')
 			except SysCallError as err:
 				raise ServiceException(f'Unable to disable service {service}: {err}')
 
+	@property
+	def _arch_chroot_cmd(self) -> list[str]:
+		"""Return the base arch-chroot command, using -S flag only if systemd-run is available."""
+		if shutil.which('systemd-run'):
+			return ['arch-chroot', '-S', str(self.target)]
+		else:
+			return ['arch-chroot', str(self.target)]
+
 	def run_command(self, cmd: str, peek_output: bool = False) -> SysCommand:
-		return SysCommand(f'arch-chroot -S {self.target} {cmd}', peek_output=peek_output)
+		return SysCommand(f'{" ".join(self._arch_chroot_cmd)} {cmd}', peek_output=peek_output)
 
 	def arch_chroot(self, cmd: str, run_as: str | None = None, peek_output: bool = False) -> SysCommand:
 		if run_as:
@@ -880,9 +900,7 @@ class Installer:
 
 			for config_name, mountpoint in snapper.items():
 				command = [
-					'arch-chroot',
-					'-S',
-					str(self.target),
+					*self._arch_chroot_cmd,
 					'snapper',
 					'--no-dbus',
 					'-c',
@@ -1219,9 +1237,7 @@ class Installer:
 		boot_dir = Path('/boot')
 
 		command = [
-			'arch-chroot',
-			'-S',
-			str(self.target),
+			*self._arch_chroot_cmd,
 			'grub-install',
 			'--debug',
 		]
@@ -1865,7 +1881,7 @@ class Installer:
 			return False
 
 		input_data = f'{user.username}:{enc_password}'.encode()
-		cmd = ['arch-chroot', '-S', str(self.target), 'chpasswd', '--encrypted']
+		cmd = [*self._arch_chroot_cmd, 'chpasswd', '--encrypted']
 
 		try:
 			run(cmd, input_data=input_data)
@@ -1984,6 +2000,10 @@ EndSection
 		return last_execution_time
 
 	def _service_state(self, service_name: str) -> str:
+		import shutil
+		if not shutil.which('systemctl'):
+			return 'dead'  # Assume not running on non-systemd systems
+
 		if os.path.splitext(service_name)[1] not in ('.service', '.target', '.timer'):
 			service_name += '.service'  # Just to be safe
 
@@ -1994,6 +2014,9 @@ EndSection
 
 
 def accessibility_tools_in_use() -> bool:
+	import shutil
+	if not shutil.which('systemctl'):
+		return False
 	return os.system('systemctl is-active --quiet espeakup.service') == 0
 
 
@@ -2008,7 +2031,7 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 			user_script.write(command)
 
 		try:
-			SysCommand(f'arch-chroot -S {installation.target} bash {script_path}')
+			SysCommand([*installation._arch_chroot_cmd, 'bash', script_path])
 		except SysCallError as e:
 			warn(f'Custom command "{command}" failed: {e}')
 		finally:

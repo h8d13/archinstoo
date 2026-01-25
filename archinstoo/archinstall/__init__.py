@@ -10,7 +10,7 @@ from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, reload_python, running_from_host
+from .lib.utils.env import Os, _run_script, clean_cache, ensure_keyring_initialized, ensure_pacman_configured, is_root, is_venv, reload_python, running_from_host
 from .lib.utils.net import ping
 
 hard_depends = ('python-pyparted',)
@@ -26,10 +26,26 @@ def _log_env_info() -> None:
 		info('Running from ISO (USB Mode)...')
 
 
+def _deps_available() -> bool:
+	"""Check if required dependencies are already available."""
+	try:
+		import parted  # noqa: F401
+		return True
+	except ImportError:
+		return False
+
+
 def _bootstrap() -> int:
 	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
 		info('Already bootstrapped...')
 		return 0
+
+	# Skip bootstrap if deps already available (e.g. on Alpine with py3-parted)
+	if _deps_available():
+		info('Dependencies already available, skipping bootstrap...')
+		Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
+		return 0
+
 	try:
 		info('Fetching deps...')
 		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
@@ -70,6 +86,8 @@ def _prepare() -> int:
 		# note indent fully offlines installs should be possible
 		# instead of importing full handler use sys.argv directly
 		try:
+			ensure_pacman_configured()
+			ensure_keyring_initialized()
 			info('Fetching db...')
 			Pacman.run('-Sy', peek_output=True)
 			if rc := _bootstrap():
