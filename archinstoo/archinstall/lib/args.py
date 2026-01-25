@@ -50,6 +50,7 @@ class Arguments:
 	debug: bool = False
 	offline: bool = False
 	advanced: bool = False
+	clean: bool = False
 
 
 @dataclass
@@ -275,6 +276,12 @@ class ArchConfigHandler:
 			action='store_true',
 			default=False,
 			help='Enabled advanced options',
+		)
+		parser.add_argument(
+			'--clean',
+			action='store_true',
+			default=False,
+			help='Clean up the log directory on exit',
 		)
 
 		return parser

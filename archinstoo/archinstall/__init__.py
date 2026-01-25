@@ -184,6 +184,8 @@ def run_as_a_module() -> int:
 
 		return rc
 	finally:
+		if handler.args.clean:
+			handler.clean_up()
 		clean_cache('.')
 
 
