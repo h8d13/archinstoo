@@ -1,4 +1,3 @@
-import sys
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Self
@@ -47,7 +46,7 @@ class Bootloader(Enum):
 		if bootloader not in bootloader_options:
 			values = ', '.join(bootloader_options)
 			warn(f'Invalid bootloader value "{bootloader}". Allowed values: {values}')
-			sys.exit(1)
+			raise SystemExit(1)
 
 		return cls(bootloader)
 

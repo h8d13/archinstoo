@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -231,7 +230,7 @@ def guided() -> None:
 	config_handler.save()
 
 	if args.dry_run:
-		sys.exit(0)
+		raise SystemExit(0)
 
 	if not args.silent:
 		aborted = False
