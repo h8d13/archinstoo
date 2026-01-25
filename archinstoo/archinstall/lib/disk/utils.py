@@ -145,4 +145,14 @@ def umount(mountpoint: Path, recursive: bool = False, debug_mode: bool = False) 
 	for path in lsblk_info.mountpoints:
 		if debug_mode:
 			debug(f'Unmounting mountpoint: {path}')
-		SysCommand(cmd + [str(path)])
+		try:
+			SysCommand(cmd + [str(path)])
+		except SysCallError as e:
+			# If busy, try lazy unmount
+			if 'busy' in str(e).lower():
+				debug(f'Mount busy, trying lazy unmount: {path}')
+				lazy_cmd = cmd.copy()
+				lazy_cmd.insert(1, '-l')  # Insert -l after 'umount'
+				SysCommand(lazy_cmd + [str(path)])
+			else:
+				raise
