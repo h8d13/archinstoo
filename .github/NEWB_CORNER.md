@@ -7,6 +7,9 @@ You can use [rufus](https://rufus.ie/) for Winslows or [KDEImageWriter](https://
 
 Then when pressing "start" **use dd mode** for full copy.
 
+After install, do not forget to **remove or change boot orders** in motherboard settings.
+This is usually f2, f10, f12 or DEL or other combinations depending on manufacturers.
+
 ## More tips in the menu 
 
 `/` allows you to search
@@ -69,3 +72,4 @@ I have slow mirrors:
 sudo reflector --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
 sudo pacman -Sy
 ```
+
