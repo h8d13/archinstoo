@@ -4,7 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from ..output import info
+from ..output import error, info
 
 
 class Os:
@@ -21,28 +21,41 @@ class Os:
 		return key in os.environ
 
 	@staticmethod
+	def running_from_host() -> bool:
+		# returns True when not on the ISO
+		return not Path('/run/archiso').exists()
+
+	@staticmethod
+	def running_from_who() -> str:
+		# checks distro name
+		if os.path.exists('/etc/os-release'):
+			for line in open('/etc/os-release'):
+				if line.startswith('ID='):
+					return line.strip().split('=')[1]
+		return ''
+
+	@staticmethod
+	def running_from_arch() -> bool:
+		# confirm its arch host
+		if Os.running_from_who() == 'arch':
+			return True
+		return False
+
+	# match Os.running_from_who():
+	# case 'alpine':
+	# do something else
+
+	@staticmethod
 	def has_binary(name: str) -> bool:
 		return shutil.which(name) is not None
 
 	@staticmethod
 	def require_binary(name: str) -> None:
 		if not Os.has_binary(name):
-			info(f"Required binary '{name}' not found.")
+			error(f"Required binary '{name}' not found.")
 			raise SystemExit(1)
 
-	@staticmethod
-	def running_from_host() -> bool:
-		# returns True when not on the ISO
-		return not Path('/run/archiso').exists()
-
-	@staticmethod
-	def running_from() -> str:
-		if Os.running_from_host():
-			if os.path.exists('/etc/arch-release'):
-				return 'arch'
-			if os.path.exists('/etc/alpine-release'):
-				return 'alpine'
-		return 'iso'
+	# to avoid using shutil.which everywhere
 
 
 def is_venv() -> bool:
