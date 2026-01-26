@@ -3,7 +3,6 @@
 ./
 ├── archinstall/
 │   ├── default_profiles/
-│   │   ├── custom
 │   │   ├── desktop
 │   │   ├── desktops/
 │   │   │   ├── awesome
@@ -128,18 +127,23 @@
 │   │       └── unicode
 │   ├── __main__
 │   └── scripts/
+│       ├── count
 │       ├── format
 │       ├── guided
 │       ├── list
 │       ├── minimal
+│       ├── mirror
 │       ├── pre_mount_cli
 │       ├── rescue
 │       └── size
 ├── examples/
+│   ├── config-custom.json
 │   ├── config-sample-full.json
-│   └── config-sample-mini.json
+│   ├── config-sample-mini.json
+│   └── custom
 ├── PKGBUILD
 ├── pyproject.toml
+├── schema.jsonc
 └── tests/
     ├── conftest
     ├── data/
@@ -147,5 +151,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 122 files
+24 directories, 126 files
 ```
