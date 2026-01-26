@@ -10,7 +10,7 @@ from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, reload_python, running_from_host
+from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, reload_python
 from .lib.utils.net import ping
 
 hard_depends = ('python-pyparted',)
@@ -20,8 +20,8 @@ def _log_env_info() -> None:
 	# log which mode we are using
 	info(f'{sys.executable} is_venv={is_venv()}')
 
-	if running_from_host():
-		info('Running from Host (H2T Mode)...')
+	if Os.running_from_host():
+		info(f'Running from Host (H2T Mode) on {Os.running_from()}...')
 	else:
 		info('Running from ISO (USB Mode)...')
 

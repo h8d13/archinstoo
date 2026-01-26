@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from ..models.mirrors import CustomRepository
 from ..models.packages import Repository
-from ..utils.env import running_from_host
+from ..utils.env import Os
 
 if TYPE_CHECKING:
 	from ..models.mirrors import PacmanConfiguration
@@ -77,7 +77,7 @@ class PacmanConfig:
 				content.append(f'Server = {custom.url}\n')
 
 		# Apply temp using backup then revert on exit handler
-		if running_from_host():
+		if Os.running_from_host():
 			temp_copy = self._config_path.with_suffix('.bak')
 			copy2(self._config_path, temp_copy)
 			atexit.register(lambda: copy2(temp_copy, self._config_path))
