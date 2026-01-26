@@ -69,7 +69,8 @@
 	},
 
 	"bootloaders": {
-		// all UEFI bootloaders use efibootmgr
+		// note efibootmgr probably isn't needed for some of these
+        // like refind should be able to self-handle entries
 		"Systemd": ["efibootmgr"],
 		"Grub": ["grub", "efibootmgr"],
 		"Limine": ["limine", "efibootmgr"],
