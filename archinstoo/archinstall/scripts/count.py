@@ -6,6 +6,8 @@ Usage: archinstall --script count path/to/user_configuration.json
 
 import argparse
 import json
+import re
+from pathlib import Path
 from typing import Any
 
 from archinstall.lib.general import SysCommand
@@ -13,133 +15,25 @@ from archinstall.lib.utils.env import Os
 
 Os.require_binary('pactree')
 
-# map all packages
+_schema_path = Path(__file__).parents[2] / 'schema.jsonc'
 
-# -- Base system (always installed) --
-BASE_PACKAGES = ['base', 'linux-firmware']
 
-# -- Desktop base (added when profile.main == 'Desktop') --
-DESKTOP_BASE = ['vi', 'openssh', 'wget', 'iwd', 'wireless_tools', 'smartmontools', 'xdg-utils']
+def _load_schema() -> dict[str, Any]:
+	"""Load schema.jsonc, stripping // comments."""
+	text = _schema_path.read_text()
+	text = re.sub(r'//.*', '', text)
+	result: dict[str, Any] = json.loads(text)
+	return result
 
-# -- Profile -> package mapping --
-# Keep in sync with default_profiles/desktops/ and default_profiles/servers/
-PROFILE_PACKAGES: dict[str, list[str]] = {
-	# Desktop environments
-	'KDE Plasma': ['plasma-desktop', 'plasma-pa', 'kscreen', 'konsole', 'kate', 'dolphin', 'ark', 'plasma-workspace'],
-	'GNOME': ['gnome', 'gnome-tweaks'],
-	'Xfce4': ['xfce4', 'xfce4-goodies', 'pavucontrol', 'gvfs', 'xarchiver'],
-	'Cinnamon': [
-		'cinnamon',
-		'system-config-printer',
-		'gnome-keyring',
-		'gnome-terminal',
-		'engrampa',
-		'gnome-screenshot',
-		'gvfs-smb',
-		'xed',
-		'xdg-user-dirs-gtk',
-	],
-	'MATE': ['mate', 'mate-extra'],
-	'Budgie': ['materia-gtk-theme', 'budgie', 'mate-terminal', 'nemo', 'papirus-icon-theme'],
-	'LXQt': ['lxqt', 'breeze-icons', 'oxygen-icons', 'xdg-utils', 'ttf-freefont', 'l3afpad', 'slock'],
-	'Cutefish': ['cutefish', 'noto-fonts'],
-	'Deepin': ['deepin', 'deepin-terminal', 'deepin-editor'],
-	'Cosmic': ['cosmic', 'xdg-user-dirs'],
-	# Wayland WMs
-	'Hyprland': [
-		'hyprland',
-		'dunst',
-		'kitty',
-		'uwsm',
-		'dolphin',
-		'wofi',
-		'xdg-desktop-portal-hyprland',
-		'qt5-wayland',
-		'qt6-wayland',
-		'polkit-kde-agent',
-		'grim',
-		'slurp',
-	],
-	'Sway': ['sway', 'swaybg', 'swaylock', 'swayidle', 'waybar', 'wmenu', 'brightnessctl', 'grim', 'slurp', 'pavucontrol', 'foot', 'xorg-xwayland'],
-	'River': ['foot', 'xdg-desktop-portal-wlr', 'river'],
-	'Niri': ['niri', 'alacritty', 'fuzzel', 'mako', 'xorg-xwayland', 'waybar', 'swaybg', 'swayidle', 'swaylock', 'xdg-desktop-portal-gnome'],
-	'Labwc': ['alacritty', 'labwc'],
-	# Xorg WMs
-	'i3-wm': ['i3-wm', 'i3lock', 'i3status', 'i3blocks', 'xss-lock', 'xterm', 'lightdm-gtk-greeter', 'lightdm', 'dmenu'],
-	'Bspwm': ['bspwm', 'sxhkd', 'dmenu', 'xdo', 'rxvt-unicode'],
-	'Awesome': [
-		'xorg-server',
-		'awesome',
-		'alacritty',
-		'xorg-xinit',
-		'xorg-xrandr',
-		'xterm',
-		'feh',
-		'slock',
-		'terminus-font',
-		'gnu-free-fonts',
-		'ttf-liberation',
-		'xsel',
-	],
-	'Enlightenment': ['enlightenment', 'terminology'],
-	'Qtile': ['qtile', 'alacritty'],
-	'Xmonad': ['xmonad', 'xmonad-contrib', 'xmonad-extras', 'xterm', 'dmenu'],
-	# Servers
-	'Nginx': ['nginx'],
-	'Docker': ['docker'],
-	'httpd': ['apache'],
-	'sshd': ['openssh'],
-	'PostgreSQL': ['postgresql'],
-	'MariaDB': ['mariadb'],
-	'Lighttpd': ['lighttpd'],
-	'Tomcat': ['tomcat10'],
-	'Cockpit': ['cockpit', 'udisks2', 'packagekit'],
-}
 
-# -- Greeter -> packages --
-GREETER_PACKAGES: dict[str, list[str]] = {
-	'lightdm-slick-greeter': ['lightdm', 'lightdm-slick-greeter'],
-	'lightdm-gtk-greeter': ['lightdm', 'lightdm-gtk-greeter'],
-	'sddm': ['sddm'],
-	'gdm': ['gdm'],
-	'ly': ['ly'],
-	'cosmic-greeter': ['cosmic-greeter'],
-}
-
-# -- GFX driver -> packages --
-GFX_DRIVER_PACKAGES: dict[str, list[str]] = {
-	'All open-source': [
-		'mesa',
-		'xf86-video-amdgpu',
-		'xf86-video-ati',
-		'xf86-video-nouveau',
-		'libva-mesa-driver',
-		'libva-intel-driver',
-		'intel-media-driver',
-		'vulkan-radeon',
-		'vulkan-intel',
-		'vulkan-nouveau',
-	],
-	'AMD / ATI (open-source)': ['mesa', 'xf86-video-amdgpu', 'xf86-video-ati', 'libva-mesa-driver', 'vulkan-radeon'],
-	'Intel (open-source)': ['mesa', 'libva-intel-driver', 'intel-media-driver', 'vulkan-intel'],
-	'Nvidia (open kernel module for newer GPUs, Turing+)': ['nvidia-open', 'libva-nvidia-driver'],
-	'Nvidia (open-source nouveau driver)': ['mesa', 'xf86-video-nouveau', 'vulkan-nouveau'],
-	'VirtualBox (open-source)': ['mesa'],
-}
-
-# Profiles that use X11 -> gfx driver adds xorg-server/xorg-xinit
-XORG_PROFILES = {'Xfce4', 'Cinnamon', 'MATE', 'Budgie', 'LXQt', 'Cutefish', 'Deepin', 'i3-wm', 'Bspwm', 'Awesome', 'Enlightenment', 'Qtile', 'Xmonad'}
-
-PIPEWIRE_PACKAGES = ['pipewire', 'pipewire-alsa', 'pipewire-jack', 'pipewire-pulse', 'gst-plugin-pipewire', 'libpulse', 'wireplumber']
-BLUETOOTH_PACKAGES = ['bluez', 'bluez-utils']
-PRINT_PACKAGES = ['cups', 'system-config-printer', 'cups-pk-helper']
+SCHEMA = _load_schema()
 
 
 def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
 	# base
-	pkgs.update(BASE_PACKAGES)
+	pkgs.update(SCHEMA['base'])
 
 	# kernels
 	kernels = config.get('kernels', ['linux'])
@@ -151,8 +45,9 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	# bootloader
 	bl = config.get('bootloader_config', {})
-	if bl.get('bootloader') == 'Grub':
-		pkgs.add('grub')
+	bl_name = bl.get('bootloader', '')
+	if bl_name in SCHEMA['bootloaders']:
+		pkgs.update(SCHEMA['bootloaders'][bl_name])
 
 	# user packages
 	for p in config.get('packages', []):
@@ -165,13 +60,14 @@ def collect(config: dict[str, Any]) -> set[str]:
 	main = profile.get('main', '')
 	details = profile.get('details', [])
 	custom_settings = profile.get('custom_settings', {})
+	profiles = SCHEMA['profiles']
 
 	if main == 'Desktop':
-		pkgs.update(DESKTOP_BASE)
+		pkgs.update(SCHEMA['desktop_base'])
 
 	for name in details:
-		if name in PROFILE_PACKAGES:
-			pkgs.update(PROFILE_PACKAGES[name])
+		if name in profiles:
+			pkgs.update(profiles[name])
 
 		# seat_access for sway/river/niri/labwc
 		settings = custom_settings.get(name, {})
@@ -180,14 +76,15 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	# greeter
 	greeter = pc.get('greeter', '')
-	if greeter in GREETER_PACKAGES:
-		pkgs.update(GREETER_PACKAGES[greeter])
+	if greeter in SCHEMA['greeters']:
+		pkgs.update(SCHEMA['greeters'][greeter])
 
 	# gfx driver
 	gfx = pc.get('gfx_driver', '')
-	if gfx in GFX_DRIVER_PACKAGES:
-		pkgs.update(GFX_DRIVER_PACKAGES[gfx])
-		if any(d in XORG_PROFILES for d in details):
+	if gfx in SCHEMA['gfx_drivers']:
+		pkgs.update(SCHEMA['gfx_drivers'][gfx])
+		xorg_profiles = set(SCHEMA['xorg_profiles'])
+		if any(d in xorg_profiles for d in details):
 			pkgs.update(['xorg-server', 'xorg-xinit'])
 		# dkms for nvidia with non-standard kernels
 		if gfx == 'Nvidia (open kernel module for newer GPUs, Turing+)':
@@ -197,45 +94,66 @@ def collect(config: dict[str, Any]) -> set[str]:
 				pkgs.add('dkms')
 				pkgs.update(f'{k}-headers' for k in kernels)
 
+	# network
+	net = config.get('network_config', {})
+	net_type = net.get('type', '')
+	if net_type in SCHEMA['network']:
+		pkgs.update(SCHEMA['network'][net_type])
+		if main == 'Desktop':
+			pkgs.update(SCHEMA['network']['nm_desktop_extra'])
+
 	# applications
 	app = config.get('app_config', {})
 
 	if app.get('bluetooth_config', {}).get('enabled', False):
-		pkgs.update(BLUETOOTH_PACKAGES)
+		pkgs.update(SCHEMA['bluetooth'])
 
 	audio = app.get('audio_config', {}).get('audio', '')
-	if audio == 'pipewire':
-		pkgs.update(PIPEWIRE_PACKAGES)
-	elif audio == 'pulseaudio':
-		pkgs.add('pulseaudio')
+	if audio in SCHEMA['audio']:
+		pkgs.update(SCHEMA['audio'][audio])
 
 	pm = app.get('power_management_config', {}).get('power_management', '')
-	if pm:
-		pkgs.add(pm)
-		if pm == 'tuned':
-			pkgs.add('tuned-ppd')
+	if pm in SCHEMA['power_management']:
+		pkgs.update(SCHEMA['power_management'][pm])
 
 	if app.get('print_service_config', {}).get('enabled', False):
-		pkgs.update(PRINT_PACKAGES)
+		pkgs.update(SCHEMA['printing'])
 
 	fw = app.get('firewall_config', {}).get('firewall', '')
-	if fw:
-		pkgs.add(fw)
+	if fw in SCHEMA['firewalls']:
+		pkgs.update(SCHEMA['firewalls'][fw])
 
 	for tool in app.get('management_config', {}).get('tools', []):
-		pkgs.add(tool)
+		if tool in SCHEMA['management']:
+			pkgs.update(SCHEMA['management'][tool])
 
 	monitor = app.get('monitor_config', {}).get('monitor', '')
-	if monitor:
-		pkgs.add(monitor)
+	if monitor in SCHEMA['monitors']:
+		pkgs.update(SCHEMA['monitors'][monitor])
 
 	editor = app.get('editor_config', {}).get('editor', '')
-	if editor:
-		pkgs.add(editor)
+	if editor in SCHEMA['editors']:
+		pkgs.update(SCHEMA['editors'][editor])
 
 	shell = app.get('shell_config', {}).get('shell', '')
-	if shell and shell != 'bash':
-		pkgs.add(shell)
+	if shell in SCHEMA['shells']:
+		pkgs.update(SCHEMA['shells'][shell])
+
+	# snapshots
+	disk = config.get('disk_config', {})
+	btrfs = disk.get('btrfs_options', {})
+	snapshot = btrfs.get('snapshot_config', {})
+	snap_type = snapshot.get('type', '')
+	if snap_type in SCHEMA['snapshots']:
+		pkgs.update(SCHEMA['snapshots'][snap_type])
+		# grub + btrfs snapshots
+		if bl_name == 'Grub':
+			pkgs.update(SCHEMA['grub_btrfs'])
+
+	# swap
+	swap = config.get('swap', {})
+	if swap.get('enabled', False):
+		pkgs.update(SCHEMA['swap'].get('zram', []))
 
 	return pkgs
 
