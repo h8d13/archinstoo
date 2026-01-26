@@ -1,10 +1,11 @@
 import importlib
 import os
-import shutil
 import sys
 from pathlib import Path
+from shutil import rmtree, which
 
-from ..output import error, info
+from ..exceptions import RequirementError
+from ..output import info
 
 
 class Os:
@@ -46,14 +47,10 @@ class Os:
 	# do something else
 
 	@staticmethod
-	def has_binary(name: str) -> bool:
-		return shutil.which(name) is not None
-
-	@staticmethod
-	def require_binary(name: str) -> None:
-		if not Os.has_binary(name):
-			error(f"Required binary '{name}' not found.")
-			raise SystemExit(1)
+	def locate_binary(name: str) -> str:
+		if path := which(name):
+			return path
+		raise RequirementError(f'Binary {name} does not exist.')
 
 	# to avoid using shutil.which everywhere
 
@@ -87,7 +84,7 @@ def clean_cache(root_dir: str) -> None:
 			if dirname.lower() == '__pycache__':
 				full_path = os.path.join(dirpath, dirname)
 				try:
-					shutil.rmtree(full_path)
+					rmtree(full_path)
 					deleted.append(full_path)
 				except Exception as e:
 					info(f'Failed to delete {full_path}: {e}')

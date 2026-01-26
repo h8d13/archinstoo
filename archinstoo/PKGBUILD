@@ -21,9 +21,9 @@ depends=(
   'pciutils'
   'kbd'
   'pacman'
+  'git'
 )
 makedepends=(
-  'git'
   'python-build'
   'python-installer'
   'python-setuptools'
