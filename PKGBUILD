@@ -9,7 +9,7 @@
 
 pkgname=archinstoo
 pkgver=0.0.01
-pkgrel=7
+pkgrel=8
 pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"
@@ -23,6 +23,7 @@ depends=(
   'util-linux' #For partition utilities
   'pciutils' #For PCI device detection
   'kbd' #For keyboard layout configuration
+  'pacman'
 )
 makedepends=(
   'python-build'
