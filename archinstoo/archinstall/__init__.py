@@ -42,13 +42,13 @@ def _bootstrap() -> int:
 	try:
 		info('Fetching deps...')
 		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
+		# mark in current env as bootstraped
+		# avoid infinite reloads
 		# refresh python last then re-exec to load new libraries
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
+		Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
 	except Exception:
 		return 1
-	# mark in current env as bootstraped
-	# avoid infinite reloads
-	Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
 	info('Reloading python...')
 	reload_python()
 	return 0
@@ -196,6 +196,7 @@ def run_as_a_module() -> int:
 		return rc
 	finally:
 		if handler.args.clean:
+			# note this deletes all logs too
 			handler.clean_up()
 		clean_cache('.')
 
