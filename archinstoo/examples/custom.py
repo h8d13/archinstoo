@@ -18,7 +18,7 @@ class CustomDesktopProfile(DesktopProfile):
 
 	@property
 	def packages(self) -> list[str]:
-			return [
-					'vlc',
-					'neovim',
-			]
+		return [
+			'vlc',
+			'neovim',
+		]
