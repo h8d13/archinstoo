@@ -21,7 +21,7 @@ _schema_path = Path(__file__).parents[2] / 'schema.jsonc'
 def _load_schema() -> dict[str, Any]:
 	"""Load schema.jsonc, stripping // comments."""
 	text = _schema_path.read_text()
-	text = re.sub(r'//.*', '', text)
+	text = re.sub(r'(?m)^\s*//.*$|(?<=,)\s*//.*$', '', text)
 	result: dict[str, Any] = json.loads(text)
 	return result
 
