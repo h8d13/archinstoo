@@ -3,11 +3,15 @@ from pathlib import Path
 
 from archinstall.lib.args import ROOTLESS_SCRIPTS
 
+scripts = [Path(x).stem for x in glob.glob(f'{Path(__file__).parent}/*.py') if Path(x).stem not in ('__init__', 'list')]
+
+rootless = sorted(s for s in scripts if s in ROOTLESS_SCRIPTS)
+root = sorted(s for s in scripts if s not in ROOTLESS_SCRIPTS)
+
 print('Available options:')
 
-for script in [Path(x) for x in glob.glob(f'{Path(__file__).parent}/*.py')]:
-	if script.stem in ['__init__', 'list']:
-		continue
+for name in rootless:
+	print(f'    {name}')
 
-	tag = '' if script.stem in ROOTLESS_SCRIPTS else '  [*] requires root'
-	print(f'    {script.stem}{tag}')
+for name in root:
+	print(f'    {name}  [*] requires root')
