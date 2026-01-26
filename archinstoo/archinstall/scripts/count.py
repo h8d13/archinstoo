@@ -6,7 +6,7 @@ Usage: archinstall --script count path/to/user_configuration.json
 
 import argparse
 import json
-import sys
+from typing import Any
 
 from archinstall.lib.general import SysCommand
 from archinstall.lib.utils.env import Os
@@ -28,7 +28,17 @@ PROFILE_PACKAGES: dict[str, list[str]] = {
 	'KDE Plasma': ['plasma-desktop', 'plasma-pa', 'kscreen', 'konsole', 'kate', 'dolphin', 'ark', 'plasma-workspace'],
 	'GNOME': ['gnome', 'gnome-tweaks'],
 	'Xfce4': ['xfce4', 'xfce4-goodies', 'pavucontrol', 'gvfs', 'xarchiver'],
-	'Cinnamon': ['cinnamon', 'system-config-printer', 'gnome-keyring', 'gnome-terminal', 'engrampa', 'gnome-screenshot', 'gvfs-smb', 'xed', 'xdg-user-dirs-gtk'],
+	'Cinnamon': [
+		'cinnamon',
+		'system-config-printer',
+		'gnome-keyring',
+		'gnome-terminal',
+		'engrampa',
+		'gnome-screenshot',
+		'gvfs-smb',
+		'xed',
+		'xdg-user-dirs-gtk',
+	],
 	'MATE': ['mate', 'mate-extra'],
 	'Budgie': ['materia-gtk-theme', 'budgie', 'mate-terminal', 'nemo', 'papirus-icon-theme'],
 	'LXQt': ['lxqt', 'breeze-icons', 'oxygen-icons', 'xdg-utils', 'ttf-freefont', 'l3afpad', 'slock'],
@@ -36,7 +46,20 @@ PROFILE_PACKAGES: dict[str, list[str]] = {
 	'Deepin': ['deepin', 'deepin-terminal', 'deepin-editor'],
 	'Cosmic': ['cosmic', 'xdg-user-dirs'],
 	# Wayland WMs
-	'Hyprland': ['hyprland', 'dunst', 'kitty', 'uwsm', 'dolphin', 'wofi', 'xdg-desktop-portal-hyprland', 'qt5-wayland', 'qt6-wayland', 'polkit-kde-agent', 'grim', 'slurp'],
+	'Hyprland': [
+		'hyprland',
+		'dunst',
+		'kitty',
+		'uwsm',
+		'dolphin',
+		'wofi',
+		'xdg-desktop-portal-hyprland',
+		'qt5-wayland',
+		'qt6-wayland',
+		'polkit-kde-agent',
+		'grim',
+		'slurp',
+	],
 	'Sway': ['sway', 'swaybg', 'swaylock', 'swayidle', 'waybar', 'wmenu', 'brightnessctl', 'grim', 'slurp', 'pavucontrol', 'foot', 'xorg-xwayland'],
 	'River': ['foot', 'xdg-desktop-portal-wlr', 'river'],
 	'Niri': ['niri', 'alacritty', 'fuzzel', 'mako', 'xorg-xwayland', 'waybar', 'swaybg', 'swayidle', 'swaylock', 'xdg-desktop-portal-gnome'],
@@ -44,7 +67,20 @@ PROFILE_PACKAGES: dict[str, list[str]] = {
 	# Xorg WMs
 	'i3-wm': ['i3-wm', 'i3lock', 'i3status', 'i3blocks', 'xss-lock', 'xterm', 'lightdm-gtk-greeter', 'lightdm', 'dmenu'],
 	'Bspwm': ['bspwm', 'sxhkd', 'dmenu', 'xdo', 'rxvt-unicode'],
-	'Awesome': ['xorg-server', 'awesome', 'alacritty', 'xorg-xinit', 'xorg-xrandr', 'xterm', 'feh', 'slock', 'terminus-font', 'gnu-free-fonts', 'ttf-liberation', 'xsel'],
+	'Awesome': [
+		'xorg-server',
+		'awesome',
+		'alacritty',
+		'xorg-xinit',
+		'xorg-xrandr',
+		'xterm',
+		'feh',
+		'slock',
+		'terminus-font',
+		'gnu-free-fonts',
+		'ttf-liberation',
+		'xsel',
+	],
 	'Enlightenment': ['enlightenment', 'terminology'],
 	'Qtile': ['qtile', 'alacritty'],
 	'Xmonad': ['xmonad', 'xmonad-contrib', 'xmonad-extras', 'xterm', 'dmenu'],
@@ -72,7 +108,18 @@ GREETER_PACKAGES: dict[str, list[str]] = {
 
 # -- GFX driver -> packages --
 GFX_DRIVER_PACKAGES: dict[str, list[str]] = {
-	'All open-source': ['mesa', 'xf86-video-amdgpu', 'xf86-video-ati', 'xf86-video-nouveau', 'libva-mesa-driver', 'libva-intel-driver', 'intel-media-driver', 'vulkan-radeon', 'vulkan-intel', 'vulkan-nouveau'],
+	'All open-source': [
+		'mesa',
+		'xf86-video-amdgpu',
+		'xf86-video-ati',
+		'xf86-video-nouveau',
+		'libva-mesa-driver',
+		'libva-intel-driver',
+		'intel-media-driver',
+		'vulkan-radeon',
+		'vulkan-intel',
+		'vulkan-nouveau',
+	],
 	'AMD / ATI (open-source)': ['mesa', 'xf86-video-amdgpu', 'xf86-video-ati', 'libva-mesa-driver', 'vulkan-radeon'],
 	'Intel (open-source)': ['mesa', 'libva-intel-driver', 'intel-media-driver', 'vulkan-intel'],
 	'Nvidia (open kernel module for newer GPUs, Turing+)': ['nvidia-open', 'libva-nvidia-driver'],
@@ -88,7 +135,7 @@ BLUETOOTH_PACKAGES = ['bluez', 'bluez-utils']
 PRINT_PACKAGES = ['cups', 'system-config-printer', 'cups-pk-helper']
 
 
-def collect(config: dict) -> set[str]:
+def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
 	# base
