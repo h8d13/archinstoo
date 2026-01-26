@@ -1,5 +1,6 @@
 import argparse
 import json
+from json import JSONDecodeError
 import shutil
 import sys
 import urllib.error
@@ -18,7 +19,7 @@ from archinstall.lib.models.locale import LocaleConfiguration
 from archinstall.lib.models.mirrors import PacmanConfiguration
 from archinstall.lib.models.network import NetworkConfiguration
 from archinstall.lib.models.profile import ProfileConfiguration
-from archinstall.lib.output import error, logger, warn
+from archinstall.lib.output import error, logger, warn, info
 from archinstall.lib.translationhandler import Language, translation_handler
 
 ROOTLESS_SCRIPTS = {'list', 'size', 'mirror'}
@@ -309,7 +310,12 @@ class ArchConfigHandler:
 			config_data = self._fetch_from_url(self._args.config_url)
 
 		if config_data is not None:
-			config.update(json.loads(config_data))
+			try:
+				config.update(json.loads(config_data))
+				
+			except JSONDecodeError as e:
+				warn(f'Malformed JSON at line {e.lineno}, column {e.colno}: {e.msg}')
+				raise SystemExit(1)
 
 		config = self._cleanup_config(config)
 

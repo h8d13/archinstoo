@@ -1,0 +1,74 @@
+{
+    "bug_report_url": "https://github.com/h8d13/archinstoo",
+    "script": "guided",
+    "archinstall-language": "English",
+    "locale_config": {
+        "kb_layout": "us",
+        "sys_lang": "en_US.UTF-8",
+        "sys_enc": "UTF-8"
+    },
+    "pacman_config": {
+        "mirror_regions": {
+            "United States": [
+                "https://mirrors.mit.edu/archlinux/$repo/os/$arch",
+                "https://mirrors.kernel.org/archlinux/$repo/os/$arch"
+            ]
+        },
+        "custom_servers": [],
+        "optional_repositories": [
+            "multilib"
+        ],
+        "custom_repositories": [],
+        "pacman_options": [
+            "Color",
+            "ILoveCandy"
+        ]
+    },
+    "bootloader_config": {
+        "bootloader": "Grub",
+        "uki": false,
+        "removable": false
+    },
+    "swap": {
+        "enabled": true,
+        "algorithm": "zstd"
+    },
+    "kernels": [
+        "linux"
+    ],
+    "profile_config": {
+        "profile": {
+            "path": "./examples/custom.py",
+            "details": [
+                "Xfce4"
+            ],
+            "custom_settings": {
+                "Xfce4": {}
+            }
+        },
+        "gfx_driver": "All open-source",
+        "greeter": "cosmic-greeter"
+    },
+    "hostname": "archlinux",
+    "auth_config": {},
+    "app_config": {
+        "bluetooth_config": {
+            "enabled": true
+        },
+        "audio_config": {
+            "audio": "pulseaudio"
+        },
+        "print_service_config": {
+            "enabled": true
+        }
+    },
+    "network_config": {
+        "type": "iso"
+    },
+    "parallel_downloads": 5,
+    "timezone": "US/Eastern",
+    "ntp": true,
+    "packages": [],
+    "services": [],
+    "custom_commands": []
+}

@@ -9,7 +9,6 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from .utils.env import Os, running_from_host
 from .utils.unicode import unicode_ljust, unicode_rjust
 
 if TYPE_CHECKING:
@@ -132,6 +131,7 @@ class Journald:
 
 def restore_perms(path: Path, recursive: bool = False) -> None:
 	# no-ops if ISO or run as root directly
+	from .utils.env import Os, running_from_host
 	if not running_from_host():
 		return
 
@@ -197,6 +197,7 @@ def _supports_color() -> bool:
 	Return True if the running system's terminal supports color,
 	and False otherwise.
 	"""
+	from .utils.env import Os
 	supported_platform = sys.platform != 'win32' or Os.has_env('ANSICON')
 
 	# isatty is not always implemented, #6223.
