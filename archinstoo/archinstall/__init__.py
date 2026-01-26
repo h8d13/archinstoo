@@ -36,9 +36,7 @@ def _deps_available() -> bool:
 
 
 def _bootstrap() -> int:
-	if _deps_available():
-		return 0
-	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
+	if _deps_available() or Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
 		info('Already bootstrapped...')
 		return 0
 	try:
