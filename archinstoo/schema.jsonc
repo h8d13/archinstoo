@@ -81,6 +81,11 @@
 	// grub + btrfs snapshots adds these
 	"grub_btrfs": ["grub-btrfs", "inotify-tools"],
 
+    "snapshots": {
+    "Snapper": ["snapper"],
+    "Timeshift": ["timeshift"]
+    },
+
 	"network": {
 		"nm": ["networkmanager", "wpa_supplicant"],
 		"nm_iwd": ["networkmanager"],
@@ -129,11 +134,6 @@
 		// bash is default, no extra package needed
 		"zsh": ["zsh"],
 		"fish": ["fish"]
-	},
-
-	"snapshots": {
-		"Snapper": ["snapper"],
-		"Timeshift": ["timeshift"]
 	},
 
 	"swap": {
