@@ -131,9 +131,9 @@ class Journald:
 
 def restore_perms(path: Path, recursive: bool = False) -> None:
 	# no-ops if ISO or run as root directly
-	from .utils.env import Os, running_from_host
+	from .utils.env import Os
 
-	if not running_from_host():
+	if not Os.running_from_host():
 		return
 
 	orig_user = Os.get_env('SUDO_USER') or Os.get_env('DOAS_USER')

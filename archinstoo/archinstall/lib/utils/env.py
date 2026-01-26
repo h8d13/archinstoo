@@ -30,6 +30,20 @@ class Os:
 			info(f"Required binary '{name}' not found.")
 			raise SystemExit(1)
 
+	@staticmethod
+	def running_from_host() -> bool:
+		# returns True when not on the ISO
+		return not Path('/run/archiso').exists()
+
+	@staticmethod
+	def running_from() -> str:
+		if Os.running_from_host():
+			if os.path.exists('/etc/arch-release'):
+				return 'arch'
+			if os.path.exists('/etc/alpine-release'):
+				return 'alpine'
+		return 'iso'
+
 
 def is_venv() -> bool:
 	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
@@ -49,11 +63,6 @@ def reload_python() -> None:
 
 def is_root() -> bool:
 	return os.getuid() == 0
-
-
-def running_from_host() -> bool:
-	# returns True when not on the ISO
-	return not Path('/run/archiso').exists()
 
 
 def clean_cache(root_dir: str) -> None:
