@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ..output import info
 
+
 class Os:
 	@staticmethod
 	def set_env(key: str, value: str) -> None:
@@ -18,7 +19,7 @@ class Os:
 	@staticmethod
 	def has_env(key: str) -> bool:
 		return key in os.environ
-	
+
 	@staticmethod
 	def has_binary(name: str) -> bool:
 		return shutil.which(name) is not None
@@ -28,6 +29,7 @@ class Os:
 		if not Os.has_binary(name):
 			info(f"Required binary '{name}' not found.")
 			raise SystemExit(1)
+
 
 def is_venv() -> bool:
 	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
@@ -55,7 +57,6 @@ def running_from_host() -> bool:
 
 
 def clean_cache(root_dir: str) -> None:
-
 	deleted = []
 
 	info('Cleaning up...')
