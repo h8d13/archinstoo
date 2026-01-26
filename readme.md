@@ -68,7 +68,7 @@ python -m archinstall [args] # try -h or --help
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
 > You can create any profile in `archinstall/default_profiles/` following convention, which will be imported automatically.
-Or modify existing ones direcly. 
+Or modify existing ones direcly. Can also see here for [examples](./archinstoo/examples)
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported. 
 
