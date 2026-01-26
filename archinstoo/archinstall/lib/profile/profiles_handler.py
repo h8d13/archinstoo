@@ -64,19 +64,23 @@ class ProfileHandler:
 		# load all the default_profiles from url and custom
 		# so that we can then apply whatever was specified
 		# in the main/detail sections
+		custom_profiles: list[Profile] = []
+
 		if url_path := profile_config.get('path', None):
 			self._url_path = url_path
 			local_path = Path(url_path)
 
 			if local_path.is_file():
-				profiles = self._process_profile_file(local_path)
-				self.remove_custom_profiles(profiles)
-				self.add_custom_profiles(profiles)
+				custom_profiles = self._process_profile_file(local_path)
+				self.remove_custom_profiles(custom_profiles)
+				self.add_custom_profiles(custom_profiles)
 			else:
 				self._import_profile_from_url(url_path)
 
 		if main := profile_config.get('main', None):
-			profile = self.get_profile_by_name(main) if main else None
+			profile = self.get_profile_by_name(main)
+		elif len(custom_profiles) == 1:
+			profile = custom_profiles[0]
 
 		if not profile:
 			return None
