@@ -13,12 +13,12 @@ from datetime import date, datetime
 from enum import Enum
 from pathlib import Path
 from select import EPOLLHUP, EPOLLIN, epoll
-from shutil import which
 from types import TracebackType
 from typing import Any, Self, override
 
-from .exceptions import RequirementError, SysCallError
+from .exceptions import SysCallError
 from .output import debug, error, logger
+from .utils.env import Os
 
 # https://stackoverflow.com/a/43627833/929999
 _VT100_ESCAPE_REGEX = r'\x1B\[[?0-9;]*[a-zA-Z]'
@@ -28,12 +28,6 @@ _VT100_ESCAPE_REGEX_BYTES = _VT100_ESCAPE_REGEX.encode()
 def generate_password(length: int = 64) -> str:
 	haystack = string.printable  # digits, ascii_letters, punctuation (!"#$[] etc) and whitespace
 	return ''.join(secrets.choice(haystack) for _ in range(length))
-
-
-def locate_binary(name: str) -> str:
-	if path := which(name):
-		return path
-	raise RequirementError(f'Binary {name} does not exist.')
 
 
 def clear_vt100_escape_codes(data: bytes) -> bytes:
@@ -99,7 +93,7 @@ class SysCommandWorker:
 			cmd = shlex.split(cmd)
 
 		if cmd and not cmd[0].startswith(('/', './')):  # Path() does not work well
-			cmd[0] = locate_binary(cmd[0])
+			cmd[0] = Os.locate_binary(cmd[0])
 
 		self.cmd = cmd
 		self.peek_output = peek_output

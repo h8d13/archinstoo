@@ -24,6 +24,7 @@ depends=(
   'pciutils' #For PCI device detection
   'kbd' #For keyboard layout configuration
   'pacman'
+  'git'
 )
 makedepends=(
   'python-build'
