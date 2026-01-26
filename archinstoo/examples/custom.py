@@ -5,11 +5,11 @@ from archinstall.default_profiles.profile import Profile
 
 # this can extend an existing one or be full standalone
 
-# see archinstoo/examples/config-custom.json
-# in this example we extend xfce
+# see /examples/config-custom.json
 
+# in this example we extend xfce
 # for fully standalone you can just specify everything in this file and remove 
-# 'details' and 'custom_settings' from json
+# 'details' and 'custom_settings' from json file
 
 class CustomDesktopProfile(DesktopProfile):
 	def __init__(self, current_selection: list[Profile] = []) -> None:
