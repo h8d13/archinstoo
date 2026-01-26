@@ -2,6 +2,25 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+
+## 0.0.01-8
+    - Start building `env` utils for support to build on alpine
+    - Rework `--script list` to show what needs root or not
+    - Add actual custom examples #71 
+    - Add `count` script that let's you map out how many pkgs would be installed by a profile
+    - Add schema.jsonc with all the possible packages installed
+    - Add mirrors progress indicator and average bit rate
+    - Style changes use `SystemExit` instead of importing sys on every file
+    - Add `--clean` args to remove logs too
+    - Wrap parted imports in try blocks
+    - Update missing packages from plasma profile
+    - Add newb docs and refresh more docs
+    - Fix missing iwd case for resume
+    - Fix disks menu QOL for resume
+    - Add `mirror` script
+    - Add lazy fallback to unmount
+    - Change disks to always show debug
+
 ## 0.0.01-7
 
     - Manual partitioning improvements
