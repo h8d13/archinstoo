@@ -9,7 +9,7 @@ from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
 
 from ..menu.list_manager import ListManager
-from ..models.users import Shell, User
+from ..models.users import Shell, SupplementaryGroup, User
 
 
 class UserList(ListManager[User]):
@@ -19,6 +19,7 @@ class UserList(ListManager[User]):
 			tr('Manage stash URLs'),
 			tr('Change password'),
 			tr('Change shell'),
+			tr('Manage groups'),
 			tr('Promote/Demote user'),
 			tr('Delete User'),
 		]
@@ -57,10 +58,13 @@ class UserList(ListManager[User]):
 		elif action == self._actions[3] and entry:  # change shell
 			user = next(filter(lambda x: x == entry, data))
 			user.shell = _select_shell(user.shell, elev=user.elev)
-		elif action == self._actions[4] and entry:  # promote/demote
+		elif action == self._actions[4] and entry:  # manage groups
+			user = next(filter(lambda x: x == entry, data))
+			user.groups = _select_groups(user.groups)
+		elif action == self._actions[5] and entry:  # promote/demote
 			user = next(filter(lambda x: x == entry, data))
 			user.elev = not user.elev
-		elif action == self._actions[5] and entry:  # delete
+		elif action == self._actions[6] and entry:  # delete
 			data = [d for d in data if d != entry]
 
 		return data
@@ -171,8 +175,9 @@ class UserList(ListManager[User]):
 				raise ValueError('Unhandled result type')
 
 		shell = _select_shell(elev=elev)
+		groups = _select_groups()
 
-		return User(username, password, elev, shell=shell)
+		return User(username, password, elev, groups=groups, shell=shell)
 
 
 def _select_shell(preset: Shell = Shell.BASH, elev: bool = False) -> Shell:
@@ -195,6 +200,29 @@ def _select_shell(preset: Shell = Shell.BASH, elev: bool = False) -> Shell:
 			return preset
 		case _:
 			return Shell.BASH
+
+
+def _select_groups(preset: list[str] | None = None) -> list[str]:
+	group = MenuItemGroup.from_enum(SupplementaryGroup)
+
+	if preset:
+		group.set_selected_by_value([SupplementaryGroup(g) for g in preset if g in SupplementaryGroup._value2member_map_])
+
+	result = SelectMenu[SupplementaryGroup](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Groups')),
+		multi=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			return [g.value for g in result.get_values()]
+		case ResultType.Skip:
+			return preset or []
+		case _:
+			return preset or []
 
 
 def ask_for_additional_users(prompt: str = '', defined_users: list[User] = []) -> list[User]:

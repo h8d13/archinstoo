@@ -148,7 +148,7 @@ def test_config_file_parsing(
 					username='user_name',
 					password=Password(enc_password='password_hash'),
 					elev=True,
-					groups=['wheel'],
+					groups=['wheel', 'video', 'storage'],
 					shell=Shell.FISH,
 				),
 			],

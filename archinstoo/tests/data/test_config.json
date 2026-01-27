@@ -34,7 +34,7 @@
               "username": "user_name",
               "enc_password": "password_hash",
               "elev": true,
-              "groups": ["wheel"],
+              "groups": ["wheel", "video", "storage"],
               "shell": "fish"
           }
       ],
