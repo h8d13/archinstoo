@@ -141,9 +141,11 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if editor in SCHEMA['editors']:
 		pkgs.update(SCHEMA['editors'][editor])
 
-	shell = app.get('shell_config', {}).get('shell', '')
-	if shell in SCHEMA['shells']:
-		pkgs.update(SCHEMA['shells'][shell])
+	# shells (per-user in auth_config)
+	for user in auth.get('users', []):
+		shell = user.get('shell', '')
+		if shell in SCHEMA['shells']:
+			pkgs.update(SCHEMA['shells'][shell])
 
 	# filesystem tools
 	disk = config.get('disk_config', {})

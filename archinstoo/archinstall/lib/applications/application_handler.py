@@ -14,7 +14,6 @@ from .cat.management import ManagementApp
 from .cat.monitor import MonitorApp
 from .cat.power_management import PowerManagementApp
 from .cat.print_service import PrintServiceApp
-from .cat.shell import ShellApp
 
 if TYPE_CHECKING:
 	from archinstall.lib.installer import Installer
@@ -66,11 +65,4 @@ class ApplicationHandler:
 			EditorApp().install(
 				install_session,
 				app_config.editor_config,
-			)
-
-		if app_config.shell_config:
-			ShellApp().install(
-				install_session,
-				app_config.shell_config,
-				users,
 			)

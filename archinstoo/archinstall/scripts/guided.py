@@ -6,6 +6,7 @@ from archinstall import SysInfo
 from archinstall.default_profiles.profile import DisplayServer
 from archinstall.lib.applications.application_handler import ApplicationHandler
 from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstall.lib.authentication.shell import ShellApp
 from archinstall.lib.configuration import ConfigurationHandler
 from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
@@ -127,9 +128,9 @@ def perform_installation(
 					config.auth_config.users,
 					config.auth_config.privilege_escalation,
 				)
+				ShellApp().install(installation, config.auth_config.users)
 
 		if app_config := config.app_config:
-			# note some apps might need to know users like changing the shell
 			users = config.auth_config.users if config.auth_config else None
 			application_handler.install_applications(installation, app_config, users)
 

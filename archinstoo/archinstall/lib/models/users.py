@@ -1,10 +1,17 @@
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
 from archinstall.lib.translationhandler import tr
 
 from ..authentication.crypt import crypt_yescrypt
+
+
+class Shell(StrEnum):
+	BASH = auto()
+	ZSH = auto()
+	FISH = auto()
+	RBASH = auto()
 
 
 class PasswordStrength(Enum):
@@ -93,6 +100,7 @@ class UserSerialization(TypedDict):
 	groups: list[str]
 	enc_password: str | None
 	stash_urls: NotRequired[list[str]]
+	shell: NotRequired[str]
 
 
 class Password:
@@ -134,6 +142,7 @@ class User:
 	elev: bool
 	groups: list[str] = field(default_factory=list)
 	stash_urls: list[str] = field(default_factory=list)
+	shell: Shell = Shell.BASH
 
 	@override
 	def __str__(self) -> str:
@@ -146,6 +155,7 @@ class User:
 			'password': self.password.hidden(),
 			'elev': self.elev,
 			'groups': self.groups,
+			'shell': self.shell.value,
 		}
 
 	def json(self) -> UserSerialization:
@@ -155,6 +165,7 @@ class User:
 			'elev': self.elev,
 			'groups': self.groups,
 			'stash_urls': self.stash_urls,
+			'shell': self.shell.value,
 		}
 
 	@staticmethod
@@ -174,6 +185,7 @@ class User:
 			groups = entry.get('groups', [])
 			enc_password = entry.get('enc_password')
 			stash_urls = entry.get('stash_urls', [])
+			shell = Shell(entry['shell']) if 'shell' in entry else Shell.BASH
 
 			if enc_password:
 				password = Password(enc_password=enc_password)
@@ -187,6 +199,7 @@ class User:
 				elev=entry.get('elev', False) is True,
 				groups=groups,
 				stash_urls=stash_urls,
+				shell=shell,
 			)
 
 			users.append(user)
