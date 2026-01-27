@@ -13,7 +13,7 @@ from typing import Any
 from archinstall.lib.general import SysCommand
 from archinstall.lib.utils.env import Os
 
-Os.require_binary('pactree')
+Os.locate_binary('pactree')
 
 _schema_path = Path(__file__).parents[2] / 'schema.jsonc'
 
@@ -139,8 +139,18 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if shell in SCHEMA['shells']:
 		pkgs.update(SCHEMA['shells'][shell])
 
-	# snapshots
+	# filesystem tools
 	disk = config.get('disk_config', {})
+	fs_tools = SCHEMA['filesystem_tools']
+	for dev in disk.get('device_modifications', []):
+		for part in dev.get('partitions', []):
+			if (fs := part.get('fs_type', '')) in fs_tools:
+				pkgs.update(fs_tools[fs])
+		for vol in dev.get('lvm_config', {}).get('volumes', []):
+			if (fs := vol.get('fs_type', '')) in fs_tools:
+				pkgs.update(fs_tools[fs])
+
+	# snapshots
 	btrfs = disk.get('btrfs_options', {})
 	snapshot = btrfs.get('snapshot_config', {})
 	snap_type = snapshot.get('type', '')
@@ -176,7 +186,6 @@ def resolve_deps(explicit: set[str]) -> set[str]:
 	total = len(pkgs)
 
 	for i, pkg in enumerate(pkgs, 1):
-		print(f'\r  {i}/{total}', end='', flush=True)
 		try:
 			output = SysCommand(f'pactree -sul {pkg}')
 			for line in output:
@@ -185,6 +194,7 @@ def resolve_deps(explicit: set[str]) -> set[str]:
 					resolved.add(name)
 		except Exception:
 			resolved.add(pkg)
+		print(f'\r  {i}/{total} | resolved: {len(resolved)}', end='', flush=True)
 
 	print()
 	return resolved

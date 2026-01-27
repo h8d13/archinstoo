@@ -5,67 +5,11 @@
 
 	"base": ["base", "linux-firmware"],
 
-	"desktop_base": ["vi", "openssh", "wget", "iwd", "wireless_tools", "smartmontools", "xdg-utils"],
-
-	// -- Desktop Environments --
-	"profiles": {
-		"KDE Plasma": ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "plasma-workspace"],
-		"GNOME": ["gnome", "gnome-tweaks"],
-		"Xfce4": ["xfce4", "xfce4-goodies", "pavucontrol", "gvfs", "xarchiver"],
-		"Cinnamon": ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed", "xdg-user-dirs-gtk"],
-		"MATE": ["mate", "mate-extra"],
-		"Budgie": ["materia-gtk-theme", "budgie", "mate-terminal", "nemo", "papirus-icon-theme"],
-		"LXQt": ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "ttf-freefont", "l3afpad", "slock"],
-		"Cutefish": ["cutefish", "noto-fonts"],
-		"Deepin": ["deepin", "deepin-terminal", "deepin-editor"],
-		"Cosmic": ["cosmic", "xdg-user-dirs"],
-
-		// -- Wayland WMs --
-		"Hyprland": ["hyprland", "dunst", "kitty", "uwsm", "dolphin", "wofi", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "polkit-kde-agent", "grim", "slurp"],
-		"Sway": ["sway", "swaybg", "swaylock", "swayidle", "waybar", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "foot", "xorg-xwayland"],
-		"River": ["foot", "xdg-desktop-portal-wlr", "river"],
-		"Niri": ["niri", "alacritty", "fuzzel", "mako", "xorg-xwayland", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome"],
-		"Labwc": ["alacritty", "labwc"],
-
-		// -- Xorg WMs --
-		"i3-wm": ["i3-wm", "i3lock", "i3status", "i3blocks", "xss-lock", "xterm", "lightdm-gtk-greeter", "lightdm", "dmenu"],
-		"Bspwm": ["bspwm", "sxhkd", "dmenu", "xdo", "rxvt-unicode"],
-		"Awesome": ["xorg-server", "awesome", "alacritty", "xorg-xinit", "xorg-xrandr", "xterm", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"],
-		"Enlightenment": ["enlightenment", "terminology"],
-		"Qtile": ["qtile", "alacritty"],
-		"Xmonad": ["xmonad", "xmonad-contrib", "xmonad-extras", "xterm", "dmenu"],
-
-		// -- Servers --
-		"Nginx": ["nginx"],
-		"Docker": ["docker"],
-		"httpd": ["apache"],
-		"sshd": ["openssh"],
-		"Postgresql": ["postgresql"],
-		"Mariadb": ["mariadb"],
-		"Lighttpd": ["lighttpd"],
-		"Tomcat": ["tomcat10"],
-		"Cockpit": ["cockpit", "udisks2", "packagekit"]
-	},
-
-	// Profiles that need xorg-server/xorg-xinit when a gfx driver is selected
-	"xorg_profiles": ["Xfce4", "Cinnamon", "MATE", "Budgie", "LXQt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
-
-	"greeters": {
-		"lightdm-slick-greeter": ["lightdm", "lightdm-slick-greeter"],
-		"lightdm-gtk-greeter": ["lightdm", "lightdm-gtk-greeter"],
-		"sddm": ["sddm"],
-		"gdm": ["gdm"],
-		"ly": ["ly"],
-		"cosmic-greeter": ["cosmic-greeter"]
-	},
-
-	"gfx_drivers": {
-		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
-		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
-		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
-		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
-		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
-		"VirtualBox (open-source)": ["mesa"]
+	"filesystem_tools": {
+		// note most are handled by base (e2fsprogs, dosfstools)
+		"btrfs": ["btrfs-progs"],
+		"xfs": ["xfsprogs"],
+		"f2fs": ["f2fs-tools"]
 	},
 
 	"bootloaders": {
@@ -78,6 +22,15 @@
 		"Refind": ["refind"]
 	},
 
+	"gfx_drivers": {
+		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
+		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
+		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
+		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
+		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
+		"VirtualBox (open-source)": ["mesa", "libva-mesa-driver'"]
+	},
+	
 	// grub + btrfs snapshots adds these
 	"grub_btrfs": ["grub-btrfs", "inotify-tools"],
 
@@ -143,5 +96,60 @@
 	"power_management": {
 		"power-profiles-daemon": ["power-profiles-daemon"],
 		"tuned": ["tuned", "tuned-ppd"]
+	},
+
+	// Always installed with desktops
+	"desktop_base": ["vi", "openssh", "wget", "iwd", "wireless_tools", "smartmontools", "xdg-utils"],
+
+	// -- Desktop Environments --
+	"profiles": {
+		"KDE Plasma": ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "plasma-workspace"],
+		"GNOME": ["gnome", "gnome-tweaks"],
+		"Xfce4": ["xfce4", "xfce4-goodies", "pavucontrol", "gvfs", "xarchiver"],
+		"Cinnamon": ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed", "xdg-user-dirs-gtk"],
+		"MATE": ["mate", "mate-extra"],
+		"Budgie": ["materia-gtk-theme", "budgie", "mate-terminal", "nemo", "papirus-icon-theme"],
+		"LXQt": ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "ttf-freefont", "l3afpad", "slock"],
+		"Cutefish": ["cutefish", "noto-fonts"],
+		"Deepin": ["deepin", "deepin-terminal", "deepin-editor"],
+		"Cosmic": ["cosmic", "xdg-user-dirs"],
+
+		// -- Wayland WMs --
+		"Hyprland": ["hyprland", "dunst", "kitty", "uwsm", "dolphin", "wofi", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "polkit-kde-agent", "grim", "slurp"],
+		"Sway": ["sway", "swaybg", "swaylock", "swayidle", "waybar", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "foot", "xorg-xwayland"],
+		"River": ["foot", "xdg-desktop-portal-wlr", "river"],
+		"Niri": ["niri", "alacritty", "fuzzel", "mako", "xorg-xwayland", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome"],
+		"Labwc": ["alacritty", "labwc"],
+
+		// -- Xorg WMs --
+		"i3-wm": ["i3-wm", "i3lock", "i3status", "i3blocks", "xss-lock", "xterm", "lightdm-gtk-greeter", "lightdm", "dmenu"],
+		"Bspwm": ["bspwm", "sxhkd", "dmenu", "xdo", "rxvt-unicode"],
+		"Awesome": ["xorg-server", "awesome", "alacritty", "xorg-xinit", "xorg-xrandr", "xterm", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"],
+		"Enlightenment": ["enlightenment", "terminology"],
+		"Qtile": ["qtile", "alacritty"],
+		"Xmonad": ["xmonad", "xmonad-contrib", "xmonad-extras", "xterm", "dmenu"],
+
+		// -- Servers --
+		"Nginx": ["nginx"],
+		"Docker": ["docker"],
+		"httpd": ["apache"],
+		"sshd": ["openssh"],
+		"Postgresql": ["postgresql"],
+		"Mariadb": ["mariadb"],
+		"Lighttpd": ["lighttpd"],
+		"Tomcat": ["tomcat10"],
+		"Cockpit": ["cockpit", "udisks2", "packagekit"]
+	},
+
+	// Profiles that need xorg-server/xorg-xinit when a gfx driver is selected
+	"xorg_profiles": ["Xfce4", "Cinnamon", "MATE", "Budgie", "LXQt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
+
+	"greeters": {
+		"lightdm-slick-greeter": ["lightdm", "lightdm-slick-greeter"],
+		"lightdm-gtk-greeter": ["lightdm", "lightdm-gtk-greeter"],
+		"sddm": ["sddm"],
+		"gdm": ["gdm"],
+		"ly": ["ly"],
+		"cosmic-greeter": ["cosmic-greeter"]
 	}
 }

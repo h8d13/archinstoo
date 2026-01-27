@@ -206,7 +206,7 @@ class CustomMirrorServersList(ListManager[CustomServer]):
 		return None
 
 
-class MirrorMenu(AbstractSubMenu[PacmanConfiguration]):
+class PMenu(AbstractSubMenu[PacmanConfiguration]):
 	def __init__(
 		self,
 		preset: PacmanConfiguration | None = None,
@@ -257,7 +257,7 @@ class MirrorMenu(AbstractSubMenu[PacmanConfiguration]):
 				key='custom_servers',
 			),
 			MenuItem(
-				text=tr('Pacman options'),
+				text=tr('Pacman misc options'),
 				action=select_pacman_options,
 				value=self._mirror_config.pacman_options,
 				preview_action=self._prev_pacman_options,

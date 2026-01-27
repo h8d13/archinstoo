@@ -56,6 +56,14 @@ class AbstractMenu[ValueT]:
 				if config_value is not None:
 					item.value = config_value
 
+	def _reset_items(self) -> None:
+		for item in self._menu_item_group._menu_items:
+			if item.key and not item.key.startswith(CONFIG_KEY):
+				if isinstance(item.value, (list, dict)):
+					item.value = type(item.value)()
+				else:
+					item.value = None
+
 	def sync_all_to_config(self) -> None:
 		for item in self._menu_item_group._menu_items:
 			if item.key:
@@ -110,7 +118,7 @@ class AbstractMenu[ValueT]:
 							continue
 						break
 				case ResultType.Reset:
-					return None
+					self._reset_items()
 
 		self.sync_all_to_config()
 		return None
