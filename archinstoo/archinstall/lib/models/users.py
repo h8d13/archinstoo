@@ -51,15 +51,6 @@ class PasswordStrength(Enum):
 			case PasswordStrength.STRONG:
 				return tr('strong')
 
-	def color(self) -> str:
-		match self:
-			case PasswordStrength.WEAK:
-				return 'red'
-			case PasswordStrength.MODERATE:
-				return 'yellow'
-			case PasswordStrength.STRONG:
-				return 'green'
-
 	@classmethod
 	def strength(cls, password: str) -> Self:
 		digit = any(character.isdigit() for character in password)
