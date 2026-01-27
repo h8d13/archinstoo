@@ -10,6 +10,24 @@
       },
       "print_service_config": {
           "enabled": true
+      },
+      "firewall_config": {
+          "firewall": "ufw"
+      },
+      "management_config": {
+          "tools": ["git", "man-db"]
+      },
+      "monitor_config": {
+          "monitor": "htop"
+      },
+      "editor_config": {
+          "editor": "vim"
+      },
+      "shell_config": {
+          "shell": "fish"
+      },
+      "power_management_config": {
+          "power_management": "power-profiles-daemon"
       }
   },
   "auth_config": {
