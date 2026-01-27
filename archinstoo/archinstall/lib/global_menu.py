@@ -36,7 +36,7 @@ from .models.profile import ProfileConfiguration
 from .network.network_menu import ask_to_configure_network
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
-from .pm.mirrors import MirrorMenu
+from .pm.mirrors import PMenu
 from .translationhandler import Language, tr, translation_handler
 
 
@@ -93,6 +93,7 @@ class GlobalMenu(AbstractMenu[None]):
 				action=self._pacman_configuration,
 				preview_action=self._prev_pacman_config,
 				key='pacman_config',
+				value_validator=lambda c: bool(c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options),
 			),
 			MenuItem(
 				text=tr('Bootloader'),
@@ -702,7 +703,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return packages
 
 	def _pacman_configuration(self, preset: PacmanConfiguration | None = None) -> PacmanConfiguration:
-		pacman_configuration = MirrorMenu(preset=preset).run()
+		pacman_configuration = PMenu(preset=preset).run()
 
 		needs_apply = pacman_configuration.optional_repositories or pacman_configuration.custom_repositories or pacman_configuration.pacman_options
 
