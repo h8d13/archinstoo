@@ -17,17 +17,22 @@ class Shell(StrEnum):
 class SupplementaryGroup(StrEnum):
 	"""Common supplementary groups.
 
-	wheel and audio are excluded — wheel is auto-added for elevated users,
-	and audio access is handled by logind/pipewire.
+	wheel is excluded — auto-added for elevated users.
+	audio/video/storage/input/network are excluded —
+	device access handled by systemd-logind for active sessions,
+	seat management by the seat_access choice (polkit/seatd).
 	"""
 
-	VIDEO = auto()
-	STORAGE = auto()
-	NETWORK = auto()
-	INPUT = auto()
-	LP = auto()
-	RFKILL = auto()
-	UUCP = auto()
+	ADM = auto()  # read access to protected logs / journal
+	FTP = auto()  # access to FTP served files
+	GAMES = auto()  # access to some game software
+	HTTP = auto()  # access to HTTP served files
+	LOG = auto()  # access to /var/log/ (syslog-ng)
+	LP = auto()  # printer access
+	RFKILL = auto()  # wireless device power control
+	SYS = auto()  # administer printers in CUPS
+	SYSTEMD_JOURNAL = 'systemd-journal'  # read-only systemd logs
+	UUCP = auto()  # serial ports and connected devices
 
 
 class PasswordStrength(Enum):
@@ -165,12 +170,12 @@ class User:
 		# safety overwrite to make sure password is not leaked
 		return f'User({self.username=}, {self.elev=}, {self.groups=})'
 
-	def table_data(self) -> dict[str, str | bool | list[str]]:
+	def table_data(self) -> dict[str, str | bool]:
 		return {
 			'username': self.username,
 			'password': self.password.hidden(),
 			'elev': self.elev,
-			'groups': self.groups,
+			'groups': f'{len(self.groups)}/{len(self.groups)}',
 			'shell': self.shell.value,
 		}
 

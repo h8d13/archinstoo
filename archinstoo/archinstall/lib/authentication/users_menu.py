@@ -175,9 +175,8 @@ class UserList(ListManager[User]):
 				raise ValueError('Unhandled result type')
 
 		shell = _select_shell(elev=elev)
-		groups = _select_groups()
 
-		return User(username, password, elev, groups=groups, shell=shell)
+		return User(username, password, elev, shell=shell)
 
 
 def _select_shell(preset: Shell = Shell.BASH, elev: bool = False) -> Shell:
