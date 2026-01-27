@@ -34,7 +34,7 @@
 		"zram": ["zram-generator"]
 	},
 
-	// Always installed with desktops
+	// always installed with desktops
 	"desktop_base": ["vi", "openssh", "wget", "iwd", "wireless_tools", "smartmontools", "xdg-utils"],
 
 	// -- Desktop Environments --
@@ -77,7 +77,7 @@
 		"Cockpit": ["cockpit", "udisks2", "packagekit"]
 	},
 
-	// Profiles that need xorg-server/xorg-xinit when a gfx driver is selected
+	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
 	"xorg_profiles": ["Xfce4", "Cinnamon", "MATE", "Budgie", "LXQt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
 
 	"gfx_drivers": {
@@ -89,7 +89,7 @@
 		"VirtualBox (open-source)": ["mesa", "libva-mesa-driver'"]
 	},
 
-	// Each desktop specifies a default greeter but there is also Nogreeter type and can pick any
+	// each desktop specifies a default greeter but there is also Nogreeter type and can pick any
 	"greeters": {
 		"lightdm-slick-greeter": ["lightdm", "lightdm-slick-greeter"],
 		"lightdm-gtk-greeter": ["lightdm", "lightdm-gtk-greeter"],
