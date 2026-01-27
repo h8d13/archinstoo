@@ -102,6 +102,12 @@ def collect(config: dict[str, Any]) -> set[str]:
 		if main == 'Desktop':
 			pkgs.update(SCHEMA['network']['nm_desktop_extra'])
 
+	# privilege escalation
+	auth = config.get('auth_config', {})
+	priv_esc = auth.get('privilege_escalation', 'sudo')
+	if priv_esc in SCHEMA['privilege_escalation']:
+		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
+
 	# applications
 	app = config.get('app_config', {})
 
@@ -165,6 +171,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if swap.get('enabled', False):
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
+	print(pkgs)
 	return pkgs
 
 

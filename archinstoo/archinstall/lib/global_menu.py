@@ -442,6 +442,11 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'{tr("Editor")}: {editor_config.editor.value}'
 				output += '\n'
 
+			if app_config.shell_config:
+				shell_config = app_config.shell_config
+				output += f'{tr("Shell")}: {shell_config.shell.value}'
+				output += '\n'
+
 			return output
 
 		return None

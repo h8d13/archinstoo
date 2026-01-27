@@ -5,13 +5,6 @@
 
 	"base": ["base", "linux-firmware"],
 
-	"filesystem_tools": {
-		// note most are handled by base (e2fsprogs, dosfstools)
-		"btrfs": ["btrfs-progs"],
-		"xfs": ["xfsprogs"],
-		"f2fs": ["f2fs-tools"]
-	},
-
 	"bootloaders": {
 		// note efibootmgr probably isn't needed for some of these
         // like refind should be able to self-handle entries
@@ -22,80 +15,23 @@
 		"Refind": ["refind"]
 	},
 
-	"gfx_drivers": {
-		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
-		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
-		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
-		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
-		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
-		"VirtualBox (open-source)": ["mesa", "libva-mesa-driver'"]
+	"filesystem_tools": {
+		// note most are handled by base (e2fsprogs, dosfstools)
+		"btrfs": ["btrfs-progs"],
+		"xfs": ["xfsprogs"],
+		"f2fs": ["f2fs-tools"]
 	},
-	
+
 	// grub + btrfs snapshots adds these
 	"grub_btrfs": ["grub-btrfs", "inotify-tools"],
 
-    "snapshots": {
-    "Snapper": ["snapper"],
-    "Timeshift": ["timeshift"]
-    },
-
-	"network": {
-		"nm": ["networkmanager", "wpa_supplicant"],
-		"nm_iwd": ["networkmanager"],
-		// nm adds network-manager-applet for desktop profiles (handled in count logic)
-		"nm_desktop_extra": ["network-manager-applet"]
-	},
-
-	"audio": {
-		"pipewire": ["pipewire", "pipewire-alsa", "pipewire-jack", "pipewire-pulse", "gst-plugin-pipewire", "libpulse", "wireplumber"],
-		"pulseaudio": ["pulseaudio"]
-	},
-
-	"bluetooth": ["bluez", "bluez-utils"],
-
-	"printing": ["cups", "system-config-printer", "cups-pk-helper"],
-
-	"firewalls": {
-		"ufw": ["ufw"],
-		"firewalld": ["firewalld"]
-	},
-
-	"management": {
-		"git": ["git"],
-		"base-devel": ["base-devel"],
-		"man-db": ["man-db"],
-		"pacman-contrib": ["pacman-contrib"],
-		"reflector": ["reflector"]
-	},
-
-	"monitors": {
-		"htop": ["htop"],
-		"btop": ["btop"],
-		"bottom": ["bottom"]
-	},
-
-	"editors": {
-		"nano": ["nano"],
-		"micro": ["micro"],
-		"vi": ["vi"],
-		"vim": ["vim"],
-		"neovim": ["neovim"],
-		"emacs": ["emacs"]
-	},
-
-	"shells": {
-		// bash is default, no extra package needed
-		"zsh": ["zsh"],
-		"fish": ["fish"]
+	"snapshots": {
+		"Snapper": ["snapper"],
+		"Timeshift": ["timeshift"]
 	},
 
 	"swap": {
 		"zram": ["zram-generator"]
-	},
-
-	"power_management": {
-		"power-profiles-daemon": ["power-profiles-daemon"],
-		"tuned": ["tuned", "tuned-ppd"]
 	},
 
 	// Always installed with desktops
@@ -144,6 +80,16 @@
 	// Profiles that need xorg-server/xorg-xinit when a gfx driver is selected
 	"xorg_profiles": ["Xfce4", "Cinnamon", "MATE", "Budgie", "LXQt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
 
+	"gfx_drivers": {
+		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
+		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
+		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
+		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
+		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
+		"VirtualBox (open-source)": ["mesa", "libva-mesa-driver'"]
+	},
+
+	// Each desktop specifies a default greeter but there is also Nogreeter type and can pick any
 	"greeters": {
 		"lightdm-slick-greeter": ["lightdm", "lightdm-slick-greeter"],
 		"lightdm-gtk-greeter": ["lightdm", "lightdm-gtk-greeter"],
@@ -151,5 +97,67 @@
 		"gdm": ["gdm"],
 		"ly": ["ly"],
 		"cosmic-greeter": ["cosmic-greeter"]
+	},
+
+	// this a 'advanced' option but seems to work fine
+	"privilege_escalation": {
+		"sudo": ["sudo"],
+		"doas": ["opendoas"]
+	},
+
+	"bluetooth": ["bluez", "bluez-utils"],
+
+	"audio": {
+		"pipewire": ["pipewire", "pipewire-alsa", "pipewire-jack", "pipewire-pulse", "gst-plugin-pipewire", "libpulse", "wireplumber"],
+		"pulseaudio": ["pulseaudio"]
+	},
+
+	"printing": ["cups", "system-config-printer", "cups-pk-helper"],
+
+	"firewalls": {
+		"ufw": ["ufw"],
+		"firewalld": ["firewalld"]
+	},
+
+	"management": {
+		"git": ["git"],
+		"base-devel": ["base-devel"],
+		"man-db": ["man-db"],
+		"pacman-contrib": ["pacman-contrib"],
+		"reflector": ["reflector"]
+	},
+
+	"monitors": {
+		"htop": ["htop"],
+		"btop": ["btop"],
+		"bottom": ["bottom"]
+	},
+
+	"editors": {
+		"nano": ["nano"],
+		"micro": ["micro"],
+		"vi": ["vi"],
+		"vim": ["vim"],
+		"neovim": ["neovim"],
+		"emacs": ["emacs"]
+	},
+
+	"shells": {
+		// bash is default, no extra package needed
+		"zsh": ["zsh"],
+		"fish": ["fish"]
+	},
+
+	// only showed on laptops
+	"power_management": {
+		"power-profiles-daemon": ["power-profiles-daemon"],
+		"tuned": ["tuned", "tuned-ppd"]
+	},
+
+	"network": {
+		"nm": ["networkmanager", "wpa_supplicant"],
+		"nm_iwd": ["networkmanager"],
+		// nm adds network-manager-applet for desktop profiles (handled in count logic)
+		"nm_desktop_extra": ["network-manager-applet"]
 	}
 }
