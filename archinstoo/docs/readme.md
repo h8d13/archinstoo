@@ -53,12 +53,12 @@
 │   │   │       ├── management
 │   │   │       ├── monitor
 │   │   │       ├── power_management
-│   │   │       ├── print_service
-│   │   │       └── shell
+│   │   │       └── print_service
 │   │   ├── args
 │   │   ├── authentication/
 │   │   │   ├── authentication_menu
 │   │   │   ├── crypt
+│   │   │   ├── shell
 │   │   │   └── users_menu
 │   │   ├── bootloader/
 │   │   │   └── bootloader_menu
@@ -133,7 +133,7 @@
 │       ├── list
 │       ├── minimal
 │       ├── mirror
-│       ├── pre_mount_cli
+│       ├── premount
 │       ├── rescue
 │       └── size
 ├── examples/
