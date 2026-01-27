@@ -14,6 +14,22 @@ class Shell(StrEnum):
 	RBASH = auto()
 
 
+class SupplementaryGroup(StrEnum):
+	"""Common supplementary groups.
+
+	wheel and audio are excluded — wheel is auto-added for elevated users,
+	and audio access is handled by logind/pipewire.
+	"""
+
+	VIDEO = auto()
+	STORAGE = auto()
+	NETWORK = auto()
+	INPUT = auto()
+	LP = auto()
+	RFKILL = auto()
+	UUCP = auto()
+
+
 class PasswordStrength(Enum):
 	WEAK = 'weak'
 	MODERATE = 'moderate'
