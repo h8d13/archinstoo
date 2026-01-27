@@ -8,7 +8,7 @@ from archinstall.lib.tui.types import Alignment, FrameProperties
 
 from ..menu.abstract_menu import AbstractSubMenu
 from ..models.locale import LocaleConfiguration
-from .utils import list_keyboard_languages, list_locales, set_kb_layout
+from .utils import list_console_fonts, list_keyboard_languages, list_locales, set_kb_layout
 
 
 class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
@@ -49,6 +49,13 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 				preview_action=self._prev_locale,
 				key='sys_enc',
 			),
+			MenuItem(
+				text=tr('Console font'),
+				action=select_console_font,
+				value=self._locale_conf.console_font,
+				preview_action=self._prev_locale,
+				key='console_font',
+			),
 		]
 
 	def _prev_locale(self, item: MenuItem) -> str:
@@ -56,6 +63,7 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 			self._menu_item_group.find_by_key('kb_layout').get_value(),
 			self._menu_item_group.find_by_key('sys_lang').get_value(),
 			self._menu_item_group.find_by_key('sys_enc').get_value(),
+			self._menu_item_group.find_by_key('console_font').get_value(),
 		)
 		return temp_locale.preview()
 
@@ -109,6 +117,29 @@ def select_locale_enc(preset: str | None = None) -> str | None:
 		group,
 		alignment=Alignment.CENTER,
 		frame=FrameProperties.min(tr('Locale encoding')),
+		allow_skip=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			return result.get_value()
+		case ResultType.Skip:
+			return preset
+		case _:
+			raise ValueError('Unhandled return type')
+
+
+def select_console_font(preset: str | None = None) -> str | None:
+	fonts = list_console_fonts()
+
+	items = [MenuItem(f, value=f) for f in fonts]
+	group = MenuItemGroup(items, sort_items=False)
+	group.set_focus_by_value(preset)
+
+	result = SelectMenu[str](
+		group,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Console font')),
 		allow_skip=True,
 	).run()
 
