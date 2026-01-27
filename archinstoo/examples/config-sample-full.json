@@ -201,7 +201,16 @@
     "hostname": "archinstoo",
     "auth_config": {
         "lock_root_account": true,
-        "privilege_escalation": "doas"
+        "privilege_escalation": "doas",
+        "users": [
+            {
+                "username": "user",
+                "enc_password": "password_hash",
+                "elev": true,
+                "groups": ["wheel"],
+                "shell": "zsh"
+            }
+        ]
     },
     "app_config": {
         "bluetooth_config": {
@@ -230,9 +239,6 @@
         },
         "editor_config": {
             "editor": "micro"
-        },
-        "shell_config": {
-            "shell": "zsh"
         },
         "power_management_config": {
             "power_management": "power-profiles-daemon"

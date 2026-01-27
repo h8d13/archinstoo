@@ -18,8 +18,6 @@ from archinstall.lib.models.application import (
 	PowerManagement,
 	PowerManagementConfiguration,
 	PrintServiceConfiguration,
-	Shell,
-	ShellConfiguration,
 )
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import SelectMenu
@@ -104,12 +102,6 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				preview_action=self._prev_editor,
 				key='editor_config',
 			),
-			MenuItem(
-				text=tr('Shell'),
-				action=select_shell,
-				preview_action=self._prev_shell,
-				key='shell_config',
-			),
 		]
 
 	def _prev_power_management(self, item: MenuItem) -> str | None:
@@ -165,12 +157,6 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: EditorConfiguration = item.value
 			return f'{tr("Editor")}: {config.editor.value}'
-		return None
-
-	def _prev_shell(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: ShellConfiguration = item.value
-			return f'{tr("Shell")}: {config.shell.value}'
 		return None
 
 
@@ -368,28 +354,5 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 			return preset
 		case ResultType.Selection:
 			return EditorConfiguration(editor=result.get_value())
-		case ResultType.Reset:
-			return None
-
-
-def select_shell(preset: ShellConfiguration | None = None) -> ShellConfiguration | None:
-	group = MenuItemGroup.from_enum(Shell)
-
-	if preset:
-		group.set_focus_by_value(preset.shell)
-
-	result = SelectMenu[Shell](
-		group,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min(tr('Shell')),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return ShellConfiguration(shell=result.get_value())
 		case ResultType.Reset:
 			return None

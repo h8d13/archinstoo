@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from archinstall.lib.models.application import Shell, ShellConfiguration
-from archinstall.lib.models.users import User
+from archinstall.lib.models.users import Shell, User
 from archinstall.lib.output import debug
 
 if TYPE_CHECKING:
@@ -16,20 +15,17 @@ class ShellApp:
 	def install(
 		self,
 		install_session: Installer,
-		shell_config: ShellConfiguration,
-		users: list[User] | None = None,
+		users: list[User],
 	) -> None:
-		shell = shell_config.shell
-		debug(f'Installing shell: {shell.value}')
+		# collect unique shells that need a package install
+		# bash and rbash are already available (rbash is bash in restricted mode)
+		shells_needed = {user.shell for user in users if user.shell not in (Shell.BASH, Shell.RBASH)}
 
-		# bash is already installed, only install if different
-		if shell != Shell.BASH:
+		for shell in shells_needed:
+			debug(f'Installing shell: {shell.value}')
 			install_session.add_additional_packages([shell.value])
 
-		if users is None:
-			return
-
-		shell_path = f'/usr/bin/{shell.value}'
 		for user in users:
+			shell_path = f'/usr/bin/{user.shell.value}'
 			debug(f'Setting shell to {shell_path} for {user.username}')
 			install_session.arch_chroot(f'chsh -s {shell_path} {user.username}')

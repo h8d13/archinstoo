@@ -23,9 +23,6 @@
       "editor_config": {
           "editor": "vim"
       },
-      "shell_config": {
-          "shell": "fish"
-      },
       "power_management_config": {
           "power_management": "power-profiles-daemon"
       }
@@ -37,7 +34,8 @@
               "username": "user_name",
               "enc_password": "password_hash",
               "elev": true,
-              "groups": ["wheel"]
+              "groups": ["wheel"],
+              "shell": "fish"
           }
       ],
       "privilege_escalation": "doas"

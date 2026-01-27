@@ -21,8 +21,6 @@ from archinstall.lib.models.application import (
 	PowerManagement,
 	PowerManagementConfiguration,
 	PrintServiceConfiguration,
-	Shell,
-	ShellConfiguration,
 	ZramConfiguration,
 )
 from archinstall.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
@@ -32,7 +30,7 @@ from archinstall.lib.models.locale import LocaleConfiguration
 from archinstall.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
 from archinstall.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstall.lib.models.packages import Repository
-from archinstall.lib.models.users import Password, User
+from archinstall.lib.models.users import Password, Shell, User
 from archinstall.lib.translationhandler import translation_handler
 
 
@@ -141,7 +139,6 @@ def test_config_file_parsing(
 			management_config=ManagementConfiguration(tools=[Management.GIT, Management.MAN]),
 			monitor_config=MonitorConfiguration(monitor=Monitor.HTOP),
 			editor_config=EditorConfiguration(editor=Editor.VIM),
-			shell_config=ShellConfiguration(shell=Shell.FISH),
 			power_management_config=PowerManagementConfiguration(power_management=PowerManagement.PPD),
 		),
 		auth_config=AuthenticationConfiguration(
@@ -152,6 +149,7 @@ def test_config_file_parsing(
 					password=Password(enc_password='password_hash'),
 					elev=True,
 					groups=['wheel'],
+					shell=Shell.FISH,
 				),
 			],
 			privilege_escalation=PrivilegeEscalation.Doas,

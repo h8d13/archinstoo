@@ -6,10 +6,10 @@ from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.prompts import get_password
 from archinstall.lib.tui.result import ResultType
-from archinstall.lib.tui.types import Alignment, Orientation
+from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
 
 from ..menu.list_manager import ListManager
-from ..models.users import User
+from ..models.users import Shell, User
 
 
 class UserList(ListManager[User]):
@@ -18,6 +18,7 @@ class UserList(ListManager[User]):
 			tr('Add a user'),
 			tr('Manage stash URLs'),
 			tr('Change password'),
+			tr('Change shell'),
 			tr('Promote/Demote user'),
 			tr('Delete User'),
 		]
@@ -53,10 +54,13 @@ class UserList(ListManager[User]):
 			if new_password:
 				user = next(filter(lambda x: x == entry, data))
 				user.password = new_password
-		elif action == self._actions[3] and entry:  # promote/demote
+		elif action == self._actions[3] and entry:  # change shell
+			user = next(filter(lambda x: x == entry, data))
+			user.shell = _select_shell(user.shell, elev=user.elev)
+		elif action == self._actions[4] and entry:  # promote/demote
 			user = next(filter(lambda x: x == entry, data))
 			user.elev = not user.elev
-		elif action == self._actions[4] and entry:  # delete
+		elif action == self._actions[5] and entry:  # delete
 			data = [d for d in data if d != entry]
 
 		return data
@@ -162,11 +166,35 @@ class UserList(ListManager[User]):
 
 		match result.type_:
 			case ResultType.Selection:
-				sudo = result.item() == MenuItem.yes()
+				elev = result.item() == MenuItem.yes()
 			case _:
 				raise ValueError('Unhandled result type')
 
-		return User(username, password, sudo)
+		shell = _select_shell(elev=elev)
+
+		return User(username, password, elev, shell=shell)
+
+
+def _select_shell(preset: Shell = Shell.BASH, elev: bool = False) -> Shell:
+	choices = [s for s in Shell if s != Shell.RBASH or not elev]
+	items = [MenuItem(s.value, value=s) for s in choices]
+	group = MenuItemGroup(items)
+	group.set_focus_by_value(preset)
+
+	result = SelectMenu[Shell](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Shell')),
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			return result.get_value()
+		case ResultType.Skip:
+			return preset
+		case _:
+			return Shell.BASH
 
 
 def ask_for_additional_users(prompt: str = '', defined_users: list[User] = []) -> list[User]:
