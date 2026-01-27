@@ -71,4 +71,3 @@ class HyprlandProfile(WaylandProfile):
 	@override
 	def do_on_select(self) -> None:
 		self._ask_seat_access()
-		return None
