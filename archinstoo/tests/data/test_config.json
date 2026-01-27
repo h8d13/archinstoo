@@ -156,7 +156,8 @@
   "locale_config": {
     "kb_layout": "us",
     "sys_enc": "UTF-8",
-    "sys_lang": "en_US"
+    "sys_lang": "en_US",
+    "console_font": "ter-v16b"
   },
   "pacman_config": {
     "custom_servers": [

@@ -158,6 +158,7 @@ def test_config_file_parsing(
 			kb_layout='us',
 			sys_lang='en_US',
 			sys_enc='UTF-8',
+			console_font='ter-v16b',
 		),
 		archinstall_language=translation_handler.get_language_by_abbr('en'),
 		disk_config=DiskLayoutConfiguration(

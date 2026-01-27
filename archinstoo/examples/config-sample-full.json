@@ -5,7 +5,8 @@
     "locale_config": {
         "kb_layout": "us",
         "sys_lang": "en_US.UTF-8",
-        "sys_enc": "UTF-8"
+        "sys_enc": "UTF-8",
+        "console_font": "default8x16"
     },
     "pacman_config": {
         "mirror_regions": {

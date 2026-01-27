@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from ..exceptions import ServiceException, SysCallError
 from ..general import SysCommand
 from ..output import error
@@ -98,6 +100,22 @@ def set_kb_layout(locale: str) -> bool:
 		return True
 
 	return False
+
+
+def list_console_fonts() -> list[str]:
+	font_dir = Path('/usr/share/kbd/consolefonts')
+	fonts: list[str] = []
+
+	if font_dir.exists():
+		for f in font_dir.iterdir():
+			name = f.name
+			for suffix in ('.psfu.gz', '.psf.gz', '.gz'):
+				if name.endswith(suffix):
+					name = name[: -len(suffix)]
+					break
+			fonts.append(name)
+
+	return sorted(fonts, key=lambda x: (len(x), x))
 
 
 def list_timezones() -> list[str]:
