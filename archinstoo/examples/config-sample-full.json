@@ -230,6 +230,12 @@
         },
         "editor_config": {
             "editor": "micro"
+        },
+        "shell_config": {
+            "shell": "zsh"
+        },
+        "power_management_config": {
+            "power_management": "power-profiles-daemon"
         }
     },
     "network_config": {
