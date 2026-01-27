@@ -105,6 +105,12 @@
 		"doas": ["opendoas"]
 	},
 
+	"shells": {
+		// bash is default rbash for guest, no extra package needed
+		"zsh": ["zsh"],
+		"fish": ["fish"]
+	},
+
 	"bluetooth": ["bluez", "bluez-utils"],
 
 	"audio": {
@@ -140,12 +146,6 @@
 		"vim": ["vim"],
 		"neovim": ["neovim"],
 		"emacs": ["emacs"]
-	},
-
-	"shells": {
-		// bash is default, no extra package needed
-		"zsh": ["zsh"],
-		"fish": ["fish"]
 	},
 
 	// only showed on laptops

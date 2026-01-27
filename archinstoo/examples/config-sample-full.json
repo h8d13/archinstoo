@@ -204,11 +204,11 @@
         "privilege_escalation": "doas",
         "users": [
             {
-                "username": "user",
-                "enc_password": "password_hash",
-                "elev": true,
-                "groups": ["wheel"],
-                "shell": "zsh"
+                "username": null,
+                "enc_password": null,
+                "elev": null,
+                "groups": null,
+                "shell": "bash"
             }
         ]
     },
