@@ -57,6 +57,12 @@ But for 5 years makepkg and similar major upstream projects support alternatives
 ```
 Anyways you start seeing the pattern... What is a 'standard' because it's actually needed, or what is a 'standard' because someone said it should be and left it in a file somewhere.
 
+A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
+
+Major upstream projects have already moved away from this mindset. For example, makepkg has supported configurable privilege escalation for years. Archinstoo aligns with this reality: if alternatives are supported upstream, installers should not force a single path.
+
+The same philosophy applies to dependencies. By removing unnecessary Python libraries and reducing the dependency surface to what is actually required, archinstoo becomes lighter, clearer, and no less capable.
+
 The same is true by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted`.
 
 Without losing any functionality.
@@ -64,37 +70,31 @@ Without losing any functionality.
 Withstanding to-dos
 ---
 
-Considering most people are volunteers who enjoy coding this stuff and have very little interaction with other contributors, aside from good or bad reviews... So I again needed a place where I can just scratch things off my list directly.
+Working in a volunteer-driven project with limited feedback loops often means long-standing issues survive simply because they are hard to address incrementally. Archinstoo exists as a space where problems can be solved directly, not worked around.
 
-The first time around where I had done this to the codebase, I had removed too much... This time around, I was more careful, but still removed considerable parts, often in favor of something else. 
+The first major refactor removed too much. This iteration is more deliberate, but still unapologetic about removing code that exists only to preserve behavior rather than correctness. But still removed considerable parts, often in favor of something else. 
 
 Code Quality
 ---
 
-If anything PCH, general best practices help make the codebase more readable, not only that reduction itself, less hard coded defaults make for a more logical and pleasing flow of code. 
+Hard-coded behavior acts as undocumented policy. Once embedded, it becomes invisible — accepted as “how things work” rather than questioned. Reducing these assumptions improves code readability, logical flow, and long-term adaptability.
 
-In the future, the more standards pop up the more this would make sense.
-This is best illustrated by what I like to call "hidden documentation". 
-Anything that is hardcoded is often something that is assumed and kind of gets lost as a standard with no competition.
-
-This got me interested in both Artix and Alpine dev for openrc, runit and other init systems.
-
-Anyways this is heavily underrated part of coding, once that choice is there and works, it is satisfying the next install de be able to pick.
+This approach naturally opens the door to alternative init systems, different privilege models, and non-default environments. Once the choice exists and works, using it becomes both empowering and satisfying.
 
 Separation and pace
 ---
 
-Two things that I needed with archinstall was for it to actually also be an installation medium creator. 
+Archinstoo also serves as its own installation medium builder. This separation allows faster development cycles, cleaner testing, and clearer boundaries between development and general usage.
 
-This allows for faster dev builds, more ram space in the ISO, and so on. This also creates a nice separation of concerns: dev build vs general usage.
-
-The state of master branch should always be a single source of truth for everyone, this means that it evolves with how standards evolve, as fast as it can.
-That it shouldn't be slowed down by some deprecated config or some nitpick on wording/styles. 
+The master branch is intended to be a single source of truth that evolves alongside the ecosystem. It should not be constrained by deprecated configurations or stylistic nitpicks that slow meaningful progress.
 
 Dev
 ---
 
-Whilst dev builds/branches... Well sometimes do some more "crazy" stuff like implementing bcachefs support just, as it's dropped out of kernel tree in .18 or supporting CachyOS kernels, or some random idea that sparked in the shower.
+Development branches are intentionally experimental, sometimes exploring ideas that may never land upstream. This freedom enables rapid iteration and early testing of new technologies without burdening stable users.
+
+In a fast-moving, deeply technical codebase, correctness and architecture must come first. And exeprimental features are fun to test:
+Bcachesfs support when it was dropped by mr Torvalds, CachyOS kernel support, etc 
 
 To conclude this I also think some priorities should be met, as working on visual changes should not be a priority to a codebase that moves fast, and has stuff that backlogs quite quickly. 
 
@@ -103,19 +103,12 @@ The future of such to me IS simplifying, and providing more tools, never settlin
 Buried treasures
 ---
 
-When I first realized I could just whip up any issues and start trying to fix stuff directly it was a thrill. 
-Like I had a direct interface with the problem and possible solutions in code. This means fixing stuff for the long run.
-Use cases that might not have been covered. Configurations that we had not thought of. 
-Additional options that user might actually need for an operating system.
-
-Outro
----
-
-I don't really think a fork is ever considered something welcome, or truly maintainable, but again it's the only way I can think of to have a "safe space" both for my fixes or testing other's patches.
-Anyways this allows me to test a bit faster and modify more behaviors to shorten testing.
+The moment it became possible to directly fix issues instead of negotiating around them, the project became a long-term investment. Archinstoo exists to uncover edge cases, support unconsidered configurations, and give users tools that actually reflect how operating systems are used in the real world.
 
 Why
 ---
+
+I don't really think a fork is ever considered something welcome, or truly maintainable, but again it's the only way I can think of to have a "safe space" both for my fixes or testing other's patches. Anyways this allows me to test a bit faster and modify more behaviors to shorten testing.
 
 Archinstoo exists because fixing archinstall’s problems required more than incremental patches. Over time, architectural debt, backwards-compat constraints, and installer-first assumptions made certain classes of bugs, UX issues, and misconfigurations effectively unfixable without breaking existing behavior. 
 
