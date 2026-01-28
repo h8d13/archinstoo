@@ -9,9 +9,8 @@ from .translationhandler import tr
 
 
 class Pacman:
-	def __init__(self, target: Path, silent: bool = False):
+	def __init__(self, target: Path):
 		self.synced = False
-		self.silent = silent
 		self.target = target
 
 	@staticmethod
@@ -43,7 +42,7 @@ class Pacman:
 				break
 			except Exception as err:
 				error(f'{error_message}: {err}')
-				if not self.silent and input('Would you like to re-try this download? (Y/n): ').lower().strip() in 'y':
+				if input('Would you like to re-try this download? (Y/n): ').lower().strip() in 'y':
 					continue
 				raise RequirementError(f'{bail_message}: {err}')
 

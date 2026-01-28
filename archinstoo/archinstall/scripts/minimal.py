@@ -92,14 +92,9 @@ def _minimal() -> None:
 	if args.dry_run:
 		raise SystemExit(0)
 
-	if not args.silent:
-		aborted = False
-		with Tui():
-			if not config_handler.confirm_config():
-				debug('Installation aborted')
-				aborted = True
-
-		if aborted:
+	with Tui():
+		if not config_handler.confirm_config():
+			debug('Installation aborted')
 			return _minimal()
 
 	if (disk_config := config.disk_config) is not None:
