@@ -47,8 +47,8 @@
                 "KDE Plasma": {}
             }
         },
-        "gfx_driver": "Intel (open-source)",
-        "greeter": "gdm"
+        "gfx_driver": null,
+        "greeter": "lightdm-gtk-greeter"
     },
     "hostname": "archinstoo",
     "auth_config": {
@@ -71,7 +71,6 @@
         "management_config": {
             "tools": [
                 "git",
-                "base-devel",
                 "man-db",
                 "pacman-contrib",
                 "reflector"

@@ -15,7 +15,7 @@ from archinstall.lib.utils.env import Os
 
 Os.locate_binary('pactree')
 
-_schema_path = Path(__file__).parents[2] / 'schema.jsonc'
+_schema_path = Path(__file__).parent.parent / 'schema.jsonc'
 
 
 def _load_schema() -> dict[str, Any]:
@@ -195,6 +195,9 @@ def resolve_deps(explicit: set[str]) -> set[str]:
 	total = len(pkgs)
 
 	for i, pkg in enumerate(pkgs, 1):
+		if pkg in resolved:
+			print(f'\r  {i}/{total} | resolved: {len(resolved)}', end='', flush=True)
+			continue
 		try:
 			output = SysCommand(f'pactree -sul {pkg}')
 			for line in output:
