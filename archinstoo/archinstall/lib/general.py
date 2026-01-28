@@ -1,10 +1,8 @@
 import json
 import os
 import re
-import secrets
 import shlex
 import stat
-import string
 import subprocess
 import sys
 import time
@@ -23,11 +21,6 @@ from .utils.env import Os
 # https://stackoverflow.com/a/43627833/929999
 _VT100_ESCAPE_REGEX = r'\x1B\[[?0-9;]*[a-zA-Z]'
 _VT100_ESCAPE_REGEX_BYTES = _VT100_ESCAPE_REGEX.encode()
-
-
-def generate_password(length: int = 64) -> str:
-	haystack = string.printable  # digits, ascii_letters, punctuation (!"#$[] etc) and whitespace
-	return ''.join(secrets.choice(haystack) for _ in range(length))
 
 
 def clear_vt100_escape_codes(data: bytes) -> bytes:

@@ -1,4 +1,6 @@
+import secrets
 import shlex
+import string
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -8,9 +10,14 @@ from archinstall.lib.disk.utils import get_lsblk_info, umount
 from archinstall.lib.models.device import DEFAULT_ITER_TIME
 
 from ..exceptions import DiskError, SysCallError
-from ..general import SysCommand, SysCommandWorker, generate_password, run
+from ..general import SysCommand, SysCommandWorker, run
 from ..models.users import Password
 from ..output import debug, info
+
+
+def generate_password(length: int = 64) -> str:
+	haystack = string.printable  # digits, ascii_letters, punctuation (!"#$[] etc) and whitespace
+	return ''.join(secrets.choice(haystack) for _ in range(length))
 
 
 @dataclass
