@@ -79,7 +79,7 @@ Code Quality
 
 Hard-coded behavior acts as undocumented policy. Once embedded, it becomes invisible — accepted as “how things work” rather than questioned. Reducing these assumptions improves code readability, logical flow, and long-term adaptability.
 
-This approach naturally opens the door to alternative init systems, different privilege models, and non-default environments. Once the choice exists and works, using it becomes both empowering and satisfying.
+This approach naturally opens the door to alternatives (and competing standards), different privilege models, and non-default environments. Once the choice exists and works, using it becomes both empowering and satisfying.
 
 Separation and pace
 ---
