@@ -208,7 +208,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		if (auth_config is None or auth_config.root_enc_password is None) and not has_superuser:
 			missing.add(
-				tr('Either root-password or at least 1 user with sudo privileges must be specified'),
+				tr('Either root-password or at least 1 user with elevated privileges must be specified'),
 			)
 
 		for item in self._item_group.items:
