@@ -83,7 +83,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			return False
 
 	def help_text(self) -> str:
-		return tr('Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help')
+		return tr('Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help')
 
 	def _show_help(self) -> None:
 		help_text = Help.get_help_text()
@@ -1174,6 +1174,14 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._item_group.reduce_filter()
 				self._draw()
 				return None
+
+		# auto-activate search when typing a letter if search is enabled (but not for '/')
+		if self._search_enabled and not self._active_search and MenuKeys.STD_KEYS in key_handles and key != ord('/'):
+			self._active_search = True
+			self._item_group.set_filter_pattern('')
+			self._item_group.append_filter(chr(key))
+			self._draw()
+			return None
 
 		# remove standard keys from the list of key handles
 		key_handles = [key for key in key_handles if key != MenuKeys.STD_KEYS]
