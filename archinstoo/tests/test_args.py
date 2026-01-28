@@ -41,7 +41,6 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 	assert args == Arguments(
 		config=None,
 		config_url=None,
-		silent=False,
 		dry_run=False,
 		script=None,
 		mountpoint=Path('/mnt'),
@@ -77,7 +76,6 @@ def test_correct_parsing_args(
 			'--offline',
 			'--advanced',
 			'--dry-run',
-			'--silent',
 		],
 	)
 
@@ -87,7 +85,6 @@ def test_correct_parsing_args(
 	assert args == Arguments(
 		config=config_fixture,
 		config_url='https://example.com',
-		silent=True,
 		dry_run=True,
 		script='execution_script',
 		mountpoint=Path('/tmp'),

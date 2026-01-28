@@ -69,25 +69,20 @@ def format_disk() -> None:
 	# Create handler instance once at the entry point and pass it through
 	device_handler = DeviceHandler()
 
-	if not args.silent:
+	while True:
 		ask_user_questions(config)
 
-	config_handler = ConfigurationHandler(config)
-	config_handler.write_debug()
-	config_handler.save()
+		config_handler = ConfigurationHandler(config)
+		config_handler.write_debug()
+		config_handler.save()
 
-	if args.dry_run:
-		raise SystemExit(0)
+		if args.dry_run:
+			raise SystemExit(0)
 
-	if not args.silent:
-		aborted = False
 		with Tui():
-			if not config_handler.confirm_config():
-				debug('Installation aborted')
-				aborted = True
-
-		if aborted:
-			return format_disk()
+			if config_handler.confirm_config():
+				break
+			debug('Installation aborted')
 
 	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)

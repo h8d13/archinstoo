@@ -102,11 +102,11 @@ class ConfigurationHandler:
 			config_file.unlink()
 
 	@classmethod
-	def prompt_resume(cls, silent: bool = False) -> dict[str, Any] | None:
+	def prompt_resume(cls) -> dict[str, Any] | None:
 		"""Prompt user to resume from saved config. Returns config dict or None."""
 		from .tui.result import ResultType
 
-		if not cls.has_saved_config() or silent:
+		if not cls.has_saved_config():
 			return None
 
 		with Tui():

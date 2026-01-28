@@ -181,28 +181,27 @@ def perform_installation(
 				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
 
 		# If the user provided custom commands to be run post-installation, execute them now.
-		if cc := config.custom_commands:
+		if args.advanced and (cc := config.custom_commands):
 			run_custom_user_commands(cc, installation)
 
 		installation.genfstab()
 
 		debug(f'Disk states after installing:\n{disk_layouts()}')
 
-		if not args.silent:
-			with Tui():
-				elapsed_time = time.time() - start_time
-				action = ask_post_installation(elapsed_time)
+		with Tui():
+			elapsed_time = time.time() - start_time
+			action = ask_post_installation(elapsed_time)
 
-			match action:
-				case PostInstallationAction.EXIT:
+		match action:
+			case PostInstallationAction.EXIT:
+				pass
+			case PostInstallationAction.REBOOT:
+				os.system('reboot')
+			case PostInstallationAction.CHROOT:
+				try:
+					installation.drop_to_shell()
+				except Exception:
 					pass
-				case PostInstallationAction.REBOOT:
-					os.system('reboot')
-				case PostInstallationAction.CHROOT:
-					try:
-						installation.drop_to_shell()
-					except Exception:
-						pass
 
 
 def guided() -> None:
@@ -215,17 +214,15 @@ def guided() -> None:
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	if not args.silent:
-		if cached := ConfigurationHandler.prompt_resume(args.silent):
-			try:
-				handler._config = ArchConfig.from_config(cached, args)
-				info('Saved selections loaded successfully')
-			except Exception as e:
-				error(f'Failed to load saved selections: {e}')
+	if cached := ConfigurationHandler.prompt_resume():
+		try:
+			handler._config = ArchConfig.from_config(cached, args)
+			info('Saved selections loaded successfully')
+		except Exception as e:
+			error(f'Failed to load saved selections: {e}')
 
 	while True:
-		if not args.silent:
-			ask_user_questions(handler.config, args)
+		ask_user_questions(handler.config, args)
 
 		config = handler.config
 
@@ -236,13 +233,10 @@ def guided() -> None:
 		if args.dry_run:
 			raise SystemExit(0)
 
-		if not args.silent:
-			with Tui():
-				if config_handler.confirm_config():
-					break
-				debug('Installation aborted')
-		else:
-			break
+		with Tui():
+			if config_handler.confirm_config():
+				break
+			debug('Installation aborted')
 
 	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)

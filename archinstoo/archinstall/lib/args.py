@@ -41,7 +41,6 @@ def _set_parsed(obj: Any, config: dict[str, Any], mapping: dict[str, tuple[type,
 class Arguments:
 	config: Path | None = None
 	config_url: str | None = None
-	silent: bool = False
 	dry_run: bool = False
 	script: str | None = None
 	mountpoint: Path = Path('/mnt')
@@ -216,13 +215,6 @@ class ArchConfigHandler:
 			default=None,
 			help='Url to a JSON configuration file',
 		)
-		# note no more creds file user always inputs disks/auth for an extra 20 seconds
-		parser.add_argument(
-			'--silent',
-			action='store_true',
-			default=False,
-			help='WARNING: Disables all prompts for input and confirmation. If no configuration is provided, this is ignored',
-		)
 		parser.add_argument(
 			'--dry-run',
 			action='store_true',
@@ -292,11 +284,6 @@ class ArchConfigHandler:
 		argparse_args, self._remaining = self._parser.parse_known_args()
 
 		args: Arguments = Arguments(**vars(argparse_args))
-
-		# amend the parameters (check internal consistency)
-		# Installation can't be silent if config is not passed
-		if args.config is None and args.config_url is None:
-			args.silent = False
 
 		return args
 

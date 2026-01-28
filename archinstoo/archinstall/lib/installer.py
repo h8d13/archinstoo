@@ -128,7 +128,7 @@ class Installer:
 		self._zram_enabled = False
 		self._disable_fstrim = False
 
-		self.pacman = Pacman(self.target, self._args.silent)
+		self.pacman = Pacman(self.target)
 
 	def __enter__(self) -> Self:
 		return self
