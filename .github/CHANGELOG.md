@@ -3,6 +3,15 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
 
+## 0.0.01-9
+    - Add console fonts config
+    - Add optional groups per user
+    - Move shell config to be per user
+    - Various UX changes for resumes/clears
+    - Various structure changes
+    - Add `count` script to list total pkgs installed by a given config
+    - Add custom profiles examples
+
 ## 0.0.01-8
     - Start building `env` utils for support to build on alpine
     - Rework `--script list` to show what needs root or not
