@@ -126,6 +126,7 @@
 │   │       ├── net
 │   │       └── unicode
 │   ├── __main__
+│   ├── schema.jsonc
 │   └── scripts/
 │       ├── count
 │       ├── format
@@ -143,7 +144,6 @@
 │   └── custom
 ├── PKGBUILD
 ├── pyproject.toml
-├── schema.jsonc
 └── tests/
     ├── conftest
     ├── data/
