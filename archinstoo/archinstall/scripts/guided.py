@@ -222,26 +222,27 @@ def guided() -> None:
 				info('Saved selections loaded successfully')
 			except Exception as e:
 				error(f'Failed to load saved selections: {e}')
-		ask_user_questions(handler.config, args)
 
-	config = handler.config
+	while True:
+		if not args.silent:
+			ask_user_questions(handler.config, args)
 
-	config_handler = ConfigurationHandler(config)
-	config_handler.write_debug()
-	config_handler.save()
+		config = handler.config
 
-	if args.dry_run:
-		raise SystemExit(0)
+		config_handler = ConfigurationHandler(config)
+		config_handler.write_debug()
+		config_handler.save()
 
-	if not args.silent:
-		aborted = False
-		with Tui():
-			if not config_handler.confirm_config():
+		if args.dry_run:
+			raise SystemExit(0)
+
+		if not args.silent:
+			with Tui():
+				if config_handler.confirm_config():
+					break
 				debug('Installation aborted')
-				aborted = True
-
-		if aborted:
-			return guided()
+		else:
+			break
 
 	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
