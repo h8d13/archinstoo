@@ -35,7 +35,7 @@
 	},
 
 	// always installed with desktops
-	"desktop_base": ["vi", "openssh", "wget", "iwd", "wireless_tools", "smartmontools", "xdg-utils"],
+	"desktop_base": ["vi", "wget", "iwd", "wireless_tools", "smartmontools", "xdg-utils"],
 
 	// -- Desktop Environments --
 	"profiles": {
@@ -127,6 +127,7 @@
 
 	"management": {
 		"git": ["git"],
+		"openssh": ["openssh"],
 		"base-devel": ["base-devel"],
 		"man-db": ["man-db"],
 		"pacman-contrib": ["pacman-contrib"],

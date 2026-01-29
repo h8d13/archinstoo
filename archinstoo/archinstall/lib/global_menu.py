@@ -1,5 +1,6 @@
 from typing import override
 
+from archinstall.default_profiles.profile import Profile
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstall.lib.models.authentication import AuthenticationConfiguration
@@ -119,6 +120,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Profile'),
+				value=ProfileConfiguration(profile=self._default_profile()),
 				action=self._select_profile,
 				preview_action=self._prev_profile,
 				key='profile_config',
@@ -682,6 +684,12 @@ class GlobalMenu(AbstractMenu[None]):
 		bootloader_config = BootloaderMenu(preset).run()
 
 		return bootloader_config
+
+	@staticmethod
+	def _default_profile() -> Profile:
+		from archinstall.default_profiles.minimal import MinimalProfile
+
+		return MinimalProfile()
 
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu
