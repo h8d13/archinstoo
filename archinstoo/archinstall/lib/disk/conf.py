@@ -224,11 +224,10 @@ def select_lvm_config(
 
 
 def _boot_partition(sector_size: SectorSize, using_gpt: bool) -> PartitionModification:
-	flags = [PartitionFlag.BOOT]
+	# on GPT parted's BOOT flag = ESP; use ESP for GPT, BOOT for MBR
+	flags = [PartitionFlag.ESP] if using_gpt else [PartitionFlag.BOOT]
 	size = Size(1, Unit.GiB, sector_size)
 	start = Size(1, Unit.MiB, sector_size)
-	if using_gpt:
-		flags.append(PartitionFlag.ESP)
 
 	# boot partition
 	return PartitionModification(
