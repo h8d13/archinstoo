@@ -242,13 +242,14 @@ class PartitioningList(ListManager[DiskSegment]):
 				#     how do we know it was the original one?
 				not_filter += [
 					self._actions['set_filesystem'],
-					self._actions['mark_bootable'],
 				]
 				if self._using_gpt:
 					not_filter += [
 						self._actions['mark_esp'],
 						self._actions['mark_xbootldr'],
 					]
+				else:
+					not_filter += [self._actions['mark_bootable']]
 				not_filter += [
 					self._actions['btrfs_mark_compressed'],
 					self._actions['btrfs_mark_nodatacow'],
