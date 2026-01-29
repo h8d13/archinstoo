@@ -1000,6 +1000,8 @@ class PartitionModification:
 			return 'root'
 		if self.is_home():
 			return 'home'
+		if self.is_swap():
+			return 'swap'
 		if self.dev_path:
 			return f'{ENC_IDENTIFIER}{self.dev_path.name}'
 		return None
