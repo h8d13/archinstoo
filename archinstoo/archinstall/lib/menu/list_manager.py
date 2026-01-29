@@ -68,13 +68,15 @@ class ListManager[ValueT]:
 		return False
 
 	def run(self) -> list[ValueT]:
-		additional_options = self._base_actions + self._terminate_actions
-
 		while True:
 			group = MenuHelper(
 				data=self._data,
-				additional_options=additional_options,
+				additional_options=self._base_actions,
 			).create_menu_group()
+
+			group.add_item(MenuItem.separator())
+			for action in self._terminate_actions:
+				group.add_item(MenuItem(action, value=action))
 
 			prompt = None
 			if self._prompt is not None:
