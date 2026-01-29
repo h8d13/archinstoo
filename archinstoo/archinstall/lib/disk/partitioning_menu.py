@@ -552,8 +552,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		if partition.mountpoint == Path('/efi'):
 			partition.set_flag(PartitionFlag.ESP)
 		elif partition.mountpoint == Path('/boot'):
-			# on GPT, parted's BOOT flag = ESP; only set it when
-			# /boot acts as the EFI System Partition (no separate /efi)
+			# same logic for parted BOOT flag = ESP
 			if self._using_gpt:
 				if not self._has_efi_partition(data):
 					partition.set_flag(PartitionFlag.ESP)
