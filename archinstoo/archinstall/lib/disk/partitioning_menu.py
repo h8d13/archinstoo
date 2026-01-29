@@ -307,9 +307,13 @@ class PartitioningList(ListManager[DiskSegment]):
 							partition.set_flag(PartitionFlag.ESP)
 						elif partition.is_boot():
 							partition.flags = []
-							partition.set_flag(PartitionFlag.BOOT)
-							if self._using_gpt and not self._has_efi_partition(data):
-								partition.set_flag(PartitionFlag.ESP)
+							# on GPT, parted's BOOT flag = ESP; only set it when
+							# /boot acts as the EFI System Partition (no separate /efi)
+							if self._using_gpt:
+								if not self._has_efi_partition(data):
+									partition.set_flag(PartitionFlag.ESP)
+							else:
+								partition.set_flag(PartitionFlag.BOOT)
 						if partition.is_home():
 							partition.flags = []
 							partition.set_flag(PartitionFlag.LINUX_HOME)
@@ -546,10 +550,13 @@ class PartitioningList(ListManager[DiskSegment]):
 		if partition.mountpoint == Path('/efi'):
 			partition.set_flag(PartitionFlag.ESP)
 		elif partition.mountpoint == Path('/boot'):
-			partition.set_flag(PartitionFlag.BOOT)
-			# only add ESP if no separate /efi partition exists
-			if self._using_gpt and not self._has_efi_partition(data):
-				partition.set_flag(PartitionFlag.ESP)
+			# on GPT, parted's BOOT flag = ESP; only set it when
+			# /boot acts as the EFI System Partition (no separate /efi)
+			if self._using_gpt:
+				if not self._has_efi_partition(data):
+					partition.set_flag(PartitionFlag.ESP)
+			else:
+				partition.set_flag(PartitionFlag.BOOT)
 		elif partition.is_swap():
 			partition.mountpoint = None
 			partition.flags = []
