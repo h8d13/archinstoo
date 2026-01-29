@@ -296,6 +296,7 @@ class DeviceHandler:
 		enc_password: Password | None,
 		lock_after_create: bool = True,
 		iter_time: int = DEFAULT_ITER_TIME,
+		pbkdf_memory: int | None = None,
 	) -> Luks2:
 		luks_handler = Luks2(
 			dev_path,
@@ -303,7 +304,7 @@ class DeviceHandler:
 			password=enc_password,
 		)
 
-		key_file = luks_handler.encrypt(iter_time=iter_time)
+		key_file = luks_handler.encrypt(iter_time=iter_time, pbkdf_memory=pbkdf_memory)
 
 		self.udev_sync()
 
