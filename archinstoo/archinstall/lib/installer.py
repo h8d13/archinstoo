@@ -1837,7 +1837,7 @@ class Installer:
 			self._clone_user_stash(user.username, stash_url)
 
 	def _clone_user_stash(self, username: str, stash_url: str) -> None:
-		info(f'Cloning stash for {username}')
+		info(f'Cloning {stash_url} for {username}')
 
 		self.add_additional_packages('git')
 
