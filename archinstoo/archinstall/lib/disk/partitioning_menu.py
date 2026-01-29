@@ -88,7 +88,6 @@ class PartitioningList(ListManager[DiskSegment]):
 			'remove_added_partitions': tr('Remove all newly added partitions'),
 			'assign_mountpoint': tr('Assign mountpoint'),
 			'mark_formatting': tr('Mark/Unmark to be formatted (wipes data)'),
-			'mark_bootable': tr('Mark/Unmark as bootable'),
 		}
 		if self._using_gpt:
 			self._actions.update(
@@ -97,6 +96,8 @@ class PartitioningList(ListManager[DiskSegment]):
 					'mark_xbootldr': tr('Mark/Unmark as XBOOTLDR'),
 				}
 			)
+		else:
+			self._actions['mark_bootable'] = tr('Mark/Unmark as bootable')
 		self._actions.update(
 			{
 				'set_filesystem': tr('Change filesystem'),
