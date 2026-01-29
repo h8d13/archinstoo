@@ -3,6 +3,33 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
 
+## 0.0.02-0
+    - Encrypted swap partition support (#4169)
+        - Allow swap partitions in the encryption selection menu
+        - Add `swap` mapper name (consistent with `root`/`home` naming)
+        - Call `swapon` on the LUKS mapper device for encrypted swap
+        - Manually add swap fstab entry (genfstab doesn't capture swap mount points)
+        - Generate keyfile and crypttab entry for passwordless unlock at boot
+    - Fix multi-select ENTER key behavior
+        - ENTER now only confirms selection, no longer auto-selects the focused item
+        - TAB/SPACE remain the toggle keys for individual items
+    - TUI search improvements
+        - Auto-activate search when typing any letter (no longer need to press `/` first)
+        - Remove `/` requirement from help text
+    - Remove `--silent` flag
+        - Disk and Authentication config are always required interactively
+        - Remove `silent` param from `Pacman`, `ConfigurationHandler.prompt_resume()`
+        - Fix custom commands only running with `--advanced` flag
+    - Fix final confirmation prompt using recursion
+        - Replace recursive `return guided()` / `return format_disk()` with `while` loop
+        - Fix `sudo` mention to `elevated privileges` in validation message
+    - Console fonts listing
+        - Skip `README*` files in `/usr/share/kbd/consolefonts/`
+    - Move `generate_password()` from `general.py` to `disk/luks.py`
+    - Finish `count` script, move `schema.jsonc` into `archinstall/`
+    - Smaller mini config sample
+    - Docs: rewrite PHILOSOPHY.md
+
 ## 0.0.01-9
     - Add console fonts config
     - Add optional groups per user
