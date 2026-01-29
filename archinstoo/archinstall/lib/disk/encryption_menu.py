@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import override
 
 from archinstall.lib.menu.menu_helper import MenuHelper
@@ -264,9 +263,8 @@ def select_partitions_to_encrypt(
 ) -> list[PartitionModification]:
 	partitions: list[PartitionModification] = []
 
-	# do not allow encrypting the boot partition
 	for mod in modification:
-		partitions += [p for p in mod.partitions if p.mountpoint != Path('/boot')]
+		partitions += list(mod.partitions)
 
 	# do not allow encrypting existing partitions that are not marked as wipe
 	avail_partitions = [p for p in partitions if not p.exists()]
