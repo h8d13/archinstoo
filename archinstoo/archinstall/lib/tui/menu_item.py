@@ -106,7 +106,8 @@ class MenuItemGroup:
 
 	def add_item(self, item: MenuItem) -> None:
 		self._menu_items.append(item)
-		delattr(self, 'items')  # resetting the cache
+		# reset cached_property if it has been computed
+		self.__dict__.pop('items', None)
 
 	def find_by_key(self, key: str) -> MenuItem:
 		for item in self._menu_items:
