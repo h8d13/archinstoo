@@ -27,7 +27,6 @@ class DesktopProfile(Profile):
 	def packages(self) -> list[str]:
 		return [
 			'vi',
-			'wget',
 			'iwd',
 			'wireless_tools',
 			'smartmontools',
