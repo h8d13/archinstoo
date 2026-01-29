@@ -401,6 +401,7 @@ class Installer:
 				self._mount_btrfs_subvol(luks_handler.mapper_dev, part_mod.btrfs_subvols, part_mod.mount_options)
 		elif part_mod.is_swap():
 			self._device_handler.swapon(luks_handler.mapper_dev)
+			self._fstab_entries.append(f'{luks_handler.mapper_dev}\tnone\tswap\tdefaults\t0\t0')
 		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None

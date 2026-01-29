@@ -108,6 +108,9 @@ def list_console_fonts() -> list[str]:
 
 	if font_dir.exists():
 		for f in font_dir.iterdir():
+			# skip documentation files
+			if f.name.startswith('README'):
+				continue
 			name = f.name
 			for suffix in ('.psfu.gz', '.psf.gz', '.gz'):
 				if name.endswith(suffix):
