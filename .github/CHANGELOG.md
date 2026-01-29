@@ -3,6 +3,25 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
 
+## 0.0.02-1
+    - Fix GPT partition flags: BOOT and ESP are aliases in parted
+        - `/efi` → `esp` flag, `/boot` with separate `/efi` → no flags
+        - `/boot` without `/efi` → `esp` (acts as EFI System Partition)
+        - MBR `/boot` → `boot` flag (traditional active/bootable)
+        - Deduplicate `boot, esp` display for existing GPT partitions
+        - Hide "Mark as bootable" menu option on GPT (only meaningful on MBR)
+        - `is_boot()` now checks mountpoint instead of flag (consistent with `is_root()`/`is_home()`)
+        - Fix suggested layout (`conf.py`) to use ESP on GPT, BOOT on MBR
+    - Allow `/boot` partition encryption (GRUB only)
+        - Remove `/boot` filter from encryption partition selection
+        - Gate encrypted `/boot` behind GRUB bootloader validation
+        - Reduce argon2id `pbkdf_memory` (512 MiB) for `/boot` so GRUB can decrypt
+        - Move `GRUB_ENABLE_CRYPTODISK=y` before `grub-install` to embed crypto modules
+    - Move `openssh` and `wget` from desktop base to Management applications
+        - Users opt in via the Management tools menu instead of forced install
+    - Auto-select Minimal profile as default
+        - Hide Minimal from profile selection menu (it's the implicit default)
+
 ## 0.0.02-0
     - Encrypted swap partition support (#4169)
         - Allow swap partitions in the encryption selection menu
