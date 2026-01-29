@@ -1204,10 +1204,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 			case MenuKeys.ACCEPT:
 				if self._multi:
 					if self._item_group.is_mandatory_fulfilled():
-						if self._item_group.focus_item is not None:
-							if self._item_group.focus_item not in self._item_group.selected_items:
-								self._item_group.selected_items.append(self._item_group.focus_item)
-							return Result(ResultType.Selection, self._item_group.selected_items)
+						return Result(ResultType.Selection, self._item_group.selected_items)
 				else:
 					item = self._item_group.focus_item
 					if item:
