@@ -41,6 +41,8 @@ class FirewallConfigSerialization(TypedDict):
 
 class Management(StrEnum):
 	GIT = 'git'
+	OPENSSH = 'openssh'
+	WGET = 'wget'
 	BASE_DEVEL = 'base-devel'
 	MAN = 'man-db'
 	PACMAN_CONTRIB = 'pacman-contrib'

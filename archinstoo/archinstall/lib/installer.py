@@ -1213,6 +1213,14 @@ class Installer:
 
 		self.pacman.strap('grub')
 
+		# enable GRUB cryptodisk before grub-install so crypto modules
+		# are embedded in the core image (required for encrypted /boot)
+		grub_default = self.target / 'etc/default/grub'
+		if self._disk_encryption.encryption_type != EncryptionType.NoEncryption:
+			config = grub_default.read_text()
+			config = re.sub(r'^#(GRUB_ENABLE_CRYPTODISK=y)', r'\1', config, flags=re.MULTILINE)
+			grub_default.write_text(config)
+
 		info(f'GRUB boot partition: {boot_partition.dev_path}')
 
 		boot_dir = Path('/boot')
@@ -1270,8 +1278,6 @@ class Installer:
 			except SysCallError as err:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 
-		grub_default = self.target / 'etc/default/grub'
-
 		if SysInfo.has_uefi() and uki_enabled:
 			grub_d = self.target / 'etc/grub.d'
 			linux_file = grub_d / '10_linux'
@@ -1313,13 +1319,6 @@ class Installer:
 				flags=re.MULTILINE,
 			)
 
-			grub_default.write_text(config)
-
-		# See #3717 enable GRUB cryptodisk support when encryption is used
-		# regardless uefi or uki or other options
-		if self._disk_encryption.encryption_type != EncryptionType.NoEncryption:
-			config = grub_default.read_text()
-			config = re.sub(r'^#(GRUB_ENABLE_CRYPTODISK=y)', r'\1', config, flags=re.MULTILINE)
 			grub_default.write_text(config)
 
 		try:
@@ -1838,7 +1837,7 @@ class Installer:
 			self._clone_user_stash(user.username, stash_url)
 
 	def _clone_user_stash(self, username: str, stash_url: str) -> None:
-		info(f'Cloning stash for {username}')
+		info(f'Cloning {stash_url} for {username}')
 
 		self.add_additional_packages('git')
 

@@ -548,6 +548,12 @@ class _PartitionInfo:
 		partition_type = PartitionType.get_type_from_code(partition.type)
 		flags = [f for f in PartitionFlag if partition.getFlag(f.flag_id)]
 
+		# on GPT, parted's BOOT and ESP flags are aliases for the same
+		# EFI System Partition type; deduplicate to avoid showing both
+		if partition.disk.type == PartitionTable.GPT.value:
+			if PartitionFlag.BOOT in flags and PartitionFlag.ESP in flags:
+				flags.remove(PartitionFlag.BOOT)
+
 		start = Size(
 			partition.geometry.start,
 			Unit.sectors,
@@ -955,7 +961,9 @@ class PartitionModification:
 		return PartitionFlag.ESP in self.flags
 
 	def is_boot(self) -> bool:
-		return PartitionFlag.BOOT in self.flags
+		if self.mountpoint is not None:
+			return self.mountpoint == Path('/boot')
+		return False
 
 	def is_root(self) -> bool:
 		if self.mountpoint is not None:

@@ -84,10 +84,13 @@ class Luks2:
 		hash_type: str = 'sha512',
 		iter_time: int = DEFAULT_ITER_TIME,
 		key_file: Path | None = None,
+		pbkdf_memory: int | None = None,
 	) -> Path | None:
 		debug(f'Luks2 encrypting: {self.luks_dev_path}')
 
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
+
+		pbkdf_memory_arg = ['--pbkdf-memory', str(pbkdf_memory)] if pbkdf_memory else []
 
 		cmd = [
 			'cryptsetup',
@@ -103,6 +106,7 @@ class Luks2:
 			str(key_size),
 			'--iter-time',
 			str(iter_time),
+			*pbkdf_memory_arg,
 			*key_file_arg,
 			'--use-urandom',
 			'luksFormat',
