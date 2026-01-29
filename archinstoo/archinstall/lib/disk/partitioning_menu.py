@@ -302,10 +302,13 @@ class PartitioningList(ListManager[DiskSegment]):
 						partition.mountpoint = new_mountpoint
 						if partition.is_root():
 							partition.flags = []
-						if partition.is_boot():
+						if partition.mountpoint == Path('/efi'):
+							partition.flags = []
+							partition.set_flag(PartitionFlag.ESP)
+						elif partition.is_boot():
 							partition.flags = []
 							partition.set_flag(PartitionFlag.BOOT)
-							if self._using_gpt:
+							if self._using_gpt and not self._has_efi_partition(data):
 								partition.set_flag(PartitionFlag.ESP)
 						if partition.is_home():
 							partition.flags = []
@@ -349,7 +352,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		else:
 			part_mods = self.get_part_mods(data)
 			index = data.index(entry)
-			part_mods.insert(index, self._create_new_partition(entry.segment))
+			part_mods.insert(index, self._create_new_partition(entry.segment, data))
 			data = self.as_segments(part_mods)
 
 		return data
@@ -518,7 +521,11 @@ class PartitioningList(ListManager[DiskSegment]):
 		assert size
 		return size
 
-	def _create_new_partition(self, free_space: FreeSpace) -> PartitionModification:
+	def _has_efi_partition(self, data: list[DiskSegment]) -> bool:
+		partitions = self.get_part_mods(data)
+		return any(p.mountpoint == Path('/efi') for p in partitions)
+
+	def _create_new_partition(self, free_space: FreeSpace, data: list[DiskSegment]) -> PartitionModification:
 		length = self._prompt_size(free_space)
 
 		fs_type = self._prompt_partition_fs_type()
@@ -536,9 +543,12 @@ class PartitioningList(ListManager[DiskSegment]):
 			mountpoint=mountpoint,
 		)
 
-		if partition.mountpoint == Path('/boot'):
+		if partition.mountpoint == Path('/efi'):
+			partition.set_flag(PartitionFlag.ESP)
+		elif partition.mountpoint == Path('/boot'):
 			partition.set_flag(PartitionFlag.BOOT)
-			if self._using_gpt:
+			# only add ESP if no separate /efi partition exists
+			if self._using_gpt and not self._has_efi_partition(data):
 				partition.set_flag(PartitionFlag.ESP)
 		elif partition.is_swap():
 			partition.mountpoint = None
