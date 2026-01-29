@@ -266,7 +266,7 @@ def select_partitions_to_encrypt(
 
 	# do not allow encrypting the boot partition
 	for mod in modification:
-		partitions += [p for p in mod.partitions if p.mountpoint != Path('/boot') and not p.is_swap()]
+		partitions += [p for p in mod.partitions if p.mountpoint != Path('/boot')]
 
 	# do not allow encrypting existing partitions that are not marked as wipe
 	avail_partitions = [p for p in partitions if not p.exists()]
