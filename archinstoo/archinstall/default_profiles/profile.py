@@ -123,7 +123,7 @@ class Profile:
 		self.current_selection = []
 
 	def is_top_level_profile(self) -> bool:
-		top_levels = [ProfileType.Desktop, ProfileType.Server, ProfileType.Xorg, ProfileType.Minimal, ProfileType.Custom]
+		top_levels = [ProfileType.Desktop, ProfileType.Server, ProfileType.Xorg, ProfileType.Custom]
 		return self.profile_type in top_levels
 
 	def is_desktop_profile(self, advanced_mode: bool = False) -> bool:

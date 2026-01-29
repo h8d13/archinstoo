@@ -1,5 +1,6 @@
 from typing import override
 
+from archinstall.default_profiles.profile import Profile
 from archinstall.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstall.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstall.lib.models.authentication import AuthenticationConfiguration
@@ -119,6 +120,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Profile'),
+				value=ProfileConfiguration(profile=self._default_profile()),
 				action=self._select_profile,
 				preview_action=self._prev_profile,
 				key='profile_config',
@@ -617,6 +619,11 @@ class GlobalMenu(AbstractMenu[None]):
 			if efi_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'ESP must be formatted as a FAT filesystem'
 
+		if disk_config.disk_encryption and bootloader != Bootloader.Grub:
+			enc = disk_config.disk_encryption
+			if any(p.is_boot() for p in enc.partitions):
+				return 'Encrypted /boot is only supported with GRUB'
+
 		if bootloader == Bootloader.Limine:
 			if boot_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'Limine does not support booting with a non-FAT boot partition'
@@ -677,6 +684,12 @@ class GlobalMenu(AbstractMenu[None]):
 		bootloader_config = BootloaderMenu(preset).run()
 
 		return bootloader_config
+
+	@staticmethod
+	def _default_profile() -> Profile:
+		from archinstall.default_profiles.minimal import MinimalProfile
+
+		return MinimalProfile()
 
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu

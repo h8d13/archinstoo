@@ -303,12 +303,17 @@ class FilesystemHandler:
 
 			for part_mod in filtered_part:
 				if part_mod in enc_config.partitions:
+					# GRUB has limited memory for argon2id decryption;
+					# use reduced pbkdf memory for /boot so GRUB can decrypt it
+					pbkdf_memory = 512 * 1024 if part_mod.is_boot() else None
+
 					luks_handler = self._device_handler.encrypt(
 						part_mod.safe_dev_path,
 						part_mod.mapper_name,
 						enc_config.encryption_password,
 						lock_after_create=lock_after_create,
 						iter_time=enc_config.iter_time,
+						pbkdf_memory=pbkdf_memory,
 					)
 
 					enc_mods[part_mod] = luks_handler
