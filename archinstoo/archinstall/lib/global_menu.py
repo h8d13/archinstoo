@@ -617,6 +617,11 @@ class GlobalMenu(AbstractMenu[None]):
 			if efi_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'ESP must be formatted as a FAT filesystem'
 
+		if disk_config.disk_encryption and bootloader != Bootloader.Grub:
+			enc = disk_config.disk_encryption
+			if any(p.is_boot() for p in enc.partitions):
+				return 'Encrypted /boot is only supported with GRUB'
+
 		if bootloader == Bootloader.Limine:
 			if boot_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'Limine does not support booting with a non-FAT boot partition'
