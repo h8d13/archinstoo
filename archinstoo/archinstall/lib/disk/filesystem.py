@@ -5,7 +5,7 @@ from pathlib import Path
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import Tui
 
-from ..interactions.general_conf import ask_abort
+from ..interactions.general_conf import confirm_abort
 from ..models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
@@ -345,6 +345,6 @@ class FilesystemHandler:
 				time.sleep(0.25)
 		except KeyboardInterrupt:
 			with Tui():
-				ask_abort()
+				confirm_abort()
 
 		return True

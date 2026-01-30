@@ -41,7 +41,7 @@ class RiverProfile(WaylandProfile):
 			return [pref]
 		return []
 
-	def _ask_seat_access(self) -> None:
+	def _select_seat_access(self) -> None:
 		# need to activate seat service and add to seat group
 		header = tr('River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)')
 		header += '\n' + tr('Choose an option to give River access to your hardware') + '\n'
@@ -65,4 +65,4 @@ class RiverProfile(WaylandProfile):
 
 	@override
 	def do_on_select(self) -> None:
-		self._ask_seat_access()
+		self._select_seat_access()

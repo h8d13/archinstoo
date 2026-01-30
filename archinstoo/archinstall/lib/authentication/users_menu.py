@@ -224,6 +224,6 @@ def _select_groups(preset: list[str] | None = None) -> list[str]:
 			return preset or []
 
 
-def ask_for_additional_users(prompt: str = '', defined_users: list[User] = []) -> list[User]:
+def select_users(prompt: str = '', defined_users: list[User] = []) -> list[User]:
 	users = UserList(prompt, defined_users).run()
 	return users

@@ -11,7 +11,7 @@ from archinstall.lib.tui.prompts import get_password
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
 
-from .users_menu import ask_for_additional_users
+from .users_menu import select_users
 
 
 class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
@@ -69,7 +69,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 
 	def _create_user_account(self, preset: list[User] | None = None) -> list[User]:
 		preset = [] if preset is None else preset
-		users = ask_for_additional_users(defined_users=preset)
+		users = select_users(defined_users=preset)
 		return users
 
 	def _prev_users(self, item: MenuItem) -> str | None:

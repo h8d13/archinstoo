@@ -20,12 +20,12 @@ from .configuration import ConfigurationHandler
 from .hardware import SysInfo
 from .interactions.general_conf import (
 	add_number_of_parallel_downloads,
-	ask_additional_packages_to_install,
-	ask_for_a_timezone,
-	ask_hostname,
-	ask_ntp,
+	select_additional_packages,
+	select_hostname,
+	select_ntp,
+	select_timezone,
 )
-from .interactions.system_conf import ask_for_swap, select_kernel
+from .interactions.system_conf import select_kernel, select_swap
 from .locale.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
@@ -34,7 +34,7 @@ from .models.mirrors import PacmanConfiguration
 from .models.network import NetworkConfiguration, NicType
 from .models.packages import Repository
 from .models.profile import ProfileConfiguration
-from .network.network_menu import ask_to_configure_network
+from .network.network_menu import select_network
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
@@ -106,7 +106,7 @@ class GlobalMenu(AbstractMenu[None]):
 			MenuItem(
 				text=tr('Swap'),
 				value=ZramConfiguration(enabled=True),
-				action=ask_for_swap,
+				action=select_swap,
 				preview_action=self._prev_swap,
 				key='swap',
 			),
@@ -128,7 +128,7 @@ class GlobalMenu(AbstractMenu[None]):
 			MenuItem(
 				text=tr('Hostname'),
 				value='archlinux',
-				action=ask_hostname,
+				action=select_hostname,
 				preview_action=self._prev_hostname,
 				key='hostname',
 			),
@@ -141,7 +141,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Network config'),
-				action=ask_to_configure_network,
+				action=select_network,
 				value={},
 				preview_action=self._prev_network_config,
 				key='network_config',
@@ -155,7 +155,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Timezone'),
-				action=ask_for_a_timezone,
+				action=select_timezone,
 				value=None,
 				preview_action=self._prev_tz,
 				mandatory=True,
@@ -163,7 +163,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Automatic time sync'),
-				action=ask_ntp,
+				action=select_ntp,
 				value=True,
 				preview_action=self._prev_ntp,
 				key='ntp',
@@ -707,7 +707,7 @@ class GlobalMenu(AbstractMenu[None]):
 			repositories = set(config.optional_repositories)
 			custom_repos = [r.name for r in config.custom_repositories]
 
-		packages = ask_additional_packages_to_install(
+		packages = select_additional_packages(
 			preset,
 			repositories=repositories,
 			custom_repos=custom_repos,
