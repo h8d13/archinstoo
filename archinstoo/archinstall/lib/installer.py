@@ -1844,7 +1844,7 @@ class Installer:
 		url, _, branch = stash_url.partition('#')
 		repo_name = url.rstrip('/').split('/')[-1].removesuffix('.git')
 		stash_dir = f'/home/{username}/.stash'
-		clone_cmd = f'git clone -b {branch} {url}' if branch else f'git clone {url}'
+		clone_cmd = f'git clone --depth 1 -b {branch} {url}' if branch else f'git clone --depth 1 {url}'
 
 		try:
 			self.arch_chroot(f'mkdir -p {stash_dir}')
