@@ -3,6 +3,19 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
 
+## 0.0.02-1
+    - Add `/boot` encryption support (#74)
+    - Fix /efi mount logic
+        - /efi exists → /efi = ESP, /boot = no flags needed
+        - /efi absent → /boot = ESP
+    - Mark bootable flag only available for BIOS systems
+    - Add `argon2id` memory limit, better print
+    - Remove `wget` and `openssh` from defaults
+    - Auto select Minimal Profile and remove from list
+    - Add separator between base actions and terminate actions
+    - Fix duplicate entries/filters
+    - Clean up comments
+
 ## 0.0.02-0
     - Encrypted swap partition support (#4169)
         - Allow swap partitions in the encryption selection menu
