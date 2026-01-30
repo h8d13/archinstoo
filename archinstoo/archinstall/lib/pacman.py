@@ -4,8 +4,29 @@ from pathlib import Path
 
 from .exceptions import RequirementError
 from .general import SysCommand
+from .network.utils import fetch_data_from_url
 from .output import error, info, logger, warn
 from .translationhandler import tr
+
+
+# Helpers for exceptions
+def reset_conf() -> None:
+	# reset pacman.conf to upstream default in case a modification is causing breakage
+	default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
+	info('Fetching default pacman.conf from upstream...')
+	conf_data = fetch_data_from_url(default_pm_conf)
+	Path('/etc/pacman.conf').write_text(conf_data)
+	info('Replaced /etc/pacman.conf with upstream default.')
+
+
+def reset_keyring() -> None:
+	# reset keyring in case of corrupted packages
+	# helper to reset auto
+	info('Reinitializing pacman keyring...')
+	Pacman.run('-Sy archlinux-keyring')
+	SysCommand('pacman-key --init')
+	SysCommand('pacman-key --populate archlinux')
+	info('Pacman keyring reinitialized.')
 
 
 class Pacman:
@@ -36,15 +57,41 @@ class Pacman:
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)
 
 	def ask(self, error_message: str, bail_message: str, func: Callable, *args, **kwargs) -> None:  # type: ignore[no-untyped-def, type-arg]
-		while True:
-			try:
-				func(*args, **kwargs)
-				break
-			except Exception as err:
-				error(f'{error_message}: {err}')
-				if input('Would you like to re-try this download? (Y/n): ').lower().strip() in 'y':
-					continue
-				raise RequirementError(f'{bail_message}: {err}')
+		try:
+			func(*args, **kwargs)
+		except Exception as err:
+			err_str = str(err).lower()
+			error(f'{error_message}: {err}')
+
+			recovery = None
+			if 'invalid or corrupted package' in err_str:
+				warn('Detected corrupted package: resetting keyring and retrying...')
+				recovery = reset_keyring
+			elif 'could not satisfy dependencies' in err_str:
+				warn('Detected dependency issue: resetting pacman.conf and retrying...')
+				recovery = reset_conf
+
+			if recovery:
+				try:
+					recovery()
+				except Exception as recovery_err:
+					error(f'Recovery failed: {recovery_err}')
+					raise RequirementError(f'{bail_message}: {err}')
+
+				try:
+					func(*args, **kwargs)
+					return
+				except Exception as retry_err:
+					raise RequirementError(f'{bail_message}: {retry_err}')
+
+			if input('Would you like to re-try this download? (Y/n): ').lower().strip() in ('', 'y'):
+				try:
+					func(*args, **kwargs)
+					return
+				except Exception as retry_err:
+					raise RequirementError(f'{bail_message}: {retry_err}')
+
+			raise RequirementError(f'{bail_message}: {err}')
 
 	def sync(self) -> None:
 		if self.synced:
