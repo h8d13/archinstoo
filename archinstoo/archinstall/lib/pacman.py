@@ -23,9 +23,9 @@ def reset_keyring() -> None:
 	# reset keyring in case of corrupted packages
 	# helper to reset auto
 	info('Reinitializing pacman keyring...')
-	Pacman.run('-Sy archlinux-keyring')
-	SysCommand('pacman-key --init')
-	SysCommand('pacman-key --populate archlinux')
+	Pacman.run('-Sy archlinux-keyring', peek_output=True)
+	SysCommand('pacman-key --init', peek_output=True)
+	SysCommand('pacman-key --populate archlinux', peek_output=True)
 	info('Pacman keyring reinitialized.')
 
 
