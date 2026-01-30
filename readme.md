@@ -125,7 +125,7 @@ https://github.com/archlinux/archinstall/issues/2213
 
 ## Testing
 
-**Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs).
+**Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md).
 
 To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see historical/latest changes [Changelog](./.github/CHANGELOG.md)
 
