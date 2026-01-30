@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC1091,SC2154,SC2086
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_GLOB="archinstoo-*.pkg.tar.zst"
 ELEV="${ELEV:-sudo}"
@@ -16,11 +18,9 @@ clean () {
 } # make sure no old sigs
 
 sign () {
-    # shellcheck disable=SC2086
     gpg --detach-sign $PKG_GLOB
 }
 verif() {
-    # shellcheck disable=SC2086
     gpg --verify $PKG_GLOB.sig
 }
 
@@ -54,7 +54,6 @@ case "$1" in
 	;;
 	-i|--install)
 	go_to
-	# shellcheck disable=SC2086
  	"$ELEV" pacman -U --overwrite '*' $PKG_GLOB
 	;;
     -tf | --test-full)
@@ -63,6 +62,10 @@ case "$1" in
     -tm | --test-mini)
     ./RUN --config examples/config-sample-mini.json
     ;;
+	-h2t | --host-to-target)
+	go_to
+	. ./PKGBUILD && pacman -Sy --needed "${depends[@]}" "${optdepends[@]}"
+	;;
 	*)
 	# Pass through to archinstall
 	./RUN "$@"
