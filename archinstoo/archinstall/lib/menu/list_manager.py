@@ -67,6 +67,8 @@ class ListManager[ValueT]:
 			return self._last_choice == self._reset_action
 		return False
 
+	# NOTE: upstream renamed to _run() (PR#4192)
+	# we do not have a wrapper so we do not need
 	def run(self) -> list[ValueT]:
 		while True:
 			group = MenuHelper(
