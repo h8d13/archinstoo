@@ -13,7 +13,7 @@ from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.global_menu import GlobalMenu
 from archinstall.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands
-from archinstall.lib.interactions.general_conf import PostInstallationAction, ask_post_installation
+from archinstall.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstall.lib.models import Bootloader
 from archinstall.lib.models.device import (
 	DiskLayoutType,
@@ -26,13 +26,7 @@ from archinstall.lib.profile.profiles_handler import ProfileHandler
 from archinstall.lib.tui import Tui
 
 
-def ask_user_questions(config: ArchConfig, args: Arguments) -> None:
-	"""
-	First, we'll ask the user for a bunch of user input.
-	Not until we're satisfied with what we want to install
-	will we continue with the actual installation steps.
-	"""
-
+def show_menu(config: ArchConfig, args: Arguments) -> None:
 	title_text = None
 
 	with Tui():
@@ -190,7 +184,7 @@ def perform_installation(
 
 		with Tui():
 			elapsed_time = time.time() - start_time
-			action = ask_post_installation(elapsed_time)
+			action = select_post_installation(elapsed_time)
 
 		match action:
 			case PostInstallationAction.EXIT:
@@ -222,7 +216,7 @@ def guided() -> None:
 			error(f'Failed to load saved selections: {e}')
 
 	while True:
-		ask_user_questions(handler.config, args)
+		show_menu(handler.config, args)
 
 		config = handler.config
 

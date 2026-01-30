@@ -104,7 +104,7 @@ def select_driver(
 			return result.get_value()
 
 
-def ask_for_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> ZramConfiguration:
+def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> ZramConfiguration:
 	prompt = tr('Would you like to use swap on zram?') + '\n'
 
 	group = MenuItemGroup.yes_no()

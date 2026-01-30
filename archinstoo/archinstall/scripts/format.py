@@ -11,7 +11,7 @@ from archinstall.lib.installer import Installer
 from archinstall.lib.tui import Tui
 
 
-def ask_user_questions(config: ArchConfig) -> None:
+def show_menu(config: ArchConfig) -> None:
 	with Tui():
 		global_menu = GlobalMenu(config)
 		global_menu.disable_all()
@@ -70,7 +70,7 @@ def format_disk() -> None:
 	device_handler = DeviceHandler()
 
 	while True:
-		ask_user_questions(config)
+		show_menu(config)
 
 		config_handler = ConfigurationHandler(config)
 		config_handler.write_debug()
