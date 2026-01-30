@@ -34,7 +34,7 @@ makedepends=(
 optdepends=(
   'systemd: systemd-based operations'
   'btrfs-progs: btrfs filesystem support'
-  'dosfstools: FAT/EFI filesystem support'
+  'dosfstools: FAT EFI filesystem support'
   'e2fsprogs: ext4 filesystem support'
   'f2fs-tools: f2fs filesystem support'
   'ntfs-3g: NTFS filesystem support'
