@@ -56,9 +56,18 @@ class Pacman:
 		# reset keyring in case of corrupted packages
 		try:
 			info('Reinitializing pacman keyring...')
-			SysCommand('killall gpg-agent', peek_output=True)
-			SysCommand('umount -l /etc/pacman.d/gnupg', peek_output=True)
-			SysCommand('rm -rf /etc/pacman.d/gnupg', peek_output=True)
+			try:
+				SysCommand('killall gpg-agent', peek_output=True)
+			except Exception:
+				pass
+			try:
+				SysCommand('umount -l /etc/pacman.d/gnupg', peek_output=True)
+			except Exception:
+				pass
+			try:
+				SysCommand('rm -rf /etc/pacman.d/gnupg', peek_output=True)
+			except Exception:
+				pass
 			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('-Sy archlinux-keyring', peek_output=True)
