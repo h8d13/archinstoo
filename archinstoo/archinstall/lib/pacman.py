@@ -10,23 +10,18 @@ from .translationhandler import tr
 
 
 # Helpers for exceptions
-def reset_conf() -> None:
+def reset_conf() -> bool:
 	# reset pacman.conf to upstream default in case a modification is causing breakage
-	default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
-	info('Fetching default pacman.conf from upstream...')
-	conf_data = fetch_data_from_url(default_pm_conf)
-	Path('/etc/pacman.conf').write_text(conf_data)
-	info('Replaced /etc/pacman.conf with upstream default.')
-
-
-def reset_keyring() -> None:
-	# reset keyring in case of corrupted packages
-	# helper to reset auto
-	info('Reinitializing pacman keyring...')
-	Pacman.run('-Sy archlinux-keyring', peek_output=True)
-	SysCommand('pacman-key --init', peek_output=True)
-	SysCommand('pacman-key --populate archlinux', peek_output=True)
-	info('Pacman keyring reinitialized.')
+	try:
+		default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
+		info('Fetching default pacman.conf from upstream...')
+		conf_data = fetch_data_from_url(default_pm_conf)
+		Path('/etc/pacman.conf').write_text(conf_data)
+		info('Replaced /etc/pacman.conf with upstream default.')
+		return True
+	except Exception as e:
+		error(f'Config reset failed: {e}')
+		return False
 
 
 class Pacman:
@@ -56,6 +51,20 @@ class Pacman:
 
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)
 
+	@staticmethod
+	def reset_keyring() -> bool:
+		# reset keyring in case of corrupted packages
+		try:
+			info('Reinitializing pacman keyring...')
+			Pacman.run('-Sy archlinux-keyring', peek_output=True)
+			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
+			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
+			info('Pacman keyring reinitialized.')
+			return True
+		except Exception as e:
+			error(f'Keyring reset failed: {e}')
+			return False
+
 	def ask(self, error_message: str, bail_message: str, func: Callable, *args, **kwargs) -> None:  # type: ignore[no-untyped-def, type-arg]
 		try:
 			func(*args, **kwargs)
@@ -66,18 +75,12 @@ class Pacman:
 			recovery = None
 			if 'invalid or corrupted package' in err_str:
 				warn('Detected corrupted package: resetting keyring and retrying...')
-				recovery = reset_keyring
+				recovery = Pacman.reset_keyring
 			elif 'could not satisfy dependencies' in err_str:
 				warn('Detected dependency issue: resetting pacman.conf and retrying...')
 				recovery = reset_conf
 
-			if recovery:
-				try:
-					recovery()
-				except Exception as recovery_err:
-					error(f'Recovery failed: {recovery_err}')
-					raise RequirementError(f'{bail_message}: {err}')
-
+			if recovery and recovery():
 				try:
 					func(*args, **kwargs)
 					return
