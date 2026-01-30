@@ -64,10 +64,7 @@ def jsonify(obj: Any, safe: bool = True) -> Any:
 
 
 class JSON(json.JSONEncoder, json.JSONDecoder):
-	"""
-	A safe JSON encoder that will omit private information in dicts (starting with !)
-	"""
-
+	# we do not store any enc pw or auth data
 	@override
 	def encode(self, o: Any) -> str:
 		return super().encode(jsonify(o))
