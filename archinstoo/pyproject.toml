@@ -161,9 +161,10 @@ docstring-code-format = true
 
 [tool.ruff.lint]
 select = [
+    "A",      # flake8-builtins (don't shadow builtins)
     "ASYNC",  # flake8-async
     "B",      # flake8-bugbear
-    "TID252", # relative-imports (PEP 8: prefer absolute imports)
+    "C4",     # flake8-comprehensions
     "C90",    # mccabe
     "COM",    # flake8-commas
     "DTZ",    # flake8-datetimez
@@ -172,21 +173,26 @@ select = [
     "F",      # Pyflakes
     "FA",     # flake8-future-annotations
     "FLY",    # flynt
+    "FURB",   # refurb (modernize code)
     "G",      # flake8-logging-format
     "I",      # isort
     "ICN",    # flake8-import-conventions
     "ISC",    # flake8-implicit-str-concat
     "LOG",    # flake8-logging
+    "PERF",   # perflint (performance anti-patterns)
     "PGH",    # pygrep-hooks
     "PIE",    # flake8-pie
     "PLC",    # Pylint conventions
     "PLE",    # Pylint errors
     "PLW",    # Pylint warnings
     "PYI",    # flake8-pyi
+    "RET",    # flake8-return (return statement clarity)
     "RSE",    # flake8-raise
     "RUF",    # Ruff-specific rules
+    "SIM",    # flake8-simplify
     "SLOT",   # flake8-slot
     "T10",    # flake8-debugger
+    "TID252", # relative-imports (PEP 8: prefer absolute imports)
     "UP",     # pyupgrade
     "W",      # pycodestyle warnings
     "YTT",    # flake8-2020
@@ -208,7 +214,9 @@ ignore = [
     "RUF015",   # unnecessary-iterable-allocation-for-first-element
     "RUF039",   # unraw-re-pattern
     "RUF051",   # if-key-in-dict-del
+    "RET504",   # unnecessary-assign-before-return (aids readability/debugging)
     "RUF067",   # non-empty-init-module
+    "SIM108",   # if-else-block-instead-of-if-exp (ternaries can reduce readability)
     "W191",     # tab-indentation
 ]
 
@@ -220,3 +228,4 @@ known-first-party = ["archinstall"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
+"docs/conf.py" = ["A001"]  # copyright is a Sphinx convention

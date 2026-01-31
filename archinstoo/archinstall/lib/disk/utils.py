@@ -108,9 +108,8 @@ def get_lsblk_by_mountpoint(mountpoint: Path, as_prefix: bool = False) -> list[L
 			elif mountpoint in entry.mountpoints:
 				devices += [entry]
 
-			if len(entry.children) > 0:
-				if len(match := _check(entry.children)) > 0:
-					devices += match
+			if len(entry.children) > 0 and len(match := _check(entry.children)) > 0:
+				devices += match
 
 		return devices
 

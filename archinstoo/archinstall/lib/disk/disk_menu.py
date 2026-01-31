@@ -109,10 +109,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 	def _check_dep_lvm(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
 
-		if disk_layout_conf and disk_layout_conf.config_type == DiskLayoutType.Default:
-			return True
-
-		return False
+		return bool(disk_layout_conf and disk_layout_conf.config_type == DiskLayoutType.Default)
 
 	def _check_dep_btrfs(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
@@ -134,9 +131,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		if not DiskEncryption.validate_enc(modifications, lvm_config):
 			return None
 
-		disk_encryption = DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset).run()
-
-		return disk_encryption
+		return DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset).run()
 
 	def _select_disk_layout_config(self, preset: DiskLayoutConfiguration | None) -> DiskLayoutConfiguration | None:
 		disk_config = select_disk_config(preset)

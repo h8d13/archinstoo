@@ -33,9 +33,8 @@ def get_password(
 			hide_input=True,
 		).input()
 
-		if allow_skip:
-			if not result.has_item() or not result.text():
-				return None
+		if allow_skip and (not result.has_item() or not result.text()):
+			return None
 
 		password = Password(plaintext=result.text())
 		strength = PasswordStrength.strength(result.text())
@@ -84,10 +83,7 @@ def prompt_dir(
 
 		return tr('Not a valid directory')
 
-	if validate:
-		validate_func = validate_path
-	else:
-		validate_func = None
+	validate_func = validate_path if validate else None
 
 	result = EditMenu(
 		text,

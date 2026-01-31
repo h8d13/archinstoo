@@ -169,7 +169,7 @@ class AvailablePackage:
 
 	@cached_property
 	def longest_key(self) -> int:
-		return max(len(key) for key in asdict(self).keys())
+		return max(len(key) for key in asdict(self))
 
 	def info(self) -> str:
 		output = ''

@@ -1,3 +1,4 @@
+import contextlib
 from getpass import getpass
 from pathlib import Path
 
@@ -62,10 +63,9 @@ def find_linux_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:
 
 	def _check_partition(lsblk_info: LsblkInfo) -> None:
 		# Check if it's a partition or LVM volume with a Linux filesystem
-		if lsblk_info.fstype in fs_values:
-			# Include partitions that are not mounted or mounted elsewhere (not on /mnt or /)
-			if not lsblk_info.mountpoints or all(str(mp) not in ['/', '/mnt'] for mp in lsblk_info.mountpoints):
-				linux_partitions.append(lsblk_info)
+		# Include partitions that are not mounted or mounted elsewhere (not on /mnt or /)
+		if lsblk_info.fstype in fs_values and (not lsblk_info.mountpoints or all(str(mp) not in ['/', '/mnt'] for mp in lsblk_info.mountpoints)):
+			linux_partitions.append(lsblk_info)
 
 		# Recursively check children (for LVM, etc.)
 		for child in lsblk_info.children:
@@ -353,10 +353,8 @@ def rescue() -> None:
 		error('No Linux partitions found. Make sure your disks are properly connected.')
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
-			try:
+			with contextlib.suppress(DiskError, SysCallError):
 				luks.lock()
-			except (DiskError, SysCallError):
-				pass
 		return
 
 	info(f'Found {len(linux_partitions)} potential Linux partition(s)')
@@ -369,10 +367,8 @@ def rescue() -> None:
 		info('No partition selected. Exiting rescue mode.')
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
-			try:
+			with contextlib.suppress(DiskError, SysCallError):
 				luks.lock()
-			except (DiskError, SysCallError):
-				pass
 		return
 
 	info(f'Selected partition: {selected_partition.path}')
@@ -387,10 +383,8 @@ def rescue() -> None:
 	if not mount_partition(selected_partition, mount_point, handler):
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
-			try:
+			with contextlib.suppress(DiskError, SysCallError):
 				luks.lock()
-			except (DiskError, SysCallError):
-				pass
 		return
 
 	# Verify it's a Linux root filesystem
@@ -399,10 +393,8 @@ def rescue() -> None:
 		unmount_all(mount_point)
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
-			try:
+			with contextlib.suppress(DiskError, SysCallError):
 				luks.lock()
-			except (DiskError, SysCallError):
-				pass
 		return
 
 	info('Linux root filesystem verified!')

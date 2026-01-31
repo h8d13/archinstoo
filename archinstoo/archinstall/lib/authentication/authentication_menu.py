@@ -69,8 +69,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 
 	def _create_user_account(self, preset: list[User] | None = None) -> list[User]:
 		preset = [] if preset is None else preset
-		users = select_users(defined_users=preset)
-		return users
+		return select_users(defined_users=preset)
 
 	def _prev_users(self, item: MenuItem) -> str | None:
 		users: list[User] | None = item.value
@@ -103,8 +102,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 
 
 def select_root_password(preset: str | None = None) -> Password | None:
-	password = get_password(text=tr('Root password'), allow_skip=True)
-	return password
+	return get_password(text=tr('Root password'), allow_skip=True)
 
 
 def select_privilege_escalation(preset: PrivilegeEscalation) -> PrivilegeEscalation:

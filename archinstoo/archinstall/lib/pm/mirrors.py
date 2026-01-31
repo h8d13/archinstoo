@@ -351,18 +351,15 @@ def select_mirror_regions(
 		case ResultType.Reset:
 			return []
 		case ResultType.Selection:
-			selected_mirrors = result.get_values()
-			return selected_mirrors
+			return result.get_values()
 
 
 def add_custom_mirror_servers(preset: list[CustomServer] = []) -> list[CustomServer]:
-	custom_mirrors = CustomMirrorServersList(preset).run()
-	return custom_mirrors
+	return CustomMirrorServersList(preset).run()
 
 
 def select_custom_mirror(preset: list[CustomRepository] = []) -> list[CustomRepository]:
-	custom_mirrors = CustomMirrorRepositoriesList(preset).run()
-	return custom_mirrors
+	return CustomMirrorRepositoriesList(preset).run()
 
 
 def select_optional_repositories(preset: list[Repository]) -> list[Repository]:
@@ -557,9 +554,7 @@ class MirrorListHandler:
 			if mirror.url.startswith('http'):
 				sorting_placeholder.setdefault(mirror.country, []).append(mirror)
 
-		sorted_by_regions: dict[str, list[MirrorStatusEntryV3]] = dict(
-			{region: unsorted_mirrors for region, unsorted_mirrors in sorted(sorting_placeholder.items(), key=lambda item: item[0])}
-		)
+		sorted_by_regions: dict[str, list[MirrorStatusEntryV3]] = dict(sorted(sorting_placeholder.items(), key=lambda item: item[0]))
 
 		return sorted_by_regions
 
