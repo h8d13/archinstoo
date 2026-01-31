@@ -179,7 +179,7 @@ class User:
 		}
 
 	@staticmethod
-	def any_elevated(users: list['User']) -> bool:
+	def any_elevated(users: list[User]) -> bool:
 		return any(u.elev for u in users)
 
 	@classmethod

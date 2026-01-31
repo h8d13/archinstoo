@@ -13,7 +13,7 @@ class LsblkOutput:
 	blockdevices: list[LsblkInfo]
 
 	@classmethod
-	def from_json(cls, data: str) -> 'LsblkOutput':
+	def from_json(cls, data: str) -> LsblkOutput:
 		parsed = json.loads(data)
 		devices = [LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])]
 		return cls(blockdevices=devices)

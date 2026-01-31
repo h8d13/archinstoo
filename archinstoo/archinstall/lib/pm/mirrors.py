@@ -316,7 +316,7 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 
 def select_mirror_regions(
 	preset: list[MirrorRegion],
-	mirror_list_handler: 'MirrorListHandler | None' = None,
+	mirror_list_handler: MirrorListHandler | None = None,
 ) -> list[MirrorRegion]:
 	handler = mirror_list_handler or MirrorListHandler()
 
