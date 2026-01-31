@@ -5,8 +5,7 @@ from functools import cached_property
 from typing import Any, ClassVar, Self
 
 from archinstall.lib.translationhandler import tr
-
-from ..utils.unicode import unicode_ljust
+from archinstall.lib.utils.unicode import unicode_ljust
 
 
 @dataclass

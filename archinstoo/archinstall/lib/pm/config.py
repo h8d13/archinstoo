@@ -4,12 +4,12 @@ from pathlib import Path
 from shutil import copy2
 from typing import TYPE_CHECKING
 
-from ..models.mirrors import CustomRepository
-from ..models.packages import Repository
-from ..utils.env import Os
+from archinstall.lib.models.mirrors import CustomRepository
+from archinstall.lib.models.packages import Repository
+from archinstall.lib.utils.env import Os
 
 if TYPE_CHECKING:
-	from ..models.mirrors import PacmanConfiguration
+	from archinstall.lib.models.mirrors import PacmanConfiguration
 
 
 class PacmanConfig:

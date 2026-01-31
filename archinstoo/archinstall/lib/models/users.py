@@ -2,9 +2,8 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
+from archinstall.lib.authentication.crypt import crypt_yescrypt
 from archinstall.lib.translationhandler import tr
-
-from ..authentication.crypt import crypt_yescrypt
 
 
 class Shell(StrEnum):

@@ -163,6 +163,7 @@ docstring-code-format = true
 select = [
     "ASYNC",  # flake8-async
     "B",      # flake8-bugbear
+    "TID252", # relative-imports (PEP 8: prefer absolute imports)
     "C90",    # mccabe
     "COM",    # flake8-commas
     "DTZ",    # flake8-datetimez

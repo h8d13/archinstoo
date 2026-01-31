@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import override
 
 from archinstall.lib.disk.encryption_menu import DiskEncryptionMenu
+from archinstall.lib.menu.abstract_menu import AbstractSubMenu
 from archinstall.lib.models.device import (
 	DEFAULT_ITER_TIME,
 	BtrfsOptions,
@@ -13,14 +14,13 @@ from archinstall.lib.models.device import (
 	SnapshotConfig,
 	SnapshotType,
 )
+from archinstall.lib.output import FormattedOutput
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties
 
-from ..menu.abstract_menu import AbstractSubMenu
-from ..output import FormattedOutput
 from .conf import select_disk_config, select_lvm_config
 
 

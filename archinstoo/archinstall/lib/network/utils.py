@@ -9,7 +9,7 @@ from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-from ..exceptions import DownloadTimeout
+from archinstall.lib.exceptions import DownloadTimeout
 
 
 class DownloadTimer:

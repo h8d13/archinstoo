@@ -8,10 +8,10 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict, override
 
-from ..models.packages import Repository
-from ..network.utils import DownloadTimer, fetch_data_from_url
-from ..output import debug
-from ..utils.net import ping
+from archinstall.lib.models.packages import Repository
+from archinstall.lib.network.utils import DownloadTimer, fetch_data_from_url
+from archinstall.lib.output import debug
+from archinstall.lib.utils.net import ping
 
 
 def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
@@ -433,7 +433,7 @@ class PacmanConfiguration:
 		return config.strip()
 
 	def regions_config(self, speed_sort: bool = True) -> str:
-		from ..pm.mirrors import MirrorListHandler
+		from archinstall.lib.pm.mirrors import MirrorListHandler
 
 		handler = MirrorListHandler()
 		config = ''

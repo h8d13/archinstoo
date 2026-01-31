@@ -1,7 +1,9 @@
 from typing import override
 
+from archinstall.lib.menu.abstract_menu import AbstractSubMenu
 from archinstall.lib.menu.menu_helper import MenuHelper
 from archinstall.lib.models.device import (
+	DEFAULT_ITER_TIME,
 	DeviceModification,
 	DiskEncryption,
 	EncryptionType,
@@ -9,17 +11,14 @@ from archinstall.lib.models.device import (
 	LvmVolume,
 	PartitionModification,
 )
+from archinstall.lib.models.users import Password
+from archinstall.lib.output import FormattedOutput
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.prompts import get_password
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties
-
-from ..menu.abstract_menu import AbstractSubMenu
-from ..models.device import DEFAULT_ITER_TIME
-from ..models.users import Password
-from ..output import FormattedOutput
-from ..tui.prompts import get_password
 
 
 class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):

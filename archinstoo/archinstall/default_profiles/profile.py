@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Self
 from archinstall.lib.translationhandler import tr
 
 if TYPE_CHECKING:
-	from ..lib.installer import Installer
+	from archinstall.lib.installer import Installer
 
 
 class ProfileType(Enum):
@@ -132,7 +132,7 @@ class Profile:
 		return self.profile_type == ProfileType.Desktop
 
 	def display_servers(self) -> set[DisplayServer]:
-		from ..lib.profile.profiles_handler import ProfileHandler
+		from archinstall.lib.profile.profiles_handler import ProfileHandler
 
 		handler = ProfileHandler()
 		return handler.display_servers(self)

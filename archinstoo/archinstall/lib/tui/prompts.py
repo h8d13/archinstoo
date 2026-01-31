@@ -1,8 +1,8 @@
 from pathlib import Path
 
+from archinstall.lib.models.users import Password, PasswordStrength
 from archinstall.lib.translationhandler import tr
 
-from ..models.users import Password, PasswordStrength
 from .curses_menu import EditMenu
 from .result import ResultType
 from .types import Alignment
