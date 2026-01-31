@@ -1,10 +1,10 @@
 from dataclasses import fields
 from functools import lru_cache
 
-from ..exceptions import SysCallError
-from ..models.packages import AvailablePackage, LocalPackage, Repository
-from ..output import debug
-from ..pacman import Pacman
+from archinstall.lib.exceptions import SysCallError
+from archinstall.lib.models.packages import AvailablePackage, LocalPackage, Repository
+from archinstall.lib.output import debug
+from archinstall.lib.pacman import Pacman
 
 
 def installed_package(package: str) -> LocalPackage | None:

@@ -3,17 +3,14 @@ from enum import Enum
 from pathlib import Path
 from typing import assert_never
 
-from archinstall.lib.models.packages import Repository
+from archinstall.lib.locale.utils import list_timezones
+from archinstall.lib.models.packages import AvailablePackage, PackageGroup, Repository
 from archinstall.lib.pm import enrich_package_info, list_available_packages
-from archinstall.lib.translationhandler import tr
+from archinstall.lib.translationhandler import Language, tr
 from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
-
-from ..locale.utils import list_timezones
-from ..models.packages import AvailablePackage, PackageGroup
-from ..translationhandler import Language
 
 
 class PostInstallationAction(Enum):

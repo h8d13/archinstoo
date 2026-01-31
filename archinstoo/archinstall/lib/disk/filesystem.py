@@ -2,11 +2,8 @@ import math
 import time
 from pathlib import Path
 
-from archinstall.lib.translationhandler import tr
-from archinstall.lib.tui.curses_menu import Tui
-
-from ..interactions.general_conf import confirm_abort
-from ..models.device import (
+from archinstall.lib.interactions.general_conf import confirm_abort
+from archinstall.lib.models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	DiskLayoutType,
@@ -20,7 +17,10 @@ from ..models.device import (
 	Size,
 	Unit,
 )
-from ..output import debug, info
+from archinstall.lib.output import debug, info
+from archinstall.lib.translationhandler import tr
+from archinstall.lib.tui.curses_menu import Tui
+
 from .device_handler import DeviceHandler
 from .luks import Luks2
 

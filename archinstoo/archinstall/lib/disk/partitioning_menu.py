@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 from typing import override
 
+from archinstall.lib.menu.list_manager import ListManager
 from archinstall.lib.models.device import (
 	BtrfsMountOption,
 	DeviceModification,
@@ -15,15 +16,14 @@ from archinstall.lib.models.device import (
 	Size,
 	Unit,
 )
+from archinstall.lib.output import FormattedOutput
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.prompts import prompt_dir
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, Orientation
 
-from ..menu.list_manager import ListManager
-from ..output import FormattedOutput
-from ..tui.prompts import prompt_dir
 from .subvolume_menu import SubvolumeMenu
 
 

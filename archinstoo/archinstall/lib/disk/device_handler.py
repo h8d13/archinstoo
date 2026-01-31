@@ -7,9 +7,9 @@ from typing import Literal, overload
 
 from parted import Device, Disk, DiskException, FileSystem, Geometry, IOException, Partition, PartitionException, freshDisk, getAllDevices, getDevice, newDisk
 
-from ..exceptions import DiskError, SysCallError, UnknownFilesystemFormat
-from ..general import SysCommand, SysCommandWorker
-from ..models.device import (
+from archinstall.lib.exceptions import DiskError, SysCallError, UnknownFilesystemFormat
+from archinstall.lib.general import SysCommand, SysCommandWorker
+from archinstall.lib.models.device import (
 	DEFAULT_ITER_TIME,
 	BDevice,
 	BtrfsMountOption,
@@ -35,8 +35,9 @@ from ..models.device import (
 	_DeviceInfo,
 	_PartitionInfo,
 )
-from ..models.users import Password
-from ..output import debug, error, info
+from archinstall.lib.models.users import Password
+from archinstall.lib.output import debug, error, info
+
 from .luks import Luks2
 from .utils import (
 	find_lsblk_info,

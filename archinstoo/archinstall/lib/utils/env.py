@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 from shutil import rmtree, which
 
-from ..exceptions import RequirementError
-from ..output import info
+from archinstall.lib.exceptions import RequirementError
+from archinstall.lib.output import info
 
 
 class Os:

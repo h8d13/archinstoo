@@ -1,13 +1,12 @@
 from types import TracebackType
 from typing import Any, Self
 
+from archinstall.lib.output import error
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import SelectMenu, Tui
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Chars, FrameProperties, FrameStyle, PreviewStyle
-
-from ..output import error
 
 CONFIG_KEY = '__config__'
 

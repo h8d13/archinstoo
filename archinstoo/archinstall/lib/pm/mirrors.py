@@ -4,15 +4,9 @@ from functools import partial
 from pathlib import Path
 from typing import ClassVar, override
 
-from archinstall.lib.translationhandler import tr
-from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
-from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstall.lib.tui.result import ResultType
-from archinstall.lib.tui.types import Alignment, FrameProperties
-
-from ..menu.abstract_menu import AbstractSubMenu
-from ..menu.list_manager import ListManager
-from ..models.mirrors import (
+from archinstall.lib.menu.abstract_menu import AbstractSubMenu
+from archinstall.lib.menu.list_manager import ListManager
+from archinstall.lib.models.mirrors import (
 	PACMAN_OPTIONS,
 	ArchLinuxDeMirrorList,
 	CustomRepository,
@@ -24,9 +18,14 @@ from ..models.mirrors import (
 	SignCheck,
 	SignOption,
 )
-from ..models.packages import Repository
-from ..network.utils import fetch_data_from_url
-from ..output import FormattedOutput, debug
+from archinstall.lib.models.packages import Repository
+from archinstall.lib.network.utils import fetch_data_from_url
+from archinstall.lib.output import FormattedOutput, debug
+from archinstall.lib.translationhandler import tr
+from archinstall.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
+from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstall.lib.tui.result import ResultType
+from archinstall.lib.tui.types import Alignment, FrameProperties
 
 
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):

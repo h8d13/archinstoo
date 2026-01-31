@@ -1,14 +1,13 @@
 from typing import assert_never
 
 from archinstall.default_profiles.profile import Profile
+from archinstall.lib.hardware import GfxDriver, SysInfo
 from archinstall.lib.models.application import ZramAlgorithm, ZramConfiguration
 from archinstall.lib.translationhandler import tr
 from archinstall.lib.tui.curses_menu import SelectMenu
 from archinstall.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, FrameStyle, Orientation, PreviewStyle
-
-from ..hardware import GfxDriver, SysInfo
 
 
 def select_kernel(preset: list[str] = []) -> list[str]:

@@ -20,11 +20,10 @@ try:
 except ImportError:
 	raise ImportError('Dep python-parted not found. Please install it with: pacman -S python-parted')
 
+from archinstall.lib.hardware import SysInfo
+from archinstall.lib.models.users import Password
+from archinstall.lib.output import debug
 from archinstall.lib.translationhandler import tr
-
-from ..hardware import SysInfo
-from ..models.users import Password
-from ..output import debug
 
 ENC_IDENTIFIER = 'ainst'
 DEFAULT_ITER_TIME = 10000
