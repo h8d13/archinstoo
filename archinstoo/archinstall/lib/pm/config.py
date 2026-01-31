@@ -91,7 +91,7 @@ class PacmanConfig:
 			copy2(self._config_path, self._config_remote_path)
 
 	@classmethod
-	def apply_config(cls, config: 'PacmanConfiguration') -> None:
+	def apply_config(cls, config: PacmanConfiguration) -> None:
 		"""Apply a PacmanConfiguration to the live system."""
 		if not config.optional_repositories and not config.custom_repositories and not config.pacman_options:
 			return

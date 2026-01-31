@@ -12,10 +12,10 @@ authors = [
 ]
 license = "GPL-3.0-only"
 readme = "readme.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 keywords = ["linux", "arch", "archinstall", "installer"]
 classifiers = [
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
@@ -59,7 +59,7 @@ include-package-data = true
 archinstall = "archinstall"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.14"
 files = "."
 exclude = "^build/"
 disallow_any_explicit = false
@@ -119,7 +119,7 @@ ignore-paths = [
     "^node_modules/",
 ]
 persistent = false
-py-version = "3.12"
+py-version = "3.14"
 recursive = true
 
 [tool.pylint.format]
@@ -151,7 +151,7 @@ init-import = true
 ignored-modules = ["parted"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 160
 
 [tool.ruff.format]
@@ -161,7 +161,7 @@ docstring-code-format = true
 
 [tool.ruff.lint]
 select = [
-    "A",      # flake8-builtins (don't shadow builtins)
+    "A",      # flake8-builtins
     "ASYNC",  # flake8-async
     "B",      # flake8-bugbear
     "C4",     # flake8-comprehensions
@@ -173,26 +173,26 @@ select = [
     "F",      # Pyflakes
     "FA",     # flake8-future-annotations
     "FLY",    # flynt
-    "FURB",   # refurb (modernize code)
+    "FURB",   # refurb
     "G",      # flake8-logging-format
     "I",      # isort
     "ICN",    # flake8-import-conventions
     "ISC",    # flake8-implicit-str-concat
     "LOG",    # flake8-logging
-    "PERF",   # perflint (performance anti-patterns)
+    "PERF",   # perflint
     "PGH",    # pygrep-hooks
     "PIE",    # flake8-pie
     "PLC",    # Pylint conventions
     "PLE",    # Pylint errors
     "PLW",    # Pylint warnings
     "PYI",    # flake8-pyi
-    "RET",    # flake8-return (return statement clarity)
+    "RET",    # flake8-return
     "RSE",    # flake8-raise
     "RUF",    # Ruff-specific rules
     "SIM",    # flake8-simplify
     "SLOT",   # flake8-slot
     "T10",    # flake8-debugger
-    "TID252", # relative-imports (PEP 8: prefer absolute imports)
+    "TID252", # relative-imports
     "UP",     # pyupgrade
     "W",      # pycodestyle warnings
     "YTT",    # flake8-2020
@@ -214,9 +214,9 @@ ignore = [
     "RUF015",   # unnecessary-iterable-allocation-for-first-element
     "RUF039",   # unraw-re-pattern
     "RUF051",   # if-key-in-dict-del
-    "RET504",   # unnecessary-assign-before-return (aids readability/debugging)
+    "RET504",   # unnecessary-assign-before-return
     "RUF067",   # non-empty-init-module
-    "SIM108",   # if-else-block-instead-of-if-exp (ternaries can reduce readability)
+    "SIM108",   # if-else-block-instead-of-if-exp
     "W191",     # tab-indentation
 ]
 
