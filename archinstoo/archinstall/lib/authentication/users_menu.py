@@ -69,9 +69,8 @@ class UserList(ListManager[User]):
 		return data
 
 	def _check_for_correct_username(self, username: str | None) -> str | None:
-		if username is not None:
-			if re.match(r'^[a-z_][a-z0-9_-]*\$?$', username) and len(username) <= 32:
-				return None
+		if username is not None and re.match(r'^[a-z_][a-z0-9_-]*\$?$', username) and len(username) <= 32:
+			return None
 		return tr('The username you entered is invalid')
 
 	def _validate_stash_url(self, url: str | None) -> str | None:
@@ -224,5 +223,4 @@ def _select_groups(preset: list[str] | None = None) -> list[str]:
 
 
 def select_users(prompt: str = '', defined_users: list[User] = []) -> list[User]:
-	users = UserList(prompt, defined_users).run()
-	return users
+	return UserList(prompt, defined_users).run()

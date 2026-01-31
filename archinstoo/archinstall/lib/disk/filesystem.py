@@ -220,7 +220,7 @@ class FilesystemHandler:
 		enc_vols: dict[LvmVolume, Luks2] = {},
 	) -> None:
 		for vol in lvm_config.get_all_volumes():
-			if enc_vol := enc_vols.get(vol, None):
+			if enc_vol := enc_vols.get(vol):
 				if not enc_vol.mapper_dev:
 					raise ValueError('No mapper device defined')
 				path = enc_vol.mapper_dev
@@ -254,7 +254,7 @@ class FilesystemHandler:
 		pv_paths: set[Path] = set()
 
 		for pv in pvs:
-			if enc_pv := enc_mods.get(pv, None):
+			if enc_pv := enc_mods.get(pv):
 				if mapper := enc_pv.mapper_dev:
 					pv_paths.add(mapper)
 			else:
@@ -324,7 +324,7 @@ class FilesystemHandler:
 		# from arch wiki:
 		# If a logical volume will be formatted with ext4, leave at least 256 MiB
 		# free space in the volume group to allow using e2scrub
-		if any([vol.fs_type == FilesystemType.Ext4 for vol in vol_gp.volumes]):
+		if any(vol.fs_type == FilesystemType.Ext4 for vol in vol_gp.volumes):
 			largest_vol = max(vol_gp.volumes, key=lambda x: x.length)
 
 			self._device_handler.lvm_vol_reduce(

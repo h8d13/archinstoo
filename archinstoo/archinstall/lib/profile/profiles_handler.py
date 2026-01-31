@@ -272,7 +272,7 @@ class ProfileHandler:
 		legacy profile definition
 		"""
 		with open(file) as fp:
-			for line in fp.readlines():
+			for line in fp:
 				if '__packages__' in line:
 					return True
 		return False

@@ -81,8 +81,7 @@ class Nic:
 				network.append(('Address', self.ip))
 			if self.gateway:
 				network.append(('Gateway', self.gateway))
-			for dns in self.dns:
-				network.append(('DNS', dns))
+			network.extend(('DNS', dns) for dns in self.dns)
 
 		config = {'Match': match, 'Network': network}
 

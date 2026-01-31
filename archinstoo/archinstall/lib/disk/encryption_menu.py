@@ -95,21 +95,15 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 	def _check_dep_enc_type(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		if enc_type and enc_type != EncryptionType.NoEncryption:
-			return True
-		return False
+		return bool(enc_type and enc_type != EncryptionType.NoEncryption)
 
 	def _check_dep_partitions(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		if enc_type and enc_type in [EncryptionType.Luks, EncryptionType.LvmOnLuks]:
-			return True
-		return False
+		return bool(enc_type and enc_type in [EncryptionType.Luks, EncryptionType.LvmOnLuks])
 
 	def _check_dep_lvm_vols(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		if enc_type and enc_type == EncryptionType.LuksOnLvm:
-			return True
-		return False
+		return bool(enc_type and enc_type == EncryptionType.LuksOnLvm)
 
 	@override
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
@@ -214,10 +208,7 @@ def select_encryption_type(
 ) -> EncryptionType | None:
 	options: list[EncryptionType] = []
 
-	if lvm_config:
-		options = [EncryptionType.LvmOnLuks, EncryptionType.LuksOnLvm]
-	else:
-		options = [EncryptionType.Luks]
+	options = [EncryptionType.LvmOnLuks, EncryptionType.LuksOnLvm] if lvm_config else [EncryptionType.Luks]
 
 	if not preset:
 		preset = options[0]
@@ -247,13 +238,11 @@ def select_encryption_type(
 
 def select_encrypted_password() -> Password | None:
 	header = tr('Enter disk encryption password (leave blank for no encryption)') + '\n'
-	password = get_password(
+	return get_password(
 		text=tr('Disk encryption password'),
 		header=header,
 		allow_skip=True,
 	)
-
-	return password
 
 
 def select_partitions_to_encrypt(
@@ -285,8 +274,7 @@ def select_partitions_to_encrypt(
 			case ResultType.Skip:
 				return preset
 			case ResultType.Selection:
-				partitions = result.get_values()
-				return partitions
+				return result.get_values()
 
 	return []
 
@@ -312,8 +300,7 @@ def select_lvm_vols_to_encrypt(
 			case ResultType.Skip:
 				return preset
 			case ResultType.Selection:
-				volumes = result.get_values()
-				return volumes
+				return result.get_values()
 
 	return []
 

@@ -59,7 +59,7 @@ def select_driver(
 	there for appeal to the general public first and edge cases later)
 	"""
 	if not options:
-		options = [driver for driver in GfxDriver]
+		options = list(GfxDriver)
 
 	servers = profile.display_servers() if profile else None
 

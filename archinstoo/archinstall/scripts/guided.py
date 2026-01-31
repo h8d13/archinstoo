@@ -1,3 +1,4 @@
+import contextlib
 import os
 import time
 from pathlib import Path
@@ -80,10 +81,13 @@ def perform_installation(
 
 		installation.sanity_check()
 
-		if disk_config.config_type != DiskLayoutType.Pre_mount:
-			if disk_config.disk_encryption and disk_config.disk_encryption.encryption_type != EncryptionType.NoEncryption:
-				# generate encryption key files for the mounted luks devices
-				installation.generate_key_files()
+		if (
+			disk_config.config_type != DiskLayoutType.Pre_mount
+			and disk_config.disk_encryption
+			and disk_config.disk_encryption.encryption_type != EncryptionType.NoEncryption
+		):
+			# generate encryption key files for the mounted luks devices
+			installation.generate_key_files()
 
 		if pacman_config := config.pacman_config:
 			installation.set_mirrors(pacman_config, on_target=False)
@@ -116,13 +120,12 @@ def perform_installation(
 				config.profile_config,
 			)
 
-		if config.auth_config:
-			if config.auth_config.users:
-				installation.create_users(
-					config.auth_config.users,
-					config.auth_config.privilege_escalation,
-				)
-				ShellApp().install(installation, config.auth_config.users)
+		if config.auth_config and config.auth_config.users:
+			installation.create_users(
+				config.auth_config.users,
+				config.auth_config.privilege_escalation,
+			)
+			ShellApp().install(installation, config.auth_config.users)
 
 		if app_config := config.app_config:
 			users = config.auth_config.users if config.auth_config else None
@@ -192,10 +195,8 @@ def perform_installation(
 			case PostInstallationAction.REBOOT:
 				os.system('reboot')
 			case PostInstallationAction.CHROOT:
-				try:
+				with contextlib.suppress(Exception):
 					installation.drop_to_shell()
-				except Exception:
-					pass
 
 
 def guided() -> None:

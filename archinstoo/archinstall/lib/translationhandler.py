@@ -21,11 +21,7 @@ class Language:
 		return f'{name} ({self.translation_percent}%)'
 
 	def is_match(self, lang_or_translated_lang: str) -> bool:
-		if self.name_en == lang_or_translated_lang:
-			return True
-		elif self.translated_lang == lang_or_translated_lang:
-			return True
-		return False
+		return bool(self.name_en == lang_or_translated_lang or self.translated_lang == lang_or_translated_lang)
 
 	def json(self) -> str:
 		return self.name_en
@@ -56,7 +52,7 @@ class TranslationHandler:
 			mapping_entry: dict[str, str] = next(filter(lambda x: x['abbr'] == short_form, mappings))
 			abbr = mapping_entry['abbr']
 			lang = mapping_entry['lang']
-			translated_lang = mapping_entry.get('translated_lang', None)
+			translated_lang = mapping_entry.get('translated_lang')
 
 			try:
 				# get a translation for a specific language
@@ -139,8 +135,7 @@ class TranslationHandler:
 		Get the locales directory path
 		"""
 		cur_path = Path(__file__).parent.parent
-		locales_dir = Path.joinpath(cur_path, 'locales')
-		return locales_dir
+		return Path.joinpath(cur_path, 'locales')
 
 	def _provided_translations(self) -> list[str]:
 		"""
@@ -149,12 +144,7 @@ class TranslationHandler:
 		locales_dir = self._get_locales_dir()
 		filenames = os.listdir(locales_dir)
 
-		translation_files = []
-		for filename in filenames:
-			if len(filename) == 2 or filename in ['pt_BR', 'zh-CN', 'zh-TW']:
-				translation_files.append(filename)
-
-		return translation_files
+		return [filename for filename in filenames if len(filename) == 2 or filename in ['pt_BR', 'zh-CN', 'zh-TW']]
 
 
 class _DeferredTranslation:

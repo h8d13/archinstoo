@@ -304,9 +304,7 @@ class ArchConfigHandler:
 				warn(f'Malformed JSON at line {e.lineno}, column {e.colno}: {e.msg}')
 				raise SystemExit(1)
 
-		config = self._cleanup_config(config)
-
-		return config
+		return self._cleanup_config(config)
 
 	def _fetch_from_url(self, url: str) -> str:
 		if urllib.parse.urlparse(url).scheme:

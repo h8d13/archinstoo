@@ -10,8 +10,7 @@ def _calc_checksum(icmp_packet: bytes) -> int:
 	for i in range(0, len(icmp_packet), 2):
 		checksum += (icmp_packet[i] << 8) + (struct.unpack('B', icmp_packet[i + 1 : i + 2])[0] if len(icmp_packet[i + 1 : i + 2]) else 0)
 	checksum = (checksum >> 16) + (checksum & 0xFFFF)
-	checksum = ~checksum & 0xFFFF
-	return checksum
+	return ~checksum & 0xFFFF
 
 
 def _build_icmp(payload: bytes) -> bytes:

@@ -71,7 +71,7 @@ class PasswordStrength(Enum):
 		# https://github.com/archlinux/archinstall/issues/1304#issuecomment-1146768163
 		if digit and upper and lower and symbol:
 			match length:
-				case num if 13 <= num:
+				case num if num >= 13:
 					return cls.STRONG
 				case num if 11 <= num <= 12:
 					return cls.MODERATE
@@ -79,7 +79,7 @@ class PasswordStrength(Enum):
 					return cls.WEAK
 		elif digit and upper and lower:
 			match length:
-				case num if 14 <= num:
+				case num if num >= 14:
 					return cls.STRONG
 				case num if 11 <= num <= 13:
 					return cls.MODERATE
@@ -87,7 +87,7 @@ class PasswordStrength(Enum):
 					return cls.WEAK
 		elif upper and lower:
 			match length:
-				case num if 15 <= num:
+				case num if num >= 15:
 					return cls.STRONG
 				case num if 12 <= num <= 14:
 					return cls.MODERATE
@@ -95,7 +95,7 @@ class PasswordStrength(Enum):
 					return cls.WEAK
 		elif lower or upper:
 			match length:
-				case num if 18 <= num:
+				case num if num >= 18:
 					return cls.STRONG
 				case num if 14 <= num <= 17:
 					return cls.MODERATE
@@ -142,8 +142,7 @@ class Password:
 	def hidden(self) -> str:
 		if self._plaintext:
 			return '*' * len(self._plaintext)
-		else:
-			return '*' * 8
+		return '*' * 8
 
 
 @dataclass

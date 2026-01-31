@@ -1,3 +1,4 @@
+import contextlib
 import curses
 
 from .curses_menu import Tui
@@ -94,10 +95,8 @@ class ScriptEditor:
 		# Position cursor
 		cursor_screen_y = edit_start_y + (self._cursor_y - self._scroll_y)
 		cursor_screen_x = line_num_width + min(self._cursor_x, max_x - line_num_width - 1)
-		try:
+		with contextlib.suppress(curses.error):
 			screen.move(cursor_screen_y, cursor_screen_x)
-		except curses.error:
-			pass
 
 		screen.refresh()
 

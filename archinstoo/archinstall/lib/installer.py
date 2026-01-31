@@ -150,16 +150,15 @@ class Installer:
 			log(msg, fg='green')
 
 			return True
-		else:
-			warn('Some required steps were not successfully installed/configured before leaving the installer:')
+		warn('Some required steps were not successfully installed/configured before leaving the installer:')
 
-			for step in missing_steps:
-				warn(f' - {step}')
+		for step in missing_steps:
+			warn(f' - {step}')
 
-			warn(f'Detailed error logs can be found at: {logger.directory}')
-			warn(f'Submit this zip file as an issue to {self._bug_report_url}/issues')
+		warn(f'Detailed error logs can be found at: {logger.directory}')
+		warn(f'Submit this zip file as an issue to {self._bug_report_url}/issues')
 
-			return False
+		return False
 
 	def sync(self) -> None:
 		info(tr('Syncing the system...'))
@@ -233,12 +232,11 @@ class Installer:
 		boot_mount = self.target / 'boot'
 		lsblk_info = get_lsblk_by_mountpoint(boot_mount)
 
-		if len(lsblk_info) > 0:
-			if lsblk_info[0].size < Size(200, Unit.MiB, SectorSize.default()):
-				raise DiskError(
-					f'The boot partition mounted at {boot_mount} is not large enough to install a boot loader. '
-					f'Please resize it to at least 200MiB and re-run the installation.',
-				)
+		if len(lsblk_info) > 0 and lsblk_info[0].size < Size(200, Unit.MiB, SectorSize.default()):
+			raise DiskError(
+				f'The boot partition mounted at {boot_mount} is not large enough to install a boot loader. '
+				f'Please resize it to at least 200MiB and re-run the installation.',
+			)
 
 	def sanity_check(self) -> None:
 		# self._verify_boot_part()
@@ -379,10 +377,9 @@ class Installer:
 			self._device_handler.swapon(part_mod.dev_path)
 
 	def _mount_lvm_vol(self, volume: LvmVolume) -> None:
-		if volume.fs_type != FilesystemType.Btrfs:
-			if volume.mountpoint and volume.dev_path:
-				target = self.target / volume.relative_mountpoint
-				self._device_handler.mount(volume.dev_path, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+		if volume.fs_type != FilesystemType.Btrfs and volume.mountpoint and volume.dev_path:
+			target = self.target / volume.relative_mountpoint
+			self._device_handler.mount(volume.dev_path, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
 		if volume.fs_type == FilesystemType.Btrfs and volume.dev_path:
 			# Only mount BTRFS subvolumes that have mountpoints specified
@@ -392,7 +389,7 @@ class Installer:
 
 	def _mount_luks_partition(self, part_mod: PartitionModification, luks_handler: Luks2) -> None:
 		if not luks_handler.mapper_dev:
-			return None
+			return
 
 		if part_mod.fs_type == FilesystemType.Btrfs and part_mod.btrfs_subvols:
 			# Only mount BTRFS subvolumes that have mountpoints specified
@@ -408,10 +405,9 @@ class Installer:
 			self._device_handler.mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=part_mod.mount_options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
-		if volume.fs_type != FilesystemType.Btrfs:
-			if volume.mountpoint and luks_handler.mapper_dev:
-				target = self.target / volume.relative_mountpoint
-				self._device_handler.mount(luks_handler.mapper_dev, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+		if volume.fs_type != FilesystemType.Btrfs and volume.mountpoint and luks_handler.mapper_dev:
+			target = self.target / volume.relative_mountpoint
+			self._device_handler.mount(luks_handler.mapper_dev, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
 		if volume.fs_type == FilesystemType.Btrfs and luks_handler.mapper_dev:
 			# Only mount BTRFS subvolumes that have mountpoints specified
@@ -535,8 +531,7 @@ class Installer:
 			raise RequirementError('Could not create fstab file')
 
 		with open(fstab_path, 'a') as fp:
-			for entry in self._fstab_entries:
-				fp.write(f'{entry}\n')
+			fp.writelines(f'{entry}\n' for entry in self._fstab_entries)
 
 	def set_hostname(self, hostname: str) -> None:
 		(self.target / 'etc/hostname').write_text(hostname + '\n')
@@ -601,8 +596,7 @@ class Installer:
 			self.arch_chroot(f'ln -s /usr/share/zoneinfo/{zone} /etc/localtime')
 			return True
 
-		else:
-			warn(f'Time zone {zone} does not exist, continuing with system default')
+		warn(f'Time zone {zone} does not exist, continuing with system default')
 
 		return False
 
@@ -663,31 +657,30 @@ class Installer:
 
 	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
 		# Copy (if any) iwd password and config files
-		if os.path.isdir('/var/lib/iwd/'):
-			if psk_files := glob.glob('/var/lib/iwd/*.psk'):
-				if not os.path.isdir(f'{self.target}/var/lib/iwd'):
-					os.makedirs(f'{self.target}/var/lib/iwd')
+		if os.path.isdir('/var/lib/iwd/') and (psk_files := glob.glob('/var/lib/iwd/*.psk')):
+			if not os.path.isdir(f'{self.target}/var/lib/iwd'):
+				os.makedirs(f'{self.target}/var/lib/iwd')
 
-				if enable_services:
-					# If we haven't installed the base yet (function called pre-maturely)
-					if self._helper_flags.get('base', False) is False:
-						self._base_packages.append('iwd')
+			if enable_services:
+				# If we haven't installed the base yet (function called pre-maturely)
+				if self._helper_flags.get('base', False) is False:
+					self._base_packages.append('iwd')
 
-						# This function will be called after minimal_installation()
-						# as a hook for post-installs. This hook is only needed if
-						# base is not installed yet.
-						def post_install_enable_iwd_service(*args: str, **kwargs: str) -> None:
-							self.enable_service('iwd')
-
-						self.post_base_install.append(post_install_enable_iwd_service)
-					# Otherwise, we can go ahead and add the required package
-					# and enable it's service:
-					else:
-						self.pacman.strap('iwd')
+					# This function will be called after minimal_installation()
+					# as a hook for post-installs. This hook is only needed if
+					# base is not installed yet.
+					def post_install_enable_iwd_service(*args: str, **kwargs: str) -> None:
 						self.enable_service('iwd')
 
-				for psk in psk_files:
-					shutil.copy2(psk, f'{self.target}/var/lib/iwd/{os.path.basename(psk)}')
+					self.post_base_install.append(post_install_enable_iwd_service)
+				# Otherwise, we can go ahead and add the required package
+				# and enable it's service:
+				else:
+					self.pacman.strap('iwd')
+					self.enable_service('iwd')
+
+			for psk in psk_files:
+				shutil.copy2(psk, f'{self.target}/var/lib/iwd/{os.path.basename(psk)}')
 
 		# Enable systemd-resolved by (forcefully) setting a symlink
 		# For further details see  https://wiki.archlinux.org/title/Systemd-resolved#DNS
@@ -752,9 +745,8 @@ class Installer:
 			return False
 
 	def _get_microcode(self) -> Path | None:
-		if not SysInfo.is_vm():
-			if vendor := SysInfo.cpu_vendor():
-				return vendor.get_ucode()
+		if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
+			return vendor.get_ucode()
 		return None
 
 	def _prepare_fs_type(
@@ -770,9 +762,8 @@ class Installer:
 			self._disable_fstrim = True
 
 		# There is not yet an fsck tool for NTFS. If it's being used for the root filesystem, the hook should be removed.
-		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target:
-			if 'fsck' in self._hooks:
-				self._hooks.remove('fsck')
+		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self._hooks:
+			self._hooks.remove('fsck')
 
 	def _prepare_encrypt(self, before: str = 'filesystems') -> None:
 		if 'encrypt' not in self._hooks:
@@ -949,10 +940,9 @@ class Installer:
 	def _get_root(self) -> PartitionModification | LvmVolume | None:
 		if self._disk_config.lvm_config:
 			return self._disk_config.lvm_config.get_root_volume()
-		else:
-			for mod in self._disk_config.device_modifications:
-				if root := mod.get_root_partition():
-					return root
+		for mod in self._disk_config.device_modifications:
+			if root := mod.get_root_partition():
+				return root
 		return None
 
 	def _configure_grub_btrfsd(self, snapshot_type: SnapshotType) -> None:
@@ -1061,10 +1051,7 @@ class Installer:
 	) -> list[str]:
 		kernel_parameters = []
 
-		if isinstance(root, LvmVolume):
-			kernel_parameters = self._get_kernel_params_lvm(root)
-		else:
-			kernel_parameters = self._get_kernel_params_partition(root, id_root, partuuid)
+		kernel_parameters = self._get_kernel_params_lvm(root) if isinstance(root, LvmVolume) else self._get_kernel_params_partition(root, id_root, partuuid)
 
 		# Zswap should be disabled when using zram.
 		# https://github.com/archlinux/archinstall/issues/881
@@ -1130,7 +1117,7 @@ class Installer:
 
 		if not efi_partition:
 			raise ValueError('Could not detect EFI system partition')
-		elif not efi_partition.mountpoint:
+		if not efi_partition.mountpoint:
 			raise ValueError('EFI system partition is not mounted')
 
 		# TODO: Ideally we would want to check if another config
@@ -1353,7 +1340,7 @@ class Installer:
 
 			if not efi_partition:
 				raise ValueError('Could not detect efi partition')
-			elif not efi_partition.mountpoint:
+			if not efi_partition.mountpoint:
 				raise ValueError('EFI partition is not mounted')
 
 			info(f'Limine EFI partition: {efi_partition.dev_path}')
@@ -1561,7 +1548,7 @@ class Installer:
 
 		if not efi_partition:
 			raise ValueError('Could not detect EFI system partition')
-		elif not efi_partition.mountpoint:
+		if not efi_partition.mountpoint:
 			raise ValueError('EFI system partition is not mounted')
 
 		info(f'rEFInd EFI partition: {efi_partition.dev_path}')
@@ -1922,12 +1909,10 @@ class Installer:
 		# Normalize vconsole layout to X11 format by stripping common suffixes
 		layout = vconsole_layout
 		for suffix in ('-latin1', '-latin2', '-latin9', '-nodeadkeys', '-mac'):
-			if layout.endswith(suffix):
-				layout = layout[: -len(suffix)]
+			layout = layout.removesuffix(suffix)
 		# Handle compound suffixes like de-latin1-nodeadkeys
 		for suffix in ('-latin1', '-latin2', '-latin9'):
-			if layout.endswith(suffix):
-				layout = layout[: -len(suffix)]
+			layout = layout.removesuffix(suffix)
 
 		# Verify layout exists in target (where X11 is installed)
 		try:

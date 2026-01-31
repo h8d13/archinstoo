@@ -63,8 +63,7 @@ class Luks2:
 
 		if isinstance(self.password, bytes):
 			return self.password
-		else:
-			return bytes(self.password.plaintext, 'UTF-8')
+		return bytes(self.password.plaintext, 'UTF-8')
 
 	def _get_passphrase_args(
 		self,
@@ -205,8 +204,7 @@ class Luks2:
 			if not override:
 				info(f'Key file {key_file} already exists, keeping existing')
 				return
-			else:
-				info(f'Key file {key_file} already exists, overriding')
+			info(f'Key file {key_file} already exists, overriding')
 
 		key_file.parent.mkdir(parents=True, exist_ok=True)
 

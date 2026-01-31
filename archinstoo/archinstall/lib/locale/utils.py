@@ -18,21 +18,12 @@ def list_keyboard_languages() -> list[str]:
 
 
 def list_locales() -> list[str]:
-	locales = []
-
 	with open('/usr/share/i18n/SUPPORTED') as file:
-		for line in file:
-			if line != 'C.UTF-8 UTF-8\n':
-				locales.append(line.rstrip())
-
-	return locales
+		return [line.rstrip() for line in file if line != 'C.UTF-8 UTF-8\n']
 
 
 def verify_keyboard_layout(layout: str) -> bool:
-	for language in list_keyboard_languages():
-		if layout.lower() == language.lower():
-			return True
-	return False
+	return any(layout.lower() == language.lower() for language in list_keyboard_languages())
 
 
 def list_x11_keyboard_languages() -> list[str]:
@@ -47,10 +38,7 @@ def list_x11_keyboard_languages() -> list[str]:
 
 
 def verify_x11_keyboard_layout(layout: str) -> bool:
-	for language in list_x11_keyboard_languages():
-		if layout.lower() == language.lower():
-			return True
-	return False
+	return any(layout.lower() == language.lower() for language in list_x11_keyboard_languages())
 
 
 def get_kb_layout() -> str:

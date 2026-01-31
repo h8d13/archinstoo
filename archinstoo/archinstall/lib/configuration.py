@@ -130,7 +130,7 @@ class ConfigurationHandler:
 
 				if choice == 'resume':
 					return cls.load_saved_config()
-				elif choice == 'fresh':
+				if choice == 'fresh':
 					cls.delete_saved_config()
 
 		return None

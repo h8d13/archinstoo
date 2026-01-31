@@ -30,17 +30,16 @@ class Os:
 	def running_from_who() -> str:
 		# checks distro name
 		if os.path.exists('/etc/os-release'):
-			for line in open('/etc/os-release'):
-				if line.startswith('ID='):
-					return line.strip().split('=')[1]
+			with open('/etc/os-release') as f:
+				for line in f:
+					if line.startswith('ID='):
+						return line.strip().split('=')[1]
 		return ''
 
 	@staticmethod
 	def running_from_arch() -> bool:
 		# confirm its arch host
-		if Os.running_from_who() == 'arch':
-			return True
-		return False
+		return Os.running_from_who() == 'arch'
 
 	# match Os.running_from_who():
 	# case 'alpine':
