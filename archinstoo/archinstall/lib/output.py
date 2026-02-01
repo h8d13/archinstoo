@@ -39,9 +39,9 @@ class FormattedOutput:
 			return cast(dict[str, Any], o.table_data())
 		if hasattr(o, 'json'):
 			return cast(dict[str, Any], o.json())
-		if is_dataclass(o):
+		if is_dataclass(o) and not isinstance(o, type):
 			return asdict(o)
-		return o.__dict__  # type: ignore[unreachable]
+		return cast(dict[str, Any], o.__dict__)
 
 	@classmethod
 	def as_table(
