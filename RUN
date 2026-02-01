@@ -4,9 +4,9 @@
 if [ "$USER" = "root" ]; then
     ELEV=""
 else
-    ELEV="${ELEV:-sudo}"
+    ELEV="${ELEV:-sudo }"
 fi
 # help / list / size 
 # do not need root but we append it for most features
 # can be launched with ELEV=doas env var
-(cd archinstoo && "$ELEV" python -B -m archinstall "$@") && cd ..
+(cd archinstoo && "$ELEV"python -B -m archinstall "$@") && cd ..

@@ -7,7 +7,7 @@ PKG_GLOB="archinstoo-*.pkg.tar.zst"
 if [ "$USER" = "root" ]; then
     ELEV=""
 else
-    ELEV="${ELEV:-sudo}"
+    ELEV="${ELEV:-sudo }"
 fi
 
 go_to () {
@@ -59,7 +59,7 @@ case "$1" in
 	;;
 	-i|--install)
 	go_to
- 	"$ELEV" pacman -U --overwrite '*' $PKG_GLOB
+ 	"$ELEV"pacman -U --overwrite '*' $PKG_GLOB
 	;;
     -tf | --test-full)
     ./RUN --config examples/config-sample-full.json
