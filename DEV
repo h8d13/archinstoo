@@ -3,7 +3,12 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_GLOB="archinstoo-*.pkg.tar.zst"
-ELEV="${ELEV:-sudo}"
+
+if [ "$USER" = "root" ]; then
+    ELEV=""
+else
+    ELEV="${ELEV:-sudo}"
+fi
 
 go_to () {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
