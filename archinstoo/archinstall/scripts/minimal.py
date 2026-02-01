@@ -82,7 +82,7 @@ def _minimal() -> None:
 
 	if disk_config is None:
 		info('Installation cancelled.')
-		return
+		return None
 
 	config.disk_config = disk_config
 	config_handler = ConfigurationHandler(config)
@@ -102,6 +102,7 @@ def _minimal() -> None:
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(args.mountpoint, config, handler, device_handler, profile_handler, network_handler)
+	return None
 
 
 _minimal()

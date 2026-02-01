@@ -59,7 +59,7 @@ class GlobalMenu(AbstractMenu[None]):
 			PacmanConfig.apply_config(arch_config.pacman_config)
 
 	def _get_menu_options(self) -> list[MenuItem]:
-		menu_options = [
+		return [
 			MenuItem(
 				text=tr('Archinstoo settings'),
 				action=self._select_archinstall_settings,
@@ -195,8 +195,6 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 		]
 
-		return menu_options
-
 	def _missing_configs(self) -> list[str]:
 		item: MenuItem = self._item_group.find_by_key('auth_config')
 		auth_config: AuthenticationConfiguration | None = item.value
@@ -281,9 +279,8 @@ class GlobalMenu(AbstractMenu[None]):
 			allow_skip=True,
 		).run()
 
-		if mode_result.type_ == ResultType.Selection:
-			if mode := mode_result.get_value():
-				Tui.set_mode(mode)
+		if mode_result.type_ == ResultType.Selection and (mode := mode_result.get_value()):
+			Tui.set_mode(mode)
 
 		# Select accent color
 		accent_items = [
@@ -305,9 +302,8 @@ class GlobalMenu(AbstractMenu[None]):
 			allow_skip=True,
 		).run()
 
-		if accent_result.type_ == ResultType.Selection:
-			if accent := accent_result.get_value():
-				Tui.set_accent(accent)
+		if accent_result.type_ == ResultType.Selection and (accent := accent_result.get_value()):
+			Tui.set_accent(accent)
 
 		# Apply theme changes
 		if t := Tui._t:
@@ -326,12 +322,10 @@ class GlobalMenu(AbstractMenu[None]):
 		return output
 
 	def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
-		app_config = ApplicationMenu(preset).run()
-		return app_config
+		return ApplicationMenu(preset).run()
 
 	def _select_authentication(self, preset: AuthenticationConfiguration | None) -> AuthenticationConfiguration | None:
-		auth_config = AuthenticationMenu(preset).run()
-		return auth_config
+		return AuthenticationMenu(preset).run()
 
 	def _update_lang_text(self) -> None:
 		"""
@@ -345,8 +339,7 @@ class GlobalMenu(AbstractMenu[None]):
 				self._item_group.find_by_key(o.key).text = o.text
 
 	def _locale_selection(self, preset: LocaleConfiguration) -> LocaleConfiguration:
-		locale_config = LocaleMenu(preset).run()
-		return locale_config
+		return LocaleMenu(preset).run()
 
 	def _prev_locale(self, item: MenuItem) -> str | None:
 		if not item.value:
@@ -394,9 +387,8 @@ class GlobalMenu(AbstractMenu[None]):
 		return auth_config.root_enc_password is not None or len(auth_config.users) > 0
 
 	def _validate_disk_config(self, disk_config: DiskLayoutConfiguration) -> bool:
-		if enc := disk_config.disk_encryption:
-			if enc.encryption_type != EncryptionType.NoEncryption:
-				return enc.encryption_password is not None
+		if (enc := disk_config.disk_encryption) and enc.encryption_type != EncryptionType.NoEncryption:
+			return enc.encryption_password is not None
 		return True
 
 	def _prev_applications(self, item: MenuItem) -> str | None:
@@ -465,8 +457,7 @@ class GlobalMenu(AbstractMenu[None]):
 		result = edit_script(preset=current_script, title=tr('Custom Commands'))
 		if result is not None:
 			# Split by newlines and filter empty lines
-			commands = [line for line in result.split('\n') if line.strip()]
-			return commands
+			return [line for line in result.split('\n') if line.strip()]
 		return preset
 
 	def _prev_custom_commands(self, item: MenuItem) -> str | None:
@@ -628,9 +619,8 @@ class GlobalMenu(AbstractMenu[None]):
 			if boot_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'Limine does not support booting with a non-FAT boot partition'
 
-		elif bootloader == Bootloader.Refind:
-			if not SysInfo.has_uefi():
-				return 'rEFInd can only be used on UEFI systems'
+		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():
+			return 'rEFInd can only be used on UEFI systems'
 
 		return None
 
@@ -670,9 +660,7 @@ class GlobalMenu(AbstractMenu[None]):
 		self,
 		preset: DiskLayoutConfiguration | None = None,
 	) -> DiskLayoutConfiguration | None:
-		disk_config = DiskLayoutConfigurationMenu(preset).run()
-
-		return disk_config
+		return DiskLayoutConfigurationMenu(preset).run()
 
 	def _select_bootloader_config(
 		self,
@@ -681,9 +669,7 @@ class GlobalMenu(AbstractMenu[None]):
 		if preset is None:
 			preset = BootloaderConfiguration.get_default()
 
-		bootloader_config = BootloaderMenu(preset).run()
-
-		return bootloader_config
+		return BootloaderMenu(preset).run()
 
 	@staticmethod
 	def _default_profile() -> Profile:
@@ -695,8 +681,7 @@ class GlobalMenu(AbstractMenu[None]):
 		from .profile.profile_menu import ProfileMenu
 
 		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
-		profile_config = ProfileMenu(preset=current_profile, kernels=kernels).run()
-		return profile_config
+		return ProfileMenu(preset=current_profile, kernels=kernels).run()
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:
 		config: PacmanConfiguration | None = self._item_group.find_by_key('pacman_config').value
@@ -707,13 +692,11 @@ class GlobalMenu(AbstractMenu[None]):
 			repositories = set(config.optional_repositories)
 			custom_repos = [r.name for r in config.custom_repositories]
 
-		packages = select_additional_packages(
+		return select_additional_packages(
 			preset,
 			repositories=repositories,
 			custom_repos=custom_repos,
 		)
-
-		return packages
 
 	def _pacman_configuration(self, preset: PacmanConfiguration | None = None) -> PacmanConfiguration:
 		pacman_configuration = PMenu(preset=preset).run()
@@ -801,9 +784,9 @@ class GlobalMenu(AbstractMenu[None]):
 				config_output = ConfigurationHandler(self._arch_config)
 				config_output.save()
 				raise SystemExit(0)  # User-initiated abort is not an error
-			elif choice == 'abort_only':
+			if choice == 'abort_only':
 				ConfigurationHandler.delete_saved_config()
 				raise SystemExit(0)  # User-initiated abort is not an error
 			# If 'cancel', just return to menu
 
-		return None
+		return

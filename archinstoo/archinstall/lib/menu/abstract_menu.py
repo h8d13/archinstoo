@@ -44,7 +44,7 @@ class AbstractMenu[ValueT]:
 			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
 
 			# Return None to propagate the exception
-			return None
+			return
 
 		self.sync_all_to_config()
 
@@ -75,10 +75,9 @@ class AbstractMenu[ValueT]:
 		is_config_key = key == CONFIG_KEY
 
 		for item in self._menu_item_group.items:
-			if item.key:
-				if item.key == key or (is_config_key and item.key.startswith(CONFIG_KEY)):
-					item.enabled = enabled
-					found = True
+			if item.key and (item.key == key or (is_config_key and item.key.startswith(CONFIG_KEY))):
+				item.enabled = enabled
+				found = True
 
 		if not found:
 			raise ValueError(f'No selector found: {key}')

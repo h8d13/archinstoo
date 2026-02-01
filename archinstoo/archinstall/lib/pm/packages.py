@@ -9,9 +9,7 @@ from archinstall.lib.pacman import Pacman
 
 def installed_package(package: str) -> LocalPackage | None:
 	try:
-		package_info = []
-		for line in Pacman.run(f'-Q --info {package}'):
-			package_info.append(line.decode().strip())
+		package_info = [line.decode().strip() for line in Pacman.run(f'-Q --info {package}')]
 
 		return _parse_package_output(package_info, LocalPackage)
 	except SysCallError:
@@ -37,9 +35,7 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 	if not pkg.description:
 		to_enrich.append(pkg)
 
-	for p in prefetch:
-		if not p.description:
-			to_enrich.append(p)
+	to_enrich.extend(p for p in prefetch if not p.description)
 
 	if not to_enrich:
 		return
@@ -53,15 +49,14 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 			dec_line = line.decode().strip()
 			current_package.append(dec_line)
 
-			if dec_line.startswith('Validated'):
-				if current_package:
-					detailed = _parse_package_output(current_package, AvailablePackage)
-					# Find matching package and update it
-					for p in to_enrich:
-						if p.name == detailed.name:
-							_update_package(p, detailed)
-							break
-					current_package = []
+			if dec_line.startswith('Validated') and current_package:
+				detailed = _parse_package_output(current_package, AvailablePackage)
+				# Find matching package and update it
+				for p in to_enrich:
+					if p.name == detailed.name:
+						_update_package(p, detailed)
+						break
+				current_package = []
 	except Exception:
 		pass
 

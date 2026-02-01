@@ -21,7 +21,7 @@ def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime 
 	if isinstance(value, datetime.datetime):
 		return value
 	try:
-		return datetime.datetime.fromisoformat(value.replace('Z', '+00:00'))
+		return datetime.datetime.fromisoformat(value)
 	except (ValueError, AttributeError):
 		return None
 
@@ -342,18 +342,15 @@ class CustomRepository:
 
 	@classmethod
 	def parse_args(cls, args: list[dict[str, str]]) -> list[Self]:
-		configs = []
-		for arg in args:
-			configs.append(
-				cls(
-					arg['name'],
-					arg['url'],
-					SignCheck(arg['sign_check']),
-					SignOption(arg['sign_option']),
-				),
+		return [
+			cls(
+				arg['name'],
+				arg['url'],
+				SignCheck(arg['sign_check']),
+				SignOption(arg['sign_option']),
 			)
-
-		return configs
+			for arg in args
+		]
 
 
 @dataclass
@@ -368,13 +365,7 @@ class CustomServer:
 
 	@classmethod
 	def parse_args(cls, args: list[dict[str, str]]) -> list[Self]:
-		configs = []
-		for arg in args:
-			configs.append(
-				cls(arg['url']),
-			)
-
-		return configs
+		return [cls(arg['url']) for arg in args]
 
 
 class _PacmanConfigurationSerialization(TypedDict):

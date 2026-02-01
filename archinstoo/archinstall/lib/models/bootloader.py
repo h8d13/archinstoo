@@ -32,8 +32,7 @@ class Bootloader(Enum):
 	def get_default(cls, skip_boot: bool = False) -> Self:
 		if skip_boot:
 			return cls.NO_BOOTLOADER
-		else:
-			return cls.Grub
+		return cls.Grub
 
 	@classmethod
 	def from_arg(cls, bootloader: str, skip_boot: bool) -> Self:
@@ -77,17 +76,11 @@ class BootloaderConfiguration:
 		text = f'{tr("Bootloader")}: {self.bootloader.value}'
 		text += '\n'
 		if SysInfo.has_uefi() and self.bootloader.has_uki_support():
-			if self.uki:
-				uki_string = tr('Enabled')
-			else:
-				uki_string = tr('Disabled')
+			uki_string = tr('Enabled') if self.uki else tr('Disabled')
 			text += f'UKI: {uki_string}'
 			text += '\n'
 		if SysInfo.has_uefi() and self.bootloader.has_removable_support():
-			if self.removable:
-				removable_string = tr('Enabled')
-			else:
-				removable_string = tr('Disabled')
+			removable_string = tr('Enabled') if self.removable else tr('Disabled')
 			text += f'{tr("Removable")}: {removable_string}'
 			text += '\n'
 		return text

@@ -98,7 +98,7 @@ class PackageSearchResult:
 
 		return self.pkg_version == other.pkg_version
 
-	def __lt__(self, other: 'PackageSearchResult') -> bool:
+	def __lt__(self, other: PackageSearchResult) -> bool:
 		return self.pkg_version < other.pkg_version
 
 
@@ -142,7 +142,7 @@ class LocalPackage:
 
 		return self.version == other.version
 
-	def __lt__(self, other: 'LocalPackage') -> bool:
+	def __lt__(self, other: LocalPackage) -> bool:
 		return self.version < other.version
 
 
@@ -169,7 +169,7 @@ class AvailablePackage:
 
 	@cached_property
 	def longest_key(self) -> int:
-		return max(len(key) for key in asdict(self).keys())
+		return max(len(key) for key in asdict(self))
 
 	def info(self) -> str:
 		output = ''
