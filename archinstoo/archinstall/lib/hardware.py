@@ -21,9 +21,8 @@ class CpuVendor(Enum):
 	def get_vendor(cls, name: str) -> Self:
 		if vendor := getattr(cls, name, None):
 			return cast(Self, vendor)
-		else:
-			debug(f"Unknown CPU vendor '{name}' detected.")
-			return cls._Unknown
+		debug(f"Unknown CPU vendor '{name}' detected.")
+		return cls._Unknown
 
 	def _has_microcode(self) -> bool:
 		match self:
@@ -326,8 +325,4 @@ class SysInfo:
 			'snd_vx_lib',
 		)
 
-		for loaded_module in _sys_info.loaded_modules:
-			if loaded_module in modules:
-				return True
-
-		return False
+		return any(loaded_module in modules for loaded_module in _sys_info.loaded_modules)

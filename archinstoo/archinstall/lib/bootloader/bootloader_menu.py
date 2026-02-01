@@ -76,8 +76,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		uki_text = f'{tr("Unified kernel images")}'
 		if item.value:
 			return f'{uki_text}: {tr("Enabled")}'
-		else:
-			return f'{uki_text}: {tr("Disabled")}'
+		return f'{uki_text}: {tr("Disabled")}'
 
 	def _prev_removable(self, item: MenuItem) -> str | None:
 		if item.value:

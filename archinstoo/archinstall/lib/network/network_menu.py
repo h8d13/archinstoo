@@ -90,10 +90,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 			if not ip:
 				return failure
 
-			if multi:
-				ips = ip.split(' ')
-			else:
-				ips = [ip]
+			ips = ip.split(' ') if multi else [ip]
 
 			try:
 				for ip in ips:
@@ -153,10 +150,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 			header = tr('Enter your gateway (router) IP address (leave blank for none)') + '\n'
 			gateway = self._get_ip_address(tr('Gateway address'), header, True, False)
 
-			if edit_nic.dns:
-				display_dns = ' '.join(edit_nic.dns)
-			else:
-				display_dns = None
+			display_dns = ' '.join(edit_nic.dns) if edit_nic.dns else None
 
 			header = tr('Enter your DNS servers with space separated (leave blank for none)') + '\n'
 			dns_servers = self._get_ip_address(
@@ -172,9 +166,8 @@ class ManualNetworkConfig(ListManager[Nic]):
 				dns = dns_servers.split(' ')
 
 			return Nic(iface=iface_name, ip=ip, gateway=gateway, dns=dns, dhcp=False)
-		else:
-			# this will contain network iface names
-			return Nic(iface=iface_name)
+		# this will contain network iface names
+		return Nic(iface=iface_name)
 
 
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:

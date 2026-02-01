@@ -52,16 +52,11 @@ class MenuItem:
 		return self.text == '' or self.text is None
 
 	def has_value(self) -> bool:
-		if self.value is None:
+		if self.value is None or (isinstance(self.value, list) and len(self.value) == 0) or (isinstance(self.value, dict) and len(self.value) == 0):
 			return False
-		elif isinstance(self.value, list) and len(self.value) == 0:
-			return False
-		elif isinstance(self.value, dict) and len(self.value) == 0:
-			return False
-		elif self.value_validator is not None:
+		if self.value_validator is not None:
 			return self.value_validator(self.value)
-		else:
-			return True
+		return True
 
 	def get_display_value(self) -> str | None:
 		if self.display_action is not None:
@@ -84,10 +79,7 @@ class MenuItemGroup:
 			raise ValueError('Menu must have at least one item')
 
 		if sort_items:
-			if sort_case_sensitive:
-				menu_items = sorted(menu_items, key=lambda x: x.text)
-			else:
-				menu_items = sorted(menu_items, key=lambda x: x.text.lower())
+			menu_items = sorted(menu_items, key=lambda x: x.text) if sort_case_sensitive else sorted(menu_items, key=lambda x: x.text.lower())
 
 		self._filter_pattern: str = ''
 		self._checkmarks: bool = checkmarks
@@ -214,10 +206,7 @@ class MenuItemGroup:
 			from .types import Chars
 
 			if item.has_value():
-				if item.get_value() is not False:
-					text = f'{text}{spacing}{Chars.Check}'
-				else:
-					text = f'{text}{spacing}{Chars.Empty}'
+				text = f'{text}{spacing}{Chars.Check}' if item.get_value() is not False else f'{text}{spacing}{Chars.Empty}'
 			else:
 				text = f'{text}{spacing}{Chars.Empty}'
 
@@ -238,8 +227,7 @@ class MenuItemGroup:
 	def items(self) -> list[MenuItem]:
 		pattern = self._filter_pattern.lower()
 		items = filter(lambda item: item.is_empty() or pattern in item.text.lower(), self._menu_items)
-		l_items = sorted(items, key=self._items_score)
-		return l_items
+		return sorted(items, key=self._items_score)
 
 	def _items_score(self, item: MenuItem) -> int:
 		pattern = self._filter_pattern.lower()
@@ -346,15 +334,10 @@ class MenuItemGroup:
 		return None
 
 	def is_mandatory_fulfilled(self) -> bool:
-		for item in self._menu_items:
-			if item.mandatory and not item.value:
-				return False
-		return True
+		return all(not (item.mandatory and not item.value) for item in self._menu_items)
 
 	def _is_selectable(self, item: MenuItem) -> bool:
-		if item.is_empty():
-			return False
-		elif item.read_only:
+		if item.is_empty() or item.read_only:
 			return False
 
 		return self.is_enabled(item)
@@ -401,8 +384,7 @@ class MenuItemsState:
 		if focus_index is None:
 			return None
 
-		row_index = focus_index // self._total_cols
-		return row_index
+		return focus_index // self._total_cols
 
 	def get_view_items(self) -> list[list[MenuItem]]:
 		enabled_items = self._item_group.get_enabled_items()
@@ -455,12 +437,5 @@ class MenuItemsState:
 		start_row: int,
 		total_rows: int,
 	) -> list[list[MenuItem]]:
-		groups: list[list[MenuItem]] = []
 		nr_items = self._total_cols * min(total_rows, len(items))
-
-		for x in range(start_row, nr_items, self._total_cols):
-			groups.append(
-				items[x : x + self._total_cols],
-			)
-
-		return groups
+		return [items[x : x + self._total_cols] for x in range(start_row, nr_items, self._total_cols)]

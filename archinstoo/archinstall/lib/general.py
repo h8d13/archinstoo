@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import re
@@ -148,10 +149,8 @@ class SysCommandWorker:
 		# TODO: https://stackoverflow.com/questions/28157929/how-to-safely-handle-an-exception-inside-a-context-manager
 
 		if self.child_fd:
-			try:
+			with contextlib.suppress(Exception):
 				os.close(self.child_fd)
-			except Exception:
-				pass
 
 		if self.peek_output:
 			# To make sure any peaked output didn't leave us hanging
@@ -172,10 +171,7 @@ class SysCommandWorker:
 	def is_alive(self) -> bool:
 		self.poll()
 
-		if self.started and self.ended is None:
-			return True
-
-		return False
+		return bool(self.started and self.ended is None)
 
 	def write(self, data: bytes, line_ending: bool = True) -> int:
 		assert isinstance(data, bytes)  # TODO: Maybe we can support str as well and encode it
@@ -314,13 +310,12 @@ class SysCommand:
 	def __getitem__(self, key: slice) -> bytes:
 		if not self.session:
 			raise KeyError('SysCommand() does not have an active session.')
-		elif type(key) is slice:
+		if type(key) is slice:
 			start = key.start or 0
 			end = key.stop or len(self.session._trace_log)
 
 			return self.session._trace_log[start:end]
-		else:
-			raise ValueError("SysCommand() doesn't have key & value pairs, only slices, SysCommand('ls')[:10] as an example.")
+		raise ValueError("SysCommand() doesn't have key & value pairs, only slices, SysCommand('ls')[:10] as an example.")
 
 	@override
 	def __repr__(self, *args: list[Any], **kwargs: dict[str, Any]) -> str:
@@ -376,8 +371,7 @@ class SysCommand:
 	def exit_code(self) -> int | None:
 		if self.session:
 			return self.session.exit_code
-		else:
-			return None
+		return None
 
 	@property
 	def trace_log(self) -> bytes | None:

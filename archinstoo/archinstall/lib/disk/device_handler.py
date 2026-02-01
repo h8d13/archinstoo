@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import time
@@ -87,10 +88,7 @@ class DeviceHandler:
 				continue
 
 			try:
-				if dev_lsblk_info.pttype:
-					disk = newDisk(device)
-				else:
-					disk = freshDisk(device, self.partition_table.value)
+				disk = newDisk(device) if dev_lsblk_info.pttype else freshDisk(device, self.partition_table.value)
 			except DiskException as err:
 				debug(f'Unable to get disk from {device.path}: {err}')
 				continue
@@ -159,7 +157,7 @@ class DeviceHandler:
 				if partition.fileSystem.type == FilesystemType.LinuxSwap.parted_value:
 					return FilesystemType.LinuxSwap
 				return FilesystemType(partition.fileSystem.type)
-			elif lsblk_info is not None:
+			if lsblk_info is not None:
 				return FilesystemType(lsblk_info.fstype) if lsblk_info.fstype else None
 			return None
 		except ValueError:
@@ -539,10 +537,7 @@ class DeviceHandler:
 		self.udev_sync()
 
 	def lvm_vol_create(self, vg_name: str, volume: LvmVolume, offset: Size | None = None) -> None:
-		if offset is not None:
-			length = volume.length - offset
-		else:
-			length = volume.length
+		length = volume.length - offset if offset is not None else volume.length
 
 		length_str = length.format_size(Unit.B, include_unit=False)
 		cmd = f'lvcreate --yes -L {length_str}B {vg_name} -n {volume.name}'
@@ -795,10 +790,8 @@ class DeviceHandler:
 			for line in result.decode().strip().split('\n'):
 				if line and not line.startswith('No devices'):
 					dm_name = line.split()[0]
-					try:
+					with contextlib.suppress(SysCallError):
 						SysCommand(f'dmsetup remove --force {dm_name}')
-					except SysCallError:
-						pass
 		except SysCallError:
 			pass
 

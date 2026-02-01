@@ -50,13 +50,7 @@ class MenuKeys(Enum):
 
 	@classmethod
 	def from_ord(cls, key: int) -> list[Self]:
-		matches: list[Self] = []
-
-		for group in cls:
-			if key in group.value:
-				matches.append(group)
-
-		return matches
+		return [group for group in cls if key in group.value]
 
 	@classmethod
 	def decode(cls, key: int) -> str:

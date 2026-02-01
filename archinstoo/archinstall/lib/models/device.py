@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import builtins
 import json
 import math
@@ -69,21 +67,20 @@ class DiskLayoutConfiguration:
 				'config_type': self.config_type.value,
 				'mountpoint': str(self.mountpoint),
 			}
-		else:
-			config: _DiskLayoutConfigurationSerialization = {
-				'config_type': self.config_type.value,
-				'device_modifications': [mod.json() for mod in self.device_modifications],
-			}
+		config: _DiskLayoutConfigurationSerialization = {
+			'config_type': self.config_type.value,
+			'device_modifications': [mod.json() for mod in self.device_modifications],
+		}
 
-			if self.lvm_config:
-				config['lvm_config'] = self.lvm_config.json()
+		if self.lvm_config:
+			config['lvm_config'] = self.lvm_config.json()
 
-			# disk_encryption is never saved (password not persisted)
+		# disk_encryption is never saved (password not persisted)
 
-			if self.btrfs_options:
-				config['btrfs_options'] = self.btrfs_options.json()
+		if self.btrfs_options:
+			config['btrfs_options'] = self.btrfs_options.json()
 
-			return config
+		return config
 
 	@classmethod
 	def parse_arg(
@@ -200,9 +197,8 @@ class DiskLayoutConfiguration:
 
 		# disk_encryption is not parsed from config (password never saved)
 
-		if config.has_default_btrfs_vols():
-			if (btrfs_arg := disk_config.get('btrfs_options', None)) is not None:
-				config.btrfs_options = BtrfsOptions.parse_arg(btrfs_arg)
+		if config.has_default_btrfs_vols() and (btrfs_arg := disk_config.get('btrfs_options', None)) is not None:
+			config.btrfs_options = BtrfsOptions.parse_arg(btrfs_arg)
 
 		return config
 
@@ -355,17 +351,15 @@ class Size:
 
 		if self.unit == target_unit:
 			return self
-		elif self.unit == Unit.sectors:
+		if self.unit == Unit.sectors:
 			norm = self._normalize()
 			return Size(norm, Unit.B, self.sector_size).convert(target_unit, sector_size)
-		else:
-			if target_unit == Unit.sectors and sector_size is not None:
-				norm = self._normalize()
-				sectors = math.ceil(norm / sector_size.value)
-				return Size(sectors, Unit.sectors, sector_size)
-			else:
-				value = int(self._normalize() / target_unit.value)
-				return Size(value, target_unit, self.sector_size)
+		if target_unit == Unit.sectors and sector_size is not None:
+			norm = self._normalize()
+			sectors = math.ceil(norm / sector_size.value)
+			return Size(sectors, Unit.sectors, sector_size)
+		value = int(self._normalize() / target_unit.value)
+		return Size(value, target_unit, self.sector_size)
 
 	def as_text(self) -> str:
 		return self.format_size(
@@ -400,8 +394,7 @@ class Size:
 
 		formatted_size = f'{size:.1f}'
 
-		if formatted_size.endswith('.0'):
-			formatted_size = formatted_size[:-2]
+		formatted_size = formatted_size.removesuffix('.0')
 
 		if not include_unit:
 			return formatted_size
@@ -425,8 +418,7 @@ class Size:
 	def format_highest(self, include_unit: bool = True, units: Units = Units.BINARY) -> str:
 		if units == Units.BINARY:
 			return self.binary_unit_highest(include_unit)
-		else:
-			return self.si_unit_highest(include_unit)
+		return self.si_unit_highest(include_unit)
 
 	def is_valid_start(self) -> bool:
 		return self >= Size(1, Unit.MiB, self.sector_size)
@@ -549,9 +541,8 @@ class _PartitionInfo:
 
 		# on GPT, parted's BOOT and ESP flags are aliases for the same
 		# EFI System Partition type; deduplicate to avoid showing both
-		if partition.disk.type == PartitionTable.GPT.value:
-			if PartitionFlag.BOOT in flags and PartitionFlag.ESP in flags:
-				flags.remove(PartitionFlag.BOOT)
+		if partition.disk.type == PartitionTable.GPT.value and PartitionFlag.BOOT in flags and PartitionFlag.ESP in flags:
+			flags.remove(PartitionFlag.BOOT)
 
 		start = Size(
 			partition.geometry.start,
@@ -739,14 +730,13 @@ class PartitionType(Enum):
 	def get_type_from_code(cls, code: int) -> Self:
 		if code == parted.PARTITION_NORMAL:
 			return cls.Primary
-		else:
-			debug(f'Partition code not supported: {code}')
-			return cls._Unknown
+		debug(f'Partition code not supported: {code}')
+		return cls._Unknown
 
 	def get_partition_code(self) -> int | None:
 		if self == PartitionType.Primary:
 			return cast(int, parted.PARTITION_NORMAL)
-		elif self == PartitionType.Boot:
+		if self == PartitionType.Boot:
 			return cast(int, parted.PARTITION_BOOT)
 		return None
 
@@ -921,11 +911,7 @@ class PartitionModification:
 	def from_existing_partition(cls, partition_info: _PartitionInfo) -> Self:
 		if partition_info.btrfs_subvol_infos:
 			mountpoint = None
-			subvol_mods = []
-			for i in partition_info.btrfs_subvol_infos:
-				subvol_mods.append(
-					SubvolumeModification.from_existing_subvol_info(i),
-				)
+			subvol_mods = [SubvolumeModification.from_existing_subvol_info(i) for i in partition_info.btrfs_subvol_infos]
 		else:
 			mountpoint = partition_info.mountpoints[0] if partition_info.mountpoints else None
 			subvol_mods = []
@@ -967,12 +953,7 @@ class PartitionModification:
 	def is_root(self) -> bool:
 		if self.mountpoint is not None:
 			return self.mountpoint == Path('/')
-		else:
-			for subvol in self.btrfs_subvols:
-				if subvol.is_root():
-					return True
-
-		return False
+		return any(subvol.is_root() for subvol in self.btrfs_subvols)
 
 	def is_home(self) -> bool:
 		if self.mountpoint is not None:
@@ -1100,11 +1081,7 @@ class LvmVolumeGroup:
 
 	@classmethod
 	def parse_arg(cls, arg: _LvmVolumeGroupSerialization, disk_config: DiskLayoutConfiguration) -> Self:
-		lvm_pvs = []
-		for mod in disk_config.device_modifications:
-			for part in mod.partitions:
-				if part.obj_id in arg.get('lvm_pvs', []):
-					lvm_pvs.append(part)
+		lvm_pvs = [part for mod in disk_config.device_modifications for part in mod.partitions if part.obj_id in arg.get('lvm_pvs', [])]
 
 		return cls(
 			arg['name'],
@@ -1231,7 +1208,7 @@ class LvmVolume:
 		}
 
 	def table_data(self) -> dict[str, str]:
-		part_mod = {
+		return {
 			'Type': self.status.value,
 			'Name': self.name,
 			'Size': self.length.format_highest(),
@@ -1240,7 +1217,6 @@ class LvmVolume:
 			'Mount options': ', '.join(self.mount_options),
 			'Btrfs': '{} {}'.format(str(len(self.btrfs_subvols)), 'vol'),
 		}
-		return part_mod
 
 	def is_modify(self) -> bool:
 		return self.status == LvmVolumeStatus.Modify
@@ -1254,12 +1230,7 @@ class LvmVolume:
 	def is_root(self) -> bool:
 		if self.mountpoint is not None:
 			return Path('/') == self.mountpoint
-		else:
-			for subvol in self.btrfs_subvols:
-				if subvol.is_root():
-					return True
-
-		return False
+		return any(subvol.is_root() for subvol in self.btrfs_subvols)
 
 
 @dataclass
@@ -1309,13 +1280,6 @@ class LvmConfiguration:
 
 	@classmethod
 	def parse_arg(cls, arg: _LvmConfigurationSerialization, disk_config: DiskLayoutConfiguration) -> Self:
-		lvm_pvs = []
-		for mod in disk_config.device_modifications:
-			for part in mod.partitions:
-				# FIXME: 'lvm_pvs' does not seem like it can ever exist in the 'arg' serialization
-				if part.obj_id in arg.get('lvm_pvs', []):  # type: ignore[operator]
-					lvm_pvs.append(part)
-
 		return cls(
 			config_type=LvmLayoutType(arg['config_type']),
 			vol_groups=[LvmVolumeGroup.parse_arg(vol_group, disk_config) for vol_group in arg['vol_groups']],
@@ -1478,8 +1442,7 @@ class DiskEncryption:
 	def should_generate_encryption_file(self, dev: PartitionModification | LvmVolume) -> bool:
 		if isinstance(dev, PartitionModification):
 			return dev in self.partitions and dev.mountpoint != Path('/')
-		else:
-			return dev in self.lvm_volumes and dev.mountpoint != Path('/')
+		return dev in self.lvm_volumes and dev.mountpoint != Path('/')
 
 	@classmethod
 	def validate_enc(
@@ -1487,17 +1450,10 @@ class DiskEncryption:
 		modifications: list[DeviceModification],
 		lvm_config: LvmConfiguration | None = None,
 	) -> bool:
-		partitions = []
+		partitions = [part for mod in modifications for part in mod.partitions]
 
-		for mod in modifications:
-			for part in mod.partitions:
-				partitions.append(part)
-
-		if len(partitions) > 2:  # assume one boot and at least 2 additional
-			if lvm_config:
-				return False
-
-		return True
+		# assume one boot and at least 2 additional
+		return not (len(partitions) > 2 and lvm_config)
 
 
 @dataclass

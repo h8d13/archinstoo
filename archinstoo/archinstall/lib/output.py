@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class FormattedOutput:
 	@staticmethod
 	def _get_values(
-		o: 'DataclassInstance',
+		o: DataclassInstance,
 		class_formatter: str | Callable | None = None,  # type: ignore[type-arg]
 		filter_list: list[str] = [],
 	) -> dict[str, Any]:
@@ -33,19 +33,18 @@ class FormattedOutput:
 			if callable(class_formatter):
 				return cast(dict[str, Any], class_formatter(o, filter_list))
 			# if is invoked by name we restrict it to a method of the class. No need to mess more
-			elif hasattr(o, class_formatter) and callable(getattr(o, class_formatter)):
+			if hasattr(o, class_formatter) and callable(getattr(o, class_formatter)):
 				func = getattr(o, class_formatter)
 				return cast(dict[str, Any], func(filter_list))
 
 			raise ValueError('Unsupported formatting call')
-		elif hasattr(o, 'table_data'):
+		if hasattr(o, 'table_data'):
 			return cast(dict[str, Any], o.table_data())
-		elif hasattr(o, 'json'):
+		if hasattr(o, 'json'):
 			return cast(dict[str, Any], o.json())
-		elif is_dataclass(o):
+		if is_dataclass(o):
 			return asdict(o)
-		else:
-			return o.__dict__  # type: ignore[unreachable]
+		return o.__dict__  # type: ignore[unreachable]
 
 	@classmethod
 	def as_table(
@@ -117,7 +116,7 @@ class Journald:
 		try:
 			import systemd.journal  # type: ignore[import-not-found]
 		except ModuleNotFoundError:
-			return None
+			return
 
 		log_adapter = logging.getLogger('archinstoo')
 		log_fmt = logging.Formatter('[%(levelname)s]: %(message)s')
@@ -261,8 +260,7 @@ def _stylize_output(
 	if bg:
 		code_list.append(background[str(bg)])
 
-	for o in font:
-		code_list.append(o.value)
+	code_list.extend(o.value for o in font)
 
 	ansi = ';'.join(code_list)
 

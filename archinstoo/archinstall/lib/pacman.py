@@ -1,3 +1,4 @@
+import contextlib
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -56,18 +57,12 @@ class Pacman:
 		# reset keyring in case of corrupted packages
 		try:
 			info('Reinitializing pacman keyring...')
-			try:
+			with contextlib.suppress(Exception):
 				SysCommand('killall gpg-agent', peek_output=True)
-			except Exception:
-				pass
-			try:
+			with contextlib.suppress(Exception):
 				SysCommand('umount -l /etc/pacman.d/gnupg', peek_output=True)
-			except Exception:
-				pass
-			try:
+			with contextlib.suppress(Exception):
 				SysCommand('rm -rf /etc/pacman.d/gnupg', peek_output=True)
-			except Exception:
-				pass
 			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('-Sy archlinux-keyring', peek_output=True)

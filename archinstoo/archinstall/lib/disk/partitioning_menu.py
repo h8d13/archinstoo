@@ -108,14 +108,11 @@ class PartitioningList(ListManager[DiskSegment]):
 			}
 		)
 
-		device_partitions = []
+		device_partitions: list[PartitionModification] = []
 
 		if not device_mod.partitions:
 			# we'll display the existing partitions of the device
-			for partition in device.partition_infos:
-				device_partitions.append(
-					PartitionModification.from_existing_partition(partition),
-				)
+			device_partitions.extend(PartitionModification.from_existing_partition(partition) for partition in device.partition_infos)
 		else:
 			device_partitions = device_mod.partitions
 
@@ -212,14 +209,13 @@ class PartitioningList(ListManager[DiskSegment]):
 		if isinstance(selection.segment, PartitionModification):
 			if selection.segment.status == ModificationStatus.Create:
 				return tr('Partition - New')
-			elif selection.segment.is_delete() and selection.segment.dev_path:
+			if selection.segment.is_delete() and selection.segment.dev_path:
 				title = tr('Partition') + '\n\n'
 				title += 'status: delete\n'
 				title += f'device: {selection.segment.dev_path}\n'
 				for part in self._device.partition_infos:
-					if part.path == selection.segment.dev_path:
-						if part.partuuid:
-							title += f'partuuid: {part.partuuid}'
+					if part.path == selection.segment.dev_path and part.partuuid:
+						title += f'partuuid: {part.partuuid}'
 				return title
 			return str(selection.segment.dev_path)
 		return ''
@@ -402,7 +398,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		if partition.is_modify():
 			partition.status = ModificationStatus.Exist
 			return
-		elif partition.exists():
+		if partition.exists():
 			partition.status = ModificationStatus.Modify
 
 		# If we mark a partition for formatting, but the format is CRYPTO LUKS, there's no point in formatting it really
@@ -450,7 +446,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		max_size: Size,
 		text: str,
 	) -> Size | None:
-		match = re.match(r'^\s*([0-9]+)\s*([a-zA-Z%]*)\s*$', text, re.I)
+		match = re.match(r'^\s*([0-9]+)\s*([a-zA-Z%]*)\s*$', text, re.IGNORECASE)
 
 		if not match:
 			return None
@@ -471,7 +467,7 @@ class PartitioningList(ListManager[DiskSegment]):
 
 		if size.format_highest() == max_size.format_highest():
 			return max_size
-		elif size > max_size or size < self._buffer:
+		if size > max_size or size < self._buffer:
 			return None
 
 		return size
@@ -519,10 +515,7 @@ class PartitioningList(ListManager[DiskSegment]):
 			case ResultType.Selection:
 				value = result.text()
 
-				if value:
-					size = self._validate_value(sector_size, max_size, value)
-				else:
-					size = max_size
+				size = self._validate_value(sector_size, max_size, value) if value else max_size
 
 		assert size
 		return size
@@ -586,9 +579,8 @@ class PartitioningList(ListManager[DiskSegment]):
 	) -> DeviceModification | None:
 		# if modifications have been done already, inform the user
 		# that this operation will erase those modifications
-		if any([not entry.exists() for entry in data]):
-			if not self._reset_confirmation():
-				return None
+		if any(not entry.exists() for entry in data) and not self._reset_confirmation():
+			return None
 
 		from .conf import suggest_single_disk_layout
 

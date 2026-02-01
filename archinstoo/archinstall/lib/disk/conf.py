@@ -182,12 +182,11 @@ def select_disk_config(
 					config_type=DiskLayoutType.Default,
 					device_modifications=[modification],
 				)
-			elif result.get_value() == manual_mode:
-				if (manual_modification := _manual_partitioning(None, device)) is not None:
-					return DiskLayoutConfiguration(
-						config_type=DiskLayoutType.Manual,
-						device_modifications=[manual_modification],
-					)
+			if result.get_value() == manual_mode and (manual_modification := _manual_partitioning(None, device)) is not None:
+				return DiskLayoutConfiguration(
+					config_type=DiskLayoutType.Manual,
+					device_modifications=[manual_modification],
+				)
 
 	return None
 
@@ -302,13 +301,12 @@ def process_root_partition_size(total_size: Size, sector_size: SectorSize) -> Si
 	if total_device_size.value > 500:
 		# maximum size
 		return Size(value=50, unit=Unit.GiB, sector_size=sector_size)
-	elif total_device_size.value < 320:
+	if total_device_size.value < 320:
 		# minimum size
 		return Size(value=32, unit=Unit.GiB, sector_size=sector_size)
-	else:
-		# 10% of total size
-		length = total_device_size.value // 10
-		return Size(value=length, unit=Unit.GiB, sector_size=sector_size)
+	# 10% of total size
+	length = total_device_size.value // 10
+	return Size(value=length, unit=Unit.GiB, sector_size=sector_size)
 
 
 def get_default_btrfs_subvols() -> list[SubvolumeModification]:
@@ -395,10 +393,7 @@ def suggest_single_disk_layout(
 	root_start = boot_partition.start + boot_partition.length
 
 	# Set a size for / (/root)
-	if using_home_partition:
-		root_length = process_root_partition_size(total_size, sector_size)
-	else:
-		root_length = available_space - root_start
+	root_length = process_root_partition_size(total_size, sector_size) if using_home_partition else available_space - root_start
 
 	root_partition = PartitionModification(
 		status=ModificationStatus.Create,

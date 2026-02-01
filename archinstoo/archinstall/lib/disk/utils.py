@@ -13,7 +13,7 @@ class LsblkOutput:
 	blockdevices: list[LsblkInfo]
 
 	@classmethod
-	def from_json(cls, data: str) -> 'LsblkOutput':
+	def from_json(cls, data: str) -> LsblkOutput:
 		parsed = json.loads(data)
 		devices = [LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])]
 		return cls(blockdevices=devices)
@@ -108,9 +108,8 @@ def get_lsblk_by_mountpoint(mountpoint: Path, as_prefix: bool = False) -> list[L
 			elif mountpoint in entry.mountpoints:
 				devices += [entry]
 
-			if len(entry.children) > 0:
-				if len(match := _check(entry.children)) > 0:
-					devices += match
+			if len(entry.children) > 0 and len(match := _check(entry.children)) > 0:
+				devices += match
 
 		return devices
 
