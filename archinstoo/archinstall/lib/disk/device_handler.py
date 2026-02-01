@@ -204,7 +204,11 @@ class DeviceHandler:
 		subvol_infos: list[_BtrfsSubvolumeInfo] = []
 
 		if not lsblk_info.mountpoint:
-			self.mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
+			try:
+				self.mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
+			except (SysCallError, DiskError):
+				debug(f'Failed to mount {dev_path} for btrfs inspection, skipping')
+				return subvol_infos
 			mountpoint = self._TMP_BTRFS_MOUNT
 		else:
 			# when multiple subvolumes are mounted then the lsblk output may look like
@@ -805,8 +809,7 @@ class DeviceHandler:
 		# to prevent "signature detected" errors
 		for part_mod in filtered_part:
 			if part_mod.dev_path:
-				debug(f'Wiping signatures from: {part_mod.dev_path}')
-				SysCommand(f'wipefs --all --force {part_mod.dev_path}')
+				self.wipefs(part_mod.dev_path)
 				self.udev_sync()
 
 	@staticmethod
@@ -878,6 +881,16 @@ class DeviceHandler:
 
 		return device_mods
 
+	@staticmethod
+	def wipefs(dev_path: Path) -> bool:
+		"""Wipe all filesystem/LVM/RAID signatures from a device."""
+		try:
+			SysCommand(f'wipefs --all --force {dev_path}')
+			return True
+		except SysCallError:
+			debug(f'wipefs failed on {dev_path}')
+			return False
+
 	def _wipe(self, dev_path: Path) -> None:
 		"""
 		Wipe a device (partition or otherwise) of meta-data, be it file system, LVM, etc.
@@ -895,7 +908,12 @@ class DeviceHandler:
 		"""
 		info(f'Wiping partitions and metadata: {block_device.device_info.path}')
 
-		# Deactivate any LVM VGs first to release device
+		# Wipe filesystem signatures first to prevent auto-discovery tools
+		# from recognizing stale FS types during teardown (e.g. btrfs mount attempts)
+		for partition in block_device.partition_infos:
+			self.wipefs(partition.path)
+
+		# Now tear down anything that's still active
 		self.lvm_deactivate_vgs_on_device(block_device)
 
 		for partition in block_device.partition_infos:
