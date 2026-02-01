@@ -50,7 +50,7 @@ pacman -Sy git
 
 Get source:
 ```shell
-git clone https://github.com/h8d13/archinstoo
+git clone --depth 1 https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
 ```
 
