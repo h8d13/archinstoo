@@ -1993,7 +1993,7 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 	aur_rule.chmod(0o440)
 
 	# Use user-writable TMPDIR since arch-chroot -S mounts a private /tmp
-	build_tmp = f'/home/{build_user.username}/.cache/aur-build'
+	build_tmp = f'/home/{build_user.username}/.cache/aurgit-tmp'
 	installation.arch_chroot(f'mkdir -p {build_tmp}', run_as=build_user.username)
 
 	try:
