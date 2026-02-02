@@ -60,22 +60,10 @@ Then open the PR with explenations too.
 ## Discussions
 
 Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/archlinux/archinstall/issues).<br>
-For less formal discussions there is also an [archinstall Discord server](https://discord.gg/aDeMffrxNg).
 
 ## Coding convention
 
-ArchInstall's goal is to follow [PEP8](https://www.python.org/dev/peps/pep-0008/) as best as it can with some minor exceptions.<br>
-
-The exceptions to PEP8 are:
-
-* Archinstall uses [tabs instead of spaces](https://www.python.org/dev/peps/pep-0008/#tabs-or-spaces) simply to make it
-  easier for non-IDE developers to navigate the code *(Tab display-width should be equal to 4 spaces)*. Exception to the
-  rule are comments that need fine-tuned indentation for documentation purposes.
-* [Line length](https://www.python.org/dev/peps/pep-0008/#maximum-line-length) a maximum line length is enforced via flake8 with 160 characters
-* Archinstall should always be saved with **Unix-formatted line endings** and no other platform-specific formats.
-* [String quotes](https://www.python.org/dev/peps/pep-0008/#string-quotes) follow PEP8, the exception being when
-  creating formatted strings, double-quoted strings are *preferred* but not required on the outer edges *(
-  Example: `f"Welcome {name}"` rather than `f'Welcome {name}'`)*.
+All rules/exlusions can be consulted in the master `pyproject.toml` file
 
 Most of these style guidelines have been put into place after the fact *(in an attempt to clean up the code)*.<br>
 There might therefore be older code which does not follow the coding convention and the code is subject to change.
@@ -90,12 +78,11 @@ pre-commit install
 
 This will install the pre-commit hook and run it every time a `git commit` is executed.
 
-You can also use tools directly locally or in IDEs extensions. These might include stuff like: `ruff vulture mypy` etc. 
+You can also use tools directly locally or in IDEs extensions.
+
+These might include stuff like: `ruff vulture mypy` etc. 
+
 Can be consulted within [PCH](./.pre-commit-config.yaml)
-
-## Documentation
-
-If you'd like to contribute to the documentation, refer to [this guide](docs/README.md) on how to build the documentation locally.
 
 ## Submitting Changes
 
