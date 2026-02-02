@@ -241,6 +241,53 @@ def select_additional_packages(
 			return [pkg.name for pkg in selected_pacakges]
 
 
+def select_aur_packages(preset: list[str] = []) -> list[str]:
+	from archinstall.lib.grimaur import aur_rpc_info, exists_in_aur_mirror
+
+	base_header = tr('Enter AUR package names separated by commas') + '\n'
+	base_header += tr('base-devel and git will be installed automatically if needed') + '\n'
+
+	error_msg = ''
+	current_text = ', '.join(preset) if preset else ''
+
+	while True:
+		header = base_header
+		if error_msg:
+			header += '\n' + error_msg
+
+		result = EditMenu(
+			tr('AUR packages'),
+			header=header,
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+			allow_reset=True,
+			default_text=current_text,
+		).input()
+
+		match result.type_:
+			case ResultType.Skip:
+				return preset
+			case ResultType.Reset:
+				return []
+			case ResultType.Selection:
+				raw = result.text().strip()
+				if not raw:
+					return []
+
+				names = [name.strip() for name in raw.split(',') if name.strip()]
+				if not names:
+					return []
+
+				Tui.print(tr('Validating AUR packages...'), clear_screen=True)
+				invalid = [n for n in names if not aur_rpc_info(n) and not exists_in_aur_mirror(n)]
+
+				if not invalid:
+					return names
+
+				current_text = ', '.join(n for n in names if n not in invalid)
+				error_msg = tr('Not found in AUR') + ': ' + ', '.join(invalid) + '\n'
+
+
 def add_number_of_parallel_downloads(preset: int | None = None) -> int | None:
 	max_recommended = 5
 

@@ -1971,6 +1971,32 @@ def accessibility_tools_in_use() -> bool:
 	return os.system('systemctl is-active --quiet espeakup.service') == 0
 
 
+def run_aur_installation(packages: list[str], installation: Installer, users: list[User]) -> None:
+	build_user = next((u for u in users if u.elev), None)
+
+	if not build_user:
+		warn('No elevated user found, skipping AUR packages')
+		return
+
+	installation.add_additional_packages(['base-devel', 'git'])
+
+	grimaur_src = Path(__file__).parent / 'grimaur.py'
+	grimaur_dest = installation.target / 'usr/local/bin/grimaur'
+	shutil.copy2(grimaur_src, grimaur_dest)
+	grimaur_dest.chmod(0o755)
+
+	for pkg in packages:
+		info(f'Installing AUR package: {pkg}')
+		try:
+			installation.arch_chroot(
+				f'grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
+				run_as=build_user.username,
+				peek_output=True,
+			)
+		except SysCallError as e:
+			warn(f'AUR package "{pkg}" failed: {e}')
+
+
 def run_custom_user_commands(commands: list[str], installation: Installer) -> None:
 	for index, command in enumerate(commands):
 		script_path = f'/var/tmp/user-command.{index}.sh'

@@ -21,6 +21,7 @@ from .hardware import SysInfo
 from .interactions.general_conf import (
 	add_number_of_parallel_downloads,
 	select_additional_packages,
+	select_aur_packages,
 	select_hostname,
 	select_ntp,
 	select_timezone,
@@ -174,6 +175,13 @@ class GlobalMenu(AbstractMenu[None]):
 				value=[],
 				preview_action=self._prev_additional_pkgs,
 				key='packages',
+			),
+			MenuItem(
+				text=tr('AUR packages'),
+				action=select_aur_packages,
+				value=[],
+				preview_action=self._prev_aur_packages,
+				key='aur_packages',
 			),
 			MenuItem(
 				text=tr('Custom commands'),
@@ -362,6 +370,14 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_additional_pkgs(self, item: MenuItem) -> str | None:
 		if item.value:
 			title = tr('Additionals')
+			divider = '-' * len(title)
+			packages = '\n'.join(sorted(item.value))
+			return f'{title}\n{divider}\n{packages}'
+		return None
+
+	def _prev_aur_packages(self, item: MenuItem) -> str | None:
+		if item.value:
+			title = tr('AUR packages')
 			divider = '-' * len(title)
 			packages = '\n'.join(sorted(item.value))
 			return f'{title}\n{divider}\n{packages}'
