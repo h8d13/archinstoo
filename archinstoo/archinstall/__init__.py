@@ -60,7 +60,8 @@ def _check_online() -> int:
 		return 0
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
-			info('Use iwctl/nmcli to connect manually.')
+			from .scripts.wifi import wifi
+			wifi()
 			return 1
 		raise
 
