@@ -20,4 +20,12 @@ Launch the server and enjoy playing with your friends.
 
 <img width="1715" height="478" alt="image" src="https://github.com/user-attachments/assets/e9487a15-f46f-4e13-999f-bed3eae0798c" />
 
+
 Default port is `tailscale_ip:25565`
+
+
+---
+
+You can apply  the same logic to remotely anything.
+
+In instance `SteamCMD` to run other game servers, or other Linux native server binaries.
