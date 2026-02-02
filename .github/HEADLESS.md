@@ -5,6 +5,7 @@ Servers choices allow for flexible control over what you want to do.
 In this example we'll set up a `tailscale` host to not have to do any port forwarding for Minecraft.
 
 0. In server options select `tailscale` and `java` , you could create or select more profiles at this step.
+
 Depending on what you are trying to achieve.
 
 <img width="933" height="127" alt="image" src="https://github.com/user-attachments/assets/50ecb579-c8ab-4c09-b6c1-67f486ddc795" />
