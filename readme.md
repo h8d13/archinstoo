@@ -105,3 +105,7 @@ The idea being to promote **option 2** to use archinstall latest. Always, since 
 2. In case of non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
 
 ---
+
+See `archinstall` [upstream](https://github.com/archlinux/archinstall)
+
+See `grimaur` [aur-helper](https://github.com/ryk4rd/grimaur)
