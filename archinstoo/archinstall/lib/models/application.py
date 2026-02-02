@@ -66,7 +66,6 @@ class MonitorConfigSerialization(TypedDict):
 class Editor(StrEnum):
 	NANO = auto()
 	MICRO = auto()
-	VI = auto()
 	VIM = auto()
 	NEOVIM = auto()
 	EMACS = auto()
