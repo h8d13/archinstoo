@@ -14,4 +14,10 @@ In this example we'll set up a `tailscale` host to not have to do any port forwa
 
 2. Add your devices or friends to `tailscale`
 
+<img width="1193" height="301" alt="image" src="https://github.com/user-attachments/assets/6d5143e6-c32e-4f0d-92dd-0a4669b14ebe" />
+
 Launch the server and enjoy playing with your friends.
+
+<img width="1715" height="478" alt="image" src="https://github.com/user-attachments/assets/e9487a15-f46f-4e13-999f-bed3eae0798c" />
+
+Default port is `tailscale_ip:25565`
