@@ -27,6 +27,7 @@ SAFETY_LOCK
 **/**.fd
 **/*-git
 /test*.py
+CLAUDE.md
 test_*/
 .idea
 .idea/

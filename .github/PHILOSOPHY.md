@@ -2,6 +2,19 @@
 
 Why would someone want to code 12h a day something like this..?
 
+Roots
+---
+
+When asked in 2005 whether he planned to automate more of the installation process — adding curses frontends, user creation wizards, etc — Judd Vinet, Arch's founder, replied:
+
+> "Not really. A lot of people like our current installation script. One thing I'd like to have is a 'kickstart' style setup for sysadmins who install linux in labs or other settings where each install is more-or-less identical."
+>
+> — [The Big Arch Linux Interview, OSnews (March 2005)](https://www.osnews.com/story/10142/the-big-arch-linux-interview/)
+
+He also said: *"Arch assumes you know what you're doing... it tends to stay out of your way."*
+
+Archinstoo carries this forward. The installer exists to give you an OS, not to make decisions for you.
+
 Rebuilding more with less
 ---
 
