@@ -1985,8 +1985,8 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 	shutil.copy2(grimaur_src, grimaur_dest)
 	grimaur_dest.chmod(0o755)
 
-	# Ensure /tmp is world-writable for makepkg
-	(installation.target / 'tmp').chmod(0o1777)
+	# Ensure /tmp is world-writable for makepkg inside the chroot
+	installation.arch_chroot('chmod 1777 /tmp')
 
 	# Temporary NOPASSWD for pacman so makepkg -si works without a tty
 	sudoers_dir = installation.target / 'etc/sudoers.d'
