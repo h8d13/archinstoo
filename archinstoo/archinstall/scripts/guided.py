@@ -13,7 +13,7 @@ from archinstall.lib.disk.device_handler import DeviceHandler
 from archinstall.lib.disk.filesystem import FilesystemHandler
 from archinstall.lib.disk.utils import disk_layouts
 from archinstall.lib.global_menu import GlobalMenu
-from archinstall.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands
+from archinstall.lib.installer import Installer, accessibility_tools_in_use, run_aur_installation, run_custom_user_commands
 from archinstall.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstall.lib.models import Bootloader
 from archinstall.lib.models.device import (
@@ -35,6 +35,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 
 		if not args.advanced:
 			global_menu.set_enabled('parallel_downloads', False)
+			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
 
 		global_menu.run(additional_title=title_text)
@@ -144,6 +145,9 @@ def perform_installation(
 		if config.kernel_headers:
 			headers = [f'{kernel}-headers' for kernel in config.kernels]
 			installation.add_additional_packages(headers)
+
+		if config.aur_packages and config.auth_config:
+			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
 
 		if timezone := config.timezone:
 			installation.set_timezone(timezone)
