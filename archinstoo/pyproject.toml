@@ -229,3 +229,4 @@ known-first-party = ["archinstall"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/docs/conf.py" = ["A001"]  # copyright is a Sphinx convention
+"**/lib/grimaur.py" = ["PLW0603"]  # standalone CLI tool uses module-level globals by design

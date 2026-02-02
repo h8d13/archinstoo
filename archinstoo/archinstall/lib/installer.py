@@ -497,7 +497,8 @@ class Installer:
 			with open(pacman_conf_path, 'a') as fp:
 				fp.write(repos_config)
 
-		regions_config = pacman_configuration.regions_config(speed_sort=True)
+		# Speed test only for the live system, target reuses the same order
+		regions_config = pacman_configuration.regions_config(speed_sort=not on_target)
 		if regions_config:
 			debug(f'Mirrorlist:\n{regions_config}')
 			mirrorlist_path.write_text(regions_config)
@@ -1969,6 +1970,45 @@ EndSection
 
 def accessibility_tools_in_use() -> bool:
 	return os.system('systemctl is-active --quiet espeakup.service') == 0
+
+
+def run_aur_installation(packages: list[str], installation: Installer, users: list[User]) -> None:
+	build_user = next((u for u in users if u.elev), None)
+
+	if not build_user:
+		warn('No elevated user found, skipping AUR packages')
+		return
+
+	installation.add_additional_packages(['base-devel', 'git'])
+
+	grimaur_src = Path(__file__).parent / 'grimaur.py'
+	grimaur_dest = installation.target / 'usr/local/bin/grimaur'
+	shutil.copy2(grimaur_src, grimaur_dest)
+	grimaur_dest.chmod(0o755)
+
+	# Temporary NOPASSWD for pacman so makepkg -si works without a tty
+	sudoers_dir = installation.target / 'etc/sudoers.d'
+	aur_rule = sudoers_dir / '99-aur-build'
+	aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
+	aur_rule.chmod(0o440)
+
+	# Use user-writable TMPDIR since arch-chroot -S mounts a private /tmp
+	build_tmp = f'/home/{build_user.username}/.cache/aurgit-tmp'
+	installation.arch_chroot(f'mkdir -p {build_tmp}', run_as=build_user.username)
+
+	try:
+		for pkg in packages:
+			info(f'Installing AUR package: {pkg}')
+			try:
+				installation.arch_chroot(
+					f'TMPDIR={build_tmp} grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
+					run_as=build_user.username,
+					peek_output=True,
+				)
+			except SysCallError as e:
+				warn(f'AUR package "{pkg}" failed: {e}')
+	finally:
+		aur_rule.unlink(missing_ok=True)
 
 
 def run_custom_user_commands(commands: list[str], installation: Installer) -> None:
