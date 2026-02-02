@@ -3,6 +3,25 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
 
+## 0.0.02-2
+    - Add Tailscale and Java (headless JRE) server profiles
+    - Add headless server docs with SteamCMD examples
+    - Add fallback for common Pacman issues
+        - Auto-reset keyring on corrupted packages
+        - Auto-reset pacman.conf on dependency failures
+    - Fix #3772 try block for mount, add `wipefs` helper
+    - Rename `ask` functions to `select` across codebase
+    - Remove `advanced_mode` from profile base class
+    - Remove all `from __future__ import annotations` lines
+    - Change to absolute imports (35 files)
+    - Apply ruff lint rules A, C4, FURB, PERF, RET, SIM (-307 lines net)
+    - Default root elevation to empty
+    - Add `-h2t` flag to DEV script
+    - Add `--depth 1` to docs clone
+    - Fix honest `type: Any` in output
+    - Peek outputs for pacman operations
+    - Docs restructure and refresh
+
 ## 0.0.02-1
     - Add `/boot` encryption support (#74)
     - Fix /efi mount logic
