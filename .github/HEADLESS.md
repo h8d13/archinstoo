@@ -8,7 +8,7 @@ In this example we'll set up a `tailscale` host to not have to do any port forwa
 
 > You can also select a firewall for the host in `Applications`
 
-1. Get the server.jar file, agree to eula.txt in `/srv/minecraft/`
+1. Get the server.jar file, agree to `eula.txt` set to `=true` in `/srv/minecraft/`
 
 > Used the AUR version (`minecraft-server`)
 
