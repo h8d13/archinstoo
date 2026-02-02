@@ -78,7 +78,9 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 ## Use cases
 
-See [Headless](./.github/HEADLESS.md)
+See [Headless](./.github/HEADLESS.md) for an example server.
+
+See [Out-of-Tree](./.github/OUT-OF-TREE.md) for an example install with unsupported hardware.
 
 ## Testing
 
