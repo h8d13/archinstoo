@@ -1,10 +1,19 @@
 import subprocess
 import time
 
+from archinstall.lib.general import clear_vt100_escape_codes_from_str
 from archinstall.lib.output import error, info
 from archinstall.lib.tui import EditMenu, MenuItem, MenuItemGroup, SelectMenu, Tui
 from archinstall.lib.tui.result import ResultType
 from archinstall.lib.tui.types import Alignment, FrameProperties, FrameStyle
+
+
+def _clean_line(line: str) -> str:
+	return clear_vt100_escape_codes_from_str(line).strip()
+
+
+def _is_header_or_separator(line: str) -> bool:
+	return not line or line.startswith('-') or line.startswith('=')
 
 
 def _get_interfaces() -> list[str]:
@@ -15,15 +24,22 @@ def _get_interfaces() -> list[str]:
 	)
 
 	interfaces: list[str] = []
+	past_header = False
 
-	for line in result.stdout.strip().splitlines():
-		# skip header lines and separator
-		stripped = line.strip()
-		if not stripped or stripped.startswith('-') or stripped.startswith('Device') or 'Powered' in stripped:
+	for raw_line in result.stdout.splitlines():
+		line = _clean_line(raw_line)
+
+		if _is_header_or_separator(line):
+			if line.startswith('-'):
+				past_header = True
 			continue
 
-		parts = stripped.split()
-		if parts:
+		if not past_header:
+			continue
+
+		parts = line.split()
+		# expect: name  type  powered  adapter
+		if len(parts) >= 2:
 			interfaces.append(parts[0])
 
 	return interfaces
@@ -45,23 +61,34 @@ def _get_networks(interface: str) -> list[str]:
 	)
 
 	networks: list[str] = []
+	past_header = False
 
-	for line in result.stdout.strip().splitlines():
-		stripped = line.strip()
-		if not stripped or stripped.startswith('-') or stripped.startswith('Network') or 'Security' in stripped:
+	for raw_line in result.stdout.splitlines():
+		line = _clean_line(raw_line)
+
+		if _is_header_or_separator(line):
+			if line.startswith('-'):
+				past_header = True
 			continue
 
-		# network name is everything before the last two columns (security, signal)
-		# lines look like: "  MyNetwork           psk   ****"
-		# but with possible ANSI codes for signal bars
-		parts = stripped.rsplit(None, 2)
-		if len(parts) >= 2:
-			name = parts[0].strip()
-			if name and name != '>':
-				# strip any leading > marker for connected network
-				name = name.lstrip('> ').strip()
-				if name:
-					networks.append(name)
+		if not past_header:
+			continue
+
+		# after cleaning ANSI, lines look like:
+		#   > MyNetwork    psk    ****
+		#     OtherNet     open
+		# rsplit from right to grab security + signal columns
+		parts = line.rsplit(None, 2)
+		if len(parts) < 2:
+			continue
+
+		name = parts[0].strip()
+		# strip connected marker
+		if name.startswith('>'):
+			name = name[1:].strip()
+
+		if name:
+			networks.append(name)
 
 	return networks
 
