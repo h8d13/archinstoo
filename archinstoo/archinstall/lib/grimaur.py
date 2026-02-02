@@ -2032,6 +2032,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 	FORCE_GIT_MIRROR = not USE_AUR_RPC
 	USE_SSH = bool(getattr(args, 'use_ssh', False))
 
+	# If /tmp is not writable (e.g. private mount in arch-chroot -S), fall back
+	# to a .tmp subdirectory inside dest-root so git/makepkg/curl still work
+	if not os.access('/tmp', os.W_OK):
+		fallback_tmp = dest_root / '.tmp'
+		fallback_tmp.mkdir(parents=True, exist_ok=True)
+		os.environ['TMPDIR'] = str(fallback_tmp)
+
 	try:
 		if args.command == 'fetch':
 			fetch_package(
