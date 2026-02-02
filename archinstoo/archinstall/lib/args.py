@@ -72,6 +72,7 @@ class ArchConfig:
 	kernel_headers: bool = False
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
+	aur_packages: list[str] = field(default_factory=list)
 	parallel_downloads: int = 0
 	timezone: str | None = None
 	services: list[str] = field(default_factory=list)
@@ -104,6 +105,7 @@ class ArchConfig:
 			'timezone': self.timezone,
 			'ntp': self.ntp,
 			'packages': self.packages,
+			'aur_packages': self.aur_packages,
 			'services': self.services,
 			'custom_commands': self.custom_commands,
 		}
@@ -125,6 +127,7 @@ class ArchConfig:
 				'timezone': 'timezone',
 				'kernels': 'kernels',
 				'packages': 'packages',
+				'aur_packages': 'aur_packages',
 				'services': 'services',
 				'custom_commands': 'custom_commands',
 			},
