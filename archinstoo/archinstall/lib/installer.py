@@ -1985,16 +1985,25 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 	shutil.copy2(grimaur_src, grimaur_dest)
 	grimaur_dest.chmod(0o755)
 
-	for pkg in packages:
-		info(f'Installing AUR package: {pkg}')
-		try:
-			installation.arch_chroot(
-				f'grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
-				run_as=build_user.username,
-				peek_output=True,
-			)
-		except SysCallError as e:
-			warn(f'AUR package "{pkg}" failed: {e}')
+	# Temporary NOPASSWD for pacman so makepkg -si works without a tty
+	sudoers_dir = installation.target / 'etc/sudoers.d'
+	aur_rule = sudoers_dir / '99-aur-build'
+	aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
+	aur_rule.chmod(0o440)
+
+	try:
+		for pkg in packages:
+			info(f'Installing AUR package: {pkg}')
+			try:
+				installation.arch_chroot(
+					f'grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
+					run_as=build_user.username,
+					peek_output=True,
+				)
+			except SysCallError as e:
+				warn(f'AUR package "{pkg}" failed: {e}')
+	finally:
+		aur_rule.unlink(missing_ok=True)
 
 
 def run_custom_user_commands(commands: list[str], installation: Installer) -> None:
