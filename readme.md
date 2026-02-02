@@ -108,4 +108,4 @@ The idea being to promote **option 2** to use archinstall latest. Always, since 
 
 See `archinstall` [upstream](https://github.com/archlinux/archinstall)
 
-See `grimaur` [aur-helper](https://github.com/ryk4rd/grimaur)
+See `grimaur` [aur-helper](https://github.com/mackilanu/grimaur)
