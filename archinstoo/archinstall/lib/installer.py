@@ -1992,16 +1992,12 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 	aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
 	aur_rule.chmod(0o440)
 
-	# Use user-writable TMPDIR since arch-chroot -S mounts a private /tmp
-	build_tmp = f'/home/{build_user.username}/.cache/aurgit-tmp'
-	installation.arch_chroot(f'mkdir -p {build_tmp}', run_as=build_user.username)
-
 	try:
 		for pkg in packages:
 			info(f'Installing AUR package: {pkg}')
 			try:
 				installation.arch_chroot(
-					f'TMPDIR={build_tmp} grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
+					f'grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
 					run_as=build_user.username,
 					peek_output=True,
 				)
