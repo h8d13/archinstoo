@@ -6,11 +6,13 @@ In this example we'll set up a `tailscale` host to not have to do any port forwa
 
 0. In server options select `tailscale` and `java`
 
+<img width="933" height="127" alt="image" src="https://github.com/user-attachments/assets/50ecb579-c8ab-4c09-b6c1-67f486ddc795" />
+
 > You can also select a firewall for the host in `Applications`
 
 1. Get the server.jar file, agree to `eula.txt` set to `=true` in `/srv/minecraft/`
 
-> Used the AUR version (`minecraft-server`)
+> Used the AUR version (`minecraft-server`) but you can also just get the raw file
 
 2. Add your devices or friends to `tailscale`
 
