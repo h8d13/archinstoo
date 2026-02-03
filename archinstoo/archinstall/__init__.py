@@ -156,10 +156,39 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 	warn(text)
 
 
+def _get_script_from_argv() -> str | None:
+	"""Peek at sys.argv for --script value without full arg parsing."""
+	try:
+		idx = sys.argv.index('--script')
+		return sys.argv[idx + 1] if idx + 1 < len(sys.argv) else None
+	except ValueError:
+		return None
+
+
+# scripts that don't need root or bootstrap
+ROOTLESS_SCRIPTS = {'list', 'size', 'mirror'}
+
+
 def run_as_a_module() -> int:
 	# set debug early from sys.argv before heavy imports
 	if '--debug' in sys.argv:
 		output.log_level = logging.DEBUG
+
+	# handle rootless scripts early before bootstrap/heavy imports
+	script_peek = _get_script_from_argv()
+	if script_peek in ROOTLESS_SCRIPTS:
+		from .lib.args import get_arch_config_handler
+
+		handler = get_arch_config_handler()
+		script = handler.get_script()
+
+		if is_root():
+			warn(f'archinstall {script} does not need root privileges.')
+			return 1
+
+		handler.pass_args_to_subscript()
+		_run_script(script)
+		return 0
 
 	# bootstrap before heavy imports
 	# on first run this installs deps and re-execs
@@ -168,10 +197,7 @@ def run_as_a_module() -> int:
 		return rc
 
 	# now safe to import after bootstrap
-	from .lib.args import (
-		ROOTLESS_SCRIPTS,
-		get_arch_config_handler,
-	)
+	from .lib.args import get_arch_config_handler
 
 	handler = get_arch_config_handler()
 
@@ -181,21 +207,10 @@ def run_as_a_module() -> int:
 	script = handler.get_script()
 
 	try:
-		# handle scripts that don't need root early before main(script)
-		# anything else is assumed to need root and be prepared
-		if script in ROOTLESS_SCRIPTS:
-			if is_root():
-				warn(f'archinstall {script} does not need root privileges.')
-				return 1
-			handler.pass_args_to_subscript()
-			_run_script(script)
-			return 0
-
 		rc = 0
 		exc = None
 
 		try:
-			# now run any script that does need root
 			rc = main(script, handler)
 		except Exception as e:
 			exc = e
