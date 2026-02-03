@@ -1311,11 +1311,6 @@ class Installer:
 			linux_file = grub_d / '10_linux'
 			uki_file = grub_d / '15_uki'
 
-			entries = ''
-			for kernel in self.kernels:
-				uki_path = f'/EFI/Linux/arch-{kernel}.efi'
-				entries += f'  menuentry "Arch Linux ({kernel})" {{\n    search --no-floppy --set=root --file {uki_path}\n    chainloader {uki_path}\n  }}\n'
-
 			raw_str_platform = r'\$grub_platform'
 			space_indent_cmd = '  uki'
 
@@ -1331,8 +1326,6 @@ class Installer:
 				EOF
 				""",
 			)
-
-			content = content.replace('fi\nEOF\n', f'{entries}fi\nEOF\n')
 
 			try:
 				mode = linux_file.stat().st_mode
@@ -1700,8 +1693,22 @@ class Installer:
 		image_re = re.compile('(.+_image="/([^"]+).+\n)')
 		uki_re = re.compile('#((.+_uki=")/[^/]+(.+\n))')
 
+		# Per-kernel os-release so GRUB UKI entries show the kernel variant
+		osrelease_dir = self.target / 'etc/os-release.d'
+		osrelease_dir.mkdir(parents=True, exist_ok=True)
+		base_osrelease = (self.target / 'etc/os-release').read_text()
+
 		# Modify .preset files
 		for kernel in self.kernels:
+			kernel_osrelease = re.sub(
+				r'^PRETTY_NAME=".*"',
+				f'PRETTY_NAME="Arch Linux ({kernel})"',
+				base_osrelease,
+				count=1,
+				flags=re.MULTILINE,
+			)
+			(osrelease_dir / kernel).write_text(kernel_osrelease)
+
 			preset = self.target / 'etc/mkinitcpio.d' / (kernel + '.preset')
 			config = preset.read_text().splitlines(True)
 
@@ -1717,7 +1724,7 @@ class Installer:
 					else:
 						config[index] = m.group(1)
 				elif line.startswith('#default_options='):
-					config[index] = line.removeprefix('#')
+					config[index] = line.removeprefix('#').rstrip('\n').rstrip('"') + f' --osrelease /etc/os-release.d/{kernel}"\n'
 
 			preset.write_text(''.join(config))
 
