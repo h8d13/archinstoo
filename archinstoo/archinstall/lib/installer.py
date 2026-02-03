@@ -1311,13 +1311,18 @@ class Installer:
 			linux_file = grub_d / '10_linux'
 			uki_file = grub_d / '15_uki'
 
+			entries = ''
+			for kernel in self.kernels:
+				uki_path = f'/EFI/Linux/arch-{kernel}.efi'
+				entries += f'  menuentry "Arch Linux ({kernel})" {{\n    search --no-floppy --set=root --file {uki_path}\n    chainloader {uki_path}\n  }}\n'
+
 			raw_str_platform = r'\$grub_platform'
 			space_indent_cmd = '  uki'
+
 			content = textwrap.dedent(
 				f"""\
 				#! /bin/sh
 				set -e
-
 				cat << EOF
 				if [ "{raw_str_platform}" = "efi" ]; then
 				{space_indent_cmd}
@@ -1325,6 +1330,8 @@ class Installer:
 				EOF
 				""",
 			)
+
+			content = content.replace('fi\nEOF\n', f'{entries}fi\nEOF\n')
 
 			try:
 				mode = linux_file.stat().st_mode
