@@ -26,17 +26,8 @@ def _log_env_info() -> None:
 		info('Running from ISO (USB Mode)...')
 
 
-def _deps_available() -> bool:
-	try:
-		import parted  # noqa: F401  # pylint: disable=unused-import
-
-		return True
-	except ImportError:
-		return False
-
-
 def _bootstrap() -> int:
-	if _deps_available() or Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
+	if Os.get_env('ARCHINSTALL_DEPS_FETCHED'):
 		info('Already bootstrapped...')
 		return 0
 	try:
