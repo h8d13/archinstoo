@@ -1,22 +1,20 @@
 #!/bin/bash
-ELEV="${ELEV:-"$ELEV"}"
-
+ELEV="${ELEV:-sudo}"
 # Strict
 set -e #uo pipefail
 
 # DO NOT RUN AS ROOT // Will prompt when needed
 [ "$(id -u)" -eq 0 ] && echo "Error: Root not required." && exit 1
 
+THREADS="${THREADS:-$(nproc)}"
 # Build stage 1 ISO with slight modifs
 # Requires 'archiso' 
-# Requires 'pacman-contrib' if this is enabled
-CACHING="${CACHING:-1}"
-
 SILENT_MODE="${SILENT_MODE:-0}"
-CLEANUP="${CLEANUP:-1}"
 PRECLEAN="${PRECLEAN:-0}"
-THREADS="${THREADS:-$(nproc)}"
+CLEANUP="${CLEANUP:-1}"
 LOG_FILE="${LOG_FILE:-1}"
+# Requires 'pacman-contrib' if this is enabled
+CACHING="${CACHING:-0}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -81,7 +79,10 @@ echo "Copy releng profile..."
 cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed to copy releng profile"
 
 echo "Mod ISO name..."
-sed -i 's/^iso_name=.*/iso_name="ArchMod"/' "$PROFILE_DIR/profiledef.sh"
+sed -i 's/^iso_name=.*/iso_name="EVOQUUS"/' "$PROFILE_DIR/profiledef.sh"
+
+echo "Adding archinstoo to file_permissions..."
+sed -i '/^file_permissions=(/a\  ["/usr/local/bin/archinstoo"]="0:0:755"' "$PROFILE_DIR/profiledef.sh"
 
 echo "Modifying COW overlay size..."
 
@@ -102,15 +103,31 @@ cat >> "$PROFILE_DIR/airootfs/etc/motd" << EOF
 
         Archinstoo Mods Projects
         Media Gen: ${BUILD_DATE}
+        
+        Connect to the internet.
+        Then 'archinstoo' for TUI installer.
 
 EOF
 
-# add git clone command to zsh history 
-# allows for arrow up fatser testing
+# add git clone command to zsh history
+# allows for arrow up faster testing
 echo "Adding to zsh history..."
 cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
-: 1728000000:0;pacman-key --init && git clone https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstall --debug
+: 1728000000:0;pacman-key --init && git clone https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstall --debug --advanced
 HISTEOF
+
+# add 'archinstoo' command to PATH
+echo "Adding archinstoo command..."
+mkdir -p "$PROFILE_DIR/airootfs/usr/local/bin"
+cat > "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo" << 'CMDEOF'
+#!/bin/bash
+set -e
+pacman-key --init
+git clone https://github.com/h8d13/archinstoo /root/archinstoo
+cd /root/archinstoo/archinstoo
+exec python -m archinstall --debug "$@"
+CMDEOF
+chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo"
 
 echo "Styling pacman.conf (Color + ILoveCandy)..."
 # Ensure pacman.conf exists in airootfs/etc
@@ -154,6 +171,4 @@ echo "Restoring permissions..."
 "$ELEV" chown -R "$USER":"$USER" "$OUTPUT_DIR"
 echo ""
 
-cleanup
-exit 0
-# done
+cleanup && exit 0
