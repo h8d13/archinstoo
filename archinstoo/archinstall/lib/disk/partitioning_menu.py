@@ -551,6 +551,8 @@ class PartitioningList(ListManager[DiskSegment]):
 					partition.set_flag(PartitionFlag.ESP)
 			else:
 				partition.set_flag(PartitionFlag.BOOT)
+		elif partition.is_home() and self._using_gpt:
+			partition.set_flag(PartitionFlag.LINUX_HOME)
 		elif partition.is_swap():
 			partition.mountpoint = None
 			partition.flags = []
