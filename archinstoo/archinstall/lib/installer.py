@@ -1313,7 +1313,6 @@ class Installer:
 
 			raw_str_platform = r'\$grub_platform'
 			space_indent_cmd = '  uki'
-
 			content = textwrap.dedent(
 				f"""\
 				#! /bin/sh
