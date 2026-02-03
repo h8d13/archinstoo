@@ -4,6 +4,7 @@ import logging
 import sys
 import textwrap
 import traceback
+from typing import TYPE_CHECKING
 
 from .lib import Pacman, output
 from .lib.hardware import SysInfo
@@ -12,6 +13,9 @@ from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, reload_python
 from .lib.utils.net import ping
+
+if TYPE_CHECKING:
+	from .lib.args import ArchConfigHandler, Arguments
 
 hard_depends = ('python-pyparted',)
 
@@ -87,15 +91,6 @@ def _prepare() -> int:
 	return 0
 
 
-# note we want to load all these after bootstrap
-from .lib.args import (
-	ROOTLESS_SCRIPTS,
-	ArchConfigHandler,
-	Arguments,
-	get_arch_config_handler,
-)
-
-
 def _log_sys_info(args: Arguments) -> None:
 	info(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
 	info(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {SysInfo._bitness()}')
@@ -149,6 +144,22 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 
 
 def run_as_a_module() -> int:
+	# set debug early from sys.argv before heavy imports
+	if '--debug' in sys.argv:
+		output.log_level = logging.DEBUG
+
+	# bootstrap before heavy imports
+	# on first run this installs deps and re-execs
+	# on second run (or if already bootstrapped) this is a no-op
+	if rc := _prepare():
+		return rc
+
+	# now safe to import after bootstrap
+	from .lib.args import (
+		ROOTLESS_SCRIPTS,
+		get_arch_config_handler,
+	)
+
 	handler = get_arch_config_handler()
 
 	if handler.args.debug:
@@ -171,8 +182,6 @@ def run_as_a_module() -> int:
 		exc = None
 
 		try:
-			if rc := _prepare():
-				return rc
 			# now run any script that does need root
 			rc = main(script, handler)
 		except Exception as e:
