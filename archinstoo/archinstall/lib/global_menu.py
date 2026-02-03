@@ -43,8 +43,13 @@ from .translationhandler import Language, tr, translation_handler
 
 
 class GlobalMenu(AbstractMenu[None]):
-	def __init__(self, arch_config: ArchConfig) -> None:
+	def __init__(
+		self,
+		arch_config: ArchConfig,
+		skip_boot: bool = False,
+	) -> None:
 		self._arch_config = arch_config
+		self._skip_boot = skip_boot
 		menu_options = self._get_menu_options()
 
 		self._item_group = MenuItemGroup(
@@ -99,7 +104,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Bootloader'),
-				value=BootloaderConfiguration.get_default(),
+				value=BootloaderConfiguration.get_default(self._skip_boot),
 				action=self._select_bootloader_config,
 				preview_action=self._prev_bootloader_config,
 				key='bootloader_config',
@@ -683,9 +688,9 @@ class GlobalMenu(AbstractMenu[None]):
 		preset: BootloaderConfiguration | None = None,
 	) -> BootloaderConfiguration | None:
 		if preset is None:
-			preset = BootloaderConfiguration.get_default()
+			preset = BootloaderConfiguration.get_default(self._skip_boot)
 
-		return BootloaderMenu(preset).run()
+		return BootloaderMenu(preset, self._skip_boot).run()
 
 	@staticmethod
 	def _default_profile() -> Profile:

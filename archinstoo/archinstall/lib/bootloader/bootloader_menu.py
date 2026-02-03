@@ -15,8 +15,10 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 	def __init__(
 		self,
 		bootloader_conf: BootloaderConfiguration,
+		skip_boot: bool = False,
 	):
 		self._bootloader_conf = bootloader_conf
+		self._skip_boot = skip_boot
 		menu_options = self._define_menu_options()
 
 		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
@@ -92,7 +94,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return self._bootloader_conf
 
 	def _select_bootloader(self, preset: Bootloader | None) -> Bootloader | None:
-		if bootloader := select_bootloader(preset):
+		if bootloader := select_bootloader(preset, self._skip_boot):
 			# Update UKI option based on bootloader
 			uki_item = self._menu_item_group.find_by_key('uki')
 			if not SysInfo.has_uefi() or not bootloader.has_uki_support():

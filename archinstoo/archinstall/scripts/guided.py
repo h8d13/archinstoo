@@ -31,7 +31,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 	title_text = None
 
 	with Tui():
-		global_menu = GlobalMenu(config)
+		global_menu = GlobalMenu(config, args.skip_boot)
 
 		if not args.advanced:
 			global_menu.set_enabled('parallel_downloads', False)
