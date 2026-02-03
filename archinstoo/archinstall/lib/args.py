@@ -22,8 +22,6 @@ from archinstall.lib.models.profile import ProfileConfiguration
 from archinstall.lib.output import error, logger, warn
 from archinstall.lib.translationhandler import Language, translation_handler
 
-ROOTLESS_SCRIPTS = {'list', 'size', 'mirror'}
-
 
 def _set_direct(obj: Any, config: dict[str, Any], mapping: dict[str, str]) -> None:
 	for key, attr in mapping.items():
