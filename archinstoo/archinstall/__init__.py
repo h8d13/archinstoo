@@ -26,6 +26,9 @@ hard_depends = ('python-pyparted',)
 # handle default guided script
 # rootless/needsroot utilities
 
+# scripts that don't need root
+ROOTLESS_SCRIPTS = {'list', 'size', 'mirror'}
+
 
 def _log_env_info() -> None:
 	# log which mode we are using
@@ -156,8 +159,8 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 	warn(text)
 
 
-def _get_script_from_argv() -> str | None:
-	"""Peek at sys.argv for --script value without full arg parsing."""
+def _script_from_argv() -> str | None:
+	# peek at sys.argv for --script value without full arg parsing
 	try:
 		idx = sys.argv.index('--script')
 		return sys.argv[idx + 1] if idx + 1 < len(sys.argv) else None
@@ -165,23 +168,26 @@ def _get_script_from_argv() -> str | None:
 		return None
 
 
-# scripts that don't need root or bootstrap
-ROOTLESS_SCRIPTS = {'list', 'size', 'mirror'}
-
-
 def run_as_a_module() -> int:
 	# set debug early from sys.argv before heavy imports
 	if '--debug' in sys.argv:
 		output.log_level = logging.DEBUG
 
-	# handle rootless scripts early before bootstrap/heavy imports
-	script_peek = _get_script_from_argv()
-	if script_peek in ROOTLESS_SCRIPTS:
-		from .lib.args import get_arch_config_handler
+	script_peek = _script_from_argv()
 
-		handler = get_arch_config_handler()
-		script = handler.get_script()
+	is_rootless = script_peek in ROOTLESS_SCRIPTS
+	# only bootstrap for scripts that need root
+	if not is_rootless and (rc := _prepare()):
+		return rc
 
+	# now safe to import after bootstrap (or skipped for rootless)
+	from .lib.args import get_arch_config_handler
+
+	handler = get_arch_config_handler()
+	script = handler.get_script()
+
+	# handle rootless scripts early
+	if is_rootless:
 		if is_root():
 			warn(f'archinstall {script} does not need root privileges.')
 			return 1
@@ -190,22 +196,10 @@ def run_as_a_module() -> int:
 		_run_script(script)
 		return 0
 
-	# bootstrap before heavy imports
-	# on first run this installs deps and re-execs
-	# on second run (or if already bootstrapped) this is a no-op
-	if rc := _prepare():
-		return rc
-
-	# now safe to import after bootstrap
-	from .lib.args import get_arch_config_handler
-
-	handler = get_arch_config_handler()
-
 	if handler.args.debug:
 		output.log_level = logging.DEBUG
 
-	script = handler.get_script()
-
+	# now handle root scripts
 	try:
 		rc = 0
 		exc = None
