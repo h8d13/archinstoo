@@ -1749,7 +1749,10 @@ class Installer:
 		root = self._get_root()
 
 		if boot_partition is None:
-			raise ValueError(f'Could not detect boot at mountpoint {self.target}')
+			if SysInfo.has_uefi() and efi_partition is not None:
+				boot_partition = efi_partition
+			else:
+				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
 
 		if root is None:
 			raise ValueError(f'Could not detect root at mountpoint {self.target}')
