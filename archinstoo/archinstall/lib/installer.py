@@ -1421,6 +1421,8 @@ class Installer:
 			if not bootloader_removable:
 				# Create EFI boot menu entry for Limine.
 				try:
+					# see https://wiki.archlinux.org/title/Arch_boot_process
+					# mixed mode booting (32bit UEFI on x86_64 CPU)
 					efi_bitness = SysInfo._bitness()
 				except Exception as err:
 					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}')
