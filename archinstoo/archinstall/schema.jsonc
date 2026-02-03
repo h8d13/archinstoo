@@ -96,6 +96,7 @@
 		"sddm": ["sddm"],
 		"gdm": ["gdm"],
 		"ly": ["ly"],
+		"greetd": ["greetd"],
 		"cosmic-greeter": ["cosmic-greeter"]
 	},
 

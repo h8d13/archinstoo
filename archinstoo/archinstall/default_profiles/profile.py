@@ -48,6 +48,7 @@ class GreeterType(Enum):
 	Sddm = 'sddm'
 	Gdm = 'gdm'
 	Ly = 'ly'
+	Greetd = 'greetd'
 	CosmicSession = 'cosmic-greeter'
 
 
