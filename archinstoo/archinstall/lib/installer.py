@@ -1692,8 +1692,22 @@ class Installer:
 		image_re = re.compile('(.+_image="/([^"]+).+\n)')
 		uki_re = re.compile('#((.+_uki=")/[^/]+(.+\n))')
 
+		# Per-kernel os-release so GRUB UKI entries show the kernel variant
+		osrelease_dir = self.target / 'etc/os-release.d'
+		osrelease_dir.mkdir(parents=True, exist_ok=True)
+		base_osrelease = (self.target / 'etc/os-release').read_text()
+
 		# Modify .preset files
 		for kernel in self.kernels:
+			kernel_osrelease = re.sub(
+				r'^PRETTY_NAME=".*"',
+				f'PRETTY_NAME="Arch Linux ({kernel})"',
+				base_osrelease,
+				count=1,
+				flags=re.MULTILINE,
+			)
+			(osrelease_dir / kernel).write_text(kernel_osrelease)
+
 			preset = self.target / 'etc/mkinitcpio.d' / (kernel + '.preset')
 			config = preset.read_text().splitlines(True)
 
@@ -1709,7 +1723,7 @@ class Installer:
 					else:
 						config[index] = m.group(1)
 				elif line.startswith('#default_options='):
-					config[index] = line.removeprefix('#')
+					config[index] = line.removeprefix('#').rstrip('\n').rstrip('"') + f' --osrelease /etc/os-release.d/{kernel}"\n'
 
 			preset.write_text(''.join(config))
 
@@ -1741,7 +1755,10 @@ class Installer:
 		root = self._get_root()
 
 		if boot_partition is None:
-			raise ValueError(f'Could not detect boot at mountpoint {self.target}')
+			if SysInfo.has_uefi() and efi_partition is not None:
+				boot_partition = efi_partition
+			else:
+				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
 
 		if root is None:
 			raise ValueError(f'Could not detect root at mountpoint {self.target}')
