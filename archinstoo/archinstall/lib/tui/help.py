@@ -52,10 +52,10 @@ class Help:
 			group_entries=[
 				HelpText(tr('Preview scroll up'), ['PgUp']),
 				HelpText(tr('Preview scroll down'), ['PgDown']),
-				HelpText(tr('Move up'), ['k', '↑']),
-				HelpText(tr('Move down'), ['j', '↓']),
-				HelpText(tr('Move right'), ['l', '→']),
-				HelpText(tr('Move left'), ['h', '←']),
+				HelpText(tr('Move up'), ['↑']),
+				HelpText(tr('Move down'), ['↓']),
+				HelpText(tr('Move right'), ['→']),
+				HelpText(tr('Move left'), ['←']),
 				HelpText(tr('Jump to entry'), ['1..9']),
 			],
 		)
@@ -75,23 +75,12 @@ class Help:
 		)
 
 	@staticmethod
-	def search() -> HelpGroup:
-		return HelpGroup(
-			group_id=HelpTextGroupId.SEARCH,
-			group_entries=[
-				HelpText(tr('Start search mode'), ['/']),
-				HelpText(tr('Exit search mode'), ['Esc']),
-			],
-		)
-
-	@staticmethod
 	def get_help_text() -> str:
 		help_output = ''
 		help_texts = [
 			Help.general(),
 			Help.navigation(),
 			Help.selection(),
-			Help.search(),
 		]
 		max_desc_width = max(entry.get_desc_width() for entry in help_texts) + 2
 		max_key_width = max(entry.get_key_width() for entry in help_texts)
