@@ -19,6 +19,13 @@ if TYPE_CHECKING:
 
 hard_depends = ('python-pyparted',)
 
+# main init file of archinstoo
+# we will log some useful info
+# checks launch pre-conditions
+# and bootstrap the lib's deps
+# handle default guided script
+# rootless/needsroot utilities
+
 
 def _log_env_info() -> None:
 	# log which mode we are using
@@ -43,9 +50,15 @@ def _bootstrap() -> int:
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
 		Os.set_env('ARCHINSTALL_DEPS_FETCHED', '1')
 	except Exception:
+		info('Failed to fetch deps.')
 		return 1
 	info('Reloading python...')
-	reload_python()
+	try:
+		reload_python()
+	except Exception:
+		info('Failed to reload python.')
+		return 1
+
 	return 0
 
 
