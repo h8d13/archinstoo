@@ -621,15 +621,17 @@ class GlobalMenu(AbstractMenu[None]):
 		if root_partition is None:
 			return 'Root partition not found'
 
-		if boot_partition is None:
-			return 'Boot partition not found'
-
+		# Legacy vs /efi newer standard
 		if SysInfo.has_uefi():
 			if efi_partition is None:
 				return 'EFI system partition (ESP) not found'
 
 			if efi_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'ESP must be formatted as a FAT filesystem'
+		else:
+			# non-uefi needs /boot
+			if boot_partition is None:
+				return 'Boot partition not found'
 
 		if disk_config.disk_encryption and bootloader != Bootloader.Grub:
 			enc = disk_config.disk_encryption
@@ -637,7 +639,8 @@ class GlobalMenu(AbstractMenu[None]):
 				return 'Encrypted /boot is only supported with GRUB'
 
 		if bootloader == Bootloader.Limine:
-			if boot_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
+			limine_boot = boot_partition or efi_partition
+			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'Limine does not support booting with a non-FAT boot partition'
 
 		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():
