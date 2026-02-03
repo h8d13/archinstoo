@@ -148,8 +148,19 @@ class GfxDriver(Enum):
 
 
 class _SysInfo:
+	efi_path = '/sys/firmware/efi'
+
 	def __init__(self) -> None:
 		pass
+
+	@cached_property
+	def has_uefi(self) -> bool:
+		return os.path.isdir(self.efi_path)
+
+	@cached_property
+	def efi_bitness(self) -> int:
+		with open(f'{self.efi_path}/fw_platform_size') as fw_ps:
+			return int(fw_ps.read().strip())
 
 	@cached_property
 	def has_battery(self) -> bool:
@@ -231,12 +242,16 @@ _sys_info = _SysInfo()
 
 class SysInfo:
 	@staticmethod
-	def has_battery() -> bool:
-		return _sys_info.has_battery
+	def has_uefi() -> bool:
+		return _sys_info.has_uefi
 
 	@staticmethod
-	def has_uefi() -> bool:
-		return os.path.isdir('/sys/firmware/efi')
+	def _bitness() -> int:
+		return _sys_info.efi_bitness
+
+	@staticmethod
+	def has_battery() -> bool:
+		return _sys_info.has_battery
 
 	@staticmethod
 	def _graphics_devices() -> dict[str, str]:

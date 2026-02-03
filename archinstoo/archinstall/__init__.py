@@ -106,14 +106,15 @@ from .lib.args import (
 
 
 def _log_sys_info(args: Arguments) -> None:
-	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}; UEFI mode: {SysInfo.has_uefi()}')
-	debug(f'Processor model detected: {SysInfo.cpu_model()}')
-	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
-	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
-	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
+	info(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
+	info(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {SysInfo._bitness()}')
+	info(f'Processor model detected: {SysInfo.cpu_model()}')
+	info(f'Memory statistics: {SysInfo.mem_total()} total installed')
+	info(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
 	if args.debug:
 		from .lib.disk.utils import disk_layouts
 
+		debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 
 

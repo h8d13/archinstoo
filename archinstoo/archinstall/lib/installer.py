@@ -1,6 +1,5 @@
 import glob
 import os
-import platform
 import re
 import shlex
 import shutil
@@ -1274,8 +1273,12 @@ class Installer:
 				boot_dir_arg.append(f'--boot-directory={boot_partition.mountpoint}')
 				boot_dir = boot_partition.mountpoint
 
+			grub_target = 'x86_64-efi' if SysInfo._bitness() == 64 else 'i386-efi'
+			# https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface
+			# mixed mode boot handling same as limine handling 32bit UEFI on 64-bit CPUs
+
 			add_options = [
-				f'--target={platform.machine()}-efi',
+				f'--target={grub_target}',
 				f'--efi-directory={efi_partition.mountpoint}',
 				*boot_dir_arg,
 				'--bootloader-id=GRUB',
@@ -1418,14 +1421,13 @@ class Installer:
 			if not bootloader_removable:
 				# Create EFI boot menu entry for Limine.
 				try:
-					with open('/sys/firmware/efi/fw_platform_size') as fw_platform_size:
-						efi_bitness = fw_platform_size.read().strip()
+					efi_bitness = SysInfo._bitness()
 				except Exception as err:
-					raise OSError(f'Could not open or read /sys/firmware/efi/fw_platform_size to determine EFI bitness: {err}')
+					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}')
 
-				if efi_bitness == '64':
+				if efi_bitness == 64:
 					loader_path = '\\EFI\\arch-limine\\BOOTX64.EFI'
-				elif efi_bitness == '32':
+				elif efi_bitness == 32:
 					loader_path = '\\EFI\\arch-limine\\BOOTIA32.EFI'
 				else:
 					raise ValueError(f'EFI bitness is neither 32 nor 64 bits. Found "{efi_bitness}".')
