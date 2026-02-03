@@ -1,6 +1,6 @@
 **/**__pycache__
 SAFETY_LOCK
-**/archiso
+**/archiso**
 **/**old.*
 **/**.img
 **/**.iso
@@ -50,3 +50,4 @@ requirements.txt
 /cmd_output.txt
 node_modules/
 uv.lock
+**.vscode/**
