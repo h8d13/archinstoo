@@ -163,6 +163,9 @@ class ProfileHandler:
 				packages = ['ly']
 				service = ['ly@tty1']
 				service_disable = ['getty@tty1']
+			case GreeterType.Greetd:
+				packages = ['greetd']
+				service = ['greetd']
 			case GreeterType.CosmicSession:
 				packages = ['cosmic-greeter']
 				service = ['cosmic-greeter']
