@@ -123,7 +123,11 @@ cat > "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo" << 'CMDEOF'
 #!/bin/bash
 set -e
 pacman-key --init
-git clone https://github.com/h8d13/archinstoo /root/archinstoo
+if [ -d /root/archinstoo ]; then
+    git -C /root/archinstoo pull
+else
+    git clone https://github.com/h8d13/archinstoo /root/archinstoo
+fi
 cd /root/archinstoo/archinstoo
 exec python -m archinstall --debug "$@"
 CMDEOF
