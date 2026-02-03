@@ -1342,7 +1342,7 @@ msgstr "Igen"
 msgid "No"
 msgstr "Nem"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Archinstall súgó"
 
 msgid " (default)"

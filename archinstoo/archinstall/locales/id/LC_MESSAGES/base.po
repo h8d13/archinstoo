@@ -1402,7 +1402,7 @@ msgid "No"
 msgstr ""
 
 #, fuzzy
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Bahasa Archinstall"
 
 #, fuzzy

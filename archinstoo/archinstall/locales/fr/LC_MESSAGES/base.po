@@ -1340,7 +1340,7 @@ msgstr "Oui"
 msgid "No"
 msgstr "Non"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Aide pour Archinstall"
 
 msgid " (default)"

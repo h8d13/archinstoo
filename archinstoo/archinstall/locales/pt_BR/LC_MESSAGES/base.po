@@ -1351,7 +1351,7 @@ msgstr "Sim"
 msgid "No"
 msgstr "Não"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Ajuda do archinstall"
 
 msgid " (default)"

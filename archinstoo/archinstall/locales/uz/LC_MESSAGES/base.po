@@ -1350,7 +1350,7 @@ msgstr "Ha"
 msgid "No"
 msgstr "Yo'q"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Archinstall yordami"
 
 msgid " (default)"

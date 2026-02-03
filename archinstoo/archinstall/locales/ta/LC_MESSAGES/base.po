@@ -1342,7 +1342,7 @@ msgstr "ஆமாம்"
 msgid "No"
 msgstr "இல்லை"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Archinstall உதவி"
 
 msgid " (default)"

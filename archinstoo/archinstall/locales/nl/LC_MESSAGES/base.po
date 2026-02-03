@@ -1419,7 +1419,7 @@ msgid "No"
 msgstr "Nee"
 
 #, fuzzy
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Archinstall-taal"
 
 msgid " (default)"

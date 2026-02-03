@@ -1340,7 +1340,7 @@ msgstr "Erê"
 msgid "No"
 msgstr "Na"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Alîkariya Archinstall"
 
 msgid " (default)"

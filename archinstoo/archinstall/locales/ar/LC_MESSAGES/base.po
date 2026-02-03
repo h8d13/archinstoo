@@ -1346,7 +1346,7 @@ msgstr "نعم"
 msgid "No"
 msgstr "لا"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "مساعدة Archinstall"
 
 msgid " (default)"
