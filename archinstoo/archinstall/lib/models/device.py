@@ -12,11 +12,8 @@ if TYPE_CHECKING:
 
 from uuid import UUID
 
-try:
-	import parted
-	from parted import Disk, Geometry, Partition
-except ImportError:
-	raise ImportError('Dep python-parted not found. Please install it with: pacman -S python-parted')
+import parted
+from parted import Disk, Geometry, Partition
 
 from archinstall.lib.hardware import SysInfo
 from archinstall.lib.models.users import Password
