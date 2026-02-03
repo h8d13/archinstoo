@@ -1323,6 +1323,7 @@ class Installer:
 				f"""\
 				#! /bin/sh
 				set -e
+
 				cat << EOF
 				if [ "{raw_str_platform}" = "efi" ]; then
 				{space_indent_cmd}
