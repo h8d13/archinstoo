@@ -5,7 +5,6 @@ from pathlib import Path
 
 from .exceptions import RequirementError
 from .general import SysCommand
-from .network.utils import fetch_data_from_url
 from .output import error, info, logger, warn
 from .translationhandler import tr
 
@@ -16,6 +15,8 @@ def reset_conf() -> bool:
 	try:
 		default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
 		info('Fetching default pacman.conf from upstream...')
+		from .network.utils import fetch_data_from_url
+
 		conf_data = fetch_data_from_url(default_pm_conf)
 		Path('/etc/pacman.conf').write_text(conf_data)
 		info('Replaced /etc/pacman.conf with upstream default.')
