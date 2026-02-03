@@ -22,6 +22,7 @@ from archinstall.lib.models.device import (
 	DiskLayoutConfiguration,
 	EncryptionType,
 	FilesystemType,
+	LsblkInfo,
 	LvmVolume,
 	PartitionModification,
 	SectorSize,
@@ -776,6 +777,7 @@ class Installer:
 		mkinitcpio: bool = True,
 		hostname: str | None = None,
 		locale_config: LocaleConfiguration | None = LocaleConfiguration.default(),
+		timezone: str | None = None,
 	) -> None:
 		if self._disk_config.lvm_config:
 			lvm = 'lvm2'
@@ -832,18 +834,20 @@ class Installer:
 		if not self._disable_fstrim:
 			self.enable_periodic_trim()
 
-		# TODO: Support locale and timezone
-		# os.remove(f'{self.target}/etc/localtime')
-		# sys_command(f'arch-chroot {self.target} ln -s /usr/share/zoneinfo/{localtime} /etc/localtime')
-		# sys_command('arch-chroot /mnt hwclock --hctosys --localtime')
 		if hostname:
 			self.set_hostname(hostname)
 
 		if locale_config:
 			self.set_locale(locale_config)
 
-		# TODO: Use python functions for this
-		self.arch_chroot('chmod 700 /root')
+		if timezone and not self.set_timezone(timezone):
+			warn(f'Failed to set timezone: {timezone}')
+
+		root_dir = self.target / 'root'
+		if root_dir.exists():
+			root_dir.chmod(0o700)
+		else:
+			debug(f'Root directory not found at {root_dir}, skipping chmod')
 
 		if mkinitcpio and not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
@@ -982,6 +986,23 @@ class Installer:
 
 		return lsblk_info.children[0].uuid
 
+	def _find_crypt_parent(self, dev_path: Path) -> LsblkInfo | None:
+		try:
+			lsblk_info = get_lsblk_info(dev_path, reverse=True, full_dev_path=True)
+		except DiskError as err:
+			debug(f'Unable to determine crypt parent for {dev_path}: {err}')
+			return None
+
+		def _walk(node: LsblkInfo) -> LsblkInfo | None:
+			if node.type == 'crypt':
+				return node
+			for child in node.children:
+				if found := _walk(child):
+					return found
+			return None
+
+		return _walk(lsblk_info)
+
 	def _get_kernel_params_partition(
 		self,
 		root_partition: PartitionModification,
@@ -991,8 +1012,27 @@ class Installer:
 		kernel_parameters = []
 
 		if root_partition in self._disk_encryption.partitions:
-			# TODO: We need to detect if the encrypted device is a whole disk encryption,
-			#       or simply a partition encryption. Right now we assume it's a partition (and we always have)
+			crypt_parent = self._find_crypt_parent(root_partition.safe_dev_path)
+			if crypt_parent and crypt_parent.path != root_partition.safe_dev_path:
+				uuid = self._get_luks_uuid_from_mapper_dev(crypt_parent.path)
+				debug(f'Root partition is inside encrypted device, identifying by UUID: {uuid}')
+				kernel_parameters.append(f'cryptdevice=UUID={uuid}:{crypt_parent.name}')
+
+				if id_root:
+					if partuuid and root_partition.partuuid:
+						debug(
+							f'Identifying root partition inside LUKS by PARTUUID: {root_partition.partuuid}',
+						)
+						kernel_parameters.append(f'root=PARTUUID={root_partition.partuuid}')
+					elif root_partition.uuid:
+						debug(
+							f'Identifying root partition inside LUKS by UUID: {root_partition.uuid}',
+						)
+						kernel_parameters.append(f'root=UUID={root_partition.uuid}')
+					else:
+						raise ValueError('Root partition UUID could not be determined')
+
+				return kernel_parameters
 
 			if partuuid:
 				debug(f'Root partition is an encrypted device, identifying by PARTUUID: {root_partition.partuuid}')
@@ -1447,7 +1487,8 @@ class Installer:
 		hook_path.write_text(hook_contents)
 
 		kernel_params = ' '.join(self._get_kernel_params(root))
-		config_contents = 'timeout: 5\n'
+		config_contents = '# Created by archinstall\n'
+		config_contents += 'timeout: 5\n'
 
 		path_root = 'boot()'
 		if efi_partition and boot_partition != efi_partition:
