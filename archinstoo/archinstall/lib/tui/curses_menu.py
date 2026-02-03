@@ -1152,8 +1152,8 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._draw()
 				return None
 
-		# auto-activate search when typing a letter if search is enabled (but not for '/')
-		if self._search_enabled and not self._active_search and MenuKeys.STD_KEYS in key_handles and key != ord('/'):
+		# auto-activate search when typing a letter if search is enabled (but not for '/' or number keys)
+		if self._search_enabled and not self._active_search and MenuKeys.STD_KEYS in key_handles and key != ord('/') and MenuKeys.NUM_KEYS not in key_handles:
 			self._active_search = True
 			self._item_group.set_filter_pattern('')
 			self._item_group.append_filter(chr(key))

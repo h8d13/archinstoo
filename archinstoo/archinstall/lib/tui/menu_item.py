@@ -268,8 +268,10 @@ class MenuItemGroup:
 				self.selected_items.append(self.focus_item)
 
 	def focus_index(self, index: int) -> None:
-		enabled = self.get_enabled_items()
-		self.focus_item = enabled[index]
+		selectable = [it for it in self.items if self._is_selectable(it)]
+		if not (0 <= index < len(selectable)):
+			return
+		self.focus_item = selectable[index]
 
 	def focus_first(self) -> None:
 		if len(self.items) == 0:
