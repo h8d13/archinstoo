@@ -12,11 +12,11 @@ This is usually f2, f10, f12 or DEL or other combinations depending on manufactu
 
 ## More tips in the menu 
 
-`/` allows you to search
+Typing let's you search.
+
+ARROW keys lets you move around.
 
 `CTRL + C` allows you to clear the current menu
-
-`hjkl` also allow you to move around (just like arrow keys)
 
 `CTRL + H` shows the full help
 
