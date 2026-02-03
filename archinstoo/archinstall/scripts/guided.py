@@ -98,6 +98,7 @@ def perform_installation(
 			mkinitcpio=run_mkinitcpio,
 			hostname=config.hostname,
 			locale_config=locale_config,
+			timezone=config.timezone,
 		)
 
 		if pacman_config := config.pacman_config:
@@ -148,9 +149,6 @@ def perform_installation(
 
 		if config.aur_packages and config.auth_config:
 			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
-
-		if timezone := config.timezone:
-			installation.set_timezone(timezone)
 
 		if config.ntp:
 			installation.activate_time_synchronization()
