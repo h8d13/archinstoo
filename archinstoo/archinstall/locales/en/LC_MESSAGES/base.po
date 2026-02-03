@@ -1275,7 +1275,7 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr ""
 
 msgid " (default)"

@@ -1343,7 +1343,7 @@ msgstr "Sí"
 msgid "No"
 msgstr "No"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Ayuda de archinstall"
 
 msgid " (default)"

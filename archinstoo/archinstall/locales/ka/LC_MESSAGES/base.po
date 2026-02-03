@@ -1341,7 +1341,7 @@ msgstr "დიახ"
 msgid "No"
 msgstr "არა"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Archinstall-ის დახმარება"
 
 msgid " (default)"

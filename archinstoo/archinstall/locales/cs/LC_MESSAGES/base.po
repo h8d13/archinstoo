@@ -1332,7 +1332,7 @@ msgstr "Ano"
 msgid "No"
 msgstr "Ne"
 
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Nápověda pro Archinstall"
 
 msgid " (default)"

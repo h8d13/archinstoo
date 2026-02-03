@@ -1359,7 +1359,7 @@ msgid "No"
 msgstr ""
 
 #, fuzzy
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Limba pentru Archinstall"
 
 #, fuzzy

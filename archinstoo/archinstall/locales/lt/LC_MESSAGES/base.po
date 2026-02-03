@@ -1282,7 +1282,7 @@ msgid "No"
 msgstr ""
 
 #, fuzzy
-msgid "Archinstall help"
+msgid "Archinstoo help"
 msgstr "Archinstall liežuvis"
 
 msgid " (default)"
