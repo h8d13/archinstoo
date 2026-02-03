@@ -61,7 +61,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			height,
 			x_start,
 			int((max_height / 2) - height / 2),
-			frame=FrameProperties.min(tr('Archinstall help')),
+			frame=FrameProperties.min(tr('Archinstoo help')),
 		)
 
 	def _confirm_interrupt(self, warning: str) -> bool:
