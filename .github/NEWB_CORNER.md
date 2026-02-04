@@ -10,6 +10,9 @@ Then when pressing "start" **use dd mode** for full copy.
 After install, do not forget to **remove or change boot orders** in motherboard settings.
 This is usually f2, f10, f12 or DEL or other combinations depending on manufacturers.
 
+Do check that you are using your best hub/USB keys (usually blue USBs are for 3.x+ or even better in USB-C)
+If install speed matters to you (Current best 1m55)
+
 ## More tips in the menu 
 
 Typing let's you search.
