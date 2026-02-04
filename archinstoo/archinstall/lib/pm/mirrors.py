@@ -577,26 +577,33 @@ class MirrorListHandler:
 	def _parse_local_mirrors(self, mirrorlist: str) -> dict[str, list[MirrorStatusEntryV3]]:
 		lines = mirrorlist.splitlines()
 
-		# remove empty lines
-		# lines = [line for line in lines if line]
-
 		mirror_list: dict[str, list[MirrorStatusEntryV3]] = {}
 
 		current_region = ''
+		has_countries = any(entry.strip().startswith('### ') for entry in lines)
 
 		for line in lines:
 			line = line.strip()
 
-			if line.startswith('## '):
-				current_region = line.replace('## ', '').strip()
+			# ### Country (ARM mirrorlist format)
+			if line.startswith('### '):
+				current_region = line.removeprefix('### ').strip()
 				mirror_list.setdefault(current_region, [])
+			# ## header — country on x86, city subheader on ARM
+			elif line.startswith('## '):
+				if not has_countries:
+					current_region = line.removeprefix('## ').strip()
+					mirror_list.setdefault(current_region, [])
+				# else: city subheader under a ### country, keep current_region
 
-			if line.startswith('Server = '):
+			# pick up both "Server = ..." and "#Server = ..."
+			server_line = line.lstrip('#').strip()
+			if server_line.startswith('Server = '):
 				if not current_region:
 					current_region = 'Local'
 					mirror_list.setdefault(current_region, [])
 
-				url = line.removeprefix('Server = ')
+				url = server_line.removeprefix('Server = ')
 
 				mirror_entry = MirrorStatusEntryV3(
 					url=url.removesuffix('$repo/os/$arch'),
