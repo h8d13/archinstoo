@@ -604,9 +604,11 @@ class MirrorListHandler:
 					mirror_list.setdefault(current_region, [])
 
 				url = server_line.removeprefix('Server = ')
+				# strip both x86 ($repo/os/$arch) and ARM ($arch/$repo) suffixes
+				url = url.removesuffix('$repo/os/$arch').removesuffix('$arch/$repo')
 
 				mirror_entry = MirrorStatusEntryV3(
-					url=url.removesuffix('$repo/os/$arch'),
+					url=url,
 					protocol=urllib.parse.urlparse(url).scheme,
 					active=True,
 					country=current_region or 'Worldwide',
