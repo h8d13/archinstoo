@@ -14,13 +14,14 @@ Depending on what you are trying to achieve.
 
 1. Get the server.jar file, agree to `eula.txt` set to `=true` in `/srv/minecraft/`
 
-> Used the AUR version (`minecraft-server`) but you can also just get the raw file
+> Used the AUR version (`minecraft-server`) but you can also just get the raw file then ran `minecraftd start`
 
 Then run `tailscale up` or `down` when turning the server off.
 
 2. Add your devices or friends to `tailscale`
 
-For this I followed standard/official install.sh method and then logged in another device.
+For this I followed standard/official `install.sh` method to add clients.
+And then logged in another device.
 
 <img width="1193" height="301" alt="image" src="https://github.com/user-attachments/assets/6d5143e6-c32e-4f0d-92dd-0a4669b14ebe" />
 
