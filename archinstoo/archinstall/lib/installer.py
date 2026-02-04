@@ -639,6 +639,8 @@ class Installer:
 				raise ServiceException(f'Unable to disable service {service}: {err}')
 
 	def run_command(self, cmd: str, peek_output: bool = False) -> SysCommand:
+		if self.target == Path('/'):
+			return SysCommand(cmd, peek_output=peek_output)
 		return SysCommand(f'arch-chroot -S {self.target} {cmd}', peek_output=peek_output)
 
 	def arch_chroot(self, cmd: str, run_as: str | None = None, peek_output: bool = False) -> SysCommand:

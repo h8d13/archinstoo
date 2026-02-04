@@ -123,10 +123,18 @@ class Pacman:
 
 		info(f'Installing packages: {packages}')
 
+		if self.target == Path('/'):
+			# Live mode: install directly on the running system
+			cmd = f'pacman -S {" ".join(packages)} --noconfirm --needed'
+			bail = f'Package installation failed. See {logger.path} or above message for error details'
+		else:
+			cmd = f'pacstrap -C /etc/pacman.conf -K {self.target} {" ".join(packages)} --noconfirm --needed'
+			bail = f'Pacstrap failed. See {logger.path} or above message for error details'
+
 		self.ask(
 			'Could not strap in packages',
-			f'Pacstrap failed. See {logger.path} or above message for error details',
+			bail,
 			SysCommand,
-			f'pacstrap -C /etc/pacman.conf -K {self.target} {" ".join(packages)} --noconfirm --needed',
+			cmd,
 			peek_output=True,
 		)
