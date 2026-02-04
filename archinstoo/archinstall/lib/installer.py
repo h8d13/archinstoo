@@ -1873,8 +1873,9 @@ class Installer:
 
 		try:
 			self.arch_chroot(cmd)
-		except SysCallError as err:
-			raise SystemError(f'Could not create user inside installation: {err}')
+		except SysCallError:
+			# user may already exist (e.g. installing onto running system)
+			info(f'User {user.username} already exists, skipping creation')
 
 		self.set_user_password(user)
 
