@@ -121,7 +121,7 @@ class GlobalMenu(AbstractMenu[None]):
 				value=['linux'],
 				action=self._select_kernel,
 				preview_action=self._prev_kernel,
-				mandatory=True,
+				mandatory=False,
 				key='kernels',
 			),
 			MenuItem(
