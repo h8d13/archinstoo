@@ -46,6 +46,13 @@ class FilesystemHandler:
 			debug('No modifications required')
 			return
 
+		# skip devices that aren't being wiped and have no new/modified partitions
+		active_mods = [d for d in device_mods if d.wipe or any(p.is_create_or_modify() for p in d.partitions)]
+
+		if not active_mods:
+			debug('No disk operations required (all partitions are existing)')
+			return
+
 		if show_countdown:
 			self._final_warning()
 
@@ -53,10 +60,10 @@ class FilesystemHandler:
 		# Once that's done, we'll hand over to perform_installation()
 
 		# make sure all devices are unmounted
-		for mod in device_mods:
+		for mod in active_mods:
 			self._device_handler.umount_all_existing(mod.device_path)
 
-		for mod in device_mods:
+		for mod in active_mods:
 			self._device_handler.partition(mod)
 
 		self._device_handler.udev_sync()
