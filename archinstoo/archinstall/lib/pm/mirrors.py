@@ -4,6 +4,7 @@ from functools import partial
 from pathlib import Path
 from typing import ClassVar, override
 
+from archinstall.lib.hardware import SysInfo
 from archinstall.lib.menu.abstract_menu import AbstractSubMenu
 from archinstall.lib.menu.list_manager import ListManager
 from archinstall.lib.models.mirrors import (
@@ -470,7 +471,12 @@ class MirrorListHandler:
 			if not _MirrorCache.is_remote:
 				self.load_local_mirrors()
 
+	_ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
+
 	def load_remote_mirrors(self) -> bool:
+		if SysInfo.arch() != 'x86_64':
+			return self._load_arm_mirrors()
+
 		attempts = 3
 
 		# Try archlinux.org first
@@ -496,6 +502,16 @@ class MirrorListHandler:
 
 		debug('Unable to fetch mirror list remotely, falling back to local mirror list')
 		return False
+
+	def _load_arm_mirrors(self) -> bool:
+		debug(f'ARM architecture ({SysInfo.arch()}), fetching Arch Linux ARM mirror list')
+		try:
+			data = fetch_data_from_url(self._ARM_MIRRORLIST_URL)
+			_MirrorCache.data.update(self._parse_local_mirrors(data))
+			return True
+		except Exception as e:
+			debug(f'Error fetching ARM mirror list: {e}')
+			return False
 
 	def load_local_mirrors(self) -> None:
 		with self._local_mirrorlist.open('r') as fp:
