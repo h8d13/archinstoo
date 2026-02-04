@@ -229,6 +229,7 @@ def guided() -> None:
 
 		if args.dry_run:
 			raise SystemExit(0)
+			# just save config => no error
 
 		with Tui():
 			if config_handler.confirm_config():
