@@ -24,7 +24,6 @@ class DesktopProfile(Profile):
 	@override
 	def packages(self) -> list[str]:
 		return [
-			'vi',
 			'iwd',
 			'wireless_tools',
 			'smartmontools',
