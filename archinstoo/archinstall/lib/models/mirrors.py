@@ -80,7 +80,11 @@ class MirrorStatusEntryV3:
 
 	@property
 	def server_url(self) -> str:
-		return f'{self.url}$repo/os/$arch'
+		from archinstall.lib.hardware import SysInfo
+
+		if SysInfo.arch() == 'x86_64':
+			return f'{self.url}$repo/os/$arch'
+		return f'{self.url}$arch/$repo'
 
 	@property
 	def speed(self) -> float:
@@ -93,11 +97,15 @@ class MirrorStatusEntryV3:
 			from archinstall.lib.hardware import SysInfo
 
 			arch = SysInfo.arch()
+			if arch == 'x86_64':
+				test_db = f'{self.url}core/os/{arch}/core.db'
+			else:
+				test_db = f'{self.url}{arch}/core/core.db'
 
 			retry = 0
 			while retry < self._speedtest_retries and self._speed is None:
-				debug(f'Checking download speed of {self._hostname}[{self.score}] by fetching: {self.url}core/os/{arch}/core.db')
-				req = urllib.request.Request(url=f'{self.url}core/os/{arch}/core.db')
+				debug(f'Checking download speed of {self._hostname}[{self.score}] by fetching: {test_db}')
+				req = urllib.request.Request(url=test_db)
 
 				try:
 					with urllib.request.urlopen(req, None, 5) as handle, DownloadTimer(timeout=5) as timer:
