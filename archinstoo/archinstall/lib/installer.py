@@ -196,7 +196,7 @@ class Installer:
 		else:
 			info(tr('Skipping waiting for automatic time sync (this can cause issues if time is out of sync during installation)'))
 
-		if not self._args.offline:
+		if not self._args.offline and SysInfo.arch() == 'x86_64':
 			info('Waiting for automatic mirror selection (reflector) to complete.')
 			for _ in range(60):
 				if self._service_state('reflector') in ('dead', 'failed', 'exited'):

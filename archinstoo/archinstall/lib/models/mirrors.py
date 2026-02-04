@@ -90,10 +90,14 @@ class MirrorStatusEntryV3:
 			elif self._speedtest_retries < 1:
 				self._speedtest_retries = 1
 
+			from archinstall.lib.hardware import SysInfo
+
+			arch = SysInfo.arch()
+
 			retry = 0
 			while retry < self._speedtest_retries and self._speed is None:
-				debug(f'Checking download speed of {self._hostname}[{self.score}] by fetching: {self.url}core/os/x86_64/core.db')
-				req = urllib.request.Request(url=f'{self.url}core/os/x86_64/core.db')
+				debug(f'Checking download speed of {self._hostname}[{self.score}] by fetching: {self.url}core/os/{arch}/core.db')
+				req = urllib.request.Request(url=f'{self.url}core/os/{arch}/core.db')
 
 				try:
 					with urllib.request.urlopen(req, None, 5) as handle, DownloadTimer(timeout=5) as timer:
