@@ -87,7 +87,7 @@ class PacmanConfig:
 
 	def persist(self) -> None:
 		has_changes = self._repositories or self._custom_repositories or self._misc_options
-		if has_changes and self._config_remote_path and self._config_path.resolve() != self._config_remote_path.resolve():
+		if has_changes and self._config_remote_path and not self._config_path.samefile(self._config_remote_path):
 			copy2(self._config_path, self._config_remote_path)
 
 	@classmethod
