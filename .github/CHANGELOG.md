@@ -3,6 +3,50 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
 
+## 0.1.0-0
+
+    - ARM (aarch64) support
+        - Parse ARM mirror list format (different HTML from x86)
+        - Filter out `reflector` on non-x86_64 (not packaged for ARM)
+        - Remove `vi` from desktop_base (conflicts with vi compat on ARM)
+        - Skip filesystem ops when `wipe=False` on existing partitions and safe copies
+        - Graphics driver menu shows only Mesa on ARM
+    - Live mode (`--script live`)
+        - New `scripts/live.py` for configuring the running system in-place
+        - Uses `pacman -S --needed` instead of `pacstrap` when target is `/`
+        - Skips `arch-chroot` wrapper when target is `/`
+        - Disables disk, bootloader, kernel menu items
+    - AUR support
+        - Full AUR builder (`grimaur.py`) with temporary non-root user
+        - AUR packages menu item (gated behind `--advanced`)
+        - Fix `/tmp` writability inside chroot for `makepkg`
+        - Out-of-tree DKMS module builds
+    - Graphics driver overhaul
+        - Replace `VMOpenSource` with `MesaOpenSource` (mesa + libva-mesa-driver)
+        - VMs and ARM both default to Mesa group
+    - Boot / EFI fixes
+        - Move EFI bitness check to `hardware.py`
+        - Fix UKI, Grub, EFISTUB installation paths
+        - UEFI `/efi` partition maps to `/boot`
+        - Add pretty name to `os-release`
+        - Named kernel entries (e.g. `linux-zen`)
+        - Show `linux-home` flag when mountpoint is `/home`
+        - Dependency injection for bootloader skip logic
+    - TUI improvements
+        - Remove hjkl nav in favor of type-to-search anywhere
+        - Fix number key selection
+        - Add `greetd` greeter choice (hopefuly cage option soon)
+    - Code quality
+        - Lazy imports in `__init__.py`
+        - Move `ROOTLESS_SCRIPTS` to `__init__.py`, fix `--list` formatting
+        - Type checking and mypy fixes
+        - Fix resume behavior for saved configurations
+    - Docs
+        - Add multi-boot guide
+        - Add AUR / out-of-tree docs
+        - Add philosophy doc
+        - Update contributing and headless guides
+
 ## 0.0.02-2
     - Add Tailscale and Java (headless JRE) server profiles
     - Add headless server docs with SteamCMD examples

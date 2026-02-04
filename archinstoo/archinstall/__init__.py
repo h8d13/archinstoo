@@ -191,7 +191,6 @@ def run_as_a_module() -> int:
 	if is_rootless:
 		if is_root():
 			warn(f'archinstall {script} does not need root privileges.')
-			return 1
 
 		handler.pass_args_to_subscript()
 		_run_script(script)
