@@ -109,7 +109,8 @@ def _prepare() -> int:
 
 def _log_sys_info(args: Arguments) -> None:
 	info(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
-	info(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {SysInfo._bitness()}')
+	bitness = SysInfo._bitness()
+	info(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
 	info(f'Processor model detected: {SysInfo.cpu_model()}')
 	info(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	info(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')

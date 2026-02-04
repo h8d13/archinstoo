@@ -1,4 +1,5 @@
 import os
+import platform
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
@@ -158,9 +159,12 @@ class _SysInfo:
 		return os.path.isdir(self.efi_path)
 
 	@cached_property
-	def efi_bitness(self) -> int:
-		with open(f'{self.efi_path}/fw_platform_size') as fw_ps:
-			return int(fw_ps.read().strip())
+	def efi_bitness(self) -> int | None:
+		try:
+			with open(f'{self.efi_path}/fw_platform_size') as fw_ps:
+				return int(fw_ps.read().strip())
+		except (FileNotFoundError, OSError):
+			return None
 
 	@cached_property
 	def has_battery(self) -> bool:
@@ -246,8 +250,12 @@ class SysInfo:
 		return _sys_info.has_uefi
 
 	@staticmethod
-	def _bitness() -> int:
+	def _bitness() -> int | None:
 		return _sys_info.efi_bitness
+
+	@staticmethod
+	def arch() -> str:
+		return platform.machine()
 
 	@staticmethod
 	def has_battery() -> bool:
