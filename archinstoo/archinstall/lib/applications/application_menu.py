@@ -286,7 +286,9 @@ def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConf
 
 
 def select_management(preset: ManagementConfiguration | None = None) -> ManagementConfiguration | None:
-	group = MenuItemGroup.from_enum(Management)
+	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo.arch() != 'x86_64')]
+	items = [MenuItem(m.value, value=m) for m in options]
+	group = MenuItemGroup(items)
 
 	header = tr('Would you like to install management tools?') + '\n'
 
