@@ -35,7 +35,7 @@
 	},
 
 	// always installed with desktops
-	"desktop_base": ["vi", "iwd", "wireless_tools", "smartmontools", "xdg-utils"],
+	"desktop_base": ["iwd", "wireless_tools", "smartmontools", "xdg-utils"],
 
 	// -- Desktop Environments --
 	"profiles": {

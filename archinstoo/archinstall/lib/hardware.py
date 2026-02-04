@@ -64,6 +64,7 @@ class GfxDriver(Enum):
 	NvidiaOpenKernel = 'Nvidia (open kernel module for newer GPUs, Turing+)'
 	NvidiaOpenSource = 'Nvidia (open-source nouveau driver)'
 	VMOpenSource = 'VirtualBox (open-source)'
+	MesaOpenSource = 'Mesa (open-source)'
 
 	def has_dkms_variant(self) -> bool:
 		match self:
@@ -140,6 +141,11 @@ class GfxDriver(Enum):
 					GfxPackage.VulkanNouveau,
 				]
 			case GfxDriver.VMOpenSource:
+				packages += [
+					GfxPackage.Mesa,
+					GfxPackage.LibvaMesaDriver,
+				]
+			case GfxDriver.MesaOpenSource:
 				packages += [
 					GfxPackage.Mesa,
 					GfxPackage.LibvaMesaDriver,

@@ -55,11 +55,15 @@ def select_driver(
 	Somewhat convoluted function, whose job is simple.
 	Select a graphics driver from a pre-defined set of popular options.
 
-	(The template xorg is for beginner users, not advanced, and should
-	there for appeal to the general public first and edge cases later)
+	This comment was stupid so I removed it. A profile should plain dictate
+	What it needs to run and be in minimal functional state.
 	"""
 	if not options:
-		options = list(GfxDriver)
+		if SysInfo.arch() != 'x86_64':
+			# On ARM only mesa-based drivers are available
+			options = [GfxDriver.MesaOpenSource]
+		else:
+			options = list(GfxDriver)
 
 	servers = profile.display_servers() if profile else None
 
@@ -71,7 +75,8 @@ def select_driver(
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	group = MenuItemGroup(items, sort_items=True)
-	group.set_default_by_value(GfxDriver.AllOpenSource)
+	default_driver = GfxDriver.AllOpenSource if GfxDriver.AllOpenSource in options else options[0]
+	group.set_default_by_value(default_driver)
 
 	if preset is not None:
 		group.set_focus_by_value(preset)
