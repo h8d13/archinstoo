@@ -86,7 +86,7 @@
 		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
 		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
 		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
-		"VirtualBox (open-source)": ["mesa", "libva-mesa-driver'"]
+		"Mesa (open-source)": ["mesa", "libva-mesa-driver"]
 	},
 
 	// each desktop specifies a default greeter but there is also Nogreeter type and can pick any

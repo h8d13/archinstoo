@@ -75,7 +75,12 @@ def select_driver(
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	group = MenuItemGroup(items, sort_items=True)
-	default_driver = GfxDriver.AllOpenSource if GfxDriver.AllOpenSource in options else options[0]
+	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
+		default_driver = GfxDriver.MesaOpenSource
+	elif GfxDriver.AllOpenSource in options:
+		default_driver = GfxDriver.AllOpenSource
+	else:
+		default_driver = options[0]
 	group.set_default_by_value(default_driver)
 
 	if preset is not None:
