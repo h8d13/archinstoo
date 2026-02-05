@@ -2,7 +2,7 @@
 
 name: Build archinstoo
 
-on: [ pull_request ]
+on: [ push ]
 
 jobs:
   deploy:
