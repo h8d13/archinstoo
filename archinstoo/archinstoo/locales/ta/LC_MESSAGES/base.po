@@ -2388,7 +2388,7 @@ msgid "save selections and abort"
 msgstr ""
 
 #, fuzzy
-msgid "exit delete selections"
+msgid "exit delete selection"
 msgstr "தற்போதைய சுயவிவரத் தேர்வு"
 
 #, fuzzy

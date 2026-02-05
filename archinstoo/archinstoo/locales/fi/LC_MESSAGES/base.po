@@ -869,7 +869,7 @@ msgid "save selections abort"
 msgstr ""
 
 #, fuzzy
-msgid "exit delete selections"
+msgid "exit delete selection"
 msgstr "Nykyinen profiilivalinta"
 
 #, fuzzy

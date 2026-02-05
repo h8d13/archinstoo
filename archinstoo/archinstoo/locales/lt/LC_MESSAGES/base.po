@@ -775,7 +775,7 @@ msgstr ""
 msgid "save selections abort"
 msgstr ""
 
-msgid "exit delete selections"
+msgid "exit delete selection"
 msgstr ""
 
 msgid "cancel abort"

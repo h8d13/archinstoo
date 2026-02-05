@@ -821,7 +821,7 @@ msgid "save selections abort"
 msgstr ""
 
 #, fuzzy
-msgid "exit delete selections"
+msgid "exit delete selection"
 msgstr "Hilbijartina profîla heyî"
 
 #, fuzzy

@@ -2321,7 +2321,7 @@ msgid "save selections and abort"
 msgstr ""
 
 #, fuzzy
-msgid "exit delete selections"
+msgid "exit delete selection"
 msgstr "Seleção de perfil atual"
 
 #, fuzzy
