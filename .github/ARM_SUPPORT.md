@@ -169,3 +169,6 @@ umount /mnt/boot /mnt
 ############
 ```
 
+
+<img width="1920" height="1080" alt="Screenshot 2026-02-05 15-32-36" src="https://github.com/user-attachments/assets/a0bdf9cd-a472-48f8-a5fc-7d5467381a30" />
+
