@@ -41,10 +41,10 @@ class Nic:
 
 	def table_data(self) -> dict[str, str | bool | list[str]]:
 		return {
-			'iface': self.iface if self.iface else '',
-			'ip': self.ip if self.ip else '',
+			'iface': self.iface or '',
+			'ip': self.ip or '',
 			'dhcp': self.dhcp,
-			'gateway': self.gateway if self.gateway else '',
+			'gateway': self.gateway or '',
 			'dns': self.dns,
 		}
 

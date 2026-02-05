@@ -204,7 +204,7 @@ class DeviceHandler:
 		if not lsblk_info.mountpoint:
 			try:
 				self.mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
-			except (SysCallError, DiskError):
+			except SysCallError, DiskError:
 				debug(f'Failed to mount {dev_path} for btrfs inspection, skipping')
 				return subvol_infos
 			mountpoint = self._TMP_BTRFS_MOUNT
@@ -238,7 +238,7 @@ class DeviceHandler:
 			# expected output format:
 			# ID 257 gen 8 top level 5 path @home
 			name = Path(line.split(' ')[-1])
-			sub_vol_mountpoint = btrfs_subvol_info.get('/' / name, None)
+			sub_vol_mountpoint = btrfs_subvol_info.get('/' / name)
 			subvol_infos.append(_BtrfsSubvolumeInfo(name, sub_vol_mountpoint))
 
 		if not lsblk_info.mountpoint:
