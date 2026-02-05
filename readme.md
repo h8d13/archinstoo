@@ -64,11 +64,12 @@ python -m archinstoo [args] # try -h or --help
 ### **3. Enjoy your new system(s)**
 
 <img width="1888" height="915" alt="Screenshot_20260122_110553" src="https://github.com/user-attachments/assets/a2edcd1f-fe68-47d9-96ec-7b7f7a5de524" />
+
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
 ---
 
-## Modify
+## Modify/Extend
 
 > You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
 Or modify existing ones direcly. Can also see here for [examples](./archinstoo/examples)
