@@ -200,7 +200,7 @@ def select_additional_packages(
 
 			if prefetch:
 				enrich_package_info(prefetch[0], prefetch=prefetch[1:])
-		except (ValueError, IndexError):
+		except ValueError, IndexError:
 			pass
 
 	# Preview function for packages - enriches current and prefetches ±50 packages
