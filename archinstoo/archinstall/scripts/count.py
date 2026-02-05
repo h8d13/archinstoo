@@ -212,7 +212,10 @@ def resolve_deps(explicit: set[str]) -> set[str]:
 
 
 def count() -> None:
-	parser = argparse.ArgumentParser(description='Count packages from a saved config (resolves deps)')
+	parser = argparse.ArgumentParser(
+		prog='python -m archinstall --script count',
+		description='Count packages from a saved config (resolves deps)',
+	)
 	parser.add_argument('config', type=str, help='Path to user_configuration.json')
 
 	args = parser.parse_args()

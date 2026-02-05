@@ -108,12 +108,12 @@ def _prepare() -> int:
 
 
 def _log_sys_info(args: Arguments) -> None:
-	info(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
+	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
 	bitness = SysInfo._bitness()
-	info(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
-	info(f'Processor model detected: {SysInfo.cpu_model()}')
-	info(f'Memory statistics: {SysInfo.mem_total()} total installed')
-	info(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
+	debug(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
+	debug(f'Processor model detected: {SysInfo.cpu_model()}')
+	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
+	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
 	if args.debug:
 		from .lib.disk.utils import disk_layouts
 
@@ -180,8 +180,9 @@ def run_as_a_module() -> int:
 	script_peek = _script_from_argv()
 
 	is_rootless = script_peek in ROOTLESS_SCRIPTS
-	# only bootstrap for scripts that need root
-	if not is_rootless and (rc := _prepare()):
+	is_help = '-h' in sys.argv or '--help' in sys.argv
+	# skip bootstrap for rootless scripts or help requests
+	if not is_rootless and not is_help and (rc := _prepare()):
 		return rc
 
 	# now safe to import after bootstrap (or skipped for rootless)
