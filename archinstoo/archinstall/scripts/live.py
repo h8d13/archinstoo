@@ -162,6 +162,7 @@ def live() -> None:
 	config = handler.config
 
 	# Override defaults for live mode
+	args.skip_boot = True
 	config.kernels = []
 
 	profile_handler = ProfileHandler()
