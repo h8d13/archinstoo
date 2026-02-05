@@ -15,14 +15,14 @@ menu system for configuring and installing Arch Linux systems.
 OPTIONS
 -------
 
+--script NAME
+    Script to run (default: guided). Use ``--script list`` to see available scripts.
+
 --config PATH
     Path to a local JSON configuration file
 
 --config-url URL
     URL to a remote JSON configuration file
-
---script NAME
-    Script to run (default: guided). Use ``--script list`` to see available scripts.
 
 --dry-run
     Generate config and exit without installing
@@ -84,9 +84,9 @@ Dry run to generate config::
 
     archinstoo --dry-run
 
-Run on a live ARM system::
+See available scripts::
 
-    archinstoo --script live
+    archinstoo --script list
 
 SEE ALSO
 --------
