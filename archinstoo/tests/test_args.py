@@ -42,7 +42,7 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 		config=None,
 		config_url=None,
 		dry_run=False,
-		script=None,
+		script='guided',
 		mountpoint=Path('/mnt'),
 		skip_ntp=False,
 		skip_wkd=False,
