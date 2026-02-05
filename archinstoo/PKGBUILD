@@ -6,7 +6,7 @@
 # Contributor: Anton Hvornum <torxed@archlinux.org>
 
 pkgname=archinstoo-git
-pkgver=r5320.4f889ed7
+pkgver=r5321.1bdd8456
 pkgrel=1
 pkgdesc="Archinstall revamped"
 arch=(any)
@@ -45,7 +45,7 @@ optdepends=(
 )
 provides=(archinstoo)
 replaces=(archinstoo)
-source=("$pkgname::git+$url.git")
+source=("$pkgname::git+$url.git#branch=dot-rename")
 sha512sums=('SKIP')
 
 pkgver() {
