@@ -35,7 +35,7 @@ from archinstoo.lib.translationhandler import translation_handler
 
 
 def test_default_args(monkeypatch: MonkeyPatch) -> None:
-	monkeypatch.setattr('sys.argv', ['archinstall'])
+	monkeypatch.setattr('sys.argv', ['archinstoo'])
 	handler = ArchConfigHandler()
 	args = handler.args
 	assert args == Arguments(
@@ -60,7 +60,7 @@ def test_correct_parsing_args(
 	monkeypatch.setattr(
 		'sys.argv',
 		[
-			'archinstall',
+			'archinstoo',
 			'--config',
 			str(config_fixture),
 			'--config-url',
@@ -104,7 +104,7 @@ def test_config_file_parsing(
 	monkeypatch.setattr(
 		'sys.argv',
 		[
-			'archinstall',
+			'archinstoo',
 			'--config',
 			str(config_fixture),
 		],
@@ -157,7 +157,7 @@ def test_config_file_parsing(
 			sys_enc='UTF-8',
 			console_font='ter-v16b',
 		),
-		archinstall_language=translation_handler.get_language_by_abbr('en'),
+		archinstoo_language=translation_handler.get_language_by_abbr('en'),
 		disk_config=DiskLayoutConfiguration(
 			config_type=DiskLayoutType.Default,
 			device_modifications=[],
