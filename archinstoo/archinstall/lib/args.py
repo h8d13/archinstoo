@@ -225,7 +225,7 @@ class ArchConfigHandler:
 		parser.add_argument(
 			'--script',
 			nargs='?',
-			help='Script to run for installation',
+			help='Script to run for installation (default: guided)',
 			type=str,
 		)
 		parser.add_argument(
