@@ -32,8 +32,21 @@ Through this you can set-up server usecases or desktops and more utilities you m
 
 ## Example Stage 1 for Rasp Pi 5 Model B Rev 1.0
 
+This script is specifically for the Pi 5 Model B. Other Pi models may need different kernels and boot configurations.
+
 Stole a lot of parts of code from what I found online and slapped it all together.
 Sorry if credits got lost...
+
+**Default credentials after boot:**
+- `root:root`
+- `alarm:alarm`
+
+**Download the tarball first:**
+```shell
+curl -LO http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz
+```
+
+Placed in the same location as the following:
 
 ```shell
 #!/bin/bash
@@ -49,14 +62,18 @@ Sorry if credits got lost...
 # replacing the kernel and firmware
 # do some very basic set-up (ssh/locale/tty/fstab/cmdline/bootparams)
 
-# default alarm alarm and root root
 # once in, passwd && passwd alarm
 # or better yet create a new user
 
 [[ $EUID -ne 0 ]] && { echo "Run as root"; exit 1; }
 
+# IMPORTANT: Verify your target device with lsblk before running.
+# Wrong device = wiped drive.
 DEVICE="/dev/sdb"
 ARCHIVE="ArchLinuxARM-rpi-aarch64-latest.tar.gz"
+
+# Boot partition needs room for kernel, initramfs, and firmware.
+# 512MiB is generally enough but can bump to 1GiB if space allows.
 END_S="513MiB"
 
 ############ MAGIC RESET
@@ -126,7 +143,8 @@ echo "root=PARTUUID=${ROOT_PARTUUID} rw rootwait console=tty1 console=ttyAMA10,1
 echo "Boot partition kernel files:"
 find /mnt/boot -maxdepth 1 \( -name "Image*" -o -name "kernel*" -o -name "initramfs*" \) -exec ls -lh {} + 2>/dev/null || echo "WARNING: No kernel found on boot partition!"
 
-# Enable DHCP on all ethernet interfaces
+# Enable DHCP on all ethernet interfaces.
+# This only covers wired. For Wi-Fi I set it up through archinstoo menu network section
 mkdir -p /mnt/etc/systemd/network
 cat > /mnt/etc/systemd/network/20-wired.network << 'EOF'
 [Match]
@@ -136,7 +154,7 @@ Name=en*
 DHCP=yes
 EOF
 
-############ Enable services manually
+############ Enable some basic services manually (initial access)
 # Default target
 ln -sf /usr/lib/systemd/system/multi-user.target /mnt/etc/systemd/system/default.target
 
