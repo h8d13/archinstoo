@@ -2055,7 +2055,7 @@ msgstr ""
 msgid "save selections and abort"
 msgstr ""
 
-msgid "exit delete selections"
+msgid "exit delete selection"
 msgstr ""
 
 msgid "cancel"

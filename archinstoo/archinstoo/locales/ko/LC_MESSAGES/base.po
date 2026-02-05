@@ -831,7 +831,7 @@ msgid "save selections abort"
 msgstr ""
 
 #, fuzzy
-msgid "exit delete selections"
+msgid "exit delete selection"
 msgstr "현재 파티션 레이아웃"
 
 #, fuzzy
