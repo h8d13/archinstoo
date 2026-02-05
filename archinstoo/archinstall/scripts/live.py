@@ -23,6 +23,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		# Disable items irrelevant for live mode
 		global_menu.set_enabled('bootloader_config', False)
 		global_menu.set_enabled('kernels', False)
+		global_menu._item_group.find_by_key('disk_config').mandatory = False
 
 		if not args.advanced:
 			global_menu.set_enabled('parallel_downloads', False)
