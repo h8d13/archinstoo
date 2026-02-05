@@ -181,7 +181,7 @@ At this point we assume you have a working boot setup and a tty or access to ter
 
 This is a reduced version of `guided` that only aims to setup certain stuff. 
 
-> Removes bootloaders/disks and more things that are not needed for a running system.
+> Removes bootloaders and more things that are not needed for a running system.
 
 First `./DEV -h2t` downloads dependencies you may need (from the PKGBUILD). 
 
