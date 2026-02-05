@@ -1,0 +1,1233 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: et\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.3\n"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway vajab juurdepääsu teie seatile (riistvaraseadmete kogum, st klaviatuur, "
+"hiir jne."
+
+#, fuzzy
+msgid "Choose an option to give Sway access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"Valige valik, et anda Sway'le juurdepääs teie riistvarale"
+
+msgid "Seat access"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway vajab juurdepääsu teie seatile (riistvaraseadmete kogum, st klaviatuur, "
+"hiir jne."
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"Valige valik, et anda Sway'le juurdepääs teie riistvarale"
+
+#, fuzzy
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway vajab juurdepääsu teie seatile (riistvaraseadmete kogum, st klaviatuur, "
+"hiir jne."
+
+#, fuzzy
+msgid "Choose an option to give labwc access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"Valige valik, et anda Sway'le juurdepääs teie riistvarale"
+
+#, fuzzy
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway vajab juurdepääsu teie seatile (riistvaraseadmete kogum, st klaviatuur, "
+"hiir jne."
+
+#, fuzzy
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"Valige valik, et anda Sway'le juurdepääs teie riistvarale"
+
+msgid "Installed packages"
+msgstr "Installeeritud paketid"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr "Keskkonna tüüp: {}"
+
+#, fuzzy, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr "Archinstall vajab käivitamiseks juurkasutaja õigusi. Vaata --help."
+
+#, fuzzy
+msgid "Add a custom repository"
+msgstr "Lisa kohandatud peegel"
+
+#, fuzzy
+msgid "Change custom repository"
+msgstr "Muuda kohandatud peeglit"
+
+#, fuzzy
+msgid "Delete custom repository"
+msgstr "Kustuta kohandadtud peeglit"
+
+#, fuzzy
+msgid "Repository name"
+msgstr "Peegelregioon"
+
+msgid "Name"
+msgstr ""
+
+msgid "Url"
+msgstr ""
+
+#, fuzzy
+msgid "Select signature check"
+msgstr "Valige allkirja kontrollimise võimalus"
+
+#, fuzzy
+msgid "Signature check"
+msgstr "Valige allkirja kontrollimise võimalus"
+
+msgid "Select signature option"
+msgstr "Valige allkirja valik"
+
+#, fuzzy
+msgid "Add a custom server"
+msgstr "Lisa kohandatud peegel"
+
+#, fuzzy
+msgid "Change custom server"
+msgstr "Muuda kohandatud peeglit"
+
+#, fuzzy
+msgid "Delete custom server"
+msgstr "Kustuta kohandadtud peeglit"
+
+msgid "Server url"
+msgstr ""
+
+#, fuzzy
+msgid "Select regions"
+msgstr "Valige allkirja valik"
+
+msgid "Optional repositories"
+msgstr "Valikulised repositooriumid"
+
+#, fuzzy
+msgid "Add custom repository"
+msgstr "Lisa kohandatud peegel"
+
+#, fuzzy
+msgid "Add custom servers"
+msgstr "Lisa kohandatud peegel"
+
+msgid "Pacman misc options"
+msgstr ""
+
+#, fuzzy
+msgid "Additional repositories"
+msgstr "Valikulised repositooriumid"
+
+#, fuzzy
+msgid "Loading mirror regions..."
+msgstr "Peegel regioonid"
+
+msgid "Mirror regions"
+msgstr "Peegel regioonid"
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Show help"
+msgstr ""
+
+msgid "Exit help"
+msgstr ""
+
+msgid "Preview scroll up"
+msgstr ""
+
+msgid "Preview scroll down"
+msgstr ""
+
+msgid "Move up"
+msgstr ""
+
+msgid "Move down"
+msgstr ""
+
+msgid "Move right"
+msgstr ""
+
+msgid "Move left"
+msgstr ""
+
+msgid "Jump to entry"
+msgstr ""
+
+msgid "Skip selection (if available)"
+msgstr ""
+
+msgid "Reset selection (if available)"
+msgstr ""
+
+#, fuzzy
+msgid "Select on single select"
+msgstr "Valige allkirja kontrollimise võimalus"
+
+#, fuzzy
+msgid "Select on multi select"
+msgstr "Vali ajatsoon"
+
+msgid "Reset"
+msgstr ""
+
+#, fuzzy
+msgid "Skip selection menu"
+msgstr "Valige täitmisrežiim"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Parool"
+
+msgid "Password"
+msgstr "Parool"
+
+#, fuzzy
+msgid "Confirm password"
+msgstr "Muuda parool"
+
+msgid "The confirmation password did not match, please try again"
+msgstr ""
+
+#, fuzzy
+msgid "Not a valid directory"
+msgstr "Ei ole sobiv kataloog: {}"
+
+#, fuzzy
+msgid "Archinstoo help"
+msgstr "Archinstalli keel"
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "Kas olete kindel, et soovite seda seadistust lähtestada?"
+
+msgid "Only ASCII characters are supported"
+msgstr ""
+
+#, fuzzy
+msgid "Yes"
+msgstr "jah"
+
+msgid "No"
+msgstr ""
+
+#, fuzzy
+msgid " (default)"
+msgstr "(vaikimisi)"
+
+msgid "The specified configuration will be applied"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to continue?"
+msgstr "Kas soovite kasutada BTRFS-i tihendamist?"
+
+msgid "Configuration"
+msgstr "Konfiguratsioon"
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "Salvesta konfiguratsioon"
+
+msgid "Add interface"
+msgstr "Lisa liides"
+
+msgid "Edit interface"
+msgstr "Muuda liidest"
+
+msgid "Delete interface"
+msgstr "Kustutage liides"
+
+#, fuzzy
+msgid "Interfaces"
+msgstr "Lisa liides"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr ""
+"Valige, millist režiimi soovite konfigureerida \"{}\" või jätke vahele, "
+"kasutada vaikimisi režiimi \"{}\""
+
+msgid "Modes"
+msgstr ""
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr "Sisestage IP ja alamvõrk {} (näide: 192.168.0.5/24): "
+
+msgid "IP address"
+msgstr ""
+
+#, fuzzy
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr ""
+"Sisestage oma võrguvärava (ruuteri) IP-aadress või jätke tühjaks, kui see "
+"puudub: "
+
+msgid "Gateway address"
+msgstr ""
+
+#, fuzzy
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr ""
+"Sisestage oma DNS-serverid (tühikuga eraldatud, jätke tühjaks, kui neid ei "
+"ole): "
+
+#, fuzzy
+msgid "DNS servers"
+msgstr "Puudub audio server"
+
+msgid "Network configuration"
+msgstr "Võrgu konfiguratsioon"
+
+#, fuzzy
+msgid "Configure interfaces"
+msgstr "Konfigureeritud {} liidesed"
+
+msgid "Root password"
+msgstr "Juur parool"
+
+msgid "User account"
+msgstr "Kasutaja konto"
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Kasutaja konto"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Kas see profiil peaks olema paigaldamiseks lubatud?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "Add a user"
+msgstr "Lisa kasutaja"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+msgid "Change password"
+msgstr "Muuda parool"
+
+#, fuzzy
+msgid "Change shell"
+msgstr "Failisüsteemi muutmine"
+
+msgid "Manage groups"
+msgstr ""
+
+msgid "Promote/Demote user"
+msgstr "Edenda/alanda kasutajat"
+
+msgid "Delete User"
+msgstr "Kustuta kasutaja"
+
+#, fuzzy
+msgid "User"
+msgstr "Kasutajanimi : "
+
+#, fuzzy
+msgid "The username you entered is invalid"
+msgstr "Teie sisestatud kasutajanimi ei sobi. Proovige uuesti"
+
+msgid "Invalid git URL"
+msgstr ""
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+#, fuzzy
+msgid "Username"
+msgstr "Kasutajanimi : "
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "Kas \"{}\" peaks olema superkasutaja (sudo)?"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Archinstalli keel"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Failisüsteemi muutmine"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr ""
+"Kas soovite kasutada automaatset ajasünkroniseerimist (NTP) vaikimisi "
+"ajaserveritega?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"NTP toimimiseks võib olla vaja riistvara aega ja muid "
+"konfiguratsioonijärgseid samme.\n"
+"Lisateavet leiate Archi wikist"
+
+msgid "Hostname"
+msgstr "Hostinimi"
+
+msgid "Timezone"
+msgstr "Ajatsoon"
+
+#, fuzzy
+msgid "Select language"
+msgstr "Kohalik keel"
+
+#, fuzzy, python-brace-format
+msgid "Repositories: {}"
+msgstr "Peegelregioon"
+
+#, fuzzy
+msgid "Loading packages..."
+msgstr "Täiendavad paketid"
+
+#, fuzzy
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"Paigaldatakse ainult sellised paketid nagu base, base-devel, linux, linux-"
+"firmware, efibootmgr ja valikulised profiilipaketid."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr ""
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "Täiendavad paketid"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "Täiendavad paketid"
+
+msgid "Not found in AUR"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr ""
+"See valik võimaldab installimise ajal valida paralleelsete allalaadimiste "
+"arvu"
+
+#, fuzzy
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"Sisestage lubatavate paralleelsete allalaadimiste arv.\n"
+" (Sisestage väärtus vahemikus 1 kuni {max_downloads})\n"
+"note:"
+
+#, fuzzy, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+" - Minimaalne väärtus   : 1 ( Võimaldab 1 paralleelset allalaadimist, "
+"võimaldab 2 allalaadimist korraga )"
+
+#, fuzzy
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - Keela/Vaikimisi : 0 ( keelab paralleelse allalaadimise, võimaldab ainult "
+"1 allalaadimist korraga )"
+
+msgid "Invalid download number"
+msgstr ""
+
+msgid "Number downloads"
+msgstr ""
+
+#, fuzzy
+msgid "What would you like to do next?"
+msgstr "Kas soovite kasutada BTRFS-i tihendamist?"
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Do you really want to abort?"
+msgstr "Kas sa tahad katkestada?"
+
+#, fuzzy
+msgid "Kernel"
+msgstr "Kernelid"
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"Parima ühilduvuse saavutamiseks oma AMD riistvaraga võiksite kasutada kas "
+"kõiki avatud lähtekoodiga või AMD/ATI valikuid."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"Parima ühilduvuse saavutamiseks oma Inteli riistvaraga võiksite kasutada kas "
+"kõiki avatud lähtekoodiga või Inteli valikuid.\n"
+"\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"Parima ühilduvuse saavutamiseks oma Nvidia riistvaraga peaksite kasutama "
+"Nvidia enda toodetud draiverit.\n"
+"\n"
+"\n"
+
+msgid "Info"
+msgstr ""
+
+msgid "Would you like to use swap on zram?"
+msgstr "Kas soovite zramis kasutada swapi?"
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "Valige kinnitus punkt :"
+
+msgid "Bootloader"
+msgstr "Buudilaadija"
+
+msgid "Unified kernel images"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to use unified kernel images?"
+msgstr "Kas soovite zramis kasutada swapi?"
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr ""
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr ""
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Print service"
+msgstr ""
+
+#, fuzzy
+msgid "Power management"
+msgstr "Partitsiooni haldamine:{}"
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Partitsiooni haldamine:{}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Muuda"
+
+#, fuzzy
+msgid "Would you like to configure Bluetooth?"
+msgstr "Kas soovite kasutada BTRFS-i tihendamist?"
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "Kas soovite kasutada BTRFS-i tihendamist?"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Kas soovite kasutada BTRFS-i tihendamist?"
+
+msgid "Keyboard layout"
+msgstr "Klaviatuuri paigutus"
+
+msgid "Locale language"
+msgstr "Kohalik keel"
+
+msgid "Locale encoding"
+msgstr "Kohaliku keele kodeering"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Archinstalli keel"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Ketta konfiguratsioon"
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Locales"
+msgstr ""
+
+msgid "Pacman config"
+msgstr ""
+
+msgid "Swap"
+msgstr "Swap"
+
+msgid "Kernels"
+msgstr "Kernelid"
+
+msgid "Profile"
+msgstr "Profiil"
+
+msgid "Applications"
+msgstr ""
+
+#, fuzzy
+msgid "Network config"
+msgstr "Võrgu konfiguratsioon"
+
+msgid "Parallel Downloads"
+msgstr "Paralleelsed allalaadimised"
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "Automaatne ajasünkroonimine"
+
+msgid "Additional packages"
+msgstr "Täiendavad paketid"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Kohandatud peegel"
+
+msgid "Install"
+msgstr "Install"
+
+msgid "Abort"
+msgstr "Katkesta"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr ""
+"Tuleb määrata kas root-sõna või vähemalt 1 kasutaja, kellel on sudo õigused"
+
+#, fuzzy
+msgid "Language"
+msgstr "Kohalik keel"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Archinstalli keel"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "Vali ajatsoon"
+
+msgid "Cyan"
+msgstr ""
+
+#, fuzzy
+msgid "Green"
+msgstr "Tervitaja"
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+msgid "Blue"
+msgstr ""
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "Valige tegevus '{}' jaoks"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "Täiendavad paketid"
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "NTP"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Kohandatud peegel"
+
+msgid "Commands"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Configuration type: {}"
+msgstr "Konfiguratsioon"
+
+#, fuzzy
+msgid "Mountpoint"
+msgstr "Paigalduspunkt: "
+
+#, fuzzy
+msgid "LVM configuration type"
+msgstr "Puudub konfiguratsioon"
+
+msgid "Disk encryption"
+msgstr "Ketta krüpteerimine"
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr ""
+
+msgid "Swap on zram"
+msgstr ""
+
+msgid "Compression algorithm"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "Headers"
+msgstr ""
+
+msgid "Missing configurations:\n"
+msgstr "Puuduvad konfiguratsioonid:\n"
+
+msgid "Profiles"
+msgstr "Profiilid"
+
+msgid "Graphics driver"
+msgstr "Graafika draiver"
+
+msgid "Greeter"
+msgstr "Tervitaja"
+
+#, fuzzy
+msgid "Selected mirror regions"
+msgstr "Peegel regioonid"
+
+#, fuzzy
+msgid "Custom servers"
+msgstr "Kohandatud peegel"
+
+#, fuzzy
+msgid "Custom repositories"
+msgstr "Valikulised repositooriumid"
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selection"
+msgstr "Praegune profiilivalik"
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "Tühista"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Installimiseks soovitud hostinimi: "
+
+msgid "Type"
+msgstr ""
+
+#, fuzzy
+msgid "Selected profiles: "
+msgstr "Kustuta profiil"
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "Valige üks või mitu seadet mida kasutada ja konfigureerida"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr "Ei õnnestu profiili hankida määratud url'ist: {}"
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+"Profiilidel peab olema unikaalne nimi, kuid leiti topeltnimega profiilide "
+"määratlusi: {}"
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] Siin on loodud logifail: {}"
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"    Esitage see probleem (ja fail) aadressil https://github.com/archlinux/"
+"archinstoo/issues"
+
+msgid "Syncing the system..."
+msgstr ""
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr ""
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+
+msgid "Package group:"
+msgstr ""
+
+msgid "Use a best-effort default partition layout"
+msgstr "Kasutage parimat võimalikku vaikimisi partitsiooni paigutust"
+
+msgid "Manual Partitioning"
+msgstr "Käsitsi partitsioneerimine"
+
+msgid "Pre-mounted configuration"
+msgstr "Eelnevalt paigaldatud konfiguratsioon"
+
+msgid "Unknown"
+msgstr "Tundmatu"
+
+#, fuzzy
+msgid "Default layout"
+msgstr "Ketta paigutus"
+
+#, fuzzy
+msgid "No Encryption"
+msgstr "Krüpteerimise tüüp"
+
+msgid "LUKS"
+msgstr ""
+
+msgid "LVM on LUKS"
+msgstr ""
+
+msgid "LUKS on LVM"
+msgstr ""
+
+msgid "weak"
+msgstr "nõrk"
+
+msgid "moderate"
+msgstr "keskmine"
+
+msgid "strong"
+msgstr "tugev"
+
+msgid "Removable"
+msgstr ""
+
+msgid "Copy ISO network configuration to installation"
+msgstr "ISO-võrgu konfiguratsiooni kopeerimine paigaldusse"
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+msgid "Manual configuration"
+msgstr "Manuaalne konfiguratsioon"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr ""
+"Pacman on juba käivitatud ja ootab maksimaalselt 10 minutit, kuni see lõpeb."
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"Eelnev pacmani lukk ei ole kunagi väljunud. Enne archinstoo'i kasutamist "
+"puhastage olemasolevad pacmani sessioonid."
+
+msgid "Confirm and exit"
+msgstr "Kinnita ja lahku"
+
+msgid "Cancel"
+msgstr "Tühista"
+
+msgid "Back"
+msgstr "Tagasi"
+
+msgid "Encryption type"
+msgstr "Krüpteerimise tüüp"
+
+msgid "Encryption password"
+msgstr "Krüpteerimise parool"
+
+msgid "Iteration time"
+msgstr ""
+
+msgid "Partitions"
+msgstr "Partitsioonid"
+
+#, fuzzy
+msgid "LVM volumes"
+msgstr "Alamköite määramine"
+
+msgid "Partitions to be encrypted"
+msgstr "Krüpteeritavad partitsioonid"
+
+#, fuzzy
+msgid "LVM volumes to be encrypted"
+msgstr "Krüpteeritavad partitsioonid"
+
+#, fuzzy
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr ""
+"Sisestage ketta krüpteerimise parool (krüpteerimise puudumisel jätke see "
+"tühjaks): "
+
+#, fuzzy
+msgid "Disk encryption password"
+msgstr "Krüpteerimise parool"
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr ""
+
+msgid "Higher values increase security but slow down boot time"
+msgstr ""
+
+msgid "Iteration time must be at least 100ms"
+msgstr ""
+
+msgid "Iteration time must be at most 120000ms"
+msgstr ""
+
+msgid "Please enter a valid number"
+msgstr ""
+
+msgid "Suggest partition layout"
+msgstr "Soovitage partitsiooni paigutust"
+
+msgid "Create empty layout (wipe all)"
+msgstr ""
+
+msgid "Remove all newly added partitions"
+msgstr "Eemaldage kõik äsja lisatud partitsioonid"
+
+msgid "Assign mountpoint"
+msgstr "Määra paigaldamis punkt"
+
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "Märgistada/mittemärgistada vormindamiseks (kustutab andmed)"
+
+#, fuzzy
+msgid "Mark/Unmark as ESP"
+msgstr "Märgistada/mittemärgistada käivitatavak"
+
+#, fuzzy
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "Märgistada/mittemärgistada käivitatavak"
+
+msgid "Mark/Unmark as bootable"
+msgstr "Märgistada/mittemärgistada käivitatavak"
+
+msgid "Change filesystem"
+msgstr "Failisüsteemi muutmine"
+
+msgid "Mark/Unmark as compressed"
+msgstr "Märgistada/mittemärgistada kui tihendatud"
+
+#, fuzzy
+msgid "Mark/Unmark as nodatacow"
+msgstr "Märgistada/mittemärgistada käivitatavak"
+
+msgid "Set subvolumes"
+msgstr "Alamköite määramine"
+
+msgid "Delete partition"
+msgstr "Kustuta partitsioon"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr "Partitsiooni haldamine:{}"
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr "Kogupikkus: {}"
+
+msgid "Wipe"
+msgstr ""
+
+#, fuzzy
+msgid "Partition - New"
+msgstr "Partitsioon"
+
+msgid "Partition"
+msgstr "Partitsioon"
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr ""
+"See partitsioon on praegu krüpteeritud, selle vormindamiseks tuleb määrata "
+"failisüsteem"
+
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+"Partitsiooni kinnituspunktid on suhtelised installeerimise sees, näiteks "
+"boot oleks /boot."
+
+#, fuzzy
+msgid "Filesystem"
+msgstr "Failisüsteemi muutmine"
+
+msgid "Invalid size"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr "Praegused vabad sektorid seadmes {}:"
+
+#, fuzzy, python-brace-format
+msgid "Size: {} / {}"
+msgstr "Kogupikkus: {}"
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr ""
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Size (default: {}): "
+msgstr "Sisestage algussektor (vaikimisi: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr "See eemaldab kõik äsja lisatud partitsioonid, jätka?"
+
+#, fuzzy
+msgid "Disk configuration type"
+msgstr "Ketta konfiguratsioon"
+
+msgid "Root mount directory"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to use compression or disable CoW?"
+msgstr "Kas soovite kasutada BTRFS-i tihendamist?"
+
+msgid "Use compression"
+msgstr ""
+
+msgid "Disable Copy-on-Write"
+msgstr ""
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr "Kas soovite kasutada BTRFS-i alamkogusid vaikimisi struktuuriga?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "Kas soovite luua eraldi partitsiooni /home jaoks?"
+
+msgid "Add subvolume"
+msgstr "Lisage alamhulk"
+
+msgid "Edit subvolume"
+msgstr "Osahulga redigeerimine"
+
+msgid "Delete subvolume"
+msgstr "Kustuta osahulk"
+
+msgid "Value cannot be empty"
+msgstr ""
+
+#, fuzzy
+msgid "Subvolume name"
+msgstr "Alamhulga nimi "
+
+msgid "Subvolume mountpoint"
+msgstr "Alamhulga kinnituspunkt"
+
+msgid "Starting device modifications in "
+msgstr ""
+
+#, fuzzy
+msgid "Partitioning"
+msgstr "Partitsioon"
+
+msgid "Snapshot type"
+msgstr ""
+
+msgid "Physical volumes"
+msgstr ""
+
+msgid "Volumes"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "Keskkonna tüüp: {}"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr ""

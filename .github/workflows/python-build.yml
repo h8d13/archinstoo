@@ -1,8 +1,8 @@
 # This workflow will build Python packages on every commit.
 
-name: Build archinstall
+name: Build archinstoo
 
-on: [ pull_request ]
+on: [ push ]
 
 jobs:
   deploy:
@@ -11,7 +11,7 @@ jobs:
       image: archlinux/archlinux:latest
       options: --privileged
     steps:
-      - uses: actions/checkout@de0fac2545e050ba11c8b8c7433b63f27a47d7e9 # v4
+      - uses: actions/checkout@v4
       - name: Prepare arch
         run: |
           pacman-key --init
@@ -20,16 +20,16 @@ jobs:
           pacman --noconfirm -Sy python-setuptools python-pip python-build
           pacman --noconfirm -Sy python-pyparted
       - name: Remove existing archinstall (if any)
-        run: pip uninstall -y archinstall --break-system-packages || true
-      - name: Build archinstall
+        run: pip uninstall -y archinstoo --break-system-packages || true
+      - name: Build archinstoo
         run: python -m build --wheel archinstoo
-      - name: Install archinstall
+      - name: Install archinstoo
         run: pip install archinstoo/dist/*.whl --break-system-packages --no-deps
-      - name: Run archinstall
+      - name: Run archinstoo
         run: |
           python -V
-          archinstall --help
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+          archinstoo --help
+      - uses: actions/upload-artifact@v4
         with:
-          name: archinstall
+          name: archinstoo
           path: archinstoo/dist/*

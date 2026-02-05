@@ -184,7 +184,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 ## 0.0.01-5
 
-    - Dependency Injection refactor (from archinstall issues #4149)
+    - Dependency Injection refactor (from archinstoo issues #4149)
         - Remove module-level singletons: device_handler, profile_handler, mirror_list_handler, application_handler
         - Consumer classes accept optional handler params with fallback defaults
         - Keep logger and translation_handler as singletons

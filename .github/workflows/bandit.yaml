@@ -1,4 +1,4 @@
-on: [ push, pull_request ]
+on: [ push ]
 name: Bandit security checkup
 jobs:
     bandit:
@@ -9,4 +9,4 @@ jobs:
             - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
             - run: pacman --noconfirm -Syu bandit
             - name: Security checkup with Bandit
-              run: bandit -r archinstoo/archinstall -c archinstoo/pyproject.toml || exit 0
+              run: bandit -r archinstoo/archinstoo -c archinstoo/pyproject.toml || exit 0

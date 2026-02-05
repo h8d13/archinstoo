@@ -1,0 +1,1219 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ur\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway kay liay access zarori hai (hardware devices ki fe'hrst jaisa ke'h "
+"keyboard, mouse, etc)"
+
+#, fuzzy
+msgid "Choose an option to give Sway access to your hardware"
+msgstr "Sway ko apnay hardware tak rasai kay liay aik ka intkh'ab krein"
+
+msgid "Seat access"
+msgstr "Tak rasai"
+
+#, fuzzy
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"niri ko apki rasai ki zrorat hai (hardware devices ki fe'hrst jaisa ke'h "
+"keyboard, mouse, etc)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+"Niri ko apnay hardware tak rasai kay liay aik ikhtiar ka intkh'ab krein"
+
+#, fuzzy
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"labwc ko apki rasai ki zrorat hai (hardware devices ki fe'hrst jaisa ke'h "
+"keyboard, mouse, etc)"
+
+#, fuzzy
+msgid "Choose an option to give labwc access to your hardware"
+msgstr ""
+"Labwc ko apnay hardware tak rasai kay liay aik ikhtiar ka intkh'ab krein"
+
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Hyperland kay liay access zarori hai (hardware devices ki fe'hrst jaisa ke'h "
+"keyboard, mouse, etc)"
+
+#, fuzzy
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr ""
+"Hyperland ko apnay hardware tak rasai kay liay aik ikhtiar ka intkh'ab krein"
+
+msgid "Installed packages"
+msgstr "Installed packages"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr "Environment ki type: {}"
+
+#, fuzzy, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr ""
+"Archinstall ko chalanay kay liay root hona zarori hai. ziada kay liay --help "
+"daykhein."
+
+#, fuzzy
+msgid "Add a custom repository"
+msgstr "Custom repository ko shamil krein"
+
+#, fuzzy
+msgid "Change custom repository"
+msgstr "Custom repository ko change krein"
+
+#, fuzzy
+msgid "Delete custom repository"
+msgstr "Custom repository ko hazif krein"
+
+#, fuzzy
+msgid "Repository name"
+msgstr "Repository ka naam"
+
+msgid "Name"
+msgstr "Naam"
+
+msgid "Url"
+msgstr "Url"
+
+#, fuzzy
+msgid "Select signature check"
+msgstr "Signature kay check karnay kay liay, ko select krein"
+
+#, fuzzy
+msgid "Signature check"
+msgstr "Signature kay check"
+
+msgid "Select signature option"
+msgstr "Signature kay ikhtiar ko select krein"
+
+#, fuzzy
+msgid "Add a custom server"
+msgstr "Aik custom server ko shamil krein"
+
+#, fuzzy
+msgid "Change custom server"
+msgstr "Custom server ko change krein"
+
+#, fuzzy
+msgid "Delete custom server"
+msgstr "Custom server ko hazif krein"
+
+msgid "Server url"
+msgstr "Server ka url"
+
+#, fuzzy
+msgid "Select regions"
+msgstr "Select regions"
+
+msgid "Optional repositories"
+msgstr "Ikhtiari repositories"
+
+#, fuzzy
+msgid "Add custom repository"
+msgstr "Custom repository ko shamil krein"
+
+#, fuzzy
+msgid "Add custom servers"
+msgstr "Custom servers ko shamil krein"
+
+msgid "Pacman misc options"
+msgstr ""
+
+#, fuzzy
+msgid "Additional repositories"
+msgstr "Ikhtiari repositories"
+
+#, fuzzy
+msgid "Loading mirror regions..."
+msgstr "Loading mirrors ka ilaqa"
+
+msgid "Mirror regions"
+msgstr "Mirrors ka ilaqa"
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Show help"
+msgstr "Madad dikhain"
+
+msgid "Exit help"
+msgstr "Madad say nikalein"
+
+msgid "Preview scroll up"
+msgstr "Scroll up dikhain"
+
+msgid "Preview scroll down"
+msgstr "Scroll down dikhain"
+
+msgid "Move up"
+msgstr "Opar jain"
+
+msgid "Move down"
+msgstr "Neechay jain"
+
+msgid "Move right"
+msgstr "Right jain"
+
+msgid "Move left"
+msgstr "Left jain"
+
+msgid "Jump to entry"
+msgstr "Entry par jump krin"
+
+msgid "Skip selection (if available)"
+msgstr "Intkhab skip krin (agar mujud ho)"
+
+msgid "Reset selection (if available)"
+msgstr "Intkhab reset krin (agar mujud ho)"
+
+msgid "Select on single select"
+msgstr "Sigle select ko muntikhab krein"
+
+#, fuzzy
+msgid "Select on multi select"
+msgstr "Multi select ka intikhab krein"
+
+msgid "Reset"
+msgstr "Reset"
+
+msgid "Skip selection menu"
+msgstr "Selection menu skip krein"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Password"
+
+msgid "Password"
+msgstr "Password"
+
+#, fuzzy
+msgid "Confirm password"
+msgstr "Password ko confirm krein"
+
+msgid "The confirmation password did not match, please try again"
+msgstr ""
+"Password ki confirmation nahi mil rhi, brah e maharbani dobara koshish krein"
+
+#, fuzzy
+msgid "Not a valid directory"
+msgstr "Sahi directory nahi hai"
+
+#, fuzzy
+msgid "Archinstoo help"
+msgstr "Archinstall ki madad"
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "Is tarte'd ko reset karnay kay liay kia aap pur yaqeen hein?"
+
+msgid "Only ASCII characters are supported"
+msgstr "Sirf ASCII alfaz ko support hasil hai"
+
+msgid "Yes"
+msgstr "Haan"
+
+msgid "No"
+msgstr "Nahi"
+
+msgid " (default)"
+msgstr " (default)"
+
+msgid "The specified configuration will be applied"
+msgstr "Matloba tarteb ko apply kia jayga"
+
+#, fuzzy
+msgid "Would you like to continue?"
+msgstr "Kia aap jari rakhna chatay hain?"
+
+msgid "Configuration"
+msgstr "tarteb"
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "tartebat mahfoz krein"
+
+msgid "Add interface"
+msgstr "Interface shamil krein"
+
+msgid "Edit interface"
+msgstr "Interface edit krein"
+
+msgid "Delete interface"
+msgstr "Interface delete krein"
+
+#, fuzzy
+msgid "Interfaces"
+msgstr "Interfaces"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr "IP-config mode main sahi IP ko aap darj krein"
+
+#, fuzzy, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr "Kis mode ki tarteb \"{}\" yahan karni hai, intkhab krein"
+
+msgid "Modes"
+msgstr "Modes"
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr ""
+"IP aur subnet {} kay liay dar'j krein (masal kay taur par: 192.168.0.5/24): "
+
+msgid "IP address"
+msgstr "IP address"
+
+#, fuzzy
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr ""
+"A'pnay gateway (router) IP address dar'j krein (khali chodain, na honay kay "
+"liay)"
+
+msgid "Gateway address"
+msgstr "Gateway ka address"
+
+#, fuzzy
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr ""
+"A'pnay DNS servers dar'j krein (space se alag, khali chodain agar koi nahi)"
+
+#, fuzzy
+msgid "DNS servers"
+msgstr "DNS servers"
+
+msgid "Network configuration"
+msgstr "Network ki tarteb"
+
+#, fuzzy
+msgid "Configure interfaces"
+msgstr "Tateb shuda interfaces"
+
+msgid "Root password"
+msgstr "Root ka password"
+
+msgid "User account"
+msgstr "Saraf ka account"
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Saraf ka account"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Kia is profile ko enable karna hai installation kay liay?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "Add a user"
+msgstr "Aik sarif sham'il krein"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+msgid "Change password"
+msgstr "Password badlein"
+
+#, fuzzy
+msgid "Change shell"
+msgstr "Filesystem badlain"
+
+#, fuzzy
+msgid "Manage groups"
+msgstr "Package ka group:"
+
+msgid "Promote/Demote user"
+msgstr "sarif ko promote/demote krein"
+
+msgid "Delete User"
+msgstr "sarif hazif krein"
+
+msgid "User"
+msgstr "Saraf"
+
+#, fuzzy
+msgid "The username you entered is invalid"
+msgstr "Darj shuda username galat hai, dubara koshish krein"
+
+#, fuzzy
+msgid "Invalid git URL"
+msgstr "Size sahi nahi"
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+#, fuzzy
+msgid "Username"
+msgstr "Saraf ka naam: "
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "Kia \"{}\" ko aik superuser (sudo) hona chahiay?\n"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Archinstall say nikalein"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "System reboot krein"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr ""
+"Kia Aap time ki automatic muta'bqat (NTP) default time servers kay sath "
+"istimal karna chahtay hein?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"NTP kay kam karnay kay liay hardware ka time aur dosri tertebe'n zarori ho "
+"sakti hein\n"
+"Mazeed ma'ulomat kay liay, Arch wiki check krein"
+
+msgid "Hostname"
+msgstr "Hostname"
+
+msgid "Timezone"
+msgstr "Timezone"
+
+#, fuzzy
+msgid "Select language"
+msgstr "Zuban ka intikhab"
+
+#, fuzzy, python-brace-format
+msgid "Repositories: {}"
+msgstr "Repositories: {}"
+
+#, fuzzy
+msgid "Loading packages..."
+msgstr "Loading packages..."
+
+#, fuzzy
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"Sirf packages jaisa ke'h base, base-devel, linux, linux-firmware, efibootmgr "
+"aur ikhti'ari profile packages hi install hein."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr ""
+"koi bhi packages neechay wali feharast main say azafi tor par install karnay "
+"kay liay"
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "Azafi packages"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "Loading packages..."
+
+msgid "Not found in AUR"
+msgstr ""
+
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr ""
+"Package download kay doran parallel downloads kay number ko qabil karnay kay "
+"liay ikhtiar krein"
+
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"Parallel downloads kay number ko darj krein qabil karnay kay liay.\n"
+"\n"
+"Note:\n"
+
+#, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+" - Maximum safarish karda value   : {} ( {} downloads ki aik waqat main "
+"ajazat hai )"
+
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - Disable/Default : 0 ( Parallel download ko disable krnay kay liay, sirf 1 "
+"download ki aik waqat main ajazat hai )\n"
+
+msgid "Invalid download number"
+msgstr "Download ka number sahi nahi"
+
+msgid "Number downloads"
+msgstr "Downloads kay number"
+
+#, fuzzy
+msgid "What would you like to do next?"
+msgstr "Is say agay app kia krna chahay gay?"
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Do you really want to abort?"
+msgstr "Kia aap sach mein yeh band karna chahtay hein?"
+
+#, fuzzy
+msgid "Kernel"
+msgstr "Kernel"
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"AMD hardware ki achi mutab'qat kay liay, aap ya to tamam open-source ya "
+"AMD / ATI options ka istimal karna chahtay hein."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"Intel hardware ki achi mutab'qat kay liay, aap ya to tamam open-source ya "
+"Intel options ka istimal karna chahtay hein.\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"Nvidia hardware ki achi mutab'qat kay liay, aap ya to tamam Nvidia malki'ati "
+"driver istimal karna chahtay hein.\n"
+
+msgid "Info"
+msgstr "Info"
+
+msgid "Would you like to use swap on zram?"
+msgstr "Kia aap zram par swap istimal karna chahtay hein?"
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "Aik mount point muntkh'b krein :"
+
+msgid "Bootloader"
+msgstr "Bootloader"
+
+msgid "Unified kernel images"
+msgstr "Unified kernel images"
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Enabled"
+msgstr "Enabled"
+
+msgid "Disabled"
+msgstr "Disabled"
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr ""
+
+msgid "Would you like to use unified kernel images?"
+msgstr "Kia aap unified kernel images kay istmal ko pasand krein gay?"
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr ""
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr ""
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr "UEFI nahi hai or kuch ikhtiar band hain"
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Print service"
+msgstr ""
+
+#, fuzzy
+msgid "Power management"
+msgstr "Partiotion ki management: {}"
+
+msgid "Firewall"
+msgstr ""
+
+msgid "Management"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Edit"
+
+#, fuzzy
+msgid "Would you like to configure Bluetooth?"
+msgstr "Kia aap jari rakhna chatay hain?"
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "Kia aap jari rakhna chatay hain?"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Kia aap jari rakhna chatay hain?"
+
+msgid "Keyboard layout"
+msgstr "Keyboard ka layout"
+
+msgid "Locale language"
+msgstr "Locale language"
+
+msgid "Locale encoding"
+msgstr "Locale encoding"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Archinstall ki madad"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Disk ki tart'b"
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Locales"
+msgstr "Locales"
+
+msgid "Pacman config"
+msgstr ""
+
+msgid "Swap"
+msgstr "Swap"
+
+msgid "Kernels"
+msgstr "Kernels"
+
+msgid "Profile"
+msgstr "Profile"
+
+msgid "Applications"
+msgstr ""
+
+#, fuzzy
+msgid "Network config"
+msgstr "Network ki tarteb"
+
+msgid "Parallel Downloads"
+msgstr "Parallel Downloads"
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "Khudkar time sync (NTP)"
+
+msgid "Additional packages"
+msgstr "Azafi packages"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Custom mirrors"
+
+msgid "Install"
+msgstr "Install"
+
+msgid "Abort"
+msgstr "Khatam krein"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr "Ya tu root ka password ya kam az kam 1 superuser zaror bataein"
+
+#, fuzzy
+msgid "Language"
+msgstr "Locale language"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Archinstall ki madad"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "Aik timezone ka intikhab krein"
+
+msgid "Cyan"
+msgstr ""
+
+#, fuzzy
+msgid "Green"
+msgstr "Greeter"
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+msgid "Blue"
+msgstr ""
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "'{}' kay liay aik action muntkh'b krein"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "Azafi packages"
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "NTP"
+msgstr "NTP"
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Custom mirrors"
+
+msgid "Commands"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Configuration type: {}"
+msgstr "Tarteb ki type: {}"
+
+#, fuzzy
+msgid "Mountpoint"
+msgstr "Mountpoint"
+
+#, fuzzy
+msgid "LVM configuration type"
+msgstr "LVM tarteb ki type"
+
+msgid "Disk encryption"
+msgstr "Desk ki encryption"
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr ""
+
+msgid "Swap on zram"
+msgstr "Zram main Swap"
+
+msgid "Compression algorithm"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "Headers"
+msgstr ""
+
+msgid "Missing configurations:\n"
+msgstr "Gum shuda'h tartebat:\n"
+
+msgid "Profiles"
+msgstr "Profiles"
+
+msgid "Graphics driver"
+msgstr "Graphic driver"
+
+msgid "Greeter"
+msgstr "Greeter"
+
+#, fuzzy
+msgid "Selected mirror regions"
+msgstr "Muntkhab mirrors ka ilaqa"
+
+#, fuzzy
+msgid "Custom servers"
+msgstr "Custom servers"
+
+#, fuzzy
+msgid "Custom repositories"
+msgstr "Custom repositories"
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selection"
+msgstr "mojoda profile selection"
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "Manso'kh krein"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Installtion kay liay pasandida hostname: "
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Selected profiles: "
+msgstr "Muntkhab Profiles: "
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "Aik yah ziada devices ka intikhab krein istimal aur tarteb krein"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr "muntkh'b url: {} say profile hasil krna mumkin nahi"
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+"Profiles ka munfirad hona zarori hai, lakin profile ki tareef duhray namoo "
+"kay sath mili hai: {}"
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] Yahan log file banai ja chuki hai: {}"
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"Brah e meharbani is issue (aur file) ko https://github.com/archlinux/"
+"archinstoo/issues par submit krein"
+
+msgid "Syncing the system..."
+msgstr ""
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr "Time sync (timedatectl show) kay mukamal honay ka intzar hai."
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+"Khud kar time sync kay intzar ko khatam krein (yeh issue bana sakta hai "
+"installation kay duran agar time sync say out hota hai)"
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+"Arch Linux keyring sync (archlinux-keyring-wkd-sync) kay mukamal honay ka "
+"intzar hai."
+
+msgid "Package group:"
+msgstr "Package ka group:"
+
+msgid "Use a best-effort default partition layout"
+msgstr "Mumkina best-effort default partition ka layout istimal krein"
+
+msgid "Manual Partitioning"
+msgstr "Manual Partitioning"
+
+msgid "Pre-mounted configuration"
+msgstr "Pre-mounted tarteb"
+
+msgid "Unknown"
+msgstr "Maloom nahi"
+
+#, fuzzy
+msgid "Default layout"
+msgstr "Default layout"
+
+#, fuzzy
+msgid "No Encryption"
+msgstr "Koi encryption nahi"
+
+msgid "LUKS"
+msgstr "LUKS"
+
+msgid "LVM on LUKS"
+msgstr "LUKS par LVM"
+
+msgid "LUKS on LVM"
+msgstr "LVM par LUKS"
+
+msgid "weak"
+msgstr "Kamzor"
+
+msgid "moderate"
+msgstr "Darmiyana"
+
+msgid "strong"
+msgstr "Mazbot"
+
+msgid "Removable"
+msgstr ""
+
+msgid "Copy ISO network configuration to installation"
+msgstr "ISO network tarteb ko installation par copy krein"
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+msgid "Manual configuration"
+msgstr "Manual tarteb"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr ""
+"Pacman pehlay hi chal rha hay, maximum 10 minutes intizar hay k woh khatam "
+"ho jay."
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"Pehlay say m'ojud pacman lock khatam nahi huwa. Brah'e mehrbani archinstoo "
+"ka istimal karnay say pehle kisi bhi m'ojude'h pacman session ko saaf krein."
+
+msgid "Confirm and exit"
+msgstr "Tasdeeq krein aur bahir niklain"
+
+msgid "Cancel"
+msgstr "Manso'kh krein"
+
+msgid "Back"
+msgstr "Back"
+
+msgid "Encryption type"
+msgstr "Encryption ki type"
+
+msgid "Encryption password"
+msgstr "Encryption ka password"
+
+msgid "Iteration time"
+msgstr ""
+
+msgid "Partitions"
+msgstr "Partitons"
+
+#, fuzzy
+msgid "LVM volumes"
+msgstr "LVM volumes"
+
+msgid "Partitions to be encrypted"
+msgstr "Partition ki encryption ho gi"
+
+#, fuzzy
+msgid "LVM volumes to be encrypted"
+msgstr "LVM volumes ko encrypt krna"
+
+#, fuzzy
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr ""
+"Disk encryption ka password darj krein (encryption na karnay kay liay khali "
+"chodain): "
+
+#, fuzzy
+msgid "Disk encryption password"
+msgstr "Encryption ka password"
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr ""
+
+msgid "Higher values increase security but slow down boot time"
+msgstr ""
+
+msgid "Iteration time must be at least 100ms"
+msgstr ""
+
+msgid "Iteration time must be at most 120000ms"
+msgstr ""
+
+msgid "Please enter a valid number"
+msgstr ""
+
+msgid "Suggest partition layout"
+msgstr "Partition ka layout tajwiz krein"
+
+msgid "Create empty layout (wipe all)"
+msgstr ""
+
+msgid "Remove all newly added partitions"
+msgstr "Nai shamil ki gai tamam partitions remove krein"
+
+msgid "Assign mountpoint"
+msgstr "Mountpoint assign krein"
+
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "Format (data hazaf) karnay kay liay mark/unmark krein"
+
+#, fuzzy
+msgid "Mark/Unmark as ESP"
+msgstr "ESP kay liay mark/unmark krein"
+
+#, fuzzy
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "XBOOTLDR kay liay mark/unmark krein"
+
+msgid "Mark/Unmark as bootable"
+msgstr "Bootable bananay kay liay mark/unmark krein"
+
+msgid "Change filesystem"
+msgstr "Filesystem badlain"
+
+msgid "Mark/Unmark as compressed"
+msgstr "Compress kay liay mark/unmark krein"
+
+msgid "Mark/Unmark as nodatacow"
+msgstr "Nodatacow kay mark/unmark krein"
+
+msgid "Set subvolumes"
+msgstr "subvolumes darj krein"
+
+msgid "Delete partition"
+msgstr "Partition hazif krein"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr "Partiotion ki management: {}"
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr "Total length: {}"
+
+msgid "Wipe"
+msgstr "Mitana"
+
+#, fuzzy
+msgid "Partition - New"
+msgstr "Nai - Partition"
+
+msgid "Partition"
+msgstr "Partition"
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr ""
+"yeh partition mojoda tor par encrypt hai, filesystem ka intkhab zarori hai "
+"is ko format karnay kay liay"
+
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+"Prtition kay mount points installation kay andar relative hein, masal kay "
+"tor par /boot boot kay liay hai."
+
+#, fuzzy
+msgid "Filesystem"
+msgstr "Filesystem"
+
+msgid "Invalid size"
+msgstr "Size sahi nahi"
+
+#, fuzzy, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr "Mojoda khali sector is device par {}:"
+
+#, fuzzy, python-brace-format
+msgid "Size: {} / {}"
+msgstr "Size: {} / {}"
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr "Tamam darj shuda miqdaron say pehlay aik unit: B, KB, KiB, MB, MiB..."
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr "Agar unit na darj hua, tu miqdar ko sector taswar kia jayga"
+
+#, fuzzy, python-brace-format
+msgid "Size (default: {}): "
+msgstr "Size (default: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr "yeh nai shamil ki gai tamam partitions remove karay ga, jari rakhein?"
+
+#, fuzzy
+msgid "Disk configuration type"
+msgstr "Disk configuration ki type"
+
+msgid "Root mount directory"
+msgstr "Root ki mount directory"
+
+msgid "Would you like to use compression or disable CoW?"
+msgstr "Kia aap compression kay istmal ya CoW ko disable karna chahtay hein?"
+
+msgid "Use compression"
+msgstr "Compression ka istmal"
+
+msgid "Disable Copy-on-Write"
+msgstr "Copy-on-Write ko disable krein"
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr ""
+"Kia aap BTRFS subvolumes ko default dha'nchay kay sath istimal karna chahtay "
+"hein?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "Kia aap /home kay liay aik alag partition bana'n chahtay hein?"
+
+msgid "Add subvolume"
+msgstr "Subvolume shamil krein"
+
+msgid "Edit subvolume"
+msgstr "Subvolume ko edit krein"
+
+msgid "Delete subvolume"
+msgstr "Subvolume ko delete krein"
+
+msgid "Value cannot be empty"
+msgstr ""
+
+#, fuzzy
+msgid "Subvolume name"
+msgstr "Subvolume ka naam"
+
+msgid "Subvolume mountpoint"
+msgstr "Subvolume ka mountpoint"
+
+msgid "Starting device modifications in "
+msgstr ""
+
+#, fuzzy
+msgid "Partitioning"
+msgstr "Partitioning"
+
+msgid "Snapshot type"
+msgstr ""
+
+msgid "Physical volumes"
+msgstr "Physical volumes"
+
+msgid "Volumes"
+msgstr "Volumes"
+
+#, fuzzy, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "Environment ki type: {}"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr ""
+"2 ya ziada partition wali LVM disk encryption ko mojoda tor par support nahi "
+"hai"

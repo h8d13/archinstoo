@@ -24,7 +24,7 @@ This is a powerful idea because it would allow for standards to compete in bette
 
 Providing choice should always be a priority, this makes for why, arch is arch.
 
-Archinstall in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
+Archinstoo in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
 
 This is also to illustrate that for example a feature that only 1% of users actually use should not be given priorities over modular architecture.
 

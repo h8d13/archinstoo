@@ -1,0 +1,1193 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: An Jaebeom <ajb8533296@gmail.com>\n"
+"Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.1.1\n"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+
+msgid "Choose an option to give Sway access to your hardware"
+msgstr ""
+
+msgid "Seat access"
+msgstr ""
+
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+
+msgid "Choose an option to give labwc access to your hardware"
+msgstr ""
+
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr ""
+
+#, fuzzy
+msgid "Installed packages"
+msgstr "추가 패키지"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr ""
+
+#, fuzzy
+msgid "Add a custom repository"
+msgstr "사용자 추가"
+
+msgid "Change custom repository"
+msgstr ""
+
+msgid "Delete custom repository"
+msgstr ""
+
+#, fuzzy
+msgid "Repository name"
+msgstr "미러 위치"
+
+msgid "Name"
+msgstr ""
+
+msgid "Url"
+msgstr ""
+
+#, fuzzy
+msgid "Select signature check"
+msgstr "추가할 인터페이스 선택"
+
+#, fuzzy
+msgid "Signature check"
+msgstr "추가할 인터페이스 선택"
+
+#, fuzzy
+msgid "Select signature option"
+msgstr "추가할 인터페이스 선택"
+
+#, fuzzy
+msgid "Add a custom server"
+msgstr "사용자 추가"
+
+#, fuzzy
+msgid "Change custom server"
+msgstr "오디오 서버를 선택하세요"
+
+#, fuzzy
+msgid "Delete custom server"
+msgstr "사용자 제거"
+
+msgid "Server url"
+msgstr ""
+
+#, fuzzy
+msgid "Select regions"
+msgstr "추가할 인터페이스 선택"
+
+msgid "Optional repositories"
+msgstr "선택적 저장소"
+
+#, fuzzy
+msgid "Add custom repository"
+msgstr "사용자 추가"
+
+#, fuzzy
+msgid "Add custom servers"
+msgstr "사용자 추가"
+
+msgid "Pacman misc options"
+msgstr ""
+
+#, fuzzy
+msgid "Additional repositories"
+msgstr "선택적 저장소"
+
+#, fuzzy
+msgid "Loading mirror regions..."
+msgstr "미러 위치"
+
+#, fuzzy
+msgid "Mirror regions"
+msgstr "미러 위치"
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Show help"
+msgstr ""
+
+msgid "Exit help"
+msgstr ""
+
+msgid "Preview scroll up"
+msgstr ""
+
+msgid "Preview scroll down"
+msgstr ""
+
+msgid "Move up"
+msgstr ""
+
+msgid "Move down"
+msgstr ""
+
+msgid "Move right"
+msgstr ""
+
+msgid "Move left"
+msgstr ""
+
+msgid "Jump to entry"
+msgstr ""
+
+msgid "Skip selection (if available)"
+msgstr ""
+
+msgid "Reset selection (if available)"
+msgstr ""
+
+#, fuzzy
+msgid "Select on single select"
+msgstr "추가할 인터페이스 선택"
+
+#, fuzzy
+msgid "Select on multi select"
+msgstr "시간대를 선택하세요"
+
+msgid "Reset"
+msgstr ""
+
+#, fuzzy
+msgid "Skip selection menu"
+msgstr "'{}' 에 대한 작업 선택"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "루트 비밀번호"
+
+#, fuzzy
+msgid "Password"
+msgstr "루트 비밀번호"
+
+#, fuzzy
+msgid "Confirm password"
+msgstr "비밀번호 변경"
+
+msgid "The confirmation password did not match, please try again"
+msgstr ""
+
+#, fuzzy
+msgid "Not a valid directory"
+msgstr "올바른 디렉터리가 아닙니다: {}"
+
+#, fuzzy
+msgid "Archinstoo help"
+msgstr "Archinstall 언어"
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "정말 설정을 초기화 하시겠습니까?"
+
+msgid "Only ASCII characters are supported"
+msgstr ""
+
+#, fuzzy
+msgid "Yes"
+msgstr "예"
+
+msgid "No"
+msgstr ""
+
+#, fuzzy
+msgid " (default)"
+msgstr "(기본)"
+
+msgid "The specified configuration will be applied"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to continue?"
+msgstr "BTRFS 압축을 사용하시겠습니까?"
+
+#, fuzzy
+msgid "Configuration"
+msgstr "구성 없음"
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "구성 저장"
+
+msgid "Add interface"
+msgstr "인터페이스 추가"
+
+msgid "Edit interface"
+msgstr "인터페이스 수정"
+
+msgid "Delete interface"
+msgstr "인터페이스 제거"
+
+#, fuzzy
+msgid "Interfaces"
+msgstr "인터페이스 추가"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr ""
+"\"{}\" 에 대해 구성할 모드를 선택하거나 기본 모드 \"{}\" 을(를) 사용하도록 건"
+"너뛰세요"
+
+msgid "Modes"
+msgstr ""
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr "{} 의 IP와 서브넷을 입력하세요 (예시: 192.168.0.5/24): "
+
+msgid "IP address"
+msgstr ""
+
+#, fuzzy
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr "게이트웨이(라우터) IP 주소를 입력하시거나 공백으로 두세요: "
+
+msgid "Gateway address"
+msgstr ""
+
+#, fuzzy
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr "DNS 서버를 입력하세요 (띄어쓰기로 구분, 없는 경우 공백): "
+
+#, fuzzy
+msgid "DNS servers"
+msgstr "오디오 서버가 없습니다"
+
+msgid "Network configuration"
+msgstr "네트워크 구성"
+
+#, fuzzy
+msgid "Configure interfaces"
+msgstr "구성된 {} 인터페이스"
+
+msgid "Root password"
+msgstr "루트 비밀번호"
+
+msgid "User account"
+msgstr "사용자 계정"
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "사용자 계정"
+
+msgid "Root account will be locked after installation"
+msgstr ""
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "Add a user"
+msgstr "사용자 추가"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+msgid "Change password"
+msgstr "비밀번호 변경"
+
+msgid "Change shell"
+msgstr ""
+
+msgid "Manage groups"
+msgstr ""
+
+msgid "Promote/Demote user"
+msgstr "사용자 승격/강등"
+
+msgid "Delete User"
+msgstr "사용자 제거"
+
+#, fuzzy
+msgid "User"
+msgstr "사용자명 : "
+
+#, fuzzy
+msgid "The username you entered is invalid"
+msgstr "입력한 사용자 이름이 잘못되었습니다. 다시 시도하세요"
+
+msgid "Invalid git URL"
+msgstr ""
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+#, fuzzy
+msgid "Username"
+msgstr "사용자명 : "
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "\"{}\"은(는) 슈퍼유저여야 합니까 (sudo)?"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Archinstall 언어"
+
+msgid "reboot system"
+msgstr ""
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr "기본 시간 서버와 함께 자동 시간 동기화(NTP)를 사용하시겠습니까?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"NTP가 작동하려면 하드웨어 시간 및 기타 사후 구성 단계가 필요할 수 있습니다.\n"
+"더 많은 정보를 확인하시려면, Arch wiki 를 확인하세요"
+
+msgid "Hostname"
+msgstr "호스트명"
+
+msgid "Timezone"
+msgstr "시간대"
+
+#, fuzzy
+msgid "Select language"
+msgstr "로케일 언어"
+
+#, fuzzy, python-brace-format
+msgid "Repositories: {}"
+msgstr "미러 위치"
+
+#, fuzzy
+msgid "Loading packages..."
+msgstr "추가 패키지"
+
+#, fuzzy
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"base, base-devel, linux, linux-firmware, efibootmgr 및 선택적 프로파일 패키지"
+"와 같은 패키지만 설치됩니다."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr ""
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "추가 패키지"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "추가 패키지"
+
+msgid "Not found in AUR"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr "이 옵션은 설치 중에 발생할 수 있는 병렬 다운로드 수를 활성화합니다"
+
+#, fuzzy
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"활성화할 병렬 다운로드 수를 입력하세요.\n"
+" (1 부터 {} 까지의 숫자중 하나를 입력하세요)\n"
+"메모:"
+
+#, fuzzy, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+" - 최댓값   : {} ( {} 개의 병렬 다운로드 허용, 한 번에 {} 개의 다운로드 허"
+"용 )"
+
+#, fuzzy
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - 비활성화/기본 : - ( 병렬 다운로드 비활성화, 한 번에 1 개의 다운로드만 허"
+"용 )"
+
+msgid "Invalid download number"
+msgstr ""
+
+msgid "Number downloads"
+msgstr ""
+
+#, fuzzy
+msgid "What would you like to do next?"
+msgstr "BTRFS 압축을 사용하시겠습니까?"
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Do you really want to abort?"
+msgstr "정말 중단하시겠습니까?"
+
+#, fuzzy
+msgid "Kernel"
+msgstr "커널"
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"AMD 하드웨어와의 최상의 호환성을 위해 모든 오픈 소스 또는 AMD/ATI 옵션을 사용"
+"할 수 있습니다."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"인텔 하드웨어와의 최상의 호환성을 위해 모든 오픈 소스 또는 인텔 옵션을 사용"
+"할 수 있습니다.\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"Nvidia 하드웨어와의 최상의 호환성을 위해 Nvidia 독점 드라이버를 사용할 수 있"
+"습니다.\n"
+
+msgid "Info"
+msgstr ""
+
+msgid "Would you like to use swap on zram?"
+msgstr "zram에서 스왑을 사용하시겠습니까?"
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "마운트 지점을 선택하세요 :"
+
+msgid "Bootloader"
+msgstr "부트로더"
+
+msgid "Unified kernel images"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to use unified kernel images?"
+msgstr "zram에서 스왑을 사용하시겠습니까?"
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr ""
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr ""
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Audio"
+msgstr "오디오"
+
+msgid "Print service"
+msgstr ""
+
+msgid "Power management"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+msgid "Management"
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "수정"
+
+#, fuzzy
+msgid "Would you like to configure Bluetooth?"
+msgstr "BTRFS 압축을 사용하시겠습니까?"
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "BTRFS 압축을 사용하시겠습니까?"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "BTRFS 압축을 사용하시겠습니까?"
+
+msgid "Keyboard layout"
+msgstr "키보드 레이아웃"
+
+msgid "Locale language"
+msgstr "로케일 언어"
+
+msgid "Locale encoding"
+msgstr "로케일 인코딩"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Archinstall 언어"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "구성 없음"
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Locales"
+msgstr ""
+
+msgid "Pacman config"
+msgstr ""
+
+msgid "Swap"
+msgstr "스왑"
+
+msgid "Kernels"
+msgstr "커널"
+
+msgid "Profile"
+msgstr "프로필"
+
+msgid "Applications"
+msgstr ""
+
+#, fuzzy
+msgid "Network config"
+msgstr "네트워크 구성"
+
+msgid "Parallel Downloads"
+msgstr "병렬 다운로드"
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "시간 자동 동기화 (NTP)"
+
+msgid "Additional packages"
+msgstr "추가 패키지"
+
+msgid "Custom commands"
+msgstr ""
+
+msgid "Install"
+msgstr "설치"
+
+msgid "Abort"
+msgstr "중단"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr "root-password 또는 sudo 권한이 있는 사용자 1 명 이상을 지정해야 합니다"
+
+#, fuzzy
+msgid "Language"
+msgstr "로케일 언어"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Archinstall 언어"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "시간대를 선택하세요"
+
+msgid "Cyan"
+msgstr ""
+
+msgid "Green"
+msgstr ""
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+msgid "Blue"
+msgstr ""
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "'{}' 에 대한 작업 선택"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "추가 패키지"
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "NTP"
+msgstr ""
+
+msgid "Custom Commands"
+msgstr ""
+
+msgid "Commands"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Configuration type: {}"
+msgstr "구성 없음"
+
+#, fuzzy
+msgid "Mountpoint"
+msgstr "파티션에 대한 마운트 지점 할당"
+
+#, fuzzy
+msgid "LVM configuration type"
+msgstr "구성 없음"
+
+msgid "Disk encryption"
+msgstr ""
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr ""
+
+msgid "Swap on zram"
+msgstr ""
+
+msgid "Compression algorithm"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "Headers"
+msgstr ""
+
+msgid "Missing configurations:\n"
+msgstr "누락된 구성들:\n"
+
+#, fuzzy
+msgid "Profiles"
+msgstr "프로필"
+
+msgid "Graphics driver"
+msgstr ""
+
+msgid "Greeter"
+msgstr ""
+
+#, fuzzy
+msgid "Selected mirror regions"
+msgstr "미러 위치"
+
+#, fuzzy
+msgid "Custom servers"
+msgstr "오디오 서버가 없습니다"
+
+#, fuzzy
+msgid "Custom repositories"
+msgstr "선택적 저장소"
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selection"
+msgstr "현재 파티션 레이아웃"
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "취소"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "설치에 원하는 호스트명: "
+
+msgid "Type"
+msgstr ""
+
+#, fuzzy
+msgid "Selected profiles: "
+msgstr "인터페이스 제거"
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "사용하고 구성할 하드 드라이브를 하나 이상 선택하세요"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] 로그파일이 다음 경로에 생성되었습니다: {}"
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"    이 문제(및 파일)를 https://github.com/archlinux/archinstoo/issues 에 제"
+"출하세요"
+
+msgid "Syncing the system..."
+msgstr ""
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr ""
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+
+msgid "Package group:"
+msgstr ""
+
+#, fuzzy
+msgid "Use a best-effort default partition layout"
+msgstr "선택한 모든 드라이브를 지우고 최선의 기본 파티션 레이아웃 사용"
+
+#, fuzzy
+msgid "Manual Partitioning"
+msgstr "수동 구성"
+
+#, fuzzy
+msgid "Pre-mounted configuration"
+msgstr "구성 없음"
+
+msgid "Unknown"
+msgstr ""
+
+#, fuzzy
+msgid "Default layout"
+msgstr "디스크 레이아웃"
+
+#, fuzzy
+msgid "No Encryption"
+msgstr "비밀번호 암호화"
+
+msgid "LUKS"
+msgstr ""
+
+msgid "LVM on LUKS"
+msgstr ""
+
+msgid "LUKS on LVM"
+msgstr ""
+
+msgid "weak"
+msgstr "약하게"
+
+msgid "moderate"
+msgstr "보통"
+
+msgid "strong"
+msgstr "강하게"
+
+msgid "Removable"
+msgstr ""
+
+msgid "Copy ISO network configuration to installation"
+msgstr "ISO 네트워크 구성을 설치에 복사"
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+msgid "Manual configuration"
+msgstr "수동 구성"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr "Pacman 이 이미 실행중입니다, 종료될 때까지 최대 10분 대기해야 합니다."
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"기존 pacman 잠금이 종료되지 않았습니다. archinstoo을 사용하기 전에 기존 "
+"pacman 세션을 모두 정리하세요."
+
+msgid "Confirm and exit"
+msgstr "저장 후 종료"
+
+msgid "Cancel"
+msgstr "취소"
+
+msgid "Back"
+msgstr ""
+
+#, fuzzy
+msgid "Encryption type"
+msgstr "비밀번호 암호화"
+
+msgid "Encryption password"
+msgstr "비밀번호 암호화"
+
+msgid "Iteration time"
+msgstr ""
+
+msgid "Partitions"
+msgstr ""
+
+#, fuzzy
+msgid "LVM volumes"
+msgstr "하위 볼륨 제거"
+
+#, fuzzy
+msgid "Partitions to be encrypted"
+msgstr "암호화할 파티션을 선택하세요:"
+
+#, fuzzy
+msgid "LVM volumes to be encrypted"
+msgstr "암호화할 파티션을 선택하세요:"
+
+#, fuzzy
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr "디스크를 암호화할 암호를 입력하세요 (암호화하지 않으려면 비워 둠): "
+
+#, fuzzy
+msgid "Disk encryption password"
+msgstr "비밀번호 암호화"
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr ""
+
+msgid "Higher values increase security but slow down boot time"
+msgstr ""
+
+msgid "Iteration time must be at least 100ms"
+msgstr ""
+
+msgid "Iteration time must be at most 120000ms"
+msgstr ""
+
+msgid "Please enter a valid number"
+msgstr ""
+
+msgid "Suggest partition layout"
+msgstr "파티션 레이아웃 제안"
+
+msgid "Create empty layout (wipe all)"
+msgstr ""
+
+#, fuzzy
+msgid "Remove all newly added partitions"
+msgstr "새 파티션 생성"
+
+#, fuzzy
+msgid "Assign mountpoint"
+msgstr "파티션에 대한 마운트 지점 할당"
+
+#, fuzzy
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "포맷할 파티션 표시/표시 해제 (데이터 삭제)"
+
+#, fuzzy
+msgid "Mark/Unmark as ESP"
+msgstr "파티션을 압축된 것으로 표시/표시 해제(btrfs만 해당)"
+
+#, fuzzy
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "파티션을 압축된 것으로 표시/표시 해제(btrfs만 해당)"
+
+msgid "Mark/Unmark as bootable"
+msgstr ""
+
+msgid "Change filesystem"
+msgstr ""
+
+#, fuzzy
+msgid "Mark/Unmark as compressed"
+msgstr "파티션을 압축된 것으로 표시/표시 해제(btrfs만 해당)"
+
+#, fuzzy
+msgid "Mark/Unmark as nodatacow"
+msgstr "파티션을 압축된 것으로 표시/표시 해제(btrfs만 해당)"
+
+#, fuzzy
+msgid "Set subvolumes"
+msgstr "하위 볼륨 제거"
+
+#, fuzzy
+msgid "Delete partition"
+msgstr "파티션 제거"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr ""
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr ""
+
+msgid "Wipe"
+msgstr ""
+
+#, fuzzy
+msgid "Partition - New"
+msgstr "수동 구성"
+
+msgid "Partition"
+msgstr ""
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+" * 파티션 마운트 포인트는 설치 내부를 기준으로 하며 예를 들어 부팅은 /boot 입"
+"니다."
+
+msgid "Filesystem"
+msgstr ""
+
+msgid "Invalid size"
+msgstr ""
+
+#, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr ""
+
+#, python-brace-format
+msgid "Size: {} / {}"
+msgstr ""
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr ""
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Size (default: {}): "
+msgstr "시작 섹터를 입력하세요 (백분율 또는 블록 번호, 기본값: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr ""
+
+#, fuzzy
+msgid "Disk configuration type"
+msgstr "구성 없음"
+
+msgid "Root mount directory"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to use compression or disable CoW?"
+msgstr "BTRFS 압축을 사용하시겠습니까?"
+
+msgid "Use compression"
+msgstr ""
+
+msgid "Disable Copy-on-Write"
+msgstr ""
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr "기본 구조로 BTRFS 하위 볼륨을 사용하시겠습니까?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "/home 에 대해 별도의 파티션을 생성하시겠습니까?"
+
+msgid "Add subvolume"
+msgstr "하위 볼륨 추가"
+
+msgid "Edit subvolume"
+msgstr "하위 볼륨 수정"
+
+msgid "Delete subvolume"
+msgstr "하위 볼륨 제거"
+
+msgid "Value cannot be empty"
+msgstr ""
+
+#, fuzzy
+msgid "Subvolume name"
+msgstr "하위 볼륨 이름 "
+
+msgid "Subvolume mountpoint"
+msgstr "하위 볼륨 마운트 지점"
+
+msgid "Starting device modifications in "
+msgstr ""
+
+#, fuzzy
+msgid "Partitioning"
+msgstr "수동 구성"
+
+msgid "Snapshot type"
+msgstr ""
+
+msgid "Physical volumes"
+msgstr ""
+
+msgid "Volumes"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "구성 없음"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr ""

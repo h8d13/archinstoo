@@ -3,8 +3,8 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from archinstall.lib.args import ArchConfigHandler
-from archinstall.lib.configuration import ConfigurationHandler
+from archinstoo.lib.args import ArchConfigHandler
+from archinstoo.lib.configuration import ConfigurationHandler
 
 
 def test_user_config_roundtrip(

@@ -1,0 +1,2569 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Aleksandr Melman <Alexmelman88@gmail.com>\n"
+"Language-Team: \n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: Poedit 3.5\n"
+
+msgid "[!] A log file has been created here: {} {}"
+msgstr "[!] Здесь был создан файл журнала: {} {}"
+
+msgid "Do you really want to abort?"
+msgstr "Вы действительно хотите прекратить?"
+
+msgid "And one more time for verification: "
+msgstr "И еще раз для проверки: "
+
+msgid "Would you like to use swap on zram?"
+msgstr "Вы хотите использовать подкачку на zram?"
+
+msgid "Desired hostname for the installation: "
+msgstr "Желаемое имя хоста для установки: "
+
+msgid "Username for required superuser with sudo privileges: "
+msgstr ""
+"Имя пользователя для требуемого суперпользователя с привилегиями sudo: "
+
+msgid "Any additional users to install (leave blank for no users): "
+msgstr ""
+"Любые дополнительные пользователи для установки (оставьте пустым, если "
+"пользователей нет): "
+
+msgid "Should this user be a superuser (sudoer)?"
+msgstr "Должен ли этот пользователь быть суперпользователем (sudoer)?"
+
+msgid "Select a timezone"
+msgstr "Выберите часовой пояс"
+
+msgid "Would you like to use GRUB as a bootloader instead of systemd-boot?"
+msgstr "Вы хотите использовать GRUB в качестве загрузчика вместо systemd-boot?"
+
+msgid "Choose a bootloader"
+msgstr "Выберите загрузчик"
+
+msgid "Choose an audio server"
+msgstr "Выберите звуковой сервер"
+
+msgid ""
+"Only packages such as base, base-devel, linux, linux-firmware, efibootmgr "
+"and optional profile packages are installed."
+msgstr ""
+"Устанавливаются только такие пакеты, как base, base-devel, linux, linux-"
+"firmware, efibootmgr и дополнительные пакеты профиля."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+
+msgid ""
+"If you desire a web browser, such as firefox or chromium, you may specify it "
+"in the following prompt."
+msgstr ""
+"Если вы хотите использовать веб-браузер, например, firefox или chromium, вы "
+"можете указать его в следующем запросе."
+
+msgid ""
+"Write additional packages to install (space separated, leave blank to skip): "
+msgstr ""
+"Напишите дополнительные пакеты для установки (разделите пробелами, оставьте "
+"пустым, чтобы пропустить): "
+
+msgid "Copy ISO network configuration to installation"
+msgstr "Копировать сетевую конфигурацию ISO в установку"
+
+msgid ""
+"Use NetworkManager (necessary for configuring internet graphically in GNOME "
+"and KDE)"
+msgstr ""
+"Использовать NetworkManager (необходим для графической настройки интернета в "
+"GNOME и KDE)"
+
+msgid "Select one network interface to configure"
+msgstr "Выберите один сетевой интерфейс для настройки"
+
+msgid ""
+"Select which mode to configure for \"{}\" or skip to use default mode \"{}\""
+msgstr ""
+"Выберите режим для конфигурации \"{}\" или пропустите, чтобы использовать "
+"режим по умолчанию \"{}\"."
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr "Введите IP-адрес и подсеть для {} (пример: 192.168.0.5/24): "
+
+msgid "Enter your gateway (router) IP address or leave blank for none: "
+msgstr ""
+"Введите IP-адрес вашего шлюза (маршрутизатора) или оставьте пустым, если его "
+"нет: "
+
+msgid "Enter your DNS servers (space separated, blank for none): "
+msgstr "Введите ваши DNS-серверы (через пробел, пустой - нет): "
+
+msgid "Select which filesystem your main partition should use"
+msgstr ""
+"Выберите, какую файловую систему должен использовать ваш основной раздел"
+
+msgid "Current partition layout"
+msgstr "Текущая разметка разделов"
+
+msgid ""
+"Select what to do with\n"
+"{}"
+msgstr ""
+"Выберите, что делать с\n"
+"{}"
+
+msgid "Enter a desired filesystem type for the partition"
+msgstr "Введите желаемый тип файловой системы для раздела"
+
+msgid ""
+"Enter the start location (in parted units: s, GB, %, etc. ; default: {}): "
+msgstr ""
+"Введите начальное значение (в раздельных блоках: с, ГБ, % и т.д.; по "
+"умолчанию: {}): "
+
+msgid "Enter the end location (in parted units: s, GB, %, etc. ; ex: {}): "
+msgstr ""
+"Введите конечное значение (в раздельных блоках: с, Гб, % и т.д.; например: "
+"{}): "
+
+msgid "{} contains queued partitions, this will remove those, are you sure?"
+msgstr "{} содержит разделы в очереди, это удалит их, вы уверены?"
+
+msgid ""
+"{}\n"
+"\n"
+"Select by index which partitions to delete"
+msgstr ""
+"{}\n"
+"\n"
+"Выберите по индексу, какие разделы следует удалить"
+
+msgid ""
+"{}\n"
+"\n"
+"Select by index which partition to mount where"
+msgstr ""
+"{}\n"
+"\n"
+"Выберите по индексу, какой раздел куда монтировать"
+
+msgid ""
+" * Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+" * Точки монтирования разделов являются относительными внутри установки, "
+"например, загрузочный будет /boot."
+
+msgid "Select where to mount partition (leave blank to remove mountpoint): "
+msgstr ""
+"Выберите куда монтировать раздел (оставьте пустым, чтобы удалить точку "
+"монтирования): "
+
+msgid ""
+"{}\n"
+"\n"
+"Select which partition to mask for formatting"
+msgstr ""
+"{}\n"
+"\n"
+"Выберите, какой раздел следует отметить для форматирования"
+
+msgid ""
+"{}\n"
+"\n"
+"Select which partition to mark as encrypted"
+msgstr ""
+"{}\n"
+"\n"
+"Выберите раздел, который следует пометить как зашифрованный"
+
+msgid ""
+"{}\n"
+"\n"
+"Select which partition to mark as bootable"
+msgstr ""
+"{}\n"
+"\n"
+"Выберите раздел, который следует отметить как загрузочный"
+
+msgid ""
+"{}\n"
+"\n"
+"Select which partition to set a filesystem on"
+msgstr ""
+"{}\n"
+"\n"
+"Выберите раздел, на котором будет установлена файловая система"
+
+msgid "Enter a desired filesystem type for the partition: "
+msgstr "Введите желаемый тип файловой системы для раздела: "
+
+msgid "Archinstall language"
+msgstr "Язык Archinstall"
+
+msgid "Wipe all selected drives and use a best-effort default partition layout"
+msgstr ""
+"Стереть все выбранные диски и использовать оптимальную схему разделов по "
+"умолчанию"
+
+msgid ""
+"Select what to do with each individual drive (followed by partition usage)"
+msgstr ""
+"Выберите, что делать с каждым отдельным диском (с последующим использованием "
+"разделов)"
+
+msgid "Select what you wish to do with the selected block devices"
+msgstr "Выберите, что вы хотите сделать с выбранными блочными устройствами"
+
+msgid ""
+"This is a list of pre-programmed profiles, they might make it easier to "
+"install things like desktop environments"
+msgstr ""
+"Это список предварительно запрограммированных профилей, они могут облегчить "
+"установку таких вещей, как окружения рабочего стола"
+
+msgid "Select keyboard layout"
+msgstr "Выберите раскладку клавиатуры"
+
+msgid "Select one of the regions to download packages from"
+msgstr "Выберите один из регионов для загрузки пакетов"
+
+msgid "Select one or more hard drives to use and configure"
+msgstr ""
+"Выберите один или несколько жестких дисков для использования и настройте их"
+
+msgid ""
+"For the best compatibility with your AMD hardware, you may want to use "
+"either the all open-source or AMD / ATI options."
+msgstr ""
+"Для наилучшей совместимости с оборудованием AMD вы можете использовать либо "
+"все варианты с открытым исходным кодом, либо AMD / ATI."
+
+msgid ""
+"For the best compatibility with your Intel hardware, you may want to use "
+"either the all open-source or Intel options.\n"
+msgstr ""
+"Для лучшей совместимости с оборудованием Intel вы можете использовать либо "
+"все варианты с открытым исходным кодом, либо Intel.\n"
+
+msgid ""
+"For the best compatibility with your Nvidia hardware, you may want to use "
+"the Nvidia proprietary driver.\n"
+msgstr ""
+"Для наилучшей совместимости с оборудованием Nvidia вы можете использовать "
+"проприетарный драйвер Nvidia.\n"
+
+msgid ""
+"\n"
+"\n"
+"Select a graphics driver or leave blank to install all open-source drivers"
+msgstr ""
+"\n"
+"\n"
+"Выберите графический драйвер или оставьте пустым, чтобы установить все "
+"драйверы с открытым исходным кодом"
+
+msgid "All open-source (default)"
+msgstr "Все с открытым исходным кодом (по умолчанию)"
+
+msgid "Choose which kernels to use or leave blank for default \"{}\""
+msgstr ""
+"Выберите, какие ядра использовать, или оставьте пустым по умолчанию \"{}\"."
+
+msgid "Choose which locale language to use"
+msgstr "Выберите, какой язык локали использовать"
+
+msgid "Choose which locale encoding to use"
+msgstr "Выберите, какую кодировку локали использовать"
+
+msgid "Select one of the values shown below: "
+msgstr "Выберите одно из значений, показанных ниже: "
+
+msgid "Select one or more of the options below: "
+msgstr "Выберите один или несколько из приведенных ниже вариантов: "
+
+msgid "Adding partition...."
+msgstr "Добавление раздела...."
+
+msgid ""
+"You need to enter a valid fs-type in order to continue. See `man parted` for "
+"valid fs-type's."
+msgstr ""
+"Чтобы продолжить, вам нужно ввести действительный fs-тип. Смотрите `man "
+"parted` для правильных fs-типов."
+
+msgid "Error: Listing profiles on URL \"{}\" resulted in:"
+msgstr "Ошибка: Перечисление профилей по URL \"{}\" привело к:"
+
+msgid "Error: Could not decode \"{}\" result as JSON:"
+msgstr "Ошибка: Не удалось декодировать результат \"{}\" как JSON:"
+
+msgid "Keyboard layout"
+msgstr "Раскладка клавиатуры"
+
+msgid "Mirror region"
+msgstr "Регион зеркала"
+
+msgid "Locale language"
+msgstr "Язык локали"
+
+msgid "Locale encoding"
+msgstr "Кодировка локали"
+
+msgid "Drive(s)"
+msgstr "Диск(и)"
+
+msgid "Disk layout"
+msgstr "Разметка диска"
+
+msgid "Encryption password"
+msgstr "Пароль шифрования"
+
+msgid "Swap"
+msgstr "Подкачка"
+
+msgid "Bootloader"
+msgstr "Загрузчик"
+
+msgid "Root password"
+msgstr "Пароль root"
+
+msgid "Superuser account"
+msgstr "Учетная запись суперпользователя"
+
+msgid "User account"
+msgstr "Учетная запись пользователя"
+
+msgid "Profile"
+msgstr "Профиль"
+
+msgid "Audio"
+msgstr "Звуковой сервер"
+
+msgid "Kernels"
+msgstr "Ядра"
+
+msgid "Additional packages"
+msgstr "Дополнительные пакеты"
+
+msgid "Network configuration"
+msgstr "Настройка сети"
+
+msgid "Automatic time sync (NTP)"
+msgstr "Автоматическая синхронизация времени (NTP)"
+
+msgid "Install ({} config(s) missing)"
+msgstr "Установить ({} конфигурация(и) отсутствует)"
+
+msgid ""
+"You decided to skip harddrive selection\n"
+"and will use whatever drive-setup is mounted at {} (experimental)\n"
+"WARNING: Archinstall won't check the suitability of this setup\n"
+"Do you wish to continue?"
+msgstr ""
+"Вы решили пропустить выбор жесткого диска\n"
+"и будете использовать любой диск, смонтированный по адресу {} "
+"(экспериментально)\n"
+"ПРЕДУПРЕЖДЕНИЕ: Archinstall не будет проверять пригодность этой установки.\n"
+"Вы хотите продолжить?"
+
+msgid "Re-using partition instance: {}"
+msgstr "Повторное использование экземпляра раздела: {}"
+
+msgid "Create a new partition"
+msgstr "Создать новый раздел"
+
+msgid "Delete a partition"
+msgstr "Удалить раздел"
+
+msgid "Clear/Delete all partitions"
+msgstr "Очистить/удалить все разделы"
+
+msgid "Assign mount-point for a partition"
+msgstr "Назначить точку монтирования для раздела"
+
+msgid "Mark/Unmark a partition to be formatted (wipes data)"
+msgstr ""
+"Пометить/снять отметку с раздела, который будет отформатирован (стирание "
+"данных)"
+
+msgid "Mark/Unmark a partition as encrypted"
+msgstr "Пометить/снять отметку с раздела как зашифрованный"
+
+msgid "Mark/Unmark a partition as bootable (automatic for /boot)"
+msgstr ""
+"Пометить/снять отметку с раздела как загрузочный (автоматически для /boot)"
+
+msgid "Set desired filesystem for a partition"
+msgstr "Установите желаемую файловую систему для раздела"
+
+msgid "Abort"
+msgstr "Прервать"
+
+msgid "Hostname"
+msgstr "Имя хоста"
+
+msgid "Not configured, unavailable unless setup manually"
+msgstr "Не настроен, недоступен, если не настроен вручную"
+
+msgid "Timezone"
+msgstr "Часовой пояс"
+
+msgid "Set/Modify the below options"
+msgstr "Установить/изменить следующие параметры"
+
+msgid "Install"
+msgstr "Установить"
+
+msgid ""
+"Use ESC to skip\n"
+"\n"
+msgstr ""
+"Используйте ESC, чтобы пропустить\n"
+"\n"
+
+msgid "Suggest partition layout"
+msgstr "Предложить разметку разделов"
+
+msgid "Enter a password: "
+msgstr "Введите пароль: "
+
+msgid "Enter a encryption password for {}"
+msgstr "Введите пароль шифрования для {}"
+
+msgid "Enter disk encryption password (leave blank for no encryption): "
+msgstr ""
+"Введите пароль шифрования диска (оставьте пустым для отсутствия шифрования): "
+
+msgid "Create a required super-user with sudo privileges: "
+msgstr "Создайте необходимого суперпользователя с привилегиями sudo: "
+
+msgid "Enter root password (leave blank to disable root): "
+msgstr "Введите пароль root (оставьте пустым, чтобы отключить root): "
+
+msgid "Password for user \"{}\": "
+msgstr "Пароль для пользователя \"{}\": "
+
+msgid ""
+"Verifying that additional packages exist (this might take a few seconds)"
+msgstr ""
+"Проверка наличия дополнительных пакетов (это может занять несколько секунд)"
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr ""
+"Вы хотите использовать автоматическую синхронизацию времени (NTP) с "
+"серверами времени по умолчанию?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"Для работы NTP может потребоваться аппаратное время и другие шаги после "
+"конфигурации.\n"
+"Для получения дополнительной информации, пожалуйста, ознакомьтесь с ArchWiki"
+
+msgid "Enter a username to create an additional user (leave blank to skip): "
+msgstr ""
+"Введите имя пользователя для создания дополнительного пользователя (оставьте "
+"пустым, чтобы пропустить): "
+
+msgid "Use ESC to skip\n"
+msgstr "Используйте ESC, чтобы пропустить\n"
+
+msgid ""
+"\n"
+" Choose an object from the list, and select one of the available actions for "
+"it to execute"
+msgstr ""
+"\n"
+" Выберите объект из списка и выберите одно из доступных действий для его "
+"выполнения"
+
+msgid "Cancel"
+msgstr "Отменить"
+
+msgid "Confirm and exit"
+msgstr "Подтвердить и выйти"
+
+msgid "Add"
+msgstr "Добавить"
+
+msgid "Copy"
+msgstr "Копировать"
+
+msgid "Edit"
+msgstr "Редактировать"
+
+msgid "Delete"
+msgstr "Удалить"
+
+msgid "Select an action for '{}'"
+msgstr "Выберите действие для '{}'"
+
+msgid "Copy to new key:"
+msgstr "Копировать в новый ключ:"
+
+msgid "Unknown nic type: {}. Possible values are {}"
+msgstr "Неизвестный тип сетевого адаптера: {}. Возможные значения: {}"
+
+msgid ""
+"\n"
+"This is your chosen configuration:"
+msgstr ""
+"\n"
+"Это выбранная вами конфигурация:"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr ""
+"Pacman уже запущен, ожидание его завершения составляет максимум 10 минут."
+
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"Существовавшая ранее блокировка pacman не завершилась. Пожалуйста, очистите "
+"все существующие сессии pacman перед использованием archinstoo."
+
+msgid "Choose which optional additional repositories to enable"
+msgstr "Выберите, какие дополнительные репозитории следует включить"
+
+msgid "Add a user"
+msgstr "Добавить пользователя"
+
+msgid "Change password"
+msgstr "Изменить пароль"
+
+msgid "Promote/Demote user"
+msgstr "Повысить/понизить пользователя"
+
+msgid "Delete User"
+msgstr "Удалить пользователя"
+
+msgid ""
+"\n"
+"Define a new user\n"
+msgstr ""
+"\n"
+"Укажите нового пользователя\n"
+
+msgid "User Name : "
+msgstr "Имя пользователя: "
+
+msgid "Should {} be a superuser (sudoer)?"
+msgstr "Должен ли {} быть суперпользователем (sudoer)?"
+
+msgid "Define users with sudo privilege: "
+msgstr "Определите пользователей с привилегиями sudo: "
+
+msgid "No network configuration"
+msgstr "Нет сетевой конфигурации"
+
+msgid "Set desired subvolumes on a btrfs partition"
+msgstr "Установите желаемые подтома на раздел btrfs"
+
+msgid ""
+"{}\n"
+"\n"
+"Select which partition to set subvolumes on"
+msgstr ""
+"{}\n"
+"\n"
+"Выберите раздел, на котором будут установлены подтома"
+
+msgid "Manage btrfs subvolumes for current partition"
+msgstr "Управление подтомами btrfs для текущего раздела"
+
+msgid "No configuration"
+msgstr "Отсутствует конфигурация"
+
+msgid "Save user configuration"
+msgstr "Сохранить конфигурацию пользователя"
+
+msgid "Save user credentials"
+msgstr "Сохранить учетные данные пользователя"
+
+msgid "Save disk layout"
+msgstr "Сохранить разметку диска"
+
+msgid "Save all"
+msgstr "Сохранить все"
+
+msgid "Choose which configuration to save"
+msgstr "Выберите, какую конфигурацию сохранить"
+
+msgid "Enter a directory for the configuration(s) to be saved: "
+msgstr "Введите каталог для сохранения конфигурации (-ций): "
+
+msgid "Not a valid directory: {}"
+msgstr "Недействительный каталог: {}"
+
+msgid "The password you are using seems to be weak,"
+msgstr "Пароль, который вы используете, кажется слабым,"
+
+msgid "are you sure you want to use it?"
+msgstr "вы уверены, что хотите его использовать?"
+
+msgid "Optional repositories"
+msgstr "Дополнительные репозитории"
+
+msgid "Save configuration"
+msgstr "Сохранить конфигурацию"
+
+msgid "Missing configurations:\n"
+msgstr "Отсутствующие конфигурации:\n"
+
+msgid "Either root-password or at least 1 superuser must be specified"
+msgstr ""
+"Должен быть указан либо пароль root, либо как минимум 1 суперпользователь"
+
+msgid "Manage superuser accounts: "
+msgstr "Управление учетными записями суперпользователей: "
+
+msgid "Manage ordinary user accounts: "
+msgstr "Управление учетными записями обычных пользователей: "
+
+msgid " Subvolume :{:16}"
+msgstr " Подтом :{:16}"
+
+msgid " mounted at {:16}"
+msgstr " смонтировано в {:16}"
+
+msgid " with option {}"
+msgstr " с параметром {}"
+
+msgid ""
+"\n"
+" Fill the desired values for a new subvolume \n"
+msgstr ""
+"\n"
+" Заполните нужные значения для нового подтома\n"
+
+msgid "Subvolume name "
+msgstr "Имя подтома "
+
+msgid "Subvolume mountpoint"
+msgstr "Точка монтирования подтома"
+
+msgid "Subvolume options"
+msgstr "Параметры подтома"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Subvolume name :"
+msgstr "Имя подтома :"
+
+msgid "Select a mount point :"
+msgstr "Выберите точку монтирования:"
+
+msgid "Select the desired subvolume options "
+msgstr "Выберите нужные параметры подтома "
+
+msgid "Define users with sudo privilege, by username: "
+msgstr "Определите пользователей с привилегией sudo по имени пользователя: "
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] Здесь был создан файл журнала: {}"
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr "Вы хотите использовать подтома BTRFS со структурой по умолчанию?"
+
+msgid "Would you like to use BTRFS compression?"
+msgstr "Хотите ли вы использовать сжатие BTRFS?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "Хотите ли вы создать отдельный раздел для /home?"
+
+msgid ""
+"The selected drives do not have the minimum capacity required for an "
+"automatic suggestion\n"
+msgstr ""
+"Выбранные диски не имеют минимальной емкости, необходимой для "
+"автоматического предложения\n"
+
+msgid "Minimum capacity for /home partition: {}GB\n"
+msgstr "Минимальный размер раздела /home: {}GB\n"
+
+msgid "Minimum capacity for Arch Linux partition: {}GB"
+msgstr "Минимальный размер раздела Arch Linux: {}GB"
+
+msgid "Continue"
+msgstr "Продолжить"
+
+msgid "yes"
+msgstr "да"
+
+msgid "no"
+msgstr "нет"
+
+msgid "set: {}"
+msgstr "выбор: {}"
+
+msgid "Manual configuration setting must be a list"
+msgstr "Ручная настройка конфигурации должна представлять собой список"
+
+msgid "No iface specified for manual configuration"
+msgstr "Не указан iface для ручной настройки"
+
+msgid "Manual nic configuration with no auto DHCP requires an IP address"
+msgstr ""
+"Ручная конфигурация сетевого адаптера без автоматического DHCP требует IP-"
+"адреса"
+
+msgid "Add interface"
+msgstr "Добавить интерфейс"
+
+msgid "Edit interface"
+msgstr "Редактировать интерфейс"
+
+msgid "Delete interface"
+msgstr "Удалить интерфейс"
+
+msgid "Select interface to add"
+msgstr "Выберите интерфейс для добавления"
+
+msgid "Manual configuration"
+msgstr "Ручная конфигурация"
+
+msgid "Mark/Unmark a partition as compressed (btrfs only)"
+msgstr "Пометить/снять отметку с раздела как сжатый (только для btrfs)"
+
+msgid ""
+"The password you are using seems to be weak, are you sure you want to use it?"
+msgstr ""
+"Пароль, который вы используете, кажется слабым, вы уверены, что хотите его "
+"использовать?"
+
+msgid ""
+"Provides a selection of desktop environments and tiling window managers, "
+"e.g. gnome, kde, sway"
+msgstr ""
+"Предоставляет выбор окружений рабочего стола и тайловых оконных менеджеров, "
+"например, gnome, kde, sway"
+
+msgid "Select your desired desktop environment"
+msgstr "Выберите желаемое окружение рабочего стола"
+
+msgid ""
+"A very basic installation that allows you to customize Arch Linux as you see "
+"fit."
+msgstr ""
+"Очень базовая установка, позволяющая настроить Arch Linux по своему "
+"усмотрению."
+
+msgid ""
+"Provides a selection of various server packages to install and enable, e.g. "
+"httpd, nginx, mariadb"
+msgstr ""
+"Предоставляет выбор различных пакетов сервера для установки и включения, "
+"например, httpd, nginx, mariadb"
+
+msgid ""
+"Choose which servers to install, if none then a minimal installation will be "
+"done"
+msgstr ""
+"Выберите серверы для установки, если их нет, то будет выполнена минимальная "
+"установка"
+
+msgid "Installs a minimal system as well as xorg and graphics drivers."
+msgstr ""
+"Устанавливает минимальную систему, а также xorg и графические драйверы."
+
+msgid "Press Enter to continue."
+msgstr "Нажмите Enter, чтобы продолжить."
+
+msgid ""
+"Would you like to chroot into the newly created installation and perform "
+"post-installation configuration?"
+msgstr ""
+"Хотите ли вы использовать chroot в новой созданной установке и выполнить "
+"настройку после установки?"
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "Вы уверены, что хотите сбросить эту настройку?"
+
+msgid "Select one or more hard drives to use and configure\n"
+msgstr ""
+"Выберите один или несколько жестких дисков для использования и настройки\n"
+
+msgid "Any modifications to the existing setting will reset the disk layout!"
+msgstr ""
+"Любые изменения существующей настройки приведут к сбросу разметки диска!"
+
+msgid ""
+"If you reset the harddrive selection this will also reset the current disk "
+"layout. Are you sure?"
+msgstr ""
+"Если вы сбросите выбор жесткого диска, это также сбросит текущую разметку "
+"диска. Вы уверены?"
+
+msgid "Save and exit"
+msgstr "Сохранить и выйти"
+
+msgid ""
+"{}\n"
+"contains queued partitions, this will remove those, are you sure?"
+msgstr ""
+"{}\n"
+"содержит разделы в очереди, это удалит их, вы уверены?"
+
+msgid "No audio server"
+msgstr "Отсутствует звуковой сервер"
+
+msgid "(default)"
+msgstr "(по умолчанию)"
+
+msgid "Use ESC to skip"
+msgstr "Используйте ESC, чтобы пропустить"
+
+msgid ""
+"Use CTRL+C to reset current selection\n"
+"\n"
+msgstr ""
+"Используйте CTRL+C для сброса текущего выбора\n"
+"\n"
+
+msgid "Copy to: "
+msgstr "Копировать в: "
+
+msgid "Edit: "
+msgstr "Редактировать: "
+
+msgid "Key: "
+msgstr "Ключ: "
+
+msgid "Edit {}: "
+msgstr "Редактировать {}: "
+
+msgid "Add: "
+msgstr "Добавить: "
+
+msgid "Value: "
+msgstr "Значение: "
+
+msgid ""
+"You can skip selecting a drive and partitioning and use whatever drive-setup "
+"is mounted at /mnt (experimental)"
+msgstr ""
+"Вы можете не выбирать диск и разметку и использовать любой диск, "
+"смонтированный в /mnt (экспериментально)"
+
+msgid "Select one of the disks or skip and use /mnt as default"
+msgstr "Выберите один из дисков или пропустите и используйте /mnt по умолчанию"
+
+msgid "Select which partitions to mark for formatting:"
+msgstr "Выберите, какие разделы следует отметить для форматирования:"
+
+msgid "Use HSM to unlock encrypted drive"
+msgstr "Использовать HSM для разблокировки зашифрованного диска"
+
+msgid "Device"
+msgstr "Устройство"
+
+msgid "Size"
+msgstr "Размер"
+
+msgid "Free space"
+msgstr "Свободное место"
+
+msgid "Bus-type"
+msgstr "Тип шины"
+
+msgid ""
+"Either root-password or at least 1 user with sudo privileges must be "
+"specified"
+msgstr ""
+"Должен быть указан либо пароль root, либо хотя бы 1 пользователь с "
+"привилегиями sudo"
+
+msgid "Enter username (leave blank to skip): "
+msgstr "Введите имя пользователя (оставьте пустым, чтобы пропустить): "
+
+msgid "The username you entered is invalid. Try again"
+msgstr "Введенное вами имя пользователя недействительно. Попробуйте еще раз"
+
+msgid "Should \"{}\" be a superuser (sudo)?"
+msgstr "Должен ли \"{}\" быть суперпользователем (sudo)?"
+
+msgid "Select which partitions to encrypt"
+msgstr "Выберите разделы для шифрования"
+
+msgid "very weak"
+msgstr "очень слабый"
+
+msgid "weak"
+msgstr "слабый"
+
+msgid "moderate"
+msgstr "умеренный"
+
+msgid "strong"
+msgstr "надежный"
+
+msgid "Add subvolume"
+msgstr "Добавить подтом"
+
+msgid "Edit subvolume"
+msgstr "Редактировать подтом"
+
+msgid "Delete subvolume"
+msgstr "Удалить подтом"
+
+msgid "Configured {} interfaces"
+msgstr "Настроено интерфейсов: {}"
+
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"installation"
+msgstr ""
+"Этот параметр определяет количество параллельных загрузок, которые могут "
+"происходить во время установки"
+
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+" (Enter a value between 1 to {})\n"
+"Note:"
+msgstr ""
+"Введите количество параллельных загрузок, которые будут включены.\n"
+" (Введите значение от 1 до {})\n"
+"Примечание:"
+
+msgid ""
+" - Maximum value   : {} ( Allows {} parallel downloads, allows {} downloads "
+"at a time )"
+msgstr ""
+" - Минимальное значение: {} ( Позволяет {} параллельную загрузку, позволяет "
+"{} загрузки одновременно )"
+
+msgid ""
+" - Minimum value   : 1 ( Allows 1 parallel download, allows 2 downloads at a "
+"time )"
+msgstr ""
+" - Минимальное значение: 1 ( Позволяет 1 параллельную загрузку, позволяет 2 "
+"загрузки одновременно )"
+
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )"
+msgstr ""
+" - Отключить/по умолчанию: 0 ( Отключает параллельную загрузку, позволяет "
+"только 1 загрузку за один раз )"
+
+#, python-brace-format
+msgid ""
+"Invalid input! Try again with a valid input [1 to {max_downloads}, or 0 to "
+"disable]"
+msgstr ""
+"Неверный ввод! Повторите попытку с правильным вводом [1 - {max_downloads}, "
+"или 0 - отключить]"
+
+msgid "Parallel Downloads"
+msgstr "Параллельные загрузки"
+
+msgid "ESC to skip"
+msgstr "ESC, чтобы пропустить"
+
+msgid "CTRL+C to reset"
+msgstr "CTRL+C, чтобы сбросить"
+
+msgid "TAB to select"
+msgstr "TAB, чтобы выбрать"
+
+msgid "[Default value: 0] > "
+msgstr "[Значение по умолчанию: 0] > "
+
+msgid ""
+"To be able to use this translation, please install a font manually that "
+"supports the language."
+msgstr ""
+"Чтобы иметь возможность использовать этот перевод, пожалуйста, установите "
+"вручную шрифт, поддерживающий данный язык."
+
+msgid "The font should be stored as {}"
+msgstr "Шрифт должен быть сохранен как {}"
+
+msgid "Archinstall requires root privileges to run. See --help for more."
+msgstr ""
+"Для запуска Archinstall требуются привилегии root. Для получения "
+"дополнительной информации смотрите --help."
+
+msgid "Select an execution mode"
+msgstr "Выберите режим выполнения"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr "Невозможно получить профиль из указанного url: {}"
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+"Профили должны иметь уникальное имя, но найдены определения профиля с "
+"дублирующимся именем: {}"
+
+msgid "Select one or more devices to use and configure"
+msgstr "Выберите одно или несколько устройств для использования и настройки"
+
+msgid ""
+"If you reset the device selection this will also reset the current disk "
+"layout. Are you sure?"
+msgstr ""
+"Если вы сбросите выбор устройства, это также сбросит текущую разметку "
+"дисков. Вы уверены?"
+
+msgid "Existing Partitions"
+msgstr "Существующие разделы"
+
+msgid "Select a partitioning option"
+msgstr "Выберите вариант разбивки на разделы"
+
+msgid "Enter the root directory of the mounted devices: "
+msgstr "Введите корневой каталог смонтированных устройств: "
+
+#, python-brace-format
+msgid "Minimum capacity for /home partition: {}GiB\n"
+msgstr "Минимальный размер раздела /home: {}GiB\n"
+
+#, python-brace-format
+msgid "Minimum capacity for Arch Linux partition: {}GiB"
+msgstr "Минимальный размер раздела Arch Linux: {}GiB"
+
+msgid ""
+"This is a list of pre-programmed profiles_bck, they might make it easier to "
+"install things like desktop environments"
+msgstr ""
+"Это список предварительно запрограммированных профилей, они могут облегчить "
+"установку таких вещей, как окружения рабочего стола"
+
+msgid "Current profile selection"
+msgstr "Текущий выбор профиля"
+
+msgid "Remove all newly added partitions"
+msgstr "Удалить все вновь добавленные разделы"
+
+msgid "Assign mountpoint"
+msgstr "Назначить точку монтирования"
+
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "Пометить/снять отметку для форматирования (стирание данных)"
+
+msgid "Mark/Unmark as bootable"
+msgstr "Пометить/снять пометку как загрузочный"
+
+msgid "Change filesystem"
+msgstr "Изменить файловую систему"
+
+msgid "Mark/Unmark as compressed"
+msgstr "Пометить/снять отметку как сжатый"
+
+msgid "Set subvolumes"
+msgstr "Установить подтома"
+
+msgid "Delete partition"
+msgstr "Удалить раздел"
+
+msgid "Partition"
+msgstr "Раздел"
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr ""
+"Этот раздел в настоящее время зашифрован, для его форматирования необходимо "
+"указать файловую систему"
+
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+"Точки монтирования разделов являются относительными внутри установки, "
+"например, загрузочный раздел будет /boot."
+
+msgid ""
+"If mountpoint /boot is set, then the partition will also be marked as "
+"bootable."
+msgstr ""
+"Если установлена точка монтирования /boot, то раздел также будет помечен как "
+"загрузочный."
+
+msgid "Mountpoint: "
+msgstr "Точка монтирования: "
+
+msgid "Current free sectors on device {}:"
+msgstr "Текущие свободные секторы на устройстве {}:"
+
+msgid "Total sectors: {}"
+msgstr "Всего секторов: {}"
+
+msgid "Enter the start sector (default: {}): "
+msgstr "Введите начальный сектор (по умолчанию: {}): "
+
+msgid ""
+"Enter the end sector of the partition (percentage or block number, default: "
+"{}): "
+msgstr ""
+"Введите конечный сектор раздела (процент или номер блока, по умолчанию: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr "Это приведет к удалению всех вновь добавленных разделов, продолжить?"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr "Управление разделом: {}"
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr "Весь размер: {}"
+
+msgid "Encryption type"
+msgstr "Тип шифрования"
+
+msgid "Iteration time"
+msgstr ""
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr ""
+
+msgid "Higher values increase security but slow down boot time"
+msgstr ""
+
+msgid "Default: 10000ms, Recommended range: 1000-60000"
+msgstr ""
+
+msgid "Iteration time cannot be empty"
+msgstr ""
+
+msgid "Iteration time must be at least 100ms"
+msgstr ""
+
+msgid "Iteration time must be at most 120000ms"
+msgstr ""
+
+msgid "Please enter a valid number"
+msgstr ""
+
+msgid "Partitions"
+msgstr "Разделы"
+
+msgid "No HSM devices available"
+msgstr "Нет доступных устройств HSM"
+
+msgid "Partitions to be encrypted"
+msgstr "Разделы, подлежащие шифрованию"
+
+msgid "Select disk encryption option"
+msgstr "Выбрать вариант шифрования диска"
+
+msgid "Select a FIDO2 device to use for HSM"
+msgstr "Выберите устройство FIDO2 для использования в качестве HSM"
+
+msgid "Use a best-effort default partition layout"
+msgstr "Использовать оптимальную схему разделов по умолчанию"
+
+msgid "Manual Partitioning"
+msgstr "Ручное разбиение на разделы"
+
+msgid "Pre-mounted configuration"
+msgstr "Предварительно смонтированная конфигурация"
+
+msgid "Unknown"
+msgstr "Неизвестно"
+
+msgid "Partition encryption"
+msgstr "Шифрование раздела"
+
+#, python-brace-format
+msgid " ! Formatting {} in "
+msgstr " ! Форматирование {} в "
+
+msgid "← Back"
+msgstr "← Назад"
+
+msgid "Disk encryption"
+msgstr "Шифрование диска"
+
+msgid "Configuration"
+msgstr "Конфигурация"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "All settings will be reset, are you sure?"
+msgstr "Все настройки будут сброшены, вы уверены?"
+
+msgid "Back"
+msgstr "Назад"
+
+msgid "Please chose which greeter to install for the chosen profiles: {}"
+msgstr ""
+"Пожалуйста, выберите, какой экран приветствия установить для выбранных "
+"профилей: {}"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr "Тип окружения рабочего стола: {}"
+
+msgid ""
+"The proprietary Nvidia driver is not supported by Sway. It is likely that "
+"you will run into issues, are you okay with that?"
+msgstr ""
+"Проприетарный драйвер Nvidia не поддерживается Sway. Вполне вероятно, что вы "
+"столкнетесь с проблемами, вы согласны с этим?"
+
+msgid "Installed packages"
+msgstr "Устанавливаемые пакеты"
+
+msgid "Add profile"
+msgstr "Добавить профиль"
+
+msgid "Edit profile"
+msgstr "Изменить профиль"
+
+msgid "Delete profile"
+msgstr "Удалить профиль"
+
+msgid "Profile name: "
+msgstr "Имя профиля: "
+
+msgid "The profile name you entered is already in use. Try again"
+msgstr "Введенное вами имя профиля уже используется. Попробуйте еще раз"
+
+msgid ""
+"Packages to be install with this profile (space separated, leave blank to "
+"skip): "
+msgstr ""
+"Пакеты, которые будут установлены с этим профилем (разделенные пробелами, "
+"оставьте пустым, чтобы пропустить): "
+
+msgid ""
+"Services to be enabled with this profile (space separated, leave blank to "
+"skip): "
+msgstr ""
+"Службы, которые должны быть включены с помощью этого профиля (разделенные "
+"пробелами, оставьте пустым, чтобы пропустить): "
+
+msgid "Should this profile be enabled for installation?"
+msgstr "Должен ли этот профиль быть включен для установки?"
+
+msgid "Create your own"
+msgstr "Создать свой собственный"
+
+msgid ""
+"\n"
+"Select a graphics driver or leave blank to install all open-source drivers"
+msgstr ""
+"\n"
+"Выберите графический драйвер или оставьте пустым, чтобы установить все "
+"драйверы с открытым исходным кодом"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway необходим доступ к вашему компьютеру (набор аппаратных устройств, т.е. "
+"клавиатура, мышь и т.д.)"
+
+msgid ""
+"\n"
+"\n"
+"Choose an option to give Sway access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"Выберите опцию, чтобы предоставить Sway доступ к вашему оборудованию"
+
+msgid "Graphics driver"
+msgstr "Графический драйвер"
+
+msgid "Greeter"
+msgstr "Экран приветствия"
+
+msgid "Please chose which greeter to install"
+msgstr "Пожалуйста, выберите, какой экран приветствия установить"
+
+msgid "This is a list of pre-programmed default_profiles"
+msgstr "Это список запрограммированных по умолчанию профилей"
+
+msgid "Disk configuration"
+msgstr "Конфигурация диска"
+
+msgid "Profiles"
+msgstr "Профили"
+
+msgid "Finding possible directories to save configuration files ..."
+msgstr "Поиск возможных каталогов для сохранения файлов конфигурации ..."
+
+msgid "Select directory (or directories) for saving configuration files"
+msgstr "Выберите каталог (или каталоги) для сохранения файлов конфигурации"
+
+msgid "Add a custom mirror"
+msgstr "Добавить пользовательское зеркало"
+
+msgid "Change custom mirror"
+msgstr "Изменить пользовательское зеркало"
+
+msgid "Delete custom mirror"
+msgstr "Удалить пользовательское зеркало"
+
+msgid "Enter name (leave blank to skip): "
+msgstr "Введите имя (оставьте пустым, чтобы пропустить): "
+
+msgid "Enter url (leave blank to skip): "
+msgstr "Введите адрес (оставьте пустым, чтобы пропустить): "
+
+msgid "Select signature check option"
+msgstr "Выбрать вариант проверки подписи"
+
+msgid "Select signature option"
+msgstr "Выбрать вариант подписи"
+
+msgid "Custom mirrors"
+msgstr "Пользовательские зеркала"
+
+msgid "Defined"
+msgstr "Определено"
+
+msgid "Save user configuration (including disk layout)"
+msgstr "Сохранить конфигурацию пользователя (включая разметку диска)"
+
+msgid ""
+"Enter a directory for the configuration(s) to be saved (tab completion "
+"enabled)\n"
+"Save directory: "
+msgstr ""
+"Введите каталог для сохранения конфигурации (-ций) (включено заполнение "
+"вкладок)\n"
+"Каталог сохранения: "
+
+msgid ""
+"Do you want to save {} configuration file(s) in the following location?\n"
+"\n"
+"{}"
+msgstr ""
+"Хотите ли вы сохранить {} файл(-а) конфигурации в следующем месте?\n"
+"\n"
+"{}"
+
+msgid "Saving {} configuration files to {}"
+msgstr "Сохранение {} файла(-ов) конфигурации в {}"
+
+msgid "Mirrors"
+msgstr "Зеркала"
+
+msgid "Mirror regions"
+msgstr "Регионы зеркала"
+
+msgid ""
+" - Maximum value   : {} ( Allows {} parallel downloads, allows "
+"{max_downloads+1} downloads at a time )"
+msgstr ""
+" - Максимальное значение: {} ( Позволяет {} параллельных загрузок, позволяет "
+"{max_downloads+1} загрузок одновременно )"
+
+msgid "Invalid input! Try again with a valid input [1 to {}, or 0 to disable]"
+msgstr ""
+"Неверный ввод! Повторите попытку с правильным вводом [1 - {}, или 0 - "
+"отключить]"
+
+msgid "Locales"
+msgstr "Локализации"
+
+msgid ""
+"Use NetworkManager (necessary to configure internet graphically in GNOME and "
+"KDE)"
+msgstr ""
+"Использовать NetworkManager (необходим для графической настройки интернета в "
+"GNOME и KDE)"
+
+msgid "Total: {} / {}"
+msgstr "Весь размер: {} / {}"
+
+msgid "All entered values can be suffixed with a unit: B, KB, KiB, MB, MiB..."
+msgstr ""
+"Все вводимые значения могут иметь суффикс с единицей измерения: Б, Кб, КиБ, "
+"Мб, МиБ..."
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr ""
+"Если единица измерения не указана, то значение интерпретируется как сектор"
+
+msgid "Enter start (default: sector {}): "
+msgstr "Введите начало (по умолчанию: сектор {}): "
+
+msgid "Enter end (default: {}): "
+msgstr "Введите конец (по умолчанию: сектор {}): "
+
+msgid "Unable to determine fido2 devices. Is libfido2 installed?"
+msgstr "Невозможно определить устройства fido2. Установлена ли libfido2?"
+
+msgid "Path"
+msgstr "Путь"
+
+msgid "Manufacturer"
+msgstr "Производитель"
+
+msgid "Product"
+msgstr "Продукт"
+
+#, python-brace-format
+msgid "Invalid configuration: {error}"
+msgstr "Неверная конфигурация: {error}"
+
+msgid "Type"
+msgstr "Тип"
+
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr ""
+"Этот параметр определяет количество параллельных загрузок, которые могут "
+"происходить во время загрузки пакетов"
+
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"Введите количество параллельных загрузок, которые будут включены.\n"
+"\n"
+"Примечание:\n"
+
+#, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+" - Максимальное рекомендуемое значение: {} ( Позволяет {} параллельных "
+"загрузок одновременно )"
+
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - Отключить/по умолчанию: 0 ( Отключает параллельную загрузку, позволяет "
+"только 1 загрузку за один раз )\n"
+
+msgid "Invalid input! Try again with a valid input [or 0 to disable]"
+msgstr ""
+"Неверный ввод! Повторите попытку с правильным вводом [ или 0, чтобы "
+"отключить ]"
+
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Hyprland необходим доступ к вашему компьютеру ( набор аппаратных устройств, "
+"т.е. клавиатура, мышь и т.д. )"
+
+msgid ""
+"\n"
+"\n"
+"Choose an option to give Hyprland access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"Выберите опцию, чтобы предоставить Hyprland доступ к вашему оборудованию"
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr ""
+"Все вводимые значения могут иметь суффикс с единицей измерения: %, Б, Кб, "
+"КиБ, Мб, МиБ..."
+
+msgid "Would you like to use unified kernel images?"
+msgstr "Хотите ли Вы использовать унифицированные образы ядра?"
+
+msgid "Unified kernel images"
+msgstr "Унифицированные образы ядра"
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr "Ожидание завершения синхронизации времени (timedatectl show)."
+
+msgid ""
+"Time syncronization not completing, while you wait - check the docs for "
+"workarounds: https://archinstoo.readthedocs.io/"
+msgstr ""
+"Синхронизация времени не завершена, пока вы ждете - проверьте документацию "
+"на предмет обходных путей: https://archinstoo.readthedocs.io/"
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+"Пропуск ожидания автоматической синхронизации времени (это может привести к "
+"проблемам, если время не синхронизируется во время установки)"
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+"Ожидание завершения синхронизации связки ключей Arch Linux (archlinux-"
+"keyring-wkd-sync)."
+
+msgid "Selected profiles: "
+msgstr "Выбранные профили: "
+
+msgid ""
+"Time synchronization not completing, while you wait - check the docs for "
+"workarounds: https://archinstoo.readthedocs.io/"
+msgstr ""
+"Синхронизация времени не завершена, пока вы ждете - проверьте документацию "
+"на предмет обходных путей: https://archinstoo.readthedocs.io/"
+
+msgid "Mark/Unmark as nodatacow"
+msgstr "Пометить/снять пометку как nodatacow"
+
+msgid "Would you like to use compression or disable CoW?"
+msgstr "Хотите ли вы использовать сжатие или отключить CoW?"
+
+msgid "Use compression"
+msgstr "Использовать сжатие"
+
+msgid "Disable Copy-on-Write"
+msgstr "Отключить копирование при записи (CoW)"
+
+msgid ""
+"Provides a selection of desktop environments and tiling window managers, "
+"e.g. GNOME, KDE Plasma, Sway"
+msgstr ""
+"Предоставляет выбор окружений рабочего стола и тайловых оконных менеджеров, "
+"например, GNOME, KDE Plasma, Sway"
+
+#, python-brace-format
+msgid "Configuration type: {}"
+msgstr "Тип конфигурации: {}"
+
+msgid "LVM configuration type"
+msgstr "Тип конфигурации LVM"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr ""
+"Шифрование дисков LVM с более чем 2 разделами в настоящее время не "
+"поддерживается"
+
+msgid ""
+"Use NetworkManager (necessary to configure internet graphically in GNOME and "
+"KDE Plasma)"
+msgstr ""
+"Использовать NetworkManager (необходим для графической настройки интернета в "
+"GNOME и KDE Plasma)"
+
+msgid "Select a LVM option"
+msgstr "Выберите вариант LVM"
+
+msgid "Partitioning"
+msgstr "Разбивка на разделы"
+
+msgid "Logical Volume Management (LVM)"
+msgstr "Управление логическими томами (LVM)"
+
+msgid "Physical volumes"
+msgstr "Физические тома"
+
+msgid "Volumes"
+msgstr "Тома"
+
+msgid "LVM volumes"
+msgstr "Тома LVM"
+
+msgid "LVM volumes to be encrypted"
+msgstr "Тома LVM, подлежащие шифрованию"
+
+msgid "Select which LVM volumes to encrypt"
+msgstr "Выберите тома LVM для шифрования"
+
+msgid "Default layout"
+msgstr "Разметка по умолчанию"
+
+msgid "No Encryption"
+msgstr "Нет шифрования"
+
+msgid "LUKS"
+msgstr "LUKS"
+
+msgid "LVM on LUKS"
+msgstr "LVM на LUKS"
+
+msgid "LUKS on LVM"
+msgstr "LUKS на LVM"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "Archinstoo help"
+msgstr "Справка Archinstall"
+
+msgid " (default)"
+msgstr " (по умолчанию)"
+
+msgid "Press Ctrl+h for help"
+msgstr "Нажмите Ctrl+h для справки"
+
+msgid "Choose an option to give Sway access to your hardware"
+msgstr "Выберите опцию, чтобы предоставить Sway доступ к вашему оборудованию"
+
+msgid "Seat access"
+msgstr "Доступ к месту"
+
+msgid "Mountpoint"
+msgstr "Точка монтирования"
+
+msgid "HSM"
+msgstr "HSM"
+
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr ""
+"Введите пароль шифрования диска (оставьте пустым для отсутствия шифрования)"
+
+msgid "Disk encryption password"
+msgstr "Пароль шифрования диска"
+
+msgid "Partition - New"
+msgstr "Раздел - Новый"
+
+msgid "Filesystem"
+msgstr "Файловая система"
+
+msgid "Invalid size"
+msgstr "Недопустимый размер"
+
+msgid "Start (default: sector {}): "
+msgstr "Начало (по умолчанию: сектор {}): "
+
+msgid "End (default: {}): "
+msgstr "Конец (по умолчанию: сектор {}): "
+
+msgid "Subvolume name"
+msgstr "Имя подтома"
+
+msgid "Disk configuration type"
+msgstr "Тип конфигурации диска"
+
+msgid "Root mount directory"
+msgstr "Корневой каталог для монтирования"
+
+msgid "Select language"
+msgstr "Выбрать язык"
+
+msgid ""
+"Write additional packages to install (space separated, leave blank to skip)"
+msgstr ""
+"Напишите дополнительные пакеты для установки (разделите пробелами, оставьте "
+"пустым, чтобы пропустить)"
+
+msgid "Invalid download number"
+msgstr "Недопустимое количество загрузок"
+
+msgid "Number downloads"
+msgstr "Количество загрузок"
+
+msgid "The username you entered is invalid"
+msgstr "Введенное вами имя пользователя недействительно"
+
+msgid "Username"
+msgstr "Имя пользователя"
+
+#, python-brace-format
+msgid "Should \"{}\" be a superuser (sudo)?\n"
+msgstr "Должен ли \"{}\" быть суперпользователем (sudo)?\n"
+
+msgid "Interfaces"
+msgstr "Интерфейсы"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr "Вам необходимо ввести действительный IP-адрес в режиме IP-конфигурации"
+
+msgid "Modes"
+msgstr "Режимы"
+
+msgid "IP address"
+msgstr "IP-адрес"
+
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr ""
+"Введите IP-адрес вашего шлюза (маршрутизатора) (оставьте пустым, если его "
+"нет)"
+
+msgid "Gateway address"
+msgstr "Адрес шлюза"
+
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr ""
+"Введите ваши DNS-серверы, разделяя их пробелами (оставьте пустым, если их "
+"нет)"
+
+msgid "DNS servers"
+msgstr "DNS-серверы"
+
+msgid "Configure interfaces"
+msgstr "Настройка интерфейсов"
+
+msgid "Kernel"
+msgstr "Ядро"
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr "UEFI не обнаружен и некоторые опции отключены"
+
+msgid "Info"
+msgstr "Информация"
+
+msgid "The proprietary Nvidia driver is not supported by Sway."
+msgstr "Проприетарный драйвер Nvidia не поддерживается Sway."
+
+msgid "It is likely that you will run into issues, are you okay with that?"
+msgstr "Вполне вероятно, что вы столкнетесь с проблемами, вы согласны с этим?"
+
+msgid "Main profile"
+msgstr "Главный профиль"
+
+msgid "Confirm password"
+msgstr "Подтвердить пароль"
+
+msgid "The confirmation password did not match, please try again"
+msgstr "Пароль подтверждения не совпал, попробуйте еще раз"
+
+msgid "Not a valid directory"
+msgstr "Недействительный каталог"
+
+msgid "Would you like to continue?"
+msgstr "Вы хотите продолжить?"
+
+msgid "Directory"
+msgstr "Каталог"
+
+msgid ""
+"Enter a directory for the configuration(s) to be saved (tab completion "
+"enabled)"
+msgstr ""
+"Введите каталог для сохранения конфигурации (-ций) (включено заполнение "
+"вкладок)"
+
+#, python-brace-format
+msgid "Do you want to save the configuration file(s) to {}?"
+msgstr "Хотите ли вы сохранить файл(ы) конфигурации в {}?"
+
+msgid "Enabled"
+msgstr "Включено"
+
+msgid "Disabled"
+msgstr "Выключено"
+
+msgid ""
+"Please submit this issue (and file) to https://github.com/archlinux/"
+"archinstoo/issues"
+msgstr ""
+"Пожалуйста, отправьте эту проблему (и файл) по адресу https://github.com/"
+"archlinux/archinstoo/issues"
+
+msgid "Mirror name"
+msgstr "Название зеркала"
+
+msgid "Url"
+msgstr "URL-адрес"
+
+msgid "Select signature check"
+msgstr "Выберите проверку подписи"
+
+msgid "Select execution mode"
+msgstr "Выберите режим выполнения"
+
+msgid "Press ? for help"
+msgstr "Нажмите ? для справки"
+
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr ""
+"Выберите опцию, чтобы предоставить Hyprland доступ к вашему оборудованию"
+
+msgid "Additional repositories"
+msgstr "Дополнительные репозитории"
+
+msgid "NTP"
+msgstr "NTP"
+
+msgid "Swap on zram"
+msgstr "Подкачка на zram"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "Signature check"
+msgstr "Проверка подписи"
+
+#, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr "Выбранный сегмент свободного пространства на устройстве {}:"
+
+#, python-brace-format
+msgid "Size: {} / {}"
+msgstr "Размер: {} / {}"
+
+#, python-brace-format
+msgid "Size (default: {}): "
+msgstr "Размер (по умолчанию: {}): "
+
+msgid "HSM device"
+msgstr "Устройство HSM"
+
+msgid "Some packages could not be found in the repository"
+msgstr "Некоторые пакеты не найдены в репозитории"
+
+msgid "User"
+msgstr "Пользователь"
+
+msgid "The specified configuration will be applied"
+msgstr "Будет применена указанная конфигурация"
+
+msgid "Wipe"
+msgstr ""
+
+#, fuzzy
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "Пометить/снять пометку как загрузочный"
+
+#, fuzzy
+msgid "Loading packages..."
+msgstr "Дополнительные пакеты"
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr ""
+
+#, fuzzy
+msgid "Add a custom repository"
+msgstr "Добавить пользовательское зеркало"
+
+#, fuzzy
+msgid "Change custom repository"
+msgstr "Изменить пользовательское зеркало"
+
+#, fuzzy
+msgid "Delete custom repository"
+msgstr "Удалить пользовательское зеркало"
+
+#, fuzzy
+msgid "Repository name"
+msgstr "Название зеркала"
+
+#, fuzzy
+msgid "Add a custom server"
+msgstr "Добавить пользовательское зеркало"
+
+#, fuzzy
+msgid "Change custom server"
+msgstr "Изменить пользовательское зеркало"
+
+#, fuzzy
+msgid "Delete custom server"
+msgstr "Удалить пользовательское зеркало"
+
+msgid "Server url"
+msgstr ""
+
+#, fuzzy
+msgid "Select regions"
+msgstr "Выбрать вариант подписи"
+
+#, fuzzy
+msgid "Add custom servers"
+msgstr "Добавить пользовательское зеркало"
+
+#, fuzzy
+msgid "Add custom repository"
+msgstr "Добавить пользовательское зеркало"
+
+#, fuzzy
+msgid "Loading mirror regions..."
+msgstr "Регионы зеркала"
+
+#, fuzzy
+msgid "Mirrors and repositories"
+msgstr "Дополнительные репозитории"
+
+#, fuzzy
+msgid "Selected mirror regions"
+msgstr "Регионы зеркала"
+
+#, fuzzy
+msgid "Custom servers"
+msgstr "Пользовательские зеркала"
+
+#, fuzzy
+msgid "Custom repositories"
+msgstr "Дополнительные репозитории"
+
+msgid "Only ASCII characters are supported"
+msgstr ""
+
+msgid "Show help"
+msgstr ""
+
+msgid "Exit help"
+msgstr ""
+
+msgid "Preview scroll up"
+msgstr ""
+
+msgid "Preview scroll down"
+msgstr ""
+
+msgid "Move up"
+msgstr ""
+
+msgid "Move down"
+msgstr ""
+
+msgid "Move right"
+msgstr ""
+
+msgid "Move left"
+msgstr ""
+
+msgid "Jump to entry"
+msgstr ""
+
+msgid "Skip selection (if available)"
+msgstr ""
+
+msgid "Reset selection (if available)"
+msgstr ""
+
+#, fuzzy
+msgid "Select on single select"
+msgstr "Выберите проверку подписи"
+
+#, fuzzy
+msgid "Select on multi select"
+msgstr "Выберите часовой пояс"
+
+msgid "Reset"
+msgstr ""
+
+#, fuzzy
+msgid "Skip selection menu"
+msgstr "Выберите режим выполнения"
+
+msgid "Start search mode"
+msgstr ""
+
+msgid "Exit search mode"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway необходим доступ к вашему компьютеру (набор аппаратных устройств, т.е. "
+"клавиатура, мышь и т.д.)"
+
+#, fuzzy
+msgid "Choose an option to give labwc access to your hardware"
+msgstr "Выберите опцию, чтобы предоставить Sway доступ к вашему оборудованию"
+
+#, fuzzy
+msgid ""
+"niri needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway необходим доступ к вашему компьютеру (набор аппаратных устройств, т.е. "
+"клавиатура, мышь и т.д.)"
+
+#, fuzzy
+msgid "Choose an option to give niri access to your hardware"
+msgstr "Выберите опцию, чтобы предоставить Sway доступ к вашему оборудованию"
+
+#, fuzzy
+msgid "Mark/Unmark as ESP"
+msgstr "Пометить/снять пометку как загрузочный"
+
+msgid "Package group:"
+msgstr ""
+
+#, fuzzy
+msgid "Exit archinstoo"
+msgstr "Справка Archinstall"
+
+#, fuzzy
+msgid "Reboot system"
+msgstr "Файловая система"
+
+#, fuzzy
+msgid "chroot into installation for post-installation configurations"
+msgstr ""
+"Хотите ли вы использовать chroot в новой созданной установке и выполнить "
+"настройку после установки?"
+
+msgid "Installation completed"
+msgstr ""
+
+#, fuzzy
+msgid "What would you like to do next?"
+msgstr "Вы хотите продолжить?"
+
+#, fuzzy, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr ""
+"Выберите режим для конфигурации \"{}\" или пропустите, чтобы использовать "
+"режим по умолчанию \"{}\"."
+
+#, fuzzy
+msgid "Incorrect credentials file decryption password"
+msgstr "Пароль шифрования диска"
+
+#, fuzzy
+msgid "Incorrect password"
+msgstr "Пароль root"
+
+#, fuzzy
+msgid "Credentials file decryption password"
+msgstr "Пароль шифрования диска"
+
+#, fuzzy
+msgid "Do you want to encrypt the user_credentials.json file?"
+msgstr "Хотите ли вы сохранить файл(ы) конфигурации в {}?"
+
+#, fuzzy
+msgid "Credentials file encryption password"
+msgstr "Пароль шифрования диска"
+
+#, fuzzy, python-brace-format
+msgid "Repositories: {}"
+msgstr "Название зеркала"
+
+#, fuzzy
+msgid "New version available"
+msgstr "Нет доступных устройств HSM"
+
+#, fuzzy
+msgid "Passwordless login"
+msgstr "Пароль"
+
+msgid "Second factor login"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to configure Bluetooth?"
+msgstr "Вы хотите продолжить?"
+
+msgid "Print service"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "Вы хотите продолжить?"
+
+#, fuzzy
+msgid "Power management"
+msgstr "Управление разделом: {}"
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Applications"
+msgstr ""
+
+msgid "U2F login method: "
+msgstr ""
+
+msgid "Passwordless sudo: "
+msgstr ""
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr ""
+
+msgid "Syncing the system..."
+msgstr ""
+
+msgid "Value cannot be empty"
+msgstr ""
+
+msgid "Snapshot type"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "Тип окружения рабочего стола: {}"
+
+msgid "U2F login setup"
+msgstr ""
+
+msgid "No U2F devices found"
+msgstr ""
+
+msgid "U2F Login Method"
+msgstr ""
+
+#, fuzzy
+msgid "Enable passwordless sudo?"
+msgstr "Введите пароль: "
+
+#, fuzzy, python-brace-format
+msgid "Setting up U2F device for user: {}"
+msgstr "Выберите устройство FIDO2 для использования в качестве HSM"
+
+msgid ""
+"You may need to enter the PIN and then touch your U2F device to register it"
+msgstr ""
+
+msgid "Starting device modifications in "
+msgstr ""
+
+#, fuzzy
+msgid "No network connection found"
+msgstr "Нет сетевой конфигурации"
+
+#, fuzzy
+msgid "Would you like to connect to a Wifi?"
+msgstr "Вы хотите продолжить?"
+
+#, fuzzy
+msgid "No wifi interface found"
+msgstr "Настройка интерфейсов"
+
+#, fuzzy
+msgid "Select wifi network to connect to"
+msgstr "Выберите один сетевой интерфейс для настройки"
+
+msgid "Scanning wifi networks..."
+msgstr ""
+
+#, fuzzy
+msgid "No wifi networks found"
+msgstr "Нет сетевой конфигурации"
+
+msgid "Failed setting up wifi"
+msgstr ""
+
+#, fuzzy
+msgid "Enter wifi password"
+msgstr "Введите пароль: "
+
+msgid "Ok"
+msgstr ""
+
+msgid "Removable"
+msgstr ""
+
+msgid "Install to removable location"
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location)"
+msgstr ""
+
+msgid "Will install to standard location with NVRAM entry"
+msgstr ""
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr ""
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+
+msgid "Firmware that does not properly support NVRAM boot entries."
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr ""
+
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr ""
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+#, fuzzy
+msgid "Language"
+msgstr "Язык локали"
+
+msgid "Compression algorithm"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"Устанавливаются только такие пакеты, как base, base-devel, linux, linux-"
+"firmware, efibootmgr и дополнительные пакеты профиля."
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "Выберите точку монтирования:"
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway необходим доступ к вашему компьютеру (набор аппаратных устройств, т.е. "
+"клавиатура, мышь и т.д.)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Выберите опцию, чтобы предоставить Sway доступ к вашему оборудованию"
+
+msgid ""
+"Ctrl+C to clear, TAB to select multiple, / to search, Ctrl+H for full help"
+msgstr ""
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Учетная запись пользователя"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Должен ли этот профиль быть включен для установки?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Справка Archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Файловая система"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Управление разделом: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Редактировать"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Вы хотите продолжить?"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Пароль"
+
+#, fuzzy
+msgid "Mirrors and repos"
+msgstr "Дополнительные репозитории"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Конфигурация диска"
+
+#, fuzzy
+msgid "Kernel headers"
+msgstr "Ядра"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Настройка сети"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Пользовательские зеркала"
+
+msgid "Privilege esc"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Пользовательские зеркала"
+
+msgid "Commands"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "save selections and abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selection"
+msgstr "Текущий выбор профиля"
+
+#, fuzzy
+msgid "cancel"
+msgstr "Отменить"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Желаемое имя хоста для установки: "
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"Пожалуйста, отправьте эту проблему (и файл) по адресу https://github.com/"
+"archlinux/archinstoo/issues"
+
+#, fuzzy, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr ""
+"Для запуска Archinstall требуются привилегии root. Для получения "
+"дополнительной информации смотрите --help."
+
+msgid "Pacman misc options"
+msgstr ""
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "Сохранить конфигурацию"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+#, fuzzy
+msgid "Change shell"
+msgstr "Изменить файловую систему"
+
+msgid "Manage groups"
+msgstr ""
+
+#, fuzzy
+msgid "Invalid git URL"
+msgstr "Недопустимый размер"
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "Должен ли \"{}\" быть суперпользователем (sudo)?\n"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Справка Archinstall"
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "Дополнительные пакеты"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "Дополнительные пакеты"
+
+msgid "Not found in AUR"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"Для наилучшей совместимости с оборудованием AMD вы можете использовать либо "
+"все варианты с открытым исходным кодом, либо AMD / ATI."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"Для лучшей совместимости с оборудованием Intel вы можете использовать либо "
+"все варианты с открытым исходным кодом, либо Intel.\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"Для наилучшей совместимости с оборудованием Nvidia вы можете использовать "
+"проприетарный драйвер Nvidia.\n"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Справка Archinstall"
+
+msgid "Pacman config"
+msgstr ""
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "Автоматическая синхронизация времени (NTP)"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr ""
+"Должен быть указан либо пароль root, либо хотя бы 1 пользователь с "
+"привилегиями sudo"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Справка Archinstall"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "Выберите часовой пояс"
+
+msgid "Cyan"
+msgstr ""
+
+#, fuzzy
+msgid "Green"
+msgstr "Экран приветствия"
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+msgid "Blue"
+msgstr ""
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "Выберите действие для '{}'"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "Дополнительные пакеты"
+
+msgid "Headers"
+msgstr ""
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "Отменить"
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "Выберите одно или несколько устройств для использования и настройки"
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"Существовавшая ранее блокировка pacman не завершилась. Пожалуйста, очистите "
+"все существующие сессии pacman перед использованием archinstoo."
+
+msgid "Create empty layout (wipe all)"
+msgstr ""

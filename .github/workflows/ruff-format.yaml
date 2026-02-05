@@ -1,4 +1,4 @@
-on: [ push, pull_request ]
+on: [ push ]
 name: ruff check formatting
 jobs:
   ruff_format_check:

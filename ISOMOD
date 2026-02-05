@@ -113,7 +113,7 @@ EOF
 # allows for arrow up faster testing
 echo "Adding to zsh history..."
 cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
-: 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstall --debug --advanced
+: 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstoo --debug --advanced
 HISTEOF
 
 # add 'archinstoo' command to PATH
@@ -129,7 +129,7 @@ else
     git clone https://github.com/h8d13/archinstoo /root/archinstoo
 fi
 cd /root/archinstoo/archinstoo
-exec python -m archinstall --debug "$@"
+exec python -m archinstoo --debug "$@"
 CMDEOF
 chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo"
 

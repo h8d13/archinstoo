@@ -1,12 +1,6 @@
 name: bug report
-description: archinstall crashed or could not install properly?
+description: archinstoo crashed or could not install properly?
 body:
-  - type: markdown
-    attributes:
-      value: >
-        Please read the ~5 known issues first:
-        https://archinstall.archlinux.page/help/known_issues.html
-
   - type: markdown
     attributes:
       value: >
@@ -37,13 +31,6 @@ body:
     validations:
       required: true
 
-  - type: markdown
-    attributes:
-      value: >
-        **Note**: Assuming you have network connectivity,
-        you can easily post the installation log using the following command:
-        `curl -F'file=@/var/log/archinstoo/install.log' https://0x0.st`
-
   - type: textarea
     id: freeform
     attributes:
@@ -59,7 +46,7 @@ body:
 
         I was installing on X hardware ...
 
-        Then X Y Z happened and archinstall crashed ...
+        Then X Y Z happened and archinstoo crashed ...
 
         #### Virtual machine config:
 
