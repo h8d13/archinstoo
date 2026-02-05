@@ -166,8 +166,8 @@ def _script_from_argv() -> str | None:
 
 
 def run_as_a_module() -> int:
-	# short-circuit for help before any preparation
-	if '-h' in sys.argv or '--help' in sys.argv:
+	# short-circuit for global help (no --script) before any preparation
+	if ('-h' in sys.argv or '--help' in sys.argv) and '--script' not in sys.argv:
 		from .lib.args import get_arch_config_handler
 
 		get_arch_config_handler().print_help()
