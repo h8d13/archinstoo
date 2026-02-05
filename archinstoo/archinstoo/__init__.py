@@ -47,7 +47,7 @@ def _bootstrap() -> int:
 		info('Already bootstrapped...')
 		return 0
 	try:
-		info('Fetching deps...')
+		debug('Fetching deps...')
 		Pacman.run(f'-S --needed --noconfirm {" ".join(hard_depends)}', peek_output=True)
 		# mark in current env as bootstraped
 		# avoid infinite reloads
@@ -55,7 +55,7 @@ def _bootstrap() -> int:
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
 		Os.set_env('ARCHINSTOO_DEPS_FETCHED', '1')
 	except Exception:
-		info('Failed to fetch deps.')
+		debug('Failed to fetch deps.')
 		return 1
 	info('Reloading python...')
 	try:
