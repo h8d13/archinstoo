@@ -11,7 +11,7 @@ jobs:
       image: archlinux/archlinux:latest
       options: --privileged
     steps:
-      - uses: actions/checkout@de0fac2545e050ba11c8b8c7433b63f27a47d7e9 # v4
+      - uses: actions/checkout@v4
       - name: Prepare arch
         run: |
           pacman-key --init
@@ -29,7 +29,7 @@ jobs:
         run: |
           python -V
           archinstoo --help
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      - uses: actions/upload-artifact@v4
         with:
           name: archinstoo
           path: archinstoo/dist/*

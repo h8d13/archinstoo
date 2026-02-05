@@ -45,7 +45,7 @@ optdepends=(
 )
 provides=(archinstoo)
 replaces=(archinstoo)
-source=("$pkgname::git+$url.git#branch=dot-rename")
+source=("$pkgname::git+$url.git")
 sha512sums=('SKIP')
 
 pkgver() {
