@@ -84,6 +84,8 @@ See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported h
 
 See [Multi-boot](./.github/MULTI_BOOT.md) for example to boot multiple OSes.
 
+See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
+
 ## Testing
 
 **Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md).
