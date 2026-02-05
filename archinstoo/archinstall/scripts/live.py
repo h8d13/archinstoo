@@ -69,7 +69,7 @@ def perform_installation(
 		# Configure system basics
 		if locale_config:
 			installation.set_vconsole(locale_config)
-			installation.set_locale(locale_config)
+			# Skip set_locale in live mode - system locale already configured
 
 		if config.hostname:
 			installation.set_hostname(config.hostname)
