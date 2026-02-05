@@ -114,10 +114,11 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
 	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
+	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
+
 	if args.debug:
 		from .lib.disk.utils import disk_layouts
 
-		debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 
 
