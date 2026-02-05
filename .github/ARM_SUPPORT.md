@@ -16,20 +16,6 @@ This usually involves using `qemu-user-static qemu-user-static-binfmt` from an x
 
 ---
 
-## Using the `live` script
-
-This is a reduced version of `guided` that only aims to setup certain stuff. 
-
-> Removes bootloaders/disks and more things that are not needed for a running system.
-
-First `./DEV -h2t` downloads dependencies you may need. 
-
-Then `./RUN --script live` will bring you to a minimal menu that is aimed to run on a live system. 
-
-Through this you can set-up server usecases or desktops and more utilities you might need.
-
----
-
 ## Example Stage 1 for Rasp Pi 5 Model B Rev 1.0
 
 This script is specifically for the Pi 5 Model B. Other Pi models may need different kernels and boot configurations.
@@ -186,6 +172,20 @@ echo "Unmounting..."
 umount /mnt/boot /mnt
 ############
 ```
+
+---
+
+## Using the `live` script
+
+This is a reduced version of `guided` that only aims to setup certain stuff. 
+
+> Removes bootloaders/disks and more things that are not needed for a running system.
+
+First `./DEV -h2t` downloads dependencies you may need. 
+
+Then `./RUN --script live` will bring you to a minimal menu that is aimed to run on a live system. 
+
+Through this you can set-up server usecases or desktops and more utilities you might need.
 
 
 <img width="1920" height="1080" alt="Screenshot 2026-02-05 15-32-36" src="https://github.com/user-attachments/assets/a0bdf9cd-a472-48f8-a5fc-7d5467381a30" />
