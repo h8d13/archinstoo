@@ -11,7 +11,7 @@ jobs:
       image: archlinux/archlinux:latest
       options: --privileged
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2545e050ba11c8b8c7433b63f27a47d7e9 # v4
       - name: Prepare arch
         run: |
           pacman-key --init

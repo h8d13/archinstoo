@@ -1,7 +1,15 @@
 # This workflow will upload a Python Package when a release is created
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+#
+# To enable Trusted Publishing:
+# 1. Go to https://pypi.org/manage/account/publishing/
+# 2. Add a new pending publisher with:
+#    - Project name: archinstoo
+#    - Owner: h8d13
+#    - Repository: archinstoo
+#    - Workflow: python-publish.yml
 
-name: Upload archinstall to PyPi
+name: Upload archinstoo to PyPi
 
 on:
   release:
@@ -9,25 +17,23 @@ on:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
     permissions:
-      # IMPORTANT: this permission is mandatory for Trusted Publishing
-      id-token: write
+      id-token: write  # Required for Trusted Publishing
     container:
       image: archlinux/archlinux:latest
       options: --privileged
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@de0fac2545e050ba11c8b8c7433b63f27a47d7e9 # v4
       - name: Prepare arch
         run: |
           pacman-key --init
           pacman --noconfirm -Sy archlinux-keyring
           pacman --noconfirm -Syyu
-          pacman --noconfirm -Sy python python-setuptools python-pip python-build python-twine python-pyparted python-pydantic
-      - name: Build archinstall
-        run: |
-          python -m build --wheel archinstoo
-      - name: Publish archinstall to PyPi
-        run: |
-          twine upload archinstoo/dist/*
+          pacman --noconfirm -Sy python python-setuptools python-pip python-build python-pyparted
+      - name: Build archinstoo
+        run: python -m build --wheel archinstoo
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: archinstoo/dist/
