@@ -142,7 +142,7 @@ def mount_additional_filesystems(mount_point: Path, handler: DeviceHandler) -> N
 				try:
 					handler.mount(Path(device), target_path, create_target_mountpoint=True)
 					info(f'Mounted {device} to {target_path}')
-				except (DiskError, SysCallError):
+				except DiskError, SysCallError:
 					warn(f'Could not mount {device} to {target_path}, skipping...')
 
 	except Exception as e:

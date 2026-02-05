@@ -1511,7 +1511,7 @@ def search_packages_rpc(
 		if isinstance(votes_value, int | float | str):
 			try:
 				votes = int(votes_value)
-			except (TypeError, ValueError):
+			except TypeError, ValueError:
 				votes = None
 		maintainer = entry.get('Maintainer')
 		is_orphan = maintainer in (None, '')
