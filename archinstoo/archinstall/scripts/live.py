@@ -111,7 +111,7 @@ def perform_installation(
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
 
-			if profile_config.profile and DisplayServer.X11 in profile_config.profile.display_servers() and locale_config:
+			if profile_config.profiles and DisplayServer.X11 in profile_config.display_servers() and locale_config:
 				installation.set_x11_keyboard(locale_config.kb_layout)
 
 		# Additional packages
@@ -139,8 +139,9 @@ def perform_installation(
 				installation.lock_root_account()
 
 		# Post-install profile hooks
-		if (profile_config := config.profile_config) and profile_config.profile:
-			profile_config.profile.post_install(installation)
+		if (profile_config := config.profile_config) and profile_config.profiles:
+			for profile in profile_config.profiles:
+				profile.post_install(installation)
 
 		# Services
 		if services := config.services:

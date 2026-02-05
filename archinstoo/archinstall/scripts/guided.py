@@ -136,8 +136,8 @@ def perform_installation(
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
 
-			# Set X11 keyboard config if profile uses X11
-			if profile_config.profile and DisplayServer.X11 in profile_config.profile.display_servers() and locale_config:
+			# Set X11 keyboard config if any profile uses X11
+			if profile_config.profiles and DisplayServer.X11 in profile_config.display_servers() and locale_config:
 				installation.set_x11_keyboard(locale_config.kb_layout)
 
 		if config.packages and config.packages[0] != '':
@@ -163,8 +163,9 @@ def perform_installation(
 			if config.auth_config.lock_root_account:
 				installation.lock_root_account()
 
-		if (profile_config := config.profile_config) and profile_config.profile:
-			profile_config.profile.post_install(installation)
+		if (profile_config := config.profile_config) and profile_config.profiles:
+			for profile in profile_config.profiles:
+				profile.post_install(installation)
 
 		# If the user provided a list of services to be enabled, pass the list to the enable_service function.
 		# Note that while it's called enable_service, it can actually take a list of services and iterate it.
