@@ -72,6 +72,18 @@ Or modify existing ones direcly. Can also see here for [examples](./archinstoo/e
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported. 
 
+```yaml
+Available options:
+    mirror
+    size
+    count    [*] requires root
+    format   [*] requires root
+    guided   [*] requires root < DEFAULT
+    live     [*] requires root
+    minimal  [*] requires root
+    rescue   [*] requires root
+```
+
 The full structure of the project can be consulted through [`TREE`](./archinstoo)
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
