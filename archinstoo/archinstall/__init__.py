@@ -126,11 +126,7 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 	Usually ran straight as a module: python -m archinstall or compiled as a package.
 	In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	"""
-	# handle global help
 	args = handler.args
-	if '-h' in sys.argv or '--help' in sys.argv:
-		handler.print_help()
-		return 0
 
 	if not is_root():
 		print(tr('archinstall {script} requires root privileges to run. See --help for more.').format(script=script))
@@ -170,6 +166,13 @@ def _script_from_argv() -> str | None:
 
 
 def run_as_a_module() -> int:
+	# short-circuit for help before any preparation
+	if '-h' in sys.argv or '--help' in sys.argv:
+		from .lib.args import get_arch_config_handler
+
+		get_arch_config_handler().print_help()
+		return 0
+
 	# set debug early from sys.argv before heavy imports
 	if '--debug' in sys.argv:
 		output.log_level = logging.DEBUG
