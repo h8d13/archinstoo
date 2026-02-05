@@ -205,21 +205,23 @@
   "profile_config": {
     "gfx_driver": "All open-source",
     "greeter": "lightdm-gtk-greeter",
-    "profile": {
-      "custom_settings": {
-        "Hyprland": {
-          "seat_access": "polkit"
+    "profiles": [
+      {
+        "custom_settings": {
+          "Hyprland": {
+            "seat_access": "polkit"
+          },
+          "Sway": {
+            "seat_access": "seatd"
+          }
         },
-        "Sway": {
-          "seat_access": "seatd"
-        }
-      },
-      "details": [
-        "Sway",
-        "Hyprland"
-      ],
-      "main": "Desktop"
-    }
+        "details": [
+          "Sway",
+          "Hyprland"
+        ],
+        "main": "Desktop"
+      }
+    ]
   },
   "custom_commands": [
     "echo 'Hello, World!'"
