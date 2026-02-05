@@ -77,7 +77,7 @@ case "$1" in
 	fi
 	;;
 	*)
-	# Pass through to archinstall
+	# Pass through to archinstoo
 	./RUN "$@"
 	;;
 esac

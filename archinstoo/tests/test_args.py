@@ -2,10 +2,10 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from archinstall.default_profiles.profile import GreeterType
-from archinstall.lib.args import ArchConfig, ArchConfigHandler, Arguments
-from archinstall.lib.hardware import GfxDriver
-from archinstall.lib.models.application import (
+from archinstoo.default_profiles.profile import GreeterType
+from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments
+from archinstoo.lib.hardware import GfxDriver
+from archinstoo.lib.models.application import (
 	ApplicationConfiguration,
 	Audio,
 	AudioConfiguration,
@@ -23,19 +23,19 @@ from archinstall.lib.models.application import (
 	PrintServiceConfiguration,
 	ZramConfiguration,
 )
-from archinstall.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
-from archinstall.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstall.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
-from archinstall.lib.models.locale import LocaleConfiguration
-from archinstall.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
-from archinstall.lib.models.network import NetworkConfiguration, Nic, NicType
-from archinstall.lib.models.packages import Repository
-from archinstall.lib.models.users import Password, Shell, User
-from archinstall.lib.translationhandler import translation_handler
+from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
+from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
+from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
+from archinstoo.lib.models.locale import LocaleConfiguration
+from archinstoo.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
+from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
+from archinstoo.lib.models.packages import Repository
+from archinstoo.lib.models.users import Password, Shell, User
+from archinstoo.lib.translationhandler import translation_handler
 
 
 def test_default_args(monkeypatch: MonkeyPatch) -> None:
-	monkeypatch.setattr('sys.argv', ['archinstall'])
+	monkeypatch.setattr('sys.argv', ['archinstoo'])
 	handler = ArchConfigHandler()
 	args = handler.args
 	assert args == Arguments(
@@ -60,7 +60,7 @@ def test_correct_parsing_args(
 	monkeypatch.setattr(
 		'sys.argv',
 		[
-			'archinstall',
+			'archinstoo',
 			'--config',
 			str(config_fixture),
 			'--config-url',
@@ -104,7 +104,7 @@ def test_config_file_parsing(
 	monkeypatch.setattr(
 		'sys.argv',
 		[
-			'archinstall',
+			'archinstoo',
 			'--config',
 			str(config_fixture),
 		],
@@ -157,7 +157,7 @@ def test_config_file_parsing(
 			sys_enc='UTF-8',
 			console_font='ter-v16b',
 		),
-		archinstall_language=translation_handler.get_language_by_abbr('en'),
+		archinstoo_language=translation_handler.get_language_by_abbr('en'),
 		disk_config=DiskLayoutConfiguration(
 			config_type=DiskLayoutType.Default,
 			device_modifications=[],

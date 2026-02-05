@@ -1,0 +1,1162 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: sv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway behöver tillgång till din sitshantering (samling av hårdvaruenheter, "
+"t.ex. tangentbord, mus, etc)"
+
+msgid "Choose an option to give Sway access to your hardware"
+msgstr "Välj ett alternativ för att ge Sway åtkomst till din hårdvara"
+
+msgid "Seat access"
+msgstr "Åtkomst av sitshantering"
+
+#, fuzzy
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"niri behöver tillgång till din sitshantering (samling av hårdvaruenheter, "
+"t.ex. tangentbord, mus, etc)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Välj ett alternativ för att ge niri åtkomst till din hårdvara"
+
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"labwc behöver tillgång till din sitshantering (samling av hårdvaruenheter, "
+"t.ex. tangentbord, mus, etc)"
+
+msgid "Choose an option to give labwc access to your hardware"
+msgstr "Välj ett alternativ för att ge labwc åtkomst till din hårdvara"
+
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Hyprland behöver tillgång till din sitshantering (samling av hårdvaruenheter "
+"t.ex. tangentbord, mus, etc)"
+
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr "Välj ett alternativ för att ge Hyprland åtkomst till din hårdvara"
+
+msgid "Installed packages"
+msgstr "Installerade paket"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr "Miljötyp: {}"
+
+#, fuzzy, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr "Archinstall kräver root-privilegier för att köras. Se --help för mer."
+
+msgid "Add a custom repository"
+msgstr "Lägg till en anpassat arkiv"
+
+msgid "Change custom repository"
+msgstr "Ändra anpassat arkiv"
+
+msgid "Delete custom repository"
+msgstr "Ta bort anpassat arkiv"
+
+msgid "Repository name"
+msgstr "Arkivnamn"
+
+msgid "Name"
+msgstr "Namn"
+
+msgid "Url"
+msgstr "Webbadress"
+
+msgid "Select signature check"
+msgstr "Välj signaturkontroll"
+
+msgid "Signature check"
+msgstr "Signaturkontroll"
+
+msgid "Select signature option"
+msgstr "Välj signaturalternativ"
+
+msgid "Add a custom server"
+msgstr "Lägg till en anpassad server"
+
+msgid "Change custom server"
+msgstr "Ändra anpassad server"
+
+msgid "Delete custom server"
+msgstr "Ta bort anpassad server"
+
+msgid "Server url"
+msgstr "Server url"
+
+msgid "Select regions"
+msgstr "Välj regioner"
+
+msgid "Optional repositories"
+msgstr "Valfria arkiv"
+
+msgid "Add custom repository"
+msgstr "Lägg till ett anpassat arkiv"
+
+msgid "Add custom servers"
+msgstr "Lägg till en anpassade servrar"
+
+msgid "Pacman misc options"
+msgstr ""
+
+msgid "Additional repositories"
+msgstr "Ytterligare arkiv"
+
+msgid "Loading mirror regions..."
+msgstr "Laddar spegelregioner..."
+
+msgid "Mirror regions"
+msgstr "Spegelregioner"
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Show help"
+msgstr "Visa hjälp"
+
+msgid "Exit help"
+msgstr "Avsluta hjälpen"
+
+msgid "Preview scroll up"
+msgstr "Förhandsgranska rulla uppåt"
+
+msgid "Preview scroll down"
+msgstr "Förhandsgranska rulla nedåt"
+
+msgid "Move up"
+msgstr "Flytta upp"
+
+msgid "Move down"
+msgstr "Flytta ned"
+
+msgid "Move right"
+msgstr "Flytta höger"
+
+msgid "Move left"
+msgstr "Flytta vänster"
+
+msgid "Jump to entry"
+msgstr "Hoppa till posten"
+
+msgid "Skip selection (if available)"
+msgstr "Hoppa över valet (om tillgängligt)"
+
+msgid "Reset selection (if available)"
+msgstr "Återställ val (om tillgängligt)"
+
+msgid "Select on single select"
+msgstr "Välj på enstaka val"
+
+msgid "Select on multi select"
+msgstr "Välj på flerval"
+
+msgid "Reset"
+msgstr "Återställ"
+
+msgid "Skip selection menu"
+msgstr "Hoppa över valmenyn"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Lösenord"
+
+msgid "Password"
+msgstr "Lösenord"
+
+msgid "Confirm password"
+msgstr "Bekräfta lösenord"
+
+msgid "The confirmation password did not match, please try again"
+msgstr "Bekräftelselösenordet matchade inte, försök igen"
+
+msgid "Not a valid directory"
+msgstr "Inte en giltig katalog"
+
+msgid "Archinstoo help"
+msgstr "Archinstall hjälp"
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "Vill du verkligen återställa denna inställning?"
+
+msgid "Only ASCII characters are supported"
+msgstr "Endast ASCII-tecken stöds"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nej"
+
+msgid " (default)"
+msgstr " (standard)"
+
+msgid "The specified configuration will be applied"
+msgstr "Den angivna konfigurationen kommer att tillämpas"
+
+msgid "Would you like to continue?"
+msgstr "Vill du fortsätta?"
+
+msgid "Configuration"
+msgstr "Konfiguration"
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "Spara konfiguration"
+
+msgid "Add interface"
+msgstr "Lägg till interface"
+
+msgid "Edit interface"
+msgstr "Editera interface"
+
+msgid "Delete interface"
+msgstr "Ta bort interface"
+
+msgid "Interfaces"
+msgstr "Gränssnitt"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr "Du måste ange en giltig IP i IP-konfigurationsläge"
+
+#, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr "Välj vilket läge att konfigurera för \"{}\""
+
+msgid "Modes"
+msgstr "Lägen"
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr "Mata in IP och subnät för {} (exempelvis: 192.168.0.5/24): "
+
+msgid "IP address"
+msgstr "IP-adress"
+
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr "Mata in IP-adress till gateway (router) eller lämna tomt för inget"
+
+msgid "Gateway address"
+msgstr "Gateway adress"
+
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr "Mata in DNS-servrar (separerade med mellanslag, lämna tomt för inget)"
+
+msgid "DNS servers"
+msgstr "DNS-servrar"
+
+msgid "Network configuration"
+msgstr "Nätverkskonfiguration"
+
+msgid "Configure interfaces"
+msgstr "Konfigurera gränssnitt"
+
+msgid "Root password"
+msgstr "Root-lösenord"
+
+msgid "User account"
+msgstr "Användarkonto"
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Användarkonto"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Ska denna profil aktiveras för installation?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "Add a user"
+msgstr "Lägg till användare"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+msgid "Change password"
+msgstr "Byt lösenord"
+
+#, fuzzy
+msgid "Change shell"
+msgstr "Byt filsystem"
+
+#, fuzzy
+msgid "Manage groups"
+msgstr "Paketgrupp:"
+
+msgid "Promote/Demote user"
+msgstr "Befodra/Degradera användare"
+
+msgid "Delete User"
+msgstr "Ta bort användare"
+
+msgid "User"
+msgstr "Användare"
+
+msgid "The username you entered is invalid"
+msgstr "Användarnamnet du angav är ogiltigt"
+
+#, fuzzy
+msgid "Invalid git URL"
+msgstr "Ogiltig storlek"
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+msgid "Username"
+msgstr "Användarnamn"
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "Ska \"{}\" vara en superanvändare (sudo)?\n"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Avsluta archinstoo"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Starta om systemet"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr ""
+"Skulle du vilja använda automatisk tidssynkronisering (NTP) med standard-"
+"tidsservrar?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"Hårdvaru-tid och annan efterkonfigurering kan behövas för att NTP skall "
+"fungera korrekt.\n"
+"För mer information, se Arch Wiki-sidan"
+
+msgid "Hostname"
+msgstr "Värdnamn"
+
+msgid "Timezone"
+msgstr "Tidszon"
+
+msgid "Select language"
+msgstr "Välj språk"
+
+#, python-brace-format
+msgid "Repositories: {}"
+msgstr "Arkiv: {}"
+
+msgid "Loading packages..."
+msgstr "Laddar paket..."
+
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"Endast paket som base, sudo, linux, linux-firmware, efibootmgr och valfria "
+"profilpaket installeras."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+"Observera: base-devel kommer inte att installeras längre som standard. Lägg "
+"till det här om du behöver byggverktyg."
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr "Välj alla paket från listan nedan som ska installeras ytterligare"
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "Extra paket"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "Laddar paket..."
+
+msgid "Not found in AUR"
+msgstr ""
+
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr ""
+"Det här alternativet aktiverar antalet parallella nedladdningar som kan ske "
+"under paketnedladdningar"
+
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"Ange antalet parallella nedladdningar som ska aktiveras.\n"
+"\n"
+"Observera:\n"
+
+#, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+" - Maximalt rekommenderat värde: {} (Tillåter {} parallella nedladdningar åt "
+"gången)"
+
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - Inaktivera/Standard: 0 (Inaktiverar parallell nedladdning, tillåter "
+"endast en nedladdning åt gången)\n"
+
+msgid "Invalid download number"
+msgstr "Ogiltigt nedladdningsnummer"
+
+msgid "Number downloads"
+msgstr "Antal nedladdningar"
+
+msgid "What would you like to do next?"
+msgstr "Vad vill du göra härnäst?"
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Do you really want to abort?"
+msgstr "Vill du verkligen avbryta?"
+
+msgid "Kernel"
+msgstr "Kärna"
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"För bästa kompabilitet med din AMD-hårdvara, vill du förmodligen använda "
+"antingen \"öppen mjukvara\" eller \"AMD/ATI\" valet."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"För bästa kompabilitet med din Intel-hårdvara, vill du förmodligen använda "
+"antingen \"öppen mjukvara\" eller \"Intel\" valet.\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"För bästa kompabilitet med din nVidia-hårdvara, vill du förmodligen använda "
+"antingen \"nVidia proprietär drivrutin\".\n"
+
+msgid "Info"
+msgstr "Information"
+
+msgid "Would you like to use swap on zram?"
+msgstr "Vill du använda swap under zram?"
+
+msgid "Select zram compression algorithm:"
+msgstr "Välj zram kompressionsalgoritm:"
+
+msgid "Bootloader"
+msgstr "Boot-loader"
+
+msgid "Unified kernel images"
+msgstr "Enhetliga kärnavbildningar"
+
+#, fuzzy
+msgid "Removable location"
+msgstr "Installera till borttagbar plats"
+
+msgid "Enabled"
+msgstr "Aktiverad"
+
+msgid "Disabled"
+msgstr "Inaktiverad"
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+"Kommer att installera till /EFI/BOOT/ (borttagbar plats, säker "
+"standardinställning))"
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr "Kommer att installeras på en anpassad plats med NVRAM-post"
+
+msgid "Would you like to use unified kernel images?"
+msgstr "Vill du använda enhetliga kärnavbildningar?"
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+"Vill du installera bootloadern på standardsökvägen för flyttbara medier?"
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+"Detta installerar bootloadern till /EFI/BOOT/BOOTX64.EFI (eller liknande) "
+"vilket är användbart för:"
+
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr ""
+"Fast programvara som inte stöder NVRAM-uppstartsposter korrekt som de flesta "
+"MSI-moderkort,"
+
+msgid "most Apple Macs, many laptops..."
+msgstr "de flesta Apple Mac-datorer, många bärbara datorer..."
+
+msgid "USB drives or other portable external media."
+msgstr "USB-minnen eller andra portabla externa medier."
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+"System där du vill att disken ska vara uppstartsbar på vilken dator som "
+"helst."
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr "UEFI identifierades inte och vissa alternativ är inaktiverade"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Audio"
+msgstr "Ljud mjukvara"
+
+msgid "Print service"
+msgstr "Utskriftstjänst"
+
+msgid "Power management"
+msgstr "Strömhantering"
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Strömhantering"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Editera"
+
+msgid "Would you like to configure Bluetooth?"
+msgstr "Vill du konfigurera Bluetooth?"
+
+msgid "Would you like to configure the print service?"
+msgstr "Vill du konfigurera utskriftstjänsten?"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Vill du ansluta till ett wifi nätverk?"
+
+msgid "Keyboard layout"
+msgstr "Tangentbordslayout"
+
+msgid "Locale language"
+msgstr "Språk du vill använda"
+
+msgid "Locale encoding"
+msgstr "Teckenuppsättning du vill använda"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Archinstall hjälp"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Diskkonfiguration"
+
+msgid "Authentication"
+msgstr "Autentisering"
+
+msgid "Locales"
+msgstr "Lokaler"
+
+msgid "Pacman config"
+msgstr ""
+
+msgid "Swap"
+msgstr "Swap"
+
+msgid "Kernels"
+msgstr "Linux-kärnor"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Applications"
+msgstr "Program"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Nätverkskonfiguration"
+
+msgid "Parallel Downloads"
+msgstr "Parallella nedladdningar"
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "Automatisk tidssynk (NTP)"
+
+msgid "Additional packages"
+msgstr "Extra paket"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Anpassade speglar"
+
+msgid "Install"
+msgstr "Installera"
+
+msgid "Abort"
+msgstr "Avbryt"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr ""
+"Antingen root-lösenord eller minst 1 användare med sudo-privilegier måste "
+"anges"
+
+msgid "Language"
+msgstr "Språk"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Archinstall hjälp"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "Välj en tidszon"
+
+msgid "Cyan"
+msgstr ""
+
+#, fuzzy
+msgid "Green"
+msgstr "Displayhanterare"
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+#, fuzzy
+msgid "Blue"
+msgstr "Bluetooth"
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "Välj vad du vill göra med '{}'"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "Extra paket"
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "NTP"
+msgstr "NTP"
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Anpassade speglar"
+
+msgid "Commands"
+msgstr ""
+
+#, python-brace-format
+msgid "Configuration type: {}"
+msgstr "Konfigurationstyp: {}"
+
+msgid "Mountpoint"
+msgstr "Monteringspunkt"
+
+msgid "LVM configuration type"
+msgstr "LVM-konfigurationstyp"
+
+msgid "Disk encryption"
+msgstr "Diskkryptering"
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr "Btrfs-ögonblicksavbildstyp: {}"
+
+msgid "Swap on zram"
+msgstr "Swap på zram"
+
+msgid "Compression algorithm"
+msgstr "Kompressionsalgoritm"
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "Headers"
+msgstr ""
+
+msgid "Missing configurations:\n"
+msgstr "Konfigurationer som saknas:\n"
+
+msgid "Profiles"
+msgstr "Profiler"
+
+msgid "Graphics driver"
+msgstr "Grafik drivrutin"
+
+msgid "Greeter"
+msgstr "Displayhanterare"
+
+msgid "Selected mirror regions"
+msgstr "Valda spegelregioner"
+
+msgid "Custom servers"
+msgstr "Anpassade servrar"
+
+msgid "Custom repositories"
+msgstr "Anpassade arkiv"
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selection"
+msgstr "Nuvarande profilval"
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "Avbryt"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Önskat 'värdnamn' för din installation: "
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Selected profiles: "
+msgstr "Valda profiler: "
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "Välj en eller flera enheter att använda och konfigurera"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr "Det gick inte att hämta profilen från angiven webbadress: {}"
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+"Profiler måste ha ett unikt namn, men profildefinitioner med dubblettnamn "
+"hittades: {}"
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] En logg-fil har skapats här: {}"
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"Vänligen skicka in detta problem (och fil) till https://github.com/archlinux/"
+"archinstoo/issues"
+
+msgid "Syncing the system..."
+msgstr "Synkroniserar systemet..."
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr "Väntar på att tidssynkroniseringen (timedatectl show) ska slutföras."
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+"Hoppa över att vänta på automatisk tidssynkronisering (detta kan orsaka "
+"problem om tiden är osynkroniserad under installationen)"
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+"Väntar på att Arch Linux-nyckelringssynkroniseringen (archlinux-keyring-wkd-"
+"sync) ska slutföras."
+
+msgid "Package group:"
+msgstr "Paketgrupp:"
+
+msgid "Use a best-effort default partition layout"
+msgstr "Använd en generiskt rekommenderad partitionslayout"
+
+msgid "Manual Partitioning"
+msgstr "Manuell partitionering"
+
+msgid "Pre-mounted configuration"
+msgstr "Förmonterad konfiguration"
+
+msgid "Unknown"
+msgstr "Okänd"
+
+msgid "Default layout"
+msgstr "Standardlayout"
+
+msgid "No Encryption"
+msgstr "Ingen kryptering"
+
+msgid "LUKS"
+msgstr "LUKS"
+
+msgid "LVM on LUKS"
+msgstr "LVM på LUKS"
+
+msgid "LUKS on LVM"
+msgstr "LUKS på LVM"
+
+msgid "weak"
+msgstr "svag"
+
+msgid "moderate"
+msgstr "måttlig"
+
+msgid "strong"
+msgstr "starkt"
+
+msgid "Removable"
+msgstr "Borttagbar"
+
+msgid "Copy ISO network configuration to installation"
+msgstr "Kopiera nätverkskonfigurationen från ISO till installationen"
+
+msgid "Use Network Manager (default backend)"
+msgstr "Använd Network Manager (standard backend)"
+
+msgid "Use Network Manager (iwd backend)"
+msgstr "Använd Network Manager (iwd backend)"
+
+msgid "Manual configuration"
+msgstr "Manuell konfiguration"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr "Pacman körs redan, väntar max 10 minuter innan vi avbryter."
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"Existerande pacman-lås avslutades aldrig. Vänligen rensa upp föregående "
+"körningar av pacman-sessioner innan du använder archinstoo."
+
+msgid "Confirm and exit"
+msgstr "Godkänn och gå ur"
+
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgid "Back"
+msgstr "Tillbaka"
+
+msgid "Encryption type"
+msgstr "Krypteringstyp"
+
+msgid "Encryption password"
+msgstr "Krypterings-lösenord"
+
+msgid "Iteration time"
+msgstr "Iterationstid"
+
+msgid "Partitions"
+msgstr "Partitioner"
+
+msgid "LVM volumes"
+msgstr "LVM-volymer"
+
+msgid "Partitions to be encrypted"
+msgstr "Partitioner som ska krypteras"
+
+msgid "LVM volumes to be encrypted"
+msgstr "LVM-volymer som ska krypteras"
+
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr ""
+"Mata in ett disk-krypteringslösenord (lämna blankt för att hoppa över "
+"kryptering)"
+
+msgid "Disk encryption password"
+msgstr "Diskkrypteringslösenord"
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr "Ange iterationstid för LUKS-kryptering (i millisekunder)"
+
+msgid "Higher values increase security but slow down boot time"
+msgstr "Högre värde ökar säkerheten men fördröjer uppstartstiden"
+
+msgid "Iteration time must be at least 100ms"
+msgstr "Iterationstiden måste vara minst 100 ms"
+
+msgid "Iteration time must be at most 120000ms"
+msgstr "Iterationstiden får vara högst 120000 ms"
+
+msgid "Please enter a valid number"
+msgstr "Var vänlig ange ett giltigt nummer"
+
+msgid "Suggest partition layout"
+msgstr "Rekommendera en partitionslayout"
+
+msgid "Create empty layout (wipe all)"
+msgstr ""
+
+msgid "Remove all newly added partitions"
+msgstr "Ta bort alla nyligen tillagda partitioner"
+
+msgid "Assign mountpoint"
+msgstr "Tilldela monteringspunkt"
+
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "Markera/avmarkera som det som ska formateras (tar bort all data)"
+
+msgid "Mark/Unmark as ESP"
+msgstr "Markera/avmarkera som ESP"
+
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "Markera/avmarkera som XBOOTLDR"
+
+msgid "Mark/Unmark as bootable"
+msgstr "Markera/avmarkera som bootbar"
+
+msgid "Change filesystem"
+msgstr "Byt filsystem"
+
+msgid "Mark/Unmark as compressed"
+msgstr "Markera/avmarkera som komprimerad"
+
+msgid "Mark/Unmark as nodatacow"
+msgstr "Markera/avmarkera som nodatacow"
+
+msgid "Set subvolumes"
+msgstr "Ställ in subvolymer"
+
+msgid "Delete partition"
+msgstr "Ta bort partition"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr "Partitionshantering: {}"
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr "Total längd: {}"
+
+msgid "Wipe"
+msgstr "Rensa"
+
+msgid "Partition - New"
+msgstr "Partition - Ny"
+
+msgid "Partition"
+msgstr "Partition"
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr ""
+"Denna partition är för närvarande krypterad, för att formatera den måste ett "
+"filsystem anges"
+
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+"Partitionsmonteringspunkter är relativa till inuti installationen, boot "
+"skulle vara /boot som ett exempel."
+
+msgid "Filesystem"
+msgstr "Filsystem"
+
+msgid "Invalid size"
+msgstr "Ogiltig storlek"
+
+#, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr "Valt ledigt utrymmessegment på enheten {}:"
+
+#, python-brace-format
+msgid "Size: {} / {}"
+msgstr "Storlek: {} / {}"
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr ""
+"Alla inmatade värden kan adderas med en enhet: %, B, KB, KiB, MB, MiB..."
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr "Om ingen enhet tillhandahålls tolkas värdet som sektorer"
+
+#, python-brace-format
+msgid "Size (default: {}): "
+msgstr "Storlek (standard: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr "Detta tar bort alla nyligen tillagda partitioner. Fortsätta?"
+
+msgid "Disk configuration type"
+msgstr "Diskkonfigurationstyp"
+
+msgid "Root mount directory"
+msgstr "Rootmonteringskatalog"
+
+msgid "Would you like to use compression or disable CoW?"
+msgstr "Vill du använda komprimering eller inaktivera CoW?"
+
+msgid "Use compression"
+msgstr "Använd komprimering"
+
+msgid "Disable Copy-on-Write"
+msgstr "Inaktivera Copy-on-Write"
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr "Vill du använda BTRFS sub-volymer med standard-layout?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "Vill du skapa en separat partition för /home?"
+
+msgid "Add subvolume"
+msgstr "Lägg till Sub-volym"
+
+msgid "Edit subvolume"
+msgstr "Editera Sub-volym"
+
+msgid "Delete subvolume"
+msgstr "Ta bort Sub-volym"
+
+msgid "Value cannot be empty"
+msgstr "Värdet kan inte vara tomt"
+
+msgid "Subvolume name"
+msgstr "Subvolymens namn"
+
+msgid "Subvolume mountpoint"
+msgstr "Monteringspunkt för sub-volymen"
+
+msgid "Starting device modifications in "
+msgstr "Starta enhetsmodifieringar i "
+
+msgid "Partitioning"
+msgstr "Partitionering"
+
+msgid "Snapshot type"
+msgstr "Ögonblicksavbildstyp"
+
+msgid "Physical volumes"
+msgstr "Fysiska volymer"
+
+msgid "Volumes"
+msgstr "Volymer"
+
+#, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "Ögonblicksavbildstyp: {}"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr "LVM-diskkryptering med fler än 2 partitioner stöds för närvarande inte"

@@ -1,7 +1,7 @@
 # Project Structure
 ```
 ./
-├── archinstall/
+├── archinstoo/
 │   ├── default_profiles/
 │   │   ├── desktop
 │   │   ├── desktops/
@@ -78,7 +78,7 @@
 │   │   ├── exceptions
 │   │   ├── general
 │   │   ├── global_menu
-│   │   ├── grimaur
+│   │   ├── grimaur*
 │   │   ├── hardware
 │   │   ├── installer
 │   │   ├── interactions/
@@ -140,6 +140,7 @@
 │       ├── mirror
 │       ├── rescue
 │       └── size
+├── archinstoo-git-r5320.4f889ed7-1-any.pkg.tar.zst
 ├── examples/
 │   ├── config-custom.json
 │   ├── config-sample-full.json
@@ -154,5 +155,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 129 files
+24 directories, 130 files
 ```

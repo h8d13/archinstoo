@@ -29,7 +29,7 @@ Default being `guided` and `--script list` just returns all files in this dir.
 
 - Config files only ever store all but encryption / auth info
 
-The rest of classes/defs/files can be traced using global search inside `./archinstall/*`
+The rest of classes/defs/files can be traced using global search inside `./archinstoo/*`
 This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
 
 ## Contrib
@@ -70,7 +70,7 @@ There might therefore be older code which does not follow the coding convention 
 
 ## Git hooks
 
-`archinstall` ships pre-commit hooks that make it easier to run checks such as `mypy`, `ruff check`, and `flake8` locally.
+`archinstoo` ships pre-commit hooks that make it easier to run checks such as `mypy`, `ruff check`, and `flake8` locally.
 The checks are listed in `.pre-commit-config.yaml` and can be installed via
 ```
 pre-commit install
@@ -86,9 +86,9 @@ Can be consulted within [PCH](./.pre-commit-config.yaml)
 
 ## Submitting Changes
 
-Archinstall uses GitHub's pull-request workflow and all contributions in terms of code should be done through pull requests.<br>
+Archinstoo uses GitHub's pull-request workflow and all contributions in terms of code should be done through pull requests.<br>
 
-Anyone interested in archinstall may review your code. One of the core developers will merge your pull request when they
+Anyone interested in archinstoo may review your code. One of the core developers will merge your pull request when they
 think it is ready. For every pull request, we aim to promptly either merge it or say why it is not yet ready; if you go
 a few days without a reply, please feel free to ping the thread by adding a new comment.
 

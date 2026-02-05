@@ -1,7 +1,7 @@
 {
     "bug_report_url": "https://github.com/h8d13/archinstoo",
     "script": "guided",
-    "archinstall-language": "English",
+    "archinstoo-language": "English",
     "locale_config": {
         "kb_layout": "us",
         "sys_lang": "en_US.UTF-8",
