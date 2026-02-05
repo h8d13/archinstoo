@@ -40,7 +40,7 @@ dev = [
 doc = ["sphinx"]
 
 [project.scripts]
-archinstall = "archinstall:run_as_a_module"
+archinstoo = "archinstall:run_as_a_module"
 
 [tool.setuptools]
 include-package-data = true
