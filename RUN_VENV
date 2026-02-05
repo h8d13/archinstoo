@@ -4,6 +4,7 @@ ELEV="${ELEV:-sudo}"
 cd archinstoo || exit 1
 
 # launch venv and run archinstall
+
 if [ ! -d ".venv" ]; then
     python -m venv --system-site-packages .venv
     . .venv/bin/activate
@@ -12,4 +13,4 @@ else
     . .venv/bin/activate
 fi
 
-"$ELEV" .venv/bin/python -B -m archinstall "$@"
+"$ELEV" .venv/bin/python -B -m archinstoo "$@"

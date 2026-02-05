@@ -15,9 +15,9 @@ jobs:
                 pacman --noconfirm -Sy python-pip python-pyparted pkgconfig gcc
             - run: pip install --break-system-packages --upgrade pip
             # this will install the exact version of mypy that is in the pyproject.toml file
-            - name: Install archinstall dependencies
+            - name: Install archinstoo dependencies
               run: pip install --break-system-packages ./archinstoo[dev]
             - run: python --version
             - run: mypy --version
             - name: run mypy
-              run: mypy --config-file archinstoo/pyproject.toml archinstoo/archinstall
+              run: mypy --config-file archinstoo/pyproject.toml archinstoo/archinstoo
