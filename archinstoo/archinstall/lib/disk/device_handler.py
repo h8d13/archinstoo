@@ -38,7 +38,6 @@ from archinstall.lib.models.device import (
 )
 from archinstall.lib.models.users import Password
 from archinstall.lib.output import debug, error, info
-from archinstall.lib.utils.env import Os
 
 from .luks import Luks2
 from .utils import (
@@ -56,9 +55,6 @@ class DeviceHandler:
 	def __init__(self) -> None:
 		self._devices: dict[Path, BDevice] = {}
 		self._partition_table = PartitionTable.default()
-		if Os.get_env('ARCHINSTALL_SKIP_DEVICE_PROBE') == '1':
-			debug('Skipping device probe due to ARCHINSTALL_SKIP_DEVICE_PROBE=1')
-			return
 		self.load_devices()
 
 	@property
