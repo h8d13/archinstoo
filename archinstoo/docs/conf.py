@@ -70,12 +70,10 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # html_theme = 'alabaster'
 html_theme = 'sphinx_rtd_theme'
 
-html_logo = '_static/logo.png'
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path: list[str] = []
 
 # If false, no module index is generated.
 html_domain_indices = True
@@ -110,7 +108,7 @@ htmlhelp_basename = 'archinstalldoc'
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [('index', 'archinstall', 'archinstall Documentation', ['Anton Hvornum'], 1)]
+man_pages = [('index', 'archinstoo', 'archinstoo Documentation', ['Anton Hvornum'], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False

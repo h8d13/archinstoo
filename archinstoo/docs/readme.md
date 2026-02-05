@@ -33,11 +33,13 @@
 │   │   │   ├── cockpit
 │   │   │   ├── docker
 │   │   │   ├── httpd
+│   │   │   ├── java
 │   │   │   ├── lighttpd
 │   │   │   ├── mariadb
 │   │   │   ├── nginx
 │   │   │   ├── postgresql
 │   │   │   ├── sshd
+│   │   │   ├── tailscale
 │   │   │   └── tomcat
 │   │   ├── wayland
 │   │   └── xorg
@@ -76,6 +78,7 @@
 │   │   ├── exceptions
 │   │   ├── general
 │   │   ├── global_menu
+│   │   ├── grimaur
 │   │   ├── hardware
 │   │   ├── installer
 │   │   ├── interactions/
@@ -132,9 +135,9 @@
 │       ├── format
 │       ├── guided
 │       ├── list
+│       ├── live
 │       ├── minimal
 │       ├── mirror
-│       ├── premount
 │       ├── rescue
 │       └── size
 ├── examples/
@@ -151,5 +154,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 126 files
+24 directories, 129 files
 ```
