@@ -203,17 +203,23 @@ class ProfileHandler:
 		install_session.add_additional_packages(pkg_names)
 
 	def install_profile_config(self, install_session: Installer, profile_config: ProfileConfiguration) -> None:
-		profile = profile_config.profile
-
-		if not profile:
+		if not profile_config.profiles:
 			return
 
-		profile.install(install_session)
+		# Install all selected profiles
+		for profile in profile_config.profiles:
+			profile.install(install_session)
 
-		if profile_config.gfx_driver and profile.display_servers():
-			self.install_gfx_driver(install_session, profile_config.gfx_driver, profile)
+		# Install gfx driver if any profile needs display servers
+		if profile_config.gfx_driver and profile_config.display_servers():
+			# Use first profile with display servers for driver installation
+			for profile in profile_config.profiles:
+				if profile.display_servers():
+					self.install_gfx_driver(install_session, profile_config.gfx_driver, profile)
+					break
 
-		if profile_config.greeter:
+		# Install greeter if any profile supports it
+		if profile_config.greeter and profile_config.is_greeter_supported():
 			self.install_greeter(install_session, profile_config.greeter)
 
 	def _import_profile_from_url(self, url: str) -> None:

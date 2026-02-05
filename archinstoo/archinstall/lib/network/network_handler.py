@@ -27,7 +27,7 @@ class NetworkHandler:
 
 				installation.add_additional_packages(packages)
 
-				if profile_config and profile_config.profile and profile_config.profile.is_desktop_profile():
+				if profile_config and profile_config.profiles and profile_config.has_desktop_profile():
 					installation.add_additional_packages('network-manager-applet')
 
 				installation.enable_service('NetworkManager.service')

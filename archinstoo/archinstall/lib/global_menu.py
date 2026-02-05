@@ -126,7 +126,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Profile'),
-				value=ProfileConfiguration(profile=self._default_profile()),
+				value=ProfileConfiguration(profiles=[self._default_profile()]),
 				action=self._select_profile,
 				preview_action=self._prev_profile,
 				key='profile_config',
@@ -663,12 +663,15 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_profile(self, item: MenuItem) -> str | None:
 		profile_config: ProfileConfiguration | None = item.value
 
-		if profile_config and profile_config.profile:
+		if profile_config and profile_config.profiles:
 			output = tr('Profiles') + ': '
-			if profile_names := profile_config.profile.current_selection_names():
-				output += ', '.join(profile_names) + '\n'
-			else:
-				output += profile_config.profile.name + '\n'
+			profile_names = [p.name for p in profile_config.profiles]
+			output += ', '.join(profile_names) + '\n'
+
+			# Show sub-selections for each profile
+			for profile in profile_config.profiles:
+				if sub_names := profile.current_selection_names():
+					output += f'  {profile.name}: ' + ', '.join(sub_names) + '\n'
 
 			if profile_config.gfx_driver:
 				output += tr('Graphics driver') + ': ' + profile_config.gfx_driver.value + '\n'

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, override
 if TYPE_CHECKING:
 	from archinstall.lib.profile.profiles_handler import ProfileHandler
 
-from archinstall.default_profiles.profile import GreeterType, Profile
+from archinstall.default_profiles.profile import DisplayServer, GreeterType, Profile
 from archinstall.lib.hardware import GfxDriver
 from archinstall.lib.interactions.system_conf import select_driver
 from archinstall.lib.menu.abstract_menu import AbstractSubMenu
@@ -41,27 +41,27 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		return [
 			MenuItem(
 				text=tr('Type'),
-				action=self._select_profile,
-				value=self._profile_config.profile,
-				preview_action=self._preview_profile,
-				key='profile',
+				action=self._select_profiles,
+				value=self._profile_config.profiles,
+				preview_action=self._preview_profiles,
+				key='profiles',
 			),
 			MenuItem(
 				text=tr('Graphics driver'),
 				action=self.select_gfx_driver,
-				value=self._profile_config.gfx_driver if self._profile_config.profile else None,
+				value=self._profile_config.gfx_driver if self._profile_config.profiles else None,
 				preview_action=self._prev_gfx,
-				enabled=bool(self._profile_config.profile and self._profile_config.profile.display_servers()),
-				dependencies=['profile'],
+				enabled=bool(self._profile_config.profiles and self._profile_config.display_servers()),
+				dependencies=['profiles'],
 				key='gfx_driver',
 			),
 			MenuItem(
 				text=tr('Greeter'),
 				action=lambda x: select_greeter(preset=x),
-				value=self._profile_config.greeter if self._profile_config.profile and self._profile_config.profile.is_greeter_supported() else None,
-				enabled=bool(self._profile_config.profile and self._profile_config.profile.is_greeter_supported()),
+				value=self._profile_config.greeter if self._profile_config.profiles and self._profile_config.is_greeter_supported() else None,
+				enabled=bool(self._profile_config.profiles and self._profile_config.is_greeter_supported()),
 				preview_action=self._prev_greeter,
-				dependencies=['profile'],
+				dependencies=['profiles'],
 				key='greeter',
 			),
 		]
@@ -71,41 +71,57 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		super().run(additional_title=additional_title)
 		return self._profile_config
 
-	def _select_profile(self, preset: Profile | None) -> Profile | None:
-		if (profile := select_profile(preset)) is not None:
-			if profile.display_servers():
+	def _select_profiles(self, preset: list[Profile]) -> list[Profile]:
+		profiles = select_profiles(preset)
+
+		if profiles:
+			# Check if any profile needs display servers
+			has_display_servers = any(p.display_servers() for p in profiles)
+			if has_display_servers:
 				self._item_group.find_by_key('gfx_driver').enabled = True
 			else:
 				self._item_group.find_by_key('gfx_driver').enabled = False
 				self._item_group.find_by_key('gfx_driver').value = None
 
-			if not profile.is_greeter_supported():
+			# Check if any profile supports greeter
+			supports_greeter = any(p.is_greeter_supported() for p in profiles)
+			if not supports_greeter:
 				self._item_group.find_by_key('greeter').enabled = False
 				self._item_group.find_by_key('greeter').value = None
 			else:
 				self._item_group.find_by_key('greeter').enabled = True
-				self._item_group.find_by_key('greeter').value = profile.default_greeter_type
+				# Get default greeter from first desktop profile
+				for p in profiles:
+					if p.default_greeter_type:
+						self._item_group.find_by_key('greeter').value = p.default_greeter_type
+						break
 		else:
 			self._item_group.find_by_key('gfx_driver').value = None
 			self._item_group.find_by_key('greeter').value = None
 
-		return profile
+		return profiles
 
 	def select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
 		driver = preset
-		profile: Profile | None = self._item_group.find_by_key('profile').value
+		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
 
-		if profile:
-			driver = select_driver(preset=preset, profile=profile, kernels=self._kernels)
+		if profiles:
+			# Use first profile with display servers for driver selection
+			for profile in profiles:
+				if profile.display_servers():
+					driver = select_driver(preset=preset, profile=profile, kernels=self._kernels)
+					break
 
 		return driver
 
 	def _prev_gfx(self, item: MenuItem) -> str | None:
 		if item.value:
 			driver = item.get_value().value
-			profile: Profile | None = self._item_group.find_by_key('profile').value
-			servers = profile.display_servers() if profile else None
-			packages = item.get_value().packages_text(servers, self._kernels)
+			profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
+			servers: set[DisplayServer] = set()
+			for profile in profiles:
+				servers.update(profile.display_servers())
+			packages = item.get_value().packages_text(servers or None, self._kernels)
 			return f'Driver: {driver}\n{packages}'
 		return None
 
@@ -114,17 +130,32 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			return f'{tr("Greeter")}: {item.value.value}'
 		return None
 
-	def _preview_profile(self, item: MenuItem) -> str | None:
-		profile: Profile | None = item.value
+	def _preview_profiles(self, item: MenuItem) -> str | None:
+		profiles: list[Profile] = item.value or []
 		text = ''
 
-		if profile:
-			if (sub_profiles := profile.current_selection) is not None:
-				text += tr('Selected profiles: ')
-				text += ', '.join([p.name for p in sub_profiles]) + '\n'
+		if profiles:
+			text += tr('Selected profiles: ')
+			text += ', '.join([p.name for p in profiles]) + '\n'
 
-			if packages := profile.packages_text(include_sub_packages=True):
-				text += f'{packages}'
+			for profile in profiles:
+				if sub_profiles := profile.current_selection:
+					text += f'  {profile.name}: '
+					text += ', '.join([p.name for p in sub_profiles]) + '\n'
+
+			# Collect all packages
+			all_packages: set[str] = set()
+			for profile in profiles:
+				if profile.packages:
+					all_packages.update(profile.packages)
+				for sub in profile.current_selection:
+					if sub.packages:
+						all_packages.update(sub.packages)
+
+			if all_packages:
+				text += tr('Installed packages') + ':\n'
+				for pkg in sorted(all_packages):
+					text += f'\t- {pkg}\n'
 
 			if text:
 				return text
@@ -167,55 +198,63 @@ def select_greeter(
 	return None
 
 
-def select_profile(
-	current_profile: Profile | None = None,
+def select_profiles(
+	current_profiles: list[Profile] | None = None,
 	header: str | None = None,
 	allow_reset: bool = True,
 	profile_handler: ProfileHandler | None = None,
-) -> Profile | None:
+) -> list[Profile]:
 	from archinstall.lib.profile.profiles_handler import ProfileHandler
 
 	handler = profile_handler or ProfileHandler()
 	top_level_profiles = handler.get_top_level_profiles()
 
 	if header is None:
-		header = tr('This is a list of pre-programmed default_profiles') + '\n'
+		header = tr('Select one or more profiles (Desktop + Server supported)') + '\n'
 
 	items = [MenuItem(p.name, value=p) for p in top_level_profiles]
 	group = MenuItemGroup(items, sort_items=True)
-	group.set_selected_by_value(current_profile)
+
+	if current_profiles:
+		for profile in current_profiles:
+			group.set_selected_by_value(profile)
 
 	result = SelectMenu[Profile](
 		group,
 		header=header,
 		allow_reset=allow_reset,
 		allow_skip=True,
+		multi=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Main profile')),
+		frame=FrameProperties.min(tr('Profiles')),
 	).run()
 
 	match result.type_:
 		case ResultType.Reset:
-			return None
+			handler.reset_top_level_profiles()
+			return []
 		case ResultType.Skip:
-			return current_profile
+			return current_profiles or []
 		case ResultType.Selection:
-			profile_selection = result.get_value()
-			select_result = profile_selection.do_on_select()
+			selected_profiles: list[Profile] = result.get_values()
 
-			if not select_result:
-				return None
+			# Call do_on_select for each profile and filter out failed ones
+			valid_profiles: list[Profile] = []
+			for profile in selected_profiles:
+				select_result = profile.do_on_select()
 
-			# we're going to reset the currently selected profile(s) to avoid
-			# any stale data laying around
-			match select_result:
-				case select_result.NewSelection:
-					handler.reset_top_level_profiles(exclude=[profile_selection])
-					current_profile = profile_selection
-				case select_result.ResetCurrent:
-					handler.reset_top_level_profiles()
-					current_profile = None
-				case select_result.SameSelection:
-					pass
+				if not select_result:
+					continue
 
-			return current_profile
+				match select_result:
+					case select_result.NewSelection:
+						valid_profiles.append(profile)
+					case select_result.ResetCurrent:
+						profile.reset()
+					case select_result.SameSelection:
+						valid_profiles.append(profile)
+
+			# Reset profiles that were not selected
+			handler.reset_top_level_profiles(exclude=valid_profiles)
+
+			return valid_profiles
