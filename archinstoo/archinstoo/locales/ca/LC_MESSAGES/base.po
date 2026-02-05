@@ -1,0 +1,1179 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway necessita accés als vostres dispositius de hardware (teclat, ratolí, "
+"etc)"
+
+msgid "Choose an option to give Sway access to your hardware"
+msgstr "Escolliu una opció per permetre que Sway accedeixi al vostre hardware"
+
+msgid "Seat access"
+msgstr "Accés al seient"
+
+#, fuzzy
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"niri necessita accés al vostre seient (gestor de dispositius de maquinari, "
+"com ara teclat, ratolí, etc)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Escolliu una opció per permetre que niri accedeixi al vostre hardware"
+
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"labwc necessita accés al vostre seient (gestor de dispositius de maquinari, "
+"com ara teclat, ratolí, etc)"
+
+msgid "Choose an option to give labwc access to your hardware"
+msgstr "Escolliu una opció per permetre que labwc accedeixi al vostre hardware"
+
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Hyprland necessita accés al vostre seient (col·lecció de dispositius de "
+"hardware, és a dir, teclat, ratolí, etc)"
+
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr "Escolliu una opció per permetre a Hyprland l'accés al vostre maquinari"
+
+msgid "Installed packages"
+msgstr "Paquets instal·lats"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr "Tipus d'entorn: {}"
+
+#, fuzzy, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr ""
+"Archinstall necessita permisos de root per a executar-se. Vegeu --help per a "
+"més detalls."
+
+msgid "Add a custom repository"
+msgstr "Afegir un repositori personalitzat"
+
+msgid "Change custom repository"
+msgstr "Canviar repositori personalitzat"
+
+msgid "Delete custom repository"
+msgstr "Eliminar repositori personalitzat"
+
+msgid "Repository name"
+msgstr "Nom del repositori"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Url"
+msgstr "Url"
+
+msgid "Select signature check"
+msgstr "Seleccionar verificació de signatura"
+
+msgid "Signature check"
+msgstr "Verificació de signatura"
+
+msgid "Select signature option"
+msgstr "Seleccioneu la opció de firma"
+
+msgid "Add a custom server"
+msgstr "Afegir un servidor personalitzat"
+
+msgid "Change custom server"
+msgstr "Canviar servidor personalitzat"
+
+msgid "Delete custom server"
+msgstr "Eliminar servidor personalitzat"
+
+msgid "Server url"
+msgstr "URL del servidor"
+
+msgid "Select regions"
+msgstr "Seleccioneu regions"
+
+msgid "Optional repositories"
+msgstr "Repositoris opcionals"
+
+msgid "Add custom repository"
+msgstr "Afegir un repositori personalitzat"
+
+msgid "Add custom servers"
+msgstr "Afegir servidors personalitzats"
+
+msgid "Pacman misc options"
+msgstr ""
+
+msgid "Additional repositories"
+msgstr "Repositoris addicionals"
+
+msgid "Loading mirror regions..."
+msgstr "Carregant regions dels miralls..."
+
+msgid "Mirror regions"
+msgstr "Regions dels miralls"
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Show help"
+msgstr "Mostrar l'ajuda"
+
+msgid "Exit help"
+msgstr "Sortir de l'ajuda"
+
+msgid "Preview scroll up"
+msgstr "Previsualització amunt"
+
+msgid "Preview scroll down"
+msgstr "Previsualització avall"
+
+msgid "Move up"
+msgstr "Mou amunt"
+
+msgid "Move down"
+msgstr "Mou avall"
+
+msgid "Move right"
+msgstr "Mou a la dreta"
+
+msgid "Move left"
+msgstr "Mou a l'esquerra"
+
+msgid "Jump to entry"
+msgstr "Saltar cap a un registre"
+
+msgid "Skip selection (if available)"
+msgstr "Saltar la selecció (si està disponible)"
+
+msgid "Reset selection (if available)"
+msgstr "Reiniciar la selecció (si està disponible)"
+
+msgid "Select on single select"
+msgstr "Selecció única"
+
+msgid "Select on multi select"
+msgstr "Selecció múltiple"
+
+msgid "Reset"
+msgstr "Reiniciar"
+
+msgid "Skip selection menu"
+msgstr "Saltar el menú de selecció"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Contrasenya"
+
+msgid "Password"
+msgstr "Contrasenya"
+
+msgid "Confirm password"
+msgstr "Confirmar contrasenya"
+
+msgid "The confirmation password did not match, please try again"
+msgstr ""
+"La confirmació de la contrasenya no coincideix, si us plau torneu-ho a "
+"intentar"
+
+msgid "Not a valid directory"
+msgstr "Directori invàlid"
+
+msgid "Archinstoo help"
+msgstr "Ajuda d'Archinstall"
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "Segur que voleu re-establir aquesta configuració?"
+
+msgid "Only ASCII characters are supported"
+msgstr "Només es suporten caràcters ASCII"
+
+msgid "Yes"
+msgstr "Sí"
+
+msgid "No"
+msgstr "No"
+
+msgid " (default)"
+msgstr " (predeterminat)"
+
+msgid "The specified configuration will be applied"
+msgstr "S'aplicarà la configuració especificada"
+
+msgid "Would you like to continue?"
+msgstr "Voleu continuar?"
+
+msgid "Configuration"
+msgstr "Configuració"
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "Guardar configuració"
+
+msgid "Add interface"
+msgstr "Afegir interfície"
+
+msgid "Edit interface"
+msgstr "Editar interfície"
+
+msgid "Delete interface"
+msgstr "Eliminar interfície"
+
+msgid "Interfaces"
+msgstr "Interfícies"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr "Necessiteu introduir una IP vàlida al mode de configuració d'IP"
+
+#, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr "Seleccioneu quin mode cal configurar per a \"{}\""
+
+msgid "Modes"
+msgstr "Modes"
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr "Introduïu la IP i la subxarxa per a {} (exemple: 192.168.0.5/24): "
+
+msgid "IP address"
+msgstr "Adreça IP"
+
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr ""
+"Introduïu la IP de la porta d'enllaç (router). Deixeu-ho en blanc per a no "
+"utilitzar-ne cap."
+
+msgid "Gateway address"
+msgstr "Adreça de la porta d'enllaç"
+
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr ""
+"Introduïu els vostres servidors DNS (separats per espais; deixeu-ho en blanc "
+"per a cap)"
+
+msgid "DNS servers"
+msgstr "Servidors DNS"
+
+msgid "Network configuration"
+msgstr "Configuració de la xarxa"
+
+msgid "Configure interfaces"
+msgstr "Configurar interfícies"
+
+msgid "Root password"
+msgstr "Contrasenya de root"
+
+msgid "User account"
+msgstr "Compte d'usuari"
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Compte d'usuari"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Cal habilitar aquest perfil per la instal·lació?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "Add a user"
+msgstr "Afegir un usuari"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+msgid "Change password"
+msgstr "Canviar contrasenya"
+
+#, fuzzy
+msgid "Change shell"
+msgstr "Canviar el sistema de fitxers"
+
+#, fuzzy
+msgid "Manage groups"
+msgstr "Group de paquets:"
+
+msgid "Promote/Demote user"
+msgstr "Promocionar/Degradar usuari"
+
+msgid "Delete User"
+msgstr "Eliminar usuari"
+
+msgid "User"
+msgstr "Usuari"
+
+msgid "The username you entered is invalid"
+msgstr "El nom d'usuari introduït no és vàlid"
+
+#, fuzzy
+msgid "Invalid git URL"
+msgstr "Mida invàlida"
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+msgid "Username"
+msgstr "Nom d'usuari"
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "Cal que \"{}\" sigui superusuari (sudo)?\n"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Sortir d'Archinstall"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Reiniciar el sistema"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr ""
+"Voleu utilitzar la sincronització automàtica d'hora (NTP) amb els servidors "
+"d'hora predeterminats?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"L'hora del hardware i altres passos post-configuració poden ser necessaris "
+"per tal que NTP funcioni.\n"
+"Per a més informació, consulteu la wiki d'Arch"
+
+msgid "Hostname"
+msgstr "Nom del host"
+
+msgid "Timezone"
+msgstr "Franja horària"
+
+msgid "Select language"
+msgstr "Seleccioneu l'idioma"
+
+#, python-brace-format
+msgid "Repositories: {}"
+msgstr "Repositoris: {}"
+
+msgid "Loading packages..."
+msgstr "Carregant paquets..."
+
+#, fuzzy
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"Només s'instal·laran paquets com base, base-devel, linux, linux-firmware, "
+"efibootmgr i altres paquets de perfil opcionals."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr ""
+"Seleccioneu qualsevol paquet de la llista de sota a incloure a la "
+"instal·lació"
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "Paquets addicionals"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "Carregant paquets..."
+
+msgid "Not found in AUR"
+msgstr ""
+
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr ""
+"Aquesta opció habilita el número de descàrregues paral·leles que poden haver-"
+"hi mentre es descarreguen paquets"
+
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"Introduïu el número de descàrregues paral·leles a activar.\n"
+"\n"
+"Nota:\n"
+
+#, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+" - Valor màxim recomanat : {} ( Permets {} descàrregues paral·leles "
+"simultànies )"
+
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - Desactivar/Per defecte : 0 ( Desactiva les descàrregues paral·leles, "
+"només permet 1 descàrrega simultània )\n"
+
+msgid "Invalid download number"
+msgstr "Número de descàrrega invàlid"
+
+msgid "Number downloads"
+msgstr "Número de descàrregues"
+
+msgid "What would you like to do next?"
+msgstr "Què voleu fer a continuació?"
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Do you really want to abort?"
+msgstr "Segur que voleu avortar?"
+
+msgid "Kernel"
+msgstr "Nuclis"
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"Per a obtenir la millor compatibilitat amb el vostre hardware AMD, és "
+"possible que us interessi utilitzar les opcions de codi obert o d'AMD / ATI."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"Per a obtenir la millor compatibilitat amb el vostre hardware Intel, és "
+"possible que us interessi utilitzar les opcions de codi obert o d'Intel.\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"Per a obtenir la millor compatibilitat amb el vostre hardware Nvidia, és "
+"possible que us interessi utilitzar les opcions de controlador propietari "
+"d'Nvidia.\n"
+
+msgid "Info"
+msgstr "Info"
+
+msgid "Would you like to use swap on zram?"
+msgstr "Us agradaria utilitzar swap a zram?"
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "Seleccioneu un punt de muntatge :"
+
+msgid "Bootloader"
+msgstr "Gestor d'arranc"
+
+msgid "Unified kernel images"
+msgstr "Imatges del kernel unificades"
+
+#, fuzzy
+msgid "Removable location"
+msgstr "Instal·lar a un mitjà extraïble"
+
+msgid "Enabled"
+msgstr "Activat"
+
+msgid "Disabled"
+msgstr "Desactivat"
+
+#, fuzzy
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr "S'instal·larà a /EFI/BOOT (mitjà extraïble)"
+
+#, fuzzy
+msgid "Will install to custom location with NVRAM entry"
+msgstr "S'instal·larà a una ubicació estàndard amb un registre NVRAM"
+
+msgid "Would you like to use unified kernel images?"
+msgstr "Us agradaria utilitzar imatges del kernel unificades?"
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+"Voleu instal·lar el bootloader a la ubicació predeterminada del dispositiu "
+"extraïble?"
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+"Això instal·larà el bootloader a /EFI/BOOT/BOOTX64.EFI (o similar). És útil "
+"per a:"
+
+#, fuzzy
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr "Firmware que no suporta registres d'arrancada NVRAM."
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr "Llapis USB o altres mitjans extraïbles externs."
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr "Sistemes on vulgueu que el dispositiu arranqui en qualsevol ordinador."
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr "S'han desactivat algunes opcions perquè no s'ha detectat UEFI"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Audio"
+msgstr "Àudio"
+
+msgid "Print service"
+msgstr ""
+
+#, fuzzy
+msgid "Power management"
+msgstr "Gestió de particions: {}"
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Gestió de particions: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Editar"
+
+msgid "Would you like to configure Bluetooth?"
+msgstr "Voleu configurar el Bluetooth?"
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "Voleu configurar el Bluetooth?"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Us voleu connectar al Wifi?"
+
+msgid "Keyboard layout"
+msgstr "Distribució del teclat"
+
+msgid "Locale language"
+msgstr "Idioma local"
+
+msgid "Locale encoding"
+msgstr "Codificació local"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Ajuda d'Archinstall"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Configuració del disc"
+
+msgid "Authentication"
+msgstr "Autenticació"
+
+msgid "Locales"
+msgstr "Llocs"
+
+msgid "Pacman config"
+msgstr ""
+
+msgid "Swap"
+msgstr "Swap"
+
+msgid "Kernels"
+msgstr "Kernels"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Applications"
+msgstr "Aplicacions"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Configuració de la xarxa"
+
+msgid "Parallel Downloads"
+msgstr "Descàrregues paral·leles"
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "Sincronització automàtica de l'hora (NTP)"
+
+msgid "Additional packages"
+msgstr "Paquets addicionals"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Miralls personalitzats"
+
+msgid "Install"
+msgstr "Instal·lar"
+
+msgid "Abort"
+msgstr "Avortar"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr ""
+"S'ha d'especificar una contrasenya de root o un mínim d'un usuari amb "
+"privilegis sudo"
+
+#, fuzzy
+msgid "Language"
+msgstr "Idioma local"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Ajuda d'Archinstall"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "Seleccioneu una franja horària"
+
+msgid "Cyan"
+msgstr ""
+
+#, fuzzy
+msgid "Green"
+msgstr "Gestor d'inici de sessió"
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+#, fuzzy
+msgid "Blue"
+msgstr "Bluetooth"
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "Seleccioneu una acció per a '{}'"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "Paquets addicionals"
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "NTP"
+msgstr "NTP"
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Miralls personalitzats"
+
+msgid "Commands"
+msgstr ""
+
+#, python-brace-format
+msgid "Configuration type: {}"
+msgstr "Tipus de configuració: {}"
+
+msgid "Mountpoint"
+msgstr "Punt de muntatge"
+
+msgid "LVM configuration type"
+msgstr "Tipus de configuració LVM"
+
+msgid "Disk encryption"
+msgstr "Xifrat de disc"
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr "Tipus d'instantània Btrfs: {}"
+
+msgid "Swap on zram"
+msgstr "Swap a zram"
+
+msgid "Compression algorithm"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "Headers"
+msgstr ""
+
+msgid "Missing configurations:\n"
+msgstr "Configuracions que falten:\n"
+
+msgid "Profiles"
+msgstr "Perfils"
+
+msgid "Graphics driver"
+msgstr "Controlador de gràfics"
+
+msgid "Greeter"
+msgstr "Gestor d'inici de sessió"
+
+msgid "Selected mirror regions"
+msgstr "Regions de miralls seleccionades"
+
+msgid "Custom servers"
+msgstr "Servidors personalitzats"
+
+msgid "Custom repositories"
+msgstr "Repositoris personalitzats"
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Selecció de perfil actual"
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "Cancel·lar"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Nom de host desitjat per a la instal·lació: "
+
+msgid "Type"
+msgstr "Tipus"
+
+msgid "Selected profiles: "
+msgstr "Perfils seleccionats: "
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "Seleccioneu un o més dispositius per a utilitzar i configurar"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr "No es pot recuperar el perfil de la URL especificada: {}"
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+"Els perfils han de tenir un nom únic, però s'han trobat definicions de "
+"perfil amb noms duplicats: {}"
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] S'ha creat un fitxer de registre aquí: {}"
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"Si us plau, envieu aquest problema (i fitxer) a https://github.com/archlinux/"
+"archinstoo/issues"
+
+msgid "Syncing the system..."
+msgstr "Sincronitzant el sistema..."
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr ""
+"Esperant a què es completi la sincronització de l'hora (timedatectl show)."
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+"Ometent l'espera de la sincronització automàtica de l'hora (això pot causar "
+"problemes si l'hora no està sincronitzada durant la instal·lació)"
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+"Esperant a què es completi la sincronització del clauer d'Arch Linux "
+"(archlinux-keyring-wkd-sync)."
+
+msgid "Package group:"
+msgstr "Group de paquets:"
+
+msgid "Use a best-effort default partition layout"
+msgstr "Utilitzar un disseny de partició òptim perdeterminat"
+
+msgid "Manual Partitioning"
+msgstr "Partició manual"
+
+msgid "Pre-mounted configuration"
+msgstr "Configuració premuntada"
+
+msgid "Unknown"
+msgstr "Desconegut"
+
+msgid "Default layout"
+msgstr "Disseny predeterminat"
+
+msgid "No Encryption"
+msgstr "Sense xifrat"
+
+msgid "LUKS"
+msgstr "LUKS"
+
+msgid "LVM on LUKS"
+msgstr "LVM en LUKS"
+
+msgid "LUKS on LVM"
+msgstr "LUKS en LVM"
+
+msgid "weak"
+msgstr "dèbil"
+
+msgid "moderate"
+msgstr "moderada"
+
+msgid "strong"
+msgstr "forta"
+
+msgid "Removable"
+msgstr "Extraïble"
+
+msgid "Copy ISO network configuration to installation"
+msgstr "Copiar la configuració de xarxa ISO a la instal·lació"
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+msgid "Manual configuration"
+msgstr "Configuració manual"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr ""
+"Pacman ja està en execució; s'esperarà un màxim de 10 minuts perquè acabi."
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"El bloqueig pre-existent de pacman mai s'ha tancat. Si us plau, netegeu "
+"qualsevol sessió de pacman existent abans d'utilitzar archinstoo."
+
+msgid "Confirm and exit"
+msgstr "Confirmar i sortir"
+
+msgid "Cancel"
+msgstr "Cancel·lar"
+
+msgid "Back"
+msgstr "Tornar"
+
+msgid "Encryption type"
+msgstr "Tipus de xifrat"
+
+msgid "Encryption password"
+msgstr "Contrasenya de xifrat"
+
+msgid "Iteration time"
+msgstr "Temps d'iteració"
+
+msgid "Partitions"
+msgstr "Particions"
+
+msgid "LVM volumes"
+msgstr "Volums LVM"
+
+msgid "Partitions to be encrypted"
+msgstr "Particions a xifrar"
+
+msgid "LVM volumes to be encrypted"
+msgstr "Volums LVM a xifrar"
+
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr ""
+"Introduïu la contrasenya del xifrat de disc (deixeu-ho en blanc per a no "
+"xifrar)"
+
+msgid "Disk encryption password"
+msgstr "Contrasenya del xifrat del disc"
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr "Introduïu el temps d'iteració per al xifrat LUKS (en mil·lisegons)"
+
+msgid "Higher values increase security but slow down boot time"
+msgstr ""
+"Un valor més alt incrementarà la seguretat però endarrerirà el temps "
+"d'arrancada"
+
+msgid "Iteration time must be at least 100ms"
+msgstr "El temps d'iteració ha de ser d'un mínim de 100ms"
+
+msgid "Iteration time must be at most 120000ms"
+msgstr "El temps d'iteració ha de ser d'un màxim de 120000ms"
+
+msgid "Please enter a valid number"
+msgstr "Si us plau, introduïu un número vàlid"
+
+msgid "Suggest partition layout"
+msgstr "Recomanar el disseny de partició"
+
+msgid "Create empty layout (wipe all)"
+msgstr ""
+
+msgid "Remove all newly added partitions"
+msgstr "Eliminar totes les particions afegides recentment"
+
+msgid "Assign mountpoint"
+msgstr "Assignar punt de muntatge"
+
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "Marcar/Desmarcar per a formatar (esborra les dades)"
+
+msgid "Mark/Unmark as ESP"
+msgstr "Marcar/Desmarcar com a ESP"
+
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "Marcar/Desmarcar com XBOOTLDR"
+
+msgid "Mark/Unmark as bootable"
+msgstr "Marcar/Desmarcar com a arranc"
+
+msgid "Change filesystem"
+msgstr "Canviar el sistema de fitxers"
+
+msgid "Mark/Unmark as compressed"
+msgstr "Marcar/Desmarcar com a comprimit"
+
+msgid "Mark/Unmark as nodatacow"
+msgstr "Marcar/Desmarcar com nodatacow"
+
+msgid "Set subvolumes"
+msgstr "Establir subvolums"
+
+msgid "Delete partition"
+msgstr "Eliminar partició"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr "Gestió de particions: {}"
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr "Llargada total: {}"
+
+msgid "Wipe"
+msgstr "Esborrat complet"
+
+msgid "Partition - New"
+msgstr "Partició - Nova"
+
+msgid "Partition"
+msgstr "Partició"
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr ""
+"Aquesta partició està actualment xifrada, cal especificar un sistema de "
+"fitxers per a formatar-la"
+
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+"Els punts de muntatge de la partició són relatius a l'interior de la "
+"instal·lació; per exemple, /boot seria l'arranc."
+
+msgid "Filesystem"
+msgstr "Sistema de fitxers"
+
+msgid "Invalid size"
+msgstr "Mida invàlida"
+
+#, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr "Segment d'espai lliure seleccionat al dispositiu {}:"
+
+#, python-brace-format
+msgid "Size: {} / {}"
+msgstr "Mida: {} / {}"
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr ""
+"Tots els valors introduïts poden tenir un sufix d'unitat: %, B, KB, KiB, MB, "
+"MiB..."
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr "Si no es proporciona cap unitat, el valor s'interpreta com sectors"
+
+#, python-brace-format
+msgid "Size (default: {}): "
+msgstr "Mida (per defecte: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr "Això eliminarà totes les particions recentment afegides, continuar?"
+
+msgid "Disk configuration type"
+msgstr "Tipus de configuració del disc"
+
+msgid "Root mount directory"
+msgstr "Directori de muntatge arrel"
+
+msgid "Would you like to use compression or disable CoW?"
+msgstr "Us agradaria utilitzar compressió o desactivar CoW?"
+
+msgid "Use compression"
+msgstr "Utilitzar compressió"
+
+msgid "Disable Copy-on-Write"
+msgstr "Desactivar Copy-on-Write"
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr ""
+"Us agradaria utilitzar subvolums BTRFS amb una estructura predeterminada?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "Us agradaria crear una partició separada per a /home?"
+
+msgid "Add subvolume"
+msgstr "Afegir subvolum"
+
+msgid "Edit subvolume"
+msgstr "Editar subvolum"
+
+msgid "Delete subvolume"
+msgstr "Eliminar subvolum"
+
+msgid "Value cannot be empty"
+msgstr "El valor no pot ser buit"
+
+msgid "Subvolume name"
+msgstr "Nom del subvolum"
+
+msgid "Subvolume mountpoint"
+msgstr "Punt de muntatge del subvolum"
+
+msgid "Starting device modifications in "
+msgstr "Començant modificacions del dispositiu en "
+
+msgid "Partitioning"
+msgstr "Particionament"
+
+msgid "Snapshot type"
+msgstr "Tipus d'instantània"
+
+msgid "Physical volumes"
+msgstr "Volums físics"
+
+msgid "Volumes"
+msgstr "Volums"
+
+#, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "Tipus d'instantània: {}"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr "Actualment no s'admet el xifrat de disc LVM amb més de 2 particions"

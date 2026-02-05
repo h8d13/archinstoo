@@ -1,0 +1,1162 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Martin Kozák <martin.kozak@outlook.cz>\n"
+"Language-Team: \n"
+"Language: cs\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.8\n"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway vyžaduje přístup k vašemu sezení (soubor zařízení jako např. "
+"klávesnice, myš, atd.)"
+
+msgid "Choose an option to give Sway access to your hardware"
+msgstr "Vyberte možnost jak zpřístupnit pro Sway váš hardware"
+
+msgid "Seat access"
+msgstr "Přístup k sezení"
+
+#, fuzzy
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"niri vyžaduje přístup k vašemu sezení (soubor zařízení jako např. "
+"klávesnice, myš, atd.)"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr "Vyberte možnost jak zpřístupnit pro niri váš hardware"
+
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"labwc vyžaduje přístup k vašemu sezení (soubor zařízení jako např. "
+"klávesnice, myš, atd.)"
+
+msgid "Choose an option to give labwc access to your hardware"
+msgstr "Vyberte možnost jak zpřístupnit pro labwc váš hardware"
+
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Hyprland vyžaduje přístup k vašemu sezení (soubor zařízení jako např. "
+"klávesnice, myš, atd.)"
+
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr "Vyberte možnost jak zpřístupnit pro Hyprland váš hardware"
+
+msgid "Installed packages"
+msgstr "Instalované balíčky"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr "Typ prostředí: {}"
+
+#, fuzzy, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr ""
+"Archinstall vyžaduje ke spuštění oprávnění správce (root). Použijte --help "
+"pro více informací."
+
+msgid "Add a custom repository"
+msgstr "Přidat vlastní repozitář"
+
+msgid "Change custom repository"
+msgstr "Změnit vlastní repozitář"
+
+msgid "Delete custom repository"
+msgstr "Smazat vlastní repozitář"
+
+msgid "Repository name"
+msgstr "Název repozitáře"
+
+msgid "Name"
+msgstr "Jméno"
+
+msgid "Url"
+msgstr "Url"
+
+msgid "Select signature check"
+msgstr "Zvolit kontrolu podpisu"
+
+msgid "Signature check"
+msgstr "Kontrola podpisu"
+
+msgid "Select signature option"
+msgstr "Zvolit možnost podpisu"
+
+msgid "Add a custom server"
+msgstr "Přidat vlastní server"
+
+msgid "Change custom server"
+msgstr "Změnit vlastní server"
+
+msgid "Delete custom server"
+msgstr "Smazat vlastní server"
+
+msgid "Server url"
+msgstr "URL serveru"
+
+msgid "Select regions"
+msgstr "Zvolte regiony"
+
+msgid "Optional repositories"
+msgstr "Volitelné repozitáře"
+
+msgid "Add custom repository"
+msgstr "Přidat vlastní repozitář"
+
+msgid "Add custom servers"
+msgstr "Přidat vlastní servery"
+
+msgid "Pacman misc options"
+msgstr ""
+
+msgid "Additional repositories"
+msgstr "Dodatečné repozitáře"
+
+msgid "Loading mirror regions..."
+msgstr "Načítání oblastí zrcadel..."
+
+msgid "Mirror regions"
+msgstr "Oblasti zrcadel"
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Show help"
+msgstr "Zobrazit nápovědu"
+
+msgid "Exit help"
+msgstr "Opustit nápovědu"
+
+msgid "Preview scroll up"
+msgstr "Posunout náhled dolů"
+
+msgid "Preview scroll down"
+msgstr "Posunout náhled dolů"
+
+msgid "Move up"
+msgstr "Posunout nahoru"
+
+msgid "Move down"
+msgstr "Posunout dolů"
+
+msgid "Move right"
+msgstr "Posunout doprava"
+
+msgid "Move left"
+msgstr "Posunout doleva"
+
+msgid "Jump to entry"
+msgstr "Přejít na položku"
+
+msgid "Skip selection (if available)"
+msgstr "Přeskočit výběr (je-li dostupné)"
+
+msgid "Reset selection (if available)"
+msgstr "Zrušit výběr (je-li dostupné)"
+
+msgid "Select on single select"
+msgstr "Výběr jedné možnosti"
+
+msgid "Select on multi select"
+msgstr "Výběr více možností"
+
+msgid "Reset"
+msgstr "Zrušit"
+
+msgid "Skip selection menu"
+msgstr "Přeskočit výběr"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "Heslo"
+
+msgid "Password"
+msgstr "Heslo"
+
+msgid "Confirm password"
+msgstr "Potvrdit heslo"
+
+msgid "The confirmation password did not match, please try again"
+msgstr "Potvrzovací heslo se neshoduje, zkuste to prosím znovu"
+
+msgid "Not a valid directory"
+msgstr "Adresář není validní"
+
+msgid "Archinstoo help"
+msgstr "Nápověda pro Archinstall"
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "Skutečně si přejete resetovat toto nastavení?"
+
+msgid "Only ASCII characters are supported"
+msgstr "Jsou podporovány pouze ASCII znaky"
+
+msgid "Yes"
+msgstr "Ano"
+
+msgid "No"
+msgstr "Ne"
+
+msgid " (default)"
+msgstr " (výchozí)"
+
+msgid "The specified configuration will be applied"
+msgstr "Bude použita zvolená konfigurace"
+
+msgid "Would you like to continue?"
+msgstr "Přejete si pokračovat?"
+
+msgid "Configuration"
+msgstr "Konfigurace"
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "Uložit konfiguraci"
+
+msgid "Add interface"
+msgstr "Přidat rozhraní"
+
+msgid "Edit interface"
+msgstr "Upravit rozhraní"
+
+msgid "Delete interface"
+msgstr "Smazat rozhraní"
+
+msgid "Interfaces"
+msgstr "Rozhraní"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr "Musíte zadat platnou IP adresu"
+
+#, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr "Zvolte který režim má být nastaven pro \"{}\""
+
+msgid "Modes"
+msgstr "Režimy"
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr "Zadejte IP a podsíť pro {} (např. 192.168.0.5/24) "
+
+msgid "IP address"
+msgstr "IP adresa"
+
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr "Zadejte IP vaší brány (routeru) nebo ponechte prázdné pro žádnou"
+
+msgid "Gateway address"
+msgstr "Adresa brány"
+
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr ""
+"Zadejte vaše DNS servery (oddělené mezerou, ponechte prázdné pro žádné):"
+
+msgid "DNS servers"
+msgstr "DNS servery"
+
+msgid "Network configuration"
+msgstr "Konfigurace sítě"
+
+msgid "Configure interfaces"
+msgstr "Nakonfigurujte rozhraní"
+
+msgid "Root password"
+msgstr "Heslo správce (root)"
+
+msgid "User account"
+msgstr "Uživatelský účet"
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "Uživatelský účet"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "Má se tento profil použít pro instalaci?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "Add a user"
+msgstr "Přidat uživatele"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+msgid "Change password"
+msgstr "Změnit heslo"
+
+#, fuzzy
+msgid "Change shell"
+msgstr "Změnit souborový systém"
+
+#, fuzzy
+msgid "Manage groups"
+msgstr "Skupina balíčků:"
+
+msgid "Promote/Demote user"
+msgstr "Udělení/Odebrání práv uživatele"
+
+msgid "Delete User"
+msgstr "Smazat uživatele"
+
+msgid "User"
+msgstr "Uživatel"
+
+msgid "The username you entered is invalid"
+msgstr "Zadané uživatelské jméno není platné"
+
+#, fuzzy
+msgid "Invalid git URL"
+msgstr "Neplatná velikost"
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+msgid "Username"
+msgstr "Uživatelské jméno"
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "Má být \"{}\" superuživatelem (sudoer)?\n"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Ukončit archinstoo"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "Restartovat systém"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr ""
+"Přejete si použít automatickou synchronizaci času (NTP) pomocí výchozích "
+"serverů?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"Pro fungování NTP může být vyžadován hardwarový čas a další kroky po "
+"konfiguraci.\n"
+"Pro další informace navštivte Arch Wiki"
+
+msgid "Hostname"
+msgstr "Název počítače"
+
+msgid "Timezone"
+msgstr "Časová zóna"
+
+msgid "Select language"
+msgstr "Zvolte jazyk"
+
+#, python-brace-format
+msgid "Repositories: {}"
+msgstr "Repozitáře: {}"
+
+msgid "Loading packages..."
+msgstr "Načítání balíčků..."
+
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"Budou nainstalovány pouze balíčky jako base, sudo, linux, linux-firmware, "
+"efibootmgr a volitelné balíčky profilu."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+"Poznámka: balík base-devel se již neinstaluje automaticky. Přidejte jej zde, "
+"pokud potřebujete nástroje pro sestavování."
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr ""
+"Vyberte balíčky z níže uvedeného seznamu, které by měly být dodatečně "
+"nainstalovány"
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "Dodatečné balíčky"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "Načítání balíčků..."
+
+msgid "Not found in AUR"
+msgstr ""
+
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr ""
+"Tato možnost povolí specifikovaný počet paralelních stahování, která mohou "
+"nastat při instalaci"
+
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"Zadejte povolený počet paralelních stahování.\n"
+"\n"
+"Poznámka:\n"
+
+#, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+" - Maximální doporučená hodnota  : {} (Povolí {} paralelních stahování "
+"naráz )"
+
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - Zakázáno/Výchozí : 0 (Zakáže paralelní stahování, povolí pouze 1 "
+"stahování naráz)\n"
+
+msgid "Invalid download number"
+msgstr "Neplatný počet stahování"
+
+msgid "Number downloads"
+msgstr "Počet stahování"
+
+msgid "What would you like to do next?"
+msgstr "Co si přejete udělat dál?"
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Do you really want to abort?"
+msgstr "Skutečně chcete proces přerušit?"
+
+msgid "Kernel"
+msgstr "Jádro"
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"Pro nejlepší kompatibilitu s vaším hardwarem AMD můžete použít buď možnost "
+"vše open-source nebo AMD / ATI."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"Pro nejlepší kompatibilitu s vaším hardwarem Intel můžete použít buď možnost "
+"vše open-source nebo Intel.\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"Pro nejlepší kompatibilitu s vaším hardwarem Nvidia můžete použít buď "
+"možnost vše open-source nebo proprietární ovladač Nvidia.\n"
+
+msgid "Info"
+msgstr "Info"
+
+msgid "Would you like to use swap on zram?"
+msgstr "Přejete si použít swap na zram?"
+
+msgid "Select zram compression algorithm:"
+msgstr "Zvolte kompresní algoritmus pro zram:"
+
+msgid "Bootloader"
+msgstr "Zavaděč"
+
+msgid "Unified kernel images"
+msgstr "Unified Kernel Images"
+
+#, fuzzy
+msgid "Removable location"
+msgstr "Nainstalovat na vyměnitelné médium"
+
+msgid "Enabled"
+msgstr "Povoleno"
+
+msgid "Disabled"
+msgstr "Zakázáno"
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr "Instalace do /EFI/BOOT/ (vyměnitelné umístění, bezpečná výchozí volba)"
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr "Instalace na standardní umístění s NVRAM záznamem"
+
+msgid "Would you like to use unified kernel images?"
+msgstr "Přejete si použít Unified Kernel Images?"
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+"Přejete si nainstalovat zavadeč do výchozího umístění pro vyhledávání "
+"vyměnitelných médií?"
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+"Toto nainstaluje zavaděč do /EFI/BOOT/BOOTX64.EFI (nebo podobně), což je "
+"užitečné pro:"
+
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr ""
+"Firmware, který nepodporuje správně zaváděcí záznamy v NVRAM, jako je tomu u "
+"většiny základních desek MSI,"
+
+msgid "most Apple Macs, many laptops..."
+msgstr "většina počítačů Apple Mac, mnoho notebooků…"
+
+msgid "USB drives or other portable external media."
+msgstr "USB disky nebo jiná přenosná externí média."
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr "Systémy, kde chcete, aby byl disk spouštěcí na jakémkoli počítači."
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr "UEFI nebylo nalezeno a některé možnosti jsou vypnuty"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Print service"
+msgstr "Tisková služba"
+
+msgid "Power management"
+msgstr "Správa napájení"
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "Správa napájení"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "Upravit"
+
+msgid "Would you like to configure Bluetooth?"
+msgstr "Přejete si nastavit Bluetooth?"
+
+msgid "Would you like to configure the print service?"
+msgstr "Přejete si nastavit tiskovou službu?"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "Přejete si připojit se k Wifi?"
+
+msgid "Keyboard layout"
+msgstr "Rozložení klávesnice"
+
+msgid "Locale language"
+msgstr "Místní jazyk"
+
+msgid "Locale encoding"
+msgstr "Kódování místního jazyka"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Nápověda pro Archinstall"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "Konfigurace disku"
+
+msgid "Authentication"
+msgstr "Ověřování"
+
+msgid "Locales"
+msgstr "Lokalizace"
+
+msgid "Pacman config"
+msgstr ""
+
+msgid "Swap"
+msgstr "Swap"
+
+msgid "Kernels"
+msgstr "Jádra"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Applications"
+msgstr "Aplikace"
+
+#, fuzzy
+msgid "Network config"
+msgstr "Konfigurace sítě"
+
+msgid "Parallel Downloads"
+msgstr "Paralelní stahování"
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "Automatická synchronizace času (NTP)"
+
+msgid "Additional packages"
+msgstr "Dodatečné balíčky"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "Vlastní zrcadla"
+
+msgid "Install"
+msgstr "Instalovat"
+
+msgid "Abort"
+msgstr "Přerušit"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr ""
+"Musí být zadáno heslo správce (root) nebo musí být specifikován alespoň "
+"jeden uživatel s sudo oprávněními"
+
+msgid "Language"
+msgstr "Jazyk"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Nápověda pro Archinstall"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "Zvolte časovou zónu"
+
+msgid "Cyan"
+msgstr ""
+
+#, fuzzy
+msgid "Green"
+msgstr "Přihlašovací obrazovka"
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+#, fuzzy
+msgid "Blue"
+msgstr "Bluetooth"
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "Zvolte akci pro '{}'"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "Dodatečné balíčky"
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "NTP"
+msgstr "NTP"
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "Vlastní zrcadla"
+
+msgid "Commands"
+msgstr ""
+
+#, python-brace-format
+msgid "Configuration type: {}"
+msgstr "Typ konfigurace: {}"
+
+msgid "Mountpoint"
+msgstr "Přípojný bod"
+
+msgid "LVM configuration type"
+msgstr "Typ LVM konfigurace"
+
+msgid "Disk encryption"
+msgstr "Šifrování disku"
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr "Druh Btrfs snímku: {}"
+
+msgid "Swap on zram"
+msgstr "Swap na zram"
+
+msgid "Compression algorithm"
+msgstr "Kompresní algoritmus"
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "Headers"
+msgstr ""
+
+msgid "Missing configurations:\n"
+msgstr "Chybějící konfigurace:\n"
+
+msgid "Profiles"
+msgstr "Profily"
+
+msgid "Graphics driver"
+msgstr "Grafický ovladač"
+
+msgid "Greeter"
+msgstr "Přihlašovací obrazovka"
+
+msgid "Selected mirror regions"
+msgstr "Zvolené oblasti zrcadel"
+
+msgid "Custom servers"
+msgstr "Vlastní servery"
+
+msgid "Custom repositories"
+msgstr "Vlastní repozitáře"
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "Aktuální výběr profilu"
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "Zrušit"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "Název počítače k instalaci: "
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Selected profiles: "
+msgstr "Zvolené profily: "
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "Zvolte jeden nebo více pevných disků k použití a konfiguraci"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr "Nepodařilo se získat profil ze zadané url: {}"
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+"Profily musí mít unikátní jméno. Následující duplicity byly nalezeny: {}"
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] Soubor s protokoly byl uložen zde: {}"
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"Prosím, informujte nás o této chybě (spolu se souborem) na https://"
+"github.com/archlinux/archinstoo/issues"
+
+msgid "Syncing the system..."
+msgstr "Synchronizování systému..."
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr "Čekám na dokončení synchronizace času (timedatectl show)."
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+"Přeskakování čekání na automatickou synchronizaci času (nesynchronizovaný "
+"čas může způsobit problémy během instalace)"
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+"Čekám na dokončení synchronizace Arch Linux keyring (archlinux-keyring-wkd-"
+"sync)."
+
+msgid "Package group:"
+msgstr "Skupina balíčků:"
+
+msgid "Use a best-effort default partition layout"
+msgstr "Použít chytré výchozí rozdělení oddílů"
+
+msgid "Manual Partitioning"
+msgstr "Ruční rozdělení disku"
+
+msgid "Pre-mounted configuration"
+msgstr "Pre-mounted konfigurace"
+
+msgid "Unknown"
+msgstr "Neznámý"
+
+msgid "Default layout"
+msgstr "Výchozí rozložení"
+
+msgid "No Encryption"
+msgstr "Žádné šifrování"
+
+msgid "LUKS"
+msgstr "LUKS"
+
+msgid "LVM on LUKS"
+msgstr "LVM na LUKS"
+
+msgid "LUKS on LVM"
+msgstr "LUKS na LVM"
+
+msgid "weak"
+msgstr "slabé"
+
+msgid "moderate"
+msgstr "středně silné"
+
+msgid "strong"
+msgstr "silné"
+
+msgid "Removable"
+msgstr "Vyměnitelné"
+
+msgid "Copy ISO network configuration to installation"
+msgstr "Zkopírovat do instalace konfiguraci sítě z ISO"
+
+msgid "Use Network Manager (default backend)"
+msgstr "Použít Network Manager (výchozí backend)"
+
+msgid "Use Network Manager (iwd backend)"
+msgstr "Použít Network Manager (iwd backend)"
+
+msgid "Manual configuration"
+msgstr "Ruční konfigurace"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr "Pacman je již spuštěn, po 10 minutách bude vynuceno jeho ukončení."
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"Nalezen zámek předchozí instance pacman. Před používáním archinstoo, "
+"prosím, vyčistěte všechna existující sezení pacman."
+
+msgid "Confirm and exit"
+msgstr "Potvrdit a ukončit"
+
+msgid "Cancel"
+msgstr "Zrušit"
+
+msgid "Back"
+msgstr "Zpět"
+
+msgid "Encryption type"
+msgstr "Typ šifrování"
+
+msgid "Encryption password"
+msgstr "Šifrovací heslo"
+
+msgid "Iteration time"
+msgstr "Doba iterace"
+
+msgid "Partitions"
+msgstr "Diskové oddíly"
+
+msgid "LVM volumes"
+msgstr "LVM svazky"
+
+msgid "Partitions to be encrypted"
+msgstr "Zvolte oddíl k zašifrování"
+
+msgid "LVM volumes to be encrypted"
+msgstr "LVM svazky k zašifrování"
+
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr ""
+"Zadejte heslo pro zašifrování disku (ponechte prázdné pro nepoužití "
+"šifrování)"
+
+msgid "Disk encryption password"
+msgstr "Heslo pro šifrování disku"
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr "Zadejte dobu iterace pro šifrování LUKS (v milisekundách)"
+
+msgid "Higher values increase security but slow down boot time"
+msgstr "Vyšší hodnoty zvyšují bezpečnost, ale snižují dobu spouštění"
+
+msgid "Iteration time must be at least 100ms"
+msgstr "Doba iterace musí být alespoň 100 ms"
+
+msgid "Iteration time must be at most 120000ms"
+msgstr "Doba iterace musí být alespoň 120000ms"
+
+msgid "Please enter a valid number"
+msgstr "Prosím zadejte platné číslo"
+
+msgid "Suggest partition layout"
+msgstr "Navrhnout rozdělení oddílů"
+
+msgid "Create empty layout (wipe all)"
+msgstr ""
+
+msgid "Remove all newly added partitions"
+msgstr "Smazat všechny nově přidané oddíly"
+
+msgid "Assign mountpoint"
+msgstr "Přiřaďte přípojný bod"
+
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "Označení/Odznačení oddílu ke zformátování (vymaže data)"
+
+msgid "Mark/Unmark as ESP"
+msgstr "Označit/Odznačit jako ESP"
+
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "Označit/Odznačit jako XBOOTLDR"
+
+msgid "Mark/Unmark as bootable"
+msgstr "Označit/Odznačit jako spouštěcí"
+
+msgid "Change filesystem"
+msgstr "Změnit souborový systém"
+
+msgid "Mark/Unmark as compressed"
+msgstr "Označit/Odznačit oddíl s kompresí"
+
+msgid "Mark/Unmark as nodatacow"
+msgstr "Označit/Odznačit jako nodatacow"
+
+msgid "Set subvolumes"
+msgstr "Nastavit podsvazky"
+
+msgid "Delete partition"
+msgstr "Smazat oddíl"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr "Správa diskových oddílů: {}"
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr "Celková délka: {}"
+
+msgid "Wipe"
+msgstr "Vymazat"
+
+msgid "Partition - New"
+msgstr "Diskový oddíl - Nový"
+
+msgid "Partition"
+msgstr "Diskový oddíl"
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr "Tento oddíl je zašifrovaný, k naformátování zadejte souborový systém"
+
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+"Přípojné body diskových oddílů jsou relativní uvnitř instalace, například "
+"spouštěcí bod by byl /boot."
+
+msgid "Filesystem"
+msgstr "Souborový systém"
+
+msgid "Invalid size"
+msgstr "Neplatná velikost"
+
+#, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr "Zvolené volné sektory na zařízení {}:"
+
+#, python-brace-format
+msgid "Size: {} / {}"
+msgstr "Velikost: {} / {}"
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr ""
+"Všechny zadané hodnoty mohou byt doplněny jednotkou: %, B, KB, KiB, MB, "
+"MiB..."
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr "Pokud nejsou zadány jednotky, hodnoty jsou brány jako sektory"
+
+#, python-brace-format
+msgid "Size (default: {}): "
+msgstr "Velikost (výchozí: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr "Tímto smažete všechny nově vytvořené oddíly, přejete si pokračovat?"
+
+msgid "Disk configuration type"
+msgstr "Typ konfigurace disku"
+
+msgid "Root mount directory"
+msgstr "Kořenový adresář pro připojení"
+
+msgid "Would you like to use compression or disable CoW?"
+msgstr "Přejete si použít kompresi nebo zakázat CoW?"
+
+msgid "Use compression"
+msgstr "Použít kompresi"
+
+msgid "Disable Copy-on-Write"
+msgstr "Zakázat Copy-on-Write"
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr "Přejete si použít výchozí strukturu BTRFS podsvazků?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "Přejete si vytvořit oddělený oddíl pro /home?"
+
+msgid "Add subvolume"
+msgstr "Přidat podsvazek"
+
+msgid "Edit subvolume"
+msgstr "Upravit podsvazek"
+
+msgid "Delete subvolume"
+msgstr "Smazat podsvazek"
+
+msgid "Value cannot be empty"
+msgstr "Hodnota nesmí být prázdná"
+
+msgid "Subvolume name"
+msgstr "Název podsvazku"
+
+msgid "Subvolume mountpoint"
+msgstr "Přípojný bod podsvazku"
+
+msgid "Starting device modifications in "
+msgstr "Spouští se úpravy zařízení v "
+
+msgid "Partitioning"
+msgstr "Rozdělení diskových oddílů"
+
+msgid "Snapshot type"
+msgstr "Druh snímku"
+
+msgid "Physical volumes"
+msgstr "Fyzické svazky"
+
+msgid "Volumes"
+msgstr "Svazky"
+
+#, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "Druh snímku: {}"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr ""
+"LVM šifrování disku s více jak dvěma oddíly není v tuto chvíli podporováno"
