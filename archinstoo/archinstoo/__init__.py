@@ -1,4 +1,4 @@
-"""Arch Linux installer - guided, templates etc."""
+"""ArchInstoo Linux installer"""
 
 import logging
 import sys
@@ -32,14 +32,14 @@ ROOTLESS_SCRIPTS = {'list', 'size', 'mirror'}
 
 def _log_env_info() -> None:
 	# log which mode we are using
-	info(f'{sys.executable} is_venv={is_venv()}')
+	info(f'Python path: {sys.executable} is_venv={is_venv()}')
 
 	if Os.running_from_host():
 		info(f'Running from Host (H2T Mode) on {Os.running_from_who()}...')
 	else:
 		info('Running from ISO (USB Mode)...')
 
-	info(f'{logger.path}')
+	info(f'Logger path: {logger.path}')
 
 
 def _bootstrap() -> int:
