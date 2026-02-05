@@ -54,10 +54,10 @@ git clone --depth 1 https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
 ```
 
-### **2. Run the module** `archinstall`
+### **2. Run the module** `archinstoo`
 
 ```shell
-python -m archinstall [args] # try -h or --help
+python -m archinstoo [args] # try -h or --help
 # some options are behind --advanced
 ```
 
@@ -67,7 +67,7 @@ python -m archinstall [args] # try -h or --help
 
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
-> You can create any profile in `archinstall/default_profiles/` following convention, which will be imported automatically.
+> You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
 Or modify existing ones direcly. Can also see here for [examples](./archinstoo/examples)
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported. 

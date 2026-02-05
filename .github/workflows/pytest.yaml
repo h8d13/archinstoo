@@ -15,7 +15,7 @@ jobs:
                 pacman --noconfirm -Syyu
                 pacman --noconfirm -Sy python-pip python-pyparted pkgconfig gcc
             - run: pip install --break-system-packages --upgrade pip
-            - name: Install archinstall dependencies
+            - name: Install archinstoo dependencies
               run: pip install --break-system-packages ./archinstoo[dev]
             - name: Test with pytest
               run: pytest -c archinstoo/pyproject.toml archinstoo/tests
