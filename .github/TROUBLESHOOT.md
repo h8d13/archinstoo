@@ -18,6 +18,8 @@ Update:
 # or the same with "${optdepends[@]}"
 ```
 
+For the lasy ones: `./DEV -h2t` or with optionals `./DEV -h2t -o`
+
 > [!IMPORTANT]
 > Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues/or partial updates,
 and needs to be rebuilt with more space for certain breaking updates. 

@@ -78,5 +78,5 @@ package() {
   cd "$srcdir/.." || exit
 
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -vDm 644 docs/_build/man/archinstall.1 -t "$pkgdir/usr/share/man/man1/"
+  install -vDm 644 docs/_build/man/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
 }
