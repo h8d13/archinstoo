@@ -75,20 +75,25 @@ def is_root() -> bool:
 
 
 def clean_cache(root_dir: str) -> None:
+	# only clean if running from source (archinstall dir exists in cwd)
+	if not os.path.isdir(os.path.join(root_dir, 'archinstall')):
+		return
+
 	deleted = []
 
 	info('Cleaning up...')
-	for dirpath, dirnames, _ in os.walk(root_dir):
-		for dirname in dirnames:
-			if dirname.lower() == '__pycache__':
-				full_path = os.path.join(dirpath, dirname)
-				try:
-					rmtree(full_path)
-					deleted.append(full_path)
-				except Exception as e:
-					info(f'Failed to delete {full_path}: {e}')
+	try:
+		for dirpath, dirnames, _ in os.walk(root_dir):
+			for dirname in dirnames:
+				if dirname.lower() == '__pycache__':
+					full_path = os.path.join(dirpath, dirname)
+					try:
+						rmtree(full_path)
+						deleted.append(full_path)
+					except Exception as e:
+						info(f'Failed to delete {full_path}: {e}')
+	except KeyboardInterrupt, PermissionError:
+		pass
 
-	if not deleted:
-		info('No cache folders found.')
-	else:
+	if deleted:
 		info(f'Done. {len(deleted)} cache folder(s) deleted.')
