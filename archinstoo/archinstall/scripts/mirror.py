@@ -6,7 +6,10 @@ import argparse
 #   archinstall --script mirror France
 from archinstall.lib.pm.mirrors import MirrorListHandler
 
-parser = argparse.ArgumentParser(description='Test mirror speed sorting')
+parser = argparse.ArgumentParser(
+	prog='python -m archinstall --script mirror',
+	description='Test mirror speed sorting',
+)
 parser.add_argument('region', nargs='?', default='Germany', help='Region to test (default: Germany)')
 parser.add_argument('--list', '-l', action='store_true', help='List available regions')
 args = parser.parse_args()
