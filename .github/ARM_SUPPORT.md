@@ -177,11 +177,13 @@ umount /mnt/boot /mnt
 
 ## Using the `live` script
 
+At this point we assume you have a working boot setup and a tty or access to terminal.
+
 This is a reduced version of `guided` that only aims to setup certain stuff. 
 
 > Removes bootloaders/disks and more things that are not needed for a running system.
 
-First `./DEV -h2t` downloads dependencies you may need. 
+First `./DEV -h2t` downloads dependencies you may need (from the PKGBUILD). 
 
 Then `./RUN --script live` will bring you to a minimal menu that is aimed to run on a live system. 
 
