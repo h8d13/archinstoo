@@ -29,7 +29,7 @@ def perform_installation(
 		return
 
 	disk_config = config.disk_config
-	mountpoint = disk_config.mountpoint if disk_config.mountpoint else mountpoint
+	mountpoint = disk_config.mountpoint or mountpoint
 
 	with Installer(
 		mountpoint,

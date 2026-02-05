@@ -28,7 +28,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 
 	@override
 	def selected_action_display(self, selection: Nic) -> str:
-		return selection.iface if selection.iface else ''
+		return selection.iface or ''
 
 	@override
 	def handle_action(self, action: str, entry: Nic | None, data: list[Nic]) -> list[Nic]:

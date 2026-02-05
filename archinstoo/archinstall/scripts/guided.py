@@ -67,7 +67,7 @@ def perform_installation(
 	run_mkinitcpio = not config.bootloader_config or not config.bootloader_config.uki
 	locale_config = config.locale_config
 	optional_repositories = config.pacman_config.optional_repositories if config.pacman_config else []
-	mountpoint = disk_config.mountpoint if disk_config.mountpoint else mountpoint
+	mountpoint = disk_config.mountpoint or mountpoint
 
 	with Installer(
 		mountpoint,

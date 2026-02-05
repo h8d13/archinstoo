@@ -176,7 +176,7 @@ def select_greeter(
 			default = preset
 		elif profile is not None:
 			default_greeter = profile.default_greeter_type
-			default = default_greeter if default_greeter else None
+			default = default_greeter or None
 
 		group.set_default_by_value(default)
 

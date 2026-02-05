@@ -182,7 +182,7 @@ def _clean_dep(name: str) -> str | None:
 		return None
 	# strip >=, <=, =, >, <
 	for sep in ('>=', '<=', '=', '>', '<'):
-		name = name.split(sep)[0]
+		name = name.split(sep, 1)[0]
 	return name or None
 
 
