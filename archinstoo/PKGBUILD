@@ -6,7 +6,7 @@
 # Contributor: Anton Hvornum <torxed@archlinux.org>
 
 pkgname=archinstoo-git
-pkgver=r5311.c07392a0
+pkgver=r5312.b31f985e
 pkgrel=1
 pkgdesc="Archinstall revamped"
 arch=(any)
