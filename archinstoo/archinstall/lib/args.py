@@ -203,6 +203,13 @@ class ArchConfigHandler:
 	def _define_arguments(self) -> ArgumentParser:
 		parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False)
 		parser.add_argument(
+			'--script',
+			nargs='?',
+			default='guided',
+			help='Script to run for installation',
+			type=str,
+		)
+		parser.add_argument(
 			'--config',
 			type=Path,
 			nargs='?',
@@ -221,13 +228,6 @@ class ArchConfigHandler:
 			action='store_true',
 			default=False,
 			help='Generates a configuration file and then exits instead of performing an installation',
-		)
-		parser.add_argument(
-			'--script',
-			nargs='?',
-			default='guided',
-			help='Script to run for installation',
-			type=str,
 		)
 		parser.add_argument(
 			'--mountpoint',
