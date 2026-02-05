@@ -1,0 +1,360 @@
+from typing import override
+
+from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
+from archinstoo.lib.models.application import (
+	ApplicationConfiguration,
+	Audio,
+	AudioConfiguration,
+	BluetoothConfiguration,
+	Editor,
+	EditorConfiguration,
+	Firewall,
+	FirewallConfiguration,
+	Management,
+	ManagementConfiguration,
+	Monitor,
+	MonitorConfiguration,
+	PowerManagement,
+	PowerManagementConfiguration,
+	PrintServiceConfiguration,
+)
+from archinstoo.lib.translationhandler import tr
+from archinstoo.lib.tui.curses_menu import SelectMenu
+from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.result import ResultType
+from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+
+
+class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
+	def __init__(
+		self,
+		preset: ApplicationConfiguration | None = None,
+	):
+		if preset:
+			self._app_config = preset
+		else:
+			self._app_config = ApplicationConfiguration()
+
+		menu_options = self._define_menu_options()
+		self._item_group = MenuItemGroup(menu_options, checkmarks=True)
+
+		super().__init__(
+			self._item_group,
+			config=self._app_config,
+			allow_reset=True,
+		)
+
+	@override
+	def run(self, additional_title: str | None = None) -> ApplicationConfiguration:
+		super().run(additional_title=additional_title)
+		return self._app_config
+
+	def _define_menu_options(self) -> list[MenuItem]:
+		return [
+			MenuItem(
+				text=tr('Bluetooth'),
+				action=select_bluetooth,
+				value=self._app_config.bluetooth_config,
+				preview_action=self._prev_bluetooth,
+				key='bluetooth_config',
+			),
+			MenuItem(
+				text=tr('Audio'),
+				action=select_audio,
+				preview_action=self._prev_audio,
+				key='audio_config',
+			),
+			MenuItem(
+				text=tr('Print service'),
+				action=select_print_service,
+				preview_action=self._prev_print_service,
+				key='print_service_config',
+			),
+			MenuItem(
+				text=tr('Power management'),
+				action=select_power_management,
+				preview_action=self._prev_power_management,
+				enabled=SysInfo.has_battery(),
+				key='power_management_config',
+			),
+			MenuItem(
+				text=tr('Firewall'),
+				action=select_firewall,
+				preview_action=self._prev_firewall,
+				key='firewall_config',
+			),
+			MenuItem(
+				text=tr('Management'),
+				action=select_management,
+				preview_action=self._prev_management,
+				key='management_config',
+			),
+			MenuItem(
+				text=tr('Monitor'),
+				action=select_monitor,
+				preview_action=self._prev_monitor,
+				key='monitor_config',
+			),
+			MenuItem(
+				text=tr('Editor'),
+				action=select_editor,
+				preview_action=self._prev_editor,
+				key='editor_config',
+			),
+		]
+
+	def _prev_power_management(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: PowerManagementConfiguration = item.value
+			return f'{tr("Power management")}: {config.power_management.value}'
+		return None
+
+	def _prev_bluetooth(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			bluetooth_config: BluetoothConfiguration = item.value
+
+			output = f'{tr("Bluetooth")}: '
+			output += tr('Enabled') if bluetooth_config.enabled else tr('Disabled')
+			return output
+		return None
+
+	def _prev_audio(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: AudioConfiguration = item.value
+			return f'{tr("Audio")}: {config.audio.value}'
+		return None
+
+	def _prev_print_service(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			print_service_config: PrintServiceConfiguration = item.value
+
+			output = f'{tr("Print service")}: '
+			output += tr('Enabled') if print_service_config.enabled else tr('Disabled')
+			return output
+		return None
+
+	def _prev_firewall(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: FirewallConfiguration = item.value
+			return f'{tr("Firewall")}: {config.firewall.value}'
+		return None
+
+	def _prev_management(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: ManagementConfiguration = item.value
+			tools = ', '.join([t.value for t in config.tools])
+			return f'{tr("Management")}: {tools}'
+		return None
+
+	def _prev_monitor(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: MonitorConfiguration = item.value
+			return f'{tr("Monitor")}: {config.monitor.value}'
+		return None
+
+	def _prev_editor(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: EditorConfiguration = item.value
+			return f'{tr("Editor")}: {config.editor.value}'
+		return None
+
+
+def select_power_management(preset: PowerManagementConfiguration | None = None) -> PowerManagementConfiguration | None:
+	group = MenuItemGroup.from_enum(PowerManagement)
+
+	if preset:
+		group.set_focus_by_value(preset.power_management)
+
+	result = SelectMenu[PowerManagement](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Power management')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return PowerManagementConfiguration(power_management=result.get_value())
+		case ResultType.Reset:
+			return None
+
+
+def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfiguration | None:
+	group = MenuItemGroup.yes_no()
+	group.focus_item = MenuItem.no()
+
+	if preset is not None:
+		group.set_selected_by_value(preset.enabled)
+
+	header = tr('Would you like to configure Bluetooth?') + '\n'
+
+	result = SelectMenu[bool](
+		group,
+		header=header,
+		alignment=Alignment.CENTER,
+		columns=2,
+		orientation=Orientation.HORIZONTAL,
+		allow_skip=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			enabled = result.item() == MenuItem.yes()
+			return BluetoothConfiguration(enabled)
+		case ResultType.Skip:
+			return preset
+		case _:
+			raise ValueError('Unhandled result type')
+
+
+def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServiceConfiguration | None:
+	group = MenuItemGroup.yes_no()
+	group.focus_item = MenuItem.no()
+
+	if preset is not None:
+		group.set_selected_by_value(preset.enabled)
+
+	header = tr('Would you like to configure the print service?') + '\n'
+
+	result = SelectMenu[bool](
+		group,
+		header=header,
+		alignment=Alignment.CENTER,
+		columns=2,
+		orientation=Orientation.HORIZONTAL,
+		allow_skip=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			enabled = result.item() == MenuItem.yes()
+			return PrintServiceConfiguration(enabled)
+		case ResultType.Skip:
+			return preset
+		case _:
+			raise ValueError('Unhandled result type')
+
+
+def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration | None:
+	items = [MenuItem(a.value, value=a) for a in Audio]
+	group = MenuItemGroup(items)
+
+	if preset:
+		group.set_focus_by_value(preset.audio)
+
+	result = SelectMenu[Audio](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Audio')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return AudioConfiguration(audio=result.get_value())
+		case ResultType.Reset:
+			raise ValueError('Unhandled result type')
+
+
+def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConfiguration | None:
+	group = MenuItemGroup.from_enum(Firewall)
+
+	if preset:
+		group.set_focus_by_value(preset.firewall)
+
+	result = SelectMenu[Firewall](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Firewall')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return FirewallConfiguration(firewall=result.get_value())
+		case ResultType.Reset:
+			return None
+
+
+def select_management(preset: ManagementConfiguration | None = None) -> ManagementConfiguration | None:
+	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo.arch() != 'x86_64')]
+	items = [MenuItem(m.value, value=m) for m in options]
+	group = MenuItemGroup(items)
+
+	header = tr('Would you like to install management tools?') + '\n'
+
+	if preset:
+		group.set_selected_by_value(preset.tools)
+
+	result = SelectMenu[Management](
+		group,
+		header=header,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Management')),
+		multi=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return ManagementConfiguration(tools=result.get_values())
+		case ResultType.Reset:
+			return None
+
+
+def select_monitor(preset: MonitorConfiguration | None = None) -> MonitorConfiguration | None:
+	group = MenuItemGroup.from_enum(Monitor)
+
+	if preset:
+		group.set_focus_by_value(preset.monitor)
+
+	result = SelectMenu[Monitor](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Monitor')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return MonitorConfiguration(monitor=result.get_value())
+		case ResultType.Reset:
+			return None
+
+
+def select_editor(preset: EditorConfiguration | None = None) -> EditorConfiguration | None:
+	group = MenuItemGroup.from_enum(Editor)
+
+	if preset:
+		group.set_focus_by_value(preset.editor)
+
+	result = SelectMenu[Editor](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Editor')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return EditorConfiguration(editor=result.get_value())
+		case ResultType.Reset:
+			return None

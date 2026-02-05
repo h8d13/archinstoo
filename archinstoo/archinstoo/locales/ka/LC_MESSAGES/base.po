@@ -1,0 +1,1217 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: archinstoo\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
+"Language-Team: Georgian <(nothing)>\n"
+"Language: ka\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.3.2\n"
+
+msgid ""
+"Sway needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway-ს თქვენს სამუშაო ადგილთან (აპარატურასთან, როგორიცაა კლავიატურა, თაგუნა "
+"და ა.შ>) წვდომა სჭირდება"
+
+#, fuzzy
+msgid "Choose an option to give Sway access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"აირჩიეთ ეს პარამეტრი, რომ Sway-ს თქვენს აპარატურასთან წვდომა მისცეთ"
+
+msgid "Seat access"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"River needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway-ს თქვენს სამუშაო ადგილთან (აპარატურასთან, როგორიცაა კლავიატურა, თაგუნა "
+"და ა.შ>) წვდომა სჭირდება"
+
+#, fuzzy
+msgid "Choose an option to give River access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"აირჩიეთ ეს პარამეტრი, რომ Sway-ს თქვენს აპარატურასთან წვდომა მისცეთ"
+
+#, fuzzy
+msgid ""
+"labwc needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Sway-ს თქვენს სამუშაო ადგილთან (აპარატურასთან, როგორიცაა კლავიატურა, თაგუნა "
+"და ა.შ>) წვდომა სჭირდება"
+
+#, fuzzy
+msgid "Choose an option to give labwc access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"აირჩიეთ ეს პარამეტრი, რომ Sway-ს თქვენს აპარატურასთან წვდომა მისცეთ"
+
+msgid ""
+"Hyprland needs access to your seat (collection of hardware devices i.e. "
+"keyboard, mouse, etc)"
+msgstr ""
+"Hyperland-ს თქვენს სამუშაო ადგილთან (აპარატურასთან, როგორიცაა კლავიატურა, "
+"თაგუნა და ა.შ>) წვდომა სჭირდება"
+
+#, fuzzy
+msgid "Choose an option to give Hyprland access to your hardware"
+msgstr ""
+"\n"
+"\n"
+"აირჩიეთ ეს პარამეტრი, რომ Hyperland-ს თქვენს აპარატურასთან წვდომა მისცეთ"
+
+msgid "Installed packages"
+msgstr "დაყენებული პაკეტები"
+
+#, python-brace-format
+msgid "Environment type: {}"
+msgstr "გარემოს ტიპი: {}"
+
+#, fuzzy, python-brace-format
+msgid ""
+"archinstoo {script} requires root privileges to run. See --help for more."
+msgstr ""
+"Archinstall-ს გასაშვებად root მომხმარებლის პრივილეგიები სჭირდება. მეტი "
+"ინფორმაციისთვის იხილეთ --help."
+
+#, fuzzy
+msgid "Add a custom repository"
+msgstr "მორგებული სარკის დამატება"
+
+#, fuzzy
+msgid "Change custom repository"
+msgstr "მორგებული სარკის შეცვლა"
+
+#, fuzzy
+msgid "Delete custom repository"
+msgstr "მორგებული სარკის წაშლა"
+
+#, fuzzy
+msgid "Repository name"
+msgstr "სარკის რეგიონი"
+
+msgid "Name"
+msgstr ""
+
+msgid "Url"
+msgstr ""
+
+#, fuzzy
+msgid "Select signature check"
+msgstr "აირჩიეთ ხელმოწერის შემოწმების პარამეტრი"
+
+#, fuzzy
+msgid "Signature check"
+msgstr "აირჩიეთ ხელმოწერის შემოწმების პარამეტრი"
+
+msgid "Select signature option"
+msgstr "აირჩიეთ ხელმოწერის პარამეტრი"
+
+#, fuzzy
+msgid "Add a custom server"
+msgstr "მორგებული სარკის დამატება"
+
+#, fuzzy
+msgid "Change custom server"
+msgstr "მორგებული სარკის შეცვლა"
+
+#, fuzzy
+msgid "Delete custom server"
+msgstr "მორგებული სარკის წაშლა"
+
+msgid "Server url"
+msgstr ""
+
+#, fuzzy
+msgid "Select regions"
+msgstr "აირჩიეთ ხელმოწერის პარამეტრი"
+
+msgid "Optional repositories"
+msgstr "არასავალდებულო რეპოზიტორიები"
+
+#, fuzzy
+msgid "Add custom repository"
+msgstr "მორგებული სარკის დამატება"
+
+#, fuzzy
+msgid "Add custom servers"
+msgstr "მორგებული სარკის დამატება"
+
+msgid "Pacman misc options"
+msgstr ""
+
+#, fuzzy
+msgid "Additional repositories"
+msgstr "არასავალდებულო რეპოზიტორიები"
+
+#, fuzzy
+msgid "Loading mirror regions..."
+msgstr "სარკის რეგიონები"
+
+msgid "Mirror regions"
+msgstr "სარკის რეგიონები"
+
+msgid "Pacman options"
+msgstr ""
+
+msgid "Show help"
+msgstr ""
+
+msgid "Exit help"
+msgstr ""
+
+msgid "Preview scroll up"
+msgstr ""
+
+msgid "Preview scroll down"
+msgstr ""
+
+msgid "Move up"
+msgstr ""
+
+msgid "Move down"
+msgstr ""
+
+msgid "Move right"
+msgstr ""
+
+msgid "Move left"
+msgstr ""
+
+msgid "Jump to entry"
+msgstr ""
+
+msgid "Skip selection (if available)"
+msgstr ""
+
+msgid "Reset selection (if available)"
+msgstr ""
+
+#, fuzzy
+msgid "Select on single select"
+msgstr "აირჩიეთ ხელმოწერის შემოწმების პარამეტრი"
+
+#, fuzzy
+msgid "Select on multi select"
+msgstr "აირჩიეთ დროის სარტყელი"
+
+msgid "Reset"
+msgstr ""
+
+#, fuzzy
+msgid "Skip selection menu"
+msgstr "აირჩიეთ შესრულების რეჟიმი"
+
+#, fuzzy
+msgid "Password strength"
+msgstr "პაროლი"
+
+msgid "Password"
+msgstr "პაროლი"
+
+#, fuzzy
+msgid "Confirm password"
+msgstr "პაროლის შეცვლა"
+
+msgid "The confirmation password did not match, please try again"
+msgstr ""
+
+#, fuzzy
+msgid "Not a valid directory"
+msgstr "არასწორი საქაღალდე: {}"
+
+msgid "Archinstoo help"
+msgstr "Archinstall-ის დახმარება"
+
+msgid "Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help"
+msgstr ""
+
+msgid "Are you sure you want to reset this setting?"
+msgstr "დარწმუნებული ბრძანდებით, რომ გნებავთ, დააბრუნოთ ეს პარამეტრი?"
+
+msgid "Only ASCII characters are supported"
+msgstr ""
+
+msgid "Yes"
+msgstr "დიახ"
+
+msgid "No"
+msgstr "არა"
+
+msgid " (default)"
+msgstr " (ნაგულისხმევი)"
+
+msgid "The specified configuration will be applied"
+msgstr ""
+
+#, fuzzy
+msgid "Would you like to continue?"
+msgstr "გნებავთ BTRFS-ის შეკუმშვის გამოყენება?"
+
+msgid "Configuration"
+msgstr "მორგება"
+
+#, fuzzy
+msgid "Saved configuration found:"
+msgstr "კონფიგურაციი შენახვა"
+
+msgid "Add interface"
+msgstr "ინტერფეისის დამატება"
+
+msgid "Edit interface"
+msgstr "ინტერფეისის ჩასწორება"
+
+msgid "Delete interface"
+msgstr "ინტერფეისის წაშლა"
+
+#, fuzzy
+msgid "Interfaces"
+msgstr "ინტერფეისის დამატება"
+
+msgid "You need to enter a valid IP in IP-config mode"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Select which mode to configure for \"{}\""
+msgstr ""
+"აირჩიეთ მოსარგები რეჟიმი \"{}\"-სთვის ან გამოტოვეთ ნაგულისხმევი რეჟიმის \"{}"
+"\" გამოსაყენებლად"
+
+msgid "Modes"
+msgstr ""
+
+#, python-brace-format
+msgid "Enter the IP and subnet for {} (example: 192.168.0.5/24): "
+msgstr "შეიყვანეთ IP მისამართი და ქვექსელი {}-სთვის (მაგ: 192.168.0.5/24): "
+
+msgid "IP address"
+msgstr ""
+
+#, fuzzy
+msgid "Enter your gateway (router) IP address (leave blank for none)"
+msgstr "აირჩიეთ ნაგულისხმევი რაუტერის IP მისამართი, ან ცარიელი დატოვეთ: "
+
+msgid "Gateway address"
+msgstr ""
+
+#, fuzzy
+msgid "Enter your DNS servers with space separated (leave blank for none)"
+msgstr ""
+"შეიყვანეთ თქვენი DNS სერვერების მისამართები (გამოყოფილი ცარიელი ადგილით. "
+"ცარიელი, თუ არ გნებავთ, გამოიყენოთ): "
+
+#, fuzzy
+msgid "DNS servers"
+msgstr "აუდიოსერვერის გრეშე"
+
+msgid "Network configuration"
+msgstr "ქსელის მორგება"
+
+#, fuzzy
+msgid "Configure interfaces"
+msgstr "მორგებულია {} ინტერფეისი"
+
+msgid "Root password"
+msgstr "Root-ის პაროლი"
+
+msgid "User account"
+msgstr "მომხმარებლის ანგარიში"
+
+msgid "Privilege escalation"
+msgstr ""
+
+#, fuzzy
+msgid "Lock root account"
+msgstr "მომხმარებლის ანგარიში"
+
+#, fuzzy
+msgid "Root account will be locked after installation"
+msgstr "უნდა ჩაირთოს თუ არა ეს პროფილი დაყენებისთვის?"
+
+msgid "Lock root account? Can be undone using passwd -u root later.\n"
+msgstr ""
+
+msgid "Sudo users can still edit /etc/shadow or use sudo directly.\n"
+msgstr ""
+
+msgid "Add a user"
+msgstr "მომხმარებლის დამატება"
+
+msgid "Manage stash URLs"
+msgstr ""
+
+msgid "Change password"
+msgstr "პაროლის შეცვლა"
+
+#, fuzzy
+msgid "Change shell"
+msgstr "ფაილური სისტემის შეცვლა"
+
+msgid "Manage groups"
+msgstr ""
+
+msgid "Promote/Demote user"
+msgstr "მომხმარებლის დაწინაურება/ჩამოქვეითება"
+
+msgid "Delete User"
+msgstr "მომხმარებლის წაშლა"
+
+#, fuzzy
+msgid "User"
+msgstr "მომხმარებლის სახელი : "
+
+#, fuzzy
+msgid "The username you entered is invalid"
+msgstr "შეყვანილი მომხმარებლის სახელი არასწორია. კიდევ სცადეთ"
+
+msgid "Invalid git URL"
+msgstr ""
+
+msgid "Add new stash URL"
+msgstr ""
+
+msgid "Select URL to remove, or add new"
+msgstr ""
+
+msgid "No stash URLs configured"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Branch is optional"
+msgstr ""
+
+msgid "Stash URL"
+msgstr ""
+
+#, fuzzy
+msgid "Username"
+msgstr "მომხმარებლის სახელი : "
+
+#, fuzzy, python-brace-format
+msgid "Should \"{}\" be a superuser?\n"
+msgstr "იყოს \"{}\" ზემომხმარებელი(sudo)?"
+
+msgid "Shell"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+#, fuzzy
+msgid "exit archinstoo"
+msgstr "Archinstall-ის დახმარება"
+
+#, fuzzy
+msgid "reboot system"
+msgstr "ფაილური სისტემის შეცვლა"
+
+msgid "chroot into install"
+msgstr ""
+
+msgid ""
+"Would you like to use automatic time synchronization (NTP) with the default "
+"time servers?\n"
+msgstr ""
+"გნებავთ დროის ავტომატური სინქრონიზაციის (NTP) ნაგულისხმევი დროის სერვერებით "
+"გამოყენება?\n"
+
+msgid ""
+"Hardware time and other post-configuration steps might be required in order "
+"for NTP to work.\n"
+"For more information, please check the Arch wiki"
+msgstr ""
+"NTP-ის ასამუშავებლად აპარატურული დრო და სხვა დაყენების-შემდგომი ნაბიჯები "
+"დაგჭირდებათ.\n"
+"მეტი ინფორმაციისთვის იხილეთ Arch-ის დოკუმენტაცია"
+
+msgid "Hostname"
+msgstr "ჰოსტის სახელი"
+
+msgid "Timezone"
+msgstr "დროის სარტყელი"
+
+#, fuzzy
+msgid "Select language"
+msgstr "ლოკალის ენა"
+
+#, fuzzy, python-brace-format
+msgid "Repositories: {}"
+msgstr "სარკის რეგიონი"
+
+#, fuzzy
+msgid "Loading packages..."
+msgstr "დამატებითი პაკეტები"
+
+#, fuzzy
+msgid ""
+"Only packages such as base, sudo, linux, linux-firmware, efibootmgr and "
+"optional profile packages are installed."
+msgstr ""
+"მოხდება მხოლოდ ისეთი პაკეტების დაყენება, როგორებიცაა base, base-devel, "
+"linux, linux-firmware, efibootmgr და არასავალდებულო პროფილის პაკეტი."
+
+msgid ""
+"Note: base-devel is no longer installed by default. Add it here if you need "
+"build tools."
+msgstr ""
+
+msgid ""
+"Select any packages from the below list that should be installed additionally"
+msgstr ""
+
+msgid "Enter AUR package names separated by commas"
+msgstr ""
+
+msgid "base-devel and git will be installed automatically if needed"
+msgstr ""
+
+#, fuzzy
+msgid "AUR packages"
+msgstr "დამატებითი პაკეტები"
+
+#, fuzzy
+msgid "Validating AUR packages..."
+msgstr "დამატებითი პაკეტები"
+
+msgid "Not found in AUR"
+msgstr ""
+
+msgid ""
+"This option enables the number of parallel downloads that can occur during "
+"package downloads"
+msgstr ""
+"ეს პარამეტრი დაყენებისას მითითებული რაოდენობის პარალელურ გადმოწერას დაუშვებს"
+
+msgid ""
+"Enter the number of parallel downloads to be enabled.\n"
+"\n"
+"Note:\n"
+msgstr ""
+"შეიყვანეთ დასაშვები პარალელური გადმოწერების რაოდენობა.\n"
+"\n"
+"შენიშვნა:\n"
+
+#, python-brace-format
+msgid ""
+" - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr " - მინიმალური მნიშვნელობა   : {} ( დაუშვებს {} პარალელურ გადმოწერას )"
+
+msgid ""
+" - Disable/Default : 0 ( Disables parallel downloading, allows only 1 "
+"download at a time )\n"
+msgstr ""
+" - გამორთვა/ნაგულისხმევი : 0 ( პარალელური გადმოწერების გათიშვა. დროის ერთ "
+"მომენტში მხოლოდ ერთი გადმოწერა მოხდება )\n"
+
+msgid "Invalid download number"
+msgstr ""
+
+msgid "Number downloads"
+msgstr ""
+
+#, fuzzy
+msgid "What would you like to do next?"
+msgstr "გნებავთ BTRFS-ის შეკუმშვის გამოყენება?"
+
+msgid ""
+"\n"
+"After reboot, remove the installation medium"
+msgstr ""
+
+msgid "Do you really want to abort?"
+msgstr "გნებავთ, გააუქმოთ?"
+
+#, fuzzy
+msgid "Kernel"
+msgstr "ბირთვები"
+
+#, fuzzy
+msgid ""
+"For the best compat with your AMD hardware, you may want to use either the "
+"all open-source or AMD / ATI options."
+msgstr ""
+"თქვენს AMD-ის აპარატურასთან საუკეთესო თავსებადობისთვის შეგიძლიათ როგორც "
+"სრულად ღია კოდის მქონე, ისე AMD/ATI-ის ვარიანტები გამოიყენოთ."
+
+#, fuzzy
+msgid ""
+"For the best compat with your Intel hardware, you may want to use either the "
+"all open-source or Intel options.\n"
+msgstr ""
+"Intel-ის აპარატურასთან საუკეთესო თავსებადობისთვის შეგიძლიათ მათი სრულად ღია "
+"კოდის მქონე ვარიანტი გამოიყენოთ.\n"
+
+#, fuzzy
+msgid ""
+"For the best compat with your Nvidia hardware, if recent use open-kernel, "
+"otherwise you might need to use the AUR later.\n"
+msgstr ""
+"Nvidia-ის თქვენს აპარატურასთან საუკეთესო თავსებადობისთვის შეიძლება Nvidia-ის "
+"დახურული კოდის მქონე დრაივერის დაყენება გნებავდეთ.\n"
+
+msgid "Info"
+msgstr ""
+
+msgid "Would you like to use swap on zram?"
+msgstr "გნებავთ სვოპის ZRAM-ზე გამოყენება?"
+
+#, fuzzy
+msgid "Select zram compression algorithm:"
+msgstr "აირჩიეთ მიმაგრების წერტილი :"
+
+msgid "Bootloader"
+msgstr "ჩამტვირთავი"
+
+msgid "Unified kernel images"
+msgstr "გაერთიანებული ბირთვის დისკის ასლის ფაილები"
+
+msgid "Removable location"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Will install to /EFI/BOOT/ (removable location, safe default)"
+msgstr ""
+
+msgid "Will install to custom location with NVRAM entry"
+msgstr ""
+
+msgid "Would you like to use unified kernel images?"
+msgstr "გნებავთ გაერთიანებული ბირთვის დისკის ასლის ფაილების გამოყენება?"
+
+msgid ""
+"Would you like to install the bootloader to the default removable media "
+"search location?"
+msgstr ""
+
+msgid ""
+"This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is "
+"useful for:"
+msgstr ""
+
+msgid ""
+"Firmware that does not properly support NVRAM boot entries like most MSI "
+"motherboards,"
+msgstr ""
+
+msgid "most Apple Macs, many laptops..."
+msgstr ""
+
+msgid "USB drives or other portable external media."
+msgstr ""
+
+msgid "Systems where you want the disk to be bootable on any computer."
+msgstr ""
+
+msgid "UEFI is not detected and some options are disabled"
+msgstr ""
+
+msgid "Bluetooth"
+msgstr ""
+
+msgid "Audio"
+msgstr "აუდიო"
+
+msgid "Print service"
+msgstr ""
+
+#, fuzzy
+msgid "Power management"
+msgstr "დანაყოფების მართვა: {}"
+
+msgid "Firewall"
+msgstr ""
+
+#, fuzzy
+msgid "Management"
+msgstr "დანაყოფების მართვა: {}"
+
+msgid "Monitor"
+msgstr ""
+
+#, fuzzy
+msgid "Editor"
+msgstr "ჩასწორება"
+
+#, fuzzy
+msgid "Would you like to configure Bluetooth?"
+msgstr "გნებავთ BTRFS-ის შეკუმშვის გამოყენება?"
+
+#, fuzzy
+msgid "Would you like to configure the print service?"
+msgstr "გნებავთ BTRFS-ის შეკუმშვის გამოყენება?"
+
+#, fuzzy
+msgid "Would you like to install management tools?"
+msgstr "გნებავთ BTRFS-ის შეკუმშვის გამოყენება?"
+
+msgid "Keyboard layout"
+msgstr "კლავიატურის განლაგება"
+
+msgid "Locale language"
+msgstr "ლოკალის ენა"
+
+msgid "Locale encoding"
+msgstr "ლოკალის კოდირება"
+
+msgid "Console font"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo settings"
+msgstr "Archinstall-ის დახმარება"
+
+#, fuzzy
+msgid "Disk config"
+msgstr "დისკის მორგება"
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Locales"
+msgstr "ლოკალები"
+
+msgid "Pacman config"
+msgstr ""
+
+msgid "Swap"
+msgstr "სვოპი"
+
+msgid "Kernels"
+msgstr "ბირთვები"
+
+msgid "Profile"
+msgstr "პროფილი"
+
+msgid "Applications"
+msgstr ""
+
+#, fuzzy
+msgid "Network config"
+msgstr "ქსელის მორგება"
+
+msgid "Parallel Downloads"
+msgstr "პარალელური გადმოწერები"
+
+#, fuzzy
+msgid "Automatic time sync"
+msgstr "დროის ავტომატური სინქრონიზაცია (NTP)"
+
+msgid "Additional packages"
+msgstr "დამატებითი პაკეტები"
+
+#, fuzzy
+msgid "Custom commands"
+msgstr "მორგებული სარკეები"
+
+msgid "Install"
+msgstr "დაყენება"
+
+msgid "Abort"
+msgstr "გაუქმება"
+
+#, fuzzy
+msgid ""
+"Either root-password or at least 1 user with elevated privileges must be "
+"specified"
+msgstr ""
+"Root-ის პაროლის ან მინიმუმ 1 sudo-ის პრივილეგიების მქონე მომხმარებლის "
+"მითითება აუცილებელია"
+
+#, fuzzy
+msgid "Language"
+msgstr "ლოკალის ენა"
+
+msgid "Theme"
+msgstr ""
+
+#, fuzzy
+msgid "Archinstoo Settings"
+msgstr "Archinstall-ის დახმარება"
+
+msgid "Dark"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+#, fuzzy
+msgid "Select mode"
+msgstr "აირჩიეთ დროის სარტყელი"
+
+msgid "Cyan"
+msgstr ""
+
+#, fuzzy
+msgid "Green"
+msgstr "მისამების ეკრანი"
+
+msgid "Red"
+msgstr ""
+
+msgid "Orange"
+msgstr ""
+
+msgid "Blue"
+msgstr ""
+
+msgid "Magenta"
+msgstr ""
+
+#, fuzzy
+msgid "Select accent color"
+msgstr "აირჩიეთ ქმედება '{}'-სთვის"
+
+#, fuzzy
+msgid "Additionals"
+msgstr "დამატებითი პაკეტები"
+
+msgid "Privilege esc"
+msgstr ""
+
+msgid "NTP"
+msgstr ""
+
+#, fuzzy
+msgid "Custom Commands"
+msgstr "მორგებული სარკეები"
+
+msgid "Commands"
+msgstr ""
+
+#, python-brace-format
+msgid "Configuration type: {}"
+msgstr "მორგების ტიპი: {}"
+
+#, fuzzy
+msgid "Mountpoint"
+msgstr "მიმაგრების წერტილი: "
+
+msgid "LVM configuration type"
+msgstr "LVM-ის კონფიგურაციის ტიპი"
+
+msgid "Disk encryption"
+msgstr "დისკის დაშიფვრა"
+
+#, python-brace-format
+msgid "Btrfs snapshot type: {}"
+msgstr ""
+
+msgid "Swap on zram"
+msgstr ""
+
+msgid "Compression algorithm"
+msgstr ""
+
+msgid "Install kernel headers?"
+msgstr ""
+
+msgid "Useful for building out-of-tree drivers or DKMS modules,"
+msgstr ""
+
+msgid "especially for non-standard kernel variants."
+msgstr ""
+
+msgid "Headers"
+msgstr ""
+
+msgid "Missing configurations:\n"
+msgstr "ნაკლული კონფიგურაციები:\n"
+
+msgid "Profiles"
+msgstr "პროფილები"
+
+msgid "Graphics driver"
+msgstr "გრაფიკის დრაივერი"
+
+msgid "Greeter"
+msgstr "მისამების ეკრანი"
+
+#, fuzzy
+msgid "Selected mirror regions"
+msgstr "სარკის რეგიონები"
+
+#, fuzzy
+msgid "Custom servers"
+msgstr "მორგებული სარკეები"
+
+#, fuzzy
+msgid "Custom repositories"
+msgstr "არასავალდებულო რეპოზიტორიები"
+
+msgid "save selections abort"
+msgstr ""
+
+#, fuzzy
+msgid "exit delete selections"
+msgstr "მიმდინარე პროფილის არჩევანი"
+
+#, fuzzy
+msgid "cancel abort"
+msgstr "შეწყვეტა"
+
+#, fuzzy
+msgid "Abort the installation? \n"
+msgstr "ჰოსტის სასურველი სახელი, დაყენებისთვის: "
+
+msgid "Type"
+msgstr "ტიპი"
+
+msgid "Selected profiles: "
+msgstr "მონიშნული პროფილები: "
+
+#, fuzzy
+msgid "Select one or more profiles (Desktop + Server supported)"
+msgstr "აირჩიეთ ერთი ან მეტი მოწყობილობა და მოირგეთ"
+
+#, python-brace-format
+msgid "Unable to fetch profile from specified url: {}"
+msgstr "პროფილის მიღება შეუძლებელია მითითებული ბმულიდან: {}"
+
+#, python-brace-format
+msgid ""
+"Profiles must have unique name, but profile definitions with duplicate name "
+"found: {}"
+msgstr ""
+"პროფილებს უნიკალური სახელი უნდა ჰქონდეთ, მაგრამ აღმოჩენილია პროფილის "
+"აღწერები გამეორებადი სახელით: {}"
+
+#, python-brace-format
+msgid "[!] A log file has been created here: {}"
+msgstr "[!] ჟურნალის ფაილის მდებარეობა: {}"
+
+#, fuzzy, python-brace-format
+msgid "Please submit this issue (and file) to {}/issues"
+msgstr ""
+"    ეს პრობლემა და ფაილი გადმოგვიგზავნეთ ბმულზე https://github.com/archlinux/"
+"archinstoo/issues"
+
+msgid "Syncing the system..."
+msgstr ""
+
+msgid "Waiting for time sync (timedatectl show) to complete."
+msgstr "დროის სინქრონიზაციის (timedatectl show) დასრულების მოლოდინი."
+
+msgid "Time synchronization not completing..."
+msgstr ""
+
+msgid ""
+"Skipping waiting for automatic time sync (this can cause issues if time is "
+"out of sync during installation)"
+msgstr ""
+"ავტომატური დროის სინქრონიზაციის მოლოდინის გამოტოვება (ამას შეუძლია, "
+"პრობლემები გამოიწვიოს, თუ დრო დაყენებისას აირევა)"
+
+msgid ""
+"Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete."
+msgstr ""
+"ველოდები Arch Linux-ის ბრელოკის სინქრონიზაციის (archlinux-keyring-wkd-sync) "
+"დასრულებას."
+
+msgid "Package group:"
+msgstr ""
+
+msgid "Use a best-effort default partition layout"
+msgstr "დანაყოფების განლაგების საუკეთესო განლაგების გამოყენება"
+
+msgid "Manual Partitioning"
+msgstr "ხელით დაყოფა"
+
+msgid "Pre-mounted configuration"
+msgstr "წინასწარ მიმაგრებული კონფიგურაცია"
+
+msgid "Unknown"
+msgstr "უცნობი"
+
+msgid "Default layout"
+msgstr "ნაგულისხმები განლაგება"
+
+msgid "No Encryption"
+msgstr "დაშიფვრის გარეშე"
+
+msgid "LUKS"
+msgstr "LUKS"
+
+msgid "LVM on LUKS"
+msgstr "LVM LUKS-ზე"
+
+msgid "LUKS on LVM"
+msgstr "LUKS LVM-ზე"
+
+msgid "weak"
+msgstr "სუსტი"
+
+msgid "moderate"
+msgstr "საშუალო"
+
+msgid "strong"
+msgstr "ძლიერი"
+
+msgid "Removable"
+msgstr ""
+
+msgid "Copy ISO network configuration to installation"
+msgstr "ISO-ის ქსელის კონფიგურაციის კოპირება დაყენების დროს"
+
+msgid "Use Network Manager (default backend)"
+msgstr ""
+
+msgid "Use Network Manager (iwd backend)"
+msgstr ""
+
+msgid "Manual configuration"
+msgstr "ხელით მორგება"
+
+msgid ""
+"Pacman is already running, waiting maximum 10 minutes for it to terminate."
+msgstr "Pacman- უკვე გაშვებულია. მოკვლამდე 10 წუთი დაველოდები."
+
+#, fuzzy
+msgid ""
+"Pre-existing pacman lock never exited. Please clean up any existing pacman "
+"sessions before using archinstoo."
+msgstr ""
+"წინასწარ packman-ის ბლოკი არასდროს არსებობდა. Archinstall-ის დაყენებამდე "
+"აუცილებელია pacman-ს სესიების მოსუფთავება აუცილებელია."
+
+msgid "Confirm and exit"
+msgstr "დადასტურება და გასვლა"
+
+msgid "Cancel"
+msgstr "შეწყვეტა"
+
+msgid "Back"
+msgstr "უკან"
+
+msgid "Encryption type"
+msgstr "დაშიფვრის ტიპი"
+
+msgid "Encryption password"
+msgstr "დაშიფვრის პაროლი"
+
+msgid "Iteration time"
+msgstr ""
+
+msgid "Partitions"
+msgstr "დანაყოფები"
+
+msgid "LVM volumes"
+msgstr "LVM-ის ტომები"
+
+msgid "Partitions to be encrypted"
+msgstr "დასაშიფრი დანაყოფები"
+
+msgid "LVM volumes to be encrypted"
+msgstr "დასაშიფრი LVM-ის ტომები"
+
+#, fuzzy
+msgid "Enter disk encryption password (leave blank for no encryption)"
+msgstr ""
+"შეიყვანეთ დისკის დაშიფვრის პაროლი (დაშიფვრის გასათიშად დატოვეთ ცარიელი): "
+
+#, fuzzy
+msgid "Disk encryption password"
+msgstr "დაშიფვრის პაროლი"
+
+msgid "Enter iteration time for LUKS encryption (in milliseconds)"
+msgstr ""
+
+msgid "Higher values increase security but slow down boot time"
+msgstr ""
+
+msgid "Iteration time must be at least 100ms"
+msgstr ""
+
+msgid "Iteration time must be at most 120000ms"
+msgstr ""
+
+msgid "Please enter a valid number"
+msgstr ""
+
+msgid "Suggest partition layout"
+msgstr "დანაყოფების განლაგების მინიშნება"
+
+msgid "Create empty layout (wipe all)"
+msgstr ""
+
+msgid "Remove all newly added partitions"
+msgstr "ყველა ახლად დამატებული დანაყოფის წაშლა"
+
+msgid "Assign mountpoint"
+msgstr "მიმაგრების წერტილის მინიჭება"
+
+msgid "Mark/Unmark to be formatted (wipes data)"
+msgstr "დასაფორმატებულობის ჭდის მოხსნა/დადება (მონაცემები წაიშლება)"
+
+#, fuzzy
+msgid "Mark/Unmark as ESP"
+msgstr "ჩატვირთვადი ალმის დაყენება/მოხსნა"
+
+#, fuzzy
+msgid "Mark/Unmark as XBOOTLDR"
+msgstr "ჩატვირთვადი ალმის დაყენება/მოხსნა"
+
+msgid "Mark/Unmark as bootable"
+msgstr "ჩატვირთვადი ალმის დაყენება/მოხსნა"
+
+msgid "Change filesystem"
+msgstr "ფაილური სისტემის შეცვლა"
+
+msgid "Mark/Unmark as compressed"
+msgstr "შეკუმშულად მონიშვნა/მონიშვნის მოხსნა"
+
+msgid "Mark/Unmark as nodatacow"
+msgstr "'nodatacow' ალმის დასმა/მოხსნა"
+
+msgid "Set subvolumes"
+msgstr "ქვეტომების დაყენება"
+
+msgid "Delete partition"
+msgstr "დანაყოფის წაშლა"
+
+#, python-brace-format
+msgid "Partition management: {}"
+msgstr "დანაყოფების მართვა: {}"
+
+#, python-brace-format
+msgid "Total length: {}"
+msgstr "ჯამური სიგრძე: {}"
+
+msgid "Wipe"
+msgstr ""
+
+#, fuzzy
+msgid "Partition - New"
+msgstr "დანაყოფი"
+
+msgid "Partition"
+msgstr "დანაყოფი"
+
+msgid ""
+"This partition is currently encrypted, to format it a filesystem has to be "
+"specified"
+msgstr ""
+"ეს დანაყოფი ამჟამად დაშიფრულია. დასაფორმატებლად აუცილებელია ფაილური სისტემის "
+"მითითება"
+
+msgid ""
+"Partition mount-points are relative to inside the installation, the boot "
+"would be /boot as an example."
+msgstr ""
+"დანაყოფის მიმაგრების წერტილები შედარებითია დაყენების შიგნით. ჩატვირთვა, "
+"მაგალითად, /boot შეიძლება, იყოს."
+
+#, fuzzy
+msgid "Filesystem"
+msgstr "ფაილური სისტემის შეცვლა"
+
+msgid "Invalid size"
+msgstr ""
+
+#, fuzzy, python-brace-format
+msgid "Selected free space segment on device {}:"
+msgstr "ამჟამად თავისუფალი სექტორები მოწყობილობაზე {}:"
+
+#, fuzzy, python-brace-format
+msgid "Size: {} / {}"
+msgstr "სულ: {} / {}"
+
+msgid ""
+"All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB..."
+msgstr ""
+"ყველა შეყვანილ მნიშვნელობად სუფიქსად შეგიძლიათ მიუთითოთ ერთეული: B, KB, KiB, "
+"MB, MiB..."
+
+msgid "If no unit is provided, the value is interpreted as sectors"
+msgstr ""
+"თუ ერთეული მითითებული არაა, მნიშვნელობა სექტორების რაოდენობად იქნება აღქმული"
+
+#, fuzzy, python-brace-format
+msgid "Size (default: {}): "
+msgstr "შეიყვანეთ ბოლო სექტორი (ნაგულისხმევი: {}): "
+
+msgid "This will remove all newly added partitions, continue?"
+msgstr "ეს ყველა ახლად დამატებულ დანაყოფს წაშლის. გავაგრძელო?"
+
+#, fuzzy
+msgid "Disk configuration type"
+msgstr "დისკის მორგება"
+
+msgid "Root mount directory"
+msgstr ""
+
+msgid "Would you like to use compression or disable CoW?"
+msgstr "შეკუმშვის გამოყენება გნებავთ, თუ CoW-ის გათიშვა?"
+
+msgid "Use compression"
+msgstr "შეკუმშვის გამოყენება"
+
+msgid "Disable Copy-on-Write"
+msgstr "ჩაწერისას-დაკოპირების გათიშვა"
+
+msgid "Would you like to use BTRFS subvolumes with a default structure?"
+msgstr "გნებავთ BTRFS-ის ქვეტომები ნაგულისხმევი სტრუქტურით გამოიყენოთ?"
+
+msgid "Would you like to create a separate partition for /home?"
+msgstr "გნებავთ /home-სთვის ცალკე დანაყოფი შექმნათ?"
+
+msgid "Add subvolume"
+msgstr "ქვეტომის დამატება"
+
+msgid "Edit subvolume"
+msgstr "ქვეტომის ჩასწორება"
+
+msgid "Delete subvolume"
+msgstr "ქვეტომის წაშლა"
+
+msgid "Value cannot be empty"
+msgstr ""
+
+#, fuzzy
+msgid "Subvolume name"
+msgstr "ქვეტომის სახელი "
+
+msgid "Subvolume mountpoint"
+msgstr "ქვეტომის მიმაგრების წერტილი"
+
+msgid "Starting device modifications in "
+msgstr ""
+
+msgid "Partitioning"
+msgstr "დაყოფა"
+
+msgid "Snapshot type"
+msgstr ""
+
+msgid "Physical volumes"
+msgstr "ფიზიკური ტომები"
+
+msgid "Volumes"
+msgstr "ტომები"
+
+#, fuzzy, python-brace-format
+msgid "Snapshot type: {}"
+msgstr "გარემოს ტიპი: {}"
+
+msgid ""
+"LVM disk encryption with more than 2 partitions is currently not supported"
+msgstr "LVM დისკის დაშიფვრა ორზე მეტი დანაყოფით ამჟამად მხარდაჭერილი არაა"

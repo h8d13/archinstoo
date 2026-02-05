@@ -13,7 +13,7 @@ authors = [
 license = "GPL-3.0-only"
 readme = "readme.md"
 requires-python = ">=3.14"
-keywords = ["linux", "arch", "archinstall", "installer"]
+keywords = ["linux", "arch", "archinstoo", "installer"]
 classifiers = [
     "Programming Language :: Python :: 3.14",
     "Operating System :: POSIX :: Linux",
@@ -24,7 +24,6 @@ dependencies = [
 
 [project.urls]
 Home = "https://archlinux.org"
-Documentation = "https://archinstall.readthedocs.io/"
 Source = "https://github.com/h8d13/archinstoo"
 
 [project.optional-dependencies]
@@ -40,14 +39,14 @@ dev = [
 doc = ["sphinx"]
 
 [project.scripts]
-archinstoo = "archinstall:run_as_a_module"
+archinstoo = "archinstoo:run_as_a_module"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.package-data]
 # We could specify locales/languages.json etc instead, but catchall works too.
-"archinstall" = [
+"archinstoo" = [
     "**/*.py",
     "**/*.mo",
     "**/*.po",
@@ -56,7 +55,7 @@ include-package-data = true
 ]
 
 [tool.setuptools.package-dir]
-archinstall = "archinstall"
+archinstoo = "archinstoo"
 
 [tool.mypy]
 python_version = "3.14"
@@ -83,12 +82,12 @@ strict = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = "archinstall.lib.disk.*"
+module = "archinstoo.lib.disk.*"
 # 'Any' imports are allowed because pyparted doesn't have type hints
 disallow_any_unimported = false
 
 [[tool.mypy.overrides]]
-module = "archinstall.lib.models.device"
+module = "archinstoo.lib.models.device"
 # 'Any' imports are allowed because pyparted doesn't have type hints
 disallow_any_unimported = false
 
@@ -101,7 +100,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.bandit]
-targets = ["archinstall"]
+targets = ["archinstoo"]
 exclude = ["/tests"]
 
 [tool.pytest]
@@ -224,7 +223,7 @@ ignore = [
 max-complexity = 40
 
 [tool.ruff.lint.isort]
-known-first-party = ["archinstall"]
+known-first-party = ["archinstoo"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]

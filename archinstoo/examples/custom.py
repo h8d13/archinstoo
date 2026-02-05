@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstall.default_profiles.desktop import DesktopProfile
+from archinstoo.default_profiles.desktop import DesktopProfile
 
 # example custom profile
 
