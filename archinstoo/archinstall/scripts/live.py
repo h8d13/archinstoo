@@ -21,7 +21,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu = GlobalMenu(config, skip_boot=True)
 
 		# Disable items irrelevant for live mode
-		global_menu.set_enabled('disk_config', False)
 		global_menu.set_enabled('bootloader_config', False)
 		global_menu.set_enabled('kernels', False)
 
