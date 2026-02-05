@@ -69,7 +69,12 @@ case "$1" in
     ;;
 	-h2t | --host-to-target)
 	go_to
-	. ./PKGBUILD && pacman -Sy --needed "${depends[@]}" "${optdepends[@]}"
+	. ./PKGBUILD
+	if [ "$2" = "-o" ] || [ "$2" = "--opt" ]; then
+		${ELEV}pacman -Sy --needed "${depends[@]}" "${optdepends[@]}"
+	else
+		${ELEV}pacman -Sy --needed "${depends[@]}"
+	fi
 	;;
 	*)
 	# Pass through to archinstall
