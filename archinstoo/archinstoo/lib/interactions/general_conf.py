@@ -146,7 +146,7 @@ def select_additional_packages(
 	package_groups = PackageGroup.from_available_packages(packages)
 
 	# Additional packages (with some light weight error handling for invalid package names)
-	header = tr('Only packages such as base, sudo, linux, linux-firmware, efibootmgr and optional profile packages are installed.') + '\n'
+	header = tr('Only packages such as base, linux, linux-firmware, efibootmgr and optional profile packages are installed.') + '\n'
 	header += tr('Note: base-devel is no longer installed by default. Add it here if you need build tools.') + '\n'
 	header += tr('Select any packages from the below list that should be installed additionally') + '\n'
 
