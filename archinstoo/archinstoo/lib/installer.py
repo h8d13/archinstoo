@@ -682,9 +682,7 @@ class Installer:
 					self.enable_service('iwd')
 
 			for psk in psk_files:
-				dest = Path(f'{self.target}/var/lib/iwd/{os.path.basename(psk)}')
-				if not Path(psk).samefile(dest):
-					shutil.copy2(psk, dest)
+				shutil.copy2(psk, f'{self.target}/var/lib/iwd/{os.path.basename(psk)}')
 
 		# Enable systemd-resolved by (forcefully) setting a symlink
 		# For further details see  https://wiki.archlinux.org/title/Systemd-resolved#DNS
@@ -699,10 +697,7 @@ class Installer:
 				os.makedirs(f'{self.target}/etc/systemd/network/')
 
 			for netconf_file in netconfigurations:
-				dest = Path(f'{self.target}/etc/systemd/network/{os.path.basename(netconf_file)}')
-				if Path(netconf_file).samefile(dest):
-					continue
-				shutil.copy2(netconf_file, dest)
+				shutil.copy2(netconf_file, f'{self.target}/etc/systemd/network/{os.path.basename(netconf_file)}')
 
 			if enable_services:
 				# If we haven't installed the base yet (function called pre-maturely)
