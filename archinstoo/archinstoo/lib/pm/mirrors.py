@@ -214,7 +214,9 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 		if preset:
 			self._mirror_config = preset
 		else:
-			self._mirror_config = PacmanConfiguration()
+			from archinstoo.lib.pm.config import PacmanConfig
+
+			self._mirror_config = PacmanConfiguration(custom_repositories=PacmanConfig.get_existing_custom_repos())
 
 		self._mirror_handler = MirrorListHandler()
 		menu_options = self._define_menu_options()

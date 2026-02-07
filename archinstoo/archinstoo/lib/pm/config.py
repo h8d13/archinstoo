@@ -4,9 +4,23 @@ from pathlib import Path
 from shutil import copy2
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.mirrors import CustomRepository
+from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.utils.env import Os
+
+# Standard Arch repos to ignore when detecting custom repos
+_STANDARD_REPOS = {
+	'options',
+	'core',
+	'extra',
+	'multilib',
+	'testing',
+	'core-testing',
+	'extra-testing',
+	'multilib-testing',
+	'community',
+	'community-testing',
+}
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
@@ -103,3 +117,33 @@ class PacmanConfig:
 		if config.pacman_options:
 			pacman.enable_options(config.pacman_options)
 		pacman.apply()
+
+	@classmethod
+	def get_existing_custom_repos(cls) -> list[CustomRepository]:
+		"""Parse pacman.conf for existing custom repositories."""
+		content = Path('/etc/pacman.conf').read_text()
+		repos: list[CustomRepository] = []
+
+		for match in re.finditer(r'\[([^\]]+)\]\s*\n([^[]*)', content):
+			name = match.group(1)
+			if name.lower() in _STANDARD_REPOS:
+				continue
+
+			block = match.group(2)
+			server = re.search(r'^Server\s*=\s*(.+)$', block, re.MULTILINE)
+			if not server:
+				continue
+
+			sig = re.search(r'^SigLevel\s*=\s*(.+)$', block, re.MULTILINE)
+			sign_check, sign_option = SignCheck.Never, SignOption.TrustAll
+
+			if sig:
+				for part in sig.group(1).split():
+					if part in [e.value for e in SignCheck]:
+						sign_check = SignCheck(part)
+					elif part in [e.value for e in SignOption]:
+						sign_option = SignOption(part)
+
+			repos.append(CustomRepository(name, server.group(1).strip(), sign_check, sign_option))
+
+		return repos
