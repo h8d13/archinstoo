@@ -312,14 +312,27 @@ class MirrorRegion:
 
 
 class SignCheck(Enum):
+	# Base levels (apply to both packages and databases)
 	Never = 'Never'
 	Optional = 'Optional'
 	Required = 'Required'
+	# Package-specific
+	PackageNever = 'PackageNever'
+	PackageOptional = 'PackageOptional'
+	PackageRequired = 'PackageRequired'
+	# Database-specific
+	DatabaseNever = 'DatabaseNever'
+	DatabaseOptional = 'DatabaseOptional'
+	DatabaseRequired = 'DatabaseRequired'
 
 
 class SignOption(Enum):
 	TrustedOnly = 'TrustedOnly'
 	TrustAll = 'TrustAll'
+	PackageTrustedOnly = 'PackageTrustedOnly'
+	PackageTrustAll = 'PackageTrustAll'
+	DatabaseTrustedOnly = 'DatabaseTrustedOnly'
+	DatabaseTrustAll = 'DatabaseTrustAll'
 
 
 class _CustomRepositorySerialization(TypedDict):
