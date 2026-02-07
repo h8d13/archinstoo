@@ -686,7 +686,7 @@ class Installer:
 
 		# Enable systemd-resolved by (forcefully) setting a symlink
 		# For further details see  https://wiki.archlinux.org/title/Systemd-resolved#DNS
-		resolv_config_path = Path(f'{self.target}/etc/resolv.conf')
+		resolv_config_path = self.target / 'etc/resolv.conf'
 		if resolv_config_path.exists():
 			os.unlink(resolv_config_path)
 		os.symlink('/run/systemd/resolve/stub-resolv.conf', resolv_config_path)
