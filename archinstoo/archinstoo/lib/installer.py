@@ -13,6 +13,8 @@ from subprocess import CalledProcessError
 from types import TracebackType
 from typing import Any, Self
 
+from alpm.alpm_types import KnownArchitecture
+
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info
 from archinstoo.lib.models.application import ZramAlgorithm
@@ -194,7 +196,7 @@ class Installer:
 		else:
 			info(tr('Skipping NTP time sync (may cause issues if system time is incorrect)'))
 
-		if not self._args.offline and SysInfo.arch() == 'x86_64':
+		if not self._args.offline and SysInfo.arch() == KnownArchitecture.X86_64:
 			info('Waiting for reflector mirror selection...')
 			reflector_state = self._service_state('reflector')
 			timed_out = True

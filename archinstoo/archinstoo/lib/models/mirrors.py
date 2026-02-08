@@ -80,9 +80,11 @@ class MirrorStatusEntryV3:
 
 	@property
 	def server_url(self) -> str:
+		from alpm.alpm_types import KnownArchitecture
+
 		from archinstoo.lib.hardware import SysInfo
 
-		if SysInfo.arch() == 'x86_64':
+		if SysInfo.arch() == KnownArchitecture.X86_64:
 			return f'{self.url}$repo/os/$arch'
 		return f'{self.url}$arch/$repo'
 
@@ -94,13 +96,16 @@ class MirrorStatusEntryV3:
 			elif self._speedtest_retries < 1:
 				self._speedtest_retries = 1
 
+			from alpm.alpm_types import KnownArchitecture
+
 			from archinstoo.lib.hardware import SysInfo
 
 			arch = SysInfo.arch()
-			if arch == 'x86_64':
-				test_db = f'{self.url}core/os/{arch}/core.db'
+			arch_str = arch.value.lower()
+			if arch == KnownArchitecture.X86_64:
+				test_db = f'{self.url}core/os/{arch_str}/core.db'
 			else:
-				test_db = f'{self.url}{arch}/core/core.db'
+				test_db = f'{self.url}{arch_str}/core/core.db'
 
 			retry = 0
 			while retry < self._speedtest_retries and self._speed is None:

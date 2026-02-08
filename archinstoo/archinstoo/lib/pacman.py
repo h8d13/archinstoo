@@ -3,6 +3,9 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+import pyalpm
+from alpm import ALPMError
+
 from .exceptions import RequirementError
 from .general import SysCommand
 from .output import error, info, logger, warn
@@ -127,14 +130,54 @@ class Pacman:
 			# Live mode: install directly on the running system
 			cmd = f'pacman -S {" ".join(packages)} --noconfirm --needed'
 			bail = f'Package installation failed. See {logger.path} or above message for error details'
+			self.ask(
+				'Could not strap in packages',
+				bail,
+				SysCommand,
+				cmd,
+				peek_output=True,
+			)
 		else:
-			cmd = f'pacstrap -C /etc/pacman.conf -K {self.target} {" ".join(packages)} --noconfirm --needed'
-			bail = f'Pacstrap failed. See {logger.path} or above message for error details'
+			self._strap_pyalpm(packages)
 
-		self.ask(
-			'Could not strap in packages',
-			bail,
-			SysCommand,
-			cmd,
-			peek_output=True,
-		)
+	def _strap_pyalpm(self, packages: list[str]) -> None:
+		"""Install packages to target using pyalpm instead of pacstrap."""
+		from .pm.mirrors import MirrorListHandler, _MirrorCache
+
+		try:
+			(self.target / 'var/lib/pacman').mkdir(parents=True, exist_ok=True)
+			handle = pyalpm.Handle(str(self.target), str(self.target / 'var/lib/pacman'))
+			handle.add_cachedir('/var/cache/pacman/pkg')
+
+			# Load mirrors and get server URLs
+			MirrorListHandler().load_local_mirrors()
+			mirrors = [e.server_url for entries in _MirrorCache.data.values() for e in entries]
+
+			# Register repos with mirrors
+			for repo in ['core', 'extra']:
+				db = handle.register_syncdb(repo, pyalpm.SIG_DATABASE_OPTIONAL)
+				db.servers = [url.replace('$repo', repo) for url in mirrors]
+				db.update(False)
+
+			# Find and install packages
+			syncdbs = handle.get_syncdbs()
+			to_install = []
+			for name in packages:
+				for db in syncdbs:
+					if pkg := db.get_pkg(name):
+						to_install.append(pkg)
+						break
+				else:
+					raise RequirementError(f'Package not found: {name}')
+
+			trans = handle.init_transaction()
+			try:
+				for pkg in to_install:
+					trans.add_pkg(pkg)
+				trans.prepare()
+				trans.commit()
+			finally:
+				trans.release()
+
+		except ALPMError as e:
+			raise RequirementError(f'ALPM error: {e}')

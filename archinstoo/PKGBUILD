@@ -22,6 +22,8 @@ depends=(
   'kbd'
   'pacman'
   'git'
+  'pyalpm'
+  'python-alpm'
 )
 makedepends=(
   'python-build'

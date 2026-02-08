@@ -87,13 +87,26 @@ module = "archinstoo.lib.disk.*"
 disallow_any_unimported = false
 
 [[tool.mypy.overrides]]
-module = "archinstoo.lib.models.device"
-# 'Any' imports are allowed because pyparted doesn't have type hints
+module = [
+    "archinstoo.lib.models.device",
+    "archinstoo.lib.hardware",
+    "archinstoo.lib.pacman",
+    "archinstoo.lib.installer",
+    "archinstoo.lib.models.mirrors",
+    "archinstoo.lib.pm.mirrors",
+    "archinstoo.lib.interactions.system_conf",
+    "archinstoo.lib.applications.application_menu",
+]
+# 'Any' imports are allowed because pyparted/pyalpm/alpm don't have type hints
 disallow_any_unimported = false
 
 [[tool.mypy.overrides]]
 module = [
     "parted",
+    "pyalpm",
+    "alpm",
+    "alpm.*",
+    "alpm_types",
     "_pytest.*",
     "pytest",
 ]
@@ -147,7 +160,7 @@ score = false
 init-import = true
 
 [tool.pylint.imports]
-ignored-modules = ["parted"]
+ignored-modules = ["parted", "pyalpm", "alpm", "alpm.alpm_types"]
 
 [tool.ruff]
 target-version = "py314"

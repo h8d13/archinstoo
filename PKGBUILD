@@ -25,6 +25,8 @@ depends=(
   'kbd' #For keyboard layout configuration
   'pacman'
   'git'
+  'pyalpm'
+  'python-alpm'
 )
 makedepends=(
   'python-build'

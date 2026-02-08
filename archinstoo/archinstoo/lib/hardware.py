@@ -5,6 +5,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import Self, cast
 
+from alpm.alpm_types import KnownArchitecture
+
 from archinstoo.default_profiles.profile import DisplayServer
 
 from .exceptions import SysCallError
@@ -254,8 +256,26 @@ class SysInfo:
 		return _sys_info.efi_bitness
 
 	@staticmethod
-	def arch() -> str:
-		return platform.machine()
+	def arch() -> KnownArchitecture:
+		machine = platform.machine().upper().replace('-', '_')
+		return getattr(KnownArchitecture, machine)
+		# note  ARMV7H (L vs H)
+
+	@staticmethod
+	def x86_64_level() -> KnownArchitecture:
+		"""Detect highest supported x86-64 microarchitecture level (v2/v3/v4)."""
+		base = SysInfo.arch()
+		if base != KnownArchitecture.X86_64:
+			return base
+
+		try:
+			output = SysCommand('/lib/ld-linux-x86-64.so.2 --help').decode()
+			for level in ('X86_64_V4', 'X86_64_V3', 'X86_64_V2'):
+				if level.lower().replace('_', '-') in output:
+					return getattr(KnownArchitecture, level)
+		except Exception:
+			pass
+		return KnownArchitecture.X86_64
 
 	@staticmethod
 	def has_battery() -> bool:

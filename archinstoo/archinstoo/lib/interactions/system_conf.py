@@ -1,5 +1,7 @@
 from typing import assert_never
 
+from alpm.alpm_types import KnownArchitecture
+
 from archinstoo.default_profiles.profile import Profile
 from archinstoo.lib.hardware import GfxDriver, SysInfo
 from archinstoo.lib.models.application import ZramAlgorithm, ZramConfiguration
@@ -59,8 +61,8 @@ def select_driver(
 	What it needs to run and be in minimal functional state.
 	"""
 	if not options:
-		if SysInfo.arch() != 'x86_64':
-			# On ARM only mesa-based drivers are available
+		if SysInfo.arch() != KnownArchitecture.X86_64:
+			# On ARM only mesa-based drivers are recommended
 			options = [GfxDriver.MesaOpenSource]
 		else:
 			options = list(GfxDriver)
@@ -75,7 +77,7 @@ def select_driver(
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	group = MenuItemGroup(items, sort_items=True)
-	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
+	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != KnownArchitecture.X86_64):
 		default_driver = GfxDriver.MesaOpenSource
 	elif GfxDriver.AllOpenSource in options:
 		default_driver = GfxDriver.AllOpenSource
