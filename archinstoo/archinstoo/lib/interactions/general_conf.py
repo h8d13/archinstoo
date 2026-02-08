@@ -16,6 +16,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, Pr
 class PostInstallationAction(Enum):
 	EXIT = tr('exit archinstoo')
 	REBOOT = tr('reboot system')
+	POWEROFF = tr('poweroff system')
 	CHROOT = tr('chroot into install')
 
 
