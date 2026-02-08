@@ -19,7 +19,7 @@ from .lib.utils.net import ping
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
 
-hard_depends = ('python-pyparted',)
+hard_depends = ('python-pyparted', 'pyalpm', 'python-alpm')
 
 # main init file of archinstoo
 # we will log some useful info
