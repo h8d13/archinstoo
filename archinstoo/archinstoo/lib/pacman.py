@@ -144,33 +144,15 @@ class Pacman:
 		import pyalpm
 
 		from .hardware import SysInfo
+		from .output import debug
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
 
-		_last_dl: dict[str, tuple[int, int]] = {}
-		_last_progress: dict[str, int] = {}
-
-		def _cb_dl(filename: str, tx: int, total: int) -> None:
-			last_tx, last_total = _last_dl.get(filename, (-1, -1))
-			if total > 0:
-				pct = tx * 100 // total
-				if pct != last_tx * 100 // last_total if last_total > 0 else -1:
-					_last_dl[filename] = (tx, total)
-					print(f'\r:: {filename} {pct}%', end='', flush=True)
-					if tx >= total:
-						print()
-			else:
-				# Unknown size - show KB downloaded
-				kb = tx // 1024
-				if kb != last_tx // 1024 if last_tx > 0 else -1:
-					_last_dl[filename] = (tx, total)
-					print(f'\r:: {filename} {kb} KB', end='', flush=True)
+		def _cb_log(level: int, msg: str) -> None:
+			debug(f'[ALPM] {msg.strip()}')
 
 		def _cb_progress(target: str, percent: int, n: int, i: int) -> None:
-			if target and percent != _last_progress.get(target, -1):
-				_last_progress[target] = percent
-				print(f'\r({i}/{n}) {target} {percent}%', end='', flush=True)
-				if percent == 100:
-					print()
+			if target and percent == 0:
+				info(f'({i}/{n}) {target}')
 
 		try:
 			# Create directory structure (like pacstrap)
@@ -187,10 +169,11 @@ class Pacman:
 					ignore=shutil.ignore_patterns('S.*'),  # Skip socket files
 				)
 
+			debug(f'pyalpm Handle: root={self.target}, dbpath={self.target}/var/lib/pacman')
 			handle = pyalpm.Handle(str(self.target), str(self.target / 'var/lib/pacman'))
 			handle.add_cachedir('/var/cache/pacman/pkg')
 			handle.gpgdir = str(target_gpgdir)
-			handle.dlcb = _cb_dl
+			handle.logcb = _cb_log
 			handle.progresscb = _cb_progress
 
 			# Load mirrors and get server URLs
@@ -214,7 +197,6 @@ class Pacman:
 				if dep in resolved:
 					continue
 
-				# Use find_satisfier to handle versioned deps like "glibc>=2.38"
 				pkg = None
 				for db in syncdbs:
 					if pkg := pyalpm.find_satisfier(db.pkgcache, dep):
@@ -236,7 +218,21 @@ class Pacman:
 				for pkg in resolved.values():
 					trans.add_pkg(pkg)
 				trans.prepare()
+
+				# Debug: check what's actually in the transaction
+				to_add = list(trans.to_add)
+				debug(f'Transaction has {len(to_add)} packages to install')
+
 				trans.commit()
+
+				# Verify installation
+				osrelease = self.target / 'etc/os-release'
+				if osrelease.exists():
+					info('Base system installed successfully')
+				else:
+					warn(f'Warning: {osrelease} not found after install!')
+					debug(f'Target contents: {list((self.target / "etc").iterdir()) if (self.target / "etc").exists() else "etc dir missing"}')
+
 			finally:
 				trans.release()
 
