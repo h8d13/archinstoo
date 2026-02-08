@@ -6,8 +6,6 @@ import textwrap
 import traceback
 from typing import TYPE_CHECKING
 
-from alpm.alpm_types import KnownArchitecture
-
 from .lib import Pacman, output
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
@@ -112,6 +110,8 @@ def _prepare() -> int:
 
 
 def _log_sys_info(args: Arguments) -> None:
+	from alpm.alpm_types import KnownArchitecture
+
 	bitness = SysInfo._bitness()
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
 	arch = SysInfo.x86_64_level() if SysInfo._arch() == KnownArchitecture.X86_64 else SysInfo._arch()
