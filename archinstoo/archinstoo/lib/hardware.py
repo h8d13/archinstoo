@@ -262,7 +262,7 @@ class SysInfo:
 		# note  ARMV7H (L vs H)
 
 	@staticmethod
-	def x86_64_level() -> KnownArchitecture:
+	def _x86_64_level() -> KnownArchitecture:
 		"""Detect highest supported x86-64 microarchitecture level (v2/v3/v4)."""
 		base = SysInfo.arch()
 		if base != KnownArchitecture.X86_64:
