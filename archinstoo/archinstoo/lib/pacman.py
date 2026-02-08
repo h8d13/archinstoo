@@ -229,10 +229,17 @@ class Pacman:
 			MirrorListHandler().load_local_mirrors()
 			mirrors = [e.server_url for entries in _MirrorCache.data.values() for e in entries]
 
-			# Register sync dbs
-			for repo in ['core', 'extra']:
+			# Register sync dbs from pacman.conf
+			from .pm.config import PacmanConfig
+
+			for repo, custom_server in PacmanConfig.get_enabled_repos():
 				db = h.register_syncdb(repo, pyalpm.SIG_DATABASE_OPTIONAL)
-				db.servers = [m.replace('$repo', repo).replace('$arch', arch) for m in mirrors]
+				if custom_server:
+					# Custom repo with explicit Server
+					db.servers = [custom_server.replace('$arch', arch)]
+				else:
+					# Standard repo - use mirrorlist
+					db.servers = [m.replace('$repo', repo).replace('$arch', arch) for m in mirrors]
 				db.update(False)
 
 			# Resolve all deps

@@ -147,3 +147,24 @@ class PacmanConfig:
 			repos.append(CustomRepository(name, server.group(1).strip(), sign_check, sign_option))
 
 		return repos
+
+	@classmethod
+	def get_enabled_repos(cls) -> list[tuple[str, str | None]]:
+		"""Get all enabled repositories from pacman.conf.
+
+		Returns list of (repo_name, custom_server_url or None for standard repos).
+		"""
+		content = Path('/etc/pacman.conf').read_text()
+		repos: list[tuple[str, str | None]] = []
+
+		for match in re.finditer(r'^\[([^\]]+)\]\s*\n([^[]*)', content, re.MULTILINE):
+			name = match.group(1)
+			if name == 'options':
+				continue
+
+			block = match.group(2)
+			server_match = re.search(r'^Server\s*=\s*(.+)$', block, re.MULTILINE)
+			server = server_match.group(1).strip() if server_match else None
+			repos.append((name, server))
+
+		return repos
