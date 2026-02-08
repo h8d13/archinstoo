@@ -169,7 +169,11 @@ class Pacman:
 			host_gpgdir = Path('/etc/pacman.d/gnupg')
 			target_gpgdir = self.target / 'etc/pacman.d/gnupg'
 			if host_gpgdir.exists() and not target_gpgdir.exists():
-				shutil.copytree(host_gpgdir, target_gpgdir)
+				shutil.copytree(
+					host_gpgdir,
+					target_gpgdir,
+					ignore=shutil.ignore_patterns('S.*'),  # Skip socket files
+				)
 
 			handle = pyalpm.Handle(str(self.target), str(self.target / 'var/lib/pacman'))
 			handle.add_cachedir('/var/cache/pacman/pkg')
