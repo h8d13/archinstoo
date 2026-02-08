@@ -142,7 +142,6 @@ class Pacman:
 		import shutil
 
 		import pyalpm
-		from alpm import ALPMError
 
 		from .hardware import SysInfo
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
@@ -241,5 +240,5 @@ class Pacman:
 			finally:
 				trans.release()
 
-		except ALPMError as e:
+		except pyalpm.error as e:
 			raise RequirementError(f'ALPM error: {e}')
