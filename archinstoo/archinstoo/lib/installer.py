@@ -1714,6 +1714,18 @@ class Installer:
 		if not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
 
+	def _flip_bmp(self, path: Path) -> None:
+		if not path.exists():
+			return
+		data = bytearray(path.read_bytes())
+		offset = int.from_bytes(data[10:14], 'little')
+		width = int.from_bytes(data[18:22], 'little')
+		height = abs(int.from_bytes(data[22:26], 'little', signed=True))
+		row_size = ((width * int.from_bytes(data[28:30], 'little') + 31) // 32) * 4
+		rows = [data[offset + i * row_size : offset + (i + 1) * row_size] for i in range(height)]
+		data[offset:] = b''.join(reversed(rows))
+		path.write_bytes(data)
+
 	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False) -> None:
 		"""
 		Adds a bootloader to the installation instance.
@@ -1728,6 +1740,7 @@ class Installer:
 		:param uki_enabled: Whether to use unified kernel images
 		:param bootloader_removable: Whether to install to removable media location (UEFI only, for GRUB and Limine)
 		"""
+		self._flip_bmp(self.target / 'usr/share/systemd/bootctl/splash-arch.bmp')
 
 		efi_partition = self._get_efi_partition()
 		boot_partition = self._get_boot_partition()
