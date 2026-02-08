@@ -150,6 +150,13 @@ class Pacman:
 		def log_cb(level: int, msg: str) -> None:
 			debug(f'[ALPM] {msg.strip()}')
 
+		def event_cb(event: str, data: tuple) -> None:  # type: ignore[type-arg]
+			debug(f'[EVENT] {event}: {data}')
+
+		def question_cb(*args: object) -> int:
+			debug(f'[QUESTION] {args}')
+			return 1  # auto-accept
+
 		def progress_cb(target: str, percent: int, n: int, i: int) -> None:
 			if target and percent == 0 and target != _last[0]:
 				_last[0] = target
@@ -177,6 +184,8 @@ class Pacman:
 		h.gpgdir = str(dst_gpg)
 		h.add_cachedir('/var/cache/pacman/pkg')
 		h.logcb = log_cb
+		h.eventcb = event_cb
+		h.questioncb = question_cb
 		h.progresscb = progress_cb
 
 		# Load mirrors
