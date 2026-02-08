@@ -147,17 +147,24 @@ class Pacman:
 		from .hardware import SysInfo
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
 
-		_last_dl: dict[str, int] = {}
+		_last_dl: dict[str, tuple[int, int]] = {}
 		_last_progress: dict[str, int] = {}
 
 		def _cb_dl(filename: str, tx: int, total: int) -> None:
+			last_tx, last_total = _last_dl.get(filename, (-1, -1))
 			if total > 0:
 				pct = tx * 100 // total
-				if pct != _last_dl.get(filename, -1):
-					_last_dl[filename] = pct
+				if pct != last_tx * 100 // last_total if last_total > 0 else -1:
+					_last_dl[filename] = (tx, total)
 					print(f'\r:: {filename} {pct}%', end='', flush=True)
-					if pct == 100:
+					if tx >= total:
 						print()
+			else:
+				# Unknown size - show KB downloaded
+				kb = tx // 1024
+				if kb != last_tx // 1024 if last_tx > 0 else -1:
+					_last_dl[filename] = (tx, total)
+					print(f'\r:: {filename} {kb} KB', end='', flush=True)
 
 		def _cb_progress(target: str, percent: int, n: int, i: int) -> None:
 			if target and percent != _last_progress.get(target, -1):
@@ -204,20 +211,21 @@ class Pacman:
 			pending = list(packages)
 
 			while pending:
-				name = pending.pop(0)
-				if name in resolved:
+				dep = pending.pop(0)
+				if dep in resolved:
 					continue
 
+				# Use find_satisfier to handle versioned deps like "glibc>=2.38"
 				pkg = None
 				for db in syncdbs:
-					if pkg := db.get_pkg(name):
-						break
-					# Try find_satisfier for virtual packages
-					if pkg := pyalpm.find_satisfier(db.pkgcache, name):
+					if pkg := pyalpm.find_satisfier(db.pkgcache, dep):
 						break
 
 				if not pkg:
-					raise RequirementError(f'Package not found: {name}')
+					raise RequirementError(f'Cannot satisfy dependency: {dep}')
+
+				if pkg.name in resolved:
+					continue
 
 				resolved[pkg.name] = pkg
 				pending.extend(pkg.depends)
