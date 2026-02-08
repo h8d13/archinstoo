@@ -3,9 +3,6 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-import pyalpm
-from alpm import ALPMError
-
 from .exceptions import RequirementError
 from .general import SysCommand
 from .output import error, info, logger, warn
@@ -143,6 +140,9 @@ class Pacman:
 	def _strap_pyalpm(self, packages: list[str]) -> None:
 		"""Install packages to target using pyalpm instead of pacstrap."""
 		import shutil
+
+		import pyalpm
+		from alpm import ALPMError
 
 		from .hardware import SysInfo
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
