@@ -288,7 +288,7 @@ def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConf
 
 
 def select_management(preset: ManagementConfiguration | None = None) -> ManagementConfiguration | None:
-	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo.arch() != KnownArchitecture.X86_64)]
+	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo._arch() != KnownArchitecture.X86_64)]
 	items = [MenuItem(m.value, value=m) for m in options]
 	group = MenuItemGroup(items)
 

@@ -84,7 +84,7 @@ class MirrorStatusEntryV3:
 
 		from archinstoo.lib.hardware import SysInfo
 
-		if SysInfo.arch() == KnownArchitecture.X86_64:
+		if SysInfo._arch() == KnownArchitecture.X86_64:
 			return f'{self.url}$repo/os/$arch'
 		return f'{self.url}$arch/$repo'
 
@@ -100,7 +100,7 @@ class MirrorStatusEntryV3:
 
 			from archinstoo.lib.hardware import SysInfo
 
-			arch = SysInfo.arch()
+			arch = SysInfo._arch()
 			arch_str = arch.value.lower()
 			if arch == KnownArchitecture.X86_64:
 				test_db = f'{self.url}core/os/{arch_str}/core.db'

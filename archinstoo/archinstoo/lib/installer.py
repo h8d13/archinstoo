@@ -196,7 +196,7 @@ class Installer:
 		else:
 			info(tr('Skipping NTP time sync (may cause issues if system time is incorrect)'))
 
-		if not self._args.offline and SysInfo.arch() == KnownArchitecture.X86_64:
+		if not self._args.offline and SysInfo._arch() == KnownArchitecture.X86_64:
 			info('Waiting for reflector mirror selection...')
 			reflector_state = self._service_state('reflector')
 			timed_out = True

@@ -242,6 +242,27 @@ class _SysInfo:
 				cards[identifier.strip().decode('UTF-8')] = str(line)
 		return cards
 
+	@cached_property
+	def arch(self) -> KnownArchitecture:
+		machine = platform.machine().upper().replace('-', '_')
+		return getattr(KnownArchitecture, machine)
+		# note: ARMV7L -> ARMV7H (L vs H)
+
+	@cached_property
+	def x86_64_level(self) -> KnownArchitecture:
+		"""Detect highest supported x86-64 microarchitecture level (v2/v3/v4)."""
+		if self.arch != KnownArchitecture.X86_64:
+			return self.arch
+
+		try:
+			output = SysCommand('/lib/ld-linux-x86-64.so.2 --help').decode()
+			for level in ('X86_64_V4', 'X86_64_V3', 'X86_64_V2'):
+				if level.lower().replace('_', '-') in output:
+					return getattr(KnownArchitecture, level)
+		except Exception:
+			pass
+		return KnownArchitecture.X86_64
+
 
 _sys_info = _SysInfo()
 
@@ -256,26 +277,12 @@ class SysInfo:
 		return _sys_info.efi_bitness
 
 	@staticmethod
-	def arch() -> KnownArchitecture:
-		machine = platform.machine().upper().replace('-', '_')
-		return getattr(KnownArchitecture, machine)
-		# note  ARMV7H (L vs H)
+	def _arch() -> KnownArchitecture:
+		return _sys_info.arch
 
 	@staticmethod
-	def _x86_64_level() -> KnownArchitecture:
-		"""Detect highest supported x86-64 microarchitecture level (v2/v3/v4)."""
-		base = SysInfo.arch()
-		if base != KnownArchitecture.X86_64:
-			return base
-
-		try:
-			output = SysCommand('/lib/ld-linux-x86-64.so.2 --help').decode()
-			for level in ('X86_64_V4', 'X86_64_V3', 'X86_64_V2'):
-				if level.lower().replace('_', '-') in output:
-					return getattr(KnownArchitecture, level)
-		except Exception:
-			pass
-		return KnownArchitecture.X86_64
+	def x86_64_level() -> KnownArchitecture:
+		return _sys_info.x86_64_level
 
 	@staticmethod
 	def has_battery() -> bool:

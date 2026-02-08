@@ -478,7 +478,7 @@ class MirrorListHandler:
 	_ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
 
 	def load_remote_mirrors(self) -> bool:
-		if SysInfo.arch() != KnownArchitecture.X86_64:
+		if SysInfo._arch() != KnownArchitecture.X86_64:
 			return self._load_arm_mirrors()
 
 		attempts = 3
@@ -508,7 +508,7 @@ class MirrorListHandler:
 		return False
 
 	def _load_arm_mirrors(self) -> bool:
-		debug(f'ARM architecture ({SysInfo.arch()}), fetching Arch Linux ARM mirror list')
+		debug(f'ARM architecture ({SysInfo._arch()}), fetching Arch Linux ARM mirror list')
 		try:
 			data = fetch_data_from_url(self._ARM_MIRRORLIST_URL)
 			_MirrorCache.data.update(self._parse_local_mirrors(data))

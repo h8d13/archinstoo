@@ -6,6 +6,8 @@ import textwrap
 import traceback
 from typing import TYPE_CHECKING
 
+from alpm.alpm_types import KnownArchitecture
+
 from .lib import Pacman, output
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
@@ -112,7 +114,8 @@ def _prepare() -> int:
 def _log_sys_info(args: Arguments) -> None:
 	bitness = SysInfo._bitness()
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
-	debug(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
+	arch = SysInfo.x86_64_level() if SysInfo._arch() == KnownArchitecture.X86_64 else SysInfo._arch()
+	debug(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {arch}')
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
 	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
