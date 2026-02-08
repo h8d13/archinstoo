@@ -196,21 +196,21 @@ class Installer:
 
 		if not self._args.offline and SysInfo.arch() == 'x86_64':
 			info('Waiting for reflector mirror selection...')
+			reflector_state = self._service_state('reflector')
 			timed_out = True
 			for _ in range(60):
-				if self._service_state('reflector') in ('dead', 'failed', 'exited'):
+				if reflector_state in ('dead', 'failed', 'exited'):
 					timed_out = False
 					break
 				time.sleep(1)
+				reflector_state = self._service_state('reflector')
 
 			if timed_out:
 				warn('Reflector did not complete within 60 seconds, continuing anyway...')
+			elif reflector_state == 'failed':
+				warn('Reflector mirror selection failed')
 			else:
-				reflector_val = SysCommand('systemctl show --property=Result --value reflector.service').decode()
-				if reflector_val and reflector_val.strip() == 'success':
-					info('Reflector mirror selection completed')
-				else:
-					warn('Reflector mirror selection failed')
+				info('Reflector mirror selection completed')
 		else:
 			info('Skipping reflector (offline mode or non-x86_64 architecture)')
 
@@ -221,14 +221,15 @@ class Installer:
 				time.sleep(1)
 
 			# Wait for the service to enter a finished state
-			while self._service_state('archlinux-keyring-wkd-sync.service') not in ('dead', 'failed', 'exited'):
+			keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
+			while keyring_state not in ('dead', 'failed', 'exited'):
 				time.sleep(1)
+				keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
 
-			keyring_val = SysCommand('systemctl show --property=Result --value archlinux-keyring-wkd-sync.service').decode()
-			if keyring_val and keyring_val.strip() == 'success':
-				info(tr('Arch Linux keyring sync completed'))
-			else:
+			if keyring_state == 'failed':
 				warn(tr('Arch Linux keyring sync failed'))
+			else:
+				info(tr('Arch Linux keyring sync completed'))
 
 	def _verify_boot_part(self) -> None:
 		"""
