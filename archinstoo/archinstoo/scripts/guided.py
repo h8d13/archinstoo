@@ -197,6 +197,8 @@ def perform_installation(
 				pass
 			case PostInstallationAction.REBOOT:
 				os.system('reboot')
+			case PostInstallationAction.POWEROFF:
+				os.system('poweroff')
 			case PostInstallationAction.CHROOT:
 				with contextlib.suppress(Exception):
 					installation.drop_to_shell()
