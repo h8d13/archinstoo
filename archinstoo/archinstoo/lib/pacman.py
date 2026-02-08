@@ -140,6 +140,7 @@ class Pacman:
 	def _strap_pyalpm(self, packages: list[str]) -> None:
 		"""Install packages to target using pyalpm instead of pacstrap."""
 		import shutil
+		import traceback
 
 		import pyalpm
 
@@ -147,17 +148,47 @@ class Pacman:
 		from .output import debug
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
 
+		_last_pkg: list[str] = ['']
+
 		def _cb_log(level: int, msg: str) -> None:
 			debug(f'[ALPM] {msg.strip()}')
 
+		def _cb_dl(filename: str, tx: int, total: int) -> None:
+			if filename != _last_pkg[0]:
+				_last_pkg[0] = filename
+				info(f':: Downloading {filename}')
+
 		def _cb_progress(target: str, percent: int, n: int, i: int) -> None:
-			if target and percent == 0:
-				info(f'({i}/{n}) {target}')
+			key = f'{i}/{n}/{target}'
+			if target and percent == 0 and key != _last_pkg[0]:
+				_last_pkg[0] = key
+				info(f'({i}/{n}) Installing {target}')
+
+		def _cb_event(event: str, data: tuple) -> None:  # type: ignore[type-arg]
+			# Event callback for package operations
+			debug(f'[ALPM EVENT] {event}: {data}')
+
+		def _cb_question(*args: object) -> int:
+			# Question callback - auto-accept for non-interactive install
+			debug(f'[ALPM QUESTION] {args}')
+			return 1  # Accept
 
 		try:
 			# Create directory structure (like pacstrap)
-			for d in ['var/lib/pacman', 'var/log', 'var/cache/pacman/pkg', 'etc/pacman.d']:
+			# Include all directories pacstrap creates
+			for d in [
+				'var/lib/pacman',
+				'var/lib/pacman/local',
+				'var/log',
+				'var/cache/pacman/pkg',
+				'etc/pacman.d',
+				'run',
+				'tmp',
+			]:
 				(self.target / d).mkdir(parents=True, exist_ok=True)
+
+			# Set proper permissions on tmp
+			(self.target / 'tmp').chmod(0o1777)
 
 			# Copy GPG keyring from host (required for signature verification)
 			host_gpgdir = Path('/etc/pacman.d/gnupg')
@@ -172,22 +203,49 @@ class Pacman:
 			# Get architecture
 			arch = SysInfo._arch().value.lower()
 
-			debug(f'pyalpm Handle: root={self.target}, dbpath={self.target}/var/lib/pacman, arch={arch}')
-			handle = pyalpm.Handle(str(self.target), str(self.target / 'var/lib/pacman'))
+			# Ensure absolute paths
+			root_path = str(self.target.resolve())
+			db_path = str((self.target / 'var/lib/pacman').resolve())
+
+			debug(f'pyalpm Handle: root={root_path}, dbpath={db_path}, arch={arch}')
+			info(f'Installing to: {root_path}')
+
+			handle = pyalpm.Handle(root_path, db_path)
+
+			# Verify the handle was created with correct root
+			debug(f'Handle root: {handle.root}, dbpath: {handle.dbpath}')
 			handle.arch = [arch]  # Must be set for package installation
+
+			# Add cache directories - both host and target
 			handle.add_cachedir('/var/cache/pacman/pkg')
+			handle.add_cachedir(str(self.target / 'var/cache/pacman/pkg'))
+
 			handle.gpgdir = str(target_gpgdir)
+
+			# Set all callbacks
 			handle.logcb = _cb_log
+			handle.dlcb = _cb_dl
 			handle.progresscb = _cb_progress
+			handle.eventcb = _cb_event
+			handle.questioncb = _cb_question
+
+			# Initialize local database (important!)
+			localdb = handle.get_localdb()
+			debug(f'Local DB initialized: {localdb.name}')
 
 			# Load mirrors and get server URLs
 			MirrorListHandler().load_local_mirrors()
 			mirrors = [e.server_url for entries in _MirrorCache.data.values() for e in entries]
+			debug(f'Loaded {len(mirrors)} mirror URLs')
+
+			if not mirrors:
+				raise RequirementError('No mirrors available for package installation')
 
 			# Register repos with mirrors
 			for repo in ['core', 'extra']:
 				db = handle.register_syncdb(repo, pyalpm.SIG_DATABASE_OPTIONAL)
 				db.servers = [url.replace('$repo', repo).replace('$arch', arch) for url in mirrors]
+				debug(f'Registered {repo} with {len(db.servers)} servers')
 				db.update(False)
 
 			# Resolve packages and all dependencies
@@ -216,17 +274,51 @@ class Pacman:
 
 			info(f'Resolved {len(resolved)} packages (including dependencies)')
 
-			trans = handle.init_transaction()
+			# Initialize transaction with flags for bootstrap install
+			trans = handle.init_transaction(
+				nodeps=False,
+				force=False,
+				nosave=False,
+				nodepversion=False,
+				cascade=False,
+				recurse=False,
+				dbonly=False,
+				downloadonly=False,
+				noscriptlet=False,
+				needed=False,
+			)
+
 			try:
 				for pkg in resolved.values():
 					trans.add_pkg(pkg)
-				trans.prepare()
+
+				# Prepare - check for errors
+				debug('Preparing transaction...')
+				try:
+					trans.prepare()
+				except pyalpm.error as prep_err:
+					error(f'Transaction prepare failed: {prep_err}')
+					traceback.print_exc()
+					raise RequirementError(f'Transaction prepare failed: {prep_err}')
 
 				# Debug: check what's actually in the transaction
 				to_add = list(trans.to_add)
-				debug(f'Transaction has {len(to_add)} packages to install')
+				to_remove = list(trans.to_remove)
+				debug(f'Transaction: {len(to_add)} to install, {len(to_remove)} to remove')
 
-				trans.commit()
+				if not to_add:
+					warn('Transaction has no packages to install!')
+					raise RequirementError('Transaction has no packages to install')
+
+				# Commit - actually install
+				debug('Committing transaction...')
+				try:
+					trans.commit()
+					debug('Transaction committed successfully')
+				except pyalpm.error as commit_err:
+					error(f'Transaction commit failed: {commit_err}')
+					traceback.print_exc()
+					raise RequirementError(f'Transaction commit failed: {commit_err}')
 
 				# Verify installation
 				osrelease = self.target / 'etc/os-release'
@@ -234,10 +326,24 @@ class Pacman:
 					info('Base system installed successfully')
 				else:
 					warn(f'Warning: {osrelease} not found after install!')
-					debug(f'Target contents: {list((self.target / "etc").iterdir()) if (self.target / "etc").exists() else "etc dir missing"}')
+					# List what was created
+					etc_dir = self.target / 'etc'
+					if etc_dir.exists():
+						debug(f'Target /etc contents: {list(etc_dir.iterdir())[:20]}')
+					else:
+						debug('Target /etc does not exist!')
+
+					# Check if any files were installed
+					usr_dir = self.target / 'usr'
+					if usr_dir.exists():
+						debug(f'Target /usr exists with: {list(usr_dir.iterdir())[:10]}')
+					else:
+						debug('Target /usr does not exist - packages NOT extracted!')
 
 			finally:
 				trans.release()
 
 		except pyalpm.error as e:
+			error(f'ALPM error: {e}')
+			traceback.print_exc()
 			raise RequirementError(f'ALPM error: {e}')
