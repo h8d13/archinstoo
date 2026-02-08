@@ -4,7 +4,7 @@ This method is more advanced and assumes you've **built a stage 1 correctly.**
 
 This usually involves the following:
 
-- Extracted tarball onto a storage device. 
+- Extracted tarball onto a storage device. [Tarballs](https://archlinuxarm.org/about/downloads)
 - Format/mount
 - Replaced kernel with appropriate for hardware
 - Hw specifics in `config.txt` or `boot.txt`
