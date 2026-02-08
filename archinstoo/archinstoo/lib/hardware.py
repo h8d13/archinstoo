@@ -3,9 +3,10 @@ import platform
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
-from typing import Self, cast
+from typing import TYPE_CHECKING, Self, cast
 
-from alpm.alpm_types import KnownArchitecture
+if TYPE_CHECKING:
+	from alpm.alpm_types import KnownArchitecture
 
 from archinstoo.default_profiles.profile import DisplayServer
 
@@ -244,6 +245,8 @@ class _SysInfo:
 
 	@cached_property
 	def arch(self) -> KnownArchitecture:
+		from alpm.alpm_types import KnownArchitecture
+
 		machine = platform.machine().upper().replace('-', '_')
 		return getattr(KnownArchitecture, machine)
 		# note: ARMV7L -> ARMV7H (L vs H)
@@ -251,6 +254,8 @@ class _SysInfo:
 	@cached_property
 	def x86_64_level(self) -> KnownArchitecture:
 		"""Detect highest supported x86-64 microarchitecture level (v2/v3/v4)."""
+		from alpm.alpm_types import KnownArchitecture
+
 		if self.arch != KnownArchitecture.X86_64:
 			return self.arch
 

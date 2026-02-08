@@ -1,7 +1,5 @@
 from typing import override
 
-from alpm.alpm_types import KnownArchitecture
-
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.application import (
@@ -288,6 +286,8 @@ def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConf
 
 
 def select_management(preset: ManagementConfiguration | None = None) -> ManagementConfiguration | None:
+	from alpm.alpm_types import KnownArchitecture
+
 	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo._arch() != KnownArchitecture.X86_64)]
 	items = [MenuItem(m.value, value=m) for m in options]
 	group = MenuItemGroup(items)

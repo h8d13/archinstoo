@@ -1,7 +1,5 @@
 from typing import assert_never
 
-from alpm.alpm_types import KnownArchitecture
-
 from archinstoo.default_profiles.profile import Profile
 from archinstoo.lib.hardware import GfxDriver, SysInfo
 from archinstoo.lib.models.application import ZramAlgorithm, ZramConfiguration
@@ -60,6 +58,8 @@ def select_driver(
 	This comment was stupid so I removed it. A profile should plain dictate
 	What it needs to run and be in minimal functional state.
 	"""
+	from alpm.alpm_types import KnownArchitecture
+
 	if not options:
 		if SysInfo._arch() != KnownArchitecture.X86_64:
 			# On ARM only mesa-based drivers are recommended

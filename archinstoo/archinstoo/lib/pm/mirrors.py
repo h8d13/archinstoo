@@ -4,8 +4,6 @@ from functools import partial
 from pathlib import Path
 from typing import ClassVar, override
 
-from alpm.alpm_types import KnownArchitecture
-
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.list_manager import ListManager
@@ -478,6 +476,8 @@ class MirrorListHandler:
 	_ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
 
 	def load_remote_mirrors(self) -> bool:
+		from alpm.alpm_types import KnownArchitecture
+
 		if SysInfo._arch() != KnownArchitecture.X86_64:
 			return self._load_arm_mirrors()
 
