@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .exceptions import RequirementError
 from .general import SysCommand
-from .output import error, info, logger, warn
+from .output import debug, error, info, logger, warn
 from .translationhandler import tr
 
 
@@ -137,12 +137,44 @@ class Pacman:
 		else:
 			self._strap_pyalpm(packages)
 
+	def _setup_chroot_mounts(self, root: Path) -> list[str]:
+		"""Set up API filesystem mounts for target (needed for ALPM hooks)."""
+		mounts: list[str] = []
+
+		# Create mount points
+		for d in ['proc', 'sys', 'dev', 'dev/pts', 'dev/shm', 'run', 'tmp']:
+			(root / d).mkdir(parents=True, exist_ok=True)
+
+		mount_cmds = [
+			(f'mount -t proc proc {root}/proc', f'{root}/proc'),
+			(f'mount -t sysfs sys {root}/sys -o nosuid,noexec,nodev,ro', f'{root}/sys'),
+			(f'mount -t devtmpfs udev {root}/dev -o mode=0755,nosuid', f'{root}/dev'),
+			(f'mount -t devpts devpts {root}/dev/pts -o mode=0620,gid=5,nosuid,noexec', f'{root}/dev/pts'),
+			(f'mount -t tmpfs shm {root}/dev/shm -o mode=1777,nosuid,nodev', f'{root}/dev/shm'),
+			(f'mount --bind /run {root}/run', f'{root}/run'),
+			(f'mount -t tmpfs tmp {root}/tmp -o mode=1777,strictatime,nodev,nosuid', f'{root}/tmp'),
+		]
+
+		for cmd, mnt in mount_cmds:
+			try:
+				SysCommand(cmd)
+				mounts.append(mnt)
+			except Exception as e:
+				debug(f'Mount warning for {mnt}: {e}')
+
+		return mounts
+
+	def _teardown_chroot_mounts(self, mounts: list[str]) -> None:
+		"""Unmount API filesystems in reverse order."""
+		for mnt in reversed(mounts):
+			with contextlib.suppress(Exception):
+				SysCommand(f'umount -l {mnt}')
+
 	def _strap_pyalpm(self, packages: list[str]) -> None:
 		"""Install packages to target using pyalpm."""
 		import pyalpm
 
 		from .hardware import SysInfo
-		from .output import debug
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
 
 		_last: list[str] = ['']
@@ -162,69 +194,77 @@ class Pacman:
 				_last[0] = target
 				info(f'({i}/{n}) Installing {target}')
 
+		root = self.target.resolve()
+
 		# Setup target directories
-		for d in ['var/lib/pacman', 'var/cache/pacman/pkg', 'etc/pacman.d']:
-			(self.target / d).mkdir(parents=True, exist_ok=True)
+		for d in ['var/lib/pacman', 'var/cache/pacman/pkg', 'etc/pacman.d', 'var/log']:
+			(root / d).mkdir(parents=True, exist_ok=True)
 
 		# Initialize keyring in target (like pacstrap -K)
-		dst_gpg = self.target / 'etc/pacman.d/gnupg'
+		dst_gpg = root / 'etc/pacman.d/gnupg'
 		if not dst_gpg.exists():
 			SysCommand(f'pacman-key --gpgdir {dst_gpg} --init', peek_output=True)
 			SysCommand(f'pacman-key --gpgdir {dst_gpg} --populate archlinux', peek_output=True)
 
 		arch = SysInfo._arch().value.lower()
-		root = str(self.target.resolve())
-		dbpath = str((self.target / 'var/lib/pacman').resolve())
+		dbpath = str(root / 'var/lib/pacman')
 
 		info(f'pyalpm: root={root}, arch={arch}')
 
-		# Create handle
-		h = pyalpm.Handle(root, dbpath)
-		h.arch = [arch]
-		h.gpgdir = str(dst_gpg)
-		h.add_cachedir('/var/cache/pacman/pkg')
-		h.logcb = log_cb
-		h.eventcb = event_cb
-		h.questioncb = question_cb
-		h.progresscb = progress_cb
+		# Set up chroot mounts BEFORE creating handle (hooks need them)
+		mounts = self._setup_chroot_mounts(root)
 
-		# Load mirrors
-		MirrorListHandler().load_local_mirrors()
-		mirrors = [e.server_url for entries in _MirrorCache.data.values() for e in entries]
-
-		# Register sync dbs
-		for repo in ['core', 'extra']:
-			db = h.register_syncdb(repo, pyalpm.SIG_DATABASE_OPTIONAL)
-			db.servers = [m.replace('$repo', repo).replace('$arch', arch) for m in mirrors]
-			db.update(False)
-
-		# Resolve all deps
-		syncdbs = h.get_syncdbs()
-		resolved: dict[str, pyalpm.Package] = {}
-		queue = list(packages)
-
-		while queue:
-			name = queue.pop(0)
-			if name in resolved:
-				continue
-			for db in syncdbs:
-				if pkg := pyalpm.find_satisfier(db.pkgcache, name):
-					if pkg.name not in resolved:
-						resolved[pkg.name] = pkg
-						queue.extend(pkg.depends)
-					break
-			else:
-				raise RequirementError(f'Package not found: {name}')
-
-		info(f'Resolved {len(resolved)} packages')
-
-		# Transaction
-		t = h.init_transaction()
 		try:
-			for pkg in resolved.values():
-				t.add_pkg(pkg)
-			t.prepare()
-			info(f'Installing {len(list(t.to_add))} packages...')
-			t.commit()
+			# Create handle
+			h = pyalpm.Handle(str(root), dbpath)
+			h.arch = [arch]
+			h.gpgdir = str(dst_gpg)
+			h.add_cachedir('/var/cache/pacman/pkg')
+			h.logcb = log_cb
+			h.eventcb = event_cb
+			h.questioncb = question_cb
+			h.progresscb = progress_cb
+
+			# Load mirrors
+			MirrorListHandler().load_local_mirrors()
+			mirrors = [e.server_url for entries in _MirrorCache.data.values() for e in entries]
+
+			# Register sync dbs
+			for repo in ['core', 'extra']:
+				db = h.register_syncdb(repo, pyalpm.SIG_DATABASE_OPTIONAL)
+				db.servers = [m.replace('$repo', repo).replace('$arch', arch) for m in mirrors]
+				db.update(False)
+
+			# Resolve all deps
+			syncdbs = h.get_syncdbs()
+			resolved: dict[str, pyalpm.Package] = {}
+			queue = list(packages)
+
+			while queue:
+				name = queue.pop(0)
+				if name in resolved:
+					continue
+				for db in syncdbs:
+					if pkg := pyalpm.find_satisfier(db.pkgcache, name):
+						if pkg.name not in resolved:
+							resolved[pkg.name] = pkg
+							queue.extend(pkg.depends)
+						break
+				else:
+					raise RequirementError(f'Package not found: {name}')
+
+			info(f'Resolved {len(resolved)} packages')
+
+			# Transaction
+			t = h.init_transaction()
+			try:
+				for pkg in resolved.values():
+					t.add_pkg(pkg)
+				t.prepare()
+				info(f'Installing {len(list(t.to_add))} packages...')
+				t.commit()
+			finally:
+				t.release()
 		finally:
-			t.release()
+			# Always clean up mounts
+			self._teardown_chroot_mounts(mounts)
