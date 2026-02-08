@@ -1858,6 +1858,8 @@ class Installer:
 					self.enable_sudo(user)
 				case PrivilegeEscalation.Doas:
 					self.enable_doas(user)
+				case PrivilegeEscalation.Run0:
+					pass  # run0 uses polkit - wheel group membership is sufficient
 
 		for stash_url in user.stash_urls:
 			self._clone_user_stash(user.username, stash_url)

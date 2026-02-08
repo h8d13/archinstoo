@@ -8,11 +8,13 @@ from archinstoo.lib.models.users import Password, User, UserSerialization
 class PrivilegeEscalation(Enum):
 	Sudo = 'sudo'
 	Doas = 'doas'
+	Run0 = 'run0'
 
 	def packages(self) -> list[str]:
 		return {
 			PrivilegeEscalation.Sudo: ['sudo'],
 			PrivilegeEscalation.Doas: ['opendoas'],
+			PrivilegeEscalation.Run0: ['polkit'],  # run0 is part of systemd, just needs polkit
 		}[self]
 
 
