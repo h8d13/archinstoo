@@ -147,16 +147,22 @@ class Pacman:
 		from .hardware import SysInfo
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
 
+		_last_dl: dict[str, int] = {}
+		_last_progress: dict[str, int] = {}
+
 		def _cb_dl(filename: str, tx: int, total: int) -> None:
 			if total > 0:
 				pct = tx * 100 // total
-				print(f'\r:: Downloading {filename}: {pct}%', end='', flush=True)
-				if tx == total:
-					print()
+				if pct != _last_dl.get(filename, -1):
+					_last_dl[filename] = pct
+					print(f'\r:: {filename} {pct}%', end='', flush=True)
+					if pct == 100:
+						print()
 
 		def _cb_progress(target: str, percent: int, n: int, i: int) -> None:
-			if target:
-				print(f'\r({i}/{n}) Installing {target}: {percent}%', end='', flush=True)
+			if target and percent != _last_progress.get(target, -1):
+				_last_progress[target] = percent
+				print(f'\r({i}/{n}) {target} {percent}%', end='', flush=True)
 				if percent == 100:
 					print()
 
@@ -192,20 +198,35 @@ class Pacman:
 				db.servers = [url.replace('$repo', repo).replace('$arch', arch) for url in mirrors]
 				db.update(False)
 
-			# Find and install packages
+			# Resolve packages and all dependencies
 			syncdbs = handle.get_syncdbs()
-			to_install = []
-			for name in packages:
+			resolved: dict[str, pyalpm.Package] = {}
+			pending = list(packages)
+
+			while pending:
+				name = pending.pop(0)
+				if name in resolved:
+					continue
+
+				pkg = None
 				for db in syncdbs:
 					if pkg := db.get_pkg(name):
-						to_install.append(pkg)
 						break
-				else:
+					# Try find_satisfier for virtual packages
+					if pkg := pyalpm.find_satisfier(db.pkgcache, name):
+						break
+
+				if not pkg:
 					raise RequirementError(f'Package not found: {name}')
+
+				resolved[pkg.name] = pkg
+				pending.extend(pkg.depends)
+
+			info(f'Resolved {len(resolved)} packages (including dependencies)')
 
 			trans = handle.init_transaction()
 			try:
-				for pkg in to_install:
+				for pkg in resolved.values():
 					trans.add_pkg(pkg)
 				trans.prepare()
 				trans.commit()
