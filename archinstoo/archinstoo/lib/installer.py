@@ -172,46 +172,50 @@ class Installer:
 			self._modules.append(mod)
 
 	def _verify_service_stop(self) -> None:
-		"""
-		Certain services might be running that affects the system during installation.
-		One such service is "reflector.service" which updates /etc/pacman.d/mirrorlist
-		We need to wait for it before we continue since we opted in to use a custom mirror/region.
-		"""
-
+		# Check for essential services statuses based on
+		# architecture and parse results for prints
+		# https://github.com/archlinux/archinstall/issues/3688
+		# be more descriptive about status in code + what user sees
 		if not self._args.skip_ntp:
-			info(tr('Waiting for time sync (timedatectl show) to complete.'))
+			info(tr('Waiting for NTP time synchronization...'))
 
 			started_wait = time.time()
 			notified = False
 			while True:
 				if not notified and time.time() - started_wait > 5:
 					notified = True
-					warn(tr('Time synchronization not completing...'))
+					warn(tr('NTP sync taking longer than expected, still waiting...'))
 
 				time_val = SysCommand('timedatectl show --property=NTPSynchronized --value').decode()
 				if time_val and time_val.strip() == 'yes':
+					info(tr('NTP time synchronization completed'))
 					break
 				time.sleep(1)
 		else:
-			info(tr('Skipping waiting for automatic time sync (this can cause issues if time is out of sync during installation)'))
+			info(tr('Skipping NTP time sync (may cause issues if system time is incorrect)'))
 
 		if not self._args.offline and SysInfo.arch() == 'x86_64':
-			info('Waiting for automatic mirror selection (reflector) to complete.')
+			info('Waiting for reflector mirror selection...')
+			timed_out = True
 			for _ in range(60):
 				if self._service_state('reflector') in ('dead', 'failed', 'exited'):
+					timed_out = False
 					break
 				time.sleep(1)
-			else:
-				warn('Reflector did not complete within 60 seconds, continuing anyway...')
-		else:
-			info('Skipped reflector...')
 
-		# info('Waiting for pacman-init.service to complete.')
-		# while self._service_state('pacman-init') not in ('dead', 'failed', 'exited'):
-		# 	time.sleep(1)
+			if timed_out:
+				warn('Reflector did not complete within 60 seconds, continuing anyway...')
+			else:
+				reflector_val = SysCommand('systemctl show --property=Result --value reflector.service').decode()
+				if reflector_val and reflector_val.strip() == 'success':
+					info('Reflector mirror selection completed')
+				else:
+					warn('Reflector mirror selection failed')
+		else:
+			info('Skipping reflector (offline mode or non-x86_64 architecture)')
 
 		if not self._args.skip_wkd:
-			info(tr('Waiting for Arch Linux keyring sync (archlinux-keyring-wkd-sync) to complete.'))
+			info(tr('Waiting for Arch Linux keyring sync...'))
 			# Wait for the timer to kick in
 			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:
 				time.sleep(1)
@@ -219,6 +223,12 @@ class Installer:
 			# Wait for the service to enter a finished state
 			while self._service_state('archlinux-keyring-wkd-sync.service') not in ('dead', 'failed', 'exited'):
 				time.sleep(1)
+
+			keyring_val = SysCommand('systemctl show --property=Result --value archlinux-keyring-wkd-sync.service').decode()
+			if keyring_val and keyring_val.strip() == 'success':
+				info(tr('Arch Linux keyring sync completed'))
+			else:
+				warn(tr('Arch Linux keyring sync failed'))
 
 	def _verify_boot_part(self) -> None:
 		"""
