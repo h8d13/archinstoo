@@ -1676,7 +1676,13 @@ class Installer:
 		# Per-kernel os-release so GRUB UKI entries show the kernel variant
 		osrelease_dir = self.target / 'etc/os-release.d'
 		osrelease_dir.mkdir(parents=True, exist_ok=True)
-		base_osrelease = (self.target / 'etc/os-release').read_text()
+
+		# os-release symlink may not exist yet (pyalpm doesn't create it)
+		osrelease_path = self.target / 'etc/os-release'
+		if not osrelease_path.exists():
+			osrelease_path.symlink_to('../usr/lib/os-release')
+
+		base_osrelease = (self.target / 'usr/lib/os-release').read_text()
 
 		# Modify .preset files
 		for kernel in self.kernels:
