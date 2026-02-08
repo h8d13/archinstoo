@@ -142,13 +142,40 @@ class Pacman:
 
 	def _strap_pyalpm(self, packages: list[str]) -> None:
 		"""Install packages to target using pyalpm instead of pacstrap."""
+		import shutil
+
 		from .hardware import SysInfo
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
 
+		def _cb_dl(filename: str, tx: int, total: int) -> None:
+			if total > 0:
+				pct = tx * 100 // total
+				print(f'\r:: Downloading {filename}: {pct}%', end='', flush=True)
+				if tx == total:
+					print()
+
+		def _cb_progress(target: str, percent: int, n: int, i: int) -> None:
+			if target:
+				print(f'\r({i}/{n}) Installing {target}: {percent}%', end='', flush=True)
+				if percent == 100:
+					print()
+
 		try:
-			(self.target / 'var/lib/pacman').mkdir(parents=True, exist_ok=True)
+			# Create directory structure (like pacstrap)
+			for d in ['var/lib/pacman', 'var/log', 'var/cache/pacman/pkg', 'etc/pacman.d']:
+				(self.target / d).mkdir(parents=True, exist_ok=True)
+
+			# Copy GPG keyring from host (required for signature verification)
+			host_gpgdir = Path('/etc/pacman.d/gnupg')
+			target_gpgdir = self.target / 'etc/pacman.d/gnupg'
+			if host_gpgdir.exists() and not target_gpgdir.exists():
+				shutil.copytree(host_gpgdir, target_gpgdir)
+
 			handle = pyalpm.Handle(str(self.target), str(self.target / 'var/lib/pacman'))
 			handle.add_cachedir('/var/cache/pacman/pkg')
+			handle.gpgdir = str(target_gpgdir)
+			handle.dlcb = _cb_dl
+			handle.progresscb = _cb_progress
 
 			# Load mirrors and get server URLs
 			MirrorListHandler().load_local_mirrors()
