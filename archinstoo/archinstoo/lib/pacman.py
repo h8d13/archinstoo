@@ -142,6 +142,7 @@ class Pacman:
 
 	def _strap_pyalpm(self, packages: list[str]) -> None:
 		"""Install packages to target using pyalpm instead of pacstrap."""
+		from .hardware import SysInfo
 		from .pm.mirrors import MirrorListHandler, _MirrorCache
 
 		try:
@@ -152,11 +153,12 @@ class Pacman:
 			# Load mirrors and get server URLs
 			MirrorListHandler().load_local_mirrors()
 			mirrors = [e.server_url for entries in _MirrorCache.data.values() for e in entries]
+			arch = SysInfo._arch().value.lower()
 
 			# Register repos with mirrors
 			for repo in ['core', 'extra']:
 				db = handle.register_syncdb(repo, pyalpm.SIG_DATABASE_OPTIONAL)
-				db.servers = [url.replace('$repo', repo) for url in mirrors]
+				db.servers = [url.replace('$repo', repo).replace('$arch', arch) for url in mirrors]
 				db.update(False)
 
 			# Find and install packages
