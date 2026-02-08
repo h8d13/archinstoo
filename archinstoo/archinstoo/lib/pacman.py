@@ -169,8 +169,12 @@ class Pacman:
 					ignore=shutil.ignore_patterns('S.*'),  # Skip socket files
 				)
 
-			debug(f'pyalpm Handle: root={self.target}, dbpath={self.target}/var/lib/pacman')
+			# Get architecture
+			arch = SysInfo._arch().value.lower()
+
+			debug(f'pyalpm Handle: root={self.target}, dbpath={self.target}/var/lib/pacman, arch={arch}')
 			handle = pyalpm.Handle(str(self.target), str(self.target / 'var/lib/pacman'))
+			handle.arch = [arch]  # Must be set for package installation
 			handle.add_cachedir('/var/cache/pacman/pkg')
 			handle.gpgdir = str(target_gpgdir)
 			handle.logcb = _cb_log
@@ -179,7 +183,6 @@ class Pacman:
 			# Load mirrors and get server URLs
 			MirrorListHandler().load_local_mirrors()
 			mirrors = [e.server_url for entries in _MirrorCache.data.values() for e in entries]
-			arch = SysInfo._arch().value.lower()
 
 			# Register repos with mirrors
 			for repo in ['core', 'extra']:
