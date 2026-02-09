@@ -251,8 +251,9 @@ def select_partitions_to_encrypt(
 ) -> list[PartitionModification]:
 	partitions: list[PartitionModification] = []
 
+	# do not allow encrypting the EFI system partition
 	for mod in modification:
-		partitions += list(mod.partitions)
+		partitions += [p for p in mod.partitions if not p.is_efi()]
 
 	# do not allow encrypting existing partitions that are not marked as wipe
 	avail_partitions = [p for p in partitions if not p.exists()]
