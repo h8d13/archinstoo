@@ -451,14 +451,6 @@ class Installer:
 				pass
 
 	def _generate_key_files_partitions(self) -> None:
-		boot_encrypted = any(p.is_boot() for p in self._disk_encryption.partitions)
-		root_partition = self._get_root()
-
-		# when /boot is encrypted, generate keyfile for root stored in /boot
-		# this allows single password prompt (GRUB decrypts /boot, initramfs uses keyfile for root)
-		if boot_encrypted and root_partition and root_partition in self._disk_encryption.partitions:
-			self._generate_root_keyfile_in_boot(root_partition)
-
 		for part_mod in self._disk_encryption.partitions:
 			gen_enc_file = self._disk_encryption.should_generate_encryption_file(part_mod)
 
@@ -468,34 +460,9 @@ class Installer:
 				password=self._disk_encryption.encryption_password,
 			)
 
-			# skip keyfile for /boot (useless - stored in root which isn't unlocked yet)
-			if gen_enc_file and not part_mod.is_root() and not part_mod.is_boot():
+			if gen_enc_file and not part_mod.is_root():
 				debug(f'Creating key-file: {part_mod.dev_path}')
 				luks_handler.create_keyfile(self.target)
-
-	def _generate_root_keyfile_in_boot(self, root_partition: PartitionModification | LvmVolume) -> None:
-		from .disk.luks import generate_password
-
-		keyfile_path = Path('/boot/crypto_keyfile.bin')
-		keyfile_full = self.target / keyfile_path.relative_to(keyfile_path.root)
-
-		debug(f'Creating root keyfile in /boot: {keyfile_full}')
-
-		keyfile_full.parent.mkdir(parents=True, exist_ok=True)
-		pwd = generate_password(length=512)
-		keyfile_full.write_text(pwd)
-		keyfile_full.chmod(0o400)
-
-		# add key to root LUKS device
-		luks_handler = Luks2(
-			root_partition.safe_dev_path,
-			mapper_name=root_partition.mapper_name,
-			password=self._disk_encryption.encryption_password,
-		)
-		luks_handler._add_key(keyfile_full)
-
-		# add keyfile to initramfs
-		self._files.append(str(keyfile_path))
 
 	def _generate_key_file_lvm_volumes(self) -> None:
 		for vol in self._disk_encryption.lvm_volumes:
@@ -1048,10 +1015,6 @@ class Installer:
 			else:
 				debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
 				kernel_parameters.append(f'cryptdevice=UUID={root_partition.uuid}:root')
-
-			# when /boot is encrypted, use keyfile stored in /boot to unlock root
-			if any(p.is_boot() for p in self._disk_encryption.partitions):
-				kernel_parameters.append('cryptkey=rootfs:/boot/crypto_keyfile.bin')
 
 			if id_root:
 				kernel_parameters.append('root=/dev/mapper/root')
