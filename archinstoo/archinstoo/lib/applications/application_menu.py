@@ -18,6 +18,8 @@ from archinstoo.lib.models.application import (
 	PowerManagement,
 	PowerManagementConfiguration,
 	PrintServiceConfiguration,
+	Security,
+	SecurityConfiguration,
 )
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -102,6 +104,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				preview_action=self._prev_editor,
 				key='editor_config',
 			),
+			MenuItem(
+				text=tr('Security'),
+				action=select_security,
+				preview_action=self._prev_security,
+				key='security_config',
+			),
 		]
 
 	def _prev_power_management(self, item: MenuItem) -> str | None:
@@ -157,6 +165,13 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: EditorConfiguration = item.value
 			return f'{tr("Editor")}: {config.editor.value}'
+		return None
+
+	def _prev_security(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: SecurityConfiguration = item.value
+			tools = ', '.join([t.value for t in config.tools])
+			return f'{tr("Security")}: {tools}'
 		return None
 
 
@@ -356,5 +371,33 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 			return preset
 		case ResultType.Selection:
 			return EditorConfiguration(editor=result.get_value())
+		case ResultType.Reset:
+			return None
+
+
+def select_security(preset: SecurityConfiguration | None = None) -> SecurityConfiguration | None:
+	items = [MenuItem(s.value, value=s) for s in Security]
+	group = MenuItemGroup(items)
+
+	header = tr('Would you like to install security tools?') + '\n'
+
+	if preset:
+		group.set_selected_by_value(preset.tools)
+
+	result = SelectMenu[Security](
+		group,
+		header=header,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Security')),
+		multi=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return SecurityConfiguration(tools=result.get_values())
 		case ResultType.Reset:
 			return None

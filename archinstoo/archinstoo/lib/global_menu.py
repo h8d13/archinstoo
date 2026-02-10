@@ -457,6 +457,11 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'{tr("Editor")}: {editor_config.editor.value}'
 				output += '\n'
 
+			if app_config.security_config and app_config.security_config.tools:
+				tools = ', '.join([t.value for t in app_config.security_config.tools])
+				output += f'{tr("Security")}: {tools}'
+				output += '\n'
+
 			return output
 
 		return None

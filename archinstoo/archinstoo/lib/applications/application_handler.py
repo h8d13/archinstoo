@@ -12,6 +12,7 @@ from .cat.management import ManagementApp
 from .cat.monitor import MonitorApp
 from .cat.power_management import PowerManagementApp
 from .cat.print_service import PrintServiceApp
+from .cat.security import SecurityApp
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -63,4 +64,10 @@ class ApplicationHandler:
 			EditorApp().install(
 				install_session,
 				app_config.editor_config,
+			)
+
+		if app_config.security_config and app_config.security_config.tools:
+			SecurityApp().install(
+				install_session,
+				app_config.security_config,
 			)
