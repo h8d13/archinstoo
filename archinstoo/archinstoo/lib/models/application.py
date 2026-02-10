@@ -76,6 +76,10 @@ class EditorConfigSerialization(TypedDict):
 	editor: str
 
 
+class SecurityConfigSerialization(TypedDict):
+	enabled: bool
+
+
 class ZramAlgorithm(StrEnum):
 	ZSTD = 'zstd'
 	LZO_RLE = 'lzo-rle'
@@ -98,6 +102,7 @@ class ApplicationSerialization(TypedDict):
 	management_config: NotRequired[ManagementConfigSerialization]
 	monitor_config: NotRequired[MonitorConfigSerialization]
 	editor_config: NotRequired[EditorConfigSerialization]
+	security_config: NotRequired[SecurityConfigSerialization]
 
 
 @dataclass
@@ -220,6 +225,18 @@ class EditorConfiguration:
 		)
 
 
+@dataclass
+class SecurityConfiguration:
+	enabled: bool
+
+	def json(self) -> SecurityConfigSerialization:
+		return {'enabled': self.enabled}
+
+	@classmethod
+	def parse_arg(cls, arg: SecurityConfigSerialization) -> Self:
+		return cls(arg['enabled'])
+
+
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
@@ -245,6 +262,7 @@ class ApplicationConfiguration:
 	management_config: ManagementConfiguration | None = None
 	monitor_config: MonitorConfiguration | None = None
 	editor_config: EditorConfiguration | None = None
+	security_config: SecurityConfiguration | None = None
 
 	_config_parsers: ClassVar[dict[str, type]] = {
 		'bluetooth_config': BluetoothConfiguration,
@@ -255,6 +273,7 @@ class ApplicationConfiguration:
 		'management_config': ManagementConfiguration,
 		'monitor_config': MonitorConfiguration,
 		'editor_config': EditorConfiguration,
+		'security_config': SecurityConfiguration,
 	}
 
 	@classmethod

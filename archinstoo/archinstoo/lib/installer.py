@@ -1784,6 +1784,11 @@ class Installer:
 	def add_additional_packages(self, packages: str | list[str]) -> None:
 		return self.pacman.strap(packages)
 
+	def add_kernel_param(self, params: str | list[str]) -> None:
+		if isinstance(params, str):
+			params = [params]
+		self._kernel_params.extend(params)
+
 	def enable_sudo(self, user: User, group: bool = False) -> None:
 		info(f'Enabling sudo permissions for {user.username}')
 
