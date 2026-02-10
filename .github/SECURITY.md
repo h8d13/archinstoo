@@ -3,15 +3,16 @@
 ## User config
 
 The real key to security is YOU being mindful.
+Some optionsa re also given in the menu directly.
 
 1. Limit AUR usage to "known"
 2. Common security practices
     - Firewall
+    - VPN
     - Adblocking
     - Sysctl conf
 
 3. Additionals
-    - selinux
     - apparmor 
     - firejail
     - fail2ban
