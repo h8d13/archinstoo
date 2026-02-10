@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""grimaur: Fetch, inspect, search, list, update, and install Arch Linux AUR packages.
+# pylint: disable=global-statement
+"""grimaur: Fetch, info, search, list, update, and install Arch Linux AUR packages.
 
 By default this tool queries the official AUR RPC API and automatically falls back to
 the git mirror at https://github.com/archlinux/aur.git when the endpoint is
@@ -9,14 +10,15 @@ makepkg. Official repository dependencies are installed with pacman when they ar
 missing.
 
 ## /* SPDX-FileCopyrightText: 2025
-# (O) Marcus A.
+# (O) Marcus A. <placeholder@placeholder.com>
 # (C) Eihdran L. <hadean-eon-dev@proton.me>
 
 ##  SPDX-License-Identifier: MIT */
 
-Requirements: git, makepkg, pacman, and (for installing official packages) sudo/doas/su/root.
+Requirements: git, makepkg, pacman, and (for installing official packages) priv-elev-esc binary.
 """
-# pylint: disable=global-statement
+
+from __future__ import annotations
 
 import argparse
 import heapq
@@ -129,7 +131,25 @@ def is_vcs_package(name: str) -> bool:
 	return any(name.endswith(suffix) for suffix in _VCS_SUFFIXES)
 
 
-class AurGitError(RuntimeError):
+def get_su_cmd() -> str:
+	"""Get the privilege escalation command to use."""
+	# Check environment variable first
+	if env_su := os.environ.get('GRIMAUR_SU'):
+		return env_su
+	# Check for common alternatives (prefer modern tools first)
+	for su_cmd in ('run0', 'doas', 'sudo'):
+		if shutil.which(su_cmd):
+			return su_cmd
+	raise RuntimeError('No privilege escalation tool found (run0, doas, or sudo)')
+
+
+def needs_sudo(cmd: list[str]) -> list[str]:
+	if os.geteuid() != 0:
+		cmd.insert(0, get_su_cmd())
+	return cmd
+
+
+class PacAurGitFpError(RuntimeError):
 	"""Wraps fatal errors coming from the helper."""
 
 
@@ -175,24 +195,24 @@ def aur_rpc_call(params: dict[str, Any]) -> dict[str, Any]:
 			status = response.getcode()
 			if status != 200:
 				disable_aur_rpc(f'status {status}')
-				raise AurGitError(f'AUR RPC request failed with status {status}')
+				raise PacAurGitFpError(f'AUR RPC request failed with status {status}')
 			payload = response.read()
 	except urllib.error.URLError as exc:
 		disable_aur_rpc(str(exc))
-		raise AurGitError(f'Failed to contact AUR RPC: {exc}') from exc
+		raise PacAurGitFpError(f'Failed to contact AUR RPC: {exc}') from exc
 	except Exception as exc:  # pragma: no cover - unexpected transport issues
 		disable_aur_rpc(str(exc))
-		raise AurGitError(f'Failed to contact AUR RPC: {exc}') from exc
+		raise PacAurGitFpError(f'Failed to contact AUR RPC: {exc}') from exc
 	try:
-		data: dict[str, Any] = json.loads(payload.decode())
+		data = json.loads(payload.decode())
 	except (UnicodeDecodeError, json.JSONDecodeError) as exc:
 		disable_aur_rpc('invalid JSON payload')
-		raise AurGitError('Failed to decode AUR RPC response') from exc
+		raise PacAurGitFpError('Failed to decode AUR RPC response') from exc
 	if data.get('type') == 'error':
 		error_msg = str(data.get('error') or 'Unknown AUR RPC error')
 		disable_aur_rpc(error_msg)
-		raise AurGitError(error_msg)
-	return data
+		raise PacAurGitFpError(error_msg)
+	return dict(data)
 
 
 def aur_rpc_info(package: str) -> dict[str, Any] | None:
@@ -200,7 +220,7 @@ def aur_rpc_info(package: str) -> dict[str, Any] | None:
 		return _AUR_INFO_CACHE[package]
 	try:
 		data = aur_rpc_call({'type': 'info', 'arg[]': [package]})
-	except AurGitError:
+	except PacAurGitFpError:
 		_AUR_INFO_CACHE[package] = None
 		return None
 	results = data.get('results')
@@ -243,7 +263,7 @@ def dependency_set_from_rpc(info: dict[str, Any]) -> DependencySet:
 def aur_rpc_search_results(pattern: str) -> list[dict[str, Any]]:
 	try:
 		data = aur_rpc_call({'type': 'search', 'arg': pattern})
-	except AurGitError:
+	except PacAurGitFpError:
 		return []
 	results = data.get('results')
 	if not isinstance(results, list):
@@ -254,7 +274,7 @@ def aur_rpc_search_results(pattern: str) -> list[dict[str, Any]]:
 def aur_rpc_suggest(prefix: str) -> list[str]:
 	try:
 		data = aur_rpc_call({'type': 'suggest', 'arg': prefix})
-	except AurGitError:
+	except PacAurGitFpError:
 		return []
 	results = data.get('results')
 	if not isinstance(results, list):
@@ -281,9 +301,9 @@ def run_command(
 			env=env,
 		)
 	except FileNotFoundError as exc:  # e.g. git not installed
-		raise AurGitError(f'Required command not found: {cmd[0]}') from exc
+		raise PacAurGitFpError(f'Required command not found: {cmd[0]}') from exc
 	except subprocess.CalledProcessError as exc:
-		raise AurGitError(f'Command failed with exit code {exc.returncode}: {" ".join(cmd)}\n{exc.stderr or ""}') from exc
+		raise PacAurGitFpError(f'Command failed with exit code {exc.returncode}: {" ".join(cmd)}\n{exc.stderr or ""}') from exc
 
 	if capture:
 		return completed.stdout
@@ -297,6 +317,7 @@ def ensure_clone(
 	refresh: bool = False,
 	force_reclone: bool = False,
 	repo_url: str | None = None,
+	pkgbase: str | None = None,
 ) -> Path:
 	"""Clone or refresh the package branch into dest_root/package."""
 	dest_root.mkdir(parents=True, exist_ok=True)
@@ -306,7 +327,7 @@ def ensure_clone(
 		if force_reclone:
 			shutil.rmtree(package_dir)
 		else:
-			raise AurGitError(f"Destination '{package_dir}' exists but is not a git repository. Use --force to overwrite.")
+			raise PacAurGitFpError(f"Destination '{package_dir}' exists but is not a git repository. Use --force to overwrite.")
 
 	if repo_url:
 		if package_dir.exists() and (package_dir / '.git').is_dir() and not force_reclone:
@@ -318,7 +339,9 @@ def ensure_clone(
 			shutil.rmtree(package_dir)
 		run_command(['git', 'clone', repo_url, str(package_dir)])
 	elif USE_AUR_RPC:
-		remote_url = f'{get_official_aur_git_base()}/{package}.git'
+		# Use pkgbase for clone URL (handles split packages like nvidia-580xx-dkms -> nvidia-580xx-utils)
+		clone_name = pkgbase or package
+		remote_url = f'{get_official_aur_git_base()}/{clone_name}.git'
 		if package_dir.exists() and (package_dir / '.git').is_dir() and not force_reclone:
 			if refresh:
 				run_command(['git', '-C', str(package_dir), 'fetch', 'origin'])
@@ -332,7 +355,7 @@ def ensure_clone(
 							f'origin/{package}',
 						),
 					)
-				except AurGitError:
+				except PacAurGitFpError:
 					if package_dir.exists():
 						shutil.rmtree(package_dir)
 					return ensure_clone(
@@ -346,12 +369,14 @@ def ensure_clone(
 			shutil.rmtree(package_dir)
 		run_command(['git', 'clone', remote_url, str(package_dir)])
 	else:
+		# Git mirror mode: use pkgbase for branch name (handles split packages)
+		branch_name = pkgbase or package
 		if package_dir.exists() and (package_dir / '.git').is_dir() and not force_reclone:
 			if refresh:
-				run_command(['git', '-C', str(package_dir), 'fetch', 'origin', package])
+				run_command(['git', '-C', str(package_dir), 'fetch', 'origin', branch_name])
 				try:
-					_reset_git_worktree(package_dir, (f'origin/{package}',))
-				except AurGitError:
+					_reset_git_worktree(package_dir, (f'origin/{branch_name}',))
+				except PacAurGitFpError:
 					if package_dir.exists():
 						shutil.rmtree(package_dir)
 					return ensure_clone(
@@ -359,6 +384,7 @@ def ensure_clone(
 						dest_root,
 						refresh=False,
 						force_reclone=True,
+						pkgbase=pkgbase,
 					)
 			return package_dir
 		if package_dir.exists():
@@ -368,7 +394,7 @@ def ensure_clone(
 				'git',
 				'clone',
 				'--branch',
-				package,
+				branch_name,
 				'--single-branch',
 				get_aur_remote(),
 				str(package_dir),
@@ -432,7 +458,7 @@ def parse_dependencies(srcinfo_content: str) -> tuple[str, str | None, Dependenc
 			checkdepends.update([_normalize_dep(value)])
 
 	if not pkgbase:
-		raise AurGitError('Failed to parse pkgbase from .SRCINFO')
+		raise PacAurGitFpError('Failed to parse pkgbase from .SRCINFO')
 	return (
 		pkgbase,
 		pkgdesc,
@@ -510,7 +536,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 				],
 				capture=True,
 			)
-		except AurGitError:
+		except PacAurGitFpError:
 			continue
 		run_command(
 			[
@@ -523,7 +549,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 			]
 		)
 		return
-	raise AurGitError(f'Could not reset {package_dir.name} to any of: {", ".join(refs)}')
+	raise PacAurGitFpError(f'Could not reset {package_dir.name} to any of: {", ".join(refs)}')
 
 
 def is_regex(pattern: str) -> bool:
@@ -567,7 +593,7 @@ def _pacman_returns_zero(args: Sequence[str]) -> bool:
 			check=False,
 		)
 	except FileNotFoundError as exc:
-		raise AurGitError('pacman command not found; this tool must run on Arch Linux') from exc
+		raise PacAurGitFpError('pacman command not found; this tool must run on Arch Linux') from exc
 	return proc.returncode == 0
 
 
@@ -602,7 +628,7 @@ def is_dependency_satisfied(dep: str) -> bool:
 			check=False,
 		)
 	except FileNotFoundError as exc:
-		raise AurGitError('pacman command not found; this tool must run on Arch Linux') from exc
+		raise PacAurGitFpError('pacman command not found; this tool must run on Arch Linux') from exc
 	return proc.returncode == 0
 
 
@@ -665,14 +691,14 @@ def _search_aur_candidates(dep: str, *, limit: int = 25) -> list[str]:
 	if len(dep) >= 3:
 		patterns.append(f'refs/heads/*{dep}*')
 	seen: set[str] = set()
-	git_results: list[str] = []
+	candidates: list[str] = []
 	for pattern in patterns:
 		try:
 			output = run_command(
 				['git', 'ls-remote', '--heads', get_aur_remote(), pattern],
 				capture=True,
 			)
-		except AurGitError:
+		except PacAurGitFpError:
 			continue
 		for raw_line in str(output).splitlines():
 			parts = raw_line.split()
@@ -683,10 +709,10 @@ def _search_aur_candidates(dep: str, *, limit: int = 25) -> list[str]:
 			if not name or name in seen:
 				continue
 			seen.add(name)
-			git_results.append(name)
-			if len(git_results) >= limit:
-				return git_results
-	return git_results
+			candidates.append(name)
+			if len(candidates) >= limit:
+				return candidates
+	return candidates
 
 
 def _search_aur_candidates_rpc(dep: str, *, limit: int) -> list[str]:
@@ -769,7 +795,7 @@ def resolve_official_dependency(dep: str) -> str | None:
 			],
 			capture=True,
 		)
-	except AurGitError:
+	except PacAurGitFpError:
 		return None
 	providers = [line.strip() for line in str(output).splitlines() if line.strip()]
 	if not providers:
@@ -797,7 +823,7 @@ def exists_in_aur_mirror(package: str) -> bool:
 			],
 			capture=True,
 		)
-	except AurGitError:
+	except PacAurGitFpError:
 		return False
 	return bool(str(output).strip())
 
@@ -805,7 +831,7 @@ def exists_in_aur_mirror(package: str) -> bool:
 def list_foreign_packages() -> dict[str, str]:
 	try:
 		output = run_command(['pacman', '-Qm'], capture=True, check=False)
-	except AurGitError:
+	except PacAurGitFpError:
 		return {}
 
 	names: dict[str, str] = {}
@@ -825,7 +851,7 @@ def get_local_head(package_dir: Path) -> str | None:
 		return None
 	try:
 		output = run_command(['git', '-C', str(package_dir), 'rev-parse', 'HEAD'], capture=True)
-	except AurGitError:
+	except PacAurGitFpError:
 		return None
 	return str(output).strip() or None
 
@@ -853,7 +879,7 @@ def get_remote_head(package: str) -> str | None:
 				],
 				capture=True,
 			)
-	except AurGitError:
+	except PacAurGitFpError:
 		return None
 	for line in str(output).splitlines():
 		parts = line.split()
@@ -868,7 +894,7 @@ def get_remote_head(package: str) -> str | None:
 def get_installed_version(package: str) -> str | None:
 	try:
 		output = run_command(['pacman', '-Qi', package], capture=True)
-	except AurGitError:
+	except PacAurGitFpError:
 		return None
 	for line in str(output).splitlines():
 		if line.lower().startswith('version'):
@@ -889,6 +915,22 @@ def list_installed_packages() -> None:
 	for name in sorted(foreign.keys()):
 		version = foreign[name]
 		print(f'  {style(name, BOLD)} {style(version, GREEN)}')
+
+
+def fetch_pkgbase(package: str) -> str | None:
+	"""Fetch pkgbase from .SRCINFO for split package detection (works with git mirror)."""
+	srcinfo = fetch_git_file(package, '.SRCINFO')
+	if not srcinfo:
+		return None
+	for line in srcinfo.splitlines():
+		line = line.strip()
+		if line.startswith('pkgbase') and '=' in line:
+			_, value = line.split('=', 1)
+			value = value.strip()
+			if value and value != package:
+				return value
+			break
+	return None
 
 
 def fetch_git_file(package: str, path: str) -> str | None:
@@ -941,8 +983,7 @@ def install_official_packages(packages: Iterable[str], *, noconfirm: bool) -> No
 	if noconfirm:
 		cmd.append('--noconfirm')
 	cmd.extend(pkgs)
-	if os.geteuid() != 0:
-		cmd.insert(0, 'sudo')
+	needs_sudo(cmd)
 	print(f'Installing official packages: {" ".join(pkgs)}')
 	run_command(cmd)
 	invalidate_installed_cache()
@@ -1006,7 +1047,7 @@ def collect_missing_official_packages(
 def build_and_install(package_dir: Path, *, noconfirm: bool, refresh: bool = False) -> None:
 	pkgbuild_path = package_dir / 'PKGBUILD'
 	if not pkgbuild_path.exists():
-		raise AurGitError(f'PKGBUILD missing at {pkgbuild_path}')
+		raise PacAurGitFpError(f'PKGBUILD missing at {pkgbuild_path}')
 	flags = '-sif' if refresh else '-si'
 	cmd = ['makepkg', flags, '--needed']
 	if noconfirm:
@@ -1047,16 +1088,39 @@ def install_package(
 	if repo_url:
 		# Skip AUR RPC when using custom repo URL
 		package_dir = ensure_clone(package, dest_root, refresh=refresh, repo_url=repo_url)
+		# Validate PKGBUILD exists after clone
+		if not (package_dir / 'PKGBUILD').exists():
+			# Check if this was installed as part of a split package
+			if is_installed(package):
+				print(f'Package {style(package, BOLD)} was installed as a split package')
+				return
+			raise PacAurGitFpError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 	elif USE_AUR_RPC:
 		info = aur_rpc_info(package)
 		if info is None and USE_AUR_RPC:
-			raise AurGitError(f"Package '{package}' not found via AUR RPC")
+			raise PacAurGitFpError(f"Package '{package}' not found via AUR RPC")
+	# Extract pkgbase for split packages (e.g., nvidia-580xx-dkms -> nvidia-580xx-utils)
+	pkgbase: str | None = None
+	if info:
+		pkgbase_value = info.get('PackageBase')
+		if isinstance(pkgbase_value, str) and pkgbase_value != package:
+			pkgbase = pkgbase_value
+	elif not repo_url:
+		# Git mirror mode: fetch pkgbase from .SRCINFO (no RPC)
+		pkgbase = fetch_pkgbase(package)
 	if info:
 		pkgdesc = info.get('Description') if isinstance(info.get('Description'), str) else None
 		deps = dependency_set_from_rpc(info)
 	else:
 		if package_dir is None:
 			package_dir = ensure_clone(package, dest_root, refresh=refresh, repo_url=repo_url)
+			# Validate PKGBUILD exists after clone
+			if not (package_dir / 'PKGBUILD').exists():
+				# Check if this was installed as part of a split package
+				if is_installed(package):
+					print(f'Package {style(package, BOLD)} was installed as a split package')
+					return
+				raise PacAurGitFpError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 		srcinfo = read_srcinfo(package_dir)
 		_, pkgdesc, deps = parse_dependencies(srcinfo)
 	if pkgdesc:
@@ -1090,7 +1154,7 @@ def install_package(
 
 	if unresolved:
 		missing_list = ', '.join(sorted(unresolved))
-		raise AurGitError(f'Could not resolve providers for: {missing_list}')
+		raise PacAurGitFpError(f'Could not resolve providers for: {missing_list}')
 
 	if missing_official:
 		to_install = missing_official - preinstalled_official
@@ -1108,7 +1172,7 @@ def install_package(
 			else:
 				print(f'  {dep_pkg}')
 		if not prompt_confirm(style('Proceed with building these dependencies? [y/N]: ', YELLOW)):
-			raise AurGitError('Installation aborted by user')
+			raise PacAurGitFpError('Installation aborted by user')
 
 	for aur_dep in sorted(aur_dependencies):
 		install_package(
@@ -1121,7 +1185,13 @@ def install_package(
 		)
 
 	if package_dir is None:
-		package_dir = ensure_clone(package, dest_root, refresh=refresh, repo_url=repo_url)
+		package_dir = ensure_clone(package, dest_root, refresh=refresh, repo_url=repo_url, pkgbase=pkgbase)
+		# Validate PKGBUILD exists after clone (AUR RPC path)
+		if not (package_dir / 'PKGBUILD').exists():
+			if is_installed(package):
+				print(f'Package {style(package, BOLD)} was installed as a split package')
+				return
+			raise PacAurGitFpError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 
 	build_and_install(package_dir, noconfirm=noconfirm, refresh=refresh)
 
@@ -1143,15 +1213,14 @@ def remove_package(
 	if noconfirm:
 		cmd.append('--noconfirm')
 
-	if os.geteuid() != 0:
-		cmd.insert(0, 'sudo')
+	needs_sudo(cmd)
 
 	print(f'Removing package {style(package, BOLD)}')
 	try:
 		run_command(cmd)
 		invalidate_installed_cache()
 		print(f'Successfully removed {style(package, GREEN)}')
-	except AurGitError as exc:
+	except PacAurGitFpError as exc:
 		print(f'Failed to remove package: {exc}', file=sys.stderr)
 		return
 
@@ -1182,62 +1251,14 @@ def get_ignored_packages() -> set[str]:
 		if not line or line.startswith('#'):
 			continue
 
-		# Look for IgnorePkg lines (format: IgnorePkg = pkg1 pkg2 pkg3)
+		# Look for IgnorePkg lines
+		# Format: IgnorePkg = pkg1 pkg2 pkg3
 		if line.startswith('IgnorePkg') and '=' in line:
 			_, packages = line.split('=', 1)
 			for pkg in packages.split():
 				ignored.add(pkg.strip())
 
 	return ignored
-
-
-def _run_system_update(
-	*,
-	noconfirm: bool,
-	index_only: bool,
-	download_only: bool,
-	install_only: bool,
-) -> bool:
-	"""Run pacman system update. Returns False if the caller should abort."""
-	if install_only:
-		cmd: list[str] = ['pacman', '-Su']
-	else:
-		cmd = ['pacman', '-Sy']
-		if download_only:
-			cmd[1] += 'uw'
-		elif not index_only:
-			cmd[1] += 'u'
-
-	if noconfirm:
-		cmd.append('--noconfirm')
-
-	if os.geteuid() != 0:
-		cmd.insert(0, 'sudo')
-
-	print(style('Updating system packages first...', CYAN))
-	try:
-		run_command(cmd)
-		invalidate_installed_cache()
-	except AurGitError as exc:
-		print(f'System update failed: {exc}', file=sys.stderr)
-		if not noconfirm and not prompt_confirm(style('Continue with AUR updates? [y/N]: ', YELLOW)):
-			return False
-
-	if download_only:
-		print(
-			style(
-				'WARNING: System packages downloaded but not installed (partial update state).',
-				YELLOW,
-			)
-		)
-		print(
-			style(
-				"Run 'grimaur update --global --install' or 'sudo pacman -Su' to install them.",
-				YELLOW,
-			)
-		)
-
-	return True
 
 
 def update_packages(
@@ -1256,13 +1277,41 @@ def update_packages(
 	ignored = get_ignored_packages()
 
 	if update_system:
-		if not _run_system_update(
-			noconfirm=noconfirm,
-			index_only=index_only,
-			download_only=download_only,
-			install_only=install_only,
-		):
-			return
+		if install_only:
+			cmd: list[str] = ['pacman', '-Su']
+		else:
+			cmd = ['pacman', '-Sy']
+			if download_only:
+				cmd[1] += 'uw'
+			elif not index_only:
+				cmd[1] += 'u'
+
+		if noconfirm:
+			cmd.append('--noconfirm')
+
+		needs_sudo(cmd)
+
+		try:
+			run_command(cmd)
+			invalidate_installed_cache()
+		except PacAurGitFpError as exc:
+			print(f'System update failed: {exc}', file=sys.stderr)
+			if not noconfirm and not prompt_confirm(style('Continue with AUR updates? [y/N]: ', YELLOW)):
+				return
+
+		if download_only:
+			print(
+				style(
+					'WARNING: System packages downloaded but not installed (partial update state).',
+					YELLOW,
+				)
+			)
+			print(
+				style(
+					"Run 'grimaur update --global --install' or 'sudo pacman -Su' to install them.",
+					YELLOW,
+				)
+			)
 
 		if system_only:
 			return
@@ -1377,7 +1426,7 @@ def update_packages(
 				visited=shared_visited,
 				preinstalled_official=shared_preinstalled_official,
 			)
-		except AurGitError as exc:
+		except PacAurGitFpError as exc:
 			print(f'error updating {candidate.name}: {exc}', file=sys.stderr)
 
 	for package in missing:
@@ -1555,10 +1604,10 @@ def format_search_result(index: int, result: SearchResult) -> list[str]:
 		line += f' {style("[" + ", ".join(meta_bits) + "]", DIM)}'
 	lines = [line]
 	if result.description:
-		# Limit description to 120 characters
+		# Limit description
 		desc = result.description
-		if len(desc) > 120:
-			desc = desc[:117] + '...'
+		if len(desc) > 90:
+			desc = desc[:87] + '...'
 		lines.append(f'    {style(desc, DIM)}')
 	return lines
 
@@ -1707,7 +1756,7 @@ def complete_packages_git(prefix: str, limit: int) -> list[str]:
 			['git', 'ls-remote', '--heads', get_aur_remote(), pattern],
 			capture=True,
 		)
-	except AurGitError:
+	except PacAurGitFpError:
 		return []
 	names: list[str] = []
 	for line in str(output).splitlines():
@@ -1787,13 +1836,13 @@ def inspect_package(
 					print('Optional: (none)')
 			return
 		if USE_AUR_RPC:
-			raise AurGitError(f"Package '{package}' not found via AUR RPC")
+			raise PacAurGitFpError(f"Package '{package}' not found via AUR RPC")
 
 	package_dir = ensure_clone(package, dest_root, refresh=refresh, repo_url=repo_url)
 	if target == 'PKGBUILD':
 		pkgbuild_path = package_dir / 'PKGBUILD'
 		if not pkgbuild_path.exists():
-			raise AurGitError(f'PKGBUILD not found at {pkgbuild_path}')
+			raise PacAurGitFpError(f'PKGBUILD not found at {pkgbuild_path}')
 		print(pkgbuild_path.read_text())
 		return
 	if target == 'SRCINFO':
@@ -1888,23 +1937,24 @@ def build_parser() -> argparse.ArgumentParser:
 	install_parser.add_argument('--noconfirm', action='store_true', help='Pass --noconfirm to pacman/makepkg')
 	install_parser.add_argument('--repo-url', help='Clone from custom Git URL')
 
-	remove_parser = subparsers.add_parser('remove', help='Remove an installed package')
+	remove_parser = subparsers.add_parser('uninstall', help='Remove an installed package')
 	remove_parser.add_argument('package', help='Package name to remove')
 	remove_parser.add_argument('--noconfirm', action='store_true', help='Pass --noconfirm to pacman')
 	remove_parser.add_argument(
-		'--remove-cache',
+		'--cache',
 		action='store_true',
+		dest='remove_cache',
 		help='Also remove the cached clone from dest-root',
 	)
 
 	update_parser = subparsers.add_parser(
-		'update',
+		'upgrade',
 		help='Upgrade installed foreign packages by rebuilding them from the mirror',
 	)
 	update_parser.add_argument(
 		'packages',
 		nargs='*',
-		help='Specific foreign package names to update (default: all from pacman -Qm)',
+		help='Specific foreign package names to upgrade (default: all from pacman -Qm)',
 	)
 	update_parser.add_argument('--noconfirm', action='store_true', help='Pass --noconfirm to pacman/makepkg')
 	update_parser.add_argument(
@@ -1915,28 +1965,7 @@ def build_parser() -> argparse.ArgumentParser:
 	update_parser.add_argument(
 		'--global',
 		action='store_true',
-		help='Update official repositories with pacman -Syu before updating AUR packages',
-	)
-	global_group = update_parser.add_mutually_exclusive_group()
-	update_parser.add_argument(
-		'--system-only',
-		action='store_true',
-		help='With --global, only update system packages and skip AUR updates',
-	)
-	global_group.add_argument(
-		'--index',
-		action='store_true',
-		help='With --global, only sync package databases (pacman -Sy)',
-	)
-	global_group.add_argument(
-		'--download',
-		action='store_true',
-		help='With --global, download updates without installing (pacman -Syuw)',
-	)
-	global_group.add_argument(
-		'--install',
-		action='store_true',
-		help='With --global, install already-downloaded packages (pacman -Su)',
+		help='Sync official repositories (pacman -Syu) before updating AUR packages',
 	)
 	search_parser = subparsers.add_parser('search', help='Search packages via the configured backend')
 	search_parser.add_argument('pattern', help='Substring or regex to match against package names')
@@ -1962,7 +1991,7 @@ def build_parser() -> argparse.ArgumentParser:
 		help='Limit number of completion candidates (default: 64)',
 	)
 
-	inspect_parser = subparsers.add_parser('inspect', help='Show PKGBUILD or dependency information')
+	inspect_parser = subparsers.add_parser('info', help='Show PKGBUILD or dependency information')
 	inspect_parser.add_argument('package', help='Package name to inspect')
 	inspect_parser.add_argument(
 		'--target',
@@ -1986,10 +2015,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 	commands = {
 		'fetch',
 		'install',
-		'remove',
-		'update',
+		'uninstall',
+		'upgrade',
 		'search',
-		'inspect',
+		'info',
 		'complete',
 		'list',
 	}
@@ -1998,19 +2027,19 @@ def main(argv: Sequence[str] | None = None) -> int:
 		remaining: list[str] = []
 		i = 0
 		while i < len(argv_list):
-			item = argv_list[i]
-			if item == '--':
+			arg = argv_list[i]
+			if arg == '--':
 				remaining.extend(argv_list[i:])
 				break
-			if item in _GLOBAL_FLAG_OPTIONS or any(item.startswith(f'{opt}=') for opt in _GLOBAL_VALUE_OPTIONS):
-				reordered.append(item)
-			elif item in _GLOBAL_VALUE_OPTIONS:
-				reordered.append(item)
+			if arg in _GLOBAL_FLAG_OPTIONS or any(arg.startswith(f'{opt}=') for opt in _GLOBAL_VALUE_OPTIONS):
+				reordered.append(arg)
+			elif arg in _GLOBAL_VALUE_OPTIONS:
+				reordered.append(arg)
 				if i + 1 < len(argv_list):
 					reordered.append(argv_list[i + 1])
 					i += 1
 			else:
-				remaining.append(item)
+				remaining.append(arg)
 			i += 1
 		else:
 			# ensure natural exit when loop completes without break
@@ -2022,6 +2051,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 	dest_root = Path(os.path.expanduser(args.dest_root)).resolve()
 	refresh: bool = bool(args.refresh)
+
+	# If /tmp is not writable (e.g. private mount in arch-chroot -S), fall back
+	# to a .tmp subdirectory inside dest-root so git/makepkg/curl still work
+	if not os.access('/tmp', os.W_OK):
+		fallback_tmp = dest_root / '.tmp'
+		fallback_tmp.mkdir(parents=True, exist_ok=True)
+		os.environ['TMPDIR'] = str(fallback_tmp)
+
 	if args.command is None:
 		parser.print_help()
 		return 0
@@ -2031,13 +2068,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 	USE_AUR_RPC = bool(getattr(args, 'aur_rpc', True))
 	FORCE_GIT_MIRROR = not USE_AUR_RPC
 	USE_SSH = bool(getattr(args, 'use_ssh', False))
-
-	# If /tmp is not writable (e.g. private mount in arch-chroot -S), fall back
-	# to a .tmp subdirectory inside dest-root so git/makepkg/curl still work
-	if not os.access('/tmp', os.W_OK):
-		fallback_tmp = dest_root / '.tmp'
-		fallback_tmp.mkdir(parents=True, exist_ok=True)
-		os.environ['TMPDIR'] = str(fallback_tmp)
 
 	try:
 		if args.command == 'fetch':
@@ -2059,7 +2089,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 				)
 				if unresolved:
 					missing_list = ', '.join(sorted(unresolved))
-					raise AurGitError(f'Could not resolve providers for: {missing_list}')
+					raise PacAurGitFpError(f'Could not resolve providers for: {missing_list}')
 				if missing_official:
 					install_official_packages(
 						missing_official,
@@ -2074,14 +2104,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 				preinstalled_official=preinstalled_official,
 				repo_url=repo_url,
 			)
-		elif args.command == 'remove':
+		elif args.command == 'uninstall':
 			remove_package(
 				args.package,
 				dest_root,
 				noconfirm=args.noconfirm,
 				remove_cache=args.remove_cache,
 			)
-		elif args.command == 'update':
+		elif args.command == 'upgrade':
 			update_packages(
 				dest_root,
 				refresh=True,
@@ -2089,10 +2119,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 				include_devel=bool(getattr(args, 'devel', False)),
 				update_system=bool(getattr(args, 'global', False)),
 				targets=args.packages or None,
-				system_only=bool(getattr(args, 'system_only', False)),
-				index_only=bool(getattr(args, 'index', False)),
-				download_only=bool(getattr(args, 'download', False)),
-				install_only=bool(getattr(args, 'install', False)),
 			)
 		elif args.command == 'search':
 			regex_obj: re.Pattern[str] | None = None
@@ -2134,28 +2160,28 @@ def main(argv: Sequence[str] | None = None) -> int:
 				return 0
 
 			print(style('Installing selected packages:', CYAN))
-			for sel in selected:
-				label = style(sel.name, BOLD)
-				if sel.version:
-					label = f'{label} {style(sel.version, GREEN)}'
+			for item in selected:
+				label = style(item.name, BOLD)
+				if item.version:
+					label = f'{label} {style(item.version, GREEN)}'
 				print(f'  {label}')
 
 			exit_code = 0
 			shared_visited: set[str] = set()
 			shared_preinstalled_official: set[str] = set()
-			for sel in selected:
+			for item in selected:
 				try:
 					install_package(
-						sel.name,
+						item.name,
 						dest_root,
 						refresh=refresh,
 						noconfirm=args.noconfirm,
 						visited=shared_visited,
 						preinstalled_official=shared_preinstalled_official,
 					)
-				except AurGitError as exc:
+				except PacAurGitFpError as exc:
 					exit_code = 1
-					print(f'error installing {sel.name}: {exc}', file=sys.stderr)
+					print(f'error installing {item.name}: {exc}', file=sys.stderr)
 			return exit_code
 		elif args.command == 'complete':
 			prefix = args.prefix
@@ -2166,7 +2192,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 			for name in names:
 				print(name)
 			return 0
-		elif args.command == 'inspect':
+		elif args.command == 'info':
 			inspect_package(
 				args.package,
 				dest_root,
@@ -2179,7 +2205,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 			list_installed_packages()
 		else:
 			parser.error('Unknown command')
-	except AurGitError as exc:
+	except PacAurGitFpError as exc:
 		print(f'error: {exc}', file=sys.stderr)
 		return 1
 

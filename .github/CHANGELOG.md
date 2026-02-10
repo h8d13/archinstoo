@@ -3,6 +3,34 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
 
+## 0.1.0-1
+
+    - New Security application category
+        - AppArmor support with kernel LSM parameter (`lsm=landlock,lockdown,yama,integrity,apparmor,bpf`)
+        - Firejail namespace-based sandboxing
+        - Bubblewrap low-level sandboxing
+        - Multi-select menu allowing any combination of tools
+    - Add `fail2ban` to Management tools
+        - Auto-enables `fail2ban.service` on install
+    - Add `run0` privilege escalation option
+        - Systemd-based alternative to sudo/doas
+        - Uses polkit, wheel group membership sufficient
+        - Update `base-devel-flex` and `grur`
+    - Add poweroff option to post-installation menu
+        - Useful for VM testing workflows
+    - Installer improvements
+        - Add `add_kernel_param()` method for applications to set kernel parameters
+        - Order:
+            - Move user creation before application installation
+            - Move application installation before bootloader (kernel params now included in bootloader config)
+    - CI/Workflow changes
+        - Remove publish workflow
+        - Trigger only on pushes
+    - Test updates
+        - Add security_config to test fixtures
+        - Update test assertions for new Security model
+    - Work on grimaur linting
+
 ## 0.1.0-0
 
     - ARM (aarch64) support
