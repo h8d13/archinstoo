@@ -27,7 +27,7 @@ from .interactions.general_conf import (
 	select_timezone,
 )
 from .interactions.system_conf import select_kernel, select_swap
-from .locale.locale_menu import LocaleMenu
+from .localization.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.locale import LocaleConfiguration

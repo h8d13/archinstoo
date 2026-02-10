@@ -3,7 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import assert_never
 
-from archinstoo.lib.locale.utils import list_timezones
+from archinstoo.lib.localization.utils import list_timezones
 from archinstoo.lib.models.packages import AvailablePackage, PackageGroup, Repository
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
 from archinstoo.lib.translationhandler import Language, tr
