@@ -135,11 +135,12 @@ def get_su_cmd() -> str:
 	# Check environment variable first
 	if env_su := os.environ.get('GRIMAUR_SU'):
 		return env_su
-	# Check for common alternatives (prefer modern tools first)
-	for su_cmd in ('run0', 'doas', 'sudo', 'su'):
+	# Check for common alternatives
+	# order matters here
+	for su_cmd in ('doas', 'sudo', 'run0', 'su'):
 		if shutil.which(su_cmd):
 			return su_cmd
-	raise RuntimeError('No privilege escalation tool found (run0, doas, sudo, or su)')
+	raise RuntimeError('No privilege escalation tool found')
 
 
 def needs_elev(cmd: list[str]) -> list[str]:
