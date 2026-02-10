@@ -153,7 +153,7 @@ def needs_elev(cmd: list[str]) -> list[str]:
 	return cmd
 
 
-class PacAurGitFpError(RuntimeError):
+class PacAurGitError(RuntimeError):
 	"""Wraps fatal errors coming from the helper."""
 
 
@@ -199,23 +199,23 @@ def aur_rpc_call(params: dict[str, Any]) -> dict[str, Any]:
 			status = response.getcode()
 			if status != 200:
 				disable_aur_rpc(f'status {status}')
-				raise PacAurGitFpError(f'AUR RPC request failed with status {status}')
+				raise PacAurGitError(f'AUR RPC request failed with status {status}')
 			payload = response.read()
 	except urllib.error.URLError as exc:
 		disable_aur_rpc(str(exc))
-		raise PacAurGitFpError(f'Failed to contact AUR RPC: {exc}') from exc
+		raise PacAurGitError(f'Failed to contact AUR RPC: {exc}') from exc
 	except Exception as exc:  # pragma: no cover - unexpected transport issues
 		disable_aur_rpc(str(exc))
-		raise PacAurGitFpError(f'Failed to contact AUR RPC: {exc}') from exc
+		raise PacAurGitError(f'Failed to contact AUR RPC: {exc}') from exc
 	try:
 		data = json.loads(payload.decode())
 	except (UnicodeDecodeError, json.JSONDecodeError) as exc:
 		disable_aur_rpc('invalid JSON payload')
-		raise PacAurGitFpError('Failed to decode AUR RPC response') from exc
+		raise PacAurGitError('Failed to decode AUR RPC response') from exc
 	if data.get('type') == 'error':
 		error_msg = str(data.get('error') or 'Unknown AUR RPC error')
 		disable_aur_rpc(error_msg)
-		raise PacAurGitFpError(error_msg)
+		raise PacAurGitError(error_msg)
 	return dict(data)
 
 
@@ -224,7 +224,7 @@ def aur_rpc_info(package: str) -> dict[str, Any] | None:
 		return _AUR_INFO_CACHE[package]
 	try:
 		data = aur_rpc_call({'type': 'info', 'arg[]': [package]})
-	except PacAurGitFpError:
+	except PacAurGitError:
 		_AUR_INFO_CACHE[package] = None
 		return None
 	results = data.get('results')
@@ -267,7 +267,7 @@ def dependency_set_from_rpc(info: dict[str, Any]) -> DependencySet:
 def aur_rpc_search_results(pattern: str) -> list[dict[str, Any]]:
 	try:
 		data = aur_rpc_call({'type': 'search', 'arg': pattern})
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return []
 	results = data.get('results')
 	if not isinstance(results, list):
@@ -278,7 +278,7 @@ def aur_rpc_search_results(pattern: str) -> list[dict[str, Any]]:
 def aur_rpc_suggest(prefix: str) -> list[str]:
 	try:
 		data = aur_rpc_call({'type': 'suggest', 'arg': prefix})
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return []
 	results = data.get('results')
 	if not isinstance(results, list):
@@ -305,9 +305,9 @@ def run_command(
 			env=env,
 		)
 	except FileNotFoundError as exc:  # e.g. git not installed
-		raise PacAurGitFpError(f'Required command not found: {cmd[0]}') from exc
+		raise PacAurGitError(f'Required command not found: {cmd[0]}') from exc
 	except subprocess.CalledProcessError as exc:
-		raise PacAurGitFpError(f'Command failed with exit code {exc.returncode}: {" ".join(cmd)}\n{exc.stderr or ""}') from exc
+		raise PacAurGitError(f'Command failed with exit code {exc.returncode}: {" ".join(cmd)}\n{exc.stderr or ""}') from exc
 
 	if capture:
 		return completed.stdout
@@ -331,7 +331,7 @@ def ensure_clone(
 		if force_reclone:
 			shutil.rmtree(package_dir)
 		else:
-			raise PacAurGitFpError(f"Destination '{package_dir}' exists but is not a git repository. Use --force to overwrite.")
+			raise PacAurGitError(f"Destination '{package_dir}' exists but is not a git repository. Use --force to overwrite.")
 
 	if repo_url:
 		if package_dir.exists() and (package_dir / '.git').is_dir() and not force_reclone:
@@ -359,7 +359,7 @@ def ensure_clone(
 							f'origin/{package}',
 						),
 					)
-				except PacAurGitFpError:
+				except PacAurGitError:
 					if package_dir.exists():
 						shutil.rmtree(package_dir)
 					return ensure_clone(
@@ -380,7 +380,7 @@ def ensure_clone(
 				run_command(['git', '-C', str(package_dir), 'fetch', 'origin', branch_name])
 				try:
 					_reset_git_worktree(package_dir, (f'origin/{branch_name}',))
-				except PacAurGitFpError:
+				except PacAurGitError:
 					if package_dir.exists():
 						shutil.rmtree(package_dir)
 					return ensure_clone(
@@ -462,7 +462,7 @@ def parse_dependencies(srcinfo_content: str) -> tuple[str, str | None, Dependenc
 			checkdepends.update([_normalize_dep(value)])
 
 	if not pkgbase:
-		raise PacAurGitFpError('Failed to parse pkgbase from .SRCINFO')
+		raise PacAurGitError('Failed to parse pkgbase from .SRCINFO')
 	return (
 		pkgbase,
 		pkgdesc,
@@ -540,7 +540,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 				],
 				capture=True,
 			)
-		except PacAurGitFpError:
+		except PacAurGitError:
 			continue
 		run_command(
 			[
@@ -553,7 +553,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 			]
 		)
 		return
-	raise PacAurGitFpError(f'Could not reset {package_dir.name} to any of: {", ".join(refs)}')
+	raise PacAurGitError(f'Could not reset {package_dir.name} to any of: {", ".join(refs)}')
 
 
 def is_regex(pattern: str) -> bool:
@@ -597,7 +597,7 @@ def _pacman_returns_zero(args: Sequence[str]) -> bool:
 			check=False,
 		)
 	except FileNotFoundError as exc:
-		raise PacAurGitFpError('pacman command not found; this tool must run on Arch Linux') from exc
+		raise PacAurGitError('pacman command not found; this tool must run on Arch Linux') from exc
 	return proc.returncode == 0
 
 
@@ -632,7 +632,7 @@ def is_dependency_satisfied(dep: str) -> bool:
 			check=False,
 		)
 	except FileNotFoundError as exc:
-		raise PacAurGitFpError('pacman command not found; this tool must run on Arch Linux') from exc
+		raise PacAurGitError('pacman command not found; this tool must run on Arch Linux') from exc
 	return proc.returncode == 0
 
 
@@ -702,7 +702,7 @@ def _search_aur_candidates(dep: str, *, limit: int = 25) -> list[str]:
 				['git', 'ls-remote', '--heads', get_aur_remote(), pattern],
 				capture=True,
 			)
-		except PacAurGitFpError:
+		except PacAurGitError:
 			continue
 		for raw_line in str(output).splitlines():
 			parts = raw_line.split()
@@ -799,7 +799,7 @@ def resolve_official_dependency(dep: str) -> str | None:
 			],
 			capture=True,
 		)
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return None
 	providers = [line.strip() for line in str(output).splitlines() if line.strip()]
 	if not providers:
@@ -827,7 +827,7 @@ def exists_in_aur_mirror(package: str) -> bool:
 			],
 			capture=True,
 		)
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return False
 	return bool(str(output).strip())
 
@@ -835,7 +835,7 @@ def exists_in_aur_mirror(package: str) -> bool:
 def list_foreign_packages() -> dict[str, str]:
 	try:
 		output = run_command(['pacman', '-Qm'], capture=True, check=False)
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return {}
 
 	names: dict[str, str] = {}
@@ -855,7 +855,7 @@ def get_local_head(package_dir: Path) -> str | None:
 		return None
 	try:
 		output = run_command(['git', '-C', str(package_dir), 'rev-parse', 'HEAD'], capture=True)
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return None
 	return str(output).strip() or None
 
@@ -883,7 +883,7 @@ def get_remote_head(package: str) -> str | None:
 				],
 				capture=True,
 			)
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return None
 	for line in str(output).splitlines():
 		parts = line.split()
@@ -898,7 +898,7 @@ def get_remote_head(package: str) -> str | None:
 def get_installed_version(package: str) -> str | None:
 	try:
 		output = run_command(['pacman', '-Qi', package], capture=True)
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return None
 	for line in str(output).splitlines():
 		if line.lower().startswith('version'):
@@ -1051,7 +1051,7 @@ def collect_missing_official_packages(
 def build_and_install(package_dir: Path, *, noconfirm: bool, refresh: bool = False) -> None:
 	pkgbuild_path = package_dir / 'PKGBUILD'
 	if not pkgbuild_path.exists():
-		raise PacAurGitFpError(f'PKGBUILD missing at {pkgbuild_path}')
+		raise PacAurGitError(f'PKGBUILD missing at {pkgbuild_path}')
 	flags = '-sif' if refresh else '-si'
 	cmd = ['makepkg', flags, '--needed']
 	if noconfirm:
@@ -1098,11 +1098,11 @@ def install_package(
 			if is_installed(package):
 				print(f'Package {style(package, BOLD)} was installed as a split package')
 				return
-			raise PacAurGitFpError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
+			raise PacAurGitError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 	elif USE_AUR_RPC:
 		info = aur_rpc_info(package)
 		if info is None and USE_AUR_RPC:
-			raise PacAurGitFpError(f"Package '{package}' not found via AUR RPC")
+			raise PacAurGitError(f"Package '{package}' not found via AUR RPC")
 	# Extract pkgbase for split packages (e.g., nvidia-580xx-dkms -> nvidia-580xx-utils)
 	pkgbase: str | None = None
 	if info:
@@ -1124,7 +1124,7 @@ def install_package(
 				if is_installed(package):
 					print(f'Package {style(package, BOLD)} was installed as a split package')
 					return
-				raise PacAurGitFpError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
+				raise PacAurGitError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 		srcinfo = read_srcinfo(package_dir)
 		_, pkgdesc, deps = parse_dependencies(srcinfo)
 	if pkgdesc:
@@ -1158,7 +1158,7 @@ def install_package(
 
 	if unresolved:
 		missing_list = ', '.join(sorted(unresolved))
-		raise PacAurGitFpError(f'Could not resolve providers for: {missing_list}')
+		raise PacAurGitError(f'Could not resolve providers for: {missing_list}')
 
 	if missing_official:
 		to_install = missing_official - preinstalled_official
@@ -1176,7 +1176,7 @@ def install_package(
 			else:
 				print(f'  {dep_pkg}')
 		if not prompt_confirm(style('Proceed with building these dependencies? [y/N]: ', YELLOW)):
-			raise PacAurGitFpError('Installation aborted by user')
+			raise PacAurGitError('Installation aborted by user')
 
 	for aur_dep in sorted(aur_dependencies):
 		install_package(
@@ -1195,7 +1195,7 @@ def install_package(
 			if is_installed(package):
 				print(f'Package {style(package, BOLD)} was installed as a split package')
 				return
-			raise PacAurGitFpError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
+			raise PacAurGitError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 
 	build_and_install(package_dir, noconfirm=noconfirm, refresh=refresh)
 
@@ -1224,7 +1224,7 @@ def remove_package(
 		run_command(cmd)
 		invalidate_installed_cache()
 		print(f'Successfully removed {style(package, GREEN)}')
-	except PacAurGitFpError as exc:
+	except PacAurGitError as exc:
 		print(f'Failed to remove package: {exc}', file=sys.stderr)
 		return
 
@@ -1298,7 +1298,7 @@ def update_packages(
 		try:
 			run_command(cmd)
 			invalidate_installed_cache()
-		except PacAurGitFpError as exc:
+		except PacAurGitError as exc:
 			print(f'System update failed: {exc}', file=sys.stderr)
 			if not noconfirm and not prompt_confirm(style('Continue with AUR updates? [y/N]: ', YELLOW)):
 				return
@@ -1430,7 +1430,7 @@ def update_packages(
 				visited=shared_visited,
 				preinstalled_official=shared_preinstalled_official,
 			)
-		except PacAurGitFpError as exc:
+		except PacAurGitError as exc:
 			print(f'error updating {candidate.name}: {exc}', file=sys.stderr)
 
 	for package in missing:
@@ -1760,7 +1760,7 @@ def complete_packages_git(prefix: str, limit: int) -> list[str]:
 			['git', 'ls-remote', '--heads', get_aur_remote(), pattern],
 			capture=True,
 		)
-	except PacAurGitFpError:
+	except PacAurGitError:
 		return []
 	names: list[str] = []
 	for line in str(output).splitlines():
@@ -1840,13 +1840,13 @@ def inspect_package(
 					print('Optional: (none)')
 			return
 		if USE_AUR_RPC:
-			raise PacAurGitFpError(f"Package '{package}' not found via AUR RPC")
+			raise PacAurGitError(f"Package '{package}' not found via AUR RPC")
 
 	package_dir = ensure_clone(package, dest_root, refresh=refresh, repo_url=repo_url)
 	if target == 'PKGBUILD':
 		pkgbuild_path = package_dir / 'PKGBUILD'
 		if not pkgbuild_path.exists():
-			raise PacAurGitFpError(f'PKGBUILD not found at {pkgbuild_path}')
+			raise PacAurGitError(f'PKGBUILD not found at {pkgbuild_path}')
 		print(pkgbuild_path.read_text())
 		return
 	if target == 'SRCINFO':
@@ -2093,7 +2093,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 				)
 				if unresolved:
 					missing_list = ', '.join(sorted(unresolved))
-					raise PacAurGitFpError(f'Could not resolve providers for: {missing_list}')
+					raise PacAurGitError(f'Could not resolve providers for: {missing_list}')
 				if missing_official:
 					install_official_packages(
 						missing_official,
@@ -2183,7 +2183,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 						visited=shared_visited,
 						preinstalled_official=shared_preinstalled_official,
 					)
-				except PacAurGitFpError as exc:
+				except PacAurGitError as exc:
 					exit_code = 1
 					print(f'error installing {item.name}: {exc}', file=sys.stderr)
 			return exit_code
@@ -2209,7 +2209,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 			list_installed_packages()
 		else:
 			parser.error('Unknown command')
-	except PacAurGitFpError as exc:
+	except PacAurGitError as exc:
 		print(f'error: {exc}', file=sys.stderr)
 		return 1
 
