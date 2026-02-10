@@ -831,6 +831,7 @@ class Installer:
 			self.set_vconsole(locale_config)
 			# fonts that are in the ISO but wont be on target
 			# unless we specifically request it before base
+			# otherwise mkinitcpio will be screaming at you
 			if locale_config.console_font.startswith('ter-'):
 				self._base_packages.append('terminus-font')
 
