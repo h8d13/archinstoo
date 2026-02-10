@@ -457,6 +457,11 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'{tr("Editor")}: {editor_config.editor.value}'
 				output += '\n'
 
+			if app_config.security_config:
+				output += f'{tr("Security")}: '
+				output += tr('Enabled') if app_config.security_config.enabled else tr('Disabled')
+				output += '\n'
+
 			return output
 
 		return None
