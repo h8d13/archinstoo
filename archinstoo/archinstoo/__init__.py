@@ -1,4 +1,24 @@
-"""ArchInstoo Linux Installer.
+r"""ArchInstoo Linux Installer.
+
+                               /$$
+                              | $$
+  /$$$$$$   /$$$$$$   /$$$$$$$| $$$$$$$
+ |____  $$ /$$__  $$ /$$_____/| $$__  $$
+  /$$$$$$$| $$  \__/| $$      | $$  \ $$
+ /$$__  $$| $$      | $$      | $$  | $$
+|  $$$$$$$| $$      |  $$$$$$$| $$  | $$
+ \_______/|__/       \_______/|__/  |__/
+
+
+
+ /$$                       /$$
+|__/                      | $$
+ /$$ /$$$$$$$   /$$$$$$$ /$$$$$$    /$$$$$$   /$$$$$$
+| $$| $$__  $$ /$$_____/|_  $$_/   /$$__  $$ /$$__  $$
+| $$| $$  \ $$|  $$$$$$   | $$    | $$  \ $$| $$  \ $$
+| $$| $$  | $$ \____  $$  | $$ /$$| $$  | $$| $$  | $$
+| $$| $$  | $$ /$$$$$$$/  |  $$$$/|  $$$$$$/|  $$$$$$/
+|__/|__/  |__/|_______/    \___/   \______/  \______/
 
                    ░           ░
                               ░                                             ░     ░ ░░
@@ -27,11 +47,16 @@
           ░░░░░░░░░░░           ░██████▓░█▒▓▓░░░░█▓▓█▒▓▓▓▓▓▒░▒▒▒ ▒▒▒░ ░ ░░
             ░░░░░░░░░░░░         ▓▒    ▓▓ ▒▓▓░░░░░░▒▒▒▒▒▓▓▓▓▒░░▒   ░▒▒▒░
 
-FS => BASE => BL => KERN/H => DRIVERS => AUTH/USERS/GROUPS => PROFILES => APPS(CAT) => MISC.
+FS => BASE => BL => KERN/H => DRIVERS => USERS/GROUPS => PROFILES => APPS(CAT) => MISC.
 Base refers to a minimal install:
+	=> Essential pkgs
 	=> Locales, console, kb
 	=> Pacman related
 	=> Hostname, TZ
+
+This roughly shows the `guided` flow.
+Other scripts or skip flags allow to skip some or all of these steps and run archinstoo.
+The way you need it, you are also free to modify profiles or certain install steps if desired.
 
 Misc is up to preference, which is the entire goal of this project: enable & give choices.
 But also lets standards compete in a better environment. Banner made on 10/02/2026.
