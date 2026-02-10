@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Self
 
-from archinstoo.lib.locale.utils import get_kb_layout
+from archinstoo.lib.localization.utils import get_kb_layout
 from archinstoo.lib.translationhandler import tr
 
 
