@@ -18,6 +18,7 @@ from archinstoo.lib.models.application import (
 	PowerManagement,
 	PowerManagementConfiguration,
 	PrintServiceConfiguration,
+	SecurityConfiguration,
 )
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -102,6 +103,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				preview_action=self._prev_editor,
 				key='editor_config',
 			),
+			MenuItem(
+				text=tr('Security'),
+				action=select_security,
+				preview_action=self._prev_security,
+				key='security_config',
+			),
 		]
 
 	def _prev_power_management(self, item: MenuItem) -> str | None:
@@ -157,6 +164,15 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: EditorConfiguration = item.value
 			return f'{tr("Editor")}: {config.editor.value}'
+		return None
+
+	def _prev_security(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			security_config: SecurityConfiguration = item.value
+
+			output = f'{tr("Security")}: '
+			output += tr('Enabled') if security_config.enabled else tr('Disabled')
+			return output
 		return None
 
 
@@ -358,3 +374,31 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 			return EditorConfiguration(editor=result.get_value())
 		case ResultType.Reset:
 			return None
+
+
+def select_security(preset: SecurityConfiguration | None) -> SecurityConfiguration | None:
+	group = MenuItemGroup.yes_no()
+	group.focus_item = MenuItem.no()
+
+	if preset is not None:
+		group.set_selected_by_value(preset.enabled)
+
+	header = tr('Would you like to enable AppArmor security?') + '\n'
+
+	result = SelectMenu[bool](
+		group,
+		header=header,
+		alignment=Alignment.CENTER,
+		columns=2,
+		orientation=Orientation.HORIZONTAL,
+		allow_skip=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			enabled = result.item() == MenuItem.yes()
+			return SecurityConfiguration(enabled)
+		case ResultType.Skip:
+			return preset
+		case _:
+			raise ValueError('Unhandled result type')
