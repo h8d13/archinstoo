@@ -19,6 +19,5 @@ class ManagementApp:
 		if packages:
 			install_session.add_additional_packages(packages)
 
-		# Enable services for tools that need them
 		if Management.FAIL2BAN in management_config.tools:
 			install_session.enable_service('fail2ban.service')
