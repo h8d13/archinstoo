@@ -71,6 +71,8 @@ Make your pizzas. *Una pizza con funghi e prosciutto.*
 
 ## Modify/Extend
 
+To test fixes see: [Contributing](./.github/CONTRIBUTING.md)
+
 > You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
 Or modify existing ones direcly. Can also see here for [examples](./archinstoo/examples)
 
@@ -106,7 +108,7 @@ See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
 **Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md).
 
-To test fixes see: [Contributing](./.github/CONTRIBUTING.md) to see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md) 
+To see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md) 
 
 The process would be the same with `git clone -b <branch> <url>` to test a specific fix.
 
