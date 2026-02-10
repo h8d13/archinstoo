@@ -18,8 +18,6 @@ missing.
 Requirements: git, makepkg, pacman, and (for installing official packages) priv-elev-esc binary.
 """
 
-from __future__ import annotations
-
 import argparse
 import heapq
 import json
@@ -143,7 +141,7 @@ def get_su_cmd() -> str:
 	raise RuntimeError('No privilege escalation tool found (run0, doas, or sudo)')
 
 
-def needs_sudo(cmd: list[str]) -> list[str]:
+def needs_elev(cmd: list[str]) -> list[str]:
 	if os.geteuid() != 0:
 		cmd.insert(0, get_su_cmd())
 	return cmd
@@ -983,7 +981,7 @@ def install_official_packages(packages: Iterable[str], *, noconfirm: bool) -> No
 	if noconfirm:
 		cmd.append('--noconfirm')
 	cmd.extend(pkgs)
-	needs_sudo(cmd)
+	needs_elev(cmd)
 	print(f'Installing official packages: {" ".join(pkgs)}')
 	run_command(cmd)
 	invalidate_installed_cache()
@@ -1213,7 +1211,7 @@ def remove_package(
 	if noconfirm:
 		cmd.append('--noconfirm')
 
-	needs_sudo(cmd)
+	needs_elev(cmd)
 
 	print(f'Removing package {style(package, BOLD)}')
 	try:
@@ -1289,7 +1287,7 @@ def update_packages(
 		if noconfirm:
 			cmd.append('--noconfirm')
 
-		needs_sudo(cmd)
+		needs_elev(cmd)
 
 		try:
 			run_command(cmd)
