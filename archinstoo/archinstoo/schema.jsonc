@@ -5,6 +5,8 @@
 
 	"base": ["base", "linux-firmware"],
 
+	"ter_fonts": ["terminus-fonts"], // to match iso
+	
 	"bootloaders": {
 		// note efibootmgr probably isn't needed for some of these
         // like refind should be able to self-handle entries
@@ -101,6 +103,7 @@
 	},
 
 	// this a 'advanced' option but seems to work fine
+	// run0 part of polkit/systemd
 	"privilege_escalation": {
 		"sudo": ["sudo"],
 		"doas": ["opendoas"]
@@ -133,7 +136,8 @@
 		"base-devel": ["base-devel"],
 		"man-db": ["man-db"],
 		"pacman-contrib": ["pacman-contrib"],
-		"reflector": ["reflector"]
+		"reflector": ["reflector"],
+		"fail2ban": ["fail2ban"]
 	},
 
 	"monitors": {
