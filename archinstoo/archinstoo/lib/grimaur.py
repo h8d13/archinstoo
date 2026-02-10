@@ -23,6 +23,7 @@ import heapq
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -135,15 +136,19 @@ def get_su_cmd() -> str:
 	if env_su := os.environ.get('GRIMAUR_SU'):
 		return env_su
 	# Check for common alternatives (prefer modern tools first)
-	for su_cmd in ('run0', 'doas', 'sudo'):
+	for su_cmd in ('run0', 'doas', 'sudo', 'su'):
 		if shutil.which(su_cmd):
 			return su_cmd
-	raise RuntimeError('No privilege escalation tool found (run0, doas, or sudo)')
+	raise RuntimeError('No privilege escalation tool found (run0, doas, sudo, or su)')
 
 
 def needs_elev(cmd: list[str]) -> list[str]:
 	if os.geteuid() != 0:
-		cmd.insert(0, get_su_cmd())
+		su_cmd = get_su_cmd()
+		if su_cmd == 'su':
+			# su requires special syntax: su -c 'command' root
+			return ['su', '-c', shlex.join(cmd), 'root']
+		cmd.insert(0, su_cmd)
 	return cmd
 
 
