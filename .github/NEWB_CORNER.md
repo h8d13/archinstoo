@@ -27,7 +27,7 @@ When setting up a user you can also clone dotfiles directly and will be in `/hom
 
 ## Languages Compat 🌐
 
-You can add Google fonts for extanded language support and setup mutiple keyboard when you have a basic system working.
+You can add Google fonts for extended language support and setup mutiple keyboards once you have a basic system working.
 ```shell
 noto-fonts-cjk         # Chinese, Japanese, Korean
 noto-fonts-extra       # Full extended symbols
