@@ -25,6 +25,9 @@
       },
       "power_management_config": {
           "power_management": "power-profiles-daemon"
+      },
+      "security_config": {
+          "tools": ["apparmor", "firejail"]
       }
   },
   "auth_config": {

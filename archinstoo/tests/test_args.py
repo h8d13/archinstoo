@@ -21,6 +21,8 @@ from archinstoo.lib.models.application import (
 	PowerManagement,
 	PowerManagementConfiguration,
 	PrintServiceConfiguration,
+	Security,
+	SecurityConfiguration,
 	ZramConfiguration,
 )
 from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
@@ -137,6 +139,7 @@ def test_config_file_parsing(
 			monitor_config=MonitorConfiguration(monitor=Monitor.HTOP),
 			editor_config=EditorConfiguration(editor=Editor.VIM),
 			power_management_config=PowerManagementConfiguration(power_management=PowerManagement.PPD),
+			security_config=SecurityConfiguration(tools=[Security.APPARMOR, Security.FIREJAIL]),
 		),
 		auth_config=AuthenticationConfiguration(
 			root_enc_password=Password(enc_password='password_hash'),
