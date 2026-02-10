@@ -18,6 +18,7 @@ from archinstoo.lib.models.application import (
 	PowerManagement,
 	PowerManagementConfiguration,
 	PrintServiceConfiguration,
+	Security,
 	SecurityConfiguration,
 )
 from archinstoo.lib.translationhandler import tr
@@ -168,11 +169,9 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 
 	def _prev_security(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			security_config: SecurityConfiguration = item.value
-
-			output = f'{tr("Security")}: '
-			output += tr('Enabled') if security_config.enabled else tr('Disabled')
-			return output
+			config: SecurityConfiguration = item.value
+			tools = ', '.join([t.value for t in config.tools])
+			return f'{tr("Security")}: {tools}'
 		return None
 
 
@@ -376,29 +375,29 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 			return None
 
 
-def select_security(preset: SecurityConfiguration | None) -> SecurityConfiguration | None:
-	group = MenuItemGroup.yes_no()
-	group.focus_item = MenuItem.no()
+def select_security(preset: SecurityConfiguration | None = None) -> SecurityConfiguration | None:
+	items = [MenuItem(s.value, value=s) for s in Security]
+	group = MenuItemGroup(items)
 
-	if preset is not None:
-		group.set_selected_by_value(preset.enabled)
+	header = tr('Would you like to install security tools?') + '\n'
 
-	header = tr('Would you like to enable AppArmor security?') + '\n'
+	if preset:
+		group.set_selected_by_value(preset.tools)
 
-	result = SelectMenu[bool](
+	result = SelectMenu[Security](
 		group,
 		header=header,
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
 		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Security')),
+		multi=True,
 	).run()
 
 	match result.type_:
-		case ResultType.Selection:
-			enabled = result.item() == MenuItem.yes()
-			return SecurityConfiguration(enabled)
 		case ResultType.Skip:
 			return preset
-		case _:
-			raise ValueError('Unhandled result type')
+		case ResultType.Selection:
+			return SecurityConfiguration(tools=result.get_values())
+		case ResultType.Reset:
+			return None

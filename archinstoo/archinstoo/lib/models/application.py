@@ -76,8 +76,14 @@ class EditorConfigSerialization(TypedDict):
 	editor: str
 
 
+class Security(StrEnum):
+	APPARMOR = auto()
+	FIREJAIL = auto()
+	BUBBLEWRAP = auto()
+
+
 class SecurityConfigSerialization(TypedDict):
-	enabled: bool
+	tools: list[str]
 
 
 class ZramAlgorithm(StrEnum):
@@ -227,14 +233,18 @@ class EditorConfiguration:
 
 @dataclass
 class SecurityConfiguration:
-	enabled: bool
+	tools: list[Security]
 
 	def json(self) -> SecurityConfigSerialization:
-		return {'enabled': self.enabled}
+		return {
+			'tools': [t.value for t in self.tools],
+		}
 
 	@classmethod
 	def parse_arg(cls, arg: SecurityConfigSerialization) -> Self:
-		return cls(arg['enabled'])
+		return cls(
+			tools=[Security(t) for t in arg['tools']],
+		)
 
 
 @dataclass(frozen=True)

@@ -66,5 +66,8 @@ class ApplicationHandler:
 				app_config.editor_config,
 			)
 
-		if app_config.security_config and app_config.security_config.enabled:
-			SecurityApp().install(install_session)
+		if app_config.security_config and app_config.security_config.tools:
+			SecurityApp().install(
+				install_session,
+				app_config.security_config,
+			)
