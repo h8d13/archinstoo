@@ -107,6 +107,19 @@ def perform_installation(
 		if config.swap and config.swap.enabled:
 			installation.setup_swap('zram', algo=config.swap.algorithm)
 
+		# Create users before applications (audio needs user for pipewire config)
+		if config.auth_config and config.auth_config.users:
+			installation.create_users(
+				config.auth_config.users,
+				config.auth_config.privilege_escalation,
+			)
+			ShellApp().install(installation, config.auth_config.users)
+
+		# Install applications before bootloader so kernel params (e.g. AppArmor LSM) are included
+		if app_config := config.app_config:
+			users = config.auth_config.users if config.auth_config else None
+			application_handler.install_applications(installation, app_config, users)
+
 		if config.bootloader_config and config.bootloader_config.bootloader != Bootloader.NO_BOOTLOADER:
 			if config.bootloader_config.bootloader == Bootloader.Grub and SysInfo.has_uefi():
 				installation.add_additional_packages('grub')
@@ -121,17 +134,6 @@ def perform_installation(
 				installation,
 				config.profile_config,
 			)
-
-		if config.auth_config and config.auth_config.users:
-			installation.create_users(
-				config.auth_config.users,
-				config.auth_config.privilege_escalation,
-			)
-			ShellApp().install(installation, config.auth_config.users)
-
-		if app_config := config.app_config:
-			users = config.auth_config.users if config.auth_config else None
-			application_handler.install_applications(installation, app_config, users)
 
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
