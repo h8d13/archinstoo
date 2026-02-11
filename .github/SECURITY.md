@@ -3,7 +3,7 @@
 ## User config
 
 The real key to security is YOU being mindful.
-Some optionsa re also given in the menu directly.
+Some options are also given in the menu directly.
 
 1. Limit AUR usage to "known"
 2. Common security practices
@@ -52,17 +52,4 @@ Root account can optionally be locked in the TUI.
 ## Guest users
 
 Ex: sybling using the same system as you can set a user to have access to the same apps yet no terminal.
-In the menu you can simply create the user without sudo access.
-
-`useradd -m -s /bin/rbash guestname`
-
-Or with a password 
-
-```
-useradd -m -s /bin/rbash guestname
-passwd guestname
-```
-
-### Releases
-
-Releases files are signed and can be verified with: `gpg --verify archinstoo-*.pkg.tar.zst.sig`
+In the menu you can simply create the user without elevated privileges and optionally `rbash`
