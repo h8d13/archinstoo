@@ -47,9 +47,11 @@ class GlobalMenu(AbstractMenu[None]):
 		self,
 		arch_config: ArchConfig,
 		skip_boot: bool = False,
+		skip_auth: bool = False,
 	) -> None:
 		self._arch_config = arch_config
 		self._skip_boot = skip_boot
+		self._skip_auth = skip_auth
 		menu_options = self._get_menu_options()
 
 		self._item_group = MenuItemGroup(
@@ -219,7 +221,7 @@ class GlobalMenu(AbstractMenu[None]):
 		missing = set()
 		has_superuser = auth_config.has_elevated_users if auth_config else False
 
-		if (auth_config is None or auth_config.root_enc_password is None) and not has_superuser:
+		if not self._skip_auth and (auth_config is None or auth_config.root_enc_password is None) and not has_superuser:
 			missing.add(
 				tr('Either root-password or at least 1 user with elevated privileges must be specified'),
 			)
