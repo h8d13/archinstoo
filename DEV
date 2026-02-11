@@ -61,6 +61,10 @@ case "$1" in
 	go_to
  	$ELEV pacman -U --overwrite '*' $PKG_GLOB
 	;;
+	-gl | --grep-logs)
+	go_to
+	grep -i "$2" ./archinstoo/logs/install.log
+	;;
     -tf | --test-full)
     ./RUN --config examples/config-sample-full.json
     ;;
