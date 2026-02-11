@@ -16,6 +16,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 	with Tui():
 		global_menu = GlobalMenu(config, skip_boot=True, skip_auth=True)
 		global_menu.disable_all()
+		global_menu.run(additional_title=' - Pkgs mode')
 
 		# Only enable profile, applications, and packages
 		global_menu.set_enabled('archinstoo_language', True)
@@ -75,6 +76,10 @@ def perform_installation(
 		# Additional packages
 		if config.packages and config.packages[0] != '':
 			installation.add_additional_packages(config.packages)
+
+		# Services
+		if services := config.services:
+			installation.enable_service(services)
 
 		elapsed_time = time.monotonic() - start_time
 		info(f'Package installation completed in {elapsed_time:.1f}s')

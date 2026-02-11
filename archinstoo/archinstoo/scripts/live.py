@@ -19,8 +19,10 @@ from archinstoo.lib.tui import Tui
 def show_menu(config: ArchConfig, args: Arguments) -> None:
 	with Tui():
 		global_menu = GlobalMenu(config, skip_boot=True)
+		global_menu.run(additional_title=' - Live mode')
 
 		# Disable items irrelevant for live mode
+		# We assume user built stage 1 but might still want to configure some stuff
 		global_menu.set_enabled('bootloader_config', False)
 		global_menu.set_enabled('kernels', False)
 		global_menu.set_enabled('disk_config', False)
@@ -30,8 +32,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 			global_menu.set_enabled('parallel_downloads', False)
 			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
-
-		global_menu.run(additional_title='Live mode')
 
 
 def perform_installation(
