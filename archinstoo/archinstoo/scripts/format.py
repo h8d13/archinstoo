@@ -13,7 +13,7 @@ from archinstoo.lib.tui import Tui
 
 def show_menu(config: ArchConfig) -> None:
 	with Tui():
-		global_menu = GlobalMenu(config)
+		global_menu = GlobalMenu(config, skip_auth=True)
 		global_menu.disable_all()
 
 		global_menu.set_enabled('archinstoo_language', True)
@@ -22,7 +22,6 @@ def show_menu(config: ArchConfig) -> None:
 
 		# Bypass mandatory checks for format-only mode
 		global_menu._item_group.find_by_key('timezone').mandatory = False
-		global_menu._item_group.find_by_key('auth_config').mandatory = False
 
 		global_menu.run(additional_title='Format only')
 
