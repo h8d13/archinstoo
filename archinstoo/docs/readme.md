@@ -55,7 +55,8 @@
 │   │   │       ├── management
 │   │   │       ├── monitor
 │   │   │       ├── power_management
-│   │   │       └── print_service
+│   │   │       ├── print_service
+│   │   │       └── security
 │   │   ├── args
 │   │   ├── authentication/
 │   │   │   ├── authentication_menu
@@ -84,7 +85,7 @@
 │   │   ├── interactions/
 │   │   │   ├── general_conf
 │   │   │   └── system_conf
-│   │   ├── locale/
+│   │   ├── localization/
 │   │   │   ├── locale_menu
 │   │   │   └── utils
 │   │   ├── menu/
@@ -140,7 +141,6 @@
 │       ├── mirror
 │       ├── rescue
 │       └── size
-├── archinstoo-git-r5320.4f889ed7-1-any.pkg.tar.zst
 ├── examples/
 │   ├── config-custom.json
 │   ├── config-sample-full.json
