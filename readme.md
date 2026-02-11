@@ -122,11 +122,11 @@ Any help in this regard is deeply appreciated, as testing takes just as long if 
 
 ## Building sources
 
-The idea being to promote **option 2** to use archinstall latest. Always, since fixes are often time critical.
+The idea being to promote **option 2** to use archinstoo latest. Always, since fixes are often time critical.
 
-1. In case of dev the top-level `PKGBUILD` has a few extra tools like `archiso` mentionned.
+1. In case of **DEV** the top-level `PKGBUILD` has a few extra tools like `archiso`, `pacman-contrib` mentionned.
 
-2. In case of non-dev case list can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD)
+2. In case of **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part.
 
 ---
 
