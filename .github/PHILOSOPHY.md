@@ -14,6 +14,7 @@ When asked in 2005 whether he planned to automate more of the installation proce
 He also said: *"Arch assumes you know what you're doing... it tends to stay out of your way."*
 
 Archinstoo carries this forward. The installer exists to give you an OS, not to make decisions for you.
+But it also exists to give you other tools you might need.
 
 Rebuilding more with less
 ---
@@ -129,5 +130,14 @@ This project started after contributing upstream and realizing that correctness,
 
 The goal of archinstoo is to be explicit instead of permissive, minimal instead of defensive (and bloated!), and intentional instead of heuristic-driven. Nothing is installed “just in case,” configuration is derived from actual capabilities, and users are expected to mean the choices they make. This trades broad approachability for predictable, debuggable systems and that trade-off is intentional.
 
+The main controversy in the arch world is the following:
+    - Users should always install manually once
+This makes it easier for them to troubleshoot if they ever do run into an issue, and even contribute to installer related issues.
+Bonus points for weird hardware that needed specific filesystems/bootloader, etc. 
+
+    - But maintaining an install is just as valuable
+Keeping an install clean, and/or making it what you need it to be, you will also learn a bunch. That is the beauty of arch, it is made for learners, who want control over their systems AND the latest.
+At the cost of sometimes having to be more careful: ie, manual interventions/following update prints. As seen on [NEWS](https://archlinux.org/news/)
+Countless times, but aside from that is pretty smooth sailing and the OS gets out of you way once you know what you are doing.
 
 
