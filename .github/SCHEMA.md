@@ -37,10 +37,9 @@ They let decide where to install to set up `users/groups/elevation/shells` + `st
 
 2. `Locales` & `Pacman` & `TZ`/`NTP` & `Hostname`
 
-These are mainly configurations that are found on the system or need to be setup.
-This is usually done through `systemctl` calls or `/etc` 
-
 This tries to follow the ArchWiki as close as possible.
+
+These are main auto configurations that are found on the system or need to be setup. This is usually done through `systemctl` calls or `/etc` 
 
 `terminus-font` is auto-added when requested as a console font through `/etc/vconsole.conf`
 A keymap is also set here.
