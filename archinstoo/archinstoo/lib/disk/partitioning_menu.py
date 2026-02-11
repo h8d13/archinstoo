@@ -101,6 +101,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		self._actions.update(
 			{
 				'set_filesystem': tr('Change filesystem'),
+				'resize_partition': tr('Resize partition'),  # ext4/btrfs only
 				'btrfs_mark_compressed': tr('Mark/Unmark as compressed'),  # btrfs only
 				'btrfs_mark_nodatacow': tr('Mark/Unmark as nodatacow'),  # btrfs only
 				'btrfs_set_subvolumes': tr('Set subvolumes'),  # btrfs only
@@ -262,6 +263,15 @@ class PartitioningList(ListManager[DiskSegment]):
 			else:
 				not_filter += [self._actions['assign_mountpoint']]
 
+			# resize only for existing ext4/btrfs partitions
+			if not selection.segment.exists() or selection.segment.fs_type not in (
+				FilesystemType.Ext4,
+				FilesystemType.Ext3,
+				FilesystemType.Ext2,
+				FilesystemType.Btrfs,
+			):
+				not_filter += [self._actions['resize_partition']]
+
 		return [o for o in options if o not in not_filter]
 
 	@override
@@ -351,6 +361,8 @@ class PartitioningList(ListManager[DiskSegment]):
 					self._set_btrfs_subvolumes(partition)
 				case 'delete_partition':
 					data = self._delete_partition(partition, data)
+				case 'resize_partition':
+					data = self._resize_partition(partition, data)
 		else:
 			part_mods = self.get_part_mods(data)
 			index = data.index(entry)
@@ -374,6 +386,62 @@ class PartitioningList(ListManager[DiskSegment]):
 		else:
 			part_mods = [d.segment for d in data if isinstance(d.segment, PartitionModification) and d.segment != entry]
 
+		return self.as_segments(part_mods)
+
+	def _resize_partition(
+		self,
+		entry: PartitionModification,
+		data: list[DiskSegment],
+	) -> list[DiskSegment]:
+		"""Resize an existing ext4/btrfs partition (shrink only)."""
+		device_info = self._device.device_info
+		sector_size = device_info.sector_size
+		current_size = entry.length
+		min_size = Size(1, Unit.GiB, sector_size)
+
+		def validate(value: str | None) -> str | None:
+			if not value:
+				return None
+			size = self._validate_value(sector_size, current_size, value)
+			if not size:
+				return tr('Invalid size')
+			if size >= current_size:
+				return tr('New size must be smaller than current (shrink only)')
+			if size < min_size:
+				return tr('Size must be at least 1 GiB')
+			return None
+
+		prompt = tr('Current size: {}').format(current_size.format_highest()) + '\n'
+		prompt += tr('Minimum size: {}').format(min_size.format_highest()) + '\n\n'
+		prompt += tr('All entered values can be suffixed with a unit: %, B, KB, KiB, MB, MiB...') + '\n'
+
+		title = tr('New size: ')
+
+		result = EditMenu(
+			title,
+			header=prompt,
+			allow_skip=True,
+			validator=validate,
+		).input()
+
+		if result.type_ == ResultType.Skip:
+			return data
+
+		value = result.text()
+		if not value:
+			return data
+
+		new_size = self._validate_value(sector_size, current_size, value)
+		if not new_size or new_size >= current_size or new_size < min_size:
+			return data
+
+		# Store original length and update
+		entry.original_length = entry.length
+		entry.length = new_size
+		entry.status = ModificationStatus.Modify
+
+		# Rebuild segments to show new free space
+		part_mods = self.get_part_mods(data)
 		return self.as_segments(part_mods)
 
 	def _toggle_mount_option(

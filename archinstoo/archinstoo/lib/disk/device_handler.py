@@ -758,6 +758,12 @@ class DeviceHandler:
 			disk = freshDisk(modification.device.disk.device, partition_table.value)
 		else:
 			info(f'Use existing device: {modification.device_path}')
+
+			# Resize any partitions marked for resize before modifying partition table
+			for part_mod in modification.partitions:
+				if part_mod.original_length is not None:
+					self.resize_partition(part_mod)
+
 			disk = modification.device.disk
 
 		info(f'Creating partitions: {modification.device_path}')
@@ -880,6 +886,82 @@ class DeviceHandler:
 			return True
 		except SysCallError:
 			debug(f'wipefs failed on {dev_path}')
+			return False
+
+	def resize_partition(self, part_mod: PartitionModification) -> bool:
+		"""
+		Resize an existing partition (shrink only).
+		Handles filesystem shrink first, then partition resize.
+		Supports ext2/3/4 and btrfs.
+		"""
+		if not part_mod.original_length or not part_mod.dev_path:
+			return False
+
+		dev_path = part_mod.dev_path
+		new_size = part_mod.length
+		fs_type = part_mod.fs_type
+
+		info(f'Resizing partition {dev_path} to {new_size.format_highest()}')
+
+		# Step 1: Shrink filesystem first
+		if fs_type in (FilesystemType.Ext2, FilesystemType.Ext3, FilesystemType.Ext4):
+			if not self._resize_ext_filesystem(dev_path, new_size):
+				return False
+		elif fs_type == FilesystemType.Btrfs:
+			if not self._resize_btrfs_filesystem(dev_path, new_size):
+				return False
+		else:
+			debug(f'Unsupported filesystem for resize: {fs_type}')
+			return False
+
+		# Step 2: Resize partition using parted
+		try:
+			# Get new size in sectors for parted
+			new_end_sector = part_mod.start.value + new_size.convert(part_mod.start.unit).value
+			SysCommand(f'parted -s {dev_path.parent} resizepart {part_mod.partn} {new_end_sector}s')
+			info(f'Partition {dev_path} resized successfully')
+			return True
+		except SysCallError as e:
+			debug(f'Failed to resize partition {dev_path}: {e}')
+			return False
+
+	def _resize_ext_filesystem(self, dev_path: Path, new_size: Size) -> bool:
+		"""Resize ext2/3/4 filesystem. Must be unmounted."""
+		try:
+			# Run e2fsck first (required before resize)
+			info(f'Running filesystem check on {dev_path}')
+			SysCommand(f'e2fsck -f -y {dev_path}')
+
+			# Resize filesystem (size in 1K blocks for resize2fs)
+			new_size_kb = new_size.convert(Unit.KiB).value
+			info(f'Shrinking ext filesystem on {dev_path}')
+			SysCommand(f'resize2fs {dev_path} {new_size_kb}K')
+			return True
+		except SysCallError as e:
+			debug(f'Failed to resize ext filesystem on {dev_path}: {e}')
+			return False
+
+	def _resize_btrfs_filesystem(self, dev_path: Path, new_size: Size) -> bool:
+		"""Resize btrfs filesystem. Can be done online (mounted)."""
+		# btrfs needs to be mounted to resize
+		tmp_mount = Path('/tmp/btrfs_resize_tmp')
+		tmp_mount.mkdir(parents=True, exist_ok=True)
+
+		try:
+			self.mount(dev_path, tmp_mount, create_target_mountpoint=True)
+
+			# Resize btrfs (size in bytes)
+			new_size_bytes = new_size.convert(Unit.B).value
+			info(f'Shrinking btrfs filesystem on {dev_path}')
+			SysCommand(f'btrfs filesystem resize {new_size_bytes} {tmp_mount}')
+
+			# Unmount
+			SysCommand(f'umount {tmp_mount}')
+			return True
+		except SysCallError as e:
+			debug(f'Failed to resize btrfs filesystem on {dev_path}: {e}')
+			with contextlib.suppress(SysCallError):
+				SysCommand(f'umount {tmp_mount}')
 			return False
 
 	def _wipe(self, dev_path: Path) -> None:

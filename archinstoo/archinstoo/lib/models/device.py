@@ -865,6 +865,9 @@ class PartitionModification:
 	partuuid: str | None = None
 	uuid: str | None = None
 
+	# set when resizing an existing partition (stores original length)
+	original_length: Size | None = None
+
 	_obj_id: UUID | str = field(init=False)
 
 	def __post_init__(self) -> None:
