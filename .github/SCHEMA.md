@@ -3,29 +3,29 @@
 ```
 Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help - Guided mode
 
-Archinstoo settings    +   ┌─ Info ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-  ───────────────────      │ Language: English (100%)                                                                                                                                     │
-  Disk config              │ Theme: Dark / Blue                                                                                                                                           │
-  Authentication           │                                                                                                                                                              │
-  ───────────────────      │                                                                                                                                                              │
-  Locales                + │                                                                                                                                                              │
-  Pacman config            │                                                                                                                                                              │
-  Bootloader             + │                                                                                                                                                              │
-  Swap                   + │                                                                                                                                                              │
-  Kernels                + │                                                                                                                                                              │
-  Profile                + │                                                                                                                                                              │
-  Hostname               + │                                                                                                                                                              │
-  Applications             │                                                                                                                                                              │
-  Network config           │                                                                                                                                                              │
-  Timezone                 │                                                                                                                                                              │
-  Automatic time sync    + │                                                                                                                                                              │
-  Additional packages      │                                                                                                                                                              │
-  AUR packages             │                                                                                                                                                              │
-  Custom commands        + │                                                                                                                                                              │
-  ───────────────────      │                                                                                                                                                              │
-  Install                  │                                                                                                                                                              │
-  Abort					   │																																							  │
-                           └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Archinstoo settings    +   ┌─ Info ────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  ───────────────────      │ Language: English (100%)                                                                                          │
+  Disk config              │ Theme: Dark / Blue                                                                                                │
+  Authentication           │                                                                                                                   │
+  ───────────────────      │                                                                                                                   │
+  Locales                + │                                                                                                                   │
+  Pacman config            │                                                                                                                   │
+  Bootloader             + │                                                                                                                   │
+  Swap                   + │                                                                                                                   │
+  Kernels                + │                                                                                                                   │
+  Profile                + │                                                                                                                   │
+  Hostname               + │                                                                                                                   │
+  Applications             │                                                                                                                   │
+  Network config           │                                                                                                                   │
+  Timezone                 │                                                                                                                   │
+  Automatic time sync    + │                                                                                                                   │
+  Additional packages      │                                                                                                                   │
+  AUR packages             │                                                                                                                   │
+  Custom commands        + │                                                                                                                   │
+  ───────────────────      │                                                                                                                   │
+  Install                  │                                                                                                                   │
+  Abort					   │																												   │
+                           └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 
@@ -44,6 +44,8 @@ This tries to follow the ArchWiki as close as possible.
 
 `terminus-font` is auto-added when requested as a console font through `/etc/vconsole.conf`
 A keymap is also set here.
+
+Repos, mirrors, misc options.
 
 3. `Bootloader` & `Swap` & `Kernels`/`Headers`
 
