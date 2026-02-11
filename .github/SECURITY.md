@@ -11,6 +11,7 @@ Some options are also given in the menu directly.
     - VPN
     - Adblocking
     - Sysctl conf
+    - SSH/Server hardening
 
 3. Additionals
     - apparmor 
@@ -18,6 +19,8 @@ Some options are also given in the menu directly.
     - fail2ban
     - bubblewrap
     - flatseal
+    - auditd / aide /tripwire
+    - ...
 
 ---
 
@@ -45,7 +48,7 @@ Usernames are more flexible:
 
     Root: Strong separate password, different from user accounts
 
-Root account can optionally be locked in the TUI. 
+Root account can **optionally be locked** in the TUI. 
 
 ---
 
@@ -53,3 +56,11 @@ Root account can optionally be locked in the TUI.
 
 Ex: sybling using the same system as you can set a user to have access to the same apps yet no terminal.
 In the menu you can simply create the user without elevated privileges and optionally `rbash`
+
+## Laptop Encryption
+
+Highly recommended in case of theft. 
+
+## U2F
+
+Whilst U2F keys were removed from the automated script (in favor of priv-esc choices), you can still set them up with `systemd-cryptenroll` and `pam.d` for passwordless auth/2FA/etc.

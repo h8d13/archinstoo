@@ -89,3 +89,8 @@ Also all up to user preference, AUR hidden behind `--advanced` this allows to bu
 This is experimental feature which allows me test some additional automation steps.
 
 ---
+
+## Working on customizing
+
+Configs and custom profiles references can be found in `examples/`
+

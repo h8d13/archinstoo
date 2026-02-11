@@ -47,7 +47,7 @@ git commit
 # describe what this commit fixes, ideally one fix per commit
 git push
 ```
-Then open the PR with explenations too.
+Then open the PR with explanations too.
 
 ## Discussions
 
