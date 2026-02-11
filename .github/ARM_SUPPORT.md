@@ -7,8 +7,8 @@ This usually involves the following:
 - Extracted tarball onto a storage device. [Tarballs](https://archlinuxarm.org/about/downloads)
 - Format/mount
 - Replaced kernel with appropriate for hardware
-- Hw specifics in `config.txt` or `boot.txt`
-- Setup `/etc/fstab` and `cmdline.txt`
+- (Hw specifics in `config.txt` or `boot.txt`)
+- (Setup `/etc/fstab` and `cmdline.txt`)
 
 At this stage you should have a minimal install with only kernel/and bootloader/FS.
 
