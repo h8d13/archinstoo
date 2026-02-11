@@ -78,11 +78,11 @@ This is all up to user preference, can be multi-selected / some set the global d
 
 6. `Additional packages` & `AUR packages` 
 
+You can also add something like `noto-fonts` variants at this step or anythign you would like in target really.
+
 Also all up to user preference, AUR hidden behind `--advanced` this allows to build DKMS drivers.
 
-Make sure to toggle `Kernel Headers` when doing so.
-
-You can also add something like `noto-fonts` variants at this step.
+**Make sure to toggle `Kernel Headers` when doing so.**
 
 7. `Custom commands`
 

@@ -15,6 +15,8 @@ If install speed matters to you (Current best 1m55)
 
 ## More tips in the menu 
 
+You may view main schema here: [Menu-Preview](./SCHEMA.md)
+
 Typing let's you search.
 
 ARROW keys lets you move around.
