@@ -52,7 +52,7 @@ Base refers to a minimal install:
 	=> Essential pkgs
 	=> Locales, console, kb
 	=> Pacman related
-	=> Hostname, TZ
+	=> Hostname, TZ/NTP
 
 This roughly shows the `guided` flow.
 Other scripts or skip flags allow to skip some or all of these steps and run archinstoo.

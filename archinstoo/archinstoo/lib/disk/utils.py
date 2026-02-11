@@ -1,3 +1,4 @@
+import contextlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -141,6 +142,12 @@ def umount(mountpoint: Path, recursive: bool = False) -> None:
 		cmd.append('-R')
 
 	for path in lsblk_info.mountpoints:
+		# Skip [SWAP] - it's not a real mountpoint, swap is handled separately
+		if str(path) == '[SWAP]':
+			debug(f'Skipping swap mountpoint, using swapoff on device: {mountpoint}')
+			with contextlib.suppress(SysCallError):
+				SysCommand(['swapoff', str(mountpoint)])
+			continue
 		debug(f'Unmounting mountpoint: {path}')
 		try:
 			SysCommand(cmd + [str(path)])
