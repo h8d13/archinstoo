@@ -29,6 +29,8 @@ Archinstoo in its essence should behave similarly, giving all the options makes 
 
 This is also to illustrate that for example a feature that only 1% of users actually use should not be given priorities over modular architecture.
 
+A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
+
 Some better examples:
 
 Historically this list from `default_profiles/desktop.py`
@@ -71,13 +73,9 @@ But for 5 years makepkg and similar major upstream projects support alternatives
 ```
 Anyways you start seeing the pattern... What is a 'standard' because it's actually needed, or what is a 'standard' because someone said it should be and left it in a file somewhere.
 
-A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
-
-Major upstream projects have already moved away from this mindset. For example, makepkg has supported configurable privilege escalation for years. Archinstoo aligns with this reality: if alternatives are supported upstream, installers should not force a single path.
-
 The same philosophy applies to dependencies. By removing unnecessary Python libraries and reducing the dependency surface to what is actually required, archinstoo becomes lighter, clearer, and no less capable.
 
-The same is true by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted`.
+For example, by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted`.
 
 Without losing any functionality.
 
@@ -112,7 +110,7 @@ Bcachesfs support when it was dropped by mr Torvalds, CachyOS kernel support, et
 
 To conclude this I also think some priorities should be met, as working on visual changes should not be a priority to a codebase that moves fast, and has stuff that backlogs quite quickly. 
 
-The future of such to me IS simplifying, and providing more tools, never settling for less.
+The future of such to me IS simplifying/automating, and providing more tools, never settling for less.
 
 Buried treasures
 ---
@@ -140,7 +138,11 @@ Bonus points for weird hardware that needed specific filesystems/bootloader, etc
     - But maintaining an install is just as valuable
 
 Keeping an install clean, and/or making it what you need it to be, you will also learn a bunch. That is the beauty of arch, it is made for learners, who want control over their systems AND the latest.
+
 At the cost of sometimes having to be more careful: ie, manual interventions/following update prints. As seen on [NEWS](https://archlinux.org/news/)
+
 Countless times, but aside from that is pretty smooth sailing and the OS gets out of you way once you know what you are doing.
 
+	- If you are not looking to learn command lines and/or reading docs
 
+This is the last and key point, other distros might be easier/better fit for you if you do not wish to dive deeper into your system's inner workings. But if you are interested, my guess is that you will like it here.
