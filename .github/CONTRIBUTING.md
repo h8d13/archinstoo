@@ -29,9 +29,9 @@ This contains all the necessary logic and calls to different parts of the codeba
 
 ## Contrib
 
-Any contributions through pull requests are welcome as this project aims to be a community based project to ease some Arch Linux installation steps.
+Any contributions through pull requests are welcome as this project aims to be a community based project fir Arch Linux.
 
-Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions.
+Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions. These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
 
 ## Branches
 
