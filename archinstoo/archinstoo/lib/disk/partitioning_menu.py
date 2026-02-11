@@ -356,6 +356,10 @@ class PartitioningList(ListManager[DiskSegment]):
 			index = data.index(entry)
 			part_mods.insert(index, self._create_new_partition(entry.segment, data))
 			data = self.as_segments(part_mods)
+			# Auto-set wipe if all partitions are new creates
+			if all(p.status == ModificationStatus.Create for p in part_mods):
+				self._wipe = True
+				self._prompt = self._info + self.wipe_str()
 
 		return data
 
