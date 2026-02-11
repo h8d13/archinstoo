@@ -1483,7 +1483,7 @@ class LsblkInfo:
 		log_sec = data.get('log-sec', 512)
 		sector_size = SectorSize(log_sec, Unit.B)
 		size = Size(data.get('size', 0), Unit.B, sector_size)
-		mountpoints = [Path(m) for m in data.get('mountpoints', []) if m is not None]
+		mountpoints = [Path(m) for m in data.get('mountpoints', []) if m is not None and m != '[SWAP]']
 		fsroots = [Path(f) for f in data.get('fsroots', []) if f is not None]
 		children: list[LsblkInfo] = [LsblkInfo.from_dict(c) for c in data.get('children', [])]
 
@@ -1506,7 +1506,7 @@ class LsblkInfo:
 			fsavail=data.get('fsavail'),
 			fsuse_percentage=data.get('fsuse%'),
 			type=data.get('type'),
-			mountpoint=Path(data['mountpoint']) if data.get('mountpoint') else None,
+			mountpoint=Path(data['mountpoint']) if data.get('mountpoint') and data['mountpoint'] != '[SWAP]' else None,
 			mountpoints=mountpoints,
 			fsroots=fsroots,
 			children=children,
