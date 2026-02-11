@@ -65,6 +65,10 @@ case "$1" in
 	go_to
 	grep -i "$2" ./archinstoo/logs/install.log
 	;;
+	-gc | --grep-code)
+	go_to
+	git grep -ni "$2"
+	;;
     -tf | --test-full)
     ./RUN --config examples/config-sample-full.json
     ;;
