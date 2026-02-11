@@ -55,7 +55,7 @@ Root account can **optionally be locked** in the TUI.
 
 ## Guest users
 
-Ex: sybling using the same system as you can set a user to have access to the same apps yet no terminal.
+Ex: siblings using the same system as you can set a user to have access to the same apps yet no terminal.
 In the menu you can simply create the user without elevated privileges and optionally `rbash`
 
 ## Laptop Encryption
