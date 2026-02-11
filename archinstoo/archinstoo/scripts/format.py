@@ -20,7 +20,11 @@ def show_menu(config: ArchConfig) -> None:
 		global_menu.set_enabled('disk_config', True)
 		global_menu.set_enabled('__config__', True)
 
-		global_menu.run()
+		# Bypass mandatory checks for format-only mode
+		global_menu._item_group.find_by_key('timezone').mandatory = False
+		global_menu._item_group.find_by_key('auth_config').mandatory = False
+
+		global_menu.run(additional_title='Format only')
 
 
 def perform_installation(
