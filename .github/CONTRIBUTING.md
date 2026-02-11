@@ -4,7 +4,7 @@
 
 ### Get an overview
 
-`tree -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|__pycache__'`
+Best places are probably `args.py` and `scripts/` themselves. Then `installer.py`
 
 ### Code standards
 
@@ -15,15 +15,10 @@ Small patches are preferred, and need to be tested from scratch (ISO env + Host-
 - Scripts
 
 ```
+├── __init.py__
 │   ├── scripts
-│   │   ├── format.py
-│   │   ├── guided.py
-│   │   ├── __init__.py
-│   │   ├── list.py
-│   │   ├── minimal.py
-│   │   └── rescue.py
+│   │   ├── ...
 ```
-
 These are used as a mods system, that can be used to run different kinds of installs/utilities. 
 Default being `guided` and `--script list` just returns all files in this dir.
 
@@ -40,11 +35,8 @@ Therefore, guidelines and style changes to the code might come into effect as we
 
 ## Branches
 
-`master` is currently the default branch, and that's where all future feature work is being done, this means that `master` is a living entity and will most likely never be in a fully stable state.
-For stable releases, please see the tagged commits.
-
-Patch releases will be done against their own branches, branched from stable tagged releases and will be named according to the version it will become on release.
-  *(Patches to `v2.1.4` will be done on branch `v2.1.5` for instance)*.
+For each patch create a branch specifically targeted to fix something, `master` should stay clean and accept these patches if tested/reproduced.
+It also means it should be the stable branch and single source of truth.
 
 For your submitted patches you'll likely need to accomodate yourself with branches easily:
 ```
@@ -59,7 +51,7 @@ Then open the PR with explenations too.
 
 ## Discussions
 
-Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/archlinux/archinstall/issues).<br>
+Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/h8d13/archinstoo/issues).<br>
 
 ## Coding convention
 
@@ -86,19 +78,20 @@ Can be consulted within [PCH](./.pre-commit-config.yaml)
 
 ## Submitting Changes
 
-Archinstoo uses GitHub's pull-request workflow and all contributions in terms of code should be done through pull requests.<br>
+Archinstoo uses GitHub's pull-request workflow and all contributions in terms of code should be done through pull requests.
+Direct pushes to master are premitted to code-owners.
 
 Anyone interested in archinstoo may review your code. One of the core developers will merge your pull request when they
-think it is ready. For every pull request, we aim to promptly either merge it or say why it is not yet ready; if you go
-a few days without a reply, please feel free to ping the thread by adding a new comment.
+think it is ready. For every pull request, we aim to promptly either merge it or say why it is not yet ready; or edit it and merge directly.
 
-To get your pull request merged sooner, you should explain why you are making the change. For example, you can point to
-a code sample that is outdated in terms of Arch Linux command lines. It is also helpful to add links to online
-documentation or to the implementation of the code you are changing.
+To get your pull request merged sooner, you should explain why you are making the change (and small patches). 
 
-Also, do not squash your commits after you have submitted a pull request, as this erases context during review. We will
-squash commits when the pull request is merged.
+For example, you can point to a code sample that is outdated in terms of Arch Linux command lines. 
+
+It is also helpful to add links to online documentation or to the implementation of the code you are changing.
+Any related digging/testing is actually just as useful as code.
 
 Original Creator:
 * Anton Hvornum ([@Torxed](https://github.com/Torxed))
 
+Modified for archinstoo dev: [@h8d13](https://github.com/h8d13)
