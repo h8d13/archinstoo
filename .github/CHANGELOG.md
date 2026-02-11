@@ -230,7 +230,7 @@ To see general [features](./FEATURES.MD)
     - New `logs/` dir for outputs (restore_perms on h2t mode)
     - Move `tui/` into `lib/` for more readable imports / flat lib / honest architecture
         - A lot of UI code is called from lib interactions or similar
-        - Having them as syblings when they are interlaced is misleading
+        - Having them as siblings when they are interlaced is misleading
     - Separate `env` module in utils for these types of checks
     - Rename `MirrorConfiguration` to `PacmanConfiguration`
         - Add pacman misc options (Color, ILoveCandy, VerbosePkgLists)
