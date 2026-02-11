@@ -5,7 +5,7 @@ from pathlib import Path
 from shutil import rmtree, which
 
 from archinstoo.lib.exceptions import RequirementError
-from archinstoo.lib.output import info
+from archinstoo.lib.output import error, info
 
 
 class Os:
@@ -59,7 +59,14 @@ def is_venv() -> bool:
 
 
 def _run_script(script: str) -> None:
-	importlib.import_module(f'archinstoo.scripts.{script}')
+	try:
+		# by importing we automatically run it
+		importlib.import_module(f'archinstoo.scripts.{script}')
+	except ModuleNotFoundError as e:
+		# Only catch if the missing module is the script itself
+		if f'archinstoo.scripts.{script}' in str(e):
+			error(f'Script: {script} does not exist. Try `--script list` to see your options.')
+			raise SystemExit(1)
 
 
 def reload_python() -> None:

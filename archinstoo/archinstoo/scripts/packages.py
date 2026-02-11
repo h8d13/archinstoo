@@ -16,7 +16,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 	with Tui():
 		global_menu = GlobalMenu(config, skip_boot=True, skip_auth=True)
 		global_menu.disable_all()
-		global_menu.run(additional_title=' - Pkgs mode')
+		global_menu.run(additional_title='- Pkgs mode')
 
 		# Only enable profile, applications, and packages
 		global_menu.set_enabled('archinstoo_language', True)
