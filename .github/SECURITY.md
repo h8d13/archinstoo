@@ -3,7 +3,8 @@
 ## User config
 
 The real key to security is YOU being mindful.
-Some options are also given in the menu directly.
+
+Some options are also given in the menu directly but **are always optional**.
 
 1. Limit AUR usage to "known"
 2. Common security practices
