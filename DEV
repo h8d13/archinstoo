@@ -63,7 +63,7 @@ case "$1" in
 	;;
 	-gl | --grep-logs)
 	go_to
-	grep -i "$2" ./archinstoo/logs/install.log
+	grep -i "$2" ./logs/install.log
 	;;
 	-gc | --grep-code)
 	go_to
