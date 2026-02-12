@@ -27,12 +27,17 @@ ARROW keys lets you move around.
 
 When setting up a user you can also clone dotfiles directly and will be in `/home/user/.stash`
 
-# Beginners
+## Beginners
 
 If you are new to archlinux full desktops are simpler to handle (`KDE Plasma`, `GNOME`, `Cinnamon`, `Cosmic` and the likes)
 Since a lot can be handled through GUI and not config files.
 
 You may want to install one of these first instead of a WindowManager where more manual work is expected.
+
+## Network 
+
+Network selection: Make sure to pick Network Manager (iwd) for Intel wifi cards. 
+Default backend for others. Or use minimal Copy from ISO (VMs, Desktops, example).
 
 ## Languages Compat 🌐
 
