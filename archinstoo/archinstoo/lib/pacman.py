@@ -66,7 +66,7 @@ class Pacman:
 				SysCommand('rm -rf /etc/pacman.d/gnupg', peek_output=True)
 			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
-			Pacman.run('-Sy archlinux-keyring', peek_output=True)
+			Pacman.run('-Sy archlinux-keyring --noconfirm', peek_output=True)
 			info('Pacman keyring reinitialized.')
 			return True
 		except Exception as e:
