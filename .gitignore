@@ -33,6 +33,8 @@ test_*/
 .idea/**
 .mypy_cache/
 .ruff_cache/
+.vscode/
+a/
 cmd_*
 logs/
 /guided.py
