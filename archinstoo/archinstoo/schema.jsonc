@@ -5,7 +5,7 @@
 
 	"base": ["base", "linux-firmware"],
 
-	"ter_fonts": ["terminus-fonts"], // to match iso
+	"ter_fonts": ["terminus-fonts"], // to match iso when `ter` fonts are chosen only
 	
 	"bootloaders": {
 		// note efibootmgr probably isn't needed for some of these
