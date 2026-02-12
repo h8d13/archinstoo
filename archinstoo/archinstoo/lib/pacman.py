@@ -61,8 +61,6 @@ class Pacman:
 			with contextlib.suppress(Exception):
 				SysCommand('killall gpg-agent', peek_output=True)
 			with contextlib.suppress(Exception):
-				SysCommand('umount -l /etc/pacman.d/gnupg', peek_output=True)
-			with contextlib.suppress(Exception):
 				SysCommand('rm -rf /etc/pacman.d/gnupg', peek_output=True)
 			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
