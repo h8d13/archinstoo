@@ -59,12 +59,15 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		]
 
 	def _prev_locale(self, item: MenuItem) -> str:
-		temp_locale = LocaleConfiguration(
-			self._menu_item_group.find_by_key('kb_layout').get_value(),
-			self._menu_item_group.find_by_key('sys_lang').get_value(),
-			self._menu_item_group.find_by_key('sys_enc').get_value(),
-			self._menu_item_group.find_by_key('console_font').get_value(),
-		)
+		kb_layout = self._menu_item_group.find_by_key('kb_layout').value
+		sys_lang = self._menu_item_group.find_by_key('sys_lang').value
+		sys_enc = self._menu_item_group.find_by_key('sys_enc').value
+		console_font = self._menu_item_group.find_by_key('console_font').value
+
+		if kb_layout is None or sys_lang is None or sys_enc is None:
+			return ''
+
+		temp_locale = LocaleConfiguration(kb_layout, sys_lang, sys_enc, console_font or 'default8x16')
 		return temp_locale.preview()
 
 	@override
