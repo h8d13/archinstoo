@@ -12,7 +12,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 class HyprlandProfile(WaylandProfile):
 	def __init__(self) -> None:
-		super().__init__('Hyprland', ProfileType.DesktopEnv)
+		super().__init__('Hyprland', ProfileType.WindowMgr)
 
 		self.custom_settings = {'seat_access': None}
 
