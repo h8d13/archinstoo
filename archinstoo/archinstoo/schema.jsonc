@@ -39,6 +39,19 @@
 	// always installed with any profile
 	"profile_base": ["smartmontools", "xdg-utils"],
 
+	// drivers are added before desktops
+	// because they might depend on virtual vulkan-something
+	"gfx_drivers": {
+		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
+		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
+		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
+		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
+		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
+		"Mesa (open-source)": ["mesa", "libva-mesa-driver"],
+		"VM (software rendering)": ["mesa", "libva-mesa-driver", "vulkan-swrast"],
+		"VM (virtio-gpu)": ["mesa", "libva-mesa-driver", "vulkan-virtio"]
+	},
+
 	// -- Desktop Environments --
 	"profiles": {
 		"KDE Plasma": ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "plasma-workspace"],
@@ -81,15 +94,6 @@
 
 	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
 	"xorg_profiles": ["Xfce4", "Cinnamon", "MATE", "Budgie", "LXQt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
-
-	"gfx_drivers": {
-		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
-		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
-		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
-		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
-		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
-		"Mesa (open-source)": ["mesa", "libva-mesa-driver"]
-	},
 
 	// each desktop specifies a default greeter but there is also Nogreeter type and can pick any
 	"greeters": {
