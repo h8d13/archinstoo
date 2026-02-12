@@ -20,6 +20,11 @@ class ServerProfile(Profile):
 			current_selection=current_value,
 		)
 
+	@property
+	@override
+	def packages(self) -> list[str]:
+		return ['smartmontools']
+
 	@override
 	def do_on_select(self) -> SelectResult:
 		handler = ProfileHandler()
@@ -62,6 +67,9 @@ class ServerProfile(Profile):
 
 	@override
 	def install(self, install_session: Installer) -> None:
+		# Install common packages for all server profiles
+		install_session.add_additional_packages(self.packages)
+
 		server_info = self.current_selection_names()
 		details = ', '.join(server_info)
 		info(f'Now installing the selected servers: {details}')
