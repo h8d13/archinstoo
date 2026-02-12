@@ -37,7 +37,7 @@
 	},
 
 	// always installed with desktops
-	"desktop_base": ["iwd", "wireless_tools", "smartmontools", "xdg-utils"],
+	"desktop_base": ["wireless_tools", "smartmontools", "xdg-utils"],
 
 	// -- Desktop Environments --
 	"profiles": {
@@ -163,7 +163,7 @@
 
 	"network": {
 		"nm": ["networkmanager", "wpa_supplicant"],
-		"nm_iwd": ["networkmanager"],
+		"nm_iwd": ["networkmanager", "iwd"],
 		// nm adds network-manager-applet for desktop profiles
 		"nm_desktop_extra": ["network-manager-applet"]
 	}
