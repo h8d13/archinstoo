@@ -25,7 +25,7 @@ class NetworkHandler:
 				if network_config.type == NicType.NM:  # legacy
 					packages.extend(['wpa_supplicant', 'wireless_tools'])
 				else:  # iwd for intel devices
-					packages.extend('iwd')
+					packages.append('iwd')
 
 				installation.add_additional_packages(packages)
 
