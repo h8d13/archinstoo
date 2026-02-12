@@ -29,7 +29,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu._item_group.find_by_key('timezone').mandatory = False
 
 		if not args.advanced:
-			global_menu.set_enabled('parallel_downloads', False)
 			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
 

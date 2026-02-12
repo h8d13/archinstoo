@@ -185,6 +185,7 @@ def test_config_file_parsing(
 					sign_option=SignOption.TrustAll,
 				),
 			],
+			parallel_downloads=66,
 		),
 		network_config=NetworkConfiguration(
 			type=NicType.MANUAL,
@@ -210,7 +211,6 @@ def test_config_file_parsing(
 		kernels=['linux-zen'],
 		ntp=True,
 		packages=['firefox'],
-		parallel_downloads=66,
 		swap=ZramConfiguration(enabled=False),
 		timezone='UTC',
 		services=['service_1', 'service_2'],

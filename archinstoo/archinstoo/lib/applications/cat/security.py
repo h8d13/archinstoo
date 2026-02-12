@@ -46,15 +46,15 @@ class SecurityApp:
 		for tool in security_config.tools:
 			match tool:
 				case Security.APPARMOR:
-					debug('Installing Security (AppArmor)')
+					debug('Installing security: AppArmor')
 					install_session.add_additional_packages(self.apparmor_packages)
 					install_session.enable_service(self.apparmor_services)
 					install_session.add_kernel_param(self.apparmor_kernel_params)
 
 				case Security.FIREJAIL:
-					debug('Installing Security (Firejail)')
+					debug('Installing security: Firejail')
 					install_session.add_additional_packages(self.firejail_packages)
 
 				case Security.BUBBLEWRAP:
-					debug('Installing Security (Bubblewrap)')
+					debug('Installing security: Bubblewrap')
 					install_session.add_additional_packages(self.bubblewrap_packages)

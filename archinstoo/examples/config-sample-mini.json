@@ -86,7 +86,6 @@
     "network_config": {
         "type": "nm_iwd"
     },
-    "parallel_downloads": 0,
     "timezone": "Europe/Berlin",
     "ntp": true,
     "packages": [],
