@@ -74,6 +74,10 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		additional_title: str | None = None,
 	) -> LocaleConfiguration:
 		super().run(additional_title=additional_title)
+		# If reset, return defaults instead of config with None fields
+		# Note: kb_layout can be None at runtime after reset despite type annotation
+		if getattr(self._locale_conf, 'kb_layout', None) is None:
+			return LocaleConfiguration.default()
 		return self._locale_conf
 
 	def _select_kb_layout(self, preset: str | None) -> str | None:
