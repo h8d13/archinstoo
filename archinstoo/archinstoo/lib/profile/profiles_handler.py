@@ -206,17 +206,16 @@ class ProfileHandler:
 		if not profile_config.profiles:
 			return
 
-		# Install all selected profiles
-		for profile in profile_config.profiles:
-			profile.install(install_session)
-
-		# Install gfx driver if any profile needs display servers
+		# Install gfx driver first as some desktops might need to satisfy deps (vulkan-driver virtual group)
 		if profile_config.gfx_driver and profile_config.display_servers():
-			# Use first profile with display servers for driver installation
 			for profile in profile_config.profiles:
 				if profile.display_servers():
 					self.install_gfx_driver(install_session, profile_config.gfx_driver, profile)
 					break
+
+		# Install all selected profiles AFTER
+		for profile in profile_config.profiles:
+			profile.install(install_session)
 
 		# Install greeter if any profile supports it
 		if profile_config.greeter and profile_config.is_greeter_supported():
