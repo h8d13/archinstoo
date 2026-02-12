@@ -348,11 +348,8 @@ class GlobalMenu(AbstractMenu[None]):
 	def _locale_selection(self, preset: LocaleConfiguration) -> LocaleConfiguration:
 		return LocaleMenu(preset).run()
 
-	def _prev_locale(self, item: MenuItem) -> str | None:
-		if not item.value:
-			return None
-
-		config: LocaleConfiguration = item.value
+	def _prev_locale(self, item: MenuItem) -> str:
+		config: LocaleConfiguration = item.value or LocaleConfiguration.default()
 		return config.preview()
 
 	def _prev_network_config(self, item: MenuItem) -> str | None:
