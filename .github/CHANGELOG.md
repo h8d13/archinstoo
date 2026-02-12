@@ -5,7 +5,8 @@ To see general [features](./FEATURES.MD)
 
 ## 0.1.1-1
     - Add `smartmontools` to Server profiles (disk health monitoring)
-        - This means original profiles list now only contains `xdg-utils` for desktops, the rest is all in logic or choices.
+        - This means original profiles list now only contains `xdg-utils | smartmontools` for desktops
+        - The rest is all in logic or choices.
 
 Down from original list:
 
