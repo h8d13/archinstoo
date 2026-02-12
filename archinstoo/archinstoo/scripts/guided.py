@@ -3,7 +3,6 @@ import os
 import time
 from pathlib import Path
 
-from archinstoo import SysInfo
 from archinstoo.default_profiles.profile import DisplayServer
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
@@ -118,9 +117,6 @@ def perform_installation(
 			application_handler.install_applications(installation, app_config, users)
 
 		if config.bootloader_config and config.bootloader_config.bootloader != Bootloader.NO_BOOTLOADER:
-			if config.bootloader_config.bootloader == Bootloader.Grub and SysInfo.has_uefi():
-				installation.add_additional_packages('grub')
-
 			installation.add_bootloader(config.bootloader_config.bootloader, config.bootloader_config.uki, config.bootloader_config.removable)
 
 		# If user selected to copy the current ISO network configuration
