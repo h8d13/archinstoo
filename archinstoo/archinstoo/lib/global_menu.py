@@ -19,7 +19,6 @@ from .bootloader.bootloader_menu import BootloaderMenu
 from .configuration import ConfigurationHandler
 from .hardware import SysInfo
 from .interactions.general_conf import (
-	add_number_of_parallel_downloads,
 	select_additional_packages,
 	select_aur_packages,
 	select_hostname,
@@ -153,13 +152,6 @@ class GlobalMenu(AbstractMenu[None]):
 				value={},
 				preview_action=self._prev_network_config,
 				key='network_config',
-			),
-			MenuItem(
-				text=tr('Parallel Downloads'),
-				action=add_number_of_parallel_downloads,
-				value=0,
-				preview_action=self._prev_parallel_dw,
-				key='parallel_downloads',
 			),
 			MenuItem(
 				text=tr('Timezone'),
@@ -536,11 +528,6 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_hostname(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			return f'{tr("Hostname")}: {item.value}'
-		return None
-
-	def _prev_parallel_dw(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			return f'{tr("Parallel Downloads")}: {item.value}'
 		return None
 
 	def _select_kernel(self, preset: list[str]) -> list[str]:

@@ -71,7 +71,6 @@ class ArchConfig:
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
-	parallel_downloads: int = 0
 	timezone: str | None = None
 	services: list[str] = field(default_factory=list)
 	custom_commands: list[str] = field(
@@ -99,7 +98,6 @@ class ArchConfig:
 			'auth_config': self.auth_config.json() if self.auth_config else None,
 			'app_config': self.app_config.json() if self.app_config else None,
 			'network_config': self.network_config.json() if self.network_config else None,
-			'parallel_downloads': self.parallel_downloads,
 			'timezone': self.timezone,
 			'ntp': self.ntp,
 			'packages': self.packages,
@@ -121,7 +119,6 @@ class ArchConfig:
 				'bug_report_url': 'bug_report_url',
 				'script': 'script',
 				'hostname': 'hostname',
-				'parallel_downloads': 'parallel_downloads',
 				'timezone': 'timezone',
 				'kernels': 'kernels',
 				'packages': 'packages',

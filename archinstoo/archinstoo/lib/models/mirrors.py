@@ -399,6 +399,7 @@ class _PacmanConfigurationSerialization(TypedDict):
 	optional_repositories: list[str]
 	custom_repositories: list[_CustomRepositorySerialization]
 	pacman_options: NotRequired[list[str]]
+	parallel_downloads: NotRequired[int]
 
 
 # Available pacman.conf misc options
@@ -412,6 +413,7 @@ class PacmanConfiguration:
 	optional_repositories: list[Repository] = field(default_factory=list)
 	custom_repositories: list[CustomRepository] = field(default_factory=list)
 	pacman_options: list[str] = field(default_factory=list)
+	parallel_downloads: int = 0
 
 	@property
 	def region_names(self) -> str:
@@ -435,6 +437,9 @@ class PacmanConfiguration:
 
 		if self.pacman_options:
 			config['pacman_options'] = self.pacman_options
+
+		if self.parallel_downloads:
+			config['parallel_downloads'] = self.parallel_downloads
 
 		return config
 
@@ -503,5 +508,8 @@ class PacmanConfiguration:
 
 		if 'pacman_options' in args:
 			config.pacman_options = args['pacman_options']
+
+		if 'parallel_downloads' in args:
+			config.parallel_downloads = args['parallel_downloads']
 
 		return config

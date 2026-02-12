@@ -32,7 +32,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu = GlobalMenu(config, args.skip_boot)
 
 		if not args.advanced:
-			global_menu.set_enabled('parallel_downloads', False)
 			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
 

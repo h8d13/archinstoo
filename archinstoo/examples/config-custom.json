@@ -22,7 +22,8 @@
         "pacman_options": [
             "Color",
             "ILoveCandy"
-        ]
+        ],
+        "parallel_downloads": 5
     },
     "bootloader_config": {
         "bootloader": "Grub",
@@ -65,7 +66,6 @@
     "network_config": {
         "type": "iso"
     },
-    "parallel_downloads": 5,
     "timezone": "US/Eastern",
     "ntp": true,
     "packages": [],

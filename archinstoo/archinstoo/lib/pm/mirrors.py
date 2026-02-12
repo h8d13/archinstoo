@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import ClassVar, override
 
 from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.interactions import add_number_of_parallel_downloads
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.mirrors import (
@@ -265,6 +266,13 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 				preview_action=self._prev_pacman_options,
 				key='pacman_options',
 			),
+			MenuItem(
+				text=tr('Parallel Downloads'),
+				action=add_number_of_parallel_downloads,
+				value=self._mirror_config.parallel_downloads,
+				preview_action=self._prev_parallel_downloads,
+				key='parallel_downloads',
+			),
 		]
 
 	def _prev_regions(self, item: MenuItem) -> str:
@@ -310,6 +318,11 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 
 		options: list[str] = item.value
 		return '\n'.join(options)
+
+	def _prev_parallel_downloads(self, item: MenuItem) -> str | None:
+		if not item.value:
+			return None
+		return str(item.value)
 
 	@override
 	def run(self, additional_title: str | None = None) -> PacmanConfiguration:
