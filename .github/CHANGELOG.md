@@ -11,7 +11,7 @@ To see general [features](./FEATURES.MD)
         - Plan future implemetation for other drivers
         - Virtual: `vulkan-driver` 
         ALREADY COVERED: `nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast, vulkan-virtio, vulkan-nouveau`
-        TODO: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno, vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
+        MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno, vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
         - Fix gfx driver installation OoO: now installs BEFORE profiles to satisfy vulkan-driver dependency
         - Update recommendation text with VM detection hint
     - Pacman config changes
