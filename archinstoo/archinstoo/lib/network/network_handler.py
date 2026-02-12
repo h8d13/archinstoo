@@ -23,7 +23,7 @@ class NetworkHandler:
 			case NicType.NM | NicType.NM_IWD:
 				packages = ['networkmanager']
 				if network_config.type == NicType.NM:
-					packages.append('wpa_supplicant')
+					packages.extend(['wpa_supplicant', 'wireless_tools'])
 
 				installation.add_additional_packages(packages)
 

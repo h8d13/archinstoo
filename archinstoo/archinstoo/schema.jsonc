@@ -36,8 +36,8 @@
 		"zram": ["zram-generator"]
 	},
 
-	// always installed with desktops
-	"desktop_base": ["wireless_tools", "smartmontools", "xdg-utils"],
+	// always installed with any profile
+	"profile_base": ["smartmontools", "xdg-utils"],
 
 	// -- Desktop Environments --
 	"profiles": {
