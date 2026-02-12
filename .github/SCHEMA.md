@@ -94,4 +94,6 @@ This is experimental feature which allows me test some additional automation ste
 
 Configs and custom profiles references can be found in [`examples/`](../archinstoo/examples/)
 
+You can also add them directly in [`default_profiles/`](../archinstoo/archinstoo/default_profiles/) following other profiles as example or modify existing ones.
+
 And master [schema](../archinstoo/archinstoo/schema.jsonc)
