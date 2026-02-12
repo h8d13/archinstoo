@@ -349,7 +349,9 @@ class GlobalMenu(AbstractMenu[None]):
 		return LocaleMenu(preset).run()
 
 	def _prev_locale(self, item: MenuItem) -> str:
-		config: LocaleConfiguration = item.value or LocaleConfiguration.default()
+		config: LocaleConfiguration | None = item.value
+		if config is None or config.kb_layout is None:
+			config = LocaleConfiguration.default()
 		return config.preview()
 
 	def _prev_network_config(self, item: MenuItem) -> str | None:
