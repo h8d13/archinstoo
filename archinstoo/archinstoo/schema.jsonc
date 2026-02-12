@@ -44,6 +44,7 @@
 	"gfx_drivers": {
 		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
 		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
+		"Asahi (Apple Silicon)": ["mesa", "libva-mesa-driver", "vulkan-asahi"],
 		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
 		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
 		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],

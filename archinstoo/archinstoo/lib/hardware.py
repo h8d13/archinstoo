@@ -47,6 +47,7 @@ class GfxPackage(Enum):
 	Mesa = 'mesa'
 	NvidiaOpen = 'nvidia-open'
 	NvidiaOpenDkms = 'nvidia-open-dkms'
+	VulkanAsahi = 'vulkan-asahi'
 	VulkanIntel = 'vulkan-intel'
 	VulkanRadeon = 'vulkan-radeon'
 	VulkanNouveau = 'vulkan-nouveau'
@@ -62,6 +63,7 @@ class GfxPackage(Enum):
 class GfxDriver(Enum):
 	AllOpenSource = 'All open-source'
 	AmdOpenSource = 'AMD / ATI (open-source)'
+	AsahiOpenSource = 'Asahi (Apple Silicon)'
 	IntelOpenSource = 'Intel (open-source)'
 	NvidiaOpenKernel = 'Nvidia (open kernel module for newer GPUs, Turing+)'
 	NvidiaOpenSource = 'Nvidia (open-source nouveau driver)'
@@ -148,11 +150,17 @@ class GfxDriver(Enum):
 					GfxPackage.Mesa,
 					GfxPackage.LibvaMesaDriver,
 				]
-				# Add druver based on detection
+				# Add driver based on detection
 				if SysInfo.has_intel_graphics():
 					packages.append(GfxPackage.VulkanIntel)
 				elif SysInfo.has_amd_graphics():
 					packages.append(GfxPackage.VulkanRadeon)
+			case GfxDriver.AsahiOpenSource:
+				packages += [
+					GfxPackage.Mesa,
+					GfxPackage.LibvaMesaDriver,
+					GfxPackage.VulkanAsahi,
+				]
 			case GfxDriver.VMSoftware:
 				packages += [
 					GfxPackage.Mesa,
@@ -297,6 +305,13 @@ class SysInfo:
 	@staticmethod
 	def has_intel_graphics() -> bool:
 		return any('intel' in x.lower() for x in _sys_info.graphics_devices)
+
+	@staticmethod
+	def has_apple_graphics() -> bool:
+		if SysInfo.arch() != 'aarch64':
+			return False
+		vendor = SysInfo.sys_vendor()
+		return vendor is not None and 'apple' in vendor.lower()
 
 	@staticmethod
 	def cpu_vendor() -> CpuVendor | None:

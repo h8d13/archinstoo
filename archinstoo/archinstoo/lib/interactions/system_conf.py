@@ -59,8 +59,11 @@ def select_driver(
 	What it needs to run and be in minimal functional state.
 	"""
 	if not options:
-		if SysInfo.arch() != 'x86_64':
-			# On ARM only mesa-based drivers are available
+		if SysInfo.has_apple_graphics():
+			# Apple Silicon - Asahi driver
+			options = [GfxDriver.AsahiOpenSource, GfxDriver.MesaOpenSource]
+		elif SysInfo.arch() != 'x86_64':
+			# Other ARM - only mesa-based drivers available
 			options = [GfxDriver.MesaOpenSource]
 		else:
 			options = list(GfxDriver)
@@ -75,7 +78,9 @@ def select_driver(
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	group = MenuItemGroup(items, sort_items=True)
-	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
+	if GfxDriver.AsahiOpenSource in options and SysInfo.has_apple_graphics():
+		default_driver = GfxDriver.AsahiOpenSource
+	elif GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
 		default_driver = GfxDriver.MesaOpenSource
 	elif GfxDriver.AllOpenSource in options:
 		default_driver = GfxDriver.AllOpenSource
@@ -89,6 +94,8 @@ def select_driver(
 	header = ''
 	if SysInfo.is_vm():
 		header += tr('VM detected: use VM (software rendering) or VM (virtio-gpu) options.\n')
+	if SysInfo.has_apple_graphics():
+		header += tr('Apple Silicon detected: use Asahi (Apple Silicon) option.\n')
 	if SysInfo.has_amd_graphics():
 		header += tr('AMD detected: use All open-source, AMD / ATI, or Mesa (open-source) options.\n')
 	if SysInfo.has_intel_graphics():
