@@ -32,6 +32,7 @@ class NetworkHandler:
 
 				installation.enable_service('NetworkManager.service')
 				if network_config.type == NicType.NM_IWD:
+					packages.append('iwd')
 					installation.configure_nm_iwd()
 					installation.disable_service('iwd.service')
 

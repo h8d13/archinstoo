@@ -63,12 +63,17 @@ class PacmanConfig:
 				repos_to_enable.append(repo.value)
 
 		content = self._config_path.read_text().splitlines(keepends=True)
+		options_found: set[str] = set()
+		last_opt_row = 0
 
 		for row, line in enumerate(content):
 			# Uncomment misc options (Color, ILoveCandy, etc.)
 			for opt in self._misc_options:
-				if re.match(rf'^#\s*{opt}\b', line):
-					content[row] = re.sub(r'^#\s*', '', line)
+				if re.match(rf'^#?\s*{opt}\b', line):
+					options_found.add(opt)
+					last_opt_row = row
+					if line.lstrip().startswith('#'):
+						content[row] = re.sub(r'^#\s*', '', line)
 					break
 
 			# Check if this is a commented repository section that needs to be enabled
@@ -81,6 +86,9 @@ class PacmanConfig:
 				# also uncomment the next line (Include statement) if it exists and is commented
 				if row + 1 < len(content) and content[row + 1].lstrip().startswith('#'):
 					content[row + 1] = re.sub(r'^#\s*', '', content[row + 1])
+
+		for opt in set(self._misc_options) - options_found:
+			content.insert(last_opt_row + 1, f'{opt}\n')
 
 		# Append custom repositories (skip if already exists)
 		content_str = ''.join(content)
