@@ -128,6 +128,14 @@ def perform_installation(
 				config.profile_config,
 			)
 
+		# note we add these before profiles as they might affect vulkan-driver
+		if config.kernel_headers:
+			headers = [f'{kernel}-headers' for kernel in config.kernels]
+			installation.add_additional_packages(headers)
+
+		if config.aur_packages and config.auth_config:
+			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
+
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
 
@@ -137,13 +145,6 @@ def perform_installation(
 
 		if config.packages and config.packages[0] != '':
 			installation.add_additional_packages(config.packages)
-
-		if config.kernel_headers:
-			headers = [f'{kernel}-headers' for kernel in config.kernels]
-			installation.add_additional_packages(headers)
-
-		if config.aur_packages and config.auth_config:
-			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
 
 		if config.ntp:
 			installation.activate_time_synchronization()
