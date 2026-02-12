@@ -62,8 +62,8 @@ def collect(config: dict[str, Any]) -> set[str]:
 	custom_settings = profile.get('custom_settings', {})
 	profiles = SCHEMA['profiles']
 
-	if main == 'Desktop':
-		pkgs.update(SCHEMA['desktop_base'])
+	if main:
+		pkgs.update(SCHEMA['profile_base'])
 
 	for name in details:
 		if name in profiles:
