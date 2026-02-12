@@ -92,6 +92,6 @@ This is experimental feature which allows me test some additional automation ste
 
 ## Working on customizing
 
-Configs and custom profiles references can be found in `examples/`
+Configs and custom profiles references can be found in [`examples/`](../archinstoo/examples/)
 
 And master [schema](../archinstoo/archinstoo/schema.jsonc)
