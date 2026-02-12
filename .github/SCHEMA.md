@@ -96,4 +96,4 @@ Configs and custom profiles references can be found in [`examples/`](../archinst
 
 You can also add them directly in [`default_profiles/`](../archinstoo/archinstoo/default_profiles/) following other profiles as example or modify existing ones.
 
-And master [schema](../archinstoo/archinstoo/schema.jsonc)
+And master [`schema.jsonc`](../archinstoo/archinstoo/schema.jsonc)
