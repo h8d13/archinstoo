@@ -28,18 +28,15 @@ from archinstoo.lib.tui import Tui
 
 
 def show_menu(config: ArchConfig, args: Arguments) -> None:
-	title_text = None
-
 	with Tui():
 		global_menu = GlobalMenu(config, args.skip_boot)
-		global_menu.run(additional_title='- Guided mode')
 
 		if not args.advanced:
 			global_menu.set_enabled('parallel_downloads', False)
 			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
 
-		global_menu.run(additional_title=title_text)
+		global_menu.run(additional_title='- Guided mode')
 
 
 def perform_installation(
