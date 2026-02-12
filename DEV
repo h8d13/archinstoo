@@ -86,6 +86,6 @@ case "$1" in
 	;;
 	*)
 	# Pass through to archinstoo
-	./RUN "$@"
+	./RUN "$@" --advanced --debug
 	;;
 esac
