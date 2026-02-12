@@ -3,6 +3,27 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 To see general [features](./FEATURES.MD)
 
+## 0.1.1-1
+    - Add `smartmontools` to Server profiles (disk health monitoring)
+        - This means original profiles list now only contains `xdg-utils` for desktops, the rest is all in logic or choices.
+
+Down from original list:
+
+```
+	@property
+	@override
+	def packages(self) -> list[str]:
+		return [
+			'vi',
+			'openssh',
+			'wget',
+			'iwd',
+			'wireless_tools',
+			'smartmontools',
+			'xdg-utils',
+		]
+```
+
 ## 0.1.1-0
 
     - Graphics driver improvements
