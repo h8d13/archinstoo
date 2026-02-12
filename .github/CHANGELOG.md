@@ -3,6 +3,28 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 To see general [features](./FEATURES.MD)
 
+## 0.1.1-0
+
+    - Graphics driver improvements
+        - Add VM-specific options: `VM (software rendering)` and `VM (virtio-gpu)` allows to pick guest drivers
+        - `Mesa (open-source)` auto-detects vulkan-intel or vulkan-radeon based on hardware
+        - Plan future implemetation for other drivers
+        `vulkan-driver (virtual pkgs) (nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast, vulkan-virtio, vulkan-nouveau, vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno, vulkan-broadcom, vulkan-panfrost, vulkan-powervr)`
+        - Fix gfx driver installation OoO: now installs BEFORE profiles to satisfy vulkan-driver dependency
+        - Update recommendation text with VM detection hint
+    - Pacman config changes
+        - Move `parallel_downloads` setting into Pacman config submenu
+        - Fix misc options (ILoveCandy) not applied when option doesn't exist in pacman.conf
+    - Profile fixes
+        - Rename `desktop_base` to `profile_base` (applies to any profile, not just desktop)
+        - Move `wireless_tools` to wpa_supplicant backend installation (remove from always installed)
+        - Fix profile types: DesktopEnv → WindowMgr
+        - Add `preview_text` to WaylandProfile (shows "Type: X (Wayland) or (Xorg)")
+    - Bug fixes
+        - Fix guided.py advanced options disappearing on install
+        - Fix duplicate grub package installation on UEFI systems
+        - Fix locale menu
+
 ## 0.1.0-1
 
     - New Security application category
