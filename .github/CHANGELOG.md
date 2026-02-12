@@ -9,7 +9,7 @@ To see general [features](./FEATURES.MD)
         - Add VM-specific options: `VM (software rendering)` and `VM (virtio-gpu)` allows to pick guest drivers
         - `Mesa (open-source)` auto-detects vulkan-intel or vulkan-radeon based on hardware
         - Plan future implemetation for other drivers
-        - Virutal: `vulkan-driver` 
+        - Virtual: `vulkan-driver` 
         ALREADY COVERED: `nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast, vulkan-virtio, vulkan-nouveau`
         TODO: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno, vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
         - Fix gfx driver installation OoO: now installs BEFORE profiles to satisfy vulkan-driver dependency
