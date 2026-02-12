@@ -87,12 +87,14 @@ def select_driver(
 		group.set_focus_by_value(preset)
 
 	header = ''
+	if SysInfo.is_vm():
+		header += tr('VM detected: use VM (software rendering) or VM (virtio-gpu) options.\n')
 	if SysInfo.has_amd_graphics():
-		header += tr('For the best compat with your AMD hardware, you may want to use either the all open-source or AMD / ATI options.') + '\n'
+		header += tr('AMD detected: use All open-source, AMD / ATI, or Mesa (open-source) options.\n')
 	if SysInfo.has_intel_graphics():
-		header += tr('For the best compat with your Intel hardware, you may want to use either the all open-source or Intel options.\n')
+		header += tr('Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n')
 	if SysInfo.has_nvidia_graphics():
-		header += tr('For the best compat with your Nvidia hardware, if recent use open-kernel, otherwise you might need to use the AUR later.\n')
+		header += tr('Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n')
 
 	result = SelectMenu[GfxDriver](
 		group,

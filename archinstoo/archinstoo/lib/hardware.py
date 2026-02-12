@@ -50,6 +50,8 @@ class GfxPackage(Enum):
 	VulkanIntel = 'vulkan-intel'
 	VulkanRadeon = 'vulkan-radeon'
 	VulkanNouveau = 'vulkan-nouveau'
+	VulkanSwrast = 'vulkan-swrast'
+	VulkanVirtio = 'vulkan-virtio'
 	Xf86VideoAmdgpu = 'xf86-video-amdgpu'
 	Xf86VideoAti = 'xf86-video-ati'
 	Xf86VideoNouveau = 'xf86-video-nouveau'
@@ -64,6 +66,8 @@ class GfxDriver(Enum):
 	NvidiaOpenKernel = 'Nvidia (open kernel module for newer GPUs, Turing+)'
 	NvidiaOpenSource = 'Nvidia (open-source nouveau driver)'
 	MesaOpenSource = 'Mesa (open-source)'
+	VMSoftware = 'VM (software rendering)'
+	VMVirtio = 'VM (virtio-gpu)'
 
 	def has_dkms_variant(self) -> bool:
 		match self:
@@ -143,6 +147,23 @@ class GfxDriver(Enum):
 				packages += [
 					GfxPackage.Mesa,
 					GfxPackage.LibvaMesaDriver,
+				]
+				# Add druver based on detection
+				if SysInfo.has_intel_graphics():
+					packages.append(GfxPackage.VulkanIntel)
+				elif SysInfo.has_amd_graphics():
+					packages.append(GfxPackage.VulkanRadeon)
+			case GfxDriver.VMSoftware:
+				packages += [
+					GfxPackage.Mesa,
+					GfxPackage.LibvaMesaDriver,
+					GfxPackage.VulkanSwrast,
+				]
+			case GfxDriver.VMVirtio:
+				packages += [
+					GfxPackage.Mesa,
+					GfxPackage.LibvaMesaDriver,
+					GfxPackage.VulkanVirtio,
 				]
 
 		return packages
