@@ -31,6 +31,7 @@ from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
 from .packages import LocalPackage, PackageSearch, PackageSearchResult, Repository
 from .profile import ProfileConfiguration
+from .service import UserService
 from .users import PasswordStrength, User
 
 __all__ = [
@@ -77,5 +78,6 @@ __all__ = [
 	'SubvolumeModification',
 	'Unit',
 	'User',
+	'UserService',
 	'_DeviceInfo',
 ]

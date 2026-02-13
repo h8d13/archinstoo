@@ -187,15 +187,25 @@
     ],
     "kernel_headers": true,
     "profile_config": {
-        "profile": {
-            "main": "Desktop",
-            "details": [
-                "KDE Plasma"
-            ],
-            "custom_settings": {
-                "KDE Plasma": {}
+        "profiles": [
+            {
+                "main": "Desktop",
+                "details": [
+                    "KDE Plasma"
+                ],
+                "custom_settings": {
+                    "KDE Plasma": {}
+                }
+            },
+            {
+                "main": "Server",
+                "details": [
+                    "docker",
+                    "sshd"
+                ],
+                "custom_settings": {}
             }
-        },
+        ],
         "gfx_driver": "Intel (open-source)",
         "greeter": "gdm"
     },
@@ -251,10 +261,13 @@
     "timezone": "Europe/Berlin",
     "ntp": true,
     "packages": [
-        "gnome-2048",
+        "syncthing",
         "chromium"
     ],
-    "services": [],
+    "services": [
+        "sshd",
+        {"unit": "syncthing.service", "user": "myuser", "linger": true}
+    ],
     "custom_commands": [
         "#arch-chroot via bash tmp files # lines are ignored",
         "#ex: su - user -c \"bash ~/.stash/repo/install.sh\""

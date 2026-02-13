@@ -103,7 +103,7 @@ def perform_installation(
 		if config.swap and config.swap.enabled:
 			installation.setup_swap('zram', algo=config.swap.algorithm)
 
-		# Create users before applications (audio needs user for pipewire config)
+		# Create users before applications i.e audio needs user(s) for pipewire config
 		if config.auth_config and config.auth_config.users:
 			installation.create_users(
 				config.auth_config.users,
@@ -118,6 +118,14 @@ def perform_installation(
 
 		if config.bootloader_config and config.bootloader_config.bootloader != Bootloader.NO_BOOTLOADER:
 			installation.add_bootloader(config.bootloader_config.bootloader, config.bootloader_config.uki, config.bootloader_config.removable)
+
+		if disk_config.has_default_btrfs_vols():
+			btrfs_options = disk_config.btrfs_options
+			snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
+			snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
+			if snapshot_type:
+				bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
+				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
 
 		# If user selected to copy the current ISO network configuration
 		# Perform a copy of the config
@@ -143,6 +151,10 @@ def perform_installation(
 			if profile_config.profiles and DisplayServer.X11 in profile_config.display_servers() and locale_config:
 				installation.set_x11_keyboard(locale_config.kb_layout)
 
+		if (profile_config := config.profile_config) and profile_config.profiles:
+			for profile in profile_config.profiles:
+				profile.post_install(installation)
+
 		if config.packages and config.packages[0] != '':
 			installation.add_additional_packages(config.packages)
 
@@ -159,24 +171,14 @@ def perform_installation(
 			if config.auth_config.lock_root_account:
 				installation.lock_root_account()
 
-		if (profile_config := config.profile_config) and profile_config.profiles:
-			for profile in profile_config.profiles:
-				profile.post_install(installation)
+		# We run the next defs last because they might depend on anything above
 
-		# If the user provided a list of services to be enabled, pass the list to the enable_service function.
-		# Note that while it's called enable_service, it can actually take a list of services and iterate it.
+		# If the user provided a list of services to be enabled
+		# This might include system wide services or user specific
 		if services := config.services:
-			installation.enable_service(services)
+			installation.enable_services_from_config(services)
 
-		if disk_config.has_default_btrfs_vols():
-			btrfs_options = disk_config.btrfs_options
-			snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
-			snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
-			if snapshot_type:
-				bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
-				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
-
-		# If the user provided custom commands to be run post-installation, execute them now.
+		# If the user provided custom commands to be run post-installation
 		if args.advanced and (cc := config.custom_commands):
 			run_custom_user_commands(cc, installation)
 

@@ -19,6 +19,7 @@ from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.profile import ProfileConfiguration
+from archinstoo.lib.models.service import UserService
 from archinstoo.lib.output import error, logger, warn
 from archinstoo.lib.translationhandler import Language, translation_handler
 
@@ -72,7 +73,7 @@ class ArchConfig:
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
 	timezone: str | None = None
-	services: list[str] = field(default_factory=list)
+	services: list[str | UserService] = field(default_factory=list)
 	custom_commands: list[str] = field(
 		default_factory=lambda: [
 			'#arch-chroot via bash tmp files # lines are ignored',
@@ -102,7 +103,7 @@ class ArchConfig:
 			'ntp': self.ntp,
 			'packages': self.packages,
 			'aur_packages': self.aur_packages,
-			'services': self.services,
+			'services': [s.json() if isinstance(s, UserService) else s for s in self.services],
 			'custom_commands': self.custom_commands,
 		}
 
@@ -123,10 +124,13 @@ class ArchConfig:
 				'kernels': 'kernels',
 				'packages': 'packages',
 				'aur_packages': 'aur_packages',
-				'services': 'services',
 				'custom_commands': 'custom_commands',
 			},
 		)
+
+		# Parse services: strings stay as-is, dicts become UserService
+		if raw_services := args_config.get('services'):
+			arch_config.services = [UserService.parse_arg(s) if isinstance(s, dict) else s for s in raw_services]
 
 		_set_parsed(
 			arch_config,
