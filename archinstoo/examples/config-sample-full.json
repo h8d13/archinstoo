@@ -254,7 +254,10 @@
         "gnome-2048",
         "chromium"
     ],
-    "services": [],
+    "services": [
+        "sshd",
+        {"unit": "syncthing.service", "user": "myuser", "linger": true}
+    ],
     "custom_commands": [
         "#arch-chroot via bash tmp files # lines are ignored",
         "#ex: su - user -c \"bash ~/.stash/repo/install.sh\""
