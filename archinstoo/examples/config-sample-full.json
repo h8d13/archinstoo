@@ -261,7 +261,7 @@
     "timezone": "Europe/Berlin",
     "ntp": true,
     "packages": [
-        "gnome-2048",
+        "syncthing",
         "chromium"
     ],
     "services": [
