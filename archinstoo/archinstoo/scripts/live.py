@@ -147,7 +147,7 @@ def perform_installation(
 
 		# Services
 		if services := config.services:
-			installation.enable_service(services)
+			installation.enable_services_from_config(services)
 
 		# Custom commands
 		if args.advanced and (cc := config.custom_commands):
