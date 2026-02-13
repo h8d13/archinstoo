@@ -79,7 +79,7 @@ def perform_installation(
 
 		# Services
 		if services := config.services:
-			installation.enable_service(services)
+			installation.enable_services_from_config(services)
 
 		elapsed_time = time.monotonic() - start_time
 		info(f'Package installation completed in {elapsed_time:.1f}s')

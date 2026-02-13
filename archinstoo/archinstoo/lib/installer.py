@@ -636,6 +636,43 @@ class Installer:
 			except SysCallError as err:
 				raise ServiceException(f'Unable to start service {service}: {err}')
 
+	def enable_linger(self, user: str) -> None:
+		linger_dir = self.target / 'var/lib/systemd/linger'
+		linger_dir.mkdir(parents=True, exist_ok=True)
+		(linger_dir / user).touch()
+		info(f'Enabled linger for user {user}')
+
+	def enable_user_service(self, user: str, services: str | list[str]) -> None:
+		if isinstance(services, str):
+			services = [services]
+
+		wants_dir = self.target / f'home/{user}/.config/systemd/user/default.target.wants'
+		wants_dir.mkdir(parents=True, exist_ok=True)
+
+		for service in services:
+			info(f'Enabling user service {service} for {user}')
+			unit_path = Path(f'/usr/lib/systemd/user/{service}')
+			symlink = wants_dir / service
+			if not symlink.exists():
+				symlink.symlink_to(unit_path)
+
+		# Fix ownership of .config tree
+		self.chown(f'{user}:{user}', f'/home/{user}/.config', ['-R'])
+
+	def enable_services_from_config(self, services: list[Any]) -> None:
+		from .models.service import UserService
+
+		system_services = [s for s in services if isinstance(s, str)]
+		user_services = [s for s in services if isinstance(s, UserService)]
+
+		if system_services:
+			self.enable_service(system_services)
+
+		for us in user_services:
+			self.enable_user_service(us.user, us.unit)
+			if us.linger:
+				self.enable_linger(us.user)
+
 	def disable_service(self, services_disable: str | list[str]) -> None:
 		if isinstance(services_disable, str):
 			services_disable = [services_disable]
