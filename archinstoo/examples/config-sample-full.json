@@ -187,15 +187,25 @@
     ],
     "kernel_headers": true,
     "profile_config": {
-        "profile": {
-            "main": "Desktop",
-            "details": [
-                "KDE Plasma"
-            ],
-            "custom_settings": {
-                "KDE Plasma": {}
+        "profiles": [
+            {
+                "main": "Desktop",
+                "details": [
+                    "KDE Plasma"
+                ],
+                "custom_settings": {
+                    "KDE Plasma": {}
+                }
+            },
+            {
+                "main": "Server",
+                "details": [
+                    "docker",
+                    "sshd"
+                ],
+                "custom_settings": {}
             }
-        },
+        ],
         "gfx_driver": "Intel (open-source)",
         "greeter": "gdm"
     },

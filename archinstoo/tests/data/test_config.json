@@ -50,7 +50,8 @@
   },
   "services": [
     "service_1",
-    "service_2"
+    "service_2",
+    {"unit": "syncthing.service", "user": "testuser", "linger": true}
   ],
   "disk_config": {
     "config_type": "default_layout",
