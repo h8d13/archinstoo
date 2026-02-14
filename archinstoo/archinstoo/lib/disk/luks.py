@@ -9,7 +9,7 @@ from types import TracebackType
 from archinstoo.lib.disk.utils import get_lsblk_info, umount
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.general import SysCommand, SysCommandWorker, run
-from archinstoo.lib.models.device import DEFAULT_ITER_TIME
+from archinstoo.lib.models.device import DEFAULT_ITER_TIME, LuksPbkdf
 from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, info
 
@@ -83,12 +83,14 @@ class Luks2:
 		iter_time: int = DEFAULT_ITER_TIME,
 		key_file: Path | None = None,
 		pbkdf_memory: int | None = None,
+		pbkdf: LuksPbkdf = LuksPbkdf.Argon2id,
 	) -> Path | None:
 		debug(f'Luks2 encrypting: {self.luks_dev_path}')
 
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
 
-		pbkdf_memory_arg = ['--pbkdf-memory', str(pbkdf_memory)] if pbkdf_memory else []
+		# pbkdf-memory is only relevant for argon2id
+		pbkdf_memory_arg = ['--pbkdf-memory', str(pbkdf_memory)] if pbkdf_memory and pbkdf == LuksPbkdf.Argon2id else []
 
 		cmd = [
 			'cryptsetup',
@@ -97,7 +99,7 @@ class Luks2:
 			'--type',
 			'luks2',
 			'--pbkdf',
-			'argon2id',
+			pbkdf.value,
 			'--hash',
 			hash_type,
 			'--key-size',

@@ -75,6 +75,13 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem.separator(),  # critical - assumed empty and mandatory
 			MenuItem(
+				text=tr('Bootloader'),
+				value=BootloaderConfiguration.get_default(self._skip_boot),
+				action=self._select_bootloader_config,
+				preview_action=self._prev_bootloader_config,
+				key='bootloader_config',
+			),
+			MenuItem(
 				text=tr('Disk config'),
 				action=self._select_disk_config,
 				preview_action=self._prev_disk_config,
@@ -102,13 +109,6 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_pacman_config,
 				key='pacman_config',
 				value_validator=lambda c: bool(c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options),
-			),
-			MenuItem(
-				text=tr('Bootloader'),
-				value=BootloaderConfiguration.get_default(self._skip_boot),
-				action=self._select_bootloader_config,
-				preview_action=self._prev_bootloader_config,
-				key='bootloader_config',
 			),
 			MenuItem(
 				text=tr('Swap'),
@@ -682,7 +682,13 @@ class GlobalMenu(AbstractMenu[None]):
 		self,
 		preset: DiskLayoutConfiguration | None = None,
 	) -> DiskLayoutConfiguration | None:
-		return DiskLayoutConfigurationMenu(preset).run()
+		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
+		uki_enabled = bool(bootloader_config and bootloader_config.uki)
+		is_grub = bool(bootloader_config and bootloader_config.bootloader == Bootloader.Grub)
+		# auto_unlock_root only works with GRUB (only bootloader that can decrypt /boot)
+		# and must not be used with UKI (initramfs on unencrypted ESP would expose the key)
+		allow_auto_unlock = is_grub and not uki_enabled
+		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock).run()
 
 	def _select_bootloader_config(
 		self,
