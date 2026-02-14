@@ -24,6 +24,18 @@ ENC_IDENTIFIER = 'ainst'
 DEFAULT_ITER_TIME = 10000
 
 
+class LuksPbkdf(Enum):
+	Argon2id = 'argon2id'
+	Pbkdf2 = 'pbkdf2'
+
+	def display_name(self) -> str:
+		match self:
+			case LuksPbkdf.Argon2id:
+				return 'Argon2id (Recommended)'
+			case LuksPbkdf.Pbkdf2:
+				return 'PBKDF2'
+
+
 class DiskLayoutType(Enum):
 	Default = 'default_layout'
 	Manual = 'manual_partitioning'
@@ -1428,6 +1440,8 @@ class DiskEncryption:
 	partitions: list[PartitionModification] = field(default_factory=list)
 	lvm_volumes: list[LvmVolume] = field(default_factory=list)
 	iter_time: int = DEFAULT_ITER_TIME
+	pbkdf: LuksPbkdf = LuksPbkdf.Argon2id
+	auto_unlock_root: bool = False
 
 	def __post_init__(self) -> None:
 		if self.encryption_type in [EncryptionType.Luks, EncryptionType.LvmOnLuks] and not self.partitions:
