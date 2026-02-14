@@ -29,7 +29,7 @@ SAFETY_LOCK
 /test*.py
 CLAUDE.md
 test_*/
-.idea
+.idea*
 .idea/**
 .mypy_cache/
 .ruff_cache/
