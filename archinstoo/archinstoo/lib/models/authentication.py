@@ -55,8 +55,6 @@ class AuthenticationConfiguration:
 		return auth_config
 
 	def json(self) -> AuthenticationSerialization:
-		# We keep only these 2 as json
-		# Users or pws are never stored
 		config: AuthenticationSerialization = {}
 
 		if self.lock_root_account:
@@ -64,5 +62,8 @@ class AuthenticationConfiguration:
 
 		if self.privilege_escalation != PrivilegeEscalation.Sudo:
 			config['privilege_escalation'] = self.privilege_escalation.value
+
+		if self.users:
+			config['users'] = [u.json() for u in self.users]
 
 		return config

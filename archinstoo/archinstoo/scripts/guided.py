@@ -212,7 +212,7 @@ def guided() -> None:
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	if cached := ConfigurationHandler.prompt_resume():
+	if not args.config and (cached := ConfigurationHandler.prompt_resume()):
 		try:
 			handler._config = ArchConfig.from_config(cached, args)
 			info('Saved selections loaded successfully')

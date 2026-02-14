@@ -6,7 +6,7 @@ from archinstoo.default_profiles.profile import Profile, ProfileType
 class SshdProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'sshd',
+			'Sshd',
 			ProfileType.ServerType,
 		)
 
