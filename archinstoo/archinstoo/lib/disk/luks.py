@@ -154,6 +154,7 @@ class Luks2:
 
 		cmd = [
 			'cryptsetup',
+			'--batch-mode',
 			'open',
 			str(self.luks_dev_path),
 			str(self.mapper_name),
