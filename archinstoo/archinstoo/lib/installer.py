@@ -462,7 +462,10 @@ class Installer:
 
 			if gen_enc_file and not part_mod.is_root():
 				debug(f'Creating key-file: {part_mod.dev_path}')
-				luks_handler.create_keyfile(self.target)
+				# GRUB has limited memory for argon2id decryption;
+				# constrain the keyfile slot too so GRUB doesn't choke on it
+				pbkdf_memory = 32 * 1024 if part_mod.is_boot() else None
+				luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory)
 
 	def _generate_key_file_lvm_volumes(self) -> None:
 		for vol in self._disk_encryption.lvm_volumes:

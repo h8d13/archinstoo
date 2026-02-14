@@ -188,7 +188,12 @@ class Luks2:
 			debug(f'Closing crypt device {child.name}')
 			SysCommand(f'cryptsetup close {child.name}')
 
-	def create_keyfile(self, target_path: Path, override: bool = False) -> None:
+	def create_keyfile(
+		self,
+		target_path: Path,
+		override: bool = False,
+		pbkdf_memory: int | None = None,
+	) -> None:
 		"""
 		Routine to create keyfiles, so it can be moved elsewhere
 		"""
@@ -214,13 +219,14 @@ class Luks2:
 
 		key_file.chmod(0o400)
 
-		self._add_key(key_file)
+		self._add_key(key_file, pbkdf_memory=pbkdf_memory)
 		self._crypttab(crypttab_path, kf_path, options=['luks', 'key-slot=1'])
 
-	def _add_key(self, key_file: Path) -> None:
+	def _add_key(self, key_file: Path, pbkdf_memory: int | None = None) -> None:
 		debug(f'Adding additional key-file {key_file}')
 
-		command = f'cryptsetup -q -v luksAddKey {self.luks_dev_path} {key_file}'
+		pbkdf_memory_arg = f' --pbkdf-memory {pbkdf_memory}' if pbkdf_memory else ''
+		command = f'cryptsetup -q -v{pbkdf_memory_arg} luksAddKey {self.luks_dev_path} {key_file}'
 		worker = SysCommandWorker(command)
 		pw_injected = False
 
