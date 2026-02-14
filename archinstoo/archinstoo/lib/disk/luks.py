@@ -193,6 +193,7 @@ class Luks2:
 		target_path: Path,
 		override: bool = False,
 		pbkdf_memory: int | None = None,
+		iter_time: int | None = None,
 	) -> None:
 		"""
 		Routine to create keyfiles, so it can be moved elsewhere
@@ -219,14 +220,15 @@ class Luks2:
 
 		key_file.chmod(0o400)
 
-		self._add_key(key_file, pbkdf_memory=pbkdf_memory)
+		self._add_key(key_file, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
 		self._crypttab(crypttab_path, kf_path, options=['luks', 'key-slot=1'])
 
-	def _add_key(self, key_file: Path, pbkdf_memory: int | None = None) -> None:
+	def _add_key(self, key_file: Path, pbkdf_memory: int | None = None, iter_time: int | None = None) -> None:
 		debug(f'Adding additional key-file {key_file}')
 
 		pbkdf_memory_arg = f' --pbkdf-memory {pbkdf_memory}' if pbkdf_memory else ''
-		command = f'cryptsetup -q -v{pbkdf_memory_arg} luksAddKey {self.luks_dev_path} {key_file}'
+		iter_time_arg = f' --iter-time {iter_time}' if iter_time else ''
+		command = f'cryptsetup -q -v{pbkdf_memory_arg}{iter_time_arg} luksAddKey {self.luks_dev_path} {key_file}'
 		worker = SysCommandWorker(command)
 		pw_injected = False
 
