@@ -1956,6 +1956,10 @@ class Installer:
 	def set_user_password(self, user: User) -> bool:
 		info(f'Setting password for {user.username}')
 
+		if not user.password:
+			debug('User password not set')
+			return False
+
 		enc_password = user.password.enc_password
 
 		if not enc_password:

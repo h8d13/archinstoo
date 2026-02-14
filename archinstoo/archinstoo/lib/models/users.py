@@ -148,7 +148,7 @@ class Password:
 @dataclass
 class User:
 	username: str
-	password: Password
+	password: Password | None
 	elev: bool
 	groups: list[str] = field(default_factory=list)
 	stash_urls: list[str] = field(default_factory=list)
@@ -162,7 +162,7 @@ class User:
 	def table_data(self) -> dict[str, str | bool]:
 		return {
 			'username': self.username,
-			'password': self.password.hidden(),
+			'password': self.password.hidden() if self.password else '-',
 			'elev': self.elev,
 			'groups': f'{len(self.groups)}/{len(self.groups)}',
 			'shell': self.shell.value,
@@ -171,7 +171,7 @@ class User:
 	def json(self) -> UserSerialization:
 		return {
 			'username': self.username,
-			'enc_password': self.password.enc_password,
+			'enc_password': self.password.enc_password if self.password else None,
 			'elev': self.elev,
 			'groups': self.groups,
 			'stash_urls': self.stash_urls,
@@ -180,7 +180,7 @@ class User:
 
 	@staticmethod
 	def any_elevated(users: list[User]) -> bool:
-		return any(u.elev for u in users)
+		return any(u.elev and u.password is not None for u in users)
 
 	@classmethod
 	def parse_arguments(
@@ -191,25 +191,19 @@ class User:
 
 		for entry in args:
 			username = entry.get('username')
-			password: Password | None = None
-			groups = entry.get('groups', [])
-			enc_password = entry.get('enc_password')
-			stash_urls = entry.get('stash_urls', [])
-			shell = Shell(entry['shell']) if 'shell' in entry else Shell.BASH
-
-			if enc_password:
-				password = Password(enc_password=enc_password)
-
-			if not username or password is None:
+			if not username:
 				continue
+
+			enc_password = entry.get('enc_password')
+			password = Password(enc_password=enc_password) if enc_password else None
 
 			user = cls(
 				username=username,
 				password=password,
 				elev=entry.get('elev', False) is True,
-				groups=groups,
-				stash_urls=stash_urls,
-				shell=shell,
+				groups=entry.get('groups') or [],
+				stash_urls=entry.get('stash_urls', []),
+				shell=Shell(entry['shell']) if 'shell' in entry else Shell.BASH,
 			)
 
 			users.append(user)

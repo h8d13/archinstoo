@@ -398,7 +398,9 @@ class GlobalMenu(AbstractMenu[None]):
 		return None
 
 	def _validate_auth_config(self, auth_config: AuthenticationConfiguration) -> bool:
-		return auth_config.root_enc_password is not None or len(auth_config.users) > 0
+		if not (auth_config.root_enc_password is not None or auth_config.users):
+			return False
+		return all(u.password is not None for u in auth_config.users)
 
 	def _validate_disk_config(self, disk_config: DiskLayoutConfiguration) -> bool:
 		if (enc := disk_config.disk_encryption) and enc.encryption_type != EncryptionType.NoEncryption:
