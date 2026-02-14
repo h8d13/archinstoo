@@ -21,6 +21,7 @@ from archinstoo.lib.models.device import (
 	DiskLayoutConfiguration,
 	EncryptionType,
 	FilesystemType,
+	LuksPbkdf,
 	LvmVolume,
 	PartitionModification,
 	SectorSize,
@@ -453,10 +454,20 @@ class Installer:
 			case EncryptionType.LuksOnLvm:
 				self._generate_key_file_lvm_volumes()
 			case EncryptionType.LvmOnLuks:
-				# currently LvmOnLuks only supports a single
-				# partitioning layout (boot + partition)
-				# so we won't need any keyfile generation atm
-				pass
+				# LvmOnLuks: the LUKS container holds an LVM PV, root is a volume inside it.
+				# The partition itself isn't "root", so _generate_key_files_partitions
+				# can't detect it via is_root(). Handle it directly here.
+				if self._disk_encryption.auto_unlock_root:
+					for part_mod in self._disk_encryption.partitions:
+						if part_mod.is_boot() or part_mod.is_efi():
+							continue
+						luks_handler = Luks2(
+							part_mod.safe_dev_path,
+							mapper_name=part_mod.mapper_name,
+							password=self._disk_encryption.encryption_password,
+						)
+						self._create_root_keyfile(luks_handler)
+						break
 
 	def _generate_key_files_partitions(self) -> None:
 		for part_mod in self._disk_encryption.partitions:
@@ -472,9 +483,14 @@ class Installer:
 				debug(f'Creating key-file: {part_mod.dev_path}')
 				# GRUB has limited memory for argon2id decryption;
 				# constrain the keyfile slot too so GRUB can handle it
-				pbkdf_memory = 32 * 1024 if part_mod.is_boot() else None
-				iter_time = 200 if part_mod.is_boot() else None
+				is_boot = part_mod.is_boot()
+				uses_argon2 = self._disk_encryption.pbkdf == LuksPbkdf.Argon2id
+				pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
+				iter_time = 200 if is_boot else None
 				luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
+
+			if self._disk_encryption.auto_unlock_root and part_mod.is_root():
+				self._create_root_keyfile(luks_handler)
 
 	def _generate_key_file_lvm_volumes(self) -> None:
 		for vol in self._disk_encryption.lvm_volumes:
@@ -489,6 +505,24 @@ class Installer:
 			if gen_enc_file and not vol.is_root():
 				info(f'Creating key-file: {vol.dev_path}')
 				luks_handler.create_keyfile(self.target)
+
+			if self._disk_encryption.auto_unlock_root and vol.is_root():
+				self._create_root_keyfile(luks_handler)
+
+	def _create_root_keyfile(self, luks_handler: Luks2) -> None:
+		# Create /crypto_keyfile.bin on target and add it as a LUKS key slot
+		# so the root volume can be auto-unlocked from the initramfs after GRUB
+		# decrypts /boot.
+		keyfile = self.target / 'crypto_keyfile.bin'
+		debug(f'Creating root auto-unlock keyfile: {keyfile}')
+
+		keyfile.write_bytes(os.urandom(2048))
+		keyfile.chmod(0o000)
+
+		luks_handler._add_key(keyfile)
+
+		if '/crypto_keyfile.bin' not in self._files:
+			self._files.append('/crypto_keyfile.bin')
 
 	def post_install_check(self, *args: str, **kwargs: str) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
@@ -1070,6 +1104,9 @@ class Installer:
 				debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
 				kernel_parameters.append(f'cryptdevice=UUID={root_partition.uuid}:root')
 
+			if self._disk_encryption.auto_unlock_root:
+				kernel_parameters.append('cryptkey=rootfs:/crypto_keyfile.bin')
+
 			if id_root:
 				kernel_parameters.append('root=/dev/mapper/root')
 		elif id_root:
@@ -1102,11 +1139,17 @@ class Installer:
 
 				debug(f'LvmOnLuks, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'cryptdevice=UUID={uuid}:cryptlvm root={lvm.safe_dev_path}')
+
+				if self._disk_encryption.auto_unlock_root:
+					kernel_parameters.append('cryptkey=rootfs:/crypto_keyfile.bin')
 			case EncryptionType.LuksOnLvm:
 				uuid = self._get_luks_uuid_from_mapper_dev(lvm.mapper_path)
 
 				debug(f'LuksOnLvm, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'cryptdevice=UUID={uuid}:root root=/dev/mapper/root')
+
+				if self._disk_encryption.auto_unlock_root:
+					kernel_parameters.append('cryptkey=rootfs:/crypto_keyfile.bin')
 			case EncryptionType.NoEncryption:
 				debug(f'Identifying root lvm by mapper device: {lvm.dev_path}')
 				kernel_parameters.append(f'root={lvm.safe_dev_path}')
