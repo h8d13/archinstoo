@@ -201,7 +201,7 @@
                 "main": "Server",
                 "details": [
                     "Docker",
-                    "sshd"
+                    "Sshd"
                 ],
                 "custom_settings": {}
             }
