@@ -262,6 +262,9 @@
         "syncthing",
         "chromium"
     ],
+    "aur_packages": [
+        "nvidia-580xx-utils"
+    ],
     "services": [
         "sshd",
         {"unit": "syncthing.service", "user": "myuser", "linger": true}
