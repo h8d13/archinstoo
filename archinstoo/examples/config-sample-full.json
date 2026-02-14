@@ -215,9 +215,9 @@
         "privilege_escalation": "doas",
         "users": [
             {
-                "username": null,
+                "username": "myuser",
                 "enc_password": null,
-                "elev": null,
+                "elev": true,
                 "groups": null,
                 "shell": "bash"
             }
@@ -239,10 +239,8 @@
         "management_config": {
             "tools": [
                 "git",
-                "base-devel",
                 "man-db",
-                "pacman-contrib",
-                "reflector"
+                "pacman-contrib"
             ]
         },
         "monitor_config": {
@@ -256,7 +254,7 @@
         }
     },
     "network_config": {
-        "type": "nm"
+        "type": "nm_iwd"
     },
     "timezone": "Europe/Berlin",
     "ntp": true,

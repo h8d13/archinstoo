@@ -48,7 +48,7 @@
 		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
 		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
 		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
-		"Mesa (open-source)": ["mesa", "libva-mesa-driver"],
+		"Mesa (open-source)": ["mesa", "libva-mesa-driver"], // add intel or amd on detect
 		"VM (software rendering)": ["mesa", "libva-mesa-driver", "vulkan-swrast"],
 		"VM (virtio-gpu)": ["mesa", "libva-mesa-driver", "vulkan-virtio"]
 	},
@@ -141,8 +141,7 @@
 		"base-devel": ["base-devel"],
 		"man-db": ["man-db"],
 		"pacman-contrib": ["pacman-contrib"],
-		"reflector": ["reflector"],
-		"fail2ban": ["fail2ban"]
+		"reflector": ["reflector"]
 	},
 
 	"monitors": {
@@ -164,6 +163,13 @@
 	"power_management": {
 		"power-profiles-daemon": ["power-profiles-daemon"],
 		"tuned": ["tuned", "tuned-ppd"]
+	},
+
+	"security": {
+		"apparmor": ["apparmor"],
+		"firejail": ["firejail"],
+		"bubblewrap": ["bubblewrap"],
+		"fail2ban": ["fail2ban"]
 	},
 
 	"network": {

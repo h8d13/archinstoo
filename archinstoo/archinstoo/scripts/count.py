@@ -132,6 +132,10 @@ def collect(config: dict[str, Any]) -> set[str]:
 		if tool in SCHEMA['management']:
 			pkgs.update(SCHEMA['management'][tool])
 
+	for tool in app.get('security_config', {}).get('tools', []):
+		if tool in SCHEMA['security']:
+			pkgs.update(SCHEMA['security'][tool])
+
 	monitor = app.get('monitor_config', {}).get('monitor', '')
 	if monitor in SCHEMA['monitors']:
 		pkgs.update(SCHEMA['monitors'][monitor])

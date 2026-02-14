@@ -47,7 +47,6 @@ class Management(StrEnum):
 	MAN = 'man-db'
 	PACMAN_CONTRIB = 'pacman-contrib'
 	REFLECTOR = 'reflector'
-	FAIL2BAN = 'fail2ban'
 
 
 class ManagementConfigSerialization(TypedDict):
@@ -81,6 +80,7 @@ class Security(StrEnum):
 	APPARMOR = auto()
 	FIREJAIL = auto()
 	BUBBLEWRAP = auto()
+	FAIL2BAN = auto()
 
 
 class SecurityConfigSerialization(TypedDict):

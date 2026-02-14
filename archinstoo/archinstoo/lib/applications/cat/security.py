@@ -58,3 +58,8 @@ class SecurityApp:
 				case Security.BUBBLEWRAP:
 					debug('Installing security: Bubblewrap')
 					install_session.add_additional_packages(self.bubblewrap_packages)
+
+				case Security.FAIL2BAN:
+					debug('Installing security: Fail2ban')
+					install_session.add_additional_packages([tool.value])
+					install_session.enable_service('fail2ban.service')
