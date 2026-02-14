@@ -1263,9 +1263,9 @@ class Installer:
 		self.pacman.strap('grub')
 
 		# enable GRUB cryptodisk before grub-install so crypto modules
-		# are embedded in the core image (required when /boot is encrypted)
+		# are embedded in the core image (required for encrypted /boot)
 		grub_default = self.target / 'etc/default/grub'
-		if self._disk_encryption.encryption_type != EncryptionType.NoEncryption and efi_partition and efi_partition.mountpoint != Path('/boot'):
+		if self._disk_encryption.encryption_type != EncryptionType.NoEncryption:
 			config = grub_default.read_text()
 			config = re.sub(r'^#(GRUB_ENABLE_CRYPTODISK=y)', r'\1', config, flags=re.MULTILINE)
 			grub_default.write_text(config)
@@ -1290,6 +1290,11 @@ class Installer:
 
 			self.pacman.strap('efibootmgr')  # TODO: Do we need? Yes, but remove from minimal_installation() instead?
 
+			boot_dir_arg = []
+			if boot_partition.mountpoint and boot_partition.mountpoint != boot_dir:
+				boot_dir_arg.append(f'--boot-directory={boot_partition.mountpoint}')
+				boot_dir = boot_partition.mountpoint
+
 			grub_target = 'x86_64-efi' if SysInfo._bitness() == 64 else 'i386-efi'
 			# https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface
 			# mixed mode boot handling same as limine handling 32bit UEFI on 64-bit CPUs
@@ -1297,6 +1302,7 @@ class Installer:
 			add_options = [
 				f'--target={grub_target}',
 				f'--efi-directory={efi_partition.mountpoint}',
+				*boot_dir_arg,
 				'--bootloader-id=GRUB',
 			]
 
