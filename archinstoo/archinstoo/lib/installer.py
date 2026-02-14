@@ -373,7 +373,15 @@ class Installer:
 		if part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
-			self._device_handler.mount(part_mod.dev_path, target, mount_fs=mount_fs, options=part_mod.mount_options)
+			options = list(part_mod.mount_options)
+
+			# restrict ESP permissions so bootctl doesn't warn about world-accessible seed files
+			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.Fat32:
+				for opt in ('fmask=0077', 'dmask=0077'):
+					if opt not in options:
+						options.append(opt)
+
+			self._device_handler.mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
 		elif part_mod.fs_type == FilesystemType.Btrfs:
 			# Only mount BTRFS subvolumes that have mountpoints specified
 			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]

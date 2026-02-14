@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import Management, ManagementConfiguration
+from archinstoo.lib.models.application import ManagementConfiguration
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
@@ -18,6 +18,3 @@ class ManagementApp:
 		packages = [tool.value for tool in management_config.tools]
 		if packages:
 			install_session.add_additional_packages(packages)
-
-		if Management.FAIL2BAN in management_config.tools:
-			install_session.enable_service('fail2ban.service')
