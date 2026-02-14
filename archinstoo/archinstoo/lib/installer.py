@@ -253,7 +253,7 @@ class Installer:
 		self._verify_service_stop()
 
 	def mount_ordered_layout(self) -> None:
-		debug('Mounting ordered layout')
+		info('Mounting ordered layout')
 
 		luks_handlers: dict[Any, Luks2] = {}
 

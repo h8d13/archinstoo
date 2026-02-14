@@ -75,7 +75,7 @@ def perform_installation(
 		# Mount all the drives to the desired mountpoint
 		if disk_config.config_type != DiskLayoutType.Pre_mount:
 			installation.mount_ordered_layout()
-
+		# checks services (ntp, keyring sync)
 		installation.sanity_check()
 
 		if (
