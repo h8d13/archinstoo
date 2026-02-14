@@ -222,19 +222,21 @@ def select_lvm_config(
 	return None
 
 
-def _boot_partition(sector_size: SectorSize, using_gpt: bool) -> PartitionModification:
+def _boot_partition(sector_size: SectorSize, using_gpt: bool, using_subvolumes: bool = False) -> PartitionModification:
 	# on GPT parted's BOOT flag = ESP; use ESP for GPT, BOOT for MBR
 	flags = [PartitionFlag.ESP] if using_gpt else [PartitionFlag.BOOT]
 	size = Size(1, Unit.GiB, sector_size)
 	start = Size(1, Unit.MiB, sector_size)
 
-	# boot partition
+	# mount ESP at /efi when using btrfs subvolumes so /boot stays in @
+	mountpoint = Path('/efi') if using_subvolumes else Path('/boot')
+
 	return PartitionModification(
 		status=ModificationStatus.Create,
 		type=PartitionType.Primary,
 		start=start,
 		length=size,
-		mountpoint=Path('/boot'),
+		mountpoint=mountpoint,
 		fs_type=FilesystemType.Fat32,
 		flags=flags,
 	)
@@ -367,7 +369,7 @@ def suggest_single_disk_layout(
 
 	# Used for reference: https://wiki.archlinux.org/title/partitioning
 
-	boot_partition = _boot_partition(sector_size, using_gpt)
+	boot_partition = _boot_partition(sector_size, using_gpt, using_subvolumes)
 	device_modification.add_partition(boot_partition)
 
 	if separate_home is False or using_subvolumes or total_size < min_size_to_allow_home_part:
