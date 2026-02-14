@@ -327,6 +327,7 @@ class DeviceHandler:
 		fs_type: FilesystemType,
 		enc_conf: DiskEncryption,
 		pbkdf_memory: int | None = None,
+		iter_time: int | None = None,
 	) -> None:
 		if not enc_conf.encryption_password:
 			raise ValueError('No encryption password provided')
@@ -337,7 +338,7 @@ class DeviceHandler:
 			password=enc_conf.encryption_password,
 		)
 
-		key_file = luks_handler.encrypt(iter_time=enc_conf.iter_time, pbkdf_memory=pbkdf_memory)
+		key_file = luks_handler.encrypt(iter_time=iter_time or enc_conf.iter_time, pbkdf_memory=pbkdf_memory)
 
 		self.udev_sync()
 
