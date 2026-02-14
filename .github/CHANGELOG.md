@@ -3,12 +3,34 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 To see general [features](./FEATURES.MD)
 
+## 0.1.2-0
+
+    - Encrypted `/boot` seperate `/efi` (GRUB + argon2id)
+        - Constrain LUKS key slot PBKDF for boot partitions (`--pbkdf-memory 32768 --iter-time 200`)
+        - Apply same constraints to keyfile generation (`luksAddKey`) so GRUB can decrypt both slots
+        - Add `--batch-mode` to `cryptsetup open` for non-interactive unlock
+    - ESP mount security
+        - Mount FAT32 ESP with `fmask=0077,dmask=0077` (root-only access)
+        - Applied at mount time in installer for both Default and Manual partitioning
+    - Default BTRFS layout: mount ESP at `/efi` so `/boot` stays in `@` subvolume
+    - User services and multi-profile support
+        - New `UserService` model for per-user systemd `--user` services
+        - Service enable/disable during installation
+    - Move `fail2ban` from Management to Security category
+        - Service auto-enabled on install
+    - Schema and count script updates
+        - Add `security` section to `schema.jsonc`
+        - Count script now resolves security tools
+    - Docs
+        - Add beginner notes and network documentation
+        - Fix example configs
+    - Fix install order: kernel headers/AUR before profiles
+
 ## 0.1.1-1
     - Add `smartmontools` to Server profiles (disk health monitoring)
         - This means original profiles list now only contains `xdg-utils | smartmontools` for desktops
-        - The rest is all in logic or choices.
 
-Down from original list:
+Down from original list (the rest is all in logic or choices):
 
 ```
 	@property

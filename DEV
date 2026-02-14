@@ -72,9 +72,6 @@ case "$1" in
     -tf | --test-full)
     ./RUN --config examples/config-sample-full.json
     ;;
-    -tm | --test-mini)
-    ./RUN --config examples/config-sample-mini.json
-    ;;
 	-h2t | --host-to-target)
 	go_to
 	. ./PKGBUILD
