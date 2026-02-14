@@ -100,11 +100,15 @@ class FilesystemHandler:
 		for part_mod in create_or_modify_parts:
 			# partition will be encrypted
 			if self._enc_config is not None and part_mod in self._enc_config.partitions:
+				# GRUB has limited memory for argon2id decryption
+				pbkdf_memory = 512 * 1024 if part_mod.is_boot() else None
+
 				self._device_handler.format_encrypted(
 					part_mod.safe_dev_path,
 					part_mod.mapper_name,
 					part_mod.safe_fs_type,
 					self._enc_config,
+					pbkdf_memory=pbkdf_memory,
 				)
 			else:
 				self._device_handler.format(part_mod.safe_fs_type, part_mod.safe_dev_path)
