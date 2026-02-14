@@ -200,7 +200,7 @@
             {
                 "main": "Server",
                 "details": [
-                    "docker",
+                    "Docker",
                     "sshd"
                 ],
                 "custom_settings": {}
@@ -251,6 +251,11 @@
         },
         "power_management_config": {
             "power_management": "power-profiles-daemon"
+        },
+        "security_config": {
+            "tools": [
+                "fail2ban"
+            ]
         }
     },
     "network_config": {
