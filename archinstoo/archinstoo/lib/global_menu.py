@@ -690,7 +690,7 @@ class GlobalMenu(AbstractMenu[None]):
 		uki_enabled = bool(bootloader_config and bootloader_config.uki)
 		is_grub = bool(bootloader_config and bootloader_config.bootloader == Bootloader.Grub)
 		# Auto-unlock embeds a keyfile in the initramfs; only safe when /boot is encrypted,
-		# which only GRUB supports. UKI places initramfs on the unencrypted ESP.
+		# which only GRUB supports. UKI should be off otherwise it will include the decryption key
 		allow_auto_unlock = is_grub and not uki_enabled
 		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock).run()
 
