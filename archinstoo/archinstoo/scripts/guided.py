@@ -214,7 +214,7 @@ def guided() -> None:
 
 	if not args.config and (cached := ConfigurationHandler.prompt_resume()):
 		try:
-			handler._config = ArchConfig.from_config(cached, args)
+			handler.config = ArchConfig.from_config(cached, args)
 			info('Saved selections loaded successfully')
 		except Exception as e:
 			error(f'Failed to load saved selections: {e}')

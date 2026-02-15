@@ -26,8 +26,8 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu.set_enabled('__config__', True)
 
 		# Skip mandatory checks
-		global_menu._item_group.find_by_key('timezone').mandatory = False
-		global_menu._item_group.find_by_key('disk_config').mandatory = False
+		global_menu.set_mandatory('timezone', False)
+		global_menu.set_mandatory('disk_config', False)
 
 		global_menu.run(additional_title='Packages only')
 
@@ -57,8 +57,8 @@ def perform_installation(
 		kernels=[],
 	) as installation:
 		# Mark base and bootloader as done — we're on a running system
-		installation._helper_flags['base'] = True
-		installation._helper_flags['bootloader'] = 'packages'
+		installation.set_helper_flag('base', True)
+		installation.set_helper_flag('bootloader', 'packages')
 
 		# Applications
 		if app_config := config.app_config:
@@ -98,7 +98,7 @@ def packages() -> None:
 
 	if cached := ConfigurationHandler.prompt_resume():
 		try:
-			handler._config = ArchConfig.from_config(cached, args)
+			handler.config = ArchConfig.from_config(cached, args)
 			info('Saved selections loaded successfully')
 		except Exception as e:
 			debug(f'Failed to load saved selections: {e}')

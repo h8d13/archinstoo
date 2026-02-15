@@ -25,8 +25,8 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu.set_enabled('bootloader_config', False)
 		global_menu.set_enabled('kernels', False)
 		global_menu.set_enabled('disk_config', False)
-		global_menu._item_group.find_by_key('disk_config').mandatory = False
-		global_menu._item_group.find_by_key('timezone').mandatory = False
+		global_menu.set_mandatory('disk_config', False)
+		global_menu.set_mandatory('timezone', False)
 
 		if not args.advanced:
 			global_menu.set_enabled('aur_packages', False)
@@ -66,8 +66,8 @@ def perform_installation(
 		handler=handler,
 	) as installation:
 		# Mark base and bootloader as done — we're on a running system
-		installation._helper_flags['base'] = True
-		installation._helper_flags['bootloader'] = 'live'
+		installation.set_helper_flag('base', True)
+		installation.set_helper_flag('bootloader', 'live')
 
 		# Configure system basics
 		if locale_config:
@@ -174,8 +174,8 @@ def live() -> None:
 
 	if cached := ConfigurationHandler.prompt_resume():
 		try:
-			handler._config = ArchConfig.from_config(cached, args)
-			handler._config.kernels = []
+			handler.config = ArchConfig.from_config(cached, args)
+			handler.config.kernels = []
 			info('Saved selections loaded successfully')
 		except Exception as e:
 			debug(f'Failed to load saved selections: {e}')
