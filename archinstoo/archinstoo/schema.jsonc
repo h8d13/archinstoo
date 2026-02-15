@@ -19,6 +19,7 @@
 
 	"filesystem_tools": {
 		// note most are handled by base (e2fsprogs, dosfstools)
+		// if not they are appended to base install
 		"btrfs": ["btrfs-progs"],
 		"xfs": ["xfsprogs"],
 		"f2fs": ["f2fs-tools"]
@@ -84,8 +85,8 @@
 		// -- Servers --
 		"Nginx": ["nginx"],
 		"Docker": ["docker"],
-		"httpd": ["apache"],
-		"sshd": ["openssh"],
+		"Httpd": ["apache"],
+		"Sshd": ["openssh"],
 		"Postgresql": ["postgresql"],
 		"Mariadb": ["mariadb"],
 		"Lighttpd": ["lighttpd"],
@@ -96,7 +97,8 @@
 	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
 	"xorg_profiles": ["Xfce4", "Cinnamon", "MATE", "Budgie", "LXQt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
 
-	// each desktop specifies a default greeter but there is also Nogreeter type and can pick any
+	// each desktop specifies a default greeter 
+	// but there is also Nogreeter type and can pick any
 	"greeters": {
 		"lightdm-slick-greeter": ["lightdm", "lightdm-slick-greeter"],
 		"lightdm-gtk-greeter": ["lightdm", "lightdm-gtk-greeter"],
@@ -110,6 +112,7 @@
 	// this a 'advanced' option but seems to work fine
 	// run0 part of polkit/systemd
 	"privilege_escalation": {
+		"run0": ["polkit"],
 		"sudo": ["sudo"],
 		"doas": ["opendoas"]
 	},
@@ -169,7 +172,9 @@
 		"apparmor": ["apparmor"],
 		"firejail": ["firejail"],
 		"bubblewrap": ["bubblewrap"],
-		"fail2ban": ["fail2ban"]
+		"fail2ban": ["fail2ban"],
+		"pam_u2f": ["pam-u2f"],
+		"sbctl": ["sbctl"]
 	},
 
 	"network": {

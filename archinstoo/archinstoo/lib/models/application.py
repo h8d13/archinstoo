@@ -81,6 +81,8 @@ class Security(StrEnum):
 	FIREJAIL = auto()
 	BUBBLEWRAP = auto()
 	FAIL2BAN = auto()
+	PAM_U2F = 'pam-u2f'
+	SBCTL = auto()
 
 
 class SecurityConfigSerialization(TypedDict):

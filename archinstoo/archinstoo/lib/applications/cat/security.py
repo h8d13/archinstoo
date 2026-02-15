@@ -63,3 +63,11 @@ class SecurityApp:
 					debug('Installing security: Fail2ban')
 					install_session.add_additional_packages([tool.value])
 					install_session.enable_service('fail2ban.service')
+
+				case Security.PAM_U2F:
+					debug('Installing security: pam-u2f')
+					install_session.add_additional_packages(['pam-u2f'])
+
+				case Security.SBCTL:
+					debug('Installing security: sbctl')
+					install_session.add_additional_packages(['sbctl'])
