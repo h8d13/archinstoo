@@ -688,8 +688,10 @@ class GlobalMenu(AbstractMenu[None]):
 	) -> DiskLayoutConfiguration | None:
 		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
 		uki_enabled = bool(bootloader_config and bootloader_config.uki)
-		# UKI places the initramfs on the unencrypted ESP, which would expose the keyfile
-		allow_auto_unlock = not uki_enabled
+		is_grub = bool(bootloader_config and bootloader_config.bootloader == Bootloader.Grub)
+		# Auto-unlock embeds a keyfile in the initramfs; only safe when /boot is encrypted,
+		# which only GRUB supports. UKI places initramfs on the unencrypted ESP.
+		allow_auto_unlock = is_grub and not uki_enabled
 		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock).run()
 
 	def _select_bootloader_config(
