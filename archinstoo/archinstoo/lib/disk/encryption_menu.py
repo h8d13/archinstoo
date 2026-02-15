@@ -101,10 +101,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				text=tr('Auto unlock root'),
 				action=self._select_auto_unlock_root,
 				value=self._enc_config.auto_unlock_root,
-				dependencies=[self._check_dep_enc_type],
+				dependencies=[self._check_dep_auto_unlock],
 				preview_action=self._preview,
 				key='auto_unlock_root',
-				enabled=self._allow_auto_unlock,
 			),
 		]
 
@@ -148,6 +147,12 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def _check_dep_lvm_vols(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
 		return bool(enc_type and enc_type == EncryptionType.LuksOnLvm)
+
+	def _check_dep_auto_unlock(self) -> bool:
+		if not self._allow_auto_unlock or not self._check_dep_enc_type():
+			return False
+		partitions: list[PartitionModification] | None = self._item_group.find_by_key('partitions').value
+		return bool(partitions and any(p.is_boot() for p in partitions))
 
 	@override
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
