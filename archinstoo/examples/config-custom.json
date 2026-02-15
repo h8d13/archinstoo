@@ -38,6 +38,7 @@
     "kernels": [
         "linux"
     ],
+    "init_hooks": "busybox",
     "profile_config": {
         "profile": {
             "path": "./examples/custom.py",

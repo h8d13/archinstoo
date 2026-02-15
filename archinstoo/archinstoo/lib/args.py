@@ -96,6 +96,7 @@ class ArchConfig:
 			'swap': self.swap,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
+			'init_hooks': self.init_hooks.json(),
 			'profile_config': self.profile_config.json() if self.profile_config else None,
 			'hostname': self.hostname,
 			'auth_config': self.auth_config.json() if self.auth_config else None,
@@ -161,6 +162,9 @@ class ArchConfig:
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 		arch_config.ntp = args_config.get('ntp', True)
+
+		if init_hooks := args_config.get('init_hooks'):
+			arch_config.init_hooks = InitHooks(init_hooks)
 
 		return arch_config
 

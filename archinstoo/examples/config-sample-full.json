@@ -186,6 +186,7 @@
         "linux-zen"
     ],
     "kernel_headers": true,
+    "init_hooks": "systemd",
     "profile_config": {
         "profiles": [
             {

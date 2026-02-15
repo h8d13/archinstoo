@@ -1111,8 +1111,15 @@ class Installer:
 		kernel_parameters = []
 
 		if root_partition in self._disk_encryption.partitions:
-			debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
-			kernel_parameters.append(f'rd.luks.name={root_partition.uuid}=root')
+			if self._init_hooks == InitHooks.Systemd:
+				debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
+				kernel_parameters.append(f'rd.luks.name={root_partition.uuid}=root')
+			elif partuuid:
+				debug(f'Root partition is an encrypted device, identifying by PARTUUID: {root_partition.partuuid}')
+				kernel_parameters.append(f'cryptdevice=PARTUUID={root_partition.partuuid}:root')
+			else:
+				debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
+				kernel_parameters.append(f'cryptdevice=UUID={root_partition.uuid}:root')
 
 			if id_root:
 				kernel_parameters.append('root=/dev/mapper/root')
@@ -1145,12 +1152,18 @@ class Installer:
 				uuid = self._get_luks_uuid_from_mapper_dev(pv_seg_info.pv_name)
 
 				debug(f'LvmOnLuks, encrypted root partition, identifying by UUID: {uuid}')
-				kernel_parameters.append(f'rd.luks.name={uuid}=cryptlvm root={lvm.safe_dev_path}')
+				if self._init_hooks == InitHooks.Systemd:
+					kernel_parameters.append(f'rd.luks.name={uuid}=cryptlvm root={lvm.safe_dev_path}')
+				else:
+					kernel_parameters.append(f'cryptdevice=UUID={uuid}:cryptlvm root={lvm.safe_dev_path}')
 			case EncryptionType.LuksOnLvm:
 				uuid = self._get_luks_uuid_from_mapper_dev(lvm.mapper_path)
 
 				debug(f'LuksOnLvm, encrypted root partition, identifying by UUID: {uuid}')
-				kernel_parameters.append(f'rd.luks.name={uuid}=root root=/dev/mapper/root')
+				if self._init_hooks == InitHooks.Systemd:
+					kernel_parameters.append(f'rd.luks.name={uuid}=root root=/dev/mapper/root')
+				else:
+					kernel_parameters.append(f'cryptdevice=UUID={uuid}:root root=/dev/mapper/root')
 			case EncryptionType.NoEncryption:
 				debug(f'Identifying root lvm by mapper device: {lvm.dev_path}')
 				kernel_parameters.append(f'root={lvm.safe_dev_path}')

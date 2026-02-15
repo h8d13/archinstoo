@@ -157,6 +157,7 @@
     "linux-zen"
   ],
   "kernel_headers": false,
+  "init_hooks": "busybox",
   "locale_config": {
     "kb_layout": "us",
     "sys_enc": "UTF-8",
