@@ -235,9 +235,7 @@ class GlobalMenu(AbstractMenu[None]):
 		"""
 		Checks the validity of the current configuration.
 		"""
-		if len(self._missing_configs()) != 0:
-			return False
-		return self._validate_bootloader() is None
+		return not (self._missing_configs() or self._validate_bootloader())
 
 	def _select_archinstoo_settings(self, preset: Language) -> Language:
 		"""Open settings submenu for language and theme selection."""
@@ -580,28 +578,25 @@ class GlobalMenu(AbstractMenu[None]):
 			return bootloader_config.preview()
 		return None
 
-	def _validate_bootloader(self) -> str | None:
+	def _validate_bootloader(self) -> list[str]:
 		"""
 		Checks the selected bootloader is valid for the selected filesystem
 		type of the boot partition.
 
-		Returns [`None`] if the bootloader is valid, otherwise returns a
-		string with the error message.
-
-		XXX: The caller is responsible for wrapping the string with the translation
-			shim if necessary.
+		Returns a list of error messages, empty if the configuration is valid.
 		"""
-		bootloader_config: BootloaderConfiguration | None = None
+		errors: list[str] = []
+
+		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
+
+		if not bootloader_config or bootloader_config.bootloader == Bootloader.NO_BOOTLOADER:
+			return errors
+
+		bootloader = bootloader_config.bootloader
+
 		root_partition: PartitionModification | None = None
 		boot_partition: PartitionModification | None = None
 		efi_partition: PartitionModification | None = None
-
-		bootloader_config = self._item_group.find_by_key('bootloader_config').value
-
-		if not bootloader_config or bootloader_config.bootloader == Bootloader.NO_BOOTLOADER:
-			return None
-
-		bootloader = bootloader_config.bootloader
 
 		if disk_config := self._item_group.find_by_key('disk_config').value:
 			for layout in disk_config.device_modifications:
@@ -615,55 +610,55 @@ class GlobalMenu(AbstractMenu[None]):
 					if efi_partition := layout.get_efi_partition():
 						break
 		else:
-			return 'No disk layout selected'
+			return ['No disk layout selected']
 
 		if root_partition is None:
-			return 'Root partition not found'
+			errors.append('Root partition not found')
 
 		# Legacy vs /efi newer standard
 		if SysInfo.has_uefi():
 			if efi_partition is None:
-				return 'EFI system partition (ESP) not found'
-
-			if efi_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
-				return 'ESP must be formatted as a FAT filesystem'
-		else:
-			# non-uefi needs /boot
-			if boot_partition is None:
-				return 'Boot partition not found'
+				errors.append('EFI system partition (ESP) not found')
+			elif efi_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
+				errors.append('ESP must be formatted as a FAT filesystem')
+		elif boot_partition is None:
+			errors.append('Boot partition not found')
 
 		if disk_config.disk_encryption and bootloader != Bootloader.Grub:
 			enc = disk_config.disk_encryption
 			if any(p.is_boot() for p in enc.partitions):
-				return 'Encrypted /boot is only supported with GRUB'
+				errors.append('Encrypted /boot is only supported with GRUB')
 
 		# When ESP is at /efi with no separate /boot (e.g. btrfs subvolumes),
 		# systemd-boot has no partition to find the kernel/initramfs;
 		# either UKI must be enabled or a separate /boot (XBOOTLDR) is needed
 		if bootloader == Bootloader.Systemd and efi_partition and not boot_partition and not bootloader_config.uki:
-			return 'systemd-boot with ESP at /efi requires UKI or a separate /boot partition'
+			errors.append('systemd-boot with ESP at /efi requires UKI or a separate XBOOTLDR /boot partition')
 
 		if bootloader == Bootloader.Limine:
 			limine_boot = boot_partition or efi_partition
 			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
-				return 'Limine does not support booting with a non-FAT boot partition'
+				errors.append('Limine does not support booting with a non-FAT boot partition')
 
 		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():
-			return 'rEFInd can only be used on UEFI systems'
+			errors.append('rEFInd can only be used on UEFI systems')
 
-		return None
+		return errors
 
 	def _prev_install_invalid_config(self, item: MenuItem) -> str | None:
+		text = ''
+
 		if missing := self._missing_configs():
-			text = tr('Missing configurations:\n')
+			text += tr('Missing configurations:\n')
 			for m in missing:
 				text += f'- {m}\n'
-			return text[:-1]  # remove last new line
 
-		if error := self._validate_bootloader():
-			return tr(f'Invalid configuration: {error}')
+		if errors := self._validate_bootloader():
+			text += tr('Bad configurations:\n')
+			for e in errors:
+				text += f'- {e}\n'
 
-		return None
+		return text.rstrip('\n') or None
 
 	def _prev_profile(self, item: MenuItem) -> str | None:
 		profile_config: ProfileConfiguration | None = item.value
