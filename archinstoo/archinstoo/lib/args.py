@@ -181,6 +181,10 @@ class ArchConfigHandler:
 	def config(self) -> ArchConfig:
 		return self._config
 
+	@config.setter
+	def config(self, value: ArchConfig) -> None:
+		self._config = value
+
 	@property
 	def args(self) -> Arguments:
 		return self._args

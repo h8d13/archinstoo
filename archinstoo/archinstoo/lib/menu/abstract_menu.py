@@ -68,6 +68,12 @@ class AbstractMenu[ValueT]:
 			if item.key:
 				setattr(self._config, item.key, item.value)
 
+	def set_mandatory(self, key: str, mandatory: bool) -> None:
+		item = self._menu_item_group.find_by_key(key)
+		if item is None:
+			raise ValueError(f'No selector found: {key}')
+		item.mandatory = mandatory
+
 	def set_enabled(self, key: str, enabled: bool) -> None:
 		# the __config__ is associated with multiple items
 		found = False
