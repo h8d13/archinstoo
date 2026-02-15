@@ -81,6 +81,8 @@ class Security(StrEnum):
 	FIREJAIL = auto()
 	BUBBLEWRAP = auto()
 	FAIL2BAN = auto()
+	LIBFIDO2 = auto()
+	SBCTL = auto()
 
 
 class SecurityConfigSerialization(TypedDict):

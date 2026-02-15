@@ -63,3 +63,11 @@ class SecurityApp:
 					debug('Installing security: Fail2ban')
 					install_session.add_additional_packages([tool.value])
 					install_session.enable_service('fail2ban.service')
+
+				case Security.LIBFIDO2:
+					debug('Installing security: libfido2')
+					install_session.add_additional_packages(['libfido2'])
+
+				case Security.SBCTL:
+					debug('Installing security: sbctl')
+					install_session.add_additional_packages(['sbctl'])
