@@ -51,6 +51,7 @@ class GlobalMenu(AbstractMenu[None]):
 		self._arch_config = arch_config
 		self._skip_boot = skip_boot
 		self._skip_auth = skip_auth
+		self._uefi = SysInfo.has_uefi()
 		menu_options = self._get_menu_options()
 
 		self._item_group = MenuItemGroup(
@@ -105,7 +106,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Bootloader'),
-				value=BootloaderConfiguration.get_default(self._skip_boot),
+				value=BootloaderConfiguration.get_default(self._uefi, self._skip_boot),
 				action=self._select_bootloader_config,
 				preview_action=self._prev_bootloader_config,
 				key='bootloader_config',
@@ -573,7 +574,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:
 		bootloader_config: BootloaderConfiguration | None = item.value
 		if bootloader_config:
-			return bootloader_config.preview()
+			return bootloader_config.preview(self._uefi)
 		return None
 
 	def _validate_bootloader(self) -> str | None:
@@ -606,7 +607,7 @@ class GlobalMenu(AbstractMenu[None]):
 			for layout in disk_config.device_modifications:
 				if boot_partition := layout.get_boot_partition():
 					break
-			if SysInfo.has_uefi():
+			if self._uefi:
 				for layout in disk_config.device_modifications:
 					if efi_partition := layout.get_efi_partition():
 						break
@@ -617,7 +618,7 @@ class GlobalMenu(AbstractMenu[None]):
 			return 'Root partition not found'
 
 		# Legacy vs /efi newer standard
-		if SysInfo.has_uefi():
+		if self._uefi:
 			if efi_partition is None:
 				return 'EFI system partition (ESP) not found'
 
@@ -638,7 +639,7 @@ class GlobalMenu(AbstractMenu[None]):
 			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				return 'Limine does not support booting with a non-FAT boot partition'
 
-		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():
+		elif bootloader == Bootloader.Refind and not self._uefi:
 			return 'rEFInd can only be used on UEFI systems'
 
 		return None
@@ -689,9 +690,9 @@ class GlobalMenu(AbstractMenu[None]):
 		preset: BootloaderConfiguration | None = None,
 	) -> BootloaderConfiguration | None:
 		if preset is None:
-			preset = BootloaderConfiguration.get_default(self._skip_boot)
+			preset = BootloaderConfiguration.get_default(self._uefi, self._skip_boot)
 
-		return BootloaderMenu(preset, self._skip_boot).run()
+		return BootloaderMenu(preset, self._uefi, self._skip_boot).run()
 
 	@staticmethod
 	def _default_profile() -> Profile:
