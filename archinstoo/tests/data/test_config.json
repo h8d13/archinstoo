@@ -1,58 +1,11 @@
 {
   "archinstall-language": "English",
   "script": "test_script",
-  "app_config": {
-      "bluetooth_config": {
-          "enabled": true
-      },
-      "audio_config": {
-          "audio": "pipewire"
-      },
-      "print_service_config": {
-          "enabled": true
-      },
-      "firewall_config": {
-          "firewall": "ufw"
-      },
-      "management_config": {
-          "tools": ["git", "man-db"]
-      },
-      "monitor_config": {
-          "monitor": "htop"
-      },
-      "editor_config": {
-          "editor": "vim"
-      },
-      "power_management_config": {
-          "power_management": "power-profiles-daemon"
-      },
-      "security_config": {
-          "tools": ["apparmor", "firejail"]
-      }
-  },
-  "auth_config": {
-      "root_enc_password": "password_hash",
-      "users": [
-          {
-              "username": "user_name",
-              "enc_password": "password_hash",
-              "elev": true,
-              "groups": ["wheel", "adm", "log"],
-              "shell": "fish"
-          }
-      ],
-      "privilege_escalation": "doas"
-  },
   "bootloader_config": {
     "bootloader": "Systemd-boot",
     "uki": false,
     "removable": false
   },
-  "services": [
-    "service_1",
-    "service_2",
-    {"unit": "syncthing.service", "user": "testuser", "linger": true}
-  ],
   "disk_config": {
     "config_type": "default_layout",
     "btrfs_options": {
@@ -152,12 +105,19 @@
       }
     ]
   },
-  "hostname": "archy",
-  "kernels": [
-    "linux-zen"
-  ],
-  "kernel_headers": false,
-  "init_hooks": "busybox",
+  "auth_config": {
+      "root_enc_password": "password_hash",
+      "users": [
+          {
+              "username": "user_name",
+              "enc_password": "password_hash",
+              "elev": true,
+              "groups": ["wheel", "adm", "log"],
+              "shell": "fish"
+          }
+      ],
+      "privilege_escalation": "doas"
+  },
   "locale_config": {
     "kb_layout": "us",
     "sys_enc": "UTF-8",
@@ -188,25 +148,12 @@
     ],
     "parallel_downloads": 66
   },
-  "network_config": {
-    "type": "manual",
-    "nics": [
-      {
-        "iface": "eno1",
-        "ip": "192.168.1.15/24",
-        "dhcp": true,
-        "gateway": "192.168.1.1",
-        "dns": [
-          "192.168.1.1",
-          "9.9.9.9"
-        ]
-      }
-    ]
-  },
-  "ntp": true,
-  "packages": [
-    "firefox"
+  "swap": false,
+  "kernels": [
+    "linux-zen"
   ],
+  "kernel_headers": false,
+  "init_hooks": "busybox",
   "profile_config": {
     "gfx_driver": "All open-source",
     "greeter": "lightdm-gtk-greeter",
@@ -228,9 +175,62 @@
       }
     ]
   },
+  "hostname": "archy",
+  "app_config": {
+      "bluetooth_config": {
+          "enabled": true
+      },
+      "audio_config": {
+          "audio": "pipewire"
+      },
+      "print_service_config": {
+          "enabled": true
+      },
+      "firewall_config": {
+          "firewall": "ufw"
+      },
+      "management_config": {
+          "tools": ["git", "man-db"]
+      },
+      "monitor_config": {
+          "monitor": "htop"
+      },
+      "editor_config": {
+          "editor": "vim"
+      },
+      "power_management_config": {
+          "power_management": "power-profiles-daemon"
+      },
+      "security_config": {
+          "tools": ["apparmor", "firejail"]
+      }
+  },
+  "network_config": {
+    "type": "manual",
+    "nics": [
+      {
+        "iface": "eno1",
+        "ip": "192.168.1.15/24",
+        "dhcp": true,
+        "gateway": "192.168.1.1",
+        "dns": [
+          "192.168.1.1",
+          "9.9.9.9"
+        ]
+      }
+    ]
+  },
+  "timezone": "UTC",
+  "ntp": true,
+  "packages": [
+    "firefox"
+  ],
+  "services": [
+    "service_1",
+    "service_2",
+    {"unit": "syncthing.service", "user": "testuser", "linger": true}
+  ],
   "custom_commands": [
     "echo 'Hello, World!'"
-  ],
-  "swap": false,
-  "timezone": "UTC"
+  ]
 }

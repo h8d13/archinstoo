@@ -55,26 +55,28 @@ class Arguments:
 
 @dataclass
 class ArchConfig:
+	# Meta
 	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
 	script: str = 'guided'
-	locale_config: LocaleConfiguration | None = None
+	# Menu order
 	archinstoo_language: Language = field(default_factory=lambda: translation_handler.get_language_by_abbr('en'))
-	disk_config: DiskLayoutConfiguration | None = None
-	profile_config: ProfileConfiguration | None = None
-	pacman_config: PacmanConfiguration | None = None
-	network_config: NetworkConfiguration | None = None
 	bootloader_config: BootloaderConfiguration | None = None
-	app_config: ApplicationConfiguration | None = None
+	disk_config: DiskLayoutConfiguration | None = None
 	auth_config: AuthenticationConfiguration | None = None
+	locale_config: LocaleConfiguration | None = None
+	pacman_config: PacmanConfiguration | None = None
 	swap: ZramConfiguration | None = None
-	hostname: str = 'archlinux'
 	kernels: list[str] = field(default_factory=lambda: ['linux'])
 	kernel_headers: bool = False
 	init_hooks: InitHooks = InitHooks.Busybox
+	profile_config: ProfileConfiguration | None = None
+	hostname: str = 'archlinux'
+	app_config: ApplicationConfiguration | None = None
+	network_config: NetworkConfiguration | None = None
+	timezone: str | None = None
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
-	timezone: str | None = None
 	services: list[str | UserService] = field(default_factory=list)
 	custom_commands: list[str] = field(
 		default_factory=lambda: [
@@ -89,17 +91,17 @@ class ArchConfig:
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
 			'archinstoo-language': self.archinstoo_language.json(),
-			'locale_config': self.locale_config.json() if self.locale_config else None,
-			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
 			'disk_config': self.disk_config.json() if self.disk_config else None,
+			'auth_config': self.auth_config.json() if self.auth_config else None,
+			'locale_config': self.locale_config.json() if self.locale_config else None,
+			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
 			'swap': self.swap,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
 			'init_hooks': self.init_hooks.json(),
 			'profile_config': self.profile_config.json() if self.profile_config else None,
 			'hostname': self.hostname,
-			'auth_config': self.auth_config.json() if self.auth_config else None,
 			'app_config': self.app_config.json() if self.app_config else None,
 			'network_config': self.network_config.json() if self.network_config else None,
 			'timezone': self.timezone,

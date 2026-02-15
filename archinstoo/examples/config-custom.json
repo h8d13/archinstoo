@@ -2,6 +2,11 @@
     "bug_report_url": "https://github.com/h8d13/archinstoo",
     "script": "guided",
     "archinstoo-language": "English",
+    "bootloader_config": {
+        "bootloader": "Grub",
+        "uki": false,
+        "removable": false
+    },
     "locale_config": {
         "kb_layout": "us",
         "sys_lang": "en_US.UTF-8",
@@ -25,11 +30,6 @@
             "ILoveCandy"
         ],
         "parallel_downloads": 5
-    },
-    "bootloader_config": {
-        "bootloader": "Grub",
-        "uki": false,
-        "removable": false
     },
     "swap": {
         "enabled": true,

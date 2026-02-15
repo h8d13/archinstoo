@@ -2,36 +2,6 @@
     "bug_report_url": "https://github.com/h8d13/archinstoo",
     "script": "guided",
     "archinstoo-language": "English",
-    "locale_config": {
-        "kb_layout": "us",
-        "sys_lang": "en_US.UTF-8",
-        "sys_enc": "UTF-8",
-        "console_font": "default8x16"
-    },
-    "pacman_config": {
-        "mirror_regions": {
-            "Germany": [
-                "https://frankfurt.mirror.pkgbuild.com/$repo/os/$arch",
-                "https://berlin.mirror.pkgbuild.com/$repo/os/$arch"
-            ]
-        },
-        "custom_servers": [],
-        "optional_repositories": [
-            "multilib"
-        ],
-        "custom_repositories": [
-            {
-                "name": "evoquus",
-                "url": "https://evoquus.com/pkgs/",
-                "sign_check": "Never",
-                "sign_option": "TrustAll"
-            }
-        ],
-        "pacman_options": [
-            "Color",
-            "ILoveCandy"
-        ]
-    },
     "bootloader_config": {
         "bootloader": "Grub",
         "uki": true,
@@ -178,6 +148,49 @@
             }
         }
     },
+    "auth_config": {
+        "lock_root_account": true,
+        "privilege_escalation": "doas",
+        "users": [
+            {
+                "username": "myuser",
+                "enc_password": null,
+                "elev": true,
+                "groups": null,
+                "shell": "bash"
+            }
+        ]
+    },
+    "locale_config": {
+        "kb_layout": "us",
+        "sys_lang": "en_US.UTF-8",
+        "sys_enc": "UTF-8",
+        "console_font": "default8x16"
+    },
+    "pacman_config": {
+        "mirror_regions": {
+            "Germany": [
+                "https://frankfurt.mirror.pkgbuild.com/$repo/os/$arch",
+                "https://berlin.mirror.pkgbuild.com/$repo/os/$arch"
+            ]
+        },
+        "custom_servers": [],
+        "optional_repositories": [
+            "multilib"
+        ],
+        "custom_repositories": [
+            {
+                "name": "evoquus",
+                "url": "https://evoquus.com/pkgs/",
+                "sign_check": "Never",
+                "sign_option": "TrustAll"
+            }
+        ],
+        "pacman_options": [
+            "Color",
+            "ILoveCandy"
+        ]
+    },
     "swap": {
         "enabled": true,
         "algorithm": "lz4"
@@ -211,19 +224,6 @@
         "greeter": "gdm"
     },
     "hostname": "archinstoo",
-    "auth_config": {
-        "lock_root_account": true,
-        "privilege_escalation": "doas",
-        "users": [
-            {
-                "username": "myuser",
-                "enc_password": null,
-                "elev": true,
-                "groups": null,
-                "shell": "bash"
-            }
-        ]
-    },
     "app_config": {
         "bluetooth_config": {
             "enabled": true
