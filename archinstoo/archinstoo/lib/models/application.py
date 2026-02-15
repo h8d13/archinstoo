@@ -81,7 +81,7 @@ class Security(StrEnum):
 	FIREJAIL = auto()
 	BUBBLEWRAP = auto()
 	FAIL2BAN = auto()
-	LIBFIDO2 = auto()
+	PAM_U2F = 'pam-u2f'
 	SBCTL = auto()
 
 
