@@ -520,7 +520,7 @@ class Installer:
 		keyfile.write_bytes(os.urandom(2048))
 		keyfile.chmod(0o000)
 
-		luks_handler._add_key(keyfile)
+		luks_handler.add_key(keyfile)
 
 		if kf_path not in self._files:
 			self._files.append(kf_path)
