@@ -98,7 +98,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='lvm_volumes',
 			),
 			MenuItem(
-				text=tr('Single password on boot'),
+				text=tr('Auto unlock root'),
 				action=self._select_auto_unlock_root,
 				value=self._enc_config.auto_unlock_root,
 				dependencies=[self._check_dep_enc_type],
@@ -114,8 +114,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return []
 
 	def _select_auto_unlock_root(self, preset: bool) -> bool:
-		prompt = tr('Embed a keyfile in initramfs so root is auto-unlocked after GRUB decrypts /boot?') + '\n'
-		prompt += tr('This avoids entering the encryption password twice on boot.') + '\n'
+		prompt = tr('Embed a keyfile in initramfs so root is auto-unlocked ?') + '\n'
+		prompt += tr('This avoids entering encryption password twice on boot.') + '\n'
 
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(preset)
@@ -269,7 +269,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if enc_type and enc_type != EncryptionType.NoEncryption:
 			status = tr('Enabled') if auto_unlock else tr('Disabled')
-			return f'{tr("Single password on boot")}: {status}'
+			return f'{tr("Auto unlock root")}: {status}'
 
 		return None
 
