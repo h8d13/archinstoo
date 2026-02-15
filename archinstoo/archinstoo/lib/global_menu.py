@@ -637,6 +637,12 @@ class GlobalMenu(AbstractMenu[None]):
 			if any(p.is_boot() for p in enc.partitions):
 				return 'Encrypted /boot is only supported with GRUB'
 
+		# When ESP is at /efi with no separate /boot (e.g. btrfs subvolumes),
+		# systemd-boot has no partition to find the kernel/initramfs;
+		# either UKI must be enabled or a separate /boot (XBOOTLDR) is needed
+		if bootloader == Bootloader.Systemd and efi_partition and not boot_partition and not bootloader_config.uki:
+			return 'systemd-boot with ESP at /efi requires UKI or a separate /boot partition'
+
 		if bootloader == Bootloader.Limine:
 			limine_boot = boot_partition or efi_partition
 			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
