@@ -13,7 +13,7 @@ To see general [features](./FEATURES.MD)
         - New `EncryptionType` and derivation models in device module
     - Security applications
         - Switch from `busybox` type initramfs hooks to `systemd` hooks
-            - This will simplify `sbctl` and more security features
+            - This will simplify `sbctl` and `systemd-cryptenroll` setups
         - Add `pam-u2f` and `sbctl` to Security category options
     - Bootloader fixes
         - Fix efistub installation path
