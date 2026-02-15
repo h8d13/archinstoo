@@ -7,8 +7,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 
 
-# any special handling for a shell can go here bellow
-# TODO: peak elitism busybox shell and remove bash
 class ShellApp:
 	def install(
 		self,

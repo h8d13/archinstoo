@@ -6,13 +6,12 @@ from archinstoo.lib.models.application import ApplicationConfiguration, ZramConf
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, FilesystemType, PartitionModification
 from archinstoo.lib.models.init import InitHooks
-from archinstoo.lib.tui.types import FrameProperties
 from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.script_editor import edit_script
-from archinstoo.lib.tui.types import Alignment, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
 from .applications.application_menu import ApplicationMenu
 from .args import ArchConfig
