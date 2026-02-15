@@ -8,9 +8,9 @@ class InitHooks(Enum):
 	def display_name(self) -> str:
 		match self:
 			case InitHooks.Busybox:
-				return 'Busybox (encrypt)'
+				return 'Busybox'
 			case InitHooks.Systemd:
-				return 'Systemd (sd-encrypt)'
+				return 'Systemd'
 
 	def json(self) -> str:
 		return self.value

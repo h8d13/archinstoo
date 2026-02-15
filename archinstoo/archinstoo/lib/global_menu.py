@@ -581,8 +581,8 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _select_init_hooks(self, preset: InitHooks) -> InitHooks:
 		header = tr('Select initramfs hooks') + '\n\n'
-		header += tr('Busybox: Minimal, traditional hooks (encrypt)') + '\n'
-		header += tr('Systemd: Full systemd in initramfs (sd-encrypt)') + '\n'
+		header += tr('Busybox: Minimal, traditional init') + '\n'
+		header += tr('Systemd: Full systemd in initramfs') + '\n'
 		header += tr('Required for TPM2/FIDO2 unlock via cryptenroll') + '\n'
 
 		items = [MenuItem(h.display_name(), value=h) for h in InitHooks]
