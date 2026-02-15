@@ -3,6 +3,31 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 To see general [features](./FEATURES.MD)
 
+## 0.1.3-0
+
+    - Encryption (#84)
+        - Add choices for LUKS key derivation function (argon2id/pbkdf2)
+        - Add auto-unlock option for non-UKI/GRUB setups (shorter iters for mem restrictions)
+        - Switch from `encrypt` hook to `sd-encrypt` with systemd initramfs hooks
+        - Update `schema.jsonc` for new encryption fields
+        - New `EncryptionType` and derivation models in device module
+    - Security applications
+        - Switch from `busybox` type initramfs hooks to `systemd` hooks
+            - This will simplify `sbctl` and more security features
+        - Add `pam-u2f` and `sbctl` to Security category options
+    - Bootloader fixes
+        - Fix efistub installation path
+        - Refactor UEFI references across bootloader menu and models (cf)
+    - Error handling
+        - Refactor error reporting for bad configs in global menu
+        - Rename error variables in `grimaur.py` for consistency
+    - Resume and config fixes
+        - Fix resume behavior for multiple settings
+        - Fix profile names for `httpd` and `sshd` servers
+        - Update `config-sample-full.json` with new fields
+    - Chores
+        - Update ruff to latest version
+
 ## 0.1.2-0
 
     - Encrypted `/boot` seperate `/efi` (GRUB + argon2id)
