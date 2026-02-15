@@ -229,6 +229,7 @@ def _boot_partition(sector_size: SectorSize, using_gpt: bool, using_subvolumes: 
 	start = Size(1, Unit.MiB, sector_size)
 
 	# mount ESP at /efi when using btrfs subvolumes so /boot stays in @
+	# for systemd-boot this also means UKI needs to be active (or would need a XBOOTLDR part)
 	mountpoint = Path('/efi') if using_subvolumes else Path('/boot')
 
 	return PartitionModification(

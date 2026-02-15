@@ -21,6 +21,7 @@ from archinstoo.lib.models.device import (
 	DiskLayoutConfiguration,
 	EncryptionType,
 	FilesystemType,
+	LuksPbkdf,
 	LvmVolume,
 	PartitionModification,
 	SectorSize,
@@ -106,8 +107,7 @@ class Installer:
 		self._binaries: list[str] = []
 		self._files: list[str] = []
 
-		# systemd, sd-vconsole and sd-encrypt will be replaced by udev, keymap and encrypt
-		# if HSM is not used to encrypt the root volume. Check mkinitcpio() function for that override.
+		# sd-encrypt is inserted by _prepare_encrypt() when disk encryption is configured
 		self._hooks: list[str] = [
 			'base',
 			'systemd',
@@ -453,10 +453,20 @@ class Installer:
 			case EncryptionType.LuksOnLvm:
 				self._generate_key_file_lvm_volumes()
 			case EncryptionType.LvmOnLuks:
-				# currently LvmOnLuks only supports a single
-				# partitioning layout (boot + partition)
-				# so we won't need any keyfile generation atm
-				pass
+				# LvmOnLuks: the LUKS container holds an LVM PV, root is a volume inside it.
+				# The partition itself isn't "root", so _generate_key_files_partitions
+				# can't detect it via is_root(). Handle it directly here.
+				if self._disk_encryption.auto_unlock_root:
+					for part_mod in self._disk_encryption.partitions:
+						if part_mod.is_boot() or part_mod.is_efi():
+							continue
+						luks_handler = Luks2(
+							part_mod.safe_dev_path,
+							mapper_name=part_mod.mapper_name,
+							password=self._disk_encryption.encryption_password,
+						)
+						self._create_root_keyfile(luks_handler, mapper_name='cryptlvm')
+						break
 
 	def _generate_key_files_partitions(self) -> None:
 		for part_mod in self._disk_encryption.partitions:
@@ -472,9 +482,14 @@ class Installer:
 				debug(f'Creating key-file: {part_mod.dev_path}')
 				# GRUB has limited memory for argon2id decryption;
 				# constrain the keyfile slot too so GRUB can handle it
-				pbkdf_memory = 32 * 1024 if part_mod.is_boot() else None
-				iter_time = 200 if part_mod.is_boot() else None
+				is_boot = part_mod.is_boot()
+				uses_argon2 = self._disk_encryption.pbkdf == LuksPbkdf.Argon2id
+				pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
+				iter_time = 200 if is_boot else None
 				luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
+
+			if self._disk_encryption.auto_unlock_root and part_mod.is_root():
+				self._create_root_keyfile(luks_handler)
 
 	def _generate_key_file_lvm_volumes(self) -> None:
 		for vol in self._disk_encryption.lvm_volumes:
@@ -489,6 +504,26 @@ class Installer:
 			if gen_enc_file and not vol.is_root():
 				info(f'Creating key-file: {vol.dev_path}')
 				luks_handler.create_keyfile(self.target)
+
+			if self._disk_encryption.auto_unlock_root and vol.is_root():
+				self._create_root_keyfile(luks_handler)
+
+	def _create_root_keyfile(self, luks_handler: Luks2, mapper_name: str = 'root') -> None:
+		"""Create a keyfile at the sd-encrypt standard path and add it as a LUKS
+		key slot so the volume can be auto-unlocked from the initramfs.
+		sd-encrypt auto-detects keys at /etc/cryptsetup-keys.d/<name>.key."""
+		kf_path = f'/etc/cryptsetup-keys.d/{mapper_name}.key'
+		keyfile = self.target / kf_path.lstrip('/')
+		debug(f'Creating root auto-unlock keyfile: {keyfile}')
+
+		keyfile.parent.mkdir(parents=True, exist_ok=True)
+		keyfile.write_bytes(os.urandom(2048))
+		keyfile.chmod(0o000)
+
+		luks_handler._add_key(keyfile)
+
+		if kf_path not in self._files:
+			self._files.append(kf_path)
 
 	def post_install_check(self, *args: str, **kwargs: str) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
@@ -787,12 +822,6 @@ class Installer:
 			content = re.sub('\nMODULES=(.*)', f'\nMODULES=({" ".join(self._modules)})', content)
 			content = re.sub('\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self._binaries)})', content)
 			content = re.sub('\nFILES=(.*)', f'\nFILES=({" ".join(self._files)})', content)
-
-			# Use traditional encryption hooks for mkinitcpio
-			# * systemd -> udev
-			# * sd-vconsole -> keymap
-			self._hooks = [hook.replace('systemd', 'udev').replace('sd-vconsole', 'keymap consolefont') for hook in self._hooks]
-
 			content = re.sub('\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self._hooks)})', content)
 			mkinit.seek(0)
 			mkinit.truncate()
@@ -828,8 +857,8 @@ class Installer:
 			self._hooks.remove('fsck')
 
 	def _prepare_encrypt(self, before: str = 'filesystems') -> None:
-		if 'encrypt' not in self._hooks:
-			self._hooks.insert(self._hooks.index(before), 'encrypt')
+		if 'sd-encrypt' not in self._hooks:
+			self._hooks.insert(self._hooks.index(before), 'sd-encrypt')
 
 	def minimal_installation(
 		self,
@@ -1060,15 +1089,8 @@ class Installer:
 		kernel_parameters = []
 
 		if root_partition in self._disk_encryption.partitions:
-			# TODO: We need to detect if the encrypted device is a whole disk encryption,
-			# or simply a partition encryption. Right now we assume it's a partition (and we always have)
-
-			if partuuid:
-				debug(f'Root partition is an encrypted device, identifying by PARTUUID: {root_partition.partuuid}')
-				kernel_parameters.append(f'cryptdevice=PARTUUID={root_partition.partuuid}:root')
-			else:
-				debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
-				kernel_parameters.append(f'cryptdevice=UUID={root_partition.uuid}:root')
+			debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
+			kernel_parameters.append(f'rd.luks.name={root_partition.uuid}=root')
 
 			if id_root:
 				kernel_parameters.append('root=/dev/mapper/root')
@@ -1101,12 +1123,12 @@ class Installer:
 				uuid = self._get_luks_uuid_from_mapper_dev(pv_seg_info.pv_name)
 
 				debug(f'LvmOnLuks, encrypted root partition, identifying by UUID: {uuid}')
-				kernel_parameters.append(f'cryptdevice=UUID={uuid}:cryptlvm root={lvm.safe_dev_path}')
+				kernel_parameters.append(f'rd.luks.name={uuid}=cryptlvm root={lvm.safe_dev_path}')
 			case EncryptionType.LuksOnLvm:
 				uuid = self._get_luks_uuid_from_mapper_dev(lvm.mapper_path)
 
 				debug(f'LuksOnLvm, encrypted root partition, identifying by UUID: {uuid}')
-				kernel_parameters.append(f'cryptdevice=UUID={uuid}:root root=/dev/mapper/root')
+				kernel_parameters.append(f'rd.luks.name={uuid}=root root=/dev/mapper/root')
 			case EncryptionType.NoEncryption:
 				debug(f'Identifying root lvm by mapper device: {lvm.dev_path}')
 				kernel_parameters.append(f'root={lvm.safe_dev_path}')
@@ -1571,7 +1593,7 @@ class Installer:
 			loader = '/vmlinuz-{kernel}'
 
 			entries = (
-				'initrd=/initramfs-{kernel}.img',
+				'initrd=\\initramfs-{kernel}.img',
 				*self._get_kernel_params(root),
 			)
 

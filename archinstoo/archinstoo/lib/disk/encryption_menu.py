@@ -7,6 +7,7 @@ from archinstoo.lib.models.device import (
 	DeviceModification,
 	DiskEncryption,
 	EncryptionType,
+	LuksPbkdf,
 	LvmConfiguration,
 	LvmVolume,
 	PartitionModification,
@@ -18,7 +19,7 @@ from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import get_password
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
 
 class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
@@ -27,6 +28,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		device_modifications: list[DeviceModification],
 		lvm_config: LvmConfiguration | None = None,
 		preset: DiskEncryption | None = None,
+		allow_auto_unlock: bool = False,
 	):
 		if preset:
 			self._enc_config = preset
@@ -35,6 +37,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		self._device_modifications = device_modifications
 		self._lvm_config = lvm_config
+		self._allow_auto_unlock = allow_auto_unlock
 
 		menu_options = self._define_menu_options()
 		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
@@ -63,6 +66,14 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='encryption_password',
 			),
 			MenuItem(
+				text=tr('Key derivation function'),
+				action=select_pbkdf,
+				value=self._enc_config.pbkdf,
+				dependencies=[self._check_dep_enc_type],
+				preview_action=self._preview,
+				key='pbkdf',
+			),
+			MenuItem(
 				text=tr('Iteration time'),
 				action=select_iteration_time,
 				value=self._enc_config.iter_time,
@@ -86,12 +97,44 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				preview_action=self._preview,
 				key='lvm_volumes',
 			),
+			MenuItem(
+				text=tr('Auto unlock root'),
+				action=self._select_auto_unlock_root,
+				value=self._enc_config.auto_unlock_root,
+				dependencies=[self._check_dep_auto_unlock],
+				preview_action=self._preview,
+				key='auto_unlock_root',
+			),
 		]
 
 	def _select_lvm_vols(self, preset: list[LvmVolume]) -> list[LvmVolume]:
 		if self._lvm_config:
 			return select_lvm_vols_to_encrypt(self._lvm_config, preset=preset)
 		return []
+
+	def _select_auto_unlock_root(self, preset: bool) -> bool:
+		prompt = tr('Embed a keyfile in initramfs so root is auto-unlocked ?') + '\n'
+		prompt += tr('This avoids entering encryption password twice on boot.') + '\n'
+
+		group = MenuItemGroup.yes_no()
+		group.set_focus_by_value(preset)
+
+		result = SelectMenu[bool](
+			group,
+			header=prompt,
+			columns=2,
+			orientation=Orientation.HORIZONTAL,
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
+
+		match result.type_:
+			case ResultType.Skip:
+				return preset
+			case ResultType.Selection:
+				return result.item() == MenuItem.yes()
+			case _:
+				return preset
 
 	def _check_dep_enc_type(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
@@ -105,15 +148,23 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
 		return bool(enc_type and enc_type == EncryptionType.LuksOnLvm)
 
+	def _check_dep_auto_unlock(self) -> bool:
+		if not self._allow_auto_unlock or not self._check_dep_enc_type():
+			return False
+		partitions: list[PartitionModification] | None = self._item_group.find_by_key('partitions').value
+		return bool(partitions and any(p.is_boot() for p in partitions))
+
 	@override
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
 		super().run(additional_title=additional_title)
 
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
 		enc_password: Password | None = self._item_group.find_by_key('encryption_password').value
+		pbkdf: LuksPbkdf | None = self._item_group.find_by_key('pbkdf').value
 		iter_time: int | None = self._item_group.find_by_key('iter_time').value
 		enc_partitions = self._item_group.find_by_key('partitions').value
 		enc_lvm_vols = self._item_group.find_by_key('lvm_volumes').value
+		auto_unlock_root: bool = self._item_group.find_by_key('auto_unlock_root').value or False
 
 		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
 			return None
@@ -131,6 +182,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				partitions=enc_partitions,
 				lvm_volumes=enc_lvm_vols,
 				iter_time=iter_time or DEFAULT_ITER_TIME,
+				pbkdf=pbkdf or LuksPbkdf.Argon2id,
+				auto_unlock_root=auto_unlock_root,
 			)
 
 		return None
@@ -144,6 +197,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		if (enc_pwd := self._prev_password()) is not None:
 			output += f'\n{enc_pwd}'
 
+		if (pbkdf := self._prev_pbkdf()) is not None:
+			output += f'\n{pbkdf}'
+
 		if (iter_time := self._prev_iter_time()) is not None:
 			output += f'\n{iter_time}'
 
@@ -152,6 +208,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if (lvm := self._prev_lvm_vols()) is not None:
 			output += f'\n\n{lvm}'
+
+		if (auto_unlock := self._prev_auto_unlock_root()) is not None:
+			output += f'\n{auto_unlock}'
 
 		if not output:
 			return None
@@ -191,12 +250,31 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		return None
 
+	def _prev_pbkdf(self) -> str | None:
+		pbkdf = self._item_group.find_by_key('pbkdf').value
+		enc_type = self._item_group.find_by_key('encryption_type').value
+
+		if pbkdf and enc_type != EncryptionType.NoEncryption:
+			return f'{tr("Key derivation function")}: {pbkdf.display_name()}'
+
+		return None
+
 	def _prev_iter_time(self) -> str | None:
 		iter_time = self._item_group.find_by_key('iter_time').value
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if iter_time and enc_type != EncryptionType.NoEncryption:
 			return f'{tr("Iteration time")}: {iter_time}ms'
+
+		return None
+
+	def _prev_auto_unlock_root(self) -> str | None:
+		auto_unlock = self._item_group.find_by_key('auto_unlock_root').value
+		enc_type = self._item_group.find_by_key('encryption_type').value
+
+		if enc_type and enc_type != EncryptionType.NoEncryption:
+			status = tr('Enabled') if auto_unlock else tr('Disabled')
+			return f'{tr("Auto unlock root")}: {status}'
 
 		return None
 
@@ -304,6 +382,32 @@ def select_lvm_vols_to_encrypt(
 				return result.get_values()
 
 	return []
+
+
+def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
+	if not preset:
+		preset = LuksPbkdf.Argon2id
+
+	options = [LuksPbkdf.Argon2id, LuksPbkdf.Pbkdf2]
+	items = [MenuItem(o.display_name(), value=o) for o in options]
+	group = MenuItemGroup(items)
+	group.set_focus_by_value(preset.display_name())
+
+	result = SelectMenu[LuksPbkdf](
+		group,
+		allow_skip=True,
+		allow_reset=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Key derivation function')),
+	).run()
+
+	match result.type_:
+		case ResultType.Reset:
+			return None
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return result.get_value()
 
 
 def select_iteration_time(preset: int | None = None) -> int | None:

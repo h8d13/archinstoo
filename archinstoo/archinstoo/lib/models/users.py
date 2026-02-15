@@ -171,7 +171,7 @@ class User:
 	def json(self) -> UserSerialization:
 		return {
 			'username': self.username,
-			'enc_password': self.password.enc_password if self.password else None,
+			'enc_password': None,
 			'elev': self.elev,
 			'groups': self.groups,
 			'stash_urls': self.stash_urls,
