@@ -1593,7 +1593,7 @@ class Installer:
 			loader = '/vmlinuz-{kernel}'
 
 			entries = (
-				'initrd=/initramfs-{kernel}.img',
+				'initrd=\\initramfs-{kernel}.img',
 				*self._get_kernel_params(root),
 			)
 
