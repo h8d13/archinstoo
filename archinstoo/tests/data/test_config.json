@@ -6,6 +6,11 @@
     "uki": false,
     "removable": false
   },
+  "kernels": [
+    "linux-zen"
+  ],
+  "kernel_headers": false,
+  "init_hooks": "busybox",
   "disk_config": {
     "config_type": "default_layout",
     "btrfs_options": {
@@ -149,11 +154,6 @@
     "parallel_downloads": 66
   },
   "swap": false,
-  "kernels": [
-    "linux-zen"
-  ],
-  "kernel_headers": false,
-  "init_hooks": "busybox",
   "profile_config": {
     "gfx_driver": "All open-source",
     "greeter": "lightdm-gtk-greeter",

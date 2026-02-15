@@ -61,14 +61,14 @@ class ArchConfig:
 	# Menu order
 	archinstoo_language: Language = field(default_factory=lambda: translation_handler.get_language_by_abbr('en'))
 	bootloader_config: BootloaderConfiguration | None = None
+	kernels: list[str] = field(default_factory=lambda: ['linux'])
+	kernel_headers: bool = False
+	init_hooks: InitHooks = InitHooks.Busybox
 	disk_config: DiskLayoutConfiguration | None = None
 	auth_config: AuthenticationConfiguration | None = None
 	locale_config: LocaleConfiguration | None = None
 	pacman_config: PacmanConfiguration | None = None
 	swap: ZramConfiguration | None = None
-	kernels: list[str] = field(default_factory=lambda: ['linux'])
-	kernel_headers: bool = False
-	init_hooks: InitHooks = InitHooks.Busybox
 	profile_config: ProfileConfiguration | None = None
 	hostname: str = 'archlinux'
 	app_config: ApplicationConfiguration | None = None
@@ -92,14 +92,14 @@ class ArchConfig:
 			'script': self.script,
 			'archinstoo-language': self.archinstoo_language.json(),
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
+			'kernels': self.kernels,
+			'kernel_headers': self.kernel_headers,
+			'init_hooks': self.init_hooks.json(),
 			'disk_config': self.disk_config.json() if self.disk_config else None,
 			'auth_config': self.auth_config.json() if self.auth_config else None,
 			'locale_config': self.locale_config.json() if self.locale_config else None,
 			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
 			'swap': self.swap,
-			'kernels': self.kernels,
-			'kernel_headers': self.kernel_headers,
-			'init_hooks': self.init_hooks.json(),
 			'profile_config': self.profile_config.json() if self.profile_config else None,
 			'hostname': self.hostname,
 			'app_config': self.app_config.json() if self.app_config else None,

@@ -7,6 +7,10 @@
         "uki": false,
         "removable": false
     },
+    "kernels": [
+        "linux"
+    ],
+    "init_hooks": "busybox",
     "locale_config": {
         "kb_layout": "us",
         "sys_lang": "en_US.UTF-8",
@@ -35,10 +39,6 @@
         "enabled": true,
         "algorithm": "zstd"
     },
-    "kernels": [
-        "linux"
-    ],
-    "init_hooks": "busybox",
     "profile_config": {
         "profile": {
             "path": "./examples/custom.py",

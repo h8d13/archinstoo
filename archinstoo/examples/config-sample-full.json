@@ -7,6 +7,11 @@
         "uki": true,
         "removable": true
     },
+    "kernels": [
+        "linux-zen"
+    ],
+    "kernel_headers": true,
+    "init_hooks": "systemd",
     "disk_config": {
         "config_type": "default_layout",
         "device_modifications": [
@@ -195,11 +200,6 @@
         "enabled": true,
         "algorithm": "lz4"
     },
-    "kernels": [
-        "linux-zen"
-    ],
-    "kernel_headers": true,
-    "init_hooks": "systemd",
     "profile_config": {
         "profiles": [
             {

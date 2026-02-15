@@ -84,6 +84,21 @@ class GlobalMenu(AbstractMenu[None]):
 				key='bootloader_config',
 			),
 			MenuItem(
+				text=tr('Kernels'),
+				value=['linux'],
+				action=self._select_kernel,
+				preview_action=self._prev_kernel,
+				mandatory=False,
+				key='kernels',
+			),
+			MenuItem(
+				text=tr('Initramfs'),
+				value=InitHooks.Busybox,
+				action=self._select_init_hooks,
+				preview_action=self._prev_init_hooks,
+				key='init_hooks',
+			),
+			MenuItem(
 				text=tr('Disk config'),
 				action=self._select_disk_config,
 				preview_action=self._prev_disk_config,
@@ -118,21 +133,6 @@ class GlobalMenu(AbstractMenu[None]):
 				action=select_swap,
 				preview_action=self._prev_swap,
 				key='swap',
-			),
-			MenuItem(
-				text=tr('Kernels'),
-				value=['linux'],
-				action=self._select_kernel,
-				preview_action=self._prev_kernel,
-				mandatory=False,
-				key='kernels',
-			),
-			MenuItem(
-				text=tr('Initramfs'),
-				value=InitHooks.Busybox,
-				action=self._select_init_hooks,
-				preview_action=self._prev_init_hooks,
-				key='init_hooks',
 			),
 			MenuItem(
 				text=tr('Profile'),
