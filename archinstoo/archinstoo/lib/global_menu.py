@@ -180,6 +180,7 @@ class GlobalMenu(AbstractMenu[None]):
 				action=select_aur_packages,
 				value=[],
 				preview_action=self._prev_aur_packages,
+				dependencies=[self._has_elevated_users],
 				key='aur_packages',
 			),
 			MenuItem(
@@ -202,6 +203,10 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 		]
 
+	def _has_elevated_users(self) -> bool:
+		auth_config: AuthenticationConfiguration | None = self._item_group.find_by_key('auth_config').value
+		return auth_config.has_elevated_users if auth_config else False
+
 	def _missing_configs(self) -> list[str]:
 		item: MenuItem = self._item_group.find_by_key('auth_config')
 		auth_config: AuthenticationConfiguration | None = item.value
@@ -211,9 +216,8 @@ class GlobalMenu(AbstractMenu[None]):
 			return item.has_value()
 
 		missing = set()
-		has_superuser = auth_config.has_elevated_users if auth_config else False
 
-		if not self._skip_auth and (auth_config is None or auth_config.root_enc_password is None) and not has_superuser:
+		if not self._skip_auth and (auth_config is None or auth_config.root_enc_password is None) and not self._has_elevated_users():
 			missing.add(
 				tr('Either root-password or at least 1 user with elevated privileges must be specified'),
 			)
