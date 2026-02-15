@@ -15,6 +15,7 @@ from archinstoo.lib.models.application import ApplicationConfiguration, ZramConf
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
+from archinstoo.lib.models.init import InitHooks
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
@@ -69,6 +70,7 @@ class ArchConfig:
 	hostname: str = 'archlinux'
 	kernels: list[str] = field(default_factory=lambda: ['linux'])
 	kernel_headers: bool = False
+	init_hooks: InitHooks = InitHooks.Busybox
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)

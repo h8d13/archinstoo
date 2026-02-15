@@ -69,6 +69,7 @@ def perform_installation(
 		mountpoint,
 		disk_config,
 		kernels=config.kernels,
+		init_hooks=config.init_hooks,
 		handler=handler,
 		device_handler=device_handler,
 	) as installation:

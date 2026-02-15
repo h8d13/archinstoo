@@ -5,6 +5,8 @@ from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, FilesystemType, PartitionModification
+from archinstoo.lib.models.init import InitHooks
+from archinstoo.lib.tui.types import FrameProperties
 from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -76,6 +78,13 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem.separator(),  # critical - assumed empty and mandatory
 			MenuItem(
+				text=tr('Bootloader'),
+				value=BootloaderConfiguration.get_default(self._uefi, self._skip_boot),
+				action=self._select_bootloader_config,
+				preview_action=self._prev_bootloader_config,
+				key='bootloader_config',
+			),
+			MenuItem(
 				text=tr('Disk config'),
 				action=self._select_disk_config,
 				preview_action=self._prev_disk_config,
@@ -105,13 +114,6 @@ class GlobalMenu(AbstractMenu[None]):
 				value_validator=lambda c: bool(c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options),
 			),
 			MenuItem(
-				text=tr('Bootloader'),
-				value=BootloaderConfiguration.get_default(self._uefi, self._skip_boot),
-				action=self._select_bootloader_config,
-				preview_action=self._prev_bootloader_config,
-				key='bootloader_config',
-			),
-			MenuItem(
 				text=tr('Swap'),
 				value=ZramConfiguration(enabled=True),
 				action=select_swap,
@@ -125,6 +127,13 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_kernel,
 				mandatory=False,
 				key='kernels',
+			),
+			MenuItem(
+				text=tr('Initramfs'),
+				value=InitHooks.Busybox,
+				action=self._select_init_hooks,
+				preview_action=self._prev_init_hooks,
+				key='init_hooks',
 			),
 			MenuItem(
 				text=tr('Profile'),
@@ -571,6 +580,37 @@ class GlobalMenu(AbstractMenu[None]):
 			return output
 		return None
 
+	def _select_init_hooks(self, preset: InitHooks) -> InitHooks:
+		header = tr('Select initramfs hooks') + '\n\n'
+		header += tr('Busybox: Minimal, traditional hooks (encrypt)') + '\n'
+		header += tr('Systemd: Full systemd in initramfs (sd-encrypt)') + '\n'
+		header += tr('Required for TPM2/FIDO2 unlock via cryptenroll') + '\n'
+
+		items = [MenuItem(h.display_name(), value=h) for h in InitHooks]
+		group = MenuItemGroup(items)
+		group.set_focus_by_value(preset)
+
+		result = SelectMenu[InitHooks](
+			group,
+			header=header,
+			allow_skip=True,
+			alignment=Alignment.CENTER,
+			frame=FrameProperties.min(tr('Initramfs')),
+		).run()
+
+		match result.type_:
+			case ResultType.Skip:
+				return preset
+			case ResultType.Selection:
+				return result.get_value()
+			case _:
+				return preset
+
+	def _prev_init_hooks(self, item: MenuItem) -> str | None:
+		if item.value:
+			return f'{tr("Initramfs")}: {item.value.display_name()}'
+		return None
+
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:
 		bootloader_config: BootloaderConfiguration | None = item.value
 		if bootloader_config:
@@ -683,7 +723,17 @@ class GlobalMenu(AbstractMenu[None]):
 		self,
 		preset: DiskLayoutConfiguration | None = None,
 	) -> DiskLayoutConfiguration | None:
-		return DiskLayoutConfigurationMenu(preset).run()
+		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
+		init_hooks: InitHooks = self._item_group.find_by_key('init_hooks').value or InitHooks.Busybox
+		uki_enabled = bool(bootloader_config and bootloader_config.uki)
+		is_grub = bool(bootloader_config and bootloader_config.bootloader == Bootloader.Grub)
+		is_systemd_hooks = init_hooks == InitHooks.Systemd
+		# auto_unlock_root only works with:
+		# - GRUB (only bootloader that can decrypt /boot)
+		# - no UKI (initramfs on unencrypted ESP would expose the key)
+		# - systemd hooks (sd-encrypt supports keyfiles in initramfs)
+		allow_auto_unlock = is_grub and not uki_enabled and is_systemd_hooks
+		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock).run()
 
 	def _select_bootloader_config(
 		self,

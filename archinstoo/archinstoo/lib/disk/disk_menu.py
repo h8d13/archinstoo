@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import override
 
 from archinstoo.lib.disk.encryption_menu import DiskEncryptionMenu
@@ -33,7 +34,8 @@ class DiskMenuConfig:
 
 
 class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
-	def __init__(self, disk_layout_config: DiskLayoutConfiguration | None):
+	def __init__(self, disk_layout_config: DiskLayoutConfiguration | None, allow_auto_unlock: bool = False):
+		self._allow_auto_unlock = allow_auto_unlock
 		if not disk_layout_config:
 			self._disk_menu_config = DiskMenuConfig(
 				disk_config=None,
@@ -131,7 +133,9 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		if not DiskEncryption.validate_enc(modifications, lvm_config):
 			return None
 
-		return DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset).run()
+		allow_auto_unlock = self._allow_auto_unlock and any(p.is_efi() and p.mountpoint == Path('/efi') for mod in modifications for p in mod.partitions)
+
+		return DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset, allow_auto_unlock=allow_auto_unlock).run()
 
 	def _select_disk_layout_config(self, preset: DiskLayoutConfiguration | None) -> DiskLayoutConfiguration | None:
 		disk_config = select_disk_config(preset)
