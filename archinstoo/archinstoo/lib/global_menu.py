@@ -725,13 +725,11 @@ class GlobalMenu(AbstractMenu[None]):
 		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
 		init_hooks: InitHooks = self._item_group.find_by_key('init_hooks').value or InitHooks.Busybox
 		uki_enabled = bool(bootloader_config and bootloader_config.uki)
-		is_grub = bool(bootloader_config and bootloader_config.bootloader == Bootloader.Grub)
 		is_systemd_hooks = init_hooks == InitHooks.Systemd
-		# auto_unlock_root only works with:
-		# - GRUB (only bootloader that can decrypt /boot)
+		# auto_unlock_root requires:
 		# - no UKI (initramfs on unencrypted ESP would expose the key)
 		# - systemd hooks (sd-encrypt supports keyfiles in initramfs)
-		allow_auto_unlock = is_grub and not uki_enabled and is_systemd_hooks
+		allow_auto_unlock = not uki_enabled and is_systemd_hooks
 		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock).run()
 
 	def _select_bootloader_config(
