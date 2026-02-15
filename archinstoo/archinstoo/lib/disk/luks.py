@@ -222,10 +222,10 @@ class Luks2:
 
 		key_file.chmod(0o400)
 
-		self._add_key(key_file, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
+		self.add_key(key_file, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
 		self._crypttab(crypttab_path, kf_path, options=['luks', 'key-slot=1'])
 
-	def _add_key(self, key_file: Path, pbkdf_memory: int | None = None, iter_time: int | None = None) -> None:
+	def add_key(self, key_file: Path, pbkdf_memory: int | None = None, iter_time: int | None = None) -> None:
 		debug(f'Adding additional key-file {key_file}')
 
 		pbkdf_memory_arg = f' --pbkdf-memory {pbkdf_memory}' if pbkdf_memory else ''
