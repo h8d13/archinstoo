@@ -5,7 +5,7 @@ from pathlib import Path
 from archinstoo.lib.args import get_arch_config_handler
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.luks import Luks2
-from archinstoo.lib.disk.utils import get_all_lsblk_info, get_lsblk_by_mountpoint
+from archinstoo.lib.disk.utils import get_all_lsblk_info, get_lsblk_by_mountpoint, mount
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import FilesystemType, LsblkInfo, Unit
@@ -98,7 +98,7 @@ def verify_linux_root(mount_point: Path) -> bool:
 def mount_partition(partition: LsblkInfo, mount_point: Path, handler: DeviceHandler) -> bool:
 	try:
 		info(f'Mounting {partition.path} to {mount_point}...')
-		handler.mount(partition.path, mount_point, create_target_mountpoint=True)
+		mount(partition.path, mount_point, create_target_mountpoint=True)
 		return True
 	except DiskError as e:
 		error(f'Failed to mount {partition.path}: {e}')
@@ -140,7 +140,7 @@ def mount_additional_filesystems(mount_point: Path, handler: DeviceHandler) -> N
 				target_path = mount_point / mountpoint.lstrip('/')
 
 				try:
-					handler.mount(Path(device), target_path, create_target_mountpoint=True)
+					mount(Path(device), target_path, create_target_mountpoint=True)
 					info(f'Mounted {device} to {target_path}')
 				except DiskError, SysCallError:
 					warn(f'Could not mount {device} to {target_path}, skipping...')
