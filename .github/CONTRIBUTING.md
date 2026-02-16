@@ -31,6 +31,10 @@ This contains all the necessary logic and calls to different parts of the codeba
 
 Any contributions through pull requests are welcome as this project aims to be a community based project for Arch Linux.
 
+### You can also help by testing or suggesting ideas:
+
+Many thanks to @ShreshthTiwari, @dzamlo, @eososlinux and some/many reddit/discord reporters too for the many indirect contribs.
+
 Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions. These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
 
 ## Branches
