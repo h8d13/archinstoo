@@ -149,10 +149,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return bool(enc_type and enc_type == EncryptionType.LuksOnLvm)
 
 	def _check_dep_auto_unlock(self) -> bool:
-		if not self._allow_auto_unlock or not self._check_dep_enc_type():
-			return False
-		partitions: list[PartitionModification] | None = self._item_group.find_by_key('partitions').value
-		return bool(partitions and any(p.is_boot() for p in partitions))
+		return self._allow_auto_unlock and self._check_dep_enc_type()
 
 	@override
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
