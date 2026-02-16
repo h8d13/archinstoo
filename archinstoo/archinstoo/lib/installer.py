@@ -14,7 +14,7 @@ from types import TracebackType
 from typing import Any, Self
 
 from archinstoo.lib.disk.device_handler import DeviceHandler
-from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info
+from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, mount, swapon
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
 	DiskEncryption,
@@ -388,7 +388,7 @@ class Installer:
 					if opt not in options:
 						options.append(opt)
 
-			self._device_handler.mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
+			mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
 		elif part_mod.fs_type == FilesystemType.Btrfs:
 			# Only mount BTRFS subvolumes that have mountpoints specified
 			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
@@ -399,12 +399,12 @@ class Installer:
 					part_mod.mount_options,
 				)
 		elif part_mod.is_swap():
-			self._device_handler.swapon(part_mod.dev_path)
+			swapon(part_mod.dev_path)
 
 	def _mount_lvm_vol(self, volume: LvmVolume) -> None:
 		if volume.fs_type != FilesystemType.Btrfs and volume.mountpoint and volume.dev_path:
 			target = self.target / volume.relative_mountpoint
-			self._device_handler.mount(volume.dev_path, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+			mount(volume.dev_path, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
 		if volume.fs_type == FilesystemType.Btrfs and volume.dev_path:
 			# Only mount BTRFS subvolumes that have mountpoints specified
@@ -422,17 +422,17 @@ class Installer:
 			if subvols_with_mountpoints:
 				self._mount_btrfs_subvol(luks_handler.mapper_dev, part_mod.btrfs_subvols, part_mod.mount_options)
 		elif part_mod.is_swap():
-			self._device_handler.swapon(luks_handler.mapper_dev)
+			swapon(luks_handler.mapper_dev)
 			self._fstab_entries.append(f'{luks_handler.mapper_dev}\tnone\tswap\tdefaults\t0\t0')
 		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
-			self._device_handler.mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=part_mod.mount_options)
+			mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=part_mod.mount_options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
 		if volume.fs_type != FilesystemType.Btrfs and volume.mountpoint and luks_handler.mapper_dev:
 			target = self.target / volume.relative_mountpoint
-			self._device_handler.mount(luks_handler.mapper_dev, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+			mount(luks_handler.mapper_dev, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
 		if volume.fs_type == FilesystemType.Btrfs and luks_handler.mapper_dev:
 			# Only mount BTRFS subvolumes that have mountpoints specified
@@ -451,7 +451,7 @@ class Installer:
 		for subvol in sorted(subvols_with_mountpoints, key=lambda x: x.relative_mountpoint):
 			mountpoint = self.target / subvol.relative_mountpoint
 			options = mount_options + [f'subvol={subvol.name}']
-			self._device_handler.mount(dev_path, mountpoint, mount_fs='btrfs', options=options)
+			mount(dev_path, mountpoint, mount_fs='btrfs', options=options)
 
 	def generate_key_files(self) -> None:
 		match self._disk_encryption.encryption_type:
@@ -1598,9 +1598,9 @@ class Installer:
 
 		if not uki_enabled:
 			loader = '/vmlinuz-{kernel}'
-
+			# EFI standards stipulate backslashes
 			entries = (
-				'initrd=\\initramfs-{kernel}.img',
+				r'initrd=\initramfs-{kernel}.img',
 				*self._get_kernel_params(root),
 			)
 

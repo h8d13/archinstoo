@@ -6,7 +6,7 @@ from pathlib import Path
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import LsblkInfo
-from archinstoo.lib.output import debug, warn
+from archinstoo.lib.output import debug, info, warn
 
 
 @dataclass
@@ -86,12 +86,12 @@ def get_lsblk_output() -> LsblkOutput:
 
 def find_lsblk_info(
 	dev_path: Path | str,
-	info: list[LsblkInfo],
+	info_list: list[LsblkInfo],
 ) -> LsblkInfo | None:
 	if isinstance(dev_path, str):
 		dev_path = Path(dev_path)
 
-	for lsblk_info in info:
+	for lsblk_info in info_list:
 		if lsblk_info.path == dev_path:
 			return lsblk_info
 
@@ -128,6 +128,42 @@ def disk_layouts() -> str:
 	return lsblk_output.to_json()
 
 
+def mount(
+	dev_path: Path,
+	target_mountpoint: Path,
+	mount_fs: str | None = None,
+	create_target_mountpoint: bool = True,
+	options: list[str] = [],
+) -> None:
+	if create_target_mountpoint and not target_mountpoint.exists():
+		target_mountpoint.mkdir(parents=True, exist_ok=True)
+
+	if not target_mountpoint.exists():
+		raise ValueError('Target mountpoint does not exist')
+
+	lsblk_info = get_lsblk_info(dev_path)
+	if target_mountpoint in lsblk_info.mountpoints:
+		info(f'Device already mounted at {target_mountpoint}')
+		return
+
+	cmd = ['mount']
+
+	if len(options):
+		cmd.extend(('-o', ','.join(options)))
+	if mount_fs:
+		cmd.extend(('-t', mount_fs))
+
+	cmd.extend((str(dev_path), str(target_mountpoint)))
+
+	command = ' '.join(cmd)
+	debug(f'Mounting {dev_path}: {command}')
+
+	try:
+		SysCommand(command)
+	except SysCallError as err:
+		raise DiskError(f'Could not mount {dev_path}: {command}\n{err.message}')
+
+
 def umount(mountpoint: Path, recursive: bool = False) -> None:
 	lsblk_info = get_lsblk_info(mountpoint)
 
@@ -144,9 +180,7 @@ def umount(mountpoint: Path, recursive: bool = False) -> None:
 	for path in lsblk_info.mountpoints:
 		# Skip [SWAP] - it's not a real mountpoint, swap is handled separately
 		if str(path) == '[SWAP]':
-			debug(f'Skipping swap mountpoint, using swapoff on device: {mountpoint}')
-			with contextlib.suppress(SysCallError):
-				SysCommand(['swapoff', str(mountpoint)])
+			swapoff(mountpoint)
 			continue
 		debug(f'Unmounting mountpoint: {path}')
 		try:
@@ -160,3 +194,16 @@ def umount(mountpoint: Path, recursive: bool = False) -> None:
 				SysCommand(lazy_cmd + [str(path)])
 			else:
 				raise
+
+
+def swapon(path: Path) -> None:
+	try:
+		SysCommand(['swapon', str(path)])
+	except SysCallError as err:
+		raise DiskError(f'Could not enable swap {path}:\n{err.message}')
+
+
+def swapoff(path: Path) -> None:
+	debug(f'Disabling swap on device: {path}')
+	with contextlib.suppress(SysCallError):
+		SysCommand(['swapoff', str(path)])

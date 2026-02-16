@@ -46,6 +46,7 @@ from .utils import (
 	get_all_lsblk_info,
 	get_lsblk_info,
 	is_subpath,
+	mount,
 	umount,
 )
 
@@ -204,7 +205,7 @@ class DeviceHandler:
 
 		if not lsblk_info.mountpoint:
 			try:
-				self.mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
+				mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
 			except SysCallError, DiskError:
 				debug(f'Failed to mount {dev_path} for btrfs inspection, skipping')
 				return subvol_infos
@@ -648,7 +649,7 @@ class DeviceHandler:
 	) -> None:
 		info(f'Creating subvolumes: {path}')
 
-		self.mount(path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
+		mount(path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
 
 		for sub_vol in sorted(btrfs_subvols, key=lambda x: x.name):
 			debug(f'Creating subvolume: {sub_vol.name}')
@@ -697,7 +698,7 @@ class DeviceHandler:
 			luks_handler = None
 			dev_path = part_mod.safe_dev_path
 
-		self.mount(
+		mount(
 			dev_path,
 			self._TMP_BTRFS_MOUNT,
 			create_target_mountpoint=True,
@@ -806,49 +807,6 @@ class DeviceHandler:
 			if part_mod.dev_path:
 				self.wipefs(part_mod.dev_path)
 				self.udev_sync()
-
-	@staticmethod
-	def swapon(path: Path) -> None:
-		try:
-			SysCommand(['swapon', str(path)])
-		except SysCallError as err:
-			raise DiskError(f'Could not enable swap {path}:\n{err.message}')
-
-	def mount(
-		self,
-		dev_path: Path,
-		target_mountpoint: Path,
-		mount_fs: str | None = None,
-		create_target_mountpoint: bool = True,
-		options: list[str] = [],
-	) -> None:
-		if create_target_mountpoint and not target_mountpoint.exists():
-			target_mountpoint.mkdir(parents=True, exist_ok=True)
-
-		if not target_mountpoint.exists():
-			raise ValueError('Target mountpoint does not exist')
-
-		lsblk_info = get_lsblk_info(dev_path)
-		if target_mountpoint in lsblk_info.mountpoints:
-			info(f'Device already mounted at {target_mountpoint}')
-			return
-
-		cmd = ['mount']
-
-		if len(options):
-			cmd.extend(('-o', ','.join(options)))
-		if mount_fs:
-			cmd.extend(('-t', mount_fs))
-
-		cmd.extend((str(dev_path), str(target_mountpoint)))
-
-		command = ' '.join(cmd)
-		debug(f'Mounting {dev_path}: {command}')
-
-		try:
-			SysCommand(command)
-		except SysCallError as err:
-			raise DiskError(f'Could not mount {dev_path}: {command}\n{err.message}')
 
 	def detect_pre_mounted_mods(self, base_mountpoint: Path) -> list[DeviceModification]:
 		part_mods: dict[Path, list[PartitionModification]] = {}
