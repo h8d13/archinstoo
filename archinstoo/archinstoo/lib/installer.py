@@ -36,7 +36,7 @@ from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
 
 from .args import ArchConfigHandler
-from .disk.luks import Luks2
+from .disk.luks import Luks2, unlock_luks2_dev
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
@@ -336,7 +336,7 @@ class Installer:
 		partitions: list[PartitionModification],
 	) -> dict[PartitionModification, Luks2]:
 		return {
-			part_mod: self._device_handler.unlock_luks2_dev(
+			part_mod: unlock_luks2_dev(
 				part_mod.dev_path,
 				part_mod.mapper_name,
 				self._disk_encryption.encryption_password,
@@ -363,7 +363,7 @@ class Installer:
 		lvm_volumes: list[LvmVolume],
 	) -> dict[LvmVolume, Luks2]:
 		return {
-			vol: self._device_handler.unlock_luks2_dev(
+			vol: unlock_luks2_dev(
 				vol.dev_path,
 				vol.mapper_name,
 				self._disk_encryption.encryption_password,
