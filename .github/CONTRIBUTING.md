@@ -33,7 +33,7 @@ Any contributions through pull requests are welcome as this project aims to be a
 
 ### You can also help by testing or suggesting ideas:
 
-Many thanks to @ShreshthTiwari, @dzamlo, @eososlinux and some/many reddit/discord reporters too for the many indirect contribs.
+Many thanks to @ShreshthTiwari, @dzamlo, @eososlinux and some/many reddit/discord reporters too for the many indirect contribs, and time spent testing or drawing up reports. This in it's core, takes just as much time as coding since you need to test many scenarios.
 
 Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions. These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
 
