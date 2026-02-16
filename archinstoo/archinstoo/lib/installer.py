@@ -94,13 +94,6 @@ class Installer:
 			'bootloader': None,
 		}
 
-	@property
-	def handler(self) -> ArchConfigHandler | None:
-		return self._handler
-
-	def set_helper_flag(self, key: str, value: str | bool | None) -> None:
-		self._helper_flags[key] = value
-
 		for kernel in self.kernels:
 			self._base_packages.append(kernel)
 
@@ -135,6 +128,13 @@ class Installer:
 		self._disable_fstrim = False
 
 		self.pacman = Pacman(self.target)
+
+	@property
+	def handler(self) -> ArchConfigHandler | None:
+		return self._handler
+
+	def set_helper_flag(self, key: str, value: str | bool | None) -> None:
+		self._helper_flags[key] = value
 
 	def __enter__(self) -> Self:
 		return self
