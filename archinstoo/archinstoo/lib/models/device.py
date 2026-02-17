@@ -1043,7 +1043,7 @@ class PartitionModification:
 			'Start': self.start.format_size(Unit.sectors, self.start.sector_size, include_unit=False),
 			'End': self.end.format_size(Unit.sectors, self.start.sector_size, include_unit=False),
 			'Size': self.length.format_highest(),
-			'FS type': self.fs_type.value if self.fs_type else 'Unknown',
+			'FS type': self.fs_type.value if self.fs_type else 'raw',
 			'Mountpoint': str(self.mountpoint) if self.mountpoint else '',
 			'Mount options': ', '.join(self.mount_options),
 			'Flags': ', '.join([f.description for f in self.flags]),
