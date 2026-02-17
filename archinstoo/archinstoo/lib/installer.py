@@ -14,7 +14,7 @@ from types import TracebackType
 from typing import Any, Self
 
 from archinstoo.lib.disk.device_handler import DeviceHandler
-from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, mount, swapon
+from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, get_parent_device_path, mount, swapon
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
 	DiskEncryption,
@@ -1356,7 +1356,7 @@ class Installer:
 		else:
 			info(f'GRUB boot partition: {boot_partition.dev_path}')
 
-			parent_dev_path = self._device_handler.get_parent_device_path(boot_partition.safe_dev_path)
+			parent_dev_path = get_parent_device_path(boot_partition.safe_dev_path)
 
 			add_options = [
 				'--target=i386-pc',
@@ -1449,7 +1449,7 @@ class Installer:
 
 			info(f'Limine EFI partition: {efi_partition.dev_path}')
 
-			parent_dev_path = self._device_handler.get_parent_device_path(efi_partition.safe_dev_path)
+			parent_dev_path = get_parent_device_path(efi_partition.safe_dev_path)
 
 			try:
 				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'
@@ -1513,7 +1513,7 @@ class Installer:
 
 			config_path = boot_limine_path / 'limine.conf'
 
-			parent_dev_path = self._device_handler.get_parent_device_path(boot_partition.safe_dev_path)
+			parent_dev_path = get_parent_device_path(boot_partition.safe_dev_path)
 
 			if unique_path := self._device_handler.get_unique_path_for_device(parent_dev_path):
 				parent_dev_path = unique_path
@@ -1610,7 +1610,7 @@ class Installer:
 			loader = '/EFI/Linux/arch-{kernel}.efi'
 			cmdline = []
 
-		parent_dev_path = self._device_handler.get_parent_device_path(boot_partition.safe_dev_path)
+		parent_dev_path = get_parent_device_path(boot_partition.safe_dev_path)
 
 		cmd_template = (
 			'efibootmgr',

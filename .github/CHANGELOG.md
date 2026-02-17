@@ -3,6 +3,30 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 To see general [features](./FEATURES.MD)
 
+## 0.1.3-1
+
+    - Refactor disk utils (DI Ext.)
+    - Add `plasma-login-manager` greeter (needs extra-testing repo enabled currently)
+        - Add `PlasmaLoginManager` to `GreeterType` enum, schema, and install logic
+    - LVM fixes for `/efi`-only layouts
+        - Fix `suggest_lvm_layout` crashing when no `/boot` partition exists (fallback to `/efi`)
+        - Fix `/efi` partition not being formatted before LVM setup in `filesystem.py`
+        - Exclude `/efi` from LVM physical volumes in both `/efi`-only and `/efi`+`/boot` layouts
+    - Bootloader defaults fix
+        - Fix UKI and Removable disabled by default for GRUB (regression from `df046f01` merge)
+        - `get_default()` was receiving `skip_boot` as `uefi` parameter
+    - Encryption improvements (#86 follow ups)
+        - Refactor LUKS UUID helper from `device_handler` to `luks.py`
+        - Add info print for key file generation (shows encryption type)
+        - Fix auto-unlock gating: require EFI partition present
+    - Disk utils refactor
+        - Separate `swapoff` into `disk/utils.py`
+        - Clean up `device_handler` by moving utility functions out
+    - Misc
+        - Fix rescue script paths
+        - Remove private prefixes from public API methods
+        - Contributing docs: add testing notes
+
 ## 0.1.3-0
 
     - Encryption (#84)

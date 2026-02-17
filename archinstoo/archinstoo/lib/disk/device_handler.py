@@ -176,10 +176,6 @@ class DeviceHandler:
 				return part
 		return None
 
-	def get_parent_device_path(self, dev_path: Path) -> Path:
-		lsblk = get_lsblk_info(dev_path)
-		return Path(f'/dev/{lsblk.pkname}')
-
 	def get_unique_path_for_device(self, dev_path: Path) -> Path | None:
 		paths = Path('/dev/disk/by-id').glob('*')
 		linked_targets = {p.resolve(): p for p in paths}

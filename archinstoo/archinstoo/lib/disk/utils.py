@@ -128,6 +128,11 @@ def disk_layouts() -> str:
 	return lsblk_output.to_json()
 
 
+def get_parent_device_path(dev_path: Path) -> Path:
+	lsblk = get_lsblk_info(dev_path)
+	return Path(f'/dev/{lsblk.pkname}')
+
+
 def mount(
 	dev_path: Path,
 	target_mountpoint: Path,
