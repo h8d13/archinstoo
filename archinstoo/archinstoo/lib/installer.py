@@ -454,6 +454,7 @@ class Installer:
 			mount(dev_path, mountpoint, mount_fs='btrfs', options=options)
 
 	def generate_key_files(self) -> None:
+		info(f'Generating key files for {self._disk_encryption.encryption_type.value}...')
 		match self._disk_encryption.encryption_type:
 			case EncryptionType.Luks:
 				self._generate_key_files_partitions()
@@ -509,7 +510,7 @@ class Installer:
 			)
 
 			if gen_enc_file and not vol.is_root():
-				info(f'Creating key-file: {vol.dev_path}')
+				debug(f'Creating key-file: {vol.dev_path}')
 				luks_handler.create_keyfile(self.target)
 
 			if self._disk_encryption.auto_unlock_root and vol.is_root():
@@ -521,8 +522,8 @@ class Installer:
 		sd-encrypt auto-detects keys at /etc/cryptsetup-keys.d/<name>.key."""
 		kf_path = f'/etc/cryptsetup-keys.d/{mapper_name}.key'
 		keyfile = self.target / kf_path.lstrip('/')
-		debug(f'Creating root auto-unlock keyfile: {keyfile}')
 
+		debug(f'Creating key-file: {keyfile}')
 		keyfile.parent.mkdir(parents=True, exist_ok=True)
 		keyfile.write_bytes(os.urandom(2048))
 		keyfile.chmod(0o000)
