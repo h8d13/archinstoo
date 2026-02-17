@@ -434,8 +434,6 @@ def suggest_single_disk_layout(
 	available_space = available_space.align()
 
 	# Used for reference: https://wiki.archlinux.org/title/partitioning
-
-	uefi = SysInfo.has_uefi()
 	boot_partitions = _boot_partition(sector_size, using_gpt, uefi, bootloader, using_subvolumes)
 	for part in boot_partitions:
 		device_modification.add_partition(part)
