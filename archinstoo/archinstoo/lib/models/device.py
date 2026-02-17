@@ -760,6 +760,7 @@ class PartitionFlag(PartitionFlagDataMixin, Enum):
 	BOOT = parted.PARTITION_BOOT
 	XBOOTLDR = parted.PARTITION_BLS_BOOT, 'bls_boot'
 	ESP = parted.PARTITION_ESP
+	BIOS_GRUB = parted.PARTITION_BIOS_GRUB, 'bios_grub'
 	LINUX_HOME = parted.PARTITION_LINUX_HOME, 'linux-home'
 	SWAP = parted.PARTITION_SWAP
 
