@@ -53,7 +53,7 @@ optdepends=(
   'python-systemd' #System journal logging
   'archiso' #Dev ISO more cow_space
   'tree' #For project tree output
-  'pacman-contrib' #For dependency trees
+  'pacman-contrib' #For dependency trees (count script and isomod)
 )
 provides=(archinstoo)
 replaces=(archinstoo)
