@@ -735,7 +735,7 @@ class DeviceHandler:
 		"""
 		Create a partition table on the block device and create all partitions.
 		"""
-		partition_table = partition_table or self.partition_table
+		partition_table = partition_table or modification.partition_table or self.partition_table
 
 		# WARNING: the entire device will be wiped and all data lost
 		if modification.wipe:

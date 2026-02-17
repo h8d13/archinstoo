@@ -1371,6 +1371,7 @@ class DeviceModification:
 	device: BDevice
 	wipe: bool
 	partitions: list[PartitionModification] = field(default_factory=list)
+	partition_table: PartitionTable | None = None
 
 	@property
 	def device_path(self) -> Path:
