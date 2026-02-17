@@ -695,7 +695,8 @@ class GlobalMenu(AbstractMenu[None]):
 		# from encrypted /boot, and UKI must be off otherwise the key
 		# ends up on the unencrypted ESP
 		allow_auto_unlock = is_grub and not uki_enabled
-		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock).run()
+		bootloader = bootloader_config.bootloader if bootloader_config else None
+		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock, bootloader=bootloader).run()
 
 	def _select_bootloader_config(
 		self,
