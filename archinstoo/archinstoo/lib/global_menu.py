@@ -77,7 +77,7 @@ class GlobalMenu(AbstractMenu[None]):
 			MenuItem.separator(),  # critical - assumed empty and mandatory
 			MenuItem(
 				text=tr('Bootloader'),
-				value=BootloaderConfiguration.get_default(self._skip_boot),
+				value=BootloaderConfiguration.get_default(self._uefi, self._skip_boot),
 				action=self._select_bootloader_config,
 				preview_action=self._prev_bootloader_config,
 				key='bootloader_config',
