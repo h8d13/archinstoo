@@ -2,6 +2,7 @@ from pathlib import Path
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.menu_helper import MenuHelper
+from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	BDevice,
 	BtrfsMountOption,
@@ -89,10 +90,12 @@ def select_device(
 def get_default_partition_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
+	bootloader: Bootloader | None = None,
 ) -> DeviceModification:
 	return suggest_single_disk_layout(
 		device,
 		filesystem_type=filesystem_type,
+		bootloader=bootloader,
 	)
 
 
@@ -112,6 +115,7 @@ def _manual_partitioning(
 def select_disk_config(
 	preset: DiskLayoutConfiguration | None = None,
 	device_handler: DeviceHandler | None = None,
+	bootloader: Bootloader | None = None,
 ) -> DiskLayoutConfiguration | None:
 	handler = device_handler or DeviceHandler()
 
@@ -179,7 +183,7 @@ def select_disk_config(
 				return None
 
 			if result.get_value() == default_layout:
-				modification = get_default_partition_layout(device)
+				modification = get_default_partition_layout(device, bootloader=bootloader)
 				return DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Default,
 					device_modifications=[modification],
@@ -228,6 +232,7 @@ def _boot_partition(
 	sector_size: SectorSize,
 	using_gpt: bool,
 	uefi: bool,
+	bootloader: Bootloader | None = None,
 	using_subvolumes: bool = False,
 ) -> list[PartitionModification]:
 	partitions = []
@@ -249,7 +254,8 @@ def _boot_partition(
 		)
 	else:
 		# BIOS+GPT: small ef02 partition for GRUB's core.img
-		if using_gpt:
+		# Limine uses the MBR gap directly, so it doesn't need this
+		if using_gpt and bootloader == Bootloader.Grub:
 			partitions.append(
 				PartitionModification(
 					status=ModificationStatus.Create,
@@ -387,6 +393,7 @@ def suggest_single_disk_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
 	separate_home: bool | None = None,
+	bootloader: Bootloader | None = None,
 ) -> DeviceModification:
 	if not filesystem_type:
 		filesystem_type = select_main_filesystem_format()
@@ -415,7 +422,8 @@ def suggest_single_disk_layout(
 		using_subvolumes = False
 		mount_options = []
 
-	partition_table = select_partition_table()
+	uefi = SysInfo.has_uefi()
+	partition_table = PartitionTable.GPT if uefi else select_partition_table()
 	device_modification = DeviceModification(device, wipe=True, partition_table=partition_table)
 
 	using_gpt = partition_table.is_gpt()
@@ -428,7 +436,7 @@ def suggest_single_disk_layout(
 	# Used for reference: https://wiki.archlinux.org/title/partitioning
 
 	uefi = SysInfo.has_uefi()
-	boot_partitions = _boot_partition(sector_size, using_gpt, uefi, using_subvolumes)
+	boot_partitions = _boot_partition(sector_size, using_gpt, uefi, bootloader, using_subvolumes)
 	for part in boot_partitions:
 		device_modification.add_partition(part)
 
