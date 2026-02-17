@@ -45,6 +45,7 @@ class GreeterType(Enum):
 	Nogreeter = ''
 	Lightdm = 'lightdm-gtk-greeter'
 	LightdmSlick = 'lightdm-slick-greeter'
+	PlasmaLoginManager = 'plasma-login-manager'
 	Sddm = 'sddm'
 	Gdm = 'gdm'
 	Ly = 'ly'

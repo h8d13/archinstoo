@@ -153,6 +153,9 @@ class ProfileHandler:
 			case GreeterType.Lightdm:
 				packages = ['lightdm', 'lightdm-gtk-greeter']
 				service = ['lightdm']
+			case GreeterType.PlasmaLoginManager:
+				packages = ['plasma-login-manager']
+				service = ['plasma-login-manager']
 			case GreeterType.Sddm:
 				packages = ['sddm']
 				service = ['sddm']

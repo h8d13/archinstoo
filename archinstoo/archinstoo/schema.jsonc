@@ -102,6 +102,7 @@
 	"greeters": {
 		"lightdm-slick-greeter": ["lightdm", "lightdm-slick-greeter"],
 		"lightdm-gtk-greeter": ["lightdm", "lightdm-gtk-greeter"],
+		"plasma-login-manager": ["plasma-login-manager"],
 		"sddm": ["sddm"],
 		"gdm": ["gdm"],
 		"ly": ["ly"],
