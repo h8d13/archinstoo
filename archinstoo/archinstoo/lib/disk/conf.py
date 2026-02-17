@@ -479,20 +479,19 @@ def suggest_lvm_layout(
 	boot_part: PartitionModification | None = None
 	other_part: list[PartitionModification] = []
 
+	efi_part: PartitionModification | None = None
+
 	for mod in disk_config.device_modifications:
 		for part in mod.partitions:
 			if part.is_boot():
 				boot_part = part
+			elif part.is_efi():
+				efi_part = part
 			else:
 				other_part.append(part)
 
 	if not boot_part:
-		for mod in disk_config.device_modifications:
-			for part in mod.partitions:
-				if part.is_efi():
-					boot_part = part
-					other_part.remove(part)
-					break
+		boot_part = efi_part
 
 	if not boot_part:
 		raise ValueError('Unable to find boot partition in partition modifications')
