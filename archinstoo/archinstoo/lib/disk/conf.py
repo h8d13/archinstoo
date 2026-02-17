@@ -233,6 +233,7 @@ def _boot_partition(
 	using_gpt: bool,
 	uefi: bool,
 	bootloader: Bootloader | None = None,
+	filesystem_type: FilesystemType = FilesystemType.Ext4,
 	using_subvolumes: bool = False,
 ) -> list[PartitionModification]:
 	partitions = []
@@ -269,7 +270,8 @@ def _boot_partition(
 			)
 			start = Size(2, Unit.MiB, sector_size)
 
-		# BIOS: /boot (ext4)
+		# BIOS: /boot — GRUB can read the user's chosen fs, Limine needs ext4
+		boot_fs = filesystem_type if bootloader == Bootloader.Grub else FilesystemType.Ext4
 		partitions.append(
 			PartitionModification(
 				status=ModificationStatus.Create,
@@ -277,7 +279,7 @@ def _boot_partition(
 				start=start,
 				length=Size(1, Unit.GiB, sector_size),
 				mountpoint=Path('/boot'),
-				fs_type=FilesystemType.Ext4,
+				fs_type=boot_fs,
 				flags=[PartitionFlag.BOOT],
 			)
 		)
@@ -434,7 +436,7 @@ def suggest_single_disk_layout(
 	available_space = available_space.align()
 
 	# Used for reference: https://wiki.archlinux.org/title/partitioning
-	boot_partitions = _boot_partition(sector_size, using_gpt, uefi, bootloader, using_subvolumes)
+	boot_partitions = _boot_partition(sector_size, using_gpt, uefi, bootloader, filesystem_type, using_subvolumes)
 	for part in boot_partitions:
 		device_modification.add_partition(part)
 
