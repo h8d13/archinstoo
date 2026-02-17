@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.device import (
 	BDevice,
@@ -222,25 +223,59 @@ def select_lvm_config(
 	return None
 
 
-def _boot_partition(sector_size: SectorSize, using_gpt: bool, using_subvolumes: bool = False) -> PartitionModification:
-	# on GPT parted's BOOT flag = ESP; use ESP for GPT, BOOT for MBR
-	flags = [PartitionFlag.ESP] if using_gpt else [PartitionFlag.BOOT]
-	size = Size(1, Unit.GiB, sector_size)
+def _boot_partition(
+	sector_size: SectorSize,
+	using_gpt: bool,
+	uefi: bool,
+	using_subvolumes: bool = False,
+) -> list[PartitionModification]:
+	partitions = []
 	start = Size(1, Unit.MiB, sector_size)
 
-	# mount ESP at /efi when using btrfs subvolumes so /boot stays in @
-	# for systemd-boot this also means UKI needs to be active (or would need a XBOOTLDR part)
-	mountpoint = Path('/efi') if using_subvolumes else Path('/boot')
+	if uefi:
+		# UEFI: ESP, mount at /efi for btrfs subvolumes so /boot stays in @
+		mountpoint = Path('/efi') if using_subvolumes else Path('/boot')
+		partitions.append(
+			PartitionModification(
+				status=ModificationStatus.Create,
+				type=PartitionType.Primary,
+				start=start,
+				length=Size(1, Unit.GiB, sector_size),
+				mountpoint=mountpoint,
+				fs_type=FilesystemType.Fat32,
+				flags=[PartitionFlag.ESP],
+			)
+		)
+	else:
+		# BIOS+GPT: small ef02 partition for GRUB's core.img
+		if using_gpt:
+			partitions.append(
+				PartitionModification(
+					status=ModificationStatus.Create,
+					type=PartitionType.Primary,
+					start=start,
+					length=Size(1, Unit.MiB, sector_size),
+					mountpoint=None,
+					fs_type=None,
+					flags=[PartitionFlag.BIOS_GRUB],
+				)
+			)
+			start = Size(2, Unit.MiB, sector_size)
 
-	return PartitionModification(
-		status=ModificationStatus.Create,
-		type=PartitionType.Primary,
-		start=start,
-		length=size,
-		mountpoint=mountpoint,
-		fs_type=FilesystemType.Fat32,
-		flags=flags,
-	)
+		# BIOS: /boot (ext4)
+		partitions.append(
+			PartitionModification(
+				status=ModificationStatus.Create,
+				type=PartitionType.Primary,
+				start=start,
+				length=Size(1, Unit.GiB, sector_size),
+				mountpoint=Path('/boot'),
+				fs_type=FilesystemType.Ext4,
+				flags=[PartitionFlag.BOOT],
+			)
+		)
+
+	return partitions
 
 
 def select_main_filesystem_format(advanced: bool = False) -> FilesystemType:
@@ -370,8 +405,10 @@ def suggest_single_disk_layout(
 
 	# Used for reference: https://wiki.archlinux.org/title/partitioning
 
-	boot_partition = _boot_partition(sector_size, using_gpt, using_subvolumes)
-	device_modification.add_partition(boot_partition)
+	uefi = SysInfo.has_uefi()
+	boot_partitions = _boot_partition(sector_size, using_gpt, uefi, using_subvolumes)
+	for part in boot_partitions:
+		device_modification.add_partition(part)
 
 	if separate_home is False or using_subvolumes or total_size < min_size_to_allow_home_part:
 		using_home_partition = False
@@ -392,8 +429,9 @@ def suggest_single_disk_layout(
 
 		using_home_partition = result.item() == MenuItem.yes()
 
-	# root partition
-	root_start = boot_partition.start + boot_partition.length
+	# root partition starts after last boot partition
+	last_boot = boot_partitions[-1]
+	root_start = last_boot.start + last_boot.length
 
 	# Set a size for / (/root)
 	root_length = process_root_partition_size(total_size, sector_size) if using_home_partition else available_space - root_start
