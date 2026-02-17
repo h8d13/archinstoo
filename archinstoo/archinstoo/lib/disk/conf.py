@@ -17,6 +17,7 @@ from archinstoo.lib.models.device import (
 	ModificationStatus,
 	PartitionFlag,
 	PartitionModification,
+	PartitionTable,
 	PartitionType,
 	SectorSize,
 	Size,
@@ -278,6 +279,29 @@ def _boot_partition(
 	return partitions
 
 
+def select_partition_table() -> PartitionTable:
+	default = PartitionTable.default()
+	items = [
+		MenuItem('GPT', value=PartitionTable.GPT),
+		MenuItem('MBR', value=PartitionTable.MBR),
+	]
+	group = MenuItemGroup(items, sort_items=False)
+	group.set_focus_by_value(default)
+
+	result = SelectMenu[PartitionTable](
+		group,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Partition table')),
+		allow_skip=False,
+	).run()
+
+	match result.type_:
+		case ResultType.Selection:
+			return result.get_value()
+		case _:
+			raise ValueError('Unhandled result type')
+
+
 def select_main_filesystem_format(advanced: bool = False) -> FilesystemType:
 	items = [
 		MenuItem('btrfs', value=FilesystemType.Btrfs),
@@ -363,10 +387,7 @@ def suggest_single_disk_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
 	separate_home: bool | None = None,
-	device_handler: DeviceHandler | None = None,
 ) -> DeviceModification:
-	handler = device_handler or DeviceHandler()
-
 	if not filesystem_type:
 		filesystem_type = select_main_filesystem_format()
 
@@ -394,9 +415,10 @@ def suggest_single_disk_layout(
 		using_subvolumes = False
 		mount_options = []
 
-	device_modification = DeviceModification(device, wipe=True)
+	partition_table = select_partition_table()
+	device_modification = DeviceModification(device, wipe=True, partition_table=partition_table)
 
-	using_gpt = handler.partition_table.is_gpt()
+	using_gpt = partition_table.is_gpt()
 
 	if using_gpt:
 		available_space = available_space.gpt_end()
