@@ -71,7 +71,8 @@ class FilesystemHandler:
 
 		if self._disk_config.lvm_config:
 			for mod in device_mods:
-				if boot_part := mod.get_boot_partition():
+				boot_part = mod.get_boot_partition() or mod.get_efi_partition()
+				if boot_part:
 					debug(f'Formatting boot partition: {boot_part.dev_path}')
 					self._format_partitions([boot_part])
 
