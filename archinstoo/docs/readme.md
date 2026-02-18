@@ -73,6 +73,7 @@
 │   │   │   ├── encryption_menu
 │   │   │   ├── filesystem
 │   │   │   ├── luks
+│   │   │   ├── lvm
 │   │   │   ├── partitioning_menu
 │   │   │   ├── subvolume_menu
 │   │   │   └── utils
@@ -102,6 +103,7 @@
 │   │   │   ├── network
 │   │   │   ├── packages
 │   │   │   ├── profile
+│   │   │   ├── service
 │   │   │   └── users
 │   │   ├── network/
 │   │   │   ├── network_handler
@@ -139,12 +141,12 @@
 │       ├── live
 │       ├── minimal
 │       ├── mirror
+│       ├── packages
 │       ├── rescue
 │       └── size
 ├── examples/
 │   ├── config-custom.json
 │   ├── config-sample-full.json
-│   ├── config-sample-mini.json
 │   └── custom
 ├── PKGBUILD
 ├── pyproject.toml
@@ -155,5 +157,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 130 files
+24 directories, 132 files
 ```

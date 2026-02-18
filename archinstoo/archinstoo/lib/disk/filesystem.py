@@ -24,6 +24,7 @@ from archinstoo.lib.tui.curses_menu import Tui
 
 from .device_handler import DeviceHandler
 from .luks import Luks2
+from .lvm import lvm_group_info, lvm_vol_info
 
 
 class FilesystemHandler:
@@ -191,7 +192,7 @@ class FilesystemHandler:
 			self._device_handler.lvm_vg_create(pv_dev_paths, vg.name)
 
 			# figure out what the actual available size in the group is
-			vg_info = self._device_handler.lvm_group_info(vg.name)
+			vg_info = lvm_group_info(vg.name)
 
 			if not vg_info:
 				raise ValueError('Unable to fetch VG info')
@@ -225,7 +226,7 @@ class FilesystemHandler:
 
 				while True:
 					debug('Fetching LVM volume info')
-					if self._device_handler.lvm_vol_info(lv.name) is not None:
+					if lvm_vol_info(lv.name) is not None:
 						break
 
 					time.sleep(1)

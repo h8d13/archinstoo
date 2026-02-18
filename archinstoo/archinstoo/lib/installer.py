@@ -14,6 +14,7 @@ from types import TracebackType
 from typing import Any, Self
 
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, get_parent_device_path, mount, swapon
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
@@ -353,10 +354,10 @@ class Installer:
 			return
 
 		for vg in lvm_config.vol_groups:
-			self._device_handler.lvm_import_vg(vg)
+			lvm_import_vg(vg)
 
 			for vol in vg.volumes:
-				self._device_handler.lvm_vol_change(vol, True)
+				lvm_vol_change(vol, True)
 
 	def _prepare_luks_lvm(
 		self,
@@ -1123,7 +1124,7 @@ class Installer:
 				if not lvm.vg_name:
 					raise ValueError(f'Unable to determine VG name for {lvm.name}')
 
-				pv_seg_info = self._device_handler.lvm_pvseg_info(lvm.vg_name, lvm.name)
+				pv_seg_info = lvm_pvseg_info(lvm.vg_name, lvm.name)
 
 				if not pv_seg_info:
 					raise ValueError(f'Unable to determine PV segment info for {lvm.vg_name}/{lvm.name}')
