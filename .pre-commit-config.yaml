@@ -1,4 +1,6 @@
 default_stages: ['pre-commit']
+default_language_version:
+  python: python3.14
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
@@ -28,7 +30,7 @@ repos:
     - id: destroyed-symlinks  # Detects symlinks which are changed to regular files
     - id: detect-private-key  # Checks for the existence of private keys
     # Python specific hooks:
-    - id: check-ast  # Simply check whether files parse as valid python
+    # check-ast skipped - requires Python 3.14 for PEP 758 syntax
     - id: check-docstring-first  # Checks for a common error of placing code before the docstring
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.19.1
@@ -45,7 +47,5 @@ repos:
     - id: pylint
       args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "archinstoo")']
       exclude: ^archinstoo/tests/
-      additional_dependencies:
-        - pyparted>=3.13.0
       fail_fast: true
       require_serial: true

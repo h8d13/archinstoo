@@ -14,6 +14,7 @@ from types import TracebackType
 from typing import Any, Self
 
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.disk.filesystem import get_boot_enc_params
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, get_parent_device_path, mount, swapon
 from archinstoo.lib.models.application import ZramAlgorithm
@@ -489,12 +490,10 @@ class Installer:
 
 			if gen_enc_file and not part_mod.is_root():
 				debug(f'Creating key-file: {part_mod.dev_path}')
-				# GRUB has limited memory for argon2id decryption;
-				# constrain the keyfile slot too so GRUB can handle it
 				is_boot = part_mod.is_boot()
 				uses_argon2 = self._disk_encryption.pbkdf == LuksPbkdf.Argon2id
-				pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
-				iter_time = 200 if is_boot else None
+				bootloader = self._handler.config.bootloader_config.bootloader if self._handler and self._handler.config.bootloader_config else None
+				pbkdf_memory, iter_time = get_boot_enc_params(is_boot, bootloader, uses_argon2)
 				luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
 
 			if self._disk_encryption.auto_unlock_root and part_mod.is_root():
