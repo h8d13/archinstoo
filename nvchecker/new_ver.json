@@ -1,0 +1,1360 @@
+{
+  "version": 2,
+  "data": {
+    "alacritty": {
+      "version": "0.16.1-1"
+    },
+    "apache": {
+      "version": "2.4.66-1"
+    },
+    "apparmor": {
+      "version": "4.1.6-1"
+    },
+    "arch-install-scripts": {
+      "version": "31-1"
+    },
+    "archinstoo": {
+      "version": "1d7b3b046d179a07f1f06f487bf890eaa8d1860c",
+      "gitref": "refs/heads/master",
+      "revision": "1d7b3b046d179a07f1f06f487bf890eaa8d1860c"
+    },
+    "archiso": {
+      "version": "87-1"
+    },
+    "ark": {
+      "version": "25.12.2-1"
+    },
+    "atril": {
+      "version": "1.28.2-1"
+    },
+    "awesome": {
+      "version": "4.3-6"
+    },
+    "baobab": {
+      "version": "49.1-1"
+    },
+    "base": {
+      "version": "3-3"
+    },
+    "base-devel": {
+      "version": "1-2"
+    },
+    "bluez": {
+      "version": "5.86-2"
+    },
+    "bluez-utils": {
+      "version": "5.86-2"
+    },
+    "bottom": {
+      "version": "0.12.3-2"
+    },
+    "breeze-icons": {
+      "version": "6.23.0-1"
+    },
+    "brightnessctl": {
+      "version": "0.5.1-3"
+    },
+    "bspwm": {
+      "version": "0.9.12-1"
+    },
+    "btop": {
+      "version": "1.4.6-1"
+    },
+    "btrfs-progs": {
+      "version": "6.19-1"
+    },
+    "bubblewrap": {
+      "version": "0.11.0-1"
+    },
+    "budgie-backgrounds": {
+      "version": "3.0-2"
+    },
+    "budgie-control-center": {
+      "version": "2.1.0-2"
+    },
+    "budgie-desktop": {
+      "version": "10.10.1-3"
+    },
+    "budgie-desktop-services": {
+      "version": "1.0.2-3"
+    },
+    "budgie-desktop-view": {
+      "version": "10.10.1-1"
+    },
+    "budgie-session": {
+      "version": "1.0.0-2"
+    },
+    "caja": {
+      "version": "1.28.0-4"
+    },
+    "caja-actions": {
+      "version": "1.28.0-4"
+    },
+    "caja-audio-video-properties": {
+      "version": "1.28.0-2"
+    },
+    "caja-image-converter": {
+      "version": "1.28.0-2"
+    },
+    "caja-open-terminal": {
+      "version": "1.28.0-2"
+    },
+    "caja-sendto": {
+      "version": "1.28.0-2"
+    },
+    "caja-share": {
+      "version": "1.28.0-2"
+    },
+    "caja-wallpaper": {
+      "version": "1.28.0-2"
+    },
+    "caja-xattr-tags": {
+      "version": "1.28.0-2"
+    },
+    "cinnamon": {
+      "version": "6.6.7-1"
+    },
+    "cockpit": {
+      "version": "355-1"
+    },
+    "coreutils": {
+      "version": "9.10-1"
+    },
+    "cosmic-app-library": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-applets": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-bg": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-comp": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-files": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-greeter": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-idle": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-initial-setup": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-launcher": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-notifications": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-osd": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-panel": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-player": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-randr": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-screenshot": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-session": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-settings": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-settings-daemon": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-store": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-terminal": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-text-editor": {
+      "version": "1:1.0.7-1"
+    },
+    "cosmic-wallpapers": {
+      "version": "2:1.0.7-1"
+    },
+    "cosmic-workspaces": {
+      "version": "2:1.0.7-1"
+    },
+    "cryptsetup": {
+      "version": "2.8.4-1"
+    },
+    "cups": {
+      "version": "2:2.4.16-2"
+    },
+    "cups-pk-helper": {
+      "version": "0.2.7-2"
+    },
+    "cutefish-calculator": {
+      "version": "0.4-3"
+    },
+    "cutefish-core": {
+      "version": "0.8-4"
+    },
+    "cutefish-dock": {
+      "version": "0.8-3"
+    },
+    "cutefish-filemanager": {
+      "version": "0.8-3"
+    },
+    "cutefish-icons": {
+      "version": "0.8-2"
+    },
+    "cutefish-launcher": {
+      "version": "0.8-3"
+    },
+    "cutefish-qt-plugins": {
+      "version": "0.5-5"
+    },
+    "cutefish-screenlocker": {
+      "version": "0.5-3"
+    },
+    "cutefish-screenshot": {
+      "version": "0.8-3"
+    },
+    "cutefish-settings": {
+      "version": "0.8-12"
+    },
+    "cutefish-statusbar": {
+      "version": "0.7-3"
+    },
+    "cutefish-terminal": {
+      "version": "0.7-2"
+    },
+    "cutefish-wallpapers": {
+      "version": "1.0-3"
+    },
+    "ddm": {
+      "version": "0.3.1-1"
+    },
+    "decibels": {
+      "version": "49.0-1"
+    },
+    "deepin-account-faces": {
+      "version": "1.0.17-1"
+    },
+    "deepin-anything": {
+      "version": "6.2.10-2"
+    },
+    "deepin-api": {
+      "version": "6.0.32-1"
+    },
+    "deepin-app-services": {
+      "version": "1.0.38-1"
+    },
+    "deepin-appearance": {
+      "version": "1.1.76-1"
+    },
+    "deepin-application-manager": {
+      "version": "1.2.40-1"
+    },
+    "deepin-calendar": {
+      "version": "6.5.6-1"
+    },
+    "deepin-control-center": {
+      "version": "6.1.9-1"
+    },
+    "deepin-daemon": {
+      "version": "6.1.43-1"
+    },
+    "deepin-desktop-base": {
+      "version": "2:2025.11.25-1"
+    },
+    "deepin-desktop-schemas": {
+      "version": "6.0.13-1"
+    },
+    "deepin-desktop-theme": {
+      "version": "1.1.14-1"
+    },
+    "deepin-editor": {
+      "version": "6.5.36-1"
+    },
+    "deepin-file-manager": {
+      "version": "1:6.1.0-4"
+    },
+    "deepin-gtk-theme": {
+      "version": "1:25.3.7-2"
+    },
+    "deepin-icon-theme": {
+      "version": "2025.12.04-1"
+    },
+    "deepin-image-viewer": {
+      "version": "5.9.20-2"
+    },
+    "deepin-launchpad": {
+      "version": "2.0.22-2"
+    },
+    "deepin-menu": {
+      "version": "5.0.1-21"
+    },
+    "deepin-network-core": {
+      "version": "2.0.39-1"
+    },
+    "deepin-polkit-agent": {
+      "version": "6.0.17-1"
+    },
+    "deepin-polkit-agent-ext-gnomekeyring": {
+      "version": "6.0.1-1"
+    },
+    "deepin-pw-check": {
+      "version": "6.0.7-1"
+    },
+    "deepin-qt5integration": {
+      "version": "5.7.30-1"
+    },
+    "deepin-qt5platform-plugins": {
+      "version": "5.7.30-1"
+    },
+    "deepin-qt6integration": {
+      "version": "6.0.47-2"
+    },
+    "deepin-qt6platform-plugins": {
+      "version": "6.0.47-2"
+    },
+    "deepin-screensaver": {
+      "version": "5.0.18-1"
+    },
+    "deepin-services": {
+      "version": "1.0.16-2"
+    },
+    "deepin-session": {
+      "version": "2.0.13-1"
+    },
+    "deepin-session-shell": {
+      "version": "6.0.26-2"
+    },
+    "deepin-session-ui": {
+      "version": "6.0.37-1"
+    },
+    "deepin-shell": {
+      "version": "2.0.25-2"
+    },
+    "deepin-sound-theme": {
+      "version": "15.10.6-2"
+    },
+    "deepin-system-monitor": {
+      "version": "6.5.17-1"
+    },
+    "deepin-terminal": {
+      "version": "6.5.22-2"
+    },
+    "deepin-turbo": {
+      "version": "0.0.6-2"
+    },
+    "deepin-wallpapers": {
+      "version": "1:1.7.7-3"
+    },
+    "deepin-widgets": {
+      "version": "6.0.15-1"
+    },
+    "deepin-wloutput-daemon": {
+      "version": "2.0.4-1"
+    },
+    "dmenu": {
+      "version": "5.4-1"
+    },
+    "docker": {
+      "version": "1:29.2.1-1"
+    },
+    "docparser": {
+      "version": "1.0.3-5"
+    },
+    "dolphin": {
+      "version": "25.12.2-1"
+    },
+    "dosfstools": {
+      "version": "4.2-5"
+    },
+    "dunst": {
+      "version": "1.13.1-1"
+    },
+    "e2fsprogs": {
+      "version": "1.47.3-2"
+    },
+    "efibootmgr": {
+      "version": "18-3"
+    },
+    "emacs": {
+      "version": "30.2-1"
+    },
+    "engrampa": {
+      "version": "1.28.2-2"
+    },
+    "enlightenment": {
+      "version": "0.27.1-1"
+    },
+    "eom": {
+      "version": "1.28.0-3"
+    },
+    "epiphany": {
+      "version": "49.2-1"
+    },
+    "ex-vi-compat": {
+      "version": "2-1"
+    },
+    "exo": {
+      "version": "4.20.0-2"
+    },
+    "f2fs-tools": {
+      "version": "1.16.0-3"
+    },
+    "fail2ban": {
+      "version": "1.1.0-8"
+    },
+    "feh": {
+      "version": "3.11.2-2"
+    },
+    "firejail": {
+      "version": "0.9.78-1"
+    },
+    "firewalld": {
+      "version": "2.4.0-6"
+    },
+    "fish": {
+      "version": "4.5.0-2"
+    },
+    "foot": {
+      "version": "1.25.0-1"
+    },
+    "fuzzel": {
+      "version": "1.14.0-2"
+    },
+    "garcon": {
+      "version": "4.20.0-2"
+    },
+    "gdm": {
+      "version": "49.2-1"
+    },
+    "git": {
+      "version": "2.53.0-1"
+    },
+    "gnome-backgrounds": {
+      "version": "49.0-1"
+    },
+    "gnome-calculator": {
+      "version": "49.2-1"
+    },
+    "gnome-calendar": {
+      "version": "49.1-1"
+    },
+    "gnome-characters": {
+      "version": "49.1-1"
+    },
+    "gnome-clocks": {
+      "version": "49.0-1"
+    },
+    "gnome-color-manager": {
+      "version": "3.36.2-1"
+    },
+    "gnome-connections": {
+      "version": "49.0-1"
+    },
+    "gnome-console": {
+      "version": "49.2-1"
+    },
+    "gnome-contacts": {
+      "version": "49.0-1"
+    },
+    "gnome-control-center": {
+      "version": "49.4-1"
+    },
+    "gnome-disk-utility": {
+      "version": "46.1-2"
+    },
+    "gnome-font-viewer": {
+      "version": "49.0-1"
+    },
+    "gnome-keyring": {
+      "version": "1:48.0-1"
+    },
+    "gnome-logs": {
+      "version": "49.0-1"
+    },
+    "gnome-maps": {
+      "version": "49.4-1"
+    },
+    "gnome-menus": {
+      "version": "3.38.1-1"
+    },
+    "gnome-music": {
+      "version": "1:49.1-2"
+    },
+    "gnome-remote-desktop": {
+      "version": "49.3-1"
+    },
+    "gnome-screenshot": {
+      "version": "1:41.0-1"
+    },
+    "gnome-session": {
+      "version": "49.2-1"
+    },
+    "gnome-settings-daemon": {
+      "version": "49.1-1"
+    },
+    "gnome-shell": {
+      "version": "1:49.4-2"
+    },
+    "gnome-software": {
+      "version": "49.3-1"
+    },
+    "gnome-system-monitor": {
+      "version": "49.1-1"
+    },
+    "gnome-terminal": {
+      "version": "3.58.1-1"
+    },
+    "gnome-text-editor": {
+      "version": "49.1-1"
+    },
+    "gnome-tour": {
+      "version": "49.0-1"
+    },
+    "gnome-tweaks": {
+      "version": "49.0-2"
+    },
+    "gnome-user-docs": {
+      "version": "49.4-1"
+    },
+    "gnome-user-share": {
+      "version": "48.2-1"
+    },
+    "gnome-weather": {
+      "version": "49.0-1"
+    },
+    "gnu-free-fonts": {
+      "version": "20120503-9"
+    },
+    "greetd": {
+      "version": "0.10.3-1"
+    },
+    "grilo-plugins": {
+      "version": "1:0.3.18-1"
+    },
+    "grim": {
+      "version": "1.5.0-2"
+    },
+    "grub": {
+      "version": "2:2.14-1"
+    },
+    "grub-btrfs": {
+      "version": "4.14-1"
+    },
+    "gst-plugin-pipewire": {
+      "version": "1:1.4.10-2"
+    },
+    "gvfs": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-afc": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-dnssd": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-goa": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-google": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-gphoto2": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-mtp": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-nfs": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-onedrive": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-smb": {
+      "version": "1.58.1-1"
+    },
+    "gvfs-wsdd": {
+      "version": "1.58.1-1"
+    },
+    "htop": {
+      "version": "3.4.1-1"
+    },
+    "hyprland": {
+      "version": "0.53.3-2"
+    },
+    "i3-wm": {
+      "version": "4.25.1-1"
+    },
+    "i3blocks": {
+      "version": "1.5-4"
+    },
+    "i3lock": {
+      "version": "2.16-1"
+    },
+    "i3status": {
+      "version": "2.15-1"
+    },
+    "inotify-tools": {
+      "version": "4.25.9.0-1"
+    },
+    "intel-media-driver": {
+      "version": "25.3.4-2"
+    },
+    "iwd": {
+      "version": "3.11-2"
+    },
+    "kate": {
+      "version": "25.12.2-1"
+    },
+    "kbd": {
+      "version": "2.9.0-1"
+    },
+    "kitty": {
+      "version": "0.45.0-4"
+    },
+    "konsole": {
+      "version": "25.12.2-1"
+    },
+    "kscreen": {
+      "version": "6.6.0-1"
+    },
+    "l3afpad": {
+      "version": "0.8.18.1.11-10"
+    },
+    "labwc": {
+      "version": "0.9.3-1"
+    },
+    "libpulse": {
+      "version": "17.0+r98+gb096704c0-1"
+    },
+    "libva-intel-driver": {
+      "version": "2.4.1-5"
+    },
+    "libva-nvidia-driver": {
+      "version": "0.0.15-1"
+    },
+    "lightdm": {
+      "version": "1:1.32.0-6"
+    },
+    "lightdm-gtk-greeter": {
+      "version": "1:2.0.9-1"
+    },
+    "lightdm-slick-greeter": {
+      "version": "2.2.6-1"
+    },
+    "lighttpd": {
+      "version": "1.4.82-1"
+    },
+    "limine": {
+      "version": "10.7.0-1"
+    },
+    "linux-firmware": {
+      "version": "20260110-1"
+    },
+    "loupe": {
+      "version": "49.2-1"
+    },
+    "lvm2": {
+      "version": "2.03.38-1"
+    },
+    "lximage-qt": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-about": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-admin": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-archiver": {
+      "version": "1.3.0-2"
+    },
+    "lxqt-config": {
+      "version": "2.3.1-2"
+    },
+    "lxqt-globalkeys": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-menu-data": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-notificationd": {
+      "version": "2.3.1-1"
+    },
+    "lxqt-openssh-askpass": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-panel": {
+      "version": "2.3.2-1"
+    },
+    "lxqt-policykit": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-powermanagement": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-qtplugin": {
+      "version": "2.3.0-3"
+    },
+    "lxqt-runner": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-session": {
+      "version": "2.3.0-2"
+    },
+    "lxqt-sudo": {
+      "version": "2.3.0-1"
+    },
+    "lxqt-themes": {
+      "version": "2.3.0-1"
+    },
+    "ly": {
+      "version": "1.3.2-1"
+    },
+    "mako": {
+      "version": "1.10.0-1"
+    },
+    "malcontent": {
+      "version": "0.13.1-1"
+    },
+    "man-db": {
+      "version": "2.13.1-1"
+    },
+    "marco": {
+      "version": "1.29.0-1"
+    },
+    "mariadb": {
+      "version": "12.2.2-2"
+    },
+    "mate-applets": {
+      "version": "1.28.1-2"
+    },
+    "mate-backgrounds": {
+      "version": "1.28.0-2"
+    },
+    "mate-calc": {
+      "version": "1.28.0-3"
+    },
+    "mate-control-center": {
+      "version": "1.28.1-2"
+    },
+    "mate-desktop": {
+      "version": "1.28.2-2"
+    },
+    "mate-icon-theme": {
+      "version": "1.28.0-2"
+    },
+    "mate-icon-theme-faenza": {
+      "version": "1.20.0-4"
+    },
+    "mate-media": {
+      "version": "1.28.1-3"
+    },
+    "mate-menus": {
+      "version": "1.28.0-3"
+    },
+    "mate-netbook": {
+      "version": "1.27.0-3"
+    },
+    "mate-notification-daemon": {
+      "version": "1.29.0-1"
+    },
+    "mate-panel": {
+      "version": "1.28.7-2"
+    },
+    "mate-polkit": {
+      "version": "1.28.1-2"
+    },
+    "mate-power-manager": {
+      "version": "1.28.1-2"
+    },
+    "mate-screensaver": {
+      "version": "1.28.0-3"
+    },
+    "mate-sensors-applet": {
+      "version": "1.28.0-4"
+    },
+    "mate-session-manager": {
+      "version": "1.28.0-2"
+    },
+    "mate-settings-daemon": {
+      "version": "1.28.0-2"
+    },
+    "mate-system-monitor": {
+      "version": "1.28.1-3"
+    },
+    "mate-terminal": {
+      "version": "1.28.1-2"
+    },
+    "mate-themes": {
+      "version": "3.22.26-3"
+    },
+    "mate-user-guide": {
+      "version": "1.28.0-2"
+    },
+    "mate-user-share": {
+      "version": "1.28.0-2"
+    },
+    "mate-utils": {
+      "version": "1.28.0-2"
+    },
+    "materia-gtk-theme": {
+      "version": "20210322-4"
+    },
+    "mesa": {
+      "version": "1:25.3.5-1"
+    },
+    "micro": {
+      "version": "2.0.15-2"
+    },
+    "mousepad": {
+      "version": "0.6.5-1"
+    },
+    "mozo": {
+      "version": "1.28.0-5"
+    },
+    "nano": {
+      "version": "8.7.1-1"
+    },
+    "nautilus": {
+      "version": "49.4-1"
+    },
+    "nemo": {
+      "version": "6.6.3-1"
+    },
+    "neovim": {
+      "version": "0.11.6-1"
+    },
+    "network-manager-applet": {
+      "version": "1.36.0-1"
+    },
+    "networkmanager": {
+      "version": "1.54.3-1"
+    },
+    "nginx": {
+      "version": "1.28.2-1"
+    },
+    "niri": {
+      "version": "25.11-1"
+    },
+    "noto-fonts": {
+      "version": "1:2026.02.01-1"
+    },
+    "ntfs-3g": {
+      "version": "2022.10.3-2"
+    },
+    "nvidia-open": {
+      "version": "590.48.01-12"
+    },
+    "obconf-qt": {
+      "version": "0.16.6-1"
+    },
+    "openbox": {
+      "version": "3.6.1-14"
+    },
+    "opendoas": {
+      "version": "6.8.2-3"
+    },
+    "openssh": {
+      "version": "10.2p1-2"
+    },
+    "orca": {
+      "version": "49.5-2"
+    },
+    "oxygen-icons": {
+      "version": "1:6.1.0-2"
+    },
+    "packagekit": {
+      "version": "1.3.4-1"
+    },
+    "pacman": {
+      "version": "7.1.0.r9.g54d9411-1"
+    },
+    "pacman-contrib": {
+      "version": "1.13.1-1"
+    },
+    "pam-u2f": {
+      "version": "1.4.0-2"
+    },
+    "papers": {
+      "version": "49.4-1"
+    },
+    "papirus-icon-theme": {
+      "version": "20250501-1"
+    },
+    "parole": {
+      "version": "4.20.0-1"
+    },
+    "pavucontrol": {
+      "version": "1:6.2-1"
+    },
+    "pavucontrol-qt": {
+      "version": "2.3.0-1"
+    },
+    "pciutils": {
+      "version": "3.14.0-1"
+    },
+    "pcmanfm-qt": {
+      "version": "2.3.0-2"
+    },
+    "pipewire": {
+      "version": "1:1.4.10-2"
+    },
+    "pipewire-alsa": {
+      "version": "1:1.4.10-2"
+    },
+    "pipewire-jack": {
+      "version": "1:1.4.10-2"
+    },
+    "pipewire-pulse": {
+      "version": "1:1.4.10-2"
+    },
+    "plasma-desktop": {
+      "version": "6.6.0-1"
+    },
+    "plasma-login-manager": {
+      "version": "6.6.0-1"
+    },
+    "plasma-pa": {
+      "version": "6.6.0-1"
+    },
+    "plasma-workspace": {
+      "version": "6.6.0-1"
+    },
+    "pluma": {
+      "version": "1.28.0-7"
+    },
+    "polkit": {
+      "version": "127-3"
+    },
+    "polkit-kde-agent": {
+      "version": "6.6.0-1"
+    },
+    "postgresql": {
+      "version": "18.2-1"
+    },
+    "power-profiles-daemon": {
+      "version": "0.30-1"
+    },
+    "pulseaudio": {
+      "version": "17.0+r98+gb096704c0-1"
+    },
+    "python": {
+      "version": "3.14.3-1"
+    },
+    "python-pyparted": {
+      "version": "3.13.0-6"
+    },
+    "python-systemd": {
+      "version": "235-5"
+    },
+    "qps": {
+      "version": "2.12.0-1"
+    },
+    "qt5-wayland": {
+      "version": "5.15.18+kde+r55-1"
+    },
+    "qt6-wayland": {
+      "version": "6.10.2-1"
+    },
+    "qterminal": {
+      "version": "2.3.0-1"
+    },
+    "qtile": {
+      "version": "0.34.1-2"
+    },
+    "refind": {
+      "version": "0.14.2-1"
+    },
+    "reflector": {
+      "version": "2023-5"
+    },
+    "ristretto": {
+      "version": "0.13.4-1"
+    },
+    "river": {
+      "version": "0.3.14-1"
+    },
+    "rxvt-unicode": {
+      "version": "9.31-9"
+    },
+    "rygel": {
+      "version": "1:45.1-1"
+    },
+    "sbctl": {
+      "version": "0.18-1"
+    },
+    "screengrab": {
+      "version": "3.1.0-1"
+    },
+    "sddm": {
+      "version": "0.21.0-6"
+    },
+    "showtime": {
+      "version": "49.1-2"
+    },
+    "simple-scan": {
+      "version": "49.1-1"
+    },
+    "slock": {
+      "version": "1.6-1"
+    },
+    "slurp": {
+      "version": "1.5.0-1"
+    },
+    "smartmontools": {
+      "version": "7.5-1"
+    },
+    "snapper": {
+      "version": "0.13.0-2"
+    },
+    "snapshot": {
+      "version": "49.1-1"
+    },
+    "sudo": {
+      "version": "1.9.17.p2-2"
+    },
+    "sushi": {
+      "version": "46.0-2"
+    },
+    "sway": {
+      "version": "1:1.11-1"
+    },
+    "swaybg": {
+      "version": "1.2.1-1"
+    },
+    "swayidle": {
+      "version": "1.9.0-1"
+    },
+    "swaylock": {
+      "version": "1.8.4-1"
+    },
+    "sxhkd": {
+      "version": "0.6.3-1"
+    },
+    "system-config-printer": {
+      "version": "1.5.18-6"
+    },
+    "systemd": {
+      "version": "259.1-1"
+    },
+    "tecla": {
+      "version": "49.0-1"
+    },
+    "terminology": {
+      "version": "1.14.0-1"
+    },
+    "terminus-font": {
+      "version": "4.49.1-8"
+    },
+    "thunar": {
+      "version": "4.20.7-1"
+    },
+    "thunar-archive-plugin": {
+      "version": "0.6.0-1"
+    },
+    "thunar-media-tags-plugin": {
+      "version": "0.6.0-1"
+    },
+    "thunar-volman": {
+      "version": "4.20.0-2"
+    },
+    "timeshift": {
+      "version": "25.12.4-1"
+    },
+    "tomcat10": {
+      "version": "10.1.52-1"
+    },
+    "tree": {
+      "version": "2.3.1-1"
+    },
+    "treeland": {
+      "version": "0.8.1-2"
+    },
+    "ttf-liberation": {
+      "version": "2.1.5-2"
+    },
+    "tumbler": {
+      "version": "4.20.1-1"
+    },
+    "tuned": {
+      "version": "2.26.0-2"
+    },
+    "tuned-ppd": {
+      "version": "2.26.0-2"
+    },
+    "udisks2": {
+      "version": "2.11.0-1"
+    },
+    "ufw": {
+      "version": "0.36.2-7"
+    },
+    "util-linux": {
+      "version": "2.41.3-2"
+    },
+    "uwsm": {
+      "version": "0.26.4-1"
+    },
+    "vim": {
+      "version": "9.2.0010-1"
+    },
+    "vulkan-intel": {
+      "version": "1:25.3.5-1"
+    },
+    "vulkan-nouveau": {
+      "version": "1:25.3.5-1"
+    },
+    "vulkan-radeon": {
+      "version": "1:25.3.5-1"
+    },
+    "vulkan-swrast": {
+      "version": "1:25.3.5-1"
+    },
+    "vulkan-virtio": {
+      "version": "1:25.3.5-1"
+    },
+    "waybar": {
+      "version": "0.15.0-1"
+    },
+    "wget": {
+      "version": "1.25.0-3"
+    },
+    "wireplumber": {
+      "version": "0.5.13-1"
+    },
+    "wmenu": {
+      "version": "0.2.0-1"
+    },
+    "wofi": {
+      "version": "1.5.3-1"
+    },
+    "wpa_supplicant": {
+      "version": "2:2.11-5"
+    },
+    "xarchiver": {
+      "version": "0.5.4.26-1"
+    },
+    "xdg-desktop-portal-cosmic": {
+      "version": "1:1.0.7-1"
+    },
+    "xdg-desktop-portal-dde": {
+      "version": "1.0.13-5"
+    },
+    "xdg-desktop-portal-gnome": {
+      "version": "49.0-1"
+    },
+    "xdg-desktop-portal-hyprland": {
+      "version": "1.3.11-3"
+    },
+    "xdg-desktop-portal-lxqt": {
+      "version": "1.3.0-2"
+    },
+    "xdg-desktop-portal-wlr": {
+      "version": "0.8.1-1"
+    },
+    "xdg-user-dirs": {
+      "version": "0.19-2"
+    },
+    "xdg-user-dirs-gtk": {
+      "version": "0.16-1"
+    },
+    "xdg-utils": {
+      "version": "1.2.1-2"
+    },
+    "xdo": {
+      "version": "0.5.7-3"
+    },
+    "xed": {
+      "version": "3.8.9-1"
+    },
+    "xf86-video-amdgpu": {
+      "version": "25.0.0-1"
+    },
+    "xf86-video-ati": {
+      "version": "1:22.0.0-2"
+    },
+    "xf86-video-nouveau": {
+      "version": "1.0.18-1"
+    },
+    "xfburn": {
+      "version": "0.8.0-1"
+    },
+    "xfce4-appfinder": {
+      "version": "4.20.0-2"
+    },
+    "xfce4-artwork": {
+      "version": "0.1.1a_git20110420-7"
+    },
+    "xfce4-battery-plugin": {
+      "version": "1.2.0-1"
+    },
+    "xfce4-clipman-plugin": {
+      "version": "1.7.0-1"
+    },
+    "xfce4-cpufreq-plugin": {
+      "version": "1.3.0-1"
+    },
+    "xfce4-cpugraph-plugin": {
+      "version": "1.3.0-1"
+    },
+    "xfce4-dict": {
+      "version": "0.8.9-1"
+    },
+    "xfce4-diskperf-plugin": {
+      "version": "2.8.0-2"
+    },
+    "xfce4-eyes-plugin": {
+      "version": "4.7.0-1"
+    },
+    "xfce4-fsguard-plugin": {
+      "version": "1.2.0-1"
+    },
+    "xfce4-genmon-plugin": {
+      "version": "4.3.0-1"
+    },
+    "xfce4-mailwatch-plugin": {
+      "version": "1.4.0-1"
+    },
+    "xfce4-mount-plugin": {
+      "version": "1.2.0-1"
+    },
+    "xfce4-mpc-plugin": {
+      "version": "0.6.0-1"
+    },
+    "xfce4-netload-plugin": {
+      "version": "1.5.0-1"
+    },
+    "xfce4-notes-plugin": {
+      "version": "1.12.0-1"
+    },
+    "xfce4-notifyd": {
+      "version": "0.9.7-2"
+    },
+    "xfce4-panel": {
+      "version": "4.20.6-1"
+    },
+    "xfce4-places-plugin": {
+      "version": "1.9.0-1"
+    },
+    "xfce4-power-manager": {
+      "version": "4.20.0-3"
+    },
+    "xfce4-pulseaudio-plugin": {
+      "version": "0.5.1-1"
+    },
+    "xfce4-screensaver": {
+      "version": "4.20.1-1"
+    },
+    "xfce4-screenshooter": {
+      "version": "1.11.3-3"
+    },
+    "xfce4-sensors-plugin": {
+      "version": "1.5.0-2"
+    },
+    "xfce4-session": {
+      "version": "4.20.3-2"
+    },
+    "xfce4-settings": {
+      "version": "4.20.3-1"
+    },
+    "xfce4-smartbookmark-plugin": {
+      "version": "0.6.0-2"
+    },
+    "xfce4-systemload-plugin": {
+      "version": "1.4.0-1"
+    },
+    "xfce4-taskmanager": {
+      "version": "1.6.0-1"
+    },
+    "xfce4-terminal": {
+      "version": "1.1.5-2"
+    },
+    "xfce4-time-out-plugin": {
+      "version": "1.2.0-1"
+    },
+    "xfce4-timer-plugin": {
+      "version": "1.8.0-1"
+    },
+    "xfce4-verve-plugin": {
+      "version": "2.1.0-1"
+    },
+    "xfce4-wavelan-plugin": {
+      "version": "0.7.0-2"
+    },
+    "xfce4-weather-plugin": {
+      "version": "0.12.0-2"
+    },
+    "xfce4-whiskermenu-plugin": {
+      "version": "2.10.0-2"
+    },
+    "xfce4-xkb-plugin": {
+      "version": "0.9.0-1"
+    },
+    "xfconf": {
+      "version": "4.20.0-2"
+    },
+    "xfdesktop": {
+      "version": "4.20.1-3"
+    },
+    "xfsprogs": {
+      "version": "6.18.0-1"
+    },
+    "xfwm4": {
+      "version": "4.20.0-2"
+    },
+    "xfwm4-themes": {
+      "version": "4.10.0-6"
+    },
+    "xmonad": {
+      "version": "0.18.0-149"
+    },
+    "xmonad-contrib": {
+      "version": "0.18.1-133"
+    },
+    "xmonad-extras": {
+      "version": "0.17.2-173"
+    },
+    "xorg-server": {
+      "version": "21.1.21-1"
+    },
+    "xorg-xinit": {
+      "version": "1.4.4-1"
+    },
+    "xorg-xrandr": {
+      "version": "1.5.3-1"
+    },
+    "xorg-xwayland": {
+      "version": "24.1.9-1"
+    },
+    "xsel": {
+      "version": "1.2.1-2"
+    },
+    "xss-lock": {
+      "version": "0.4.0-1"
+    },
+    "xterm": {
+      "version": "406-1"
+    },
+    "yelp": {
+      "version": "49.0-1"
+    },
+    "zram-generator": {
+      "version": "1.2.1-1"
+    },
+    "zsh": {
+      "version": "5.9-5"
+    }
+  }
+}

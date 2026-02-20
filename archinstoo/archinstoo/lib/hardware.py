@@ -42,9 +42,8 @@ class GfxPackage(Enum):
 	Dkms = 'dkms'
 	IntelMediaDriver = 'intel-media-driver'
 	LibvaIntelDriver = 'libva-intel-driver'
-	LibvaMesaDriver = 'libva-mesa-driver'
 	LibvaNvidiaDriver = 'libva-nvidia-driver'
-	Mesa = 'mesa'
+	Mesa = 'mesa'  # provides libva-mesa-driver since 24.2.7
 	NvidiaOpen = 'nvidia-open'
 	NvidiaOpenDkms = 'nvidia-open-dkms'
 	VulkanIntel = 'vulkan-intel'
@@ -106,7 +105,6 @@ class GfxDriver(Enum):
 					GfxPackage.Xf86VideoAmdgpu,
 					GfxPackage.Xf86VideoAti,
 					GfxPackage.Xf86VideoNouveau,
-					GfxPackage.LibvaMesaDriver,
 					GfxPackage.LibvaIntelDriver,
 					GfxPackage.IntelMediaDriver,
 					GfxPackage.VulkanRadeon,
@@ -118,7 +116,6 @@ class GfxDriver(Enum):
 					GfxPackage.Mesa,
 					GfxPackage.Xf86VideoAmdgpu,
 					GfxPackage.Xf86VideoAti,
-					GfxPackage.LibvaMesaDriver,
 					GfxPackage.VulkanRadeon,
 				]
 			case GfxDriver.IntelOpenSource:
@@ -140,13 +137,11 @@ class GfxDriver(Enum):
 				packages += [
 					GfxPackage.Mesa,
 					GfxPackage.Xf86VideoNouveau,
-					GfxPackage.LibvaMesaDriver,
 					GfxPackage.VulkanNouveau,
 				]
 			case GfxDriver.MesaOpenSource:
 				packages += [
 					GfxPackage.Mesa,
-					GfxPackage.LibvaMesaDriver,
 				]
 				# Add druver based on detection
 				if SysInfo.has_intel_graphics():
@@ -156,13 +151,11 @@ class GfxDriver(Enum):
 			case GfxDriver.VMSoftware:
 				packages += [
 					GfxPackage.Mesa,
-					GfxPackage.LibvaMesaDriver,
 					GfxPackage.VulkanSwrast,
 				]
 			case GfxDriver.VMVirtio:
 				packages += [
 					GfxPackage.Mesa,
-					GfxPackage.LibvaMesaDriver,
 					GfxPackage.VulkanVirtio,
 				]
 

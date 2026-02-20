@@ -19,7 +19,7 @@ class LxqtProfile(XorgProfile):
 			'breeze-icons',
 			'oxygen-icons',
 			'xdg-utils',
-			'ttf-freefont',
+			'gnu-free-fonts',
 			'l3afpad',
 			'slock',
 		]
