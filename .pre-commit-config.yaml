@@ -40,7 +40,7 @@ repos:
       exclude: ^archinstoo/tests/
       fail_fast: true
   - repo: https://github.com/pycqa/pylint
-    rev: v4.0.4
+    rev: v4.0.5
     hooks:
     - id: pylint
       args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "archinstoo")']
