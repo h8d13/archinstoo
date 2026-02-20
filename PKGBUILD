@@ -31,8 +31,6 @@ makedepends=(
   'python-installer'
   'python-pylint'
   'python-setuptools'
-  'python-sphinx'
-  'python-sphinx_rtd_theme'
   'python-wheel'
   'ruff'
 )
@@ -71,12 +69,11 @@ build() {
 
   rm -rf dist/ && rm -rf ./*.egg
   python -m build --wheel --no-isolation
-  PYTHONDONTWRITEBYTECODE=1 make man -C docs
 }
 
 package() {
   cd "$srcdir/.." || exit
 
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -vDm 644 docs/_build/man/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
+  install -vDm 644 archinstoo/docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
 }
