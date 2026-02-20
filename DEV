@@ -20,7 +20,7 @@ pre_build () {
 
 clean () {
     rm -rf pkg src dist ./*.pkg.tar.zst.sig build ./*.egg-info ../*.egg-info ./*-git
-} # make sure no old sigs
+} # make sure no old sigs or build artifacts
 
 sign () {
     gpg --detach-sign $PKG_GLOB
@@ -60,6 +60,10 @@ case "$1" in
 	-i|--install)
 	go_to
  	$ELEV pacman -U --overwrite '*' $PKG_GLOB
+	;;
+	-ul | --up-logs)
+	go_to
+	curl -F 'file=@./logs/install.log' https://0x0.st
 	;;
 	-gl | --grep-logs)
 	go_to
