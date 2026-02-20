@@ -98,8 +98,7 @@ def _minimal() -> None:
 			return _minimal()
 
 	if (disk_config := config.disk_config) is not None:
-		bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
-		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler, bootloader=bootloader)
+		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(args.mountpoint, config, handler, device_handler, profile_handler, network_handler)

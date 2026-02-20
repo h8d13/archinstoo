@@ -238,8 +238,7 @@ def guided() -> None:
 			debug('Installation aborted')
 
 	if disk_config := config.disk_config:
-		bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
-		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler, bootloader=bootloader)
+		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(

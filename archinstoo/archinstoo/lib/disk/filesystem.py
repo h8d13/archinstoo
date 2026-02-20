@@ -3,7 +3,6 @@ import time
 from pathlib import Path
 
 from archinstoo.lib.interactions.general_conf import confirm_abort
-from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
@@ -27,35 +26,16 @@ from .device_handler import DeviceHandler
 from .luks import Luks2
 from .lvm import lvm_group_info, lvm_vol_info
 
-# GRUB has limited memory
-# iteration capacity for LUKS decryption
-GRUB_BOOT_ITER_TIME = 200
-GRUB_BOOT_PBKDF_MEMORY = 32 * 1024
-
-
-def get_boot_enc_params(
-	is_boot: bool,
-	bootloader: Bootloader | None,
-	uses_argon2: bool,
-) -> tuple[int | None, int | None]:
-	# Return (pbkdf_memory, iter_time)
-	if is_boot and bootloader == Bootloader.Grub:
-		pbkdf_memory = GRUB_BOOT_PBKDF_MEMORY if uses_argon2 else None
-		return (pbkdf_memory, GRUB_BOOT_ITER_TIME)
-	return (None, None)
-
 
 class FilesystemHandler:
 	def __init__(
 		self,
 		disk_config: DiskLayoutConfiguration,
 		device_handler: DeviceHandler | None = None,
-		bootloader: Bootloader | None = None,
 	):
 		self._disk_config = disk_config
 		self._enc_config = disk_config.disk_encryption
 		self._device_handler = device_handler or DeviceHandler()
-		self._bootloader = bootloader
 
 	def perform_filesystem_operations(self, show_countdown: bool = True) -> None:
 		if self._disk_config.config_type == DiskLayoutType.Pre_mount:
@@ -123,9 +103,12 @@ class FilesystemHandler:
 		for part_mod in create_or_modify_parts:
 			# partition will be encrypted
 			if self._enc_config is not None and part_mod in self._enc_config.partitions:
+				# GRUB has limited memory for argon2id decryption;
+				# use reduced pbkdf memory and iter time so GRUB can decrypt /boot
 				is_boot = part_mod.is_boot()
 				uses_argon2 = self._enc_config.pbkdf == LuksPbkdf.Argon2id
-				pbkdf_memory, iter_time = get_boot_enc_params(is_boot, self._bootloader, uses_argon2)
+				pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
+				iter_time = 200 if is_boot else None
 
 				self._device_handler.format_encrypted(
 					part_mod.safe_dev_path,
@@ -340,10 +323,12 @@ class FilesystemHandler:
 
 			for part_mod in filtered_part:
 				if part_mod in enc_config.partitions:
+					# GRUB has limited memory for argon2id decryption;
+					# use reduced pbkdf memory and iter time for /boot so GRUB can decrypt it
 					is_boot = part_mod.is_boot()
 					uses_argon2 = enc_config.pbkdf == LuksPbkdf.Argon2id
-					pbkdf_memory, iter_time = get_boot_enc_params(is_boot, self._bootloader, uses_argon2)
-					iter_time = iter_time or enc_config.iter_time
+					pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
+					iter_time = 200 if is_boot else enc_config.iter_time
 
 					luks_handler = self._device_handler.encrypt(
 						part_mod.safe_dev_path,
