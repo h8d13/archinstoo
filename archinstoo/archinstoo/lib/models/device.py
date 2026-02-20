@@ -1452,13 +1452,10 @@ class DiskEncryption:
 
 	def _is_root_encrypted(self) -> bool:
 		"""Check if root partition/volume is in the encrypted set."""
-		for part in self.partitions:
-			if part.mountpoint == Path('/'):
-				return True
-		for vol in self.lvm_volumes:
-			if vol.mountpoint == Path('/'):
-				return True
-		return False
+		return (
+			any(p.mountpoint == Path('/') for p in self.partitions)
+			or any(v.mountpoint == Path('/') for v in self.lvm_volumes)
+		)
 
 	def should_generate_encryption_file(self, dev: PartitionModification | LvmVolume) -> bool:
 		# Don't generate keyfiles on unencrypted root - they'd be exposed
