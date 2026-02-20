@@ -94,6 +94,8 @@ The full structure of the project can be consulted through [`TREE`](./archinstoo
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
+A man page is also available `man -l docs/archinstoo.1` 
+
 ## Use cases
 
 See [Headless](./.github/HEADLESS.md) for example server install to play minecraft.
