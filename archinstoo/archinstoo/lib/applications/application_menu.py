@@ -358,8 +358,11 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 	if preset:
 		group.set_focus_by_value(preset.editor)
 
+	header = tr('Would you like to set an editor globally?') + '\n'
+
 	result = SelectMenu[Editor](
 		group,
+		header=header,
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
