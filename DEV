@@ -37,7 +37,7 @@ case "$1" in
 		echo '```'
 		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
 		echo '```'
-	} > docs/readme.md
+	} > docs/README.md
 	;;
 	-c | --clean)
 	go_to
