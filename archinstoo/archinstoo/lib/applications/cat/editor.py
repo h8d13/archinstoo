@@ -8,8 +8,12 @@ if TYPE_CHECKING:
 
 
 class EditorApp:
+	def _get_editor_package(self, editor: Editor) -> str:
+		# package names that differ from enum value
+		return 'ex-vi-compat' if editor == Editor.VI else editor.value
+
 	def _get_editor_binary(self, editor: Editor) -> str:
-		# special handling only name that differs
+		# binary names that differ from enum value
 		return 'nvim' if editor == Editor.NEOVIM else editor.value
 
 	def install(
@@ -17,9 +21,10 @@ class EditorApp:
 		install_session: Installer,
 		editor_config: EditorConfiguration,
 	) -> None:
-		debug(f'Installing editor: {editor_config.editor.value}')
+		pkg = self._get_editor_package(editor_config.editor)
+		debug(f'Installing editor: {pkg}')
 
-		install_session.add_additional_packages([editor_config.editor.value])
+		install_session.add_additional_packages([pkg])
 
 		editor_binary = self._get_editor_binary(editor_config.editor)
 		environment_path = install_session.target / 'etc' / 'environment'

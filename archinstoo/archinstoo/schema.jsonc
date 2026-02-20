@@ -5,7 +5,7 @@
 
 	"base": ["base", "linux-firmware"],
 
-	"ter_fonts": ["terminus-fonts"], // to match iso when `ter` fonts are chosen only
+	"ter_fonts": ["terminus-font"], // to match iso when `ter` fonts are chosen only
 	
 	"bootloaders": {
 		// note efibootmgr probably isn't needed for some of these
@@ -43,15 +43,16 @@
 
 	// drivers are added before desktops
 	// because they might depend on virtual vulkan-something
+	// libva-mesa-driver now provided by mesa since 24.2.7
 	"gfx_drivers": {
-		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-mesa-driver", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
-		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "libva-mesa-driver", "vulkan-radeon"],
+		"All open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
+		"AMD / ATI (open-source)": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "vulkan-radeon"],
 		"Intel (open-source)": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
 		"Nvidia (open kernel module for newer GPUs, Turing+)": ["nvidia-open", "libva-nvidia-driver"],
 		"Nvidia (open-source nouveau driver)": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
-		"Mesa (open-source)": ["mesa", "libva-mesa-driver"], // add intel or amd on detect
-		"VM (software rendering)": ["mesa", "libva-mesa-driver", "vulkan-swrast"],
-		"VM (virtio-gpu)": ["mesa", "libva-mesa-driver", "vulkan-virtio"]
+		"Mesa (open-source)": ["mesa"], 
+		"VM (software rendering)": ["mesa", "vulkan-swrast"],
+		"VM (virtio-gpu)": ["mesa", "vulkan-virtio"]
 	},
 
 	// -- Desktop Environments --
@@ -62,7 +63,7 @@
 		"Cinnamon": ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed", "xdg-user-dirs-gtk"],
 		"MATE": ["mate", "mate-extra"],
 		"Budgie": ["materia-gtk-theme", "budgie", "mate-terminal", "nemo", "papirus-icon-theme"],
-		"LXQt": ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "ttf-freefont", "l3afpad", "slock"],
+		"LXQt": ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "gnu-free-fonts", "l3afpad", "slock"],
 		"Cutefish": ["cutefish", "noto-fonts"],
 		"Deepin": ["deepin", "deepin-terminal", "deepin-editor"],
 		"Cosmic": ["cosmic", "xdg-user-dirs"],
@@ -157,7 +158,7 @@
 	"editors": {
 		"nano": ["nano"],
 		"micro": ["micro"],
-		"vi": ["vi"],
+		"vi": ["ex-vi-compat"],
 		"vim": ["vim"],
 		"neovim": ["neovim"],
 		"emacs": ["emacs"]

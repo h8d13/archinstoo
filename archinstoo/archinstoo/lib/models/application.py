@@ -64,7 +64,7 @@ class MonitorConfigSerialization(TypedDict):
 
 
 class Editor(StrEnum):
-	VI = auto()
+	VI = auto() # changed in repos ex-vi-compat 
 	NANO = auto()
 	MICRO = auto()
 	VIM = auto()
