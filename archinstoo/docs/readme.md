@@ -2,30 +2,6 @@
 ```
 ./
 ├── PKGBUILD
-├── archinstall/
-│   ├── applications/
-│   ├── default_profiles/
-│   │   ├── desktops/
-│   │   └── servers/
-│   ├── lib/
-│   │   ├── applications/
-│   │   │   └── cat/
-│   │   ├── authentication/
-│   │   ├── bootloader/
-│   │   ├── disk/
-│   │   ├── interactions/
-│   │   ├── locale/
-│   │   ├── menu/
-│   │   ├── models/
-│   │   ├── network/
-│   │   ├── packages/
-│   │   ├── pacman/
-│   │   ├── pm/
-│   │   ├── profile/
-│   │   ├── tui/
-│   │   └── utils/
-│   ├── scripts/
-│   └── tui/
 ├── archinstoo/
 │   ├── __main__
 │   ├── default_profiles/
@@ -181,5 +157,5 @@
     ├── test_args
     └── test_configuration_output
 
-48 directories, 132 files
+24 directories, 132 files
 ```
