@@ -1450,7 +1450,21 @@ class DiskEncryption:
 		if self.encryption_type == EncryptionType.LuksOnLvm and not self.lvm_volumes:
 			raise ValueError('LuksOnLvm encryption require LMV volumes to be defined')
 
+	def _is_root_encrypted(self) -> bool:
+		"""Check if root partition/volume is in the encrypted set."""
+		for part in self.partitions:
+			if part.mountpoint == Path('/'):
+				return True
+		for vol in self.lvm_volumes:
+			if vol.mountpoint == Path('/'):
+				return True
+		return False
+
 	def should_generate_encryption_file(self, dev: PartitionModification | LvmVolume) -> bool:
+		# Don't generate keyfiles on unencrypted root - they'd be exposed
+		# See: https://github.com/archlinux/archinstall/issues/1856
+		if not self._is_root_encrypted():
+			return False
 		if isinstance(dev, PartitionModification):
 			return dev in self.partitions and dev.mountpoint != Path('/')
 		return dev in self.lvm_volumes and dev.mountpoint != Path('/')
