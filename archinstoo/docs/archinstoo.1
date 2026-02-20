@@ -1,0 +1,88 @@
+.TH ARCHINSTOO 1 "2026-02-20" "archinstoo" "User Commands"
+.SH NAME
+archinstoo \- Arch Linux guided installer
+.SH SYNOPSIS
+.B archinstoo
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+archinstoo is a guided installer for Arch Linux. It provides a TUI-based
+menu system for configuring and installing Arch Linux systems.
+.SH OPTIONS
+.TP
+.B \-\-script \fINAME\fR
+Script to run (default: guided). Use \fB\-\-script list\fR to see available scripts.
+.TP
+.B \-\-config \fIPATH\fR
+Path to a local JSON configuration file.
+.TP
+.B \-\-config\-url \fIURL\fR
+URL to a remote JSON configuration file.
+.TP
+.B \-\-dry\-run
+Generate config and exit without installing.
+.TP
+.B \-\-mountpoint \fIPATH\fR
+Alternate mount point (default: /mnt).
+.TP
+.B \-\-skip\-ntp
+Skip NTP time sync check.
+.TP
+.B \-\-skip\-wkd
+Skip archlinux-keyring WKD sync.
+.TP
+.B \-\-skip\-boot
+Skip bootloader installation.
+.TP
+.B \-\-offline
+Disable online package search.
+.TP
+.B \-\-advanced
+Enable advanced menu options.
+.TP
+.B \-\-debug
+Enable debug logging.
+.TP
+.B \-\-clean
+Clean logs/ after run.
+.TP
+.B \-h\fR, \fB\-\-help
+Show help message.
+.SH FILES
+.TP
+.I logs/install.log
+Main installation log.
+.TP
+.I logs/user_configuration.json
+Saved configuration.
+.TP
+.I logs/cmd_history.txt
+Command history.
+.TP
+.I logs/cmd_output.txt
+Raw command output.
+.SH EXAMPLES
+Run the guided installer:
+.PP
+.RS
+archinstoo
+.RE
+.PP
+Use a saved configuration:
+.PP
+.RS
+archinstoo \-\-config /path/to/config.json
+.RE
+.PP
+Dry run to generate config:
+.PP
+.RS
+archinstoo \-\-dry\-run
+.RE
+.PP
+See available scripts:
+.PP
+.RS
+archinstoo \-\-script list
+.RE
+.SH SEE ALSO
+Project: https://github.com/h8d13/archinstoo
