@@ -132,10 +132,13 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		if not DiskEncryption.validate_enc(modifications, lvm_config):
 			return None
 
-		# Auto-unlock is only safe when /efi is present (ESP separate from /boot),
-		# so the initramfs with the embedded keyfile stays on encrypted storage
+		# Auto-unlock embeds a keyfile in initramfs. This is only safe when:
+		# 1. /efi is separate (so /boot isn't the ESP itself), AND
+		# 2. /boot is inside encrypted root (no separate /boot partition)
+		# If /boot is a separate unencrypted partition, the keyfile would be exposed.
 		has_efi = any(p.is_efi() for mod in modifications for p in mod.partitions)
-		allow_auto_unlock = self._allow_auto_unlock and has_efi
+		has_separate_boot = any(p.is_boot() for mod in modifications for p in mod.partitions)
+		allow_auto_unlock = self._allow_auto_unlock and has_efi and not has_separate_boot
 
 		return DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset, allow_auto_unlock=allow_auto_unlock).run()
 
