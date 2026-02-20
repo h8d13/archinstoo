@@ -179,7 +179,7 @@
 	},
 
 	"network": {
-		"nm": ["networkmanager", "wpa_supplicant", "wireless_tools"],
+		"nm": ["networkmanager", "wpa_supplicant"],
 		"nm_iwd": ["networkmanager", "iwd"],
 		// nm adds network-manager-applet for desktop profiles
 		"nm_desktop_extra": ["network-manager-applet"]
