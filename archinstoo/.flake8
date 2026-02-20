@@ -1,9 +1,0 @@
-[flake8]
-count = True
-ignore = W191,W503,E704,E203,E101,E117,E126
-max-complexity = 40
-max-line-length = 160
-show-source = True
-statistics = True
-exclude = .git,__pycache__,build,docs,actions-runner
-per-file-ignores = __init__.py:E402
