@@ -33,6 +33,7 @@ makedepends=(
   'python-setuptools'
   'python-wheel'
   'ruff'
+  'nvchecker'
 )
 # marked as optional because they depend
 # on choices made during installation
