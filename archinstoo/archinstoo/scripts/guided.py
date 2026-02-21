@@ -152,8 +152,10 @@ def perform_installation(
 				installation.set_x11_keyboard(locale_config.kb_layout)
 
 		if (profile_config := config.profile_config) and profile_config.profiles:
+			users = config.auth_config.users if config.auth_config else []
 			for profile in profile_config.profiles:
 				profile.post_install(installation)
+				profile.provision(installation, users)
 
 		if config.packages and config.packages[0] != '':
 			installation.add_additional_packages(config.packages)
