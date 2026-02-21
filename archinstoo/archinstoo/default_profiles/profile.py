@@ -5,6 +5,7 @@ from archinstoo.lib.translationhandler import tr
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.users import User
 
 
 class ProfileType(Enum):
@@ -93,6 +94,8 @@ class Profile:
 	def install(self, install_session: Installer) -> None: ...
 
 	def post_install(self, install_session: Installer) -> None: ...
+
+	def provision(self, install_session: Installer, users: list[User]) -> None: ...
 
 	def json(self) -> dict[str, str]:
 		"""

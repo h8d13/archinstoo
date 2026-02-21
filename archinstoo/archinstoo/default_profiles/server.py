@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Self, override
 
 from archinstoo.default_profiles.profile import Profile, ProfileType, SelectResult
+from archinstoo.lib.models.users import User
 from archinstoo.lib.output import info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -64,6 +65,11 @@ class ServerProfile(Profile):
 	def post_install(self, install_session: Installer) -> None:
 		for profile in self.current_selection:
 			profile.post_install(install_session)
+
+	@override
+	def provision(self, install_session: Installer, users: list[User]) -> None:
+		for profile in self.current_selection:
+			profile.provision(install_session, users)
 
 	@override
 	def install(self, install_session: Installer) -> None:

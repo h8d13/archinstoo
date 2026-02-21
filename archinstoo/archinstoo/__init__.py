@@ -47,7 +47,7 @@ r"""ArchInstoo Linux Installer.
           ░░░░░░░░░░░           ░██████▓░█▒▓▓░░░░█▓▓█▒▓▓▓▓▓▒░▒▒▒ ▒▒▒░ ░ ░░
             ░░░░░░░░░░░░         ▓▒    ▓▓ ▒▓▓░░░░░░▒▒▒▒▒▓▓▓▓▒░░▒   ░▒▒▒░
 
-FS => BASE => BL => KERN/H => DRIVERS => USERS/GROUPS => PROFILES => APPS(CAT) => MISC.
+=> BL => FS => BASE => KERN/H => DRIVERS => USERS/GROUPS => PROFILES => APPS(CAT) => MISC.
 Base refers to a minimal install:
 	=> Essential pkgs
 	=> Locales, console, kb
@@ -283,10 +283,12 @@ def run_as_a_module() -> int:
 			rc = 1
 
 		return rc
+
 	finally:
 		if handler.args.clean:
 			# note this deletes all logs too
 			handler.clean_up()
+		# note this removes any __pycache__ if possible
 		clean_cache('.')
 
 
