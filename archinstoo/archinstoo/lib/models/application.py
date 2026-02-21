@@ -257,6 +257,14 @@ class ZramConfiguration:
 	algorithm: ZramAlgorithm = ZramAlgorithm.ZSTD
 	decompression_algorithm: ZramAlgorithm = ZramAlgorithm.LZ4
 
+	def json(self) -> ZramConfigSerialization:
+		config: ZramConfigSerialization = {'enabled': self.enabled}
+		if self.algorithm != ZramAlgorithm.ZSTD:
+			config['algorithm'] = self.algorithm.value
+		if self.decompression_algorithm != ZramAlgorithm.LZ4:
+			config['decompression_algorithm'] = self.decompression_algorithm.value
+		return config
+
 	@classmethod
 	def parse_arg(cls, arg: bool | ZramConfigSerialization) -> Self:
 		if isinstance(arg, bool):

@@ -14,8 +14,8 @@ from .translationhandler import tr
 
 # we deliberatly do not use DI for this file as it would need to be passed to
 # many callers which causes confusion. instead SysInfo().something() anywhere
-# and properties are cached for re-use and speed, also no file foot killer
-# the same is true to translations and output
+# and properties are cached for re-use and speed
+# the same is true/applies to translations and output
 
 
 class CpuVendor(Enum):

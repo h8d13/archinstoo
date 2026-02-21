@@ -91,7 +91,7 @@ class ArchConfig:
 			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
 			'disk_config': self.disk_config.json() if self.disk_config else None,
-			'swap': self.swap,
+			'swap': self.swap.json() if self.swap else None,
 			'kernel_config': self.kernel_config.json(),
 			'profile_config': self.profile_config.json() if self.profile_config else None,
 			'hostname': self.hostname,
