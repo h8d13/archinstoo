@@ -28,6 +28,7 @@ from archinstoo.lib.models.application import (
 from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
+from archinstoo.lib.models.kernel import KernelConfiguration
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
@@ -209,7 +210,7 @@ def test_config_file_parsing(
 			removable=False,
 		),
 		hostname='archy',
-		kernels=['linux-zen'],
+		kernel_config=KernelConfiguration(kernels=['linux-zen'], headers=False),
 		ntp=True,
 		packages=['firefox'],
 		swap=ZramConfiguration(enabled=False),

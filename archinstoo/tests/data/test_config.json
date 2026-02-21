@@ -153,10 +153,10 @@
     ]
   },
   "hostname": "archy",
-  "kernels": [
-    "linux-zen"
-  ],
-  "kernel_headers": false,
+  "kernel_config": {
+    "kernels": ["linux-zen"],
+    "headers": false
+  },
   "locale_config": {
     "kb_layout": "us",
     "sys_enc": "UTF-8",

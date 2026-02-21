@@ -9,7 +9,7 @@ from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.script_editor import edit_script
+from archinstoo.lib.tui.script_editor import ScriptEditor
 from archinstoo.lib.tui.types import Alignment
 
 from .applications.application_menu import ApplicationMenu
@@ -479,9 +479,8 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _edit_custom_commands(self, preset: list[str]) -> list[str]:
 		current_script = '\n'.join(preset) if preset else ''
-		result = edit_script(preset=current_script, title=tr('Custom Commands'))
+		result = ScriptEditor(title=tr('Custom Commands'), preset=current_script).edit()
 		if result is not None:
-			# Split by newlines and filter empty lines
 			return [line for line in result.split('\n') if line.strip()]
 		return preset
 
