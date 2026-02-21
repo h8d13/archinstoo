@@ -313,10 +313,10 @@ class GfxDriver(Enum):
 					GfxPackage.Mesa,
 				]
 				# Add driver based on detection
-				sysinfo = SysInfo()
-				if sysinfo.has_intel_graphics():
+				_sysinfo = SysInfo()
+				if _sysinfo.has_intel_graphics():
 					packages.append(GfxPackage.VulkanIntel)
-				elif sysinfo.has_amd_graphics():
+				elif _sysinfo.has_amd_graphics():
 					packages.append(GfxPackage.VulkanRadeon)
 			case GfxDriver.VMSoftware:
 				packages += [

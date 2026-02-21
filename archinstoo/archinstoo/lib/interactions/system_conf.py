@@ -216,10 +216,10 @@ def select_driver(
 	This comment was stupid so I removed it. A profile should plain dictate
 	What it needs to run and be in minimal functional state.
 	"""
-	sysinfo = SysInfo()
+	_sysinfo = SysInfo()
 
 	if not options:
-		if sysinfo.arch() != 'x86_64':
+		if _sysinfo.arch() != 'x86_64':
 			# On ARM only mesa-based drivers are available
 			options = [GfxDriver.MesaOpenSource]
 		else:
@@ -235,7 +235,7 @@ def select_driver(
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	group = MenuItemGroup(items, sort_items=True)
-	if GfxDriver.MesaOpenSource in options and (sysinfo.is_vm() or sysinfo.arch() != 'x86_64'):
+	if GfxDriver.MesaOpenSource in options and (_sysinfo.is_vm() or _sysinfo.arch() != 'x86_64'):
 		default_driver = GfxDriver.MesaOpenSource
 	elif GfxDriver.AllOpenSource in options:
 		default_driver = GfxDriver.AllOpenSource
@@ -247,13 +247,13 @@ def select_driver(
 		group.set_focus_by_value(preset)
 
 	header = ''
-	if sysinfo.is_vm():
+	if _sysinfo.is_vm():
 		header += tr('VM detected: use VM (software rendering) or VM (virtio-gpu) options.\n')
-	if sysinfo.has_amd_graphics():
+	if _sysinfo.has_amd_graphics():
 		header += tr('AMD detected: use All open-source, AMD / ATI, or Mesa (open-source) options.\n')
-	if sysinfo.has_intel_graphics():
+	if _sysinfo.has_intel_graphics():
 		header += tr('Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n')
-	if sysinfo.has_nvidia_graphics():
+	if _sysinfo.has_nvidia_graphics():
 		header += tr('Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n')
 
 	result = SelectMenu[GfxDriver](
