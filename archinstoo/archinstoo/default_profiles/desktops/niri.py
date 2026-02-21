@@ -21,12 +21,13 @@ class NiriProfile(WaylandProfile):
 			'alacritty',
 			'fuzzel',
 			'mako',
-			'xorg-xwayland',
+			'xwayland-satellite',
 			'waybar',
 			'swaybg',
 			'swayidle',
 			'swaylock',
 			'xdg-desktop-portal-gnome',
+			'xdg-desktop-portal-gtk',
 		]
 
 	@property
