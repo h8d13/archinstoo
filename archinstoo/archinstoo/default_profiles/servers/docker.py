@@ -4,6 +4,7 @@ from archinstoo.default_profiles.profile import Profile, ProfileType
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.users import User
 
 
 class DockerProfile(Profile):
@@ -24,7 +25,6 @@ class DockerProfile(Profile):
 		return ['docker']
 
 	@override
-	def post_install(self, install_session: Installer) -> None:
-		if install_session.handler and (auth_config := install_session.handler.config.auth_config):
-			for user in auth_config.users:
-				install_session.arch_chroot(f'usermod -a -G docker {user.username}')
+	def provision(self, install_session: Installer, users: list[User]) -> None:
+		for user in users:
+			install_session.arch_chroot(f'usermod -a -G docker {user.username}')
