@@ -15,11 +15,11 @@ license=(GPL-3.0-only)
 depends=(
   'python-pyparted'
   'python'
-  'arch-install-scripts'
-  'coreutils'
-  'util-linux'
-  'pciutils'
-  'kbd'
+  'arch-install-scripts' #For pacstrap, genfstab, chroot
+  'coreutils' #Basic utilities
+  'util-linux' #For partition utilities
+  'pciutils' #For PCI device detection
+  'kbd' #For keyboard layout configuration
   'pacman'
   'git'
 )
