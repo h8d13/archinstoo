@@ -100,7 +100,13 @@ class KernelMenu(AbstractSubMenu[KernelConfiguration]):
 		]
 
 	def _prev_kernel(self, item: MenuItem) -> str:
-		return self._kernel_conf.preview()
+		kernels: list[str] = self._item_group.find_by_key('kernels').value or []
+		headers = cast(bool, self._item_group.find_by_key('headers').value)
+		kernel_str = ', '.join(kernels) if kernels else tr('None')
+		output = f'{tr("Kernels")}: {kernel_str}\n'
+		status = tr('Enabled') if headers else tr('Disabled')
+		output += f'{tr("Headers")}: {status}'
+		return output
 
 	@override
 	def run(self, additional_title: str | None = None) -> KernelConfiguration:
