@@ -95,8 +95,8 @@ class FilesystemHandler:
 		the formatting functionality and in essence the support for the given filesystem.
 		"""
 
-		# don't touch existing partitions
-		create_or_modify_parts = [p for p in partitions if p.is_create_or_modify()]
+		# don't touch existing partitions or raw partitions (e.g. BIOS boot ef02)
+		create_or_modify_parts = [p for p in partitions if p.is_create_or_modify() and p.fs_type is not None]
 
 		self._validate_partitions(create_or_modify_parts)
 

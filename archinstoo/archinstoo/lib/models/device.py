@@ -760,6 +760,7 @@ class PartitionFlag(PartitionFlagDataMixin, Enum):
 	BOOT = parted.PARTITION_BOOT
 	XBOOTLDR = parted.PARTITION_BLS_BOOT, 'bls_boot'
 	ESP = parted.PARTITION_ESP
+	BIOS_GRUB = parted.PARTITION_BIOS_GRUB, 'bios_grub'
 	LINUX_HOME = parted.PARTITION_LINUX_HOME, 'linux-home'
 	SWAP = parted.PARTITION_SWAP
 
@@ -1042,7 +1043,7 @@ class PartitionModification:
 			'Start': self.start.format_size(Unit.sectors, self.start.sector_size, include_unit=False),
 			'End': self.end.format_size(Unit.sectors, self.start.sector_size, include_unit=False),
 			'Size': self.length.format_highest(),
-			'FS type': self.fs_type.value if self.fs_type else 'Unknown',
+			'FS type': self.fs_type.value if self.fs_type else 'Raw',
 			'Mountpoint': str(self.mountpoint) if self.mountpoint else '',
 			'Mount options': ', '.join(self.mount_options),
 			'Flags': ', '.join([f.description for f in self.flags]),
@@ -1370,6 +1371,7 @@ class DeviceModification:
 	device: BDevice
 	wipe: bool
 	partitions: list[PartitionModification] = field(default_factory=list)
+	partition_table: PartitionTable | None = None
 
 	@property
 	def device_path(self) -> Path:
