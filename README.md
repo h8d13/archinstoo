@@ -126,9 +126,11 @@ Any help in this regard is deeply appreciated, as testing takes just as long if 
 
 The idea being to promote **option 2** to use archinstoo latest. Always, since fixes are often time critical.
 
-1. In case of **DEV** the top-level `PKGBUILD` has a few extra tools like `archiso`, `pacman-contrib` and `nvchecker` mentionned.
+1. In case of **DEV** the top-level `PKGBUILD` has a few extra tools `archiso`, `pacman-contrib`, `tree` and `nvchecker` mentionned.
 
 2. In case of **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part.
+
+You would need a PKGBUILD in case you are running from an exising system and not from the ISO (which already has these tools).
 
 ---
 

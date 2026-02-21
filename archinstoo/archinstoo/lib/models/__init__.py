@@ -26,6 +26,7 @@ from .device import (
 	Unit,
 	_DeviceInfo,
 )
+from .kernel import KernelConfiguration
 from .locale import LocaleConfiguration
 from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
@@ -49,6 +50,7 @@ __all__ = [
 	'DiskLayoutType',
 	'EncryptionType',
 	'FilesystemType',
+	'KernelConfiguration',
 	'LocalPackage',
 	'LocaleConfiguration',
 	'LsblkInfo',

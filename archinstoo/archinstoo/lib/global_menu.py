@@ -10,7 +10,7 @@ from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.script_editor import edit_script
-from archinstoo.lib.tui.types import Alignment, Orientation
+from archinstoo.lib.tui.types import Alignment
 
 from .applications.application_menu import ApplicationMenu
 from .args import ArchConfig
@@ -25,16 +25,17 @@ from .interactions.general_conf import (
 	select_ntp,
 	select_timezone,
 )
-from .interactions.system_conf import select_kernel, select_swap
+from .interactions.system_conf import KernelMenu, SwapMenu
 from .localization.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
+from .models.kernel import KernelConfiguration
 from .models.locale import LocaleConfiguration
 from .models.mirrors import PacmanConfiguration
 from .models.network import NetworkConfiguration, NicType
 from .models.packages import Repository
 from .models.profile import ProfileConfiguration
-from .network.network_menu import select_network
+from .network.network_menu import NetworkMenu
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
@@ -51,7 +52,7 @@ class GlobalMenu(AbstractMenu[None]):
 		self._arch_config = arch_config
 		self._skip_boot = skip_boot
 		self._skip_auth = skip_auth
-		self._uefi = SysInfo.has_uefi()
+		self._uefi = SysInfo().has_uefi()
 		menu_options = self._get_menu_options()
 
 		self._item_group = MenuItemGroup(
@@ -114,17 +115,17 @@ class GlobalMenu(AbstractMenu[None]):
 			MenuItem(
 				text=tr('Swap'),
 				value=ZramConfiguration(enabled=True),
-				action=select_swap,
+				action=self._select_swap,
 				preview_action=self._prev_swap,
 				key='swap',
 			),
 			MenuItem(
 				text=tr('Kernels'),
-				value=['linux'],
+				value=KernelConfiguration(),
 				action=self._select_kernel,
 				preview_action=self._prev_kernel,
 				mandatory=False,
-				key='kernels',
+				key='kernel_config',
 			),
 			MenuItem(
 				text=tr('Profile'),
@@ -149,8 +150,8 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Network config'),
-				action=select_network,
-				value={},
+				action=self._select_network,
+				value=None,
 				preview_action=self._prev_network_config,
 				key='network_config',
 			),
@@ -526,6 +527,7 @@ class GlobalMenu(AbstractMenu[None]):
 			output += tr('Enabled') if item.value.enabled else tr('Disabled')
 			if item.value.enabled:
 				output += f'\n{tr("Compression algorithm")}: {item.value.algorithm.value}'
+				output += f'\n{tr("Decompression algorithm")}: {item.value.decompression_algorithm.value}'
 			return output
 		return None
 
@@ -534,44 +536,20 @@ class GlobalMenu(AbstractMenu[None]):
 			return f'{tr("Hostname")}: {item.value}'
 		return None
 
-	def _select_kernel(self, preset: list[str]) -> list[str]:
-		"""Select kernels and then ask about kernel headers."""
-		selected_kernels = select_kernel(preset)
-
-		# Ask about kernel headers
-		current_headers = self._arch_config.kernel_headers
-		header_text = tr('Install kernel headers?') + '\n\n'
-		header_text += tr('Useful for building out-of-tree drivers or DKMS modules,') + '\n'
-		header_text += tr('especially for non-standard kernel variants.') + '\n'
-
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(current_headers)
-
-		result = SelectMenu[bool](
-			group,
-			header=header_text,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				pass
-			case ResultType.Selection:
-				self._arch_config.kernel_headers = result.item() == MenuItem.yes()
-
-		return selected_kernels
+	def _select_kernel(self, preset: KernelConfiguration) -> KernelConfiguration:
+		return KernelMenu(preset).run()
 
 	def _prev_kernel(self, item: MenuItem) -> str | None:
-		if item.value:
-			kernel = ', '.join(item.value)
-			output = f'{tr("Kernels")}: {kernel}\n'
-			status = tr('Enabled') if self._arch_config.kernel_headers else tr('Disabled')
-			output += f'{tr("Headers")}: {status}'
-			return output
+		kc: KernelConfiguration | None = item.value
+		if kc:
+			return kc.preview()
 		return None
+
+	def _select_swap(self, preset: ZramConfiguration) -> ZramConfiguration:
+		return SwapMenu(preset).run()
+
+	def _select_network(self, preset: NetworkConfiguration | None) -> NetworkConfiguration | None:
+		return NetworkMenu(preset or NetworkConfiguration(NicType.NM)).run()
 
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:
 		bootloader_config: BootloaderConfiguration | None = item.value
@@ -641,7 +619,7 @@ class GlobalMenu(AbstractMenu[None]):
 			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				errors.append('Limine does not support booting with a non-FAT boot partition')
 
-		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():
+		elif bootloader == Bootloader.Refind and not self._uefi:
 			errors.append('rEFInd can only be used on UEFI systems')
 
 		return errors
@@ -715,7 +693,8 @@ class GlobalMenu(AbstractMenu[None]):
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu
 
-		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
+		kc: KernelConfiguration | None = self._item_group.find_by_key('kernel_config').value
+		kernels = kc.kernels if kc else None
 		return ProfileMenu(preset=current_profile, kernels=kernels).run()
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:

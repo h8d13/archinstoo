@@ -1,10 +1,10 @@
+import platform
 import time
 import urllib.parse
 from functools import partial
 from pathlib import Path
-from typing import ClassVar, override
+from typing import override
 
-from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.interactions import add_number_of_parallel_downloads
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.list_manager import ListManager
@@ -438,29 +438,25 @@ def select_pacman_options(preset: list[str]) -> list[str]:
 			return result.get_values()
 
 
-class _MirrorCache:
-	data: ClassVar[dict[str, list[MirrorStatusEntryV3]]] = {}
-	is_remote: bool = False
-	sort_info_shown: bool = False
-
-
 class MirrorListHandler:
 	def __init__(
 		self,
 		local_mirrorlist: Path = Path('/etc/pacman.d/mirrorlist'),
 	) -> None:
 		self._local_mirrorlist = local_mirrorlist
+		self._data: dict[str, list[MirrorStatusEntryV3]] = {}
+		self._is_remote: bool = False
 
 	def is_loaded(self) -> bool:
-		return bool(_MirrorCache.data)
+		return bool(self._data)
 
 	def _mappings(self) -> dict[str, list[MirrorStatusEntryV3]]:
-		if not _MirrorCache.data:
+		if not self._data:
 			self.load_mirrors()
-			if not _MirrorCache.data:
+			if not self._data:
 				raise RuntimeError('Failed to load mirror list')
 
-		return _MirrorCache.data
+		return self._data
 
 	def get_mirror_regions(self) -> list[MirrorRegion]:
 		available_mirrors = []
@@ -474,22 +470,22 @@ class MirrorListHandler:
 		return available_mirrors
 
 	def load_mirrors(self, offline: bool = False) -> None:
-		if _MirrorCache.data:
+		if self._data:
 			return
 
 		if offline:
-			_MirrorCache.is_remote = False
+			self._is_remote = False
 			self.load_local_mirrors()
 		else:
-			_MirrorCache.is_remote = self.load_remote_mirrors()
-			debug(f'load mirrors: {_MirrorCache.is_remote}')
-			if not _MirrorCache.is_remote:
+			self._is_remote = self.load_remote_mirrors()
+			debug(f'load mirrors: {self._is_remote}')
+			if not self._is_remote:
 				self.load_local_mirrors()
 
 	_ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
 
 	def load_remote_mirrors(self) -> bool:
-		if SysInfo.arch() != 'x86_64':
+		if platform.machine() != 'x86_64':
 			return self._load_arm_mirrors()
 
 		attempts = 3
@@ -498,7 +494,7 @@ class MirrorListHandler:
 		for attempt_nr in range(attempts):
 			try:
 				data = fetch_data_from_url('https://archlinux.org/mirrors/status/json/')
-				_MirrorCache.data.update(self._parse_remote_mirror_list(data))
+				self._data.update(self._parse_remote_mirror_list(data))
 				return True
 			except Exception as e:
 				debug(f'Error fetching from archlinux.org: {e}')
@@ -509,7 +505,7 @@ class MirrorListHandler:
 			try:
 				de_list = ArchLinuxDeMirrorList.fetch_all('https://www.archlinux.de/api/mirrors')
 				v3_list = de_list.to_v3()
-				_MirrorCache.data.update(self._parse_remote_mirror_list(v3_list.to_json()))
+				self._data.update(self._parse_remote_mirror_list(v3_list.to_json()))
 				return True
 			except Exception as e:
 				debug(f'Error fetching from archlinux.de: {e}')
@@ -519,10 +515,10 @@ class MirrorListHandler:
 		return False
 
 	def _load_arm_mirrors(self) -> bool:
-		debug(f'ARM architecture ({SysInfo.arch()}), fetching Arch Linux ARM mirror list')
+		debug(f'ARM architecture ({platform.machine()}), fetching Arch Linux ARM mirror list')
 		try:
 			data = fetch_data_from_url(self._ARM_MIRRORLIST_URL)
-			_MirrorCache.data.update(self._parse_local_mirrors(data))
+			self._data.update(self._parse_local_mirrors(data))
 			return True
 		except Exception as e:
 			debug(f'Error fetching ARM mirror list: {e}')
@@ -531,7 +527,7 @@ class MirrorListHandler:
 	def load_local_mirrors(self) -> None:
 		with self._local_mirrorlist.open('r') as fp:
 			mirrorlist = fp.read()
-			_MirrorCache.data.update(self._parse_local_mirrors(mirrorlist))
+			self._data.update(self._parse_local_mirrors(mirrorlist))
 
 	def get_status_by_region(self, region: str, speed_sort: bool) -> list[MirrorStatusEntryV3]:
 		mappings = self._mappings()
@@ -540,7 +536,7 @@ class MirrorListHandler:
 		# Only sort if we have remote mirror data with score/speed info
 		# Local mirrors lack this data and can be modified manually before-hand
 		# Or reflector potentially ran already
-		if _MirrorCache.is_remote and speed_sort:
+		if self._is_remote and speed_sort:
 			# simple counter to show progress
 			# and current best to show another useful info
 			total = len(region_list)

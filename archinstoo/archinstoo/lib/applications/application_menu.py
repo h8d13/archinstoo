@@ -77,7 +77,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				text=tr('Power management'),
 				action=select_power_management,
 				preview_action=self._prev_power_management,
-				enabled=SysInfo.has_battery(),
+				enabled=SysInfo().has_battery(),
 				key='power_management_config',
 			),
 			MenuItem(
@@ -301,7 +301,7 @@ def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConf
 
 
 def select_management(preset: ManagementConfiguration | None = None) -> ManagementConfiguration | None:
-	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo.arch() != 'x86_64')]
+	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo().arch() != 'x86_64')]
 	items = [MenuItem(m.value, value=m) for m in options]
 	group = MenuItemGroup(items)
 

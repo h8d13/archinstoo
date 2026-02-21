@@ -78,6 +78,7 @@ class Installer:
 		"""
 		from .args import Arguments
 
+		self._sysinfo = SysInfo()
 		self._handler = handler
 		self._device_handler = device_handler or DeviceHandler()
 		self._args = handler.args if handler else Arguments()
@@ -133,6 +134,10 @@ class Installer:
 	@property
 	def handler(self) -> ArchConfigHandler | None:
 		return self._handler
+
+	@property
+	def sys_info(self) -> SysInfo:
+		return self._sysinfo
 
 	def set_helper_flag(self, key: str, value: str | bool | None) -> None:
 		self._helper_flags[key] = value
@@ -202,7 +207,7 @@ class Installer:
 		else:
 			info(tr('Skipping NTP time sync (may cause issues if system time is incorrect)'))
 
-		if not self._args.offline and SysInfo.arch() == 'x86_64':
+		if not self._args.offline and self._sysinfo.arch() == 'x86_64':
 			info('Waiting for reflector mirror selection...')
 			reflector_state = self._service_state('reflector')
 			timed_out = True
@@ -845,7 +850,7 @@ class Installer:
 			return False
 
 	def _get_microcode(self) -> Path | None:
-		if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
+		if not self._sysinfo.is_vm() and (vendor := self._sysinfo.cpu_vendor()):
 			return vendor.get_ucode()
 		return None
 
@@ -1011,21 +1016,26 @@ class Installer:
 			self._configure_grub_btrfsd(snapshot_type)
 			self.enable_service('grub-btrfsd.service')
 
-	def setup_swap(self, kind: str = 'zram', algo: ZramAlgorithm = ZramAlgorithm.ZSTD) -> None:
+	def setup_swap(
+		self,
+		kind: str = 'zram',
+		algo: ZramAlgorithm = ZramAlgorithm.ZSTD,
+		decomp_algo: ZramAlgorithm = ZramAlgorithm.LZ4,
+	) -> None:
 		if kind == 'zram':
 			info('Setting up swap on zram')
 			self.pacman.strap('zram-generator')
 			# Get RAM size in MB from hardware info
-			ram_kb = SysInfo.mem_total()
+			ram_kb = self._sysinfo.mem_total()
 			# Convert KB to MB and divide by 2, with minimum of 4096 MB
 			size_mb = max(ram_kb // 2048, 4096)
 			info(f'Zram size: {size_mb} from RAM: {ram_kb}')
-			info(f'Zram compression algorithm: {algo.value}')
+			info(f'Zram compression algorithm: {algo.value} {decomp_algo.value}')
 
 			with open(f'{self.target}/etc/systemd/zram-generator.conf', 'w') as zram_conf:
 				zram_conf.write('[zram0]\n')
 				zram_conf.write(f'zram-size = {size_mb}\n')
-				zram_conf.write(f'compression-algorithm = {algo.value}\n')
+				zram_conf.write(f'compression-algorithm = {algo.value} {decomp_algo.value}\n')
 
 			self.enable_service('systemd-zram-setup@zram0.service')
 
@@ -1213,7 +1223,7 @@ class Installer:
 
 		self.pacman.strap('efibootmgr')
 
-		if not SysInfo.has_uefi():
+		if not self._sysinfo.has_uefi():
 			raise HardwareIncompatibilityError
 
 		if not efi_partition:
@@ -1321,7 +1331,7 @@ class Installer:
 			'--debug',
 		]
 
-		if SysInfo.has_uefi():
+		if self._sysinfo.has_uefi():
 			if not efi_partition:
 				raise ValueError('Could not detect efi partition')
 
@@ -1334,7 +1344,7 @@ class Installer:
 				boot_dir_arg.append(f'--boot-directory={boot_partition.mountpoint}')
 				boot_dir = boot_partition.mountpoint
 
-			grub_target = 'x86_64-efi' if SysInfo._bitness() == 64 else 'i386-efi'
+			grub_target = 'x86_64-efi' if self._sysinfo.efi_bitness() == 64 else 'i386-efi'
 			# https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface
 			# mixed mode boot handling same as limine handling 32bit UEFI on 64-bit CPUs
 
@@ -1370,7 +1380,7 @@ class Installer:
 			except SysCallError as err:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 
-		if SysInfo.has_uefi() and uki_enabled:
+		if self._sysinfo.has_uefi() and uki_enabled:
 			grub_d = self.target / 'etc/grub.d'
 			linux_file = grub_d / '10_linux'
 			uki_file = grub_d / '15_uki'
@@ -1440,7 +1450,7 @@ class Installer:
 		config_path = None
 		hook_command = None
 
-		if SysInfo.has_uefi():
+		if self._sysinfo.has_uefi():
 			self.pacman.strap('efibootmgr')
 
 			if not efi_partition:
@@ -1484,7 +1494,7 @@ class Installer:
 				try:
 					# see https://wiki.archlinux.org/title/Arch_boot_process
 					# mixed mode booting (32bit UEFI on x86_64 CPU)
-					efi_bitness = SysInfo._bitness()
+					efi_bitness = self._sysinfo.efi_bitness()
 				except Exception as err:
 					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}')
 
@@ -1591,7 +1601,7 @@ class Installer:
 
 		self.pacman.strap('efibootmgr')
 
-		if not SysInfo.has_uefi():
+		if not self._sysinfo.has_uefi():
 			raise HardwareIncompatibilityError
 
 		# TODO: Ideally we would want to check if another config
@@ -1647,7 +1657,7 @@ class Installer:
 
 		self.pacman.strap('refind')
 
-		if not SysInfo.has_uefi():
+		if not self._sysinfo.has_uefi():
 			raise HardwareIncompatibilityError
 
 		info(f'rEFInd boot partition: {boot_partition.dev_path}')
@@ -1832,7 +1842,7 @@ class Installer:
 		root = self._get_root()
 
 		if boot_partition is None:
-			if SysInfo.has_uefi() and efi_partition is not None:
+			if self._sysinfo.has_uefi() and efi_partition is not None:
 				boot_partition = efi_partition
 			else:
 				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
@@ -1844,7 +1854,7 @@ class Installer:
 
 		# validate removable bootloader option
 		if bootloader_removable:
-			if not SysInfo.has_uefi():
+			if not self._sysinfo.has_uefi():
 				warn('Removable install requested but system is not UEFI; disabling.')
 				bootloader_removable = False
 			elif not bootloader.has_removable_support():

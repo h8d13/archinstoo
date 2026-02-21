@@ -1,9 +1,11 @@
 import ipaddress
 from typing import assert_never, override
 
+from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.network.utils import list_interfaces
+from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -170,45 +172,75 @@ class ManualNetworkConfig(ListManager[Nic]):
 		return Nic(iface=iface_name)
 
 
-def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:
-	"""
-	Configure the network on the newly installed system
-	"""
-
+def _select_nic_type(preset: NicType) -> NicType:
 	items = [MenuItem(n.display_msg(), value=n) for n in NicType]
 	group = MenuItemGroup(items, sort_items=True)
-
-	if preset:
-		group.set_selected_by_value(preset.type)
+	group.set_focus_by_value(preset)
 
 	result = SelectMenu[NicType](
 		group,
 		alignment=Alignment.CENTER,
 		frame=FrameProperties.min(tr('Network configuration')),
-		allow_reset=True,
 		allow_skip=True,
 	).run()
 
 	match result.type_:
 		case ResultType.Skip:
 			return preset
-		case ResultType.Reset:
-			return None
 		case ResultType.Selection:
-			config = result.get_value()
+			return result.get_value()
+		case ResultType.Reset:
+			raise ValueError('Unhandled result type')
 
-			match config:
-				case NicType.ISO:
-					return NetworkConfiguration(NicType.ISO)
-				case NicType.NM:
-					return NetworkConfiguration(NicType.NM)
-				case NicType.NM_IWD:
-					return NetworkConfiguration(NicType.NM_IWD)
-				case NicType.MANUAL:
-					preset_nics = preset.nics if preset else []
-					nics = ManualNetworkConfig(tr('Configure interfaces'), preset_nics).run()
 
-					if nics:
-						return NetworkConfiguration(NicType.MANUAL, nics)
+def _select_interfaces(preset: list[Nic]) -> list[Nic]:
+	return ManualNetworkConfig(tr('Configure interfaces'), preset).run()
 
-	return preset
+
+class NetworkMenu(AbstractSubMenu[NetworkConfiguration]):
+	def __init__(self, config: NetworkConfiguration):
+		self._net_conf = config
+		menu_options = self._define_menu_options()
+
+		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
+		super().__init__(
+			self._item_group,
+			config=self._net_conf,
+		)
+
+	def _define_menu_options(self) -> list[MenuItem]:
+		return [
+			MenuItem(
+				text=tr('Type'),
+				action=self._select_type,
+				value=self._net_conf.type,
+				preview_action=self._prev_network,
+				key='type',
+			),
+			MenuItem(
+				text=tr('Interfaces'),
+				action=_select_interfaces,
+				value=self._net_conf.nics,
+				preview_action=self._prev_network,
+				key='nics',
+				enabled=self._net_conf.type == NicType.MANUAL,
+			),
+		]
+
+	def _select_type(self, preset: NicType) -> NicType:
+		result = _select_nic_type(preset)
+		self._item_group.find_by_key('nics').enabled = result == NicType.MANUAL
+		return result
+
+	def _prev_network(self, item: MenuItem) -> str | None:
+		nic_type = NicType(self._item_group.find_by_key('type').value)
+		if nic_type == NicType.MANUAL:
+			nics: list[Nic] = self._item_group.find_by_key('nics').value or []
+			if nics:
+				return FormattedOutput.as_table(nics)
+		return f'{tr("Network configuration")}:\n{nic_type.display_msg()}'
+
+	@override
+	def run(self, additional_title: str | None = None) -> NetworkConfiguration:
+		super().run(additional_title=additional_title)
+		return self._net_conf

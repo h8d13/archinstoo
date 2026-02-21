@@ -1,17 +1,21 @@
 import datetime
 import http.client
 import json
+import platform
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, NotRequired, Self, TypedDict, override
+from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.network.utils import DownloadTimer, fetch_data_from_url
 from archinstoo.lib.output import debug
 from archinstoo.lib.utils.net import ping
+
+if TYPE_CHECKING:
+	from archinstoo.lib.pm.mirrors import MirrorListHandler
 
 
 def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
@@ -80,9 +84,7 @@ class MirrorStatusEntryV3:
 
 	@property
 	def server_url(self) -> str:
-		from archinstoo.lib.hardware import SysInfo
-
-		if SysInfo.arch() == 'x86_64':
+		if platform.machine() == 'x86_64':
 			return f'{self.url}$repo/os/$arch'
 		return f'{self.url}$arch/$repo'
 
@@ -94,9 +96,7 @@ class MirrorStatusEntryV3:
 			elif self._speedtest_retries < 1:
 				self._speedtest_retries = 1
 
-			from archinstoo.lib.hardware import SysInfo
-
-			arch = SysInfo.arch()
+			arch = platform.machine()
 			if arch == 'x86_64':
 				test_db = f'{self.url}core/os/{arch}/core.db'
 			else:
@@ -453,10 +453,10 @@ class PacmanConfiguration:
 
 		return config.strip()
 
-	def regions_config(self, speed_sort: bool = True) -> str:
+	def regions_config(self, speed_sort: bool = True, mirror_list_handler: MirrorListHandler | None = None) -> str:
 		from archinstoo.lib.pm.mirrors import MirrorListHandler
 
-		handler = MirrorListHandler()
+		handler = mirror_list_handler or MirrorListHandler()
 		config = ''
 
 		for mirror_region in self.mirror_regions:

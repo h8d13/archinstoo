@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 
 
 class PacmanConfig:
-	def __init__(self, target: Path | None):
-		self._config_path = Path('/etc') / 'pacman.conf'
+	def __init__(self, target: Path | None, config_path: Path = Path('/etc/pacman.conf')):
+		self._config_path = config_path
 		self._config_remote_path: Path | None = None
 
 		if target:
@@ -113,11 +113,11 @@ class PacmanConfig:
 			copy2(self._config_path, self._config_remote_path)
 
 	@classmethod
-	def apply_config(cls, config: PacmanConfiguration) -> None:
+	def apply_config(cls, config: PacmanConfiguration, config_path: Path = Path('/etc/pacman.conf')) -> None:
 		"""Apply a PacmanConfiguration to the live system."""
 		if not config.optional_repositories and not config.custom_repositories and not config.pacman_options:
 			return
-		pacman = cls(None)
+		pacman = cls(None, config_path=config_path)
 		if config.optional_repositories:
 			pacman.enable(config.optional_repositories)
 		if config.custom_repositories:
@@ -127,9 +127,9 @@ class PacmanConfig:
 		pacman.apply()
 
 	@classmethod
-	def get_existing_custom_repos(cls) -> list[CustomRepository]:
+	def get_existing_custom_repos(cls, config_path: Path = Path('/etc/pacman.conf')) -> list[CustomRepository]:
 		"""Parse pacman.conf for existing custom repositories."""
-		content = Path('/etc/pacman.conf').read_text()
+		content = config_path.read_text()
 		repos: list[CustomRepository] = []
 
 		for match in re.finditer(r'\[([^\]]+)\]\s*\n([^[]*)', content):

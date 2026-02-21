@@ -15,7 +15,6 @@ from uuid import UUID
 import parted
 from parted import Disk, Geometry, Partition
 
-from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug
 from archinstoo.lib.translationhandler import tr
@@ -235,7 +234,9 @@ class PartitionTable(Enum):
 
 	@classmethod
 	def default(cls) -> Self:
-		return cls.GPT if SysInfo.has_uefi() else cls.MBR
+		from archinstoo.lib.hardware import SysInfo
+
+		return cls.GPT if SysInfo().has_uefi() else cls.MBR
 
 
 class Units(Enum):

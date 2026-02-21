@@ -36,11 +36,12 @@ def collect(config: dict[str, Any]) -> set[str]:
 	pkgs.update(SCHEMA['base'])
 
 	# kernels
-	kernels = config.get('kernels', ['linux'])
+	kc = config.get('kernel_config', {})
+	kernels = kc.get('kernels', ['linux'])
 	pkgs.update(kernels)
 
 	# kernel headers
-	if config.get('kernel_headers', False):
+	if kc.get('headers', False):
 		pkgs.update(f'{k}-headers' for k in kernels)
 
 	# bootloader

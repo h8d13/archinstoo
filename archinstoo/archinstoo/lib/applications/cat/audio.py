@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.application import Audio, AudioConfiguration
 from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug
@@ -66,10 +65,10 @@ class AudioApp:
 			debug('No audio server selected, skipping installation.')
 			return
 
-		if SysInfo.requires_sof_fw():
+		if install_session.sys_info.requires_sof_fw():
 			install_session.add_additional_packages('sof-firmware')
 
-		if SysInfo.requires_alsa_fw():
+		if install_session.sys_info.requires_alsa_fw():
 			install_session.add_additional_packages('alsa-firmware')
 
 		match audio_config.audio:

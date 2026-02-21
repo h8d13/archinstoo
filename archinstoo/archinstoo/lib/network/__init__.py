@@ -1,8 +1,8 @@
 from .network_handler import NetworkHandler
-from .network_menu import ManualNetworkConfig, select_network
+from .network_menu import ManualNetworkConfig, NetworkMenu
 
 __all__ = [
 	'ManualNetworkConfig',
 	'NetworkHandler',
-	'select_network',
+	'NetworkMenu',
 ]

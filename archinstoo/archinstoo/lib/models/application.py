@@ -100,6 +100,7 @@ class ZramAlgorithm(StrEnum):
 class ZramConfigSerialization(TypedDict):
 	enabled: bool
 	algorithm: NotRequired[str]
+	decompression_algorithm: NotRequired[str]
 
 
 class ApplicationSerialization(TypedDict):
@@ -254,6 +255,7 @@ class SecurityConfiguration:
 class ZramConfiguration:
 	enabled: bool
 	algorithm: ZramAlgorithm = ZramAlgorithm.ZSTD
+	decompression_algorithm: ZramAlgorithm = ZramAlgorithm.LZ4
 
 	@classmethod
 	def parse_arg(cls, arg: bool | ZramConfigSerialization) -> Self:
@@ -262,7 +264,8 @@ class ZramConfiguration:
 
 		enabled = arg.get('enabled', True)
 		algo = arg.get('algorithm', ZramAlgorithm.ZSTD.value)
-		return cls(enabled=enabled, algorithm=ZramAlgorithm(algo))
+		decomp = arg.get('decompression_algorithm', ZramAlgorithm.LZ4.value)
+		return cls(enabled=enabled, algorithm=ZramAlgorithm(algo), decompression_algorithm=ZramAlgorithm(decomp))
 
 
 @dataclass

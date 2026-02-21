@@ -1,8 +1,10 @@
-from typing import assert_never
+from typing import assert_never, cast, override
 
 from archinstoo.default_profiles.profile import Profile
 from archinstoo.lib.hardware import GfxDriver, SysInfo
+from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.application import ZramAlgorithm, ZramConfiguration
+from archinstoo.lib.models.kernel import KernelConfiguration
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -10,13 +12,7 @@ from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, FrameStyle, Orientation, PreviewStyle
 
 
-def select_kernel(preset: list[str] = []) -> list[str]:
-	"""
-	Asks the user to select a kernel for system.
-
-	:return: The string as a selected kernel
-	:rtype: string
-	"""
+def _select_kernels(preset: list[str]) -> list[str]:
 	kernels = ['linux', 'linux-lts', 'linux-zen', 'linux-hardened']
 	default_kernel = 'linux'
 
@@ -45,6 +41,162 @@ def select_kernel(preset: list[str] = []) -> list[str]:
 			return result.get_values()
 
 
+def _yes_no(preset: bool, header: str) -> bool:
+	group = MenuItemGroup.yes_no()
+	group.set_focus_by_value(preset)
+
+	result = SelectMenu[bool](
+		group,
+		header=header,
+		columns=2,
+		orientation=Orientation.HORIZONTAL,
+		alignment=Alignment.CENTER,
+		allow_skip=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return result.item() == MenuItem.yes()
+		case ResultType.Reset:
+			raise ValueError('Unhandled result type')
+
+
+def _select_headers(preset: bool) -> bool:
+	header = tr('Install kernel headers?') + '\n\n'
+	header += tr('Useful for building out-of-tree drivers or DKMS modules,') + '\n'
+	header += tr('especially for non-standard kernel variants.') + '\n'
+	return _yes_no(preset, header)
+
+
+class KernelMenu(AbstractSubMenu[KernelConfiguration]):
+	def __init__(self, config: KernelConfiguration):
+		self._kernel_conf = config
+		menu_options = self._define_menu_options()
+
+		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
+		super().__init__(
+			self._item_group,
+			config=self._kernel_conf,
+		)
+
+	def _define_menu_options(self) -> list[MenuItem]:
+		return [
+			MenuItem(
+				text=tr('Kernels'),
+				action=_select_kernels,
+				value=self._kernel_conf.kernels,
+				preview_action=self._prev_kernel,
+				key='kernels',
+			),
+			MenuItem(
+				text=tr('Headers'),
+				action=_select_headers,
+				value=self._kernel_conf.headers,
+				preview_action=self._prev_kernel,
+				key='headers',
+			),
+		]
+
+	def _prev_kernel(self, item: MenuItem) -> str:
+		return self._kernel_conf.preview()
+
+	@override
+	def run(self, additional_title: str | None = None) -> KernelConfiguration:
+		super().run(additional_title=additional_title)
+		return self._kernel_conf
+
+
+def _select_swap_enabled(preset: bool) -> bool:
+	return _yes_no(preset, tr('Would you like to use swap on zram?') + '\n')
+
+
+def _select_zram_algo(preset: ZramAlgorithm, header: str, default: ZramAlgorithm) -> ZramAlgorithm:
+	algo_group = MenuItemGroup.from_enum(ZramAlgorithm, sort_items=False)
+	algo_group.set_default_by_value(default)
+	algo_group.set_focus_by_value(preset)
+
+	result = SelectMenu[ZramAlgorithm](
+		algo_group,
+		header=header,
+		alignment=Alignment.CENTER,
+		allow_skip=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return result.get_value()
+		case ResultType.Reset:
+			raise ValueError('Unhandled result type')
+		case _:
+			assert_never(result.type_)
+
+
+class SwapMenu(AbstractSubMenu[ZramConfiguration]):
+	def __init__(self, config: ZramConfiguration):
+		self._swap_conf = config
+		menu_options = self._define_menu_options()
+
+		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
+		super().__init__(
+			self._item_group,
+			config=self._swap_conf,
+		)
+
+	def _define_menu_options(self) -> list[MenuItem]:
+		return [
+			MenuItem(
+				text=tr('Enable zram'),
+				action=_select_swap_enabled,
+				value=self._swap_conf.enabled,
+				preview_action=self._prev_swap,
+				key='enabled',
+			),
+			MenuItem(
+				text=tr('Compression algorithm'),
+				action=lambda p: _select_zram_algo(p, tr('Select zram compression algorithm:') + '\n', ZramAlgorithm.ZSTD),
+				value=self._swap_conf.algorithm,
+				preview_action=self._prev_swap,
+				key='algorithm',
+			),
+			MenuItem(
+				text=tr('Decompression algorithm'),
+				action=lambda p: _select_zram_algo(p, tr('Select zram decompression algorithm:') + '\n', ZramAlgorithm.LZ4),
+				value=self._swap_conf.decompression_algorithm,
+				preview_action=self._prev_swap,
+				key='decompression_algorithm',
+			),
+		]
+
+	def _prev_swap(self, item: MenuItem) -> str:
+		enabled = cast(bool, self._item_group.find_by_key('enabled').value)
+		output = f'{tr("Swap on zram")}: '
+		output += tr('Enabled') if enabled else tr('Disabled')
+		if enabled:
+			algo = cast(ZramAlgorithm, self._item_group.find_by_key('algorithm').value)
+			decomp = cast(ZramAlgorithm, self._item_group.find_by_key('decompression_algorithm').value)
+			output += f'\n{tr("Compression algorithm")}: {algo.value}'
+			output += f'\n{tr("Decompression algorithm")}: {decomp.value}'
+		return output
+
+	@override
+	def sync_all_to_config(self) -> None:
+		# ZramConfiguration is frozen, so rebuild instead of setattr
+		enabled = cast(bool, self._item_group.find_by_key('enabled').value)
+		algo = cast(ZramAlgorithm, self._item_group.find_by_key('algorithm').value)
+		decomp = cast(ZramAlgorithm, self._item_group.find_by_key('decompression_algorithm').value)
+		self._swap_conf = ZramConfiguration(enabled=enabled, algorithm=algo, decompression_algorithm=decomp)
+		self._config = self._swap_conf
+
+	@override
+	def run(self, additional_title: str | None = None) -> ZramConfiguration:
+		super().run(additional_title=additional_title)
+		return self._swap_conf
+
+
 def select_driver(
 	options: list[GfxDriver] = [],
 	preset: GfxDriver | None = None,
@@ -58,8 +210,10 @@ def select_driver(
 	This comment was stupid so I removed it. A profile should plain dictate
 	What it needs to run and be in minimal functional state.
 	"""
+	sysinfo = SysInfo()
+
 	if not options:
-		if SysInfo.arch() != 'x86_64':
+		if sysinfo.arch() != 'x86_64':
 			# On ARM only mesa-based drivers are available
 			options = [GfxDriver.MesaOpenSource]
 		else:
@@ -75,7 +229,7 @@ def select_driver(
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	group = MenuItemGroup(items, sort_items=True)
-	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
+	if GfxDriver.MesaOpenSource in options and (sysinfo.is_vm() or sysinfo.arch() != 'x86_64'):
 		default_driver = GfxDriver.MesaOpenSource
 	elif GfxDriver.AllOpenSource in options:
 		default_driver = GfxDriver.AllOpenSource
@@ -87,13 +241,13 @@ def select_driver(
 		group.set_focus_by_value(preset)
 
 	header = ''
-	if SysInfo.is_vm():
+	if sysinfo.is_vm():
 		header += tr('VM detected: use VM (software rendering) or VM (virtio-gpu) options.\n')
-	if SysInfo.has_amd_graphics():
+	if sysinfo.has_amd_graphics():
 		header += tr('AMD detected: use All open-source, AMD / ATI, or Mesa (open-source) options.\n')
-	if SysInfo.has_intel_graphics():
+	if sysinfo.has_intel_graphics():
 		header += tr('Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n')
-	if SysInfo.has_nvidia_graphics():
+	if sysinfo.has_nvidia_graphics():
 		header += tr('Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n')
 
 	result = SelectMenu[GfxDriver](
@@ -113,54 +267,3 @@ def select_driver(
 			return None
 		case ResultType.Selection:
 			return result.get_value()
-
-
-def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> ZramConfiguration:
-	prompt = tr('Would you like to use swap on zram?') + '\n'
-
-	group = MenuItemGroup.yes_no()
-	group.set_default_by_value(True)
-	group.set_focus_by_value(preset.enabled)
-
-	result = SelectMenu[bool](
-		group,
-		header=prompt,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			enabled = result.item() == MenuItem.yes()
-			if not enabled:
-				return ZramConfiguration(enabled=False)
-
-			# Ask for compression algorithm
-			algo_group = MenuItemGroup.from_enum(ZramAlgorithm, sort_items=False)
-			algo_group.set_default_by_value(ZramAlgorithm.ZSTD)
-			algo_group.set_focus_by_value(preset.algorithm)
-
-			algo_result = SelectMenu[ZramAlgorithm](
-				algo_group,
-				header=tr('Select zram compression algorithm:') + '\n',
-				alignment=Alignment.CENTER,
-				allow_skip=True,
-			).run()
-
-			match algo_result.type_:
-				case ResultType.Skip:
-					algo = preset.algorithm
-				case ResultType.Selection:
-					algo = algo_result.get_value()
-				case ResultType.Reset:
-					raise ValueError('Unhandled result type')
-				case _:
-					assert_never(algo_result.type_)
-
-			return ZramConfiguration(enabled=True, algorithm=algo)
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')

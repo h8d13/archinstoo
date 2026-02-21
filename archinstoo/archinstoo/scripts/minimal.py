@@ -34,7 +34,7 @@ def perform_installation(
 	with Installer(
 		mountpoint,
 		disk_config,
-		kernels=config.kernels,
+		kernels=config.kernel_config.kernels,
 		handler=handler,
 		device_handler=device_handler,
 	) as installation:

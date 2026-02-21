@@ -58,7 +58,7 @@ This roughly shows the `guided` flow.
 Other scripts or skip flags allow to skip some or all of these steps and run archinstoo.
 The way you need it, you are also free to modify profiles or certain install steps if desired.
 
-Misc is up to preference, which is the entire goal of this project: enable & give choices.
+The entire goal of this project: enable & give choices.
 But also lets standards compete in a better environment. Banner made on 10/02/2026.
 """
 
@@ -172,13 +172,13 @@ def _prepare() -> int:
 
 
 def _log_sys_info(args: Arguments) -> None:
-	bitness = SysInfo._bitness()
-	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
-	debug(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
-	debug(f'Processor model detected: {SysInfo.cpu_model()}')
-	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
-	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
-	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
+	bitness = SysInfo().efi_bitness()
+	debug(f'Hardware model detected: {SysInfo().sys_vendor()} {SysInfo().product_name()}')
+	debug(f'UEFI mode: {SysInfo().has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo().arch()}')
+	debug(f'Processor model detected: {SysInfo().cpu_model()}')
+	debug(f'Memory statistics: {SysInfo().mem_total()} total installed')
+	debug(f'Graphics devices detected: {SysInfo().graphics_devices().keys()}')
+	debug(f'Virtualization detected is VM: {SysInfo().is_vm()}')
 
 	if args.debug:
 		from .lib.disk.utils import disk_layouts

@@ -23,7 +23,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		# Disable items irrelevant for live mode
 		# We assume user built stage 1 but might still want to configure some stuff
 		global_menu.set_enabled('bootloader_config', False)
-		global_menu.set_enabled('kernels', False)
+		global_menu.set_enabled('kernel_config', False)
 		global_menu.set_enabled('disk_config', False)
 		global_menu.set_mandatory('disk_config', False)
 		global_menu.set_mandatory('timezone', False)
@@ -86,7 +86,7 @@ def perform_installation(
 
 		# Swap (zram)
 		if config.swap and config.swap.enabled:
-			installation.setup_swap('zram', algo=config.swap.algorithm)
+			installation.setup_swap('zram', algo=config.swap.algorithm, decomp_algo=config.swap.decompression_algorithm)
 
 		# Network
 		if network_config := config.network_config:
@@ -166,7 +166,7 @@ def live() -> None:
 
 	# Override defaults for live mode
 	args.skip_boot = True
-	config.kernels = []
+	config.kernel_config.kernels = []
 
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
@@ -175,7 +175,7 @@ def live() -> None:
 	if cached := ConfigurationHandler.prompt_resume():
 		try:
 			handler.config = ArchConfig.from_config(cached, args)
-			handler.config.kernels = []
+			handler.config.kernel_config.kernels = []
 			info('Saved selections loaded successfully')
 		except Exception as e:
 			debug(f'Failed to load saved selections: {e}')

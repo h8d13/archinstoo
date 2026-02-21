@@ -15,6 +15,7 @@ from archinstoo.lib.models.application import ApplicationConfiguration, ZramConf
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
+from archinstoo.lib.models.kernel import KernelConfiguration
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
@@ -67,8 +68,7 @@ class ArchConfig:
 	auth_config: AuthenticationConfiguration | None = None
 	swap: ZramConfiguration | None = None
 	hostname: str = 'archlinux'
-	kernels: list[str] = field(default_factory=lambda: ['linux'])
-	kernel_headers: bool = False
+	kernel_config: KernelConfiguration = field(default_factory=KernelConfiguration)
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
@@ -92,8 +92,7 @@ class ArchConfig:
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
 			'disk_config': self.disk_config.json() if self.disk_config else None,
 			'swap': self.swap,
-			'kernels': self.kernels,
-			'kernel_headers': self.kernel_headers,
+			'kernel_config': self.kernel_config.json(),
 			'profile_config': self.profile_config.json() if self.profile_config else None,
 			'hostname': self.hostname,
 			'auth_config': self.auth_config.json() if self.auth_config else None,
@@ -121,7 +120,6 @@ class ArchConfig:
 				'script': 'script',
 				'hostname': 'hostname',
 				'timezone': 'timezone',
-				'kernels': 'kernels',
 				'packages': 'packages',
 				'aur_packages': 'aur_packages',
 				'custom_commands': 'custom_commands',
@@ -157,7 +155,9 @@ class ArchConfig:
 		if (swap := args_config.get('swap')) is not None:
 			arch_config.swap = ZramConfiguration.parse_arg(swap)
 
-		arch_config.kernel_headers = args_config.get('kernel_headers', False)
+		if kc := args_config.get('kernel_config'):
+			arch_config.kernel_config = KernelConfiguration.parse_arg(kc)
+
 		arch_config.ntp = args_config.get('ntp', True)
 
 		return arch_config
