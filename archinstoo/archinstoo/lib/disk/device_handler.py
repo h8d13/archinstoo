@@ -468,8 +468,8 @@ class DeviceHandler:
 			length=length_sector.value,
 		)
 
-		fs_value = part_mod.safe_fs_type.parted_value
-		filesystem = FileSystem(type=fs_value, geometry=geometry)
+		fs_value = part_mod.fs_type.parted_value if part_mod.fs_type else None
+		filesystem = FileSystem(type=fs_value, geometry=geometry) if fs_value else None
 
 		partition = Partition(
 			disk=disk,
@@ -616,7 +616,7 @@ class DeviceHandler:
 		"""
 		Create a partition table on the block device and create all partitions.
 		"""
-		partition_table = partition_table or self.partition_table
+		partition_table = partition_table or modification.partition_table or self.partition_table
 
 		# WARNING: the entire device will be wiped and all data lost
 		if modification.wipe:
