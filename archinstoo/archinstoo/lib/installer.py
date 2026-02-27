@@ -133,6 +133,7 @@ class Installer:
 
 		self._zram_enabled = False
 		self._disable_fstrim = False
+		self._zfs_compression_override = False
 
 		self.pacman = Pacman(self.target)
 
@@ -631,13 +632,18 @@ class Installer:
 		fstab_content = gen_fstab.decode('utf-8', errors='replace')
 
 		# Filter out ZFS entries — ZFS datasets must NOT appear in fstab
+		# Then add root dataset explicitly for snapshot navigation stability
 		if self._disk_config.zfs_config:
-			pool_name = self._disk_config.zfs_config.pool.name
+			pool = self._disk_config.zfs_config.pool
 			filtered_lines = [
 				line for line in fstab_content.splitlines(keepends=True)
-				if pool_name not in line and '\tzfs\t' not in line
+				if pool.name not in line and '\tzfs\t' not in line
 			]
 			fstab_content = ''.join(filtered_lines)
+
+			# Append root dataset entry for ZFSBootMenu snapshot navigation
+			root_dataset = f'{pool.full_dataset_prefix}/root'
+			fstab_content += f'\n{root_dataset}\t/\tzfs\tdefaults\t0\t0\n'
 
 		with open(fstab_path, 'a') as fp:
 			fp.write(fstab_content)
@@ -880,6 +886,13 @@ class Installer:
 			content = re.sub('\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self._binaries)})', content)
 			content = re.sub('\nFILES=(.*)', f'\nFILES=({" ".join(self._files)})', content)
 			content = re.sub('\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self._hooks)})', content)
+
+			# ZFS datasets are already compressed; avoid double-compression in initramfs
+			if self._zfs_compression_override:
+				content = re.sub(r'\n#?COMPRESSION=.*', '\nCOMPRESSION="cat"', content)
+				if 'COMPRESSION=' not in content:
+					content += '\nCOMPRESSION="cat"\n'
+
 			mkinit.seek(0)
 			mkinit.truncate()
 			mkinit.write(content)
@@ -938,7 +951,7 @@ class Installer:
 		timezone: str | None = None,
 	) -> None:
 		if self._disk_config.zfs_config:
-			# ZFS: add packages and hooks, set kernel params
+			# ZFS: add packages, modules, hooks, set kernel params
 			pool = self._disk_config.zfs_config.pool
 
 			# Add linux-headers for DKMS (needed per kernel)
@@ -946,6 +959,10 @@ class Installer:
 				headers_pkg = f'{kernel}-headers'
 				if headers_pkg not in self._base_packages:
 					self._base_packages.append(headers_pkg)
+
+			# Add zfs to mkinitcpio MODULES so the module loads at boot
+			if 'zfs' not in self._modules:
+				self._modules.append('zfs')
 
 			# Insert zfs hook before filesystems
 			if 'zfs' not in self._hooks:
@@ -957,6 +974,9 @@ class Installer:
 
 			# ZFS manages trim via autotrim
 			self._disable_fstrim = True
+
+			# COMPRESSION=cat avoids double-compression (ZFS datasets already compressed)
+			self._zfs_compression_override = True
 		elif self._disk_config.lvm_config:
 			lvm = 'lvm2'
 			self.add_additional_packages(lvm)
@@ -1089,6 +1109,23 @@ class Installer:
 		cache_dir = self.target / 'etc/zfs/zfs-list.cache'
 		cache_dir.mkdir(parents=True, exist_ok=True)
 		(cache_dir / pool.name).touch()
+
+		# Install boot-environment aware ZED history cacher hook
+		# This filters zfs-list.cache to only include datasets from the current BE,
+		# preventing cross-BE mount issues in multi-boot setups
+		zed_asset = Path(__file__).resolve().parent.parent / 'assets' / 'zed' / 'history_event-zfs-list-cacher.sh'
+		if zed_asset.exists():
+			zed_dst_dir = self.target / 'etc/zfs/zed.d'
+			zed_dst_dir.mkdir(parents=True, exist_ok=True)
+			zed_dst = zed_dst_dir / zed_asset.name
+
+			try:
+				shutil.copy2(str(zed_asset), str(zed_dst))
+				zed_dst.chmod(0o755)
+				self.arch_chroot(f'chattr +i /etc/zfs/zed.d/{zed_asset.name}')
+				info('Installed ZED history cacher hook')
+			except Exception as e:
+				debug(f'Failed to install ZED history cacher hook: {e}')
 
 	def setup_btrfs_snapshot(
 		self,
