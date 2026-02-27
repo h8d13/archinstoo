@@ -15,6 +15,7 @@
 		"Limine": ["limine", "efibootmgr"],
 		"Efistub": ["efibootmgr"],
 		"Refind": ["refind"]
+		// zfs bootloader
 	},
 
 	"filesystem_tools": {
@@ -23,6 +24,7 @@
 		"btrfs": ["btrfs-progs"],
 		"xfs": ["xfsprogs"],
 		"f2fs": ["f2fs-tools"]
+		// add missing entries zfs, bcachefs, ntfs
 	},
 
 	// grub + btrfs snapshots adds these

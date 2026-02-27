@@ -631,14 +631,12 @@ class Installer:
 
 		fstab_content = gen_fstab.decode('utf-8', errors='replace')
 
-		# Filter out ZFS entries — ZFS datasets must NOT appear in fstab
-		# Then add root dataset explicitly for snapshot navigation stability
+		# Filter out ZFS entries, then add root dataset for snapshot navigation stability
 		if self._disk_config.zfs_config:
 			pool = self._disk_config.zfs_config.pool
 			filtered_lines = [line for line in fstab_content.splitlines(keepends=True) if pool.name not in line and '\tzfs\t' not in line]
 			fstab_content = ''.join(filtered_lines)
 
-			# Append root dataset entry for ZFSBootMenu snapshot navigation
 			root_dataset = f'{pool.full_dataset_prefix}/root'
 			fstab_content += f'\n{root_dataset}\t/\tzfs\tdefaults\t0\t0\n'
 
@@ -2098,7 +2096,7 @@ class Installer:
 			root_dataset = f'{pool.full_dataset_prefix}/root'
 
 			try:
-				cmdline = 'spl.spl_hostid=0x00bab10c zswap.enabled=0 rw'
+				cmdline = 'spl.spl_hostid=0x00bab10c zswap.enabled=0 systemd.gpt_auto=0 rw'
 				SysCommand(f'zfs set org.zfsbootmenu:commandline="{cmdline}" {root_dataset}')
 				SysCommand(f'zfs set org.zfsbootmenu:rootprefix="zfs=" {root_dataset}')
 			except SysCallError as e:
