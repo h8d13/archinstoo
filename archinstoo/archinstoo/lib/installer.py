@@ -2003,7 +2003,13 @@ class Installer:
 			else:
 				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
 
-		if root is None and bootloader != Bootloader.ZFSBootMenu:
+		# ZFSBootMenu doesn't need a root partition — ZFS manages its own root
+		if bootloader == Bootloader.ZFSBootMenu:
+			info(f'Adding bootloader {bootloader.value}')
+			self._add_zfsbootmenu_bootloader(efi_partition)
+			return
+
+		if root is None:
 			raise ValueError(f'Could not detect root at mountpoint {self.target}')
 
 		info(f'Adding bootloader {bootloader.value} to {boot_partition.dev_path}')
@@ -2031,8 +2037,6 @@ class Installer:
 				self._add_limine_bootloader(boot_partition, efi_partition, root, uki_enabled, bootloader_removable)
 			case Bootloader.Refind:
 				self._add_refind_bootloader(boot_partition, efi_partition, root, uki_enabled)
-			case Bootloader.ZFSBootMenu:
-				self._add_zfsbootmenu_bootloader(efi_partition)
 
 	def _add_zfsbootmenu_bootloader(self, efi_partition: PartitionModification | None) -> None:
 		"""Install ZFSBootMenu bootloader."""
