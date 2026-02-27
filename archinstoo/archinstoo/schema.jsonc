@@ -3,7 +3,7 @@
 	// This is the single source of truth for all package mappings
 	// Used by count.py and should stay in sync with default_profiles/ and lib/
 
-	"base": ["base", "linux-firmware"],
+	"base": ["base", "linux-firmware"], // this then appends filesystem_tools or headers as necessary
 
 	"ter_fonts": ["terminus-font"], // to match iso when `ter` fonts are chosen only
 	
