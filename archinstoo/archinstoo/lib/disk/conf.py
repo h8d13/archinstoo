@@ -627,7 +627,7 @@ def suggest_zfs_layout(
 	pool_name: str = 'zpool',
 	dataset_prefix: str = 'archinstoo',
 ) -> DiskLayoutConfiguration | None:
-	"""Create a default ZFS layout: ESP + one large Solaris Root partition."""
+	"""Create a default ZFS layout: ESP + ZFS partition using remaining space."""
 	handler = device_handler or DeviceHandler()
 
 	device = select_device(device_handler=handler)
@@ -646,8 +646,8 @@ def suggest_zfs_layout(
 	device_modification = DeviceModification(device, wipe=True, partition_table=partition_table)
 	available_space = available_space.gpt_end().align()
 
-	# ESP partition (500 MiB) — mounted at /boot/efi so kernels stay in ZFS root dataset /boot/
-	# ZFSBootMenu scans ZFS datasets for kernels, not the ESP
+	# ESP at /boot/efi; kernels live in the ZFS root dataset under /boot
+	# so ZFSBootMenu can find them (it scans datasets, not the ESP)
 	start = Size(1, Unit.MiB, sector_size)
 	esp_partition = PartitionModification(
 		status=ModificationStatus.Create,
@@ -660,7 +660,7 @@ def suggest_zfs_layout(
 	)
 	device_modification.add_partition(esp_partition)
 
-	# ZFS partition (remaining space, no filesystem — ZFS handles it)
+	# no filesystem; ZFS manages this partition directly
 	zfs_start = esp_partition.start + esp_partition.length
 	zfs_length = available_space - zfs_start
 
@@ -674,7 +674,6 @@ def suggest_zfs_layout(
 	)
 	device_modification.add_partition(zfs_partition)
 
-	# Create ZFS configuration
 	zfs_pool = ZfsPool(
 		name=pool_name,
 		pvs=[zfs_partition],

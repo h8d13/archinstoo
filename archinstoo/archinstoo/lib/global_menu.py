@@ -615,7 +615,7 @@ class GlobalMenu(AbstractMenu[None]):
 		else:
 			return ['No disk layout selected']
 
-		# ZFS manages its own root via datasets, not partitions
+		# ZFS root is a dataset, not a partition
 		is_zfs = disk_config.zfs_config is not None if disk_config else False
 
 		if root_partition is None and not is_zfs:

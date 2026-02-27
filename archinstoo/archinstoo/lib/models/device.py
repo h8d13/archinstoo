@@ -209,7 +209,6 @@ class DiskLayoutConfiguration:
 		if (lvm_arg := disk_config.get('lvm_config', None)) is not None:
 			config.lvm_config = LvmConfiguration.parse_arg(lvm_arg, config)
 
-		# Parse ZFS configuration from settings
 		if (zfs_arg := disk_config.get('zfs_config', None)) is not None:
 			config.zfs_config = ZfsConfiguration.parse_arg(zfs_arg, config)
 

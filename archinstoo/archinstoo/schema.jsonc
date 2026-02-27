@@ -3,7 +3,7 @@
 	// This is the single source of truth for all package mappings
 	// Used by count.py and should stay in sync with default_profiles/ and lib/
 
-	"base": ["base", "linux-firmware"], // this then appends filesystem_tools or headers as necessary
+	"base": ["base", "linux-firmware"],
 
 	"ter_fonts": ["terminus-font"], // to match iso when `ter` fonts are chosen only
 	
@@ -15,7 +15,7 @@
 		"Limine": ["limine", "efibootmgr"],
 		"Efistub": ["efibootmgr"],
 		"Refind": ["refind"]
-		// zfs bootloader
+		// ZFSBootMenu: no packages here, downloads EFI binary at install time
 	},
 
 	"filesystem_tools": {
@@ -24,7 +24,7 @@
 		"btrfs": ["btrfs-progs"],
 		"xfs": ["xfsprogs"],
 		"f2fs": ["f2fs-tools"]
-		// add missing entries zfs, bcachefs, ntfs
+		// TODO: zfs, bcachefs, ntfs
 	},
 
 	// grub + btrfs snapshots adds these

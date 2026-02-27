@@ -80,7 +80,7 @@ class FilesystemHandler:
 
 			self.perform_lvm_operations()
 		elif self._disk_config.zfs_config:
-			# ZFS: only format boot/ESP partitions; ZFS partition has fs_type=None
+			# only format boot/ESP; ZFS partition has fs_type=None
 			for mod in device_mods:
 				boot_parts = [p for p in mod.partitions if p.fs_type is not None]
 				if boot_parts:
@@ -162,13 +162,11 @@ class FilesystemHandler:
 
 		pool = zfs_config.pool
 
-		# ZFS module is assumed to be pre-loaded by the custom ISO (DKMS autoinstall service)
-
-		# Set static hostid on HOST before pool creation so the pool records it.
-		# Must match what the target system will use (0x00bab10c).
+		# hostid must be set before pool creation so the pool records it;
+		# must match the target system value (0x00bab10c)
 		zgenhostid()
 
-		# Find the ZFS partition device path (the one with fs_type=None)
+		# the ZFS partition has fs_type=None (no filesystem, ZFS manages it)
 		zfs_device: Path | None = None
 		for mod in self._disk_config.device_modifications:
 			for part in mod.partitions:
@@ -179,20 +177,16 @@ class FilesystemHandler:
 		if not zfs_device:
 			raise ValueError('No ZFS partition found in device modifications')
 
-		# Create pool on the ZFS partition
 		zpool_create(pool.name, zfs_device, pool.compression, pool.mountpoint)
-
-		# Disable legacy zpool.cache
 		zpool_set_cachefile_none(pool.name)
 
-		# Create base dataset (pool/prefix) with mountpoint=none
+		# base dataset (pool/prefix) acts as a namespace container
 		base_dataset = pool.full_dataset_prefix
 		zfs_create_dataset(base_dataset, {'mountpoint': 'none', 'compression': pool.compression})
 
-		# Create child datasets sorted by hierarchy depth
 		zfs_create_datasets(base_dataset, pool.datasets)
 
-		# Export pool (will be re-imported during mount phase)
+		# export now; re-imported during mount phase
 		zpool_export(pool.name)
 
 	def perform_lvm_operations(self) -> None:

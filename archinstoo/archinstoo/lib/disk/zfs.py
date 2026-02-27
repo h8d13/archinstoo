@@ -6,7 +6,6 @@ from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import ZfsDatasetConfig
 from archinstoo.lib.output import debug, error, info
 
-# Standard pool creation options matching the reference implementation
 DEFAULT_POOL_OPTIONS: list[str] = [
 	'-o ashift=12',
 	'-O acltype=posixacl',
@@ -19,7 +18,6 @@ DEFAULT_POOL_OPTIONS: list[str] = [
 	'-m none',
 ]
 
-# ZFS services to enable on the target system
 ZFS_SERVICES: list[str] = [
 	'zfs.target',
 	'zfs-import.target',
@@ -30,7 +28,6 @@ ZFS_SERVICES: list[str] = [
 
 
 def zfs_load_module() -> None:
-	"""Load the ZFS kernel module."""
 	debug('Loading ZFS kernel module')
 	try:
 		SysCommand('modprobe zfs')
@@ -41,7 +38,6 @@ def zfs_load_module() -> None:
 
 
 def zpool_create(pool_name: str, device: Path, compression: str = 'lz4', mountpoint: Path = Path('/mnt')) -> None:
-	"""Create a ZFS pool with standard options."""
 	debug(f'Creating ZFS pool {pool_name} on {device}')
 
 	options = DEFAULT_POOL_OPTIONS.copy()
@@ -59,7 +55,6 @@ def zpool_create(pool_name: str, device: Path, compression: str = 'lz4', mountpo
 
 
 def zpool_export(pool_name: str) -> None:
-	"""Export a ZFS pool (sync, unmount all, export)."""
 	debug(f'Exporting pool {pool_name}')
 	try:
 		os.sync()
@@ -75,7 +70,7 @@ def zpool_export(pool_name: str) -> None:
 
 
 def zpool_import(pool_name: str, mountpoint: Path) -> None:
-	"""Import a ZFS pool at specified mountpoint without mounting datasets."""
+	# -N: import without mounting (datasets are mounted explicitly later)
 	debug(f'Importing pool {pool_name} to {mountpoint}')
 	try:
 		SysCommand(f'zpool import -N -R {mountpoint} {pool_name}')
@@ -86,7 +81,6 @@ def zpool_import(pool_name: str, mountpoint: Path) -> None:
 
 
 def zfs_create_dataset(full_path: str, properties: dict[str, str] | None = None) -> None:
-	"""Create a ZFS dataset with optional properties."""
 	debug(f'Creating dataset: {full_path}')
 
 	props_str = ''
@@ -103,11 +97,10 @@ def zfs_create_dataset(full_path: str, properties: dict[str, str] | None = None)
 
 
 def zfs_create_datasets(base_dataset: str, datasets: list[ZfsDatasetConfig]) -> None:
-	"""Create child datasets sorted by hierarchy depth, ensuring parents exist."""
+	# sorted by depth so parents are created before children
 	sorted_datasets = sorted(datasets, key=lambda d: len(d.name.split('/')))
 
 	for dataset in sorted_datasets:
-		# Ensure parent datasets exist
 		parts = dataset.name.split('/')
 		for i in range(len(parts) - 1):
 			parent = '/'.join(parts[: i + 1])
@@ -126,7 +119,6 @@ def zfs_create_datasets(base_dataset: str, datasets: list[ZfsDatasetConfig]) -> 
 
 
 def zfs_mount_dataset(dataset_path: str) -> None:
-	"""Mount a specific ZFS dataset."""
 	debug(f'Mounting dataset: {dataset_path}')
 	try:
 		SysCommand(f'zfs mount {dataset_path}')
@@ -136,7 +128,6 @@ def zfs_mount_dataset(dataset_path: str) -> None:
 
 
 def zfs_mount_all(prefix: str) -> None:
-	"""Mount all datasets under a prefix (used after mounting root)."""
 	debug(f'Mounting all datasets under {prefix}')
 	try:
 		SysCommand(f'zfs mount -R {prefix}')
@@ -146,7 +137,6 @@ def zfs_mount_all(prefix: str) -> None:
 
 
 def zfs_umount_all() -> None:
-	"""Unmount all ZFS datasets."""
 	debug('Unmounting all ZFS datasets')
 	try:
 		SysCommand('zfs umount -a')
@@ -155,25 +145,22 @@ def zfs_umount_all() -> None:
 
 
 def zfs_set(dataset: str, prop: str, value: str) -> None:
-	"""Set a property on a ZFS dataset."""
 	debug(f'Setting {prop}={value} on {dataset}')
 	SysCommand(f'zfs set {prop}={value} {dataset}')
 
 
 def zpool_set(pool: str, prop: str, value: str) -> None:
-	"""Set a property on a ZFS pool."""
 	debug(f'Setting {prop}={value} on pool {pool}')
 	SysCommand(f'zpool set {prop}={value} {pool}')
 
 
 def zpool_set_cachefile_none(pool_name: str) -> None:
-	"""Disable legacy zpool.cache (use zfs-mount-generator instead)."""
+	# zfs-mount-generator replaces the legacy zpool.cache approach
 	debug(f'Setting cachefile=none on {pool_name}')
 	SysCommand(f'zpool set cachefile=none {pool_name}')
 
 
 def zgenhostid() -> None:
-	"""Generate a static host ID for ZFS."""
 	debug('Generating static hostid')
 	try:
 		SysCommand('zgenhostid -f 0x00bab10c')
@@ -184,7 +171,6 @@ def zgenhostid() -> None:
 
 
 def zfs_load_key(pool_name: str, key_path: Path) -> None:
-	"""Load encryption key for an encrypted pool."""
 	debug(f'Loading encryption key for pool {pool_name}')
 	try:
 		SysCommand(f'zfs load-key -L file://{key_path} {pool_name}')
