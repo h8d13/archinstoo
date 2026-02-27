@@ -18,7 +18,7 @@ from archinstoo.lib.tui import Tui
 
 def show_menu(config: ArchConfig, args: Arguments) -> None:
 	with Tui():
-		global_menu = GlobalMenu(config, skip_boot=True, skip_auth=False)
+		global_menu = GlobalMenu(config, skip_boot=True, skip_auth=False, advanced=args.advanced)
 
 		# Disable items irrelevant for live mode
 		# We assume user built stage 1 but might still want to configure some stuff

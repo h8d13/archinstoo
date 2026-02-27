@@ -96,7 +96,32 @@ find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i 's|\(APPEND.*archiso.*\)
 echo "Mod pkg list and MOTD..."
 {
     echo "git"
+    # bcachefs support (removed from mainline kernel 6.18+, needs DKMS)
+    echo "linux-headers"
+    echo "bcachefs-dkms"
+    echo "bcachefs-tools"
+    echo "dkms"
 } >> "$PROFILE_DIR/packages.x86_64"
+
+# Ensure bcachefs DKMS module is built and loaded at boot
+echo "Adding bcachefs DKMS boot service..."
+mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+cat > "$PROFILE_DIR/airootfs/etc/systemd/system/bcachefs-dkms.service" << 'SVCEOF'
+[Unit]
+Description=Build and load bcachefs DKMS module
+After=local-fs.target
+ConditionPathExists=!/lib/modules/%v/updates/dkms/bcachefs.ko
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/dkms autoinstall
+ExecStart=/usr/sbin/modprobe bcachefs
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+ln -sf /etc/systemd/system/bcachefs-dkms.service "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/bcachefs-dkms.service"
 
 # Append custom MOTD
 cat >> "$PROFILE_DIR/airootfs/etc/motd" << EOF
