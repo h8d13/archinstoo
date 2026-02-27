@@ -635,10 +635,7 @@ class Installer:
 		# Then add root dataset explicitly for snapshot navigation stability
 		if self._disk_config.zfs_config:
 			pool = self._disk_config.zfs_config.pool
-			filtered_lines = [
-				line for line in fstab_content.splitlines(keepends=True)
-				if pool.name not in line and '\tzfs\t' not in line
-			]
+			filtered_lines = [line for line in fstab_content.splitlines(keepends=True) if pool.name not in line and '\tzfs\t' not in line]
 			fstab_content = ''.join(filtered_lines)
 
 			# Append root dataset entry for ZFSBootMenu snapshot navigation
@@ -953,6 +950,10 @@ class Installer:
 		if self._disk_config.zfs_config:
 			# ZFS: add packages, modules, hooks, set kernel params
 			pool = self._disk_config.zfs_config.pool
+
+			# DKMS needs build tools to compile ZFS module
+			if 'base-devel' not in self._base_packages:
+				self._base_packages.append('base-devel')
 
 			# Add linux-headers for DKMS (needed per kernel)
 			for kernel in self.kernels:
@@ -2065,16 +2066,10 @@ class Installer:
 			existing_entries = SysCommand('efibootmgr -v').decode()
 
 			if 'ZFSBootMenu' not in existing_entries:
-				SysCommand(
-					f"efibootmgr -c -d {parent_dev_path} -p {efi_partition.partn}"
-					f" -L 'ZFSBootMenu' -l '\\EFI\\ZBM\\VMLINUZ.EFI'"
-				)
+				SysCommand(f"efibootmgr -c -d {parent_dev_path} -p {efi_partition.partn} -L 'ZFSBootMenu' -l '\\EFI\\ZBM\\VMLINUZ.EFI'")
 
 			if 'ZFSBootMenu-Recovery' not in existing_entries:
-				SysCommand(
-					f"efibootmgr -c -d {parent_dev_path} -p {efi_partition.partn}"
-					f" -L 'ZFSBootMenu-Recovery' -l '\\EFI\\ZBM\\RECOVERY.EFI'"
-				)
+				SysCommand(f"efibootmgr -c -d {parent_dev_path} -p {efi_partition.partn} -L 'ZFSBootMenu-Recovery' -l '\\EFI\\ZBM\\RECOVERY.EFI'")
 		except SysCallError as e:
 			warn(f'Failed to create EFI boot entries: {e}')
 
