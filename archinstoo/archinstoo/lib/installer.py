@@ -965,6 +965,15 @@ class Installer:
 			if 'zfs' not in self._modules:
 				self._modules.append('zfs')
 
+			# The zfs hook is busybox-based and incompatible with the systemd initramfs.
+			# Replace systemd hooks with their busybox equivalents.
+			if 'systemd' in self._hooks:
+				idx = self._hooks.index('systemd')
+				self._hooks[idx] = 'udev'
+			if 'sd-vconsole' in self._hooks:
+				idx = self._hooks.index('sd-vconsole')
+				self._hooks[idx:idx + 1] = ['keymap', 'consolefont']
+
 			# Insert zfs hook before filesystems
 			if 'zfs' not in self._hooks:
 				self._hooks.insert(self._hooks.index('filesystems'), 'zfs')
@@ -1148,7 +1157,7 @@ class Installer:
 					if mp == mnt_prefix:
 						parts[1] = '/'
 					elif mp.startswith(mnt_prefix + '/'):
-						parts[1] = '/' + mp[len(mnt_prefix) + 1:]
+						parts[1] = '/' + mp[len(mnt_prefix) + 1 :]
 				adjusted_lines.append('\t'.join(parts))
 			(target_cache_dir / pool.name).write_text('\n'.join(adjusted_lines) + '\n')
 		else:
