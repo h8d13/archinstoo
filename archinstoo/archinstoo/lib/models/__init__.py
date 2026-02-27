@@ -40,6 +40,7 @@ from .service import UserService
 from .users import PasswordStrength, User
 
 __all__ = [
+	'DEFAULT_ZFS_DATASETS',
 	'ApplicationConfiguration',
 	'Audio',
 	'AudioConfiguration',
@@ -62,11 +63,6 @@ __all__ = [
 	'LvmVolume',
 	'LvmVolumeGroup',
 	'LvmVolumeStatus',
-	'DEFAULT_ZFS_DATASETS',
-	'ZfsConfiguration',
-	'ZfsDatasetConfig',
-	'ZfsLayoutType',
-	'ZfsPool',
 	'MirrorRegion',
 	'ModificationStatus',
 	'NetworkConfiguration',
@@ -89,5 +85,9 @@ __all__ = [
 	'Unit',
 	'User',
 	'UserService',
+	'ZfsConfiguration',
+	'ZfsDatasetConfig',
+	'ZfsLayoutType',
+	'ZfsPool',
 	'_DeviceInfo',
 ]
