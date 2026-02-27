@@ -868,15 +868,11 @@ class Installer:
 		if fs_type.fs_type_mount in ('btrfs', 'bcachefs'):
 			self._disable_fstrim = True
 
-		if fs_type.fs_type_mount == 'bcachefs' and 'bcachefs' not in self._modules:
-			self._modules.append('bcachefs')
-
-		if fs_type.fs_type_mount == 'bcachefs' and 'bcachefs' not in self._hooks:
-			try:
-				block_index = self._hooks.index('block')
-				self._hooks.insert(block_index + 1, 'bcachefs')
-			except ValueError:
-				pass
+		if fs_type == FilesystemType.Bcachefs:
+			if 'bcachefs' not in self._modules:
+				self._modules.append('bcachefs')
+			if 'bcachefs' not in self._hooks and 'block' in self._hooks:
+				self._hooks.insert(self._hooks.index('block') + 1, 'bcachefs')
 
 		# There is not yet an fsck tool for NTFS. If it's being used for the root filesystem, the hook should be removed.
 		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self._hooks:
