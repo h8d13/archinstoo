@@ -74,10 +74,12 @@ class PartitioningList(ListManager[DiskSegment]):
 		self,
 		device_mod: DeviceModification,
 		partition_table: PartitionTable,
+		advanced: bool = False,
 	) -> None:
 		device = device_mod.device
 
 		self._device = device
+		self._advanced = advanced
 		self._wipe = device_mod.wipe
 		self._buffer = Size(1, Unit.MiB, device.device_info.sector_size)
 		self._using_gpt = device_mod.using_gpt(partition_table)
@@ -590,14 +592,15 @@ class PartitioningList(ListManager[DiskSegment]):
 
 		from .conf import suggest_single_disk_layout
 
-		return suggest_single_disk_layout(self._device)
+		return suggest_single_disk_layout(self._device, advanced=self._advanced)
 
 
 def manual_partitioning(
 	device_mod: DeviceModification,
 	partition_table: PartitionTable,
+	advanced: bool = False,
 ) -> DeviceModification | None:
-	menu_list = PartitioningList(device_mod, partition_table)
+	menu_list = PartitioningList(device_mod, partition_table, advanced=advanced)
 	mod = menu_list.get_device_mod()
 
 	if menu_list.is_last_choice_reset():

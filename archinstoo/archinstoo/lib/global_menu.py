@@ -47,10 +47,12 @@ class GlobalMenu(AbstractMenu[None]):
 		arch_config: ArchConfig,
 		skip_boot: bool = False,
 		skip_auth: bool = False,
+		advanced: bool = False,
 	) -> None:
 		self._arch_config = arch_config
 		self._skip_boot = skip_boot
 		self._skip_auth = skip_auth
+		self._advanced = advanced
 		self._uefi = SysInfo.has_uefi()
 		menu_options = self._get_menu_options()
 
@@ -696,7 +698,7 @@ class GlobalMenu(AbstractMenu[None]):
 		# ends up on the unencrypted ESP
 		allow_auto_unlock = is_grub and not uki_enabled
 		bootloader = bootloader_config.bootloader if bootloader_config else None
-		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock, bootloader=bootloader).run()
+		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock, bootloader=bootloader, advanced=self._advanced).run()
 
 	def _select_bootloader_config(
 		self,
