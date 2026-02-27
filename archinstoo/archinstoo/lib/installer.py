@@ -951,9 +951,11 @@ class Installer:
 			# ZFS: add packages, modules, hooks, set kernel params
 			pool = self._disk_config.zfs_config.pool
 
-			# DKMS needs build tools to compile ZFS module
-			if 'base-devel' not in self._base_packages:
-				self._base_packages.append('base-devel')
+			# ZFS packages included in base strap so mkinitcpio hooks are
+			# available when the kernel post-install trigger fires
+			for pkg in ('base-devel', 'zfs-dkms', 'zfs-utils'):
+				if pkg not in self._base_packages:
+					self._base_packages.append(pkg)
 
 			# Add linux-headers for DKMS (needed per kernel)
 			for kernel in self.kernels:
@@ -1023,10 +1025,14 @@ class Installer:
 			if locale_config.console_font.startswith('ter-'):
 				self._base_packages.append('terminus-font')
 
+		# ZFS: add archzfs repo to host pacman.conf so pacstrap can find zfs-dkms/zfs-utils
+		if self._disk_config.zfs_config:
+			self._add_archzfs_repo_to_host()
+
 		self.pacman.strap(self._base_packages)
 		self._helper_flags['base-strapped'] = True
 
-		# ZFS target setup: add archzfs repo and install ZFS packages in chroot
+		# ZFS target setup: hostid, services, ZED hook, cache files
 		if self._disk_config.zfs_config:
 			self._setup_zfs_target()
 
@@ -1067,8 +1073,21 @@ class Installer:
 			info(f'Running post-installation hook: {function}')
 			function(self)
 
+	def _add_archzfs_repo_to_host(self) -> None:
+		"""Add archzfs repository to host pacman.conf so pacstrap can find ZFS packages."""
+		host_pacman_conf = Path('/etc/pacman.conf')
+		content = host_pacman_conf.read_text()
+		if '[archzfs]' not in content:
+			archzfs_block = '\n[archzfs]\nSigLevel = Never\nServer = https://github.com/archzfs/archzfs/releases/download/experimental\n'
+			content += archzfs_block
+			host_pacman_conf.write_text(content)
+			try:
+				SysCommand('pacman -Sy')
+			except SysCallError as e:
+				debug(f'Failed to sync package databases: {e}')
+
 	def _setup_zfs_target(self) -> None:
-		"""Set up ZFS on the target system after pacstrap."""
+		"""Configure ZFS on the target system after pacstrap (packages already installed)."""
 		zfs_config = self._disk_config.zfs_config
 		if not zfs_config:
 			return
@@ -1076,20 +1095,13 @@ class Installer:
 		pool = zfs_config.pool
 		info('Setting up ZFS on target system')
 
-		# Add archzfs repository to target pacman.conf
+		# Ensure archzfs repo is on target too (pacstrap copies host config but be safe)
 		target_pacman_conf = self.target / 'etc/pacman.conf'
 		content = target_pacman_conf.read_text()
 		if '[archzfs]' not in content:
 			archzfs_block = '\n[archzfs]\nSigLevel = Never\nServer = https://github.com/archzfs/archzfs/releases/download/experimental\n'
 			content += archzfs_block
 			target_pacman_conf.write_text(content)
-
-		# Sync package databases and install ZFS packages
-		try:
-			self.arch_chroot('pacman -Sy --noconfirm')
-			self.arch_chroot('pacman -S --noconfirm --needed zfs-dkms zfs-utils')
-		except SysCallError as e:
-			warn(f'Failed to install ZFS packages in chroot: {e}')
 
 		# Generate hostid in target
 		hostid_path = self.target / 'etc/hostid'
