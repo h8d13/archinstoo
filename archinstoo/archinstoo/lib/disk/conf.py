@@ -91,11 +91,13 @@ def get_default_partition_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
 	bootloader: Bootloader | None = None,
+	advanced: bool = False,
 ) -> DeviceModification:
 	return suggest_single_disk_layout(
 		device,
 		filesystem_type=filesystem_type,
 		bootloader=bootloader,
+		advanced=advanced,
 	)
 
 
@@ -103,26 +105,28 @@ def _manual_partitioning(
 	preset: DeviceModification | None,
 	device: BDevice,
 	device_handler: DeviceHandler | None = None,
+	advanced: bool = False,
 ) -> DeviceModification | None:
 	handler = device_handler or DeviceHandler()
 
 	if not preset:
 		preset = DeviceModification(device, wipe=False)
 
-	return manual_partitioning(preset, handler.partition_table)
+	return manual_partitioning(preset, handler.partition_table, advanced=advanced)
 
 
 def select_disk_config(
 	preset: DiskLayoutConfiguration | None = None,
 	device_handler: DeviceHandler | None = None,
 	bootloader: Bootloader | None = None,
+	advanced: bool = False,
 ) -> DiskLayoutConfiguration | None:
 	handler = device_handler or DeviceHandler()
 
 	# if manual mode already configured, go directly to partition detail screen
 	if preset and preset.config_type == DiskLayoutType.Manual and preset.device_modifications:
 		preset_mod = preset.device_modifications[0]
-		if (manual_modification := _manual_partitioning(preset_mod, preset_mod.device, handler)) is not None:
+		if (manual_modification := _manual_partitioning(preset_mod, preset_mod.device, handler, advanced=advanced)) is not None:
 			return DiskLayoutConfiguration(
 				config_type=DiskLayoutType.Manual,
 				device_modifications=[manual_modification],
@@ -183,12 +187,12 @@ def select_disk_config(
 				return None
 
 			if result.get_value() == default_layout:
-				modification = get_default_partition_layout(device, bootloader=bootloader)
+				modification = get_default_partition_layout(device, bootloader=bootloader, advanced=advanced)
 				return DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Default,
 					device_modifications=[modification],
 				)
-			if result.get_value() == manual_mode and (manual_modification := _manual_partitioning(None, device)) is not None:
+			if result.get_value() == manual_mode and (manual_modification := _manual_partitioning(None, device, advanced=advanced)) is not None:
 				return DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Manual,
 					device_modifications=[manual_modification],
@@ -200,6 +204,7 @@ def select_disk_config(
 def select_lvm_config(
 	disk_config: DiskLayoutConfiguration,
 	preset: LvmConfiguration | None = None,
+	advanced: bool = False,
 ) -> LvmConfiguration | None:
 	preset_value = preset.config_type.display_msg() if preset else None
 	default_mode = LvmLayoutType.Default.display_msg()
@@ -223,7 +228,7 @@ def select_lvm_config(
 			return None
 		case ResultType.Selection:
 			if result.get_value() == default_mode:
-				return suggest_lvm_layout(disk_config)
+				return suggest_lvm_layout(disk_config, advanced=advanced)
 
 	return None
 
@@ -397,9 +402,10 @@ def suggest_single_disk_layout(
 	filesystem_type: FilesystemType | None = None,
 	separate_home: bool | None = None,
 	bootloader: Bootloader | None = None,
+	advanced: bool = False,
 ) -> DeviceModification:
 	if not filesystem_type:
-		filesystem_type = select_main_filesystem_format()
+		filesystem_type = select_main_filesystem_format(advanced=advanced)
 
 	sector_size = device.device_info.sector_size
 	total_size = device.device_info.total_size
@@ -511,6 +517,7 @@ def suggest_lvm_layout(
 	disk_config: DiskLayoutConfiguration,
 	filesystem_type: FilesystemType | None = None,
 	vg_grp_name: str = 'ArchinstooVg',
+	advanced: bool = False,
 ) -> LvmConfiguration:
 	if disk_config.config_type != DiskLayoutType.Default:
 		raise ValueError('LVM suggested volumes are only available for default partitioning')
@@ -521,7 +528,7 @@ def suggest_lvm_layout(
 	mount_options = []
 
 	if not filesystem_type:
-		filesystem_type = select_main_filesystem_format()
+		filesystem_type = select_main_filesystem_format(advanced=advanced)
 
 	if filesystem_type == FilesystemType.Btrfs:
 		prompt = tr('Would you like to use BTRFS subvolumes with a default structure?') + '\n'
