@@ -96,6 +96,10 @@ find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i 's|\(APPEND.*archiso.*\)
 echo "Mod pkg list and MOTD..."
 {
     echo "git"
+    # bcachefs support (removed from mainline kernel 6.18+, needs DKMS)
+    echo "linux-headers"
+    echo "bcachefs-dkms"
+    echo "bcachefs-tools"
 } >> "$PROFILE_DIR/packages.x86_64"
 
 # Append custom MOTD

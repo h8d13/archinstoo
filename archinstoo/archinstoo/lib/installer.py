@@ -857,9 +857,25 @@ class Installer:
 		if (pkg := fs_type.installation_pkg) is not None:
 			self._base_packages.append(pkg)
 
+		# Install linux-headers and bcachefs-dkms if bcachefs is selected
+		if fs_type == FilesystemType.Bcachefs:
+			self._base_packages.extend(f'{kernel}-headers' for kernel in self.kernels)
+			self._base_packages.append('bcachefs-dkms')
+
 		# https://github.com/archlinux/archinstall/issues/1837
-		if fs_type.fs_type_mount == 'btrfs':
+		# https://github.com/koverstreet/bcachefs/issues/916
+		if fs_type.fs_type_mount in ('btrfs', 'bcachefs'):
 			self._disable_fstrim = True
+
+		if fs_type.fs_type_mount == 'bcachefs' and 'bcachefs' not in self._modules:
+			self._modules.append('bcachefs')
+
+		if fs_type.fs_type_mount == 'bcachefs' and 'bcachefs' not in self._hooks:
+			try:
+				block_index = self._hooks.index('block')
+				self._hooks.insert(block_index + 1, 'bcachefs')
+			except ValueError:
+				pass
 
 		# There is not yet an fsck tool for NTFS. If it's being used for the root filesystem, the hook should be removed.
 		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self._hooks:

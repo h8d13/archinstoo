@@ -319,6 +319,7 @@ def select_main_filesystem_format(advanced: bool = False) -> FilesystemType:
 	]
 
 	if advanced:
+		items.append(MenuItem('bcachefs', value=FilesystemType.Bcachefs))
 		items.append(MenuItem('ntfs', value=FilesystemType.Ntfs))
 
 	group = MenuItemGroup(items, sort_items=False)

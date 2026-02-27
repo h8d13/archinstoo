@@ -793,6 +793,7 @@ class PartitionGUID(Enum):
 
 
 class FilesystemType(Enum):
+	Bcachefs = 'bcachefs'
 	Btrfs = 'btrfs'
 	Ext2 = 'ext2'
 	Ext3 = 'ext3'
@@ -829,6 +830,8 @@ class FilesystemType(Enum):
 	@property
 	def installation_pkg(self) -> str | None:
 		match self:
+			case FilesystemType.Bcachefs:
+				return 'bcachefs-tools'
 			case FilesystemType.Btrfs:
 				return 'btrfs-progs'
 			case FilesystemType.Xfs:
