@@ -384,7 +384,8 @@ class Installer:
 			options = list(part_mod.mount_options)
 
 			# restrict ESP permissions so bootctl doesn't warn about world-accessible seed files
-			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.Fat32:
+			# only when mounted at /efi; at /boot the filesystem package expects 755
+			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.Fat32 and part_mod.mountpoint != Path('/boot'):
 				for opt in ('fmask=0077', 'dmask=0077'):
 					if opt not in options:
 						options.append(opt)
