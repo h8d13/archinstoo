@@ -384,7 +384,8 @@ class Installer:
 			options = list(part_mod.mount_options)
 
 			# restrict ESP permissions so bootctl doesn't warn about world-accessible seed files
-			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.Fat32:
+			# only when mounted at /efi; at /boot the filesystem package expects 755
+			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.Fat32 and part_mod.mountpoint != Path('/boot'):
 				for opt in ('fmask=0077', 'dmask=0077'):
 					if opt not in options:
 						options.append(opt)
@@ -857,9 +858,21 @@ class Installer:
 		if (pkg := fs_type.installation_pkg) is not None:
 			self._base_packages.append(pkg)
 
+		# Install linux-headers and bcachefs-dkms if bcachefs is selected
+		if fs_type == FilesystemType.Bcachefs:
+			self._base_packages.extend(f'{kernel}-headers' for kernel in self.kernels)
+			self._base_packages.append('bcachefs-dkms')
+
 		# https://github.com/archlinux/archinstall/issues/1837
-		if fs_type.fs_type_mount == 'btrfs':
+		# https://github.com/koverstreet/bcachefs/issues/916
+		if fs_type.fs_type_mount in ('btrfs', 'bcachefs'):
 			self._disable_fstrim = True
+
+		if fs_type == FilesystemType.Bcachefs:
+			if 'bcachefs' not in self._modules:
+				self._modules.append('bcachefs')
+			if 'bcachefs' not in self._hooks and 'block' in self._hooks:
+				self._hooks.insert(self._hooks.index('block') + 1, 'bcachefs')
 
 		# There is not yet an fsck tool for NTFS. If it's being used for the root filesystem, the hook should be removed.
 		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self._hooks:

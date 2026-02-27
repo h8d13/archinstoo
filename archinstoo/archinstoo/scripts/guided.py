@@ -28,7 +28,7 @@ from archinstoo.lib.tui import Tui
 
 def show_menu(config: ArchConfig, args: Arguments) -> None:
 	with Tui():
-		global_menu = GlobalMenu(config, args.skip_boot)
+		global_menu = GlobalMenu(config, args.skip_boot, advanced=args.advanced)
 
 		if not args.advanced:
 			global_menu.set_enabled('aur_packages', False)
