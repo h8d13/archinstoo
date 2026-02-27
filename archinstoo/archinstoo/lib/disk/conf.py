@@ -646,14 +646,15 @@ def suggest_zfs_layout(
 	device_modification = DeviceModification(device, wipe=True, partition_table=partition_table)
 	available_space = available_space.gpt_end().align()
 
-	# ESP partition (1 GiB)
+	# ESP partition (500 MiB) — mounted at /boot/efi so kernels stay in ZFS root dataset /boot/
+	# ZFSBootMenu scans ZFS datasets for kernels, not the ESP
 	start = Size(1, Unit.MiB, sector_size)
 	esp_partition = PartitionModification(
 		status=ModificationStatus.Create,
 		type=PartitionType.Primary,
 		start=start,
-		length=Size(1, Unit.GiB, sector_size),
-		mountpoint=Path('/boot'),
+		length=Size(500, Unit.MiB, sector_size),
+		mountpoint=Path('/boot/efi'),
 		fs_type=FilesystemType.Fat32,
 		flags=[PartitionFlag.ESP],
 	)
