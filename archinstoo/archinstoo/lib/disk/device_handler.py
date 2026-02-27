@@ -475,7 +475,7 @@ class DeviceHandler:
 		# Parted does not have a file system type for bcachefs as of version 3.6, use
 		# ext4 in its place as that will result in a type of native Linux file system
 		if part_mod.fs_type == FilesystemType.Bcachefs:
-			fs_value = FilesystemType.Ext4.parted_value
+			fs_value: str | None = FilesystemType.Ext4.parted_value
 		else:
 			fs_value = part_mod.fs_type.parted_value if part_mod.fs_type else None
 		filesystem = FileSystem(type=fs_value, geometry=geometry) if fs_value else None
