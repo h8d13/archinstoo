@@ -25,6 +25,13 @@ from archinstoo.lib.tui.curses_menu import Tui
 from .device_handler import DeviceHandler
 from .luks import Luks2
 from .lvm import lvm_group_info, lvm_vol_info
+from .zfs import (
+	zfs_create_dataset,
+	zfs_create_datasets,
+	zpool_create,
+	zpool_export,
+	zpool_set_cachefile_none,
+)
 
 
 class FilesystemHandler:
@@ -78,6 +85,14 @@ class FilesystemHandler:
 					self._format_partitions([boot_part])
 
 			self.perform_lvm_operations()
+		elif self._disk_config.zfs_config:
+			# ZFS: only format boot/ESP partitions; ZFS partition has fs_type=None
+			for mod in device_mods:
+				boot_parts = [p for p in mod.partitions if p.fs_type is not None]
+				if boot_parts:
+					self._format_partitions(boot_parts)
+
+			self.perform_zfs_operations()
 		else:
 			for mod in device_mods:
 				self._format_partitions(mod.partitions)
@@ -143,6 +158,44 @@ class FilesystemHandler:
 		for check, exc in checks.items():
 			if next(filter(check, partitions), None) is not None:
 				raise exc
+
+	def perform_zfs_operations(self) -> None:
+		info('Setting up ZFS config...')
+
+		zfs_config = self._disk_config.zfs_config
+		if not zfs_config:
+			return
+
+		pool = zfs_config.pool
+
+		# ZFS module is assumed to be pre-loaded by the custom ISO (DKMS autoinstall service)
+
+		# Find the ZFS partition device path (the one with fs_type=None)
+		zfs_device: Path | None = None
+		for mod in self._disk_config.device_modifications:
+			for part in mod.partitions:
+				if part.fs_type is None and part.dev_path and not any(f.name == 'BIOS_GRUB' for f in part.flags):
+					zfs_device = part.dev_path
+					break
+
+		if not zfs_device:
+			raise ValueError('No ZFS partition found in device modifications')
+
+		# Create pool on the ZFS partition
+		zpool_create(pool.name, zfs_device, pool.compression, pool.mountpoint)
+
+		# Disable legacy zpool.cache
+		zpool_set_cachefile_none(pool.name)
+
+		# Create base dataset (pool/prefix) with mountpoint=none
+		base_dataset = pool.full_dataset_prefix
+		zfs_create_dataset(base_dataset, {'mountpoint': 'none', 'compression': pool.compression})
+
+		# Create child datasets sorted by hierarchy depth
+		zfs_create_datasets(base_dataset, pool.datasets)
+
+		# Export pool (will be re-imported during mount phase)
+		zpool_export(pool.name)
 
 	def perform_lvm_operations(self) -> None:
 		info('Setting up LVM config...')

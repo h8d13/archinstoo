@@ -119,6 +119,10 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 	def _check_dep_lvm(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
 
+		# LVM is not available when ZFS is configured
+		if disk_layout_conf and disk_layout_conf.zfs_config:
+			return False
+
 		return bool(disk_layout_conf and disk_layout_conf.config_type == DiskLayoutType.Default)
 
 	def _check_dep_btrfs(self) -> bool:

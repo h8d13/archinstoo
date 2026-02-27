@@ -1,6 +1,7 @@
 from .application import ApplicationConfiguration, Audio, AudioConfiguration, BluetoothConfiguration, PrintServiceConfiguration
 from .bootloader import Bootloader
 from .device import (
+	DEFAULT_ZFS_DATASETS,
 	BDevice,
 	DeviceGeometry,
 	DeviceModification,
@@ -24,6 +25,10 @@ from .device import (
 	Size,
 	SubvolumeModification,
 	Unit,
+	ZfsConfiguration,
+	ZfsDatasetConfig,
+	ZfsLayoutType,
+	ZfsPool,
 	_DeviceInfo,
 )
 from .locale import LocaleConfiguration
@@ -57,6 +62,11 @@ __all__ = [
 	'LvmVolume',
 	'LvmVolumeGroup',
 	'LvmVolumeStatus',
+	'DEFAULT_ZFS_DATASETS',
+	'ZfsConfiguration',
+	'ZfsDatasetConfig',
+	'ZfsLayoutType',
+	'ZfsPool',
 	'MirrorRegion',
 	'ModificationStatus',
 	'NetworkConfiguration',

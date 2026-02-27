@@ -55,6 +55,7 @@ class _DiskLayoutConfigurationSerialization(TypedDict):
 	config_type: str
 	device_modifications: NotRequired[list[_DeviceModificationSerialization]]
 	lvm_config: NotRequired[_LvmConfigurationSerialization]
+	zfs_config: NotRequired[_ZfsConfigurationSerialization]
 	mountpoint: NotRequired[str]
 	btrfs_options: NotRequired[_BtrfsOptionsSerialization]
 
@@ -64,6 +65,7 @@ class DiskLayoutConfiguration:
 	config_type: DiskLayoutType
 	device_modifications: list[DeviceModification] = field(default_factory=list)
 	lvm_config: LvmConfiguration | None = None
+	zfs_config: ZfsConfiguration | None = None
 	disk_encryption: DiskEncryption | None = None
 	btrfs_options: BtrfsOptions | None = None
 
@@ -83,6 +85,9 @@ class DiskLayoutConfiguration:
 
 		if self.lvm_config:
 			config['lvm_config'] = self.lvm_config.json()
+
+		if self.zfs_config:
+			config['zfs_config'] = self.zfs_config.json()
 
 		# disk_encryption is never saved (password not persisted)
 
@@ -203,6 +208,10 @@ class DiskLayoutConfiguration:
 		# Parse LVM configuration from settings
 		if (lvm_arg := disk_config.get('lvm_config', None)) is not None:
 			config.lvm_config = LvmConfiguration.parse_arg(lvm_arg, config)
+
+		# Parse ZFS configuration from settings
+		if (zfs_arg := disk_config.get('zfs_config', None)) is not None:
+			config.zfs_config = ZfsConfiguration.parse_arg(zfs_arg, config)
 
 		# disk_encryption is not parsed from config (password never saved)
 
@@ -1320,6 +1329,115 @@ class LvmConfiguration:
 				return filtered
 
 		return None
+
+
+class ZfsLayoutType(Enum):
+	Default = 'default'
+
+	def display_msg(self) -> str:
+		match self:
+			case ZfsLayoutType.Default:
+				return tr('Default layout')
+
+		raise ValueError(f'Unknown type: {self}')
+
+
+@dataclass
+class ZfsDatasetConfig:
+	name: str
+	mountpoint: Path | None = None
+	properties: dict[str, str] = field(default_factory=dict)
+
+
+DEFAULT_ZFS_DATASETS = [
+	ZfsDatasetConfig(name='root', mountpoint=Path('/'), properties={'canmount': 'noauto'}),
+	ZfsDatasetConfig(name='data/home', mountpoint=Path('/home'), properties={}),
+	ZfsDatasetConfig(name='data/root', mountpoint=Path('/root'), properties={}),
+]
+
+
+class _ZfsPoolSerialization(TypedDict):
+	name: str
+	pvs: list[str]
+	dataset_prefix: str
+	datasets: list[dict[str, Any]]
+	compression: str
+	mountpoint: str
+
+
+@dataclass
+class ZfsPool:
+	name: str
+	pvs: list[PartitionModification]
+	dataset_prefix: str
+	datasets: list[ZfsDatasetConfig] = field(default_factory=list)
+	compression: str = 'lz4'
+	mountpoint: Path = field(default_factory=lambda: Path('/mnt'))
+
+	def json(self) -> _ZfsPoolSerialization:
+		return {
+			'name': self.name,
+			'pvs': [p.obj_id for p in self.pvs],
+			'dataset_prefix': self.dataset_prefix,
+			'datasets': [
+				{
+					'name': ds.name,
+					'mountpoint': str(ds.mountpoint) if ds.mountpoint else None,
+					'properties': ds.properties,
+				}
+				for ds in self.datasets
+			],
+			'compression': self.compression,
+			'mountpoint': str(self.mountpoint),
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: _ZfsPoolSerialization, disk_config: DiskLayoutConfiguration) -> ZfsPool:
+		pvs = [part for mod in disk_config.device_modifications for part in mod.partitions if part.obj_id in arg.get('pvs', [])]
+		datasets = [
+			ZfsDatasetConfig(
+				name=ds['name'],
+				mountpoint=Path(ds['mountpoint']) if ds.get('mountpoint') else None,
+				properties=ds.get('properties', {}),
+			)
+			for ds in arg.get('datasets', [])
+		]
+		return cls(
+			name=arg['name'],
+			pvs=pvs,
+			dataset_prefix=arg['dataset_prefix'],
+			datasets=datasets,
+			compression=arg.get('compression', 'lz4'),
+			mountpoint=Path(arg.get('mountpoint', '/mnt')),
+		)
+
+	@property
+	def full_dataset_prefix(self) -> str:
+		return f'{self.name}/{self.dataset_prefix}'
+
+
+class _ZfsConfigurationSerialization(TypedDict):
+	config_type: str
+	pool: _ZfsPoolSerialization
+
+
+@dataclass
+class ZfsConfiguration:
+	config_type: ZfsLayoutType
+	pool: ZfsPool
+
+	def json(self) -> _ZfsConfigurationSerialization:
+		return {
+			'config_type': self.config_type.value,
+			'pool': self.pool.json(),
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: _ZfsConfigurationSerialization, disk_config: DiskLayoutConfiguration) -> ZfsConfiguration:
+		return cls(
+			config_type=ZfsLayoutType(arg['config_type']),
+			pool=ZfsPool.parse_arg(arg['pool'], disk_config),
+		)
 
 
 class _BtrfsOptionsSerialization(TypedDict):

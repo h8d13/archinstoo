@@ -13,9 +13,10 @@ class Bootloader(Enum):
 	Efistub = 'Efistub'
 	Limine = 'Limine'
 	Refind = 'Refind'
+	ZFSBootMenu = 'ZFSBootMenu'
 
 	def has_uki_support(self) -> bool:
-		return self != Bootloader.NO_BOOTLOADER
+		return self not in (Bootloader.NO_BOOTLOADER, Bootloader.ZFSBootMenu)
 
 	def has_removable_support(self) -> bool:
 		match self:
