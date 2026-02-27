@@ -2075,17 +2075,20 @@ class Installer:
 				error(f'Failed to download ZFSBootMenu: {e}')
 				raise
 
-		# Create EFI boot entries
-		parent_dev_path = get_parent_device_path(efi_partition.safe_dev_path)
+		# Also install to fallback boot path so firmware always finds it
+		fallback_dir = self.target / efi_partition.relative_mountpoint / 'EFI/BOOT'
+		fallback_dir.mkdir(parents=True, exist_ok=True)
+		shutil.copy(zbm_path / 'VMLINUZ.EFI', fallback_dir / 'BOOTX64.EFI')
 
+		# Create EFI boot entries using partition path directly
 		try:
 			existing_entries = SysCommand('efibootmgr -v').decode()
 
 			if 'ZFSBootMenu' not in existing_entries:
-				SysCommand(f"efibootmgr -c -d {parent_dev_path} -p {efi_partition.partn} -L 'ZFSBootMenu' -l '\\EFI\\ZBM\\VMLINUZ.EFI'")
+				SysCommand(f"efibootmgr -c -d {efi_partition.safe_dev_path} -L 'ZFSBootMenu' -l '\\EFI\\ZBM\\VMLINUZ.EFI'")
 
 			if 'ZFSBootMenu-Recovery' not in existing_entries:
-				SysCommand(f"efibootmgr -c -d {parent_dev_path} -p {efi_partition.partn} -L 'ZFSBootMenu-Recovery' -l '\\EFI\\ZBM\\RECOVERY.EFI'")
+				SysCommand(f"efibootmgr -c -d {efi_partition.safe_dev_path} -L 'ZFSBootMenu-Recovery' -l '\\EFI\\ZBM\\RECOVERY.EFI'")
 		except SysCallError as e:
 			warn(f'Failed to create EFI boot entries: {e}')
 
