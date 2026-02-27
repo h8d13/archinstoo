@@ -25,7 +25,7 @@ from archinstoo.lib.tui.curses_menu import Tui
 from .device_handler import DeviceHandler
 from .luks import Luks2
 from .lvm import lvm_group_info, lvm_vol_info
-from .zfs import zgenhostid, zfs_create_dataset, zfs_create_datasets, zpool_create, zpool_export, zpool_set_cachefile_none
+from .zfs import zfs_create_dataset, zfs_create_datasets, zgenhostid, zpool_create, zpool_export, zpool_set_cachefile_none
 
 
 class FilesystemHandler:

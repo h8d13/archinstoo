@@ -972,7 +972,7 @@ class Installer:
 				self._hooks[idx] = 'udev'
 			if 'sd-vconsole' in self._hooks:
 				idx = self._hooks.index('sd-vconsole')
-				self._hooks[idx:idx + 1] = ['keymap', 'consolefont']
+				self._hooks[idx : idx + 1] = ['keymap', 'consolefont']
 
 			# Insert zfs hook before filesystems
 			if 'zfs' not in self._hooks:
