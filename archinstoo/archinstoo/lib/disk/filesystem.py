@@ -26,6 +26,7 @@ from .device_handler import DeviceHandler
 from .luks import Luks2
 from .lvm import lvm_group_info, lvm_vol_info
 from .zfs import (
+	zgenhostid,
 	zfs_create_dataset,
 	zfs_create_datasets,
 	zpool_create,
@@ -169,6 +170,10 @@ class FilesystemHandler:
 		pool = zfs_config.pool
 
 		# ZFS module is assumed to be pre-loaded by the custom ISO (DKMS autoinstall service)
+
+		# Set static hostid on HOST before pool creation so the pool records it.
+		# Must match what the target system will use (0x00bab10c).
+		zgenhostid()
 
 		# Find the ZFS partition device path (the one with fs_type=None)
 		zfs_device: Path | None = None

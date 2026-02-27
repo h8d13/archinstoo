@@ -1101,9 +1101,12 @@ class Installer:
 			content += archzfs_block
 			target_pacman_conf.write_text(content)
 
-		# Generate hostid in target
-		hostid_path = self.target / 'etc/hostid'
-		if not hostid_path.exists():
+		# Copy hostid from host to target (host hostid was set before pool creation)
+		host_hostid = Path('/etc/hostid')
+		target_hostid = self.target / 'etc/hostid'
+		if host_hostid.exists():
+			shutil.copy2(str(host_hostid), str(target_hostid))
+		else:
 			try:
 				self.arch_chroot('zgenhostid -f 0x00bab10c')
 			except SysCallError as e:
@@ -1116,10 +1119,40 @@ class Installer:
 			except Exception as e:
 				debug(f'Failed to enable ZFS service {service}: {e}')
 
-		# Set up zfs-mount-generator cache
-		cache_dir = self.target / 'etc/zfs/zfs-list.cache'
-		cache_dir.mkdir(parents=True, exist_ok=True)
-		(cache_dir / pool.name).touch()
+		# Prepare zfs-mount-generator cache: enable zed on host to populate it,
+		# then copy to target with mountpoints adjusted
+		host_cache_dir = Path('/etc/zfs/zfs-list.cache')
+		host_cache_dir.mkdir(parents=True, exist_ok=True)
+		host_cache_file = host_cache_dir / pool.name
+		host_cache_file.touch()
+
+		try:
+			SysCommand('systemctl enable --now zfs-zed.service')
+		except SysCallError as e:
+			debug(f'Failed to start zfs-zed on host: {e}')
+
+		# Give ZED a moment to populate the cache
+		time.sleep(2)
+
+		# Copy and adjust cache mountpoints for target (strip /mnt prefix)
+		target_cache_dir = self.target / 'etc/zfs/zfs-list.cache'
+		target_cache_dir.mkdir(parents=True, exist_ok=True)
+		cache_content = host_cache_file.read_text()
+		if cache_content.strip():
+			mnt_prefix = str(self.target)
+			adjusted_lines = []
+			for line in cache_content.splitlines():
+				parts = line.split('\t')
+				if len(parts) > 1:
+					mp = parts[1]
+					if mp == mnt_prefix:
+						parts[1] = '/'
+					elif mp.startswith(mnt_prefix + '/'):
+						parts[1] = '/' + mp[len(mnt_prefix) + 1:]
+				adjusted_lines.append('\t'.join(parts))
+			(target_cache_dir / pool.name).write_text('\n'.join(adjusted_lines) + '\n')
+		else:
+			(target_cache_dir / pool.name).touch()
 
 		# Install boot-environment aware ZED history cacher hook
 		# This filters zfs-list.cache to only include datasets from the current BE,
