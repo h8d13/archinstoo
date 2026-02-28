@@ -1,7 +1,6 @@
 # Changelog
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
-To see general [features](./FEATURES.MD)
 
 ## 0.1.4-0
 
