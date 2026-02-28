@@ -1024,7 +1024,12 @@ class Installer:
 			self._configure_grub_btrfsd(snapshot_type)
 			self.enable_service('grub-btrfsd.service')
 
-	def setup_swap(self, kind: str = 'zram', algo: ZramAlgorithm = ZramAlgorithm.Default) -> None:
+	def setup_swap(
+		self,
+		kind: str = 'zram',
+		algo: ZramAlgorithm = ZramAlgorithm.Default,
+		recomp_algo: ZramAlgorithm | None = None,
+	) -> None:
 		if kind == 'zram':
 			info('Setting up swap on zram')
 			self.pacman.strap('zram-generator')
@@ -1039,7 +1044,10 @@ class Installer:
 				zram_conf.write('[zram0]\n')
 				zram_conf.write(f'zram-size = {size_mb}\n')
 				if algo != ZramAlgorithm.Default:
-					zram_conf.write(f'compression-algorithm = {algo.value}\n')
+					comp_recomp = algo.value
+					if recomp_algo:
+						comp_recomp += f' {recomp_algo.value}'
+					zram_conf.write(f'compression-algorithm = {comp_recomp}\n')
 
 			self.enable_service('systemd-zram-setup@zram0.service')
 

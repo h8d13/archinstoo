@@ -161,6 +161,43 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 				case _:
 					assert_never(algo_result.type_)
 
-			return ZramConfiguration(enabled=True, algorithm=algo)
+			# Ask for idle recompression algorithm (only if a specific primary algo was chosen)
+			recomp_algo: ZramAlgorithm | None = None
+			if algo != ZramAlgorithm.Default:
+				recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
+
+			return ZramConfiguration(enabled=True, algorithm=algo, recomp_algorithm=recomp_algo)
 		case ResultType.Reset:
 			raise ValueError('Unhandled result type')
+
+
+def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | None:
+	prompt = tr('Select idle recompression algorithm (skip for none):') + '\n'
+
+	# Exclude Default since recompression needs a specific algorithm
+	recomp_items = [
+		MenuItem(algo.value, value=algo)
+		for algo in ZramAlgorithm
+		if algo != ZramAlgorithm.Default
+	]
+	recomp_group = MenuItemGroup(recomp_items, sort_items=False)
+
+	if preset:
+		recomp_group.set_focus_by_value(preset)
+
+	recomp_result = SelectMenu[ZramAlgorithm](
+		recomp_group,
+		header=prompt,
+		alignment=Alignment.CENTER,
+		allow_skip=True,
+	).run()
+
+	match recomp_result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return recomp_result.get_value()
+		case ResultType.Reset:
+			raise ValueError('Unhandled result type')
+		case _:
+			assert_never(recomp_result.type_)

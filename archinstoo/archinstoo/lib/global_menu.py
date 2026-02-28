@@ -528,6 +528,8 @@ class GlobalMenu(AbstractMenu[None]):
 			output += tr('Enabled') if item.value.enabled else tr('Disabled')
 			if item.value.enabled:
 				output += f'\n{tr("Compression algorithm")}: {item.value.algorithm.value}'
+				if item.value.recomp_algorithm:
+					output += f'\n{tr("Recompression algorithm")}: {item.value.recomp_algorithm.value}'
 			return output
 		return None
 
