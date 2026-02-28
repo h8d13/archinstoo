@@ -349,6 +349,17 @@ class EditViewport(AbstractViewport):
 			return ''
 		return self._textbox.gather().strip()
 
+	def redraw_text(self, text: str, cursor_pos: int) -> None:
+		if not self._edit_win:
+			return
+		self._edit_win.erase()
+		_, max_x = self._edit_win.getmaxyx()
+		display = text[: max_x - 1]
+		if display:
+			self._edit_win.addstr(0, 0, display)
+		self._edit_win.move(0, min(cursor_pos, len(display)))
+		self._edit_win.refresh()
+
 	def erase(self) -> None:
 		if self._main_win:
 			self._main_win.erase()
@@ -493,6 +504,7 @@ class EditMenu(AbstractCurses[str]):
 
 		self._current_text = default_text or ''
 		self._real_input = default_text or ''
+		self._cursor_pos = len(self._real_input)
 
 	def _init_viewports(self) -> None:
 		y_offset = 0
@@ -607,56 +619,69 @@ class EditMenu(AbstractCurses[str]):
 
 		return self._last_state
 
-	def _process_edit_key(self, key: int) -> int:
-		key_handles = MenuKeys.from_ord(key)
+	def _redraw_input(self) -> None:
+		assert self._input_vp
+		display = '*' * len(self._real_input) if self._hide_input else self._real_input
+		self._input_vp.redraw_text(display, self._cursor_pos)
 
+	def _process_edit_key(self, key: int) -> int:
 		if self._help_active:
-			if MenuKeys.ESC in key_handles:
+			if key == 27:  # ESC
 				self._help_active = False
 				self.clear_help_win()
 				return 7
 			return 0
 
-		# remove standard keys from the list of key handles
-		key_handles = [key for key in key_handles if key != MenuKeys.STD_KEYS]
+		# Ctrl-H: help
+		if key == 8:
+			self._current_text = self._real_input
+			self._clear_all()
+			self._help_active = True
+			self._show_help()
+			return 0
 
-		# regular key stroke should be passed to the editor
-		if key_handles:
-			special_key = key_handles[0]
+		# ESC: cancel
+		if key == 27:
+			if self._allow_skip:
+				self._last_state = Result(ResultType.Skip, None)
+				return 7
+			return 0
 
-			match special_key:
-				case MenuKeys.HELP:
-					assert self._input_vp
-					self._current_text = self._input_vp.textbox_value()
-					self._clear_all()
-					self._help_active = True
-					self._show_help()
-					return 0
-				case MenuKeys.ESC:
-					if self._allow_skip:
-						self._last_state = Result(ResultType.Skip, None)
-						key = 7
-				case MenuKeys.ACCEPT:
-					self._last_state = Result(ResultType.Selection, None)
-					key = 7
-				case MenuKeys.BACKSPACE:
-					if len(self._real_input) > 0:
-						self._real_input = self._real_input[:-1]
-				case _:
-					if isprint(key):
-						self._real_input += chr(key)
-						if self._hide_input:
-							key = 42
-		else:
-			try:
-				if isprint(key):
-					self._real_input += chr(key)
-					if self._hide_input:
-						key = 42
-			except Exception:
-				pass
+		# Enter: accept
+		if key == 10:
+			self._last_state = Result(ResultType.Selection, None)
+			return 7
 
-		return key
+		# Cursor movement
+		if key == curses.KEY_LEFT:
+			if self._cursor_pos > 0:
+				self._cursor_pos -= 1
+		elif key == curses.KEY_RIGHT:
+			if self._cursor_pos < len(self._real_input):
+				self._cursor_pos += 1
+		elif key in (curses.KEY_HOME, 1):  # Home or Ctrl-A
+			self._cursor_pos = 0
+		elif key in (curses.KEY_END, 5):  # End or Ctrl-E
+			self._cursor_pos = len(self._real_input)
+
+		# Backspace
+		elif key in (curses.KEY_BACKSPACE, 127):
+			if self._cursor_pos > 0:
+				self._real_input = self._real_input[: self._cursor_pos - 1] + self._real_input[self._cursor_pos :]
+				self._cursor_pos -= 1
+
+		# Delete
+		elif key == curses.KEY_DC:
+			if self._cursor_pos < len(self._real_input):
+				self._real_input = self._real_input[: self._cursor_pos] + self._real_input[self._cursor_pos + 1 :]
+
+		# Printable characters
+		elif isprint(key):
+			self._real_input = self._real_input[: self._cursor_pos] + chr(key) + self._real_input[self._cursor_pos :]
+			self._cursor_pos += 1
+
+		self._redraw_input()
+		return 0
 
 	def _handle_interrupt(self) -> bool:
 		if self._allow_reset:
