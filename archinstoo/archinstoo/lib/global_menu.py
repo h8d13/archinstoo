@@ -6,10 +6,10 @@ from archinstoo.lib.models.application import ApplicationConfiguration, ZramConf
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, FilesystemType, PartitionModification
 from archinstoo.lib.pm import list_available_packages
+from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.types import Alignment, Orientation
 
 from .applications.application_menu import ApplicationMenu
@@ -507,14 +507,20 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _edit_sysctl(self, preset: list[str]) -> list[str]:
 		if not preset:
-			swap_item = self._item_group.find_by_key('swap')
-			if swap_item.value and swap_item.value.enabled:
-				preset = [
-					'vm.swappiness = 180',
-					'vm.watermark_boost_factor = 0',
-					'vm.watermark_scale_factor = 125',
-					'vm.page-cluster = 0',
-				]
+			items = [
+				MenuItem(text=tr('Start empty'), value='empty'),
+				MenuItem(text=tr('Load optimized defaults'), value='optimized'),
+			]
+
+			result = SelectMenu[str](
+				MenuItemGroup(items, sort_items=False),
+				header=tr('Sysctl'),
+				alignment=Alignment.CENTER,
+				allow_skip=True,
+			).run()
+
+			if result.type_ == ResultType.Selection and result.get_value() == 'optimized':
+				preset = self._sysctl_optimized_defaults()
 
 		current_text = '\n'.join(preset) if preset else ''
 		result = edit_content(preset=current_text, title=tr('Sysctl'), mode='kvp')
@@ -537,6 +543,88 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'  ... +{len(entries) - 5} more'
 			return output
 		return None
+
+	# Sysctl load defaults option
+	# Update as settings get merged into shipped defaults
+	# (10-arch.conf, 50-default.conf, or CONFIG_ in /proc/config.gz)
+	#
+	# Network performance
+	#   rmem_max/wmem_max = 16M: raise socket buffer ceiling from ~208K for 1G+ links
+	#     ref: fasterdata.es.net/host-tuning/linux
+	#   tcp_rmem/tcp_wmem: raise TCP autotuning ceiling (min/default/max bytes)
+	#     ref: docs.redhat.com RHEL 10 network tuning guide
+	#   tcp_congestion_control = bbr: model-based CC, 2-25x over CUBIC on lossy paths
+	#     kernel default: cubic (CONFIG_DEFAULT_TCP_CONG="cubic")
+	#     ref: research.google/pubs/bbr-congestion-based-congestion-control-2
+	#   default_qdisc = fq: per-flow pacing, required for optimal BBR
+	#     overrides systemd 50-default.conf which sets fq_codel
+	#     ref: github.com/systemd/systemd/issues/9725
+	#   tcp_fastopen = 3: data in SYN (client+server), saves 1 RTT (RFC 7413)
+	#   tcp_mtu_probing = 1: work around ICMP black holes (RFC 4821)
+	#
+	# Security
+	#   rp_filter = 1: strict reverse-path, prevents IP spoofing (CIS 3.3.7)
+	#     overrides systemd 50-default.conf which sets 2 (loose mode)
+	#   accept_redirects = 0: block ICMP redirect MITM (CIS 3.3.2)
+	#   secure_redirects = 0: belt-and-suspenders with above (CIS 3.3.3)
+	#   use_tempaddr = 2: IPv6 privacy extensions, rotate addresses (RFC 4941)
+	#   kptr_restrict = 2: zero kernel pointers for all users, protects KASLR
+	#   yama.ptrace_scope = 1: ptrace children only (CIS 1.5.4)
+	#     ref: kernel.org/doc/Documentation/security/Yama.txt
+	#
+	# Performance
+	#   sched_autogroup_enabled = 0: inert on systemd, avoids nice(1) breakage
+	#     ref: lwn.net/Articles/416641
+	#   vfs_cache_pressure = 50: retain dentry/inode caches longer
+	#   dirty_ratio = 15: reduce worst-case write stall (default 20)
+	#   dirty_background_ratio = 5: earlier background flush, smoother IO (default 10)
+
+	def _sysctl_optimized_defaults(self) -> list[str]:
+		lines: list[str] = []
+
+		# Zram tuning
+		swap_item = self._item_group.find_by_key('swap')
+		if swap_item.value and swap_item.value.enabled:
+			lines += [
+				'# Zram tuning',
+				'vm.swappiness = 180',
+				'vm.watermark_boost_factor = 0',
+				'vm.watermark_scale_factor = 125',
+				'vm.page-cluster = 0',
+				'',
+			]
+
+		lines += [
+			'# Network performance',
+			'net.core.rmem_max = 16777216',
+			'net.core.wmem_max = 16777216',
+			'net.ipv4.tcp_rmem = 4096 87380 16777216',
+			'net.ipv4.tcp_wmem = 4096 65536 16777216',
+			'net.ipv4.tcp_congestion_control = bbr',
+			'net.core.default_qdisc = fq',
+			'net.ipv4.tcp_fastopen = 3',
+			'net.ipv4.tcp_mtu_probing = 1',
+			'',
+			'# Security',
+			'net.ipv4.conf.all.rp_filter = 1',
+			'net.ipv4.conf.default.rp_filter = 1',
+			'net.ipv4.conf.all.accept_redirects = 0',
+			'net.ipv4.conf.default.accept_redirects = 0',
+			'net.ipv4.conf.all.secure_redirects = 0',
+			'net.ipv4.conf.default.secure_redirects = 0',
+			'net.ipv6.conf.all.use_tempaddr = 2',
+			'net.ipv6.conf.default.use_tempaddr = 2',
+			'kernel.kptr_restrict = 2',
+			'kernel.yama.ptrace_scope = 1',
+			'',
+			'# Performance',
+			'kernel.sched_autogroup_enabled = 0',
+			'vm.vfs_cache_pressure = 50',
+			'vm.dirty_ratio = 15',
+			'vm.dirty_background_ratio = 5',
+		]
+
+		return lines
 
 	def _prev_disk_config(self, item: MenuItem) -> str | None:
 		disk_layout_conf: DiskLayoutConfiguration | None = item.value

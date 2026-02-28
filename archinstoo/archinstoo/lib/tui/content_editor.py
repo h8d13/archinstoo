@@ -5,14 +5,14 @@ from .curses_menu import Tui
 from .types import STYLE, Chars
 
 
-class ScriptEditor:
-	"""A simple multi-line text editor for custom scripts."""
+class ContentEditor:
+	"""A simple multi-line text editor for content."""
 
 	def __init__(
 		self,
-		title: str = 'Script Editor',
+		title: str = 'Editor',
 		preset: str = '',
-		mode: str = 'free',
+		mode: str = 'free', # vs kvp
 	):
 		self._title = title
 		self._lines: list[str] = preset.split('\n') if preset else ['']
@@ -118,7 +118,7 @@ class ScriptEditor:
 		if key in (27, curses.KEY_F10):  # ESC or F10 - cancel
 			self._running = False
 		elif key == curses.KEY_F2:  # F2 - save
-			if self._mode == 'kvp' and any(not self._is_line_valid(l) for l in self._lines):
+			if self._mode == 'kvp' and any(not self._is_line_valid(line) for line in self._lines):
 				self._error_msg = 'Invalid format — each line must be key = value'
 			else:
 				self._saved = True
@@ -187,9 +187,7 @@ class ScriptEditor:
 			return True
 		if stripped.startswith('#'):
 			return True
-		if '=' in line:
-			return True
-		return False
+		return '=' in line
 
 	def _clamp_cursor_x(self) -> None:
 		max_x = len(self._lines[self._cursor_y])
@@ -197,5 +195,5 @@ class ScriptEditor:
 
 
 def edit_content(preset: str = '', title: str = 'Custom Commands', mode: str = 'free') -> str | None:
-	editor = ScriptEditor(title=title, preset=preset, mode=mode)
+	editor = ContentEditor(title=title, preset=preset, mode=mode)
 	return editor.edit()

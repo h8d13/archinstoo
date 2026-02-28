@@ -1,7 +1,7 @@
+from .content_editor import ContentEditor, edit_content
 from .curses_menu import EditMenu, SelectMenu, Tui
 from .menu_item import MenuItem, MenuItemGroup
 from .result import Result, ResultType
-from .content_editor import ScriptEditor, edit_content
 from .types import Alignment, Chars, FrameProperties, FrameStyle, Orientation, PreviewStyle
 
 __all__ = [
@@ -16,7 +16,7 @@ __all__ = [
 	'PreviewStyle',
 	'Result',
 	'ResultType',
-	'ScriptEditor',
+	'ContentEditor',
 	'SelectMenu',
 	'Tui',
 	'edit_content',
