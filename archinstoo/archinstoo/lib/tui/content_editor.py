@@ -99,7 +99,7 @@ class ContentEditor:
 			screen.addstr(status_y + 1, 0, self._error_msg[: max_x - 1], highlight)
 		else:
 			pos_info = f'Ln {self._cursor_y + 1}, Col {self._cursor_x + 1}'
-			help_text = 'F2:save  F10/Esc:cancel'
+			help_text = 'F2:save  F10/Esc:cancel  Ctrl-C:clear'
 			screen.addstr(status_y + 1, 0, help_text, normal)
 			screen.addstr(status_y + 1, max_x - len(pos_info) - 1, pos_info, normal)
 
