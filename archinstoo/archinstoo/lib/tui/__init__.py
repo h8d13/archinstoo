@@ -7,6 +7,7 @@ from .types import Alignment, Chars, FrameProperties, FrameStyle, Orientation, P
 __all__ = [
 	'Alignment',
 	'Chars',
+	'ContentEditor',
 	'EditMenu',
 	'FrameProperties',
 	'FrameStyle',
@@ -16,7 +17,6 @@ __all__ = [
 	'PreviewStyle',
 	'Result',
 	'ResultType',
-	'ContentEditor',
 	'SelectMenu',
 	'Tui',
 	'edit_content',
