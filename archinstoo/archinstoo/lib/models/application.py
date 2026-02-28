@@ -90,6 +90,7 @@ class SecurityConfigSerialization(TypedDict):
 
 
 class ZramAlgorithm(StrEnum):
+	Default = 'default'
 	ZSTD = 'zstd'
 	LZO_RLE = 'lzo-rle'
 	LZO = 'lzo'
@@ -253,7 +254,7 @@ class SecurityConfiguration:
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
-	algorithm: ZramAlgorithm = ZramAlgorithm.ZSTD
+	algorithm: ZramAlgorithm = ZramAlgorithm.Default
 
 	@classmethod
 	def parse_arg(cls, arg: bool | ZramConfigSerialization) -> Self:
@@ -261,7 +262,7 @@ class ZramConfiguration:
 			return cls(enabled=arg)
 
 		enabled = arg.get('enabled', True)
-		algo = arg.get('algorithm', ZramAlgorithm.ZSTD.value)
+		algo = arg.get('algorithm', ZramAlgorithm.Default.value)
 		return cls(enabled=enabled, algorithm=ZramAlgorithm(algo))
 
 
