@@ -347,6 +347,11 @@ def select_mount_options() -> list[str]:
 	compression = tr('Use compression')
 	disable_cow = tr('Disable Copy-on-Write')
 
+	# noatime is always included for btrfs to avoid unnecessary metadata
+	# writes due to atime updates interacting poorly with CoW and snapshots
+	# https://github.com/archlinux/archinstall/issues/582
+	default_options = [BtrfsMountOption.noatime.value]
+
 	items = [
 		MenuItem(compression, value=BtrfsMountOption.compress.value),
 		MenuItem(disable_cow, value=BtrfsMountOption.nodatacow.value),
@@ -364,9 +369,9 @@ def select_mount_options() -> list[str]:
 
 	match result.type_:
 		case ResultType.Skip:
-			return []
+			return default_options
 		case ResultType.Selection:
-			return [result.get_value()]
+			return default_options + [result.get_value()]
 		case _:
 			raise ValueError('Unhandled result type')
 

@@ -488,6 +488,7 @@ class Size:
 class BtrfsMountOption(Enum):
 	compress = 'compress=zstd'
 	nodatacow = 'nodatacow'
+	noatime = 'noatime'
 
 
 @dataclass
