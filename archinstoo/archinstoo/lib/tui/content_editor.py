@@ -12,7 +12,7 @@ class ContentEditor:
 		self,
 		title: str = 'Editor',
 		preset: str = '',
-		mode: str = 'free', # vs kvp
+		mode: str = 'free',  # vs kvp
 	):
 		self._title = title
 		self._lines: list[str] = preset.split('\n') if preset else ['']
@@ -96,7 +96,7 @@ class ContentEditor:
 		screen.addstr(status_y, 0, Chars.Horizontal * max_x, normal)
 
 		if self._error_msg:
-			screen.addstr(status_y + 1, 0, self._error_msg[:max_x - 1], highlight)
+			screen.addstr(status_y + 1, 0, self._error_msg[: max_x - 1], highlight)
 		else:
 			pos_info = f'Ln {self._cursor_y + 1}, Col {self._cursor_x + 1}'
 			help_text = 'F2:save  F10/Esc:cancel'
