@@ -21,8 +21,7 @@ To see general [features](./FEATURES.MD)
         - Simplify ZRAM size to RAM / 2
     - Btrfs
         - Add btrfs subvolume option (#582)
-    - Niri window manager
-        - Add Niri as a Wayland compositor profile
+    - Niri window manager Various fixes
     - Encryption fix (#1856)
         - Check if `/` is not encrypted before generating keyfile
         - Skip keyfile generation and use password prompt for unencrypted root
