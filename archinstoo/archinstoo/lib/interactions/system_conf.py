@@ -175,11 +175,7 @@ def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | No
 	prompt = tr('Select idle recompression algorithm (skip for none):') + '\n'
 
 	# Exclude Default since recompression needs a specific algorithm
-	recomp_items = [
-		MenuItem(algo.value, value=algo)
-		for algo in ZramAlgorithm
-		if algo != ZramAlgorithm.Default
-	]
+	recomp_items = [MenuItem(algo.value, value=algo) for algo in ZramAlgorithm if algo != ZramAlgorithm.Default]
 	recomp_group = MenuItemGroup(recomp_items, sort_items=False)
 
 	if preset:
