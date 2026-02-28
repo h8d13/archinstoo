@@ -486,12 +486,15 @@ class GlobalMenu(AbstractMenu[None]):
 		return None
 
 	def _edit_custom_commands(self, preset: list[str]) -> list[str]:
-		current_script = '\n'.join(preset) if preset else ''
-		result = edit_content(preset=current_script, title=tr('Custom Commands'))
-		if result is not None:
-			# Split by newlines and filter empty lines
-			return [line for line in result.split('\n') if line.strip()]
-		return preset
+		try:
+			current_script = '\n'.join(preset) if preset else ''
+			result = edit_content(preset=current_script, title=tr('Custom Commands'))
+			if result is not None:
+				# Split by newlines and filter empty lines
+				return [line for line in result.split('\n') if line.strip()]
+			return preset
+		except KeyboardInterrupt:
+			return []
 
 	def _prev_custom_commands(self, item: MenuItem) -> str | None:
 		commands: list[str] = item.value or []
@@ -506,31 +509,34 @@ class GlobalMenu(AbstractMenu[None]):
 		return None
 
 	def _edit_sysctl(self, preset: list[str]) -> list[str]:
-		if not preset:
-			items = [
-				MenuItem(text=tr('Start empty'), value='empty'),
-				MenuItem(text=tr('Load optimized defaults'), value='optimized'),
-			]
+		try:
+			if not preset:
+				items = [
+					MenuItem(text=tr('Start empty'), value='empty'),
+					MenuItem(text=tr('Load optimized defaults'), value='optimized'),
+				]
 
-			result = SelectMenu[str](
-				MenuItemGroup(items, sort_items=False),
-				header=tr('Sysctl'),
-				alignment=Alignment.CENTER,
-				allow_skip=True,
-			).run()
+				result = SelectMenu[str](
+					MenuItemGroup(items, sort_items=False),
+					header=tr('Sysctl'),
+					alignment=Alignment.CENTER,
+					allow_skip=True,
+				).run()
 
-			if result.type_ == ResultType.Selection and result.get_value() == 'optimized':
-				preset = self._sysctl_optimized_defaults()
+				if result.type_ == ResultType.Selection and result.get_value() == 'optimized':
+					preset = self._sysctl_optimized_defaults()
 
-		current_text = '\n'.join(preset) if preset else ''
-		edited = edit_content(preset=current_text, title=tr('Sysctl'), mode='kvp')
-		if edited is not None:
-			lines = edited.split('\n')
-			# Strip trailing blank lines only
-			while lines and not lines[-1].strip():
-				lines.pop()
-			return lines
-		return preset
+			current_text = '\n'.join(preset) if preset else ''
+			edited = edit_content(preset=current_text, title=tr('Sysctl'), mode='kvp')
+			if edited is not None:
+				lines = edited.split('\n')
+				# Strip trailing blank lines only
+				while lines and not lines[-1].strip():
+					lines.pop()
+				return lines
+			return preset
+		except KeyboardInterrupt:
+			return []
 
 	def _prev_sysctl(self, item: MenuItem) -> str | None:
 		entries: list[str] = item.value or []
