@@ -16,6 +16,12 @@ from typing import Any, Self
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, get_parent_device_path, mount, swapon
+from archinstoo.lib.disk.zfs import (
+	ZFS_SERVICES,
+	zfs_mount_all,
+	zfs_mount_dataset,
+	zpool_import,
+)
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
 	DiskEncryption,
@@ -127,6 +133,7 @@ class Installer:
 
 		self._zram_enabled = False
 		self._disable_fstrim = False
+		self._zfs_compression_override = False
 
 		self.pacman = Pacman(self.target)
 
@@ -263,6 +270,11 @@ class Installer:
 	def mount_ordered_layout(self) -> None:
 		info('Mounting ordered layout')
 
+		# ZFS has its own mount flow
+		if self._disk_config.zfs_config:
+			self._mount_zfs_layout()
+			return
+
 		luks_handlers: dict[Any, Luks2] = {}
 
 		match self._disk_encryption.encryption_type:
@@ -312,6 +324,27 @@ class Installer:
 				if luks_handler := luks_handlers.get(part_mod):
 					self._mount_luks_partition(part_mod, luks_handler)
 				else:
+					self._mount_partition(part_mod)
+
+	def _mount_zfs_layout(self) -> None:
+		zfs_config = self._disk_config.zfs_config
+		if not zfs_config:
+			return
+
+		pool = zfs_config.pool
+		debug(f'Mounting ZFS layout: pool={pool.name}, prefix={pool.dataset_prefix}')
+
+		zpool_import(pool.name, self.target)
+
+		# root has canmount=noauto, must be mounted explicitly before the rest
+		root_dataset = f'{pool.full_dataset_prefix}/root'
+		zfs_mount_dataset(root_dataset)
+		zfs_mount_all(pool.full_dataset_prefix)
+
+		# boot/ESP partitions are regular filesystems
+		for mod in self._disk_config.device_modifications:
+			for part_mod in mod.partitions:
+				if part_mod.mountpoint and part_mod.fs_type is not None:
 					self._mount_partition(part_mod)
 
 	def _mount_lvm_layout(self, luks_handlers: dict[Any, Luks2] = {}) -> None:
@@ -592,8 +625,20 @@ class Installer:
 		except SysCallError as err:
 			raise RequirementError(f'Could not generate fstab, strapping in packages most likely failed (disk out of space?)\n Error: {err}')
 
-		with open(fstab_path, 'ab') as fp:
-			fp.write(gen_fstab)
+		fstab_content = gen_fstab.decode('utf-8', errors='replace')
+
+		# genfstab picks up ZFS mounts but ZFS handles its own mounting;
+		# only keep the root dataset entry for snapshot rollback stability
+		if self._disk_config.zfs_config:
+			pool = self._disk_config.zfs_config.pool
+			filtered_lines = [line for line in fstab_content.splitlines(keepends=True) if pool.name not in line and '\tzfs\t' not in line]
+			fstab_content = ''.join(filtered_lines)
+
+			root_dataset = f'{pool.full_dataset_prefix}/root'
+			fstab_content += f'\n{root_dataset}\t/\tzfs\tdefaults\t0\t0\n'
+
+		with open(fstab_path, 'a') as fp:
+			fp.write(fstab_content)
 
 		if not fstab_path.is_file():
 			raise RequirementError('Could not create fstab file')
@@ -833,6 +878,13 @@ class Installer:
 			content = re.sub('\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self._binaries)})', content)
 			content = re.sub('\nFILES=(.*)', f'\nFILES=({" ".join(self._files)})', content)
 			content = re.sub('\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self._hooks)})', content)
+
+			# COMPRESSION=cat: ZFS datasets are already compressed
+			if self._zfs_compression_override:
+				content = re.sub(r'\n#?COMPRESSION=.*', '\nCOMPRESSION="cat"', content)
+				if 'COMPRESSION=' not in content:
+					content += '\nCOMPRESSION="cat"\n'
+
 			mkinit.seek(0)
 			mkinit.truncate()
 			mkinit.write(content)
@@ -890,7 +942,41 @@ class Installer:
 		locale_config: LocaleConfiguration | None = LocaleConfiguration.default(),
 		timezone: str | None = None,
 	) -> None:
-		if self._disk_config.lvm_config:
+		if self._disk_config.zfs_config:
+			pool = self._disk_config.zfs_config.pool
+
+			# must be in base strap so mkinitcpio hooks exist when the
+			# kernel post-install trigger fires
+			for pkg in ('base-devel', 'zfs-dkms', 'zfs-utils'):
+				if pkg not in self._base_packages:
+					self._base_packages.append(pkg)
+
+			# DKMS needs headers per kernel
+			for kernel in self.kernels:
+				headers_pkg = f'{kernel}-headers'
+				if headers_pkg not in self._base_packages:
+					self._base_packages.append(headers_pkg)
+
+			if 'zfs' not in self._modules:
+				self._modules.append('zfs')
+
+			# zfs hook is busybox-only; replace systemd hooks with busybox equivalents
+			if 'systemd' in self._hooks:
+				idx = self._hooks.index('systemd')
+				self._hooks[idx] = 'udev'
+			if 'sd-vconsole' in self._hooks:
+				idx = self._hooks.index('sd-vconsole')
+				self._hooks[idx : idx + 1] = ['keymap', 'consolefont']
+
+			if 'zfs' not in self._hooks:
+				self._hooks.insert(self._hooks.index('filesystems'), 'zfs')
+
+			root_dataset = f'{pool.full_dataset_prefix}/root'
+			self._kernel_params.append(f'zfs={root_dataset}')
+
+			self._disable_fstrim = True  # ZFS uses autotrim instead
+			self._zfs_compression_override = True  # datasets already compressed
+		elif self._disk_config.lvm_config:
 			lvm = 'lvm2'
 			self.add_additional_packages(lvm)
 			self._hooks.insert(self._hooks.index('filesystems') - 1, lvm)
@@ -935,8 +1021,16 @@ class Installer:
 			if locale_config.console_font.startswith('ter-'):
 				self._base_packages.append('terminus-font')
 
+		# archzfs repo needed on host so pacstrap can find zfs-dkms/zfs-utils
+		if self._disk_config.zfs_config:
+			self._add_archzfs_repo_to_host()
+
 		self.pacman.strap(self._base_packages)
 		self._helper_flags['base-strapped'] = True
+
+		# post-strap ZFS setup: hostid, services, ZED, cache
+		if self._disk_config.zfs_config:
+			self._setup_zfs_target()
 
 		pacman_conf.persist()
 
@@ -974,6 +1068,102 @@ class Installer:
 		for function in self.post_base_install:
 			info(f'Running post-installation hook: {function}')
 			function(self)
+
+	def _add_archzfs_repo_to_host(self) -> None:
+		host_pacman_conf = Path('/etc/pacman.conf')
+		content = host_pacman_conf.read_text()
+		if '[archzfs]' not in content:
+			archzfs_block = '\n[archzfs]\nSigLevel = Never\nServer = https://github.com/archzfs/archzfs/releases/download/experimental\n'
+			content += archzfs_block
+			host_pacman_conf.write_text(content)
+			try:
+				SysCommand('pacman -Sy')
+			except SysCallError as e:
+				debug(f'Failed to sync package databases: {e}')
+
+	def _setup_zfs_target(self) -> None:
+		zfs_config = self._disk_config.zfs_config
+		if not zfs_config:
+			return
+
+		pool = zfs_config.pool
+		info('Setting up ZFS on target system')
+
+		# pacstrap copies host config but verify archzfs is present
+		target_pacman_conf = self.target / 'etc/pacman.conf'
+		content = target_pacman_conf.read_text()
+		if '[archzfs]' not in content:
+			archzfs_block = '\n[archzfs]\nSigLevel = Never\nServer = https://github.com/archzfs/archzfs/releases/download/experimental\n'
+			content += archzfs_block
+			target_pacman_conf.write_text(content)
+
+		# hostid must match the value used during pool creation
+		host_hostid = Path('/etc/hostid')
+		target_hostid = self.target / 'etc/hostid'
+		if host_hostid.exists():
+			shutil.copy2(str(host_hostid), str(target_hostid))
+		else:
+			try:
+				self.arch_chroot('zgenhostid -f 0x00bab10c')
+			except SysCallError as e:
+				warn(f'Failed to generate hostid in target: {e}')
+
+		for service in ZFS_SERVICES:
+			try:
+				self.enable_service(service)
+			except Exception as e:
+				debug(f'Failed to enable ZFS service {service}: {e}')
+
+		# zfs-mount-generator cache: start ZED on host to populate, then
+		# copy to target with /mnt prefix stripped from mountpoints
+		host_cache_dir = Path('/etc/zfs/zfs-list.cache')
+		host_cache_dir.mkdir(parents=True, exist_ok=True)
+		host_cache_file = host_cache_dir / pool.name
+		host_cache_file.touch()
+
+		try:
+			SysCommand('systemctl enable --now zfs-zed.service')
+		except SysCallError as e:
+			debug(f'Failed to start zfs-zed on host: {e}')
+
+		# ZED populates cache asynchronously
+		time.sleep(2)
+
+		# adjust mountpoints for target (strip /mnt prefix)
+		target_cache_dir = self.target / 'etc/zfs/zfs-list.cache'
+		target_cache_dir.mkdir(parents=True, exist_ok=True)
+		cache_content = host_cache_file.read_text()
+		if cache_content.strip():
+			mnt_prefix = str(self.target)
+			adjusted_lines = []
+			for line in cache_content.splitlines():
+				parts = line.split('\t')
+				if len(parts) > 1:
+					mp = parts[1]
+					if mp == mnt_prefix:
+						parts[1] = '/'
+					elif mp.startswith(mnt_prefix + '/'):
+						parts[1] = '/' + mp[len(mnt_prefix) + 1 :]
+				adjusted_lines.append('\t'.join(parts))
+			(target_cache_dir / pool.name).write_text('\n'.join(adjusted_lines) + '\n')
+		else:
+			(target_cache_dir / pool.name).touch()
+
+		# BE-aware ZED hook: filters zfs-list.cache to the active boot environment,
+		# preventing cross-BE mount conflicts
+		zed_asset = Path(__file__).resolve().parent.parent / 'assets' / 'zed' / 'history_event-zfs-list-cacher.sh'
+		if zed_asset.exists():
+			zed_dst_dir = self.target / 'etc/zfs/zed.d'
+			zed_dst_dir.mkdir(parents=True, exist_ok=True)
+			zed_dst = zed_dst_dir / zed_asset.name
+
+			try:
+				shutil.copy2(str(zed_asset), str(zed_dst))
+				zed_dst.chmod(0o755)
+				self.arch_chroot(f'chattr +i /etc/zfs/zed.d/{zed_asset.name}')
+				info('Installed ZED history cacher hook')
+			except Exception as e:
+				debug(f'Failed to install ZED history cacher hook: {e}')
 
 	def setup_btrfs_snapshot(
 		self,
@@ -1853,6 +2043,12 @@ class Installer:
 			else:
 				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
 
+		# ZFSBootMenu boots from ZFS datasets, no root partition needed
+		if bootloader == Bootloader.ZFSBootMenu:
+			info(f'Adding bootloader {bootloader.value}')
+			self._add_zfsbootmenu_bootloader(efi_partition)
+			return
+
 		if root is None:
 			raise ValueError(f'Could not detect root at mountpoint {self.target}')
 
@@ -1881,6 +2077,60 @@ class Installer:
 				self._add_limine_bootloader(boot_partition, efi_partition, root, uki_enabled, bootloader_removable)
 			case Bootloader.Refind:
 				self._add_refind_bootloader(boot_partition, efi_partition, root, uki_enabled)
+
+	def _add_zfsbootmenu_bootloader(self, efi_partition: PartitionModification | None) -> None:
+		debug('Installing ZFSBootMenu bootloader')
+
+		if not SysInfo.has_uefi():
+			raise HardwareIncompatibilityError('ZFSBootMenu requires UEFI')
+
+		if not efi_partition:
+			raise ValueError('Could not detect EFI system partition')
+
+		self.pacman.strap('efibootmgr')
+
+		zbm_path = self.target / efi_partition.relative_mountpoint / 'EFI/ZBM'
+		zbm_path.mkdir(parents=True, exist_ok=True)
+
+		if not (zbm_path / 'VMLINUZ.EFI').exists():
+			try:
+				SysCommand(f'curl -o {zbm_path}/VMLINUZ.EFI -L https://get.zfsbootmenu.org/efi')
+				SysCommand(f'curl -o {zbm_path}/RECOVERY.EFI -L https://get.zfsbootmenu.org/efi/recovery')
+			except SysCallError as e:
+				error(f'Failed to download ZFSBootMenu: {e}')
+				raise
+
+		# fallback path so firmware finds it without NVRAM entries
+		fallback_dir = self.target / efi_partition.relative_mountpoint / 'EFI/BOOT'
+		fallback_dir.mkdir(parents=True, exist_ok=True)
+		shutil.copy(zbm_path / 'VMLINUZ.EFI', fallback_dir / 'BOOTX64.EFI')
+
+		# NVRAM boot entries
+		try:
+			existing_entries = SysCommand('efibootmgr -v').decode()
+
+			if 'ZFSBootMenu' not in existing_entries:
+				SysCommand(f"efibootmgr -c -d {efi_partition.safe_dev_path} -L 'ZFSBootMenu' -l '\\EFI\\ZBM\\VMLINUZ.EFI'")
+
+			if 'ZFSBootMenu-Recovery' not in existing_entries:
+				SysCommand(f"efibootmgr -c -d {efi_partition.safe_dev_path} -L 'ZFSBootMenu-Recovery' -l '\\EFI\\ZBM\\RECOVERY.EFI'")
+		except SysCallError as e:
+			warn(f'Failed to create EFI boot entries: {e}')
+
+		# ZBM reads commandline and rootprefix from dataset properties
+		if self._disk_config.zfs_config:
+			pool = self._disk_config.zfs_config.pool
+			root_dataset = f'{pool.full_dataset_prefix}/root'
+
+			try:
+				cmdline = 'spl.spl_hostid=0x00bab10c zswap.enabled=0 systemd.gpt_auto=0 rw'
+				SysCommand(f'zfs set org.zfsbootmenu:commandline="{cmdline}" {root_dataset}')
+				SysCommand(f'zfs set org.zfsbootmenu:rootprefix="zfs=" {root_dataset}')
+			except SysCallError as e:
+				warn(f'Failed to set ZFSBootMenu dataset properties: {e}')
+
+		self._helper_flags['bootloader'] = 'zfsbootmenu'
+		info('ZFSBootMenu installed successfully')
 
 	def add_additional_packages(self, packages: str | list[str]) -> None:
 		return self.pacman.strap(packages)

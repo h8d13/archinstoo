@@ -617,7 +617,10 @@ class GlobalMenu(AbstractMenu[None]):
 		else:
 			return ['No disk layout selected']
 
-		if root_partition is None:
+		# ZFS root is a dataset, not a partition
+		is_zfs = disk_config.zfs_config is not None if disk_config else False
+
+		if root_partition is None and not is_zfs:
 			errors.append('Root partition not found')
 
 		# Legacy vs /efi newer standard
@@ -626,7 +629,7 @@ class GlobalMenu(AbstractMenu[None]):
 				errors.append('EFI system partition (ESP) not found')
 			elif efi_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
 				errors.append('ESP must be formatted as a FAT filesystem')
-		elif boot_partition is None:
+		elif boot_partition is None and not is_zfs:
 			errors.append('Boot partition not found')
 
 		if disk_config.disk_encryption and bootloader != Bootloader.Grub:
