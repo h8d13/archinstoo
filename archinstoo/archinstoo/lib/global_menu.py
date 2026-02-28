@@ -523,9 +523,9 @@ class GlobalMenu(AbstractMenu[None]):
 				preset = self._sysctl_optimized_defaults()
 
 		current_text = '\n'.join(preset) if preset else ''
-		result = edit_content(preset=current_text, title=tr('Sysctl'), mode='kvp')
-		if result is not None:
-			lines = result.split('\n')
+		edited = edit_content(preset=current_text, title=tr('Sysctl'), mode='kvp')
+		if edited is not None:
+			lines = edited.split('\n')
 			# Strip trailing blank lines only
 			while lines and not lines[-1].strip():
 				lines.pop()
@@ -582,7 +582,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _sysctl_optimized_defaults(self) -> list[str]:
 		lines: list[str] = []
 
-		# Zram tuning
+		# Zram tuning only if selected
 		swap_item = self._item_group.find_by_key('swap')
 		if swap_item.value and swap_item.value.enabled:
 			lines += [
