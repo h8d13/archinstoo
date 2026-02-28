@@ -3,10 +3,59 @@
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 To see general [features](./FEATURES.MD)
 
+## 0.1.4-0
+
+    - Bcachefs support
+        - Add Bcachefs as a filesystem option
+        - Bcachefs backed in ISO builds
+    - BIOS/GPT partitioning
+        - Offer partition table choice on BIOS systems (MBR or GPT)
+        - Add gating logic for BIOS/GPT layouts
+        - Use `raw` type instead of `unknown` for unformatted partitions
+    - Sysctl editor
+        - Add sysctl configuration editor
+        - Allow Ctrl+C to clear editor values
+    - ZRAM configuration (#4266)
+        - Add default option for kernel default ZRAM settings
+        - Add recompression algorithm choice when not using default
+        - Simplify ZRAM size to RAM / 2
+    - Btrfs
+        - Add btrfs subvolume option (#582)
+    - Niri window manager
+        - Add Niri as a Wayland compositor profile
+    - Encryption fix (#1856)
+        - Check if `/` is not encrypted before generating keyfile
+        - Skip keyfile generation and use password prompt for unencrypted root
+    - TUI input fixes
+        - Fix dsync behaviors on TUI inputs (behave like insert mode)
+        - Delete/backspace works correctly and never overwrites current selected char
+    - LVM refactor
+        - Refactor LVM logic
+    - Advanced mode
+        - Pass `--advanced` flag consistently for filesystems
+        - Fix ownerships gate
+    - CI/CD and tooling
+        - Pin dependencies
+        - Drop flake8 in favor of more ruff rules
+        - Remove flake8 workflow
+        - Add nvchecker dependency to DEV PKGBUILD
+        - Add nvchecker version tracking
+    - Documentation
+        - Add man page
+        - Drop Sphinx entirely
+        - Remove readthedocs integration
+        - Remove Python publish workflow
+        - Add curl upload logs helper
+    - Chores
+        - Remove legacy `wireless_tools`
+        - Remove unnecessary post-init
+        - Help text updates
+        - Various linting and structure cleanups
+
 ## 0.1.3-1
 
     - Refactor disk utils (DI Ext.)
-    - Add `plasma-login-manager` greeter (needs extra-testing repo enabled currently)
+    - Add `plasma-login-manager` greeter
         - Add `PlasmaLoginManager` to `GreeterType` enum, schema, and install logic
     - LVM fixes for `/efi`-only layouts
         - Fix `suggest_lvm_layout` crashing when no `/boot` partition exists (fallback to `/efi`)
