@@ -88,6 +88,9 @@ def perform_installation(
 		if config.swap and config.swap.enabled:
 			installation.setup_swap('zram', algo=config.swap.algorithm, recomp_algo=config.swap.recomp_algorithm)
 
+		if config.sysctl:
+			installation.setup_sysctl(config.sysctl)
+
 		# Network
 		if network_config := config.network_config:
 			network_handler.install_network_config(

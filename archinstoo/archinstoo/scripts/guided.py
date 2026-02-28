@@ -103,6 +103,9 @@ def perform_installation(
 		if config.swap and config.swap.enabled:
 			installation.setup_swap('zram', algo=config.swap.algorithm, recomp_algo=config.swap.recomp_algorithm)
 
+		if config.sysctl:
+			installation.setup_sysctl(config.sysctl)
+
 		# Create users before applications i.e audio needs user(s) for pipewire config
 		if config.auth_config and config.auth_config.users:
 			installation.create_users(
