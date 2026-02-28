@@ -8,15 +8,15 @@
       "version": "2.4.66-1"
     },
     "apparmor": {
-      "version": "4.1.6-1"
+      "version": "4.1.6-2"
     },
     "arch-install-scripts": {
       "version": "31-1"
     },
     "archinstoo": {
-      "version": "1d7b3b046d179a07f1f06f487bf890eaa8d1860c",
+      "version": "bbb9b23764b91c16791a880decedfdb0b7ce0624",
       "gitref": "refs/heads/master",
-      "revision": "1d7b3b046d179a07f1f06f487bf890eaa8d1860c"
+      "revision": "bbb9b23764b91c16791a880decedfdb0b7ce0624"
     },
     "archiso": {
       "version": "87-1"
@@ -40,10 +40,10 @@
       "version": "1-2"
     },
     "bluez": {
-      "version": "5.86-2"
+      "version": "5.86-3"
     },
     "bluez-utils": {
-      "version": "5.86-2"
+      "version": "5.86-3"
     },
     "bottom": {
       "version": "0.12.3-2"
@@ -64,7 +64,7 @@
       "version": "6.19-1"
     },
     "bubblewrap": {
-      "version": "0.11.0-1"
+      "version": "0.11.0-2"
     },
     "budgie-backgrounds": {
       "version": "3.0-2"
@@ -115,79 +115,79 @@
       "version": "6.6.7-1"
     },
     "cockpit": {
-      "version": "355-1"
+      "version": "357-1"
     },
     "coreutils": {
       "version": "9.10-1"
     },
     "cosmic-app-library": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-applets": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-bg": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-comp": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-files": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-greeter": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-idle": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-initial-setup": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-launcher": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-notifications": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-osd": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-panel": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-player": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-randr": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-screenshot": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-session": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-settings": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-settings-daemon": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-store": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-terminal": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-text-editor": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "cosmic-wallpapers": {
-      "version": "2:1.0.7-1"
+      "version": "2:1.0.8-1"
     },
     "cosmic-workspaces": {
-      "version": "2:1.0.7-1"
+      "version": "2:1.0.8-1"
     },
     "cryptsetup": {
       "version": "2.8.4-1"
@@ -238,7 +238,7 @@
       "version": "1.0-3"
     },
     "ddm": {
-      "version": "0.3.1-1"
+      "version": "0.3.2-1"
     },
     "decibels": {
       "version": "49.0-1"
@@ -250,7 +250,7 @@
       "version": "6.2.10-2"
     },
     "deepin-api": {
-      "version": "6.0.32-1"
+      "version": "6.0.33-1"
     },
     "deepin-app-services": {
       "version": "1.0.38-1"
@@ -259,10 +259,10 @@
       "version": "1.1.76-1"
     },
     "deepin-application-manager": {
-      "version": "1.2.40-1"
+      "version": "1.2.41-1"
     },
     "deepin-calendar": {
-      "version": "6.5.6-1"
+      "version": "6.5.7-1"
     },
     "deepin-control-center": {
       "version": "6.1.9-1"
@@ -280,7 +280,7 @@
       "version": "1.1.14-1"
     },
     "deepin-editor": {
-      "version": "6.5.36-1"
+      "version": "6.5.37-1"
     },
     "deepin-file-manager": {
       "version": "1:6.1.0-4"
@@ -331,7 +331,7 @@
       "version": "1.0.16-2"
     },
     "deepin-session": {
-      "version": "2.0.13-1"
+      "version": "2.0.14-1"
     },
     "deepin-session-shell": {
       "version": "6.0.26-2"
@@ -415,7 +415,7 @@
       "version": "1.1.0-8"
     },
     "feh": {
-      "version": "3.11.2-2"
+      "version": "3.11.3-1"
     },
     "firejail": {
       "version": "0.9.78-1"
@@ -469,7 +469,7 @@
       "version": "49.0-1"
     },
     "gnome-control-center": {
-      "version": "49.4-1"
+      "version": "49.5-1"
     },
     "gnome-disk-utility": {
       "version": "46.1-2"
@@ -592,7 +592,7 @@
       "version": "3.4.1-1"
     },
     "hyprland": {
-      "version": "0.53.3-2"
+      "version": "0.54.0-1"
     },
     "i3-wm": {
       "version": "4.25.1-1"
@@ -628,7 +628,7 @@
       "version": "25.12.2-1"
     },
     "kscreen": {
-      "version": "6.6.0-1"
+      "version": "6.6.1-1"
     },
     "l3afpad": {
       "version": "0.8.18.1.11-10"
@@ -658,10 +658,10 @@
       "version": "1.4.82-1"
     },
     "limine": {
-      "version": "10.7.0-1"
+      "version": "10.8.2-1"
     },
     "linux-firmware": {
-      "version": "20260110-1"
+      "version": "20260221-1"
     },
     "loupe": {
       "version": "49.2-1"
@@ -814,7 +814,7 @@
       "version": "20210322-4"
     },
     "mesa": {
-      "version": "1:25.3.5-1"
+      "version": "1:26.0.1-1"
     },
     "micro": {
       "version": "2.0.15-2"
@@ -856,7 +856,7 @@
       "version": "2022.10.3-2"
     },
     "nvidia-open": {
-      "version": "590.48.01-12"
+      "version": "590.48.01-13"
     },
     "obconf-qt": {
       "version": "0.16.6-1"
@@ -922,16 +922,16 @@
       "version": "1:1.4.10-2"
     },
     "plasma-desktop": {
-      "version": "6.6.0-1"
+      "version": "6.6.1-1"
     },
     "plasma-login-manager": {
-      "version": "6.6.0-1"
+      "version": "6.6.1-1"
     },
     "plasma-pa": {
-      "version": "6.6.0-1"
+      "version": "6.6.1-1"
     },
     "plasma-workspace": {
-      "version": "6.6.0-1"
+      "version": "6.6.1-1"
     },
     "pluma": {
       "version": "1.28.0-7"
@@ -940,10 +940,10 @@
       "version": "127-3"
     },
     "polkit-kde-agent": {
-      "version": "6.6.0-1"
+      "version": "6.6.1-1"
     },
     "postgresql": {
-      "version": "18.2-1"
+      "version": "18.3-1"
     },
     "power-profiles-daemon": {
       "version": "0.30-1"
@@ -1033,7 +1033,7 @@
       "version": "1:1.11-1"
     },
     "swaybg": {
-      "version": "1.2.1-1"
+      "version": "1.2.2-1"
     },
     "swayidle": {
       "version": "1.9.0-1"
@@ -1048,7 +1048,7 @@
       "version": "1.5.18-6"
     },
     "systemd": {
-      "version": "259.1-1"
+      "version": "259.2-1"
     },
     "tecla": {
       "version": "49.0-1"
@@ -1081,7 +1081,7 @@
       "version": "2.3.1-1"
     },
     "treeland": {
-      "version": "0.8.1-2"
+      "version": "0.8.2-1"
     },
     "ttf-liberation": {
       "version": "2.1.5-2"
@@ -1090,10 +1090,10 @@
       "version": "4.20.1-1"
     },
     "tuned": {
-      "version": "2.26.0-2"
+      "version": "2.27.0-1"
     },
     "tuned-ppd": {
-      "version": "2.26.0-2"
+      "version": "2.27.0-1"
     },
     "udisks2": {
       "version": "2.11.0-1"
@@ -1108,25 +1108,25 @@
       "version": "0.26.4-1"
     },
     "vim": {
-      "version": "9.2.0010-1"
+      "version": "9.2.0067-1"
     },
     "vulkan-intel": {
-      "version": "1:25.3.5-1"
+      "version": "1:26.0.1-1"
     },
     "vulkan-nouveau": {
-      "version": "1:25.3.5-1"
+      "version": "1:26.0.1-1"
     },
     "vulkan-radeon": {
-      "version": "1:25.3.5-1"
+      "version": "1:26.0.1-1"
     },
     "vulkan-swrast": {
-      "version": "1:25.3.5-1"
+      "version": "1:26.0.1-1"
     },
     "vulkan-virtio": {
-      "version": "1:25.3.5-1"
+      "version": "1:26.0.1-1"
     },
     "waybar": {
-      "version": "0.15.0-1"
+      "version": "0.15.0-2"
     },
     "wget": {
       "version": "1.25.0-3"
@@ -1147,7 +1147,7 @@
       "version": "0.5.4.26-1"
     },
     "xdg-desktop-portal-cosmic": {
-      "version": "1:1.0.7-1"
+      "version": "1:1.0.8-1"
     },
     "xdg-desktop-portal-dde": {
       "version": "1.0.13-5"
@@ -1297,7 +1297,7 @@
       "version": "0.12.0-2"
     },
     "xfce4-whiskermenu-plugin": {
-      "version": "2.10.0-2"
+      "version": "2.10.1-1"
     },
     "xfce4-xkb-plugin": {
       "version": "0.9.0-1"
