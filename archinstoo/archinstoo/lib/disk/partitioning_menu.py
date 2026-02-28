@@ -345,6 +345,8 @@ class PartitioningList(ListManager[DiskSegment]):
 					# btrfs subvolumes will define mountpoints
 					if fs_type == FilesystemType.Btrfs:
 						partition.mountpoint = None
+						if BtrfsMountOption.noatime.value not in partition.mount_options:
+							partition.mount_options.append(BtrfsMountOption.noatime.value)
 				case 'btrfs_mark_compressed':
 					self._toggle_mount_option(partition, BtrfsMountOption.compress)
 				case 'btrfs_mark_nodatacow':

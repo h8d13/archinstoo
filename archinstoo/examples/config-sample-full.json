@@ -97,6 +97,7 @@
                         "fs_type": "btrfs",
                         "mountpoint": null,
                         "mount_options": [
+                            "noatime",
                             "compress=zstd"
                         ],
                         "flags": [],
