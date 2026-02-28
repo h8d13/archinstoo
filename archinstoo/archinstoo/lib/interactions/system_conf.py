@@ -141,7 +141,7 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 
 			# Ask for compression algorithm
 			algo_group = MenuItemGroup.from_enum(ZramAlgorithm, sort_items=False)
-			algo_group.set_default_by_value(ZramAlgorithm.ZSTD)
+			algo_group.set_default_by_value(ZramAlgorithm.Default)
 			algo_group.set_focus_by_value(preset.algorithm)
 
 			algo_result = SelectMenu[ZramAlgorithm](
