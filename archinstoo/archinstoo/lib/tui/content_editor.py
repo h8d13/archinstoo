@@ -12,6 +12,7 @@ class ScriptEditor:
 		self,
 		title: str = 'Script Editor',
 		preset: str = '',
+		mode: str = 'free',
 	):
 		self._title = title
 		self._lines: list[str] = preset.split('\n') if preset else ['']
@@ -20,6 +21,8 @@ class ScriptEditor:
 		self._scroll_y = 0
 		self._running = True
 		self._saved = False
+		self._mode = mode
+		self._error_msg: str | None = None
 
 	def edit(self) -> str | None:
 		"""Open the editor and return the script content, or None"""
@@ -78,7 +81,12 @@ class ScriptEditor:
 				line = self._lines[line_idx]
 				available_width = max_x - line_num_width - 1
 				display_line = line[:available_width]
-				screen.addstr(y_pos, line_num_width, display_line, normal)
+
+				line_style = normal
+				if self._mode == 'kvp' and not self._is_line_valid(line):
+					line_style = highlight
+
+				screen.addstr(y_pos, line_num_width, display_line, line_style)
 			else:
 				# Empty line indicator
 				screen.addstr(y_pos, line_num_width - 2, '~', normal)
@@ -87,10 +95,13 @@ class ScriptEditor:
 		status_y = max_y - 2
 		screen.addstr(status_y, 0, Chars.Horizontal * max_x, normal)
 
-		pos_info = f'Ln {self._cursor_y + 1}, Col {self._cursor_x + 1}'
-		help_text = 'F2:save  F10/Esc:cancel'
-		screen.addstr(status_y + 1, 0, help_text, normal)
-		screen.addstr(status_y + 1, max_x - len(pos_info) - 1, pos_info, normal)
+		if self._error_msg:
+			screen.addstr(status_y + 1, 0, self._error_msg[:max_x - 1], highlight)
+		else:
+			pos_info = f'Ln {self._cursor_y + 1}, Col {self._cursor_x + 1}'
+			help_text = 'F2:save  F10/Esc:cancel'
+			screen.addstr(status_y + 1, 0, help_text, normal)
+			screen.addstr(status_y + 1, max_x - len(pos_info) - 1, pos_info, normal)
 
 		# Position cursor
 		cursor_screen_y = edit_start_y + (self._cursor_y - self._scroll_y)
@@ -101,13 +112,17 @@ class ScriptEditor:
 		screen.refresh()
 
 	def _handle_key(self, key: int) -> None:
+		self._error_msg = None
 		current_line = self._lines[self._cursor_y]
 
 		if key in (27, curses.KEY_F10):  # ESC or F10 - cancel
 			self._running = False
 		elif key == curses.KEY_F2:  # F2 - save
-			self._saved = True
-			self._running = False
+			if self._mode == 'kvp' and any(not self._is_line_valid(l) for l in self._lines):
+				self._error_msg = 'Invalid format — each line must be key = value'
+			else:
+				self._saved = True
+				self._running = False
 		elif key == curses.KEY_UP:
 			if self._cursor_y > 0:
 				self._cursor_y -= 1
@@ -165,11 +180,22 @@ class ScriptEditor:
 			self._lines[self._cursor_y] = current_line[: self._cursor_x] + chr(key) + current_line[self._cursor_x :]
 			self._cursor_x += 1
 
+	def _is_line_valid(self, line: str) -> bool:
+		"""Check if a line is valid in KVP mode."""
+		stripped = line.strip()
+		if not stripped:
+			return True
+		if stripped.startswith('#'):
+			return True
+		if '=' in line:
+			return True
+		return False
+
 	def _clamp_cursor_x(self) -> None:
 		max_x = len(self._lines[self._cursor_y])
 		self._cursor_x = max(0, min(self._cursor_x, max_x))
 
 
-def edit_script(preset: str = '', title: str = 'Custom Commands') -> str | None:
-	editor = ScriptEditor(title=title, preset=preset)
+def edit_content(preset: str = '', title: str = 'Custom Commands', mode: str = 'free') -> str | None:
+	editor = ScriptEditor(title=title, preset=preset, mode=mode)
 	return editor.edit()
