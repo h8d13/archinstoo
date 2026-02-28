@@ -1049,6 +1049,17 @@ class Installer:
 		else:
 			raise ValueError('Archinstoo currently only supports setting up swap on zram')
 
+	def setup_sysctl(self, entries: list[str]) -> None:
+		if not entries:
+			return
+
+		info('Writing sysctl configuration')
+		sysctl_dir = self.target / 'etc/sysctl.d'
+		sysctl_dir.mkdir(parents=True, exist_ok=True)
+
+		conf = sysctl_dir / '99-archinstoo.conf'
+		conf.write_text('\n'.join(entries) + '\n')
+
 	def _get_efi_partition(self) -> PartitionModification | None:
 		for layout in self._disk_config.device_modifications:
 			if partition := layout.get_efi_partition():

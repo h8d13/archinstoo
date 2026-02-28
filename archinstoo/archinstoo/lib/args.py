@@ -74,6 +74,7 @@ class ArchConfig:
 	aur_packages: list[str] = field(default_factory=list)
 	timezone: str | None = None
 	services: list[str | UserService] = field(default_factory=list)
+	sysctl: list[str] = field(default_factory=list)
 	custom_commands: list[str] = field(
 		default_factory=lambda: [
 			'#arch-chroot via bash tmp files # lines are ignored',
@@ -104,6 +105,7 @@ class ArchConfig:
 			'packages': self.packages,
 			'aur_packages': self.aur_packages,
 			'services': [s.json() if isinstance(s, UserService) else s for s in self.services],
+			'sysctl': self.sysctl,
 			'custom_commands': self.custom_commands,
 		}
 
@@ -124,6 +126,7 @@ class ArchConfig:
 				'kernels': 'kernels',
 				'packages': 'packages',
 				'aur_packages': 'aur_packages',
+				'sysctl': 'sysctl',
 				'custom_commands': 'custom_commands',
 			},
 		)

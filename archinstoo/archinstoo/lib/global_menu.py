@@ -9,7 +9,7 @@ from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.script_editor import edit_script
+from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.types import Alignment, Orientation
 
 from .applications.application_menu import ApplicationMenu
@@ -185,6 +185,13 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_aur_packages,
 				dependencies=[self._has_elevated_users],
 				key='aur_packages',
+			),
+			MenuItem(
+				text=tr('Sysctl'),
+				action=self._edit_sysctl,
+				value=[],
+				preview_action=self._prev_sysctl,
+				key='sysctl',
 			),
 			MenuItem(
 				text=tr('Custom commands'),
@@ -480,7 +487,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _edit_custom_commands(self, preset: list[str]) -> list[str]:
 		current_script = '\n'.join(preset) if preset else ''
-		result = edit_script(preset=current_script, title=tr('Custom Commands'))
+		result = edit_content(preset=current_script, title=tr('Custom Commands'))
 		if result is not None:
 			# Split by newlines and filter empty lines
 			return [line for line in result.split('\n') if line.strip()]
@@ -495,6 +502,39 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'  {i + 1}. {display}\n'
 			if len(commands) > 5:
 				output += f'  ... +{len(commands) - 5} more'
+			return output
+		return None
+
+	def _edit_sysctl(self, preset: list[str]) -> list[str]:
+		if not preset:
+			swap_item = self._item_group.find_by_key('swap')
+			if swap_item.value and swap_item.value.enabled:
+				preset = [
+					'vm.swappiness = 180',
+					'vm.watermark_boost_factor = 0',
+					'vm.watermark_scale_factor = 125',
+					'vm.page-cluster = 0',
+				]
+
+		current_text = '\n'.join(preset) if preset else ''
+		result = edit_content(preset=current_text, title=tr('Sysctl'), mode='kvp')
+		if result is not None:
+			lines = result.split('\n')
+			# Strip trailing blank lines only
+			while lines and not lines[-1].strip():
+				lines.pop()
+			return lines
+		return preset
+
+	def _prev_sysctl(self, item: MenuItem) -> str | None:
+		entries: list[str] = item.value or []
+		if entries:
+			output = f'{tr("Entries")}: {len(entries)}\n'
+			for line in entries[:5]:
+				display = line[:60] + '...' if len(line) > 60 else line
+				output += f'  {display}\n'
+			if len(entries) > 5:
+				output += f'  ... +{len(entries) - 5} more'
 			return output
 		return None
 
