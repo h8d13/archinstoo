@@ -49,6 +49,9 @@ source = "pacman"
 [python-pyparted]
 source = "pacman"
 
+[systemd]
+source = "pacman"
+
 [util-linux]
 source = "pacman"
 
@@ -83,9 +86,6 @@ source = "pacman"
 source = "pacman"
 
 [python-systemd]
-source = "pacman"
-
-[systemd]
 source = "pacman"
 
 [tree]
