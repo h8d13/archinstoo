@@ -101,6 +101,7 @@ class ZramAlgorithm(StrEnum):
 class ZramConfigSerialization(TypedDict):
 	enabled: bool
 	algorithm: NotRequired[str]
+	recomp_algorithm: NotRequired[str]
 
 
 class ApplicationSerialization(TypedDict):
@@ -255,6 +256,7 @@ class SecurityConfiguration:
 class ZramConfiguration:
 	enabled: bool
 	algorithm: ZramAlgorithm = ZramAlgorithm.Default
+	recomp_algorithm: ZramAlgorithm | None = None
 
 	@classmethod
 	def parse_arg(cls, arg: bool | ZramConfigSerialization) -> Self:
@@ -263,7 +265,9 @@ class ZramConfiguration:
 
 		enabled = arg.get('enabled', True)
 		algo = arg.get('algorithm', ZramAlgorithm.Default.value)
-		return cls(enabled=enabled, algorithm=ZramAlgorithm(algo))
+		recomp = arg.get('recomp_algorithm')
+		recomp_algo = ZramAlgorithm(recomp) if recomp else None
+		return cls(enabled=enabled, algorithm=ZramAlgorithm(algo), recomp_algorithm=recomp_algo)
 
 
 @dataclass

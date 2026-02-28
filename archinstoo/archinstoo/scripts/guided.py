@@ -101,7 +101,7 @@ def perform_installation(
 			installation.set_mirrors(pacman_config, on_target=True)
 
 		if config.swap and config.swap.enabled:
-			installation.setup_swap('zram', algo=config.swap.algorithm)
+			installation.setup_swap('zram', algo=config.swap.algorithm, recomp_algo=config.swap.recomp_algorithm)
 
 		# Create users before applications i.e audio needs user(s) for pipewire config
 		if config.auth_config and config.auth_config.users:
