@@ -168,7 +168,6 @@ class Installer:
 
 		return False
 
-
 	def remove_mod(self, mod: str) -> None:
 		if mod in self._modules:
 			self._modules.remove(mod)
