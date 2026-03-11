@@ -1,0 +1,19 @@
+# ZFS ISO config — sourced by ISOMOD
+# Adds ZFS DKMS support and archzfs repository to the ISO
+
+BUILD_PACMAN_CONF="$PROFILE_DIR/pacman.conf"
+if ! grep -q "\[archzfs\]" "$BUILD_PACMAN_CONF"; then
+    cat >> "$BUILD_PACMAN_CONF" << 'ZFSEOF'
+
+[archzfs]
+SigLevel = Never
+Server = https://github.com/archzfs/archzfs/releases/download/experimental
+ZFSEOF
+fi
+
+{
+    echo "zfs-dkms"
+    echo "zfs-utils"
+} >> "$PROFILE_DIR/packages.x86_64"
+
+DKMS_MODULES="$DKMS_MODULES zfs"

@@ -1,0 +1,9 @@
+# bcachefs ISO config — sourced by ISOMOD
+# Adds bcachefs DKMS support to the ISO (removed from mainline kernel 6.18+)
+
+{
+    echo "bcachefs-dkms"
+    echo "bcachefs-tools"
+} >> "$PROFILE_DIR/packages.x86_64"
+
+DKMS_MODULES="$DKMS_MODULES bcachefs"

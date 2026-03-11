@@ -54,3 +54,4 @@ requirements.txt
 node_modules/
 uv.lock
 **.vscode/**
+archinstall**

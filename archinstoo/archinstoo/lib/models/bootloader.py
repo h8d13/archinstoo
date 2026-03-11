@@ -13,9 +13,10 @@ class Bootloader(Enum):
 	Efistub = 'Efistub'
 	Limine = 'Limine'
 	Refind = 'Refind'
+	ZFSBootMenu = 'ZFSBootMenu'
 
 	def has_uki_support(self) -> bool:
-		return self != Bootloader.NO_BOOTLOADER
+		return self not in (Bootloader.NO_BOOTLOADER, Bootloader.ZFSBootMenu)
 
 	def has_removable_support(self) -> bool:
 		match self:
@@ -35,9 +36,6 @@ class Bootloader(Enum):
 
 	@classmethod
 	def from_arg(cls, bootloader: str, skip_boot: bool) -> Self:
-		# to support old configuration files
-		bootloader = bootloader.capitalize()
-
 		bootloader_options = [e.value for e in cls if e != cls.NO_BOOTLOADER or skip_boot is True]
 
 		if bootloader not in bootloader_options:

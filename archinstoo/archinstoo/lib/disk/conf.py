@@ -4,6 +4,7 @@ from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
+	DEFAULT_ZFS_DATASETS,
 	BDevice,
 	BtrfsMountOption,
 	DeviceModification,
@@ -24,6 +25,9 @@ from archinstoo.lib.models.device import (
 	Size,
 	SubvolumeModification,
 	Unit,
+	ZfsConfiguration,
+	ZfsLayoutType,
+	ZfsPool,
 	_DeviceInfo,
 )
 from archinstoo.lib.output import FormattedOutput
@@ -136,16 +140,24 @@ def select_disk_config(
 	default_layout = DiskLayoutType.Default.display_msg()
 	manual_mode = DiskLayoutType.Manual.display_msg()
 	pre_mount_mode = DiskLayoutType.Pre_mount.display_msg()
+	zfs_mode = 'ZFS layout'
 
 	items = [
 		MenuItem(manual_mode, value=manual_mode),
 		MenuItem(default_layout, value=default_layout),
 		MenuItem(pre_mount_mode, value=pre_mount_mode),
 	]
+
+	if advanced:
+		items.append(MenuItem(zfs_mode, value=zfs_mode))
+
 	group = MenuItemGroup(items, sort_items=False)
 
 	if preset:
-		group.set_selected_by_value(preset.config_type.display_msg())
+		if preset.zfs_config:
+			group.set_selected_by_value(zfs_mode)
+		else:
+			group.set_selected_by_value(preset.config_type.display_msg())
 
 	result = SelectMenu[str](
 		group,
@@ -179,6 +191,9 @@ def select_disk_config(
 					device_modifications=mods,
 					mountpoint=path,
 				)
+
+			if selection == zfs_mode:
+				return suggest_zfs_layout(handler)
 
 			preset_device = preset.device_modifications[0].device if preset and preset.device_modifications else None
 			device = select_device(preset_device, device_handler=handler)
@@ -610,3 +625,76 @@ def suggest_lvm_layout(
 		lvm_vol_group.volumes.append(home_vol)
 
 	return LvmConfiguration(LvmLayoutType.Default, [lvm_vol_group])
+
+
+def suggest_zfs_layout(
+	device_handler: DeviceHandler | None = None,
+	pool_name: str = 'zpool',
+	dataset_prefix: str = 'archinstoo',
+) -> DiskLayoutConfiguration | None:
+	"""Create a default ZFS layout: ESP + ZFS partition using remaining space."""
+	handler = device_handler or DeviceHandler()
+
+	device = select_device(device_handler=handler)
+	if not device:
+		return None
+
+	sector_size = device.device_info.sector_size
+	total_size = device.device_info.total_size
+	available_space = total_size
+
+	uefi = SysInfo.has_uefi()
+	if not uefi:
+		raise ValueError('ZFS requires UEFI boot (for ZFSBootMenu)')
+
+	partition_table = PartitionTable.GPT
+	device_modification = DeviceModification(device, wipe=True, partition_table=partition_table)
+	available_space = available_space.gpt_end().align()
+
+	# ESP at /boot/efi; kernels live in the ZFS root dataset under /boot
+	# so ZFSBootMenu can find them (it scans datasets, not the ESP)
+	start = Size(1, Unit.MiB, sector_size)
+	esp_partition = PartitionModification(
+		status=ModificationStatus.Create,
+		type=PartitionType.Primary,
+		start=start,
+		length=Size(500, Unit.MiB, sector_size),
+		mountpoint=Path('/boot/efi'),
+		fs_type=FilesystemType.Fat32,
+		flags=[PartitionFlag.ESP],
+	)
+	device_modification.add_partition(esp_partition)
+
+	# no filesystem; ZFS manages this partition directly
+	zfs_start = esp_partition.start + esp_partition.length
+	zfs_length = available_space - zfs_start
+
+	zfs_partition = PartitionModification(
+		status=ModificationStatus.Create,
+		type=PartitionType.Primary,
+		start=zfs_start,
+		length=zfs_length,
+		mountpoint=None,
+		fs_type=None,
+	)
+	device_modification.add_partition(zfs_partition)
+
+	zfs_pool = ZfsPool(
+		name=pool_name,
+		pvs=[zfs_partition],
+		dataset_prefix=dataset_prefix,
+		datasets=list(DEFAULT_ZFS_DATASETS),
+		compression='lz4',
+		mountpoint=Path('/mnt'),
+	)
+
+	zfs_config = ZfsConfiguration(
+		config_type=ZfsLayoutType.Default,
+		pool=zfs_pool,
+	)
+
+	return DiskLayoutConfiguration(
+		config_type=DiskLayoutType.Default,
+		device_modifications=[device_modification],
+		zfs_config=zfs_config,
+	)
