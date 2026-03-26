@@ -61,20 +61,20 @@ sha512sums=()
 b2sums=()
 
 check() {
-  cd "$srcdir/.." || exit
+  cd "$srcdir/../archinstoo" || exit
   ruff check --config pyproject.toml
 }
 
 build() {
-  cd "$srcdir/.." || exit
+  cd "$srcdir/../archinstoo" || exit
 
   rm -rf dist/ && rm -rf ./*.egg
   python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$srcdir/.." || exit
+  cd "$srcdir/../archinstoo" || exit
 
   python -m installer --destdir="$pkgdir" dist/*.whl
-  install -vDm 644 archinstoo/docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
+  install -vDm 644 docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
 }
