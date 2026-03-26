@@ -87,7 +87,7 @@ class ArchConfig:
 		config: dict[str, Any] = {
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
-			'archinstoo-language': self.archinstoo_language.json(),
+			'archinstoo_language': self.archinstoo_language.json(),
 			'locale_config': self.locale_config.json() if self.locale_config else None,
 			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
@@ -149,7 +149,7 @@ class ArchConfig:
 		)
 
 		# Special cases that don't fit the pattern
-		if lang := args_config.get('archinstoo-language'):
+		if lang := args_config.get('archinstoo_language'):
 			arch_config.archinstoo_language = translation_handler.get_language_by_name(lang)
 
 		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config)
