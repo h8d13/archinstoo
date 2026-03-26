@@ -15,3 +15,11 @@ Make sure you have `os-prober` package installed
 This can also be achieved through custom entries using `blkid` in `/etc/grub.d/40_custom`
 
 *Other bootloaders* have their own ways of doing this.
+
+---
+
+For same disks, you might be using another app to format, resize, etc before-hand.
+
+Then you can use `Manual Partitioning`, anything left marked as `Existing` will not be formated. 
+
+Already have a bootloader, `skip-boot` if you already have a bootloader for example.
