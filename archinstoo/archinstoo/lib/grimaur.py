@@ -130,17 +130,27 @@ def is_vcs_package(name: str) -> bool:
 	return any(name.endswith(suffix) for suffix in _VCS_SUFFIXES)
 
 
-def get_su_cmd() -> str:
-	"""Get the privilege escalation command to use."""
-	# Check environment variable first
-	if env_su := os.environ.get('GRIMAUR_SU'):
-		return env_su
-	# Check for common alternatives
-	# order matters here
-	for su_cmd in ('doas', 'sudo', 'run0', 'su'):
-		if shutil.which(su_cmd):
-			return su_cmd
-	raise RuntimeError('No privilege escalation tool found.')
+def _in_gui_session():
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def get_su_cmd():
+    """Get the privilege escalation command to use."""
+    # Check environment variable first
+    if env_su := os.environ.get("GRIMAUR_SU"):
+        return env_su
+    # Check for common alternatives
+    # most popular takes precedence
+    # run0 inserted first when not in a tty
+    # makes for xdg pw prompts
+    candidates = ["sudo", "doas", "run0", "su"]
+    if _in_gui_session() and shutil.which("run0"):
+        candidates.remove("run0") # remove from original check
+        candidates.insert(0, "run0") # add as first
+    for su_cmd in candidates:
+        if shutil.which(su_cmd):
+            return su_cmd
+    raise RuntimeError("No privilege escalation tool found")
 
 
 def needs_elev(cmd: list[str]) -> list[str]:
@@ -348,7 +358,7 @@ def ensure_clone(
 			return package_dir
 		if package_dir.exists():
 			shutil.rmtree(package_dir)
-		run_command(['git', 'clone', repo_url, str(package_dir)])
+		run_command(['git', 'clone', '--depth', '1', repo_url, str(package_dir)])
 	elif USE_AUR_RPC:
 		# Use pkgbase for clone URL (handles split packages like nvidia-580xx-dkms -> nvidia-580xx-utils)
 		clone_name = pkgbase or package
@@ -378,7 +388,7 @@ def ensure_clone(
 			return package_dir
 		if package_dir.exists():
 			shutil.rmtree(package_dir)
-		run_command(['git', 'clone', remote_url, str(package_dir)])
+		run_command(['git', 'clone', '--depth', '1', remote_url, str(package_dir)])
 	else:
 		# Git mirror mode: use pkgbase for branch name (handles split packages)
 		branch_name = pkgbase or package
@@ -404,6 +414,8 @@ def ensure_clone(
 			[
 				'git',
 				'clone',
+				'--depth',
+				'1',
 				'--branch',
 				branch_name,
 				'--single-branch',
