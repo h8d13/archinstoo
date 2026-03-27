@@ -131,27 +131,26 @@ def is_vcs_package(name: str) -> bool:
 
 
 def _in_gui_session():
-    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+    return bool(os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY'))
 
 
 def get_su_cmd():
     """Get the privilege escalation command to use."""
     # Check environment variable first
-    if env_su := os.environ.get("GRIMAUR_SU"):
+    if env_su := os.environ.get('GRIMAUR_SU'):
         return env_su
     # Check for common alternatives
     # most popular takes precedence
     # run0 inserted first when not in a tty
     # makes for xdg pw prompts
-    candidates = ["sudo", "doas", "run0", "su"]
-    if _in_gui_session() and shutil.which("run0"):
-        candidates.remove("run0") # remove from original check
-        candidates.insert(0, "run0") # add as first
-		# else we still check run0 but not first
+    candidates = ['sudo', 'doas', 'run0', 'su']
+    if _in_gui_session() and shutil.which('run0'):
+        candidates.remove('run0')  # remove from original check
+        candidates.insert(0, 'run0')  # add as first else check in 3rd position
     for su_cmd in candidates:
         if shutil.which(su_cmd):
             return su_cmd
-    raise RuntimeError("No privilege escalation tool found")
+    raise RuntimeError('No privilege escalation tool found')
 
 
 def needs_elev(cmd: list[str]) -> list[str]:
