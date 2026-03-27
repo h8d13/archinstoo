@@ -147,6 +147,7 @@ def get_su_cmd():
     if _in_gui_session() and shutil.which("run0"):
         candidates.remove("run0") # remove from original check
         candidates.insert(0, "run0") # add as first
+		# else we still check run0 but not first
     for su_cmd in candidates:
         if shutil.which(su_cmd):
             return su_cmd
