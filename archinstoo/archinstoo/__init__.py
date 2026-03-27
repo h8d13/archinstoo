@@ -73,7 +73,7 @@ from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, reload_python
+from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, kernel_info, reload_python
 from .lib.utils.net import ping
 
 if TYPE_CHECKING:
@@ -101,6 +101,7 @@ def _log_env_info() -> None:
 	else:
 		info('Running from ISO (USB Mode)...')
 
+	info(f'Kernel: {kernel_info()}')
 	info(f'Logger path: {logger.path}')
 
 

@@ -1,5 +1,6 @@
 import importlib
 import os
+import platform
 import sys
 from pathlib import Path
 from shutil import rmtree, which
@@ -79,6 +80,10 @@ def reload_python() -> None:
 
 def is_root() -> bool:
 	return os.getuid() == 0
+
+
+def kernel_info() -> str:
+	return f'{platform.release()} built {platform.version()}'
 
 
 def clean_cache(root_dir: str) -> None:

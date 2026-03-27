@@ -130,27 +130,27 @@ def is_vcs_package(name: str) -> bool:
 	return any(name.endswith(suffix) for suffix in _VCS_SUFFIXES)
 
 
-def _in_gui_session():
-    return bool(os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY'))
+def _in_gui_session() -> bool:
+	return bool(os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY'))
 
 
-def get_su_cmd():
-    """Get the privilege escalation command to use."""
-    # Check environment variable first
-    if env_su := os.environ.get('GRIMAUR_SU'):
-        return env_su
-    # Check for common alternatives
-    # most popular takes precedence
-    # run0 inserted first when not in a tty
-    # makes for xdg pw prompts
-    candidates = ['sudo', 'doas', 'run0', 'su']
-    if _in_gui_session() and shutil.which('run0'):
-        candidates.remove('run0')  # remove from original check
-        candidates.insert(0, 'run0')  # add as first else check in 3rd position
-    for su_cmd in candidates:
-        if shutil.which(su_cmd):
-            return su_cmd
-    raise RuntimeError('No privilege escalation tool found')
+def get_su_cmd() -> str:
+	"""Get the privilege escalation command to use."""
+	# Check environment variable first
+	if env_su := os.environ.get('GRIMAUR_SU'):
+		return env_su
+	# Check for common alternatives
+	# most popular takes precedence
+	# run0 inserted first when not in a tty
+	# makes for xdg pw prompts
+	candidates = ['sudo', 'doas', 'run0', 'su']
+	if _in_gui_session() and shutil.which('run0'):
+		candidates.remove('run0')  # remove from original check
+		candidates.insert(0, 'run0')  # add as first else check in 3rd position
+	for su_cmd in candidates:
+		if shutil.which(su_cmd):
+			return su_cmd
+	raise RuntimeError('No privilege escalation tool found')
 
 
 def needs_elev(cmd: list[str]) -> list[str]:
@@ -163,7 +163,7 @@ def needs_elev(cmd: list[str]) -> list[str]:
 	return cmd
 
 
-class PacAurGitError(RuntimeError):
+class GrimaurError(RuntimeError):
 	"""Wraps fatal errors coming from the helper."""
 
 
@@ -209,26 +209,26 @@ def aur_rpc_call(params: dict[str, Any]) -> dict[str, Any] | list[Any]:
 			status = response.getcode()
 			if status != 200:
 				disable_aur_rpc(f'status {status}')
-				raise PacAurGitError(f'AUR RPC request failed with status {status}')
+				raise GrimaurError(f'AUR RPC request failed with status {status}')
 			payload = response.read()
 	except urllib.error.URLError as exc:
 		disable_aur_rpc(str(exc))
-		raise PacAurGitError(f'Failed to contact AUR RPC: {exc}') from exc
+		raise GrimaurError(f'Failed to contact AUR RPC: {exc}') from exc
 	except Exception as exc:  # pragma: no cover - unexpected transport issues
 		disable_aur_rpc(str(exc))
-		raise PacAurGitError(f'Failed to contact AUR RPC: {exc}') from exc
+		raise GrimaurError(f'Failed to contact AUR RPC: {exc}') from exc
 	try:
 		data = json.loads(payload.decode())
 	except (UnicodeDecodeError, json.JSONDecodeError) as exc:
 		disable_aur_rpc('invalid JSON payload')
-		raise PacAurGitError('Failed to decode AUR RPC response') from exc
+		raise GrimaurError('Failed to decode AUR RPC response') from exc
 	# suggest endpoint returns a raw list, not a dict
 	if isinstance(data, list):
 		return data
 	if data.get('type') == 'error':
 		error_msg = str(data.get('error') or 'Unknown AUR RPC error')
 		disable_aur_rpc(error_msg)
-		raise PacAurGitError(error_msg)
+		raise GrimaurError(error_msg)
 	return dict(data)
 
 
@@ -237,7 +237,7 @@ def aur_rpc_info(package: str) -> dict[str, Any] | None:
 		return _AUR_INFO_CACHE[package]
 	try:
 		data = aur_rpc_call({'type': 'info', 'arg[]': [package]})
-	except PacAurGitError:
+	except GrimaurError:
 		_AUR_INFO_CACHE[package] = None
 		return None
 	if not isinstance(data, dict):
@@ -282,7 +282,7 @@ def dependency_set_from_rpc(info: dict[str, Any]) -> DependencySet:
 def aur_rpc_search_results(pattern: str) -> list[dict[str, Any]]:
 	try:
 		data = aur_rpc_call({'type': 'search', 'arg': pattern})
-	except PacAurGitError:
+	except GrimaurError:
 		return []
 	if not isinstance(data, dict):
 		return []
@@ -295,7 +295,7 @@ def aur_rpc_search_results(pattern: str) -> list[dict[str, Any]]:
 def aur_rpc_suggest(prefix: str) -> list[str]:
 	try:
 		data = aur_rpc_call({'type': 'suggest', 'arg': prefix})
-	except PacAurGitError:
+	except GrimaurError:
 		return []
 	# suggest endpoint returns a raw list of strings
 	if isinstance(data, list):
@@ -322,9 +322,9 @@ def run_command(
 			env=env,
 		)
 	except FileNotFoundError as exc:  # e.g. git not installed
-		raise PacAurGitError(f'Required command not found: {cmd[0]}') from exc
+		raise GrimaurError(f'Required command not found: {cmd[0]}') from exc
 	except subprocess.CalledProcessError as exc:
-		raise PacAurGitError(f'Command failed with exit code {exc.returncode}: {" ".join(cmd)}\n{exc.stderr or ""}') from exc
+		raise GrimaurError(f'Command failed with exit code {exc.returncode}: {" ".join(cmd)}\n{exc.stderr or ""}') from exc
 
 	if capture:
 		return completed.stdout
@@ -348,7 +348,7 @@ def ensure_clone(
 		if force_reclone:
 			shutil.rmtree(package_dir)
 		else:
-			raise PacAurGitError(f"Destination '{package_dir}' exists but is not a git repository. Use --force to overwrite.")
+			raise GrimaurError(f"Destination '{package_dir}' exists but is not a git repository. Use --force to overwrite.")
 
 	if repo_url:
 		if package_dir.exists() and (package_dir / '.git').is_dir() and not force_reclone:
@@ -376,7 +376,7 @@ def ensure_clone(
 							f'origin/{package}',
 						),
 					)
-				except PacAurGitError:
+				except GrimaurError:
 					if package_dir.exists():
 						shutil.rmtree(package_dir)
 					return ensure_clone(
@@ -397,7 +397,7 @@ def ensure_clone(
 				run_command(['git', '-C', str(package_dir), 'fetch', 'origin', branch_name])
 				try:
 					_reset_git_worktree(package_dir, (f'origin/{branch_name}',))
-				except PacAurGitError:
+				except GrimaurError:
 					if package_dir.exists():
 						shutil.rmtree(package_dir)
 					return ensure_clone(
@@ -481,7 +481,7 @@ def parse_dependencies(srcinfo_content: str) -> tuple[str, str | None, Dependenc
 			checkdepends.update([_normalize_dep(value)])
 
 	if not pkgbase:
-		raise PacAurGitError('Failed to parse pkgbase from .SRCINFO')
+		raise GrimaurError('Failed to parse pkgbase from .SRCINFO')
 	return (
 		pkgbase,
 		pkgdesc,
@@ -559,7 +559,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 				],
 				capture=True,
 			)
-		except PacAurGitError:
+		except GrimaurError:
 			continue
 		run_command(
 			[
@@ -572,7 +572,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 			]
 		)
 		return
-	raise PacAurGitError(f'Could not reset {package_dir.name} to any of: {", ".join(refs)}')
+	raise GrimaurError(f'Could not reset {package_dir.name} to any of: {", ".join(refs)}')
 
 
 def is_regex(pattern: str) -> bool:
@@ -616,7 +616,7 @@ def _pacman_returns_zero(args: Sequence[str]) -> bool:
 			check=False,
 		)
 	except FileNotFoundError as exc:
-		raise PacAurGitError('pacman command not found; this tool must run on Arch Linux') from exc
+		raise GrimaurError('pacman command not found; this tool must run on Arch Linux') from exc
 	return proc.returncode == 0
 
 
@@ -651,7 +651,7 @@ def is_dependency_satisfied(dep: str) -> bool:
 			check=False,
 		)
 	except FileNotFoundError as exc:
-		raise PacAurGitError('pacman command not found; this tool must run on Arch Linux') from exc
+		raise GrimaurError('pacman command not found; this tool must run on Arch Linux') from exc
 	return proc.returncode == 0
 
 
@@ -721,7 +721,7 @@ def _search_aur_candidates(dep: str, *, limit: int = 25) -> list[str]:
 				['git', 'ls-remote', '--heads', get_aur_remote(), pattern],
 				capture=True,
 			)
-		except PacAurGitError:
+		except GrimaurError:
 			continue
 		for raw_line in str(output).splitlines():
 			parts = raw_line.split()
@@ -818,7 +818,7 @@ def resolve_official_dependency(dep: str) -> str | None:
 			],
 			capture=True,
 		)
-	except PacAurGitError:
+	except GrimaurError:
 		return None
 	providers = [line.strip() for line in str(output).splitlines() if line.strip()]
 	if not providers:
@@ -846,7 +846,7 @@ def exists_in_aur_mirror(package: str) -> bool:
 			],
 			capture=True,
 		)
-	except PacAurGitError:
+	except GrimaurError:
 		return False
 	return bool(str(output).strip())
 
@@ -854,7 +854,7 @@ def exists_in_aur_mirror(package: str) -> bool:
 def list_foreign_packages() -> dict[str, str]:
 	try:
 		output = run_command(['pacman', '-Qm'], capture=True, check=False)
-	except PacAurGitError:
+	except GrimaurError:
 		return {}
 
 	names: dict[str, str] = {}
@@ -874,7 +874,7 @@ def get_local_head(package_dir: Path) -> str | None:
 		return None
 	try:
 		output = run_command(['git', '-C', str(package_dir), 'rev-parse', 'HEAD'], capture=True)
-	except PacAurGitError:
+	except GrimaurError:
 		return None
 	return str(output).strip() or None
 
@@ -902,7 +902,7 @@ def get_remote_head(package: str) -> str | None:
 				],
 				capture=True,
 			)
-	except PacAurGitError:
+	except GrimaurError:
 		return None
 	for line in str(output).splitlines():
 		parts = line.split()
@@ -917,7 +917,7 @@ def get_remote_head(package: str) -> str | None:
 def get_installed_version(package: str) -> str | None:
 	try:
 		output = run_command(['pacman', '-Qi', package], capture=True)
-	except PacAurGitError:
+	except GrimaurError:
 		return None
 	for line in str(output).splitlines():
 		if line.lower().startswith('version'):
@@ -1070,7 +1070,7 @@ def collect_missing_official_packages(
 def build_and_install(package_dir: Path, *, noconfirm: bool, refresh: bool = False) -> None:
 	pkgbuild_path = package_dir / 'PKGBUILD'
 	if not pkgbuild_path.exists():
-		raise PacAurGitError(f'PKGBUILD missing at {pkgbuild_path}')
+		raise GrimaurError(f'PKGBUILD missing at {pkgbuild_path}')
 	flags = '-sif' if refresh else '-si'
 	cmd = ['makepkg', flags, '--needed']
 	if noconfirm:
@@ -1117,11 +1117,11 @@ def install_package(
 			if is_installed(package):
 				print(f'Package {style(package, BOLD)} was installed as a split package')
 				return
-			raise PacAurGitError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
+			raise GrimaurError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 	elif USE_AUR_RPC:
 		info = aur_rpc_info(package)
 		if info is None and USE_AUR_RPC:
-			raise PacAurGitError(f"Package '{package}' not found via AUR RPC")
+			raise GrimaurError(f"Package '{package}' not found via AUR RPC")
 	# Extract pkgbase for split packages (e.g., nvidia-580xx-dkms -> nvidia-580xx-utils)
 	pkgbase: str | None = None
 	if info:
@@ -1143,7 +1143,7 @@ def install_package(
 				if is_installed(package):
 					print(f'Package {style(package, BOLD)} was installed as a split package')
 					return
-				raise PacAurGitError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
+				raise GrimaurError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 		srcinfo = read_srcinfo(package_dir)
 		_, pkgdesc, deps = parse_dependencies(srcinfo)
 	if pkgdesc:
@@ -1177,7 +1177,7 @@ def install_package(
 
 	if unresolved:
 		missing_list = ', '.join(sorted(unresolved))
-		raise PacAurGitError(f'Could not resolve providers for: {missing_list}')
+		raise GrimaurError(f'Could not resolve providers for: {missing_list}')
 
 	if missing_official:
 		to_install = missing_official - preinstalled_official
@@ -1195,7 +1195,7 @@ def install_package(
 			else:
 				print(f'  {dep_pkg}')
 		if not prompt_confirm(style('Proceed with building these dependencies? [y/N]: ', YELLOW)):
-			raise PacAurGitError('Installation aborted by user')
+			raise GrimaurError('Installation aborted by user')
 
 	for aur_dep in sorted(aur_dependencies):
 		install_package(
@@ -1214,7 +1214,7 @@ def install_package(
 			if is_installed(package):
 				print(f'Package {style(package, BOLD)} was installed as a split package')
 				return
-			raise PacAurGitError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
+			raise GrimaurError(f'PKGBUILD not found at {package_dir / "PKGBUILD"} - package may be a split package or have an invalid AUR entry')
 
 	build_and_install(package_dir, noconfirm=noconfirm, refresh=refresh)
 
@@ -1243,7 +1243,7 @@ def remove_package(
 		run_command(cmd)
 		invalidate_installed_cache()
 		print(f'Successfully removed {style(package, GREEN)}')
-	except PacAurGitError as exc:
+	except GrimaurError as exc:
 		print(f'Failed to remove package: {exc}', file=sys.stderr)
 		return
 
@@ -1317,7 +1317,7 @@ def update_packages(
 		try:
 			run_command(cmd)
 			invalidate_installed_cache()
-		except PacAurGitError as exc:
+		except GrimaurError as exc:
 			print(f'System update failed: {exc}', file=sys.stderr)
 			if not noconfirm and not prompt_confirm(style('Continue with AUR updates? [y/N]: ', YELLOW)):
 				return
@@ -1449,7 +1449,7 @@ def update_packages(
 				visited=shared_visited,
 				preinstalled_official=shared_preinstalled_official,
 			)
-		except PacAurGitError as exc:
+		except GrimaurError as exc:
 			print(f'error updating {candidate.name}: {exc}', file=sys.stderr)
 
 	for package in missing:
@@ -1779,7 +1779,7 @@ def complete_packages_git(prefix: str, limit: int) -> list[str]:
 			['git', 'ls-remote', '--heads', get_aur_remote(), pattern],
 			capture=True,
 		)
-	except PacAurGitError:
+	except GrimaurError:
 		return []
 	names: list[str] = []
 	for line in str(output).splitlines():
@@ -1859,13 +1859,13 @@ def inspect_package(
 					print('Optional: (none)')
 			return
 		if USE_AUR_RPC:
-			raise PacAurGitError(f"Package '{package}' not found via AUR RPC")
+			raise GrimaurError(f"Package '{package}' not found via AUR RPC")
 
 	package_dir = ensure_clone(package, dest_root, refresh=refresh, repo_url=repo_url)
 	if target == 'PKGBUILD':
 		pkgbuild_path = package_dir / 'PKGBUILD'
 		if not pkgbuild_path.exists():
-			raise PacAurGitError(f'PKGBUILD not found at {pkgbuild_path}')
+			raise GrimaurError(f'PKGBUILD not found at {pkgbuild_path}')
 		print(pkgbuild_path.read_text())
 		return
 	if target == 'SRCINFO':
@@ -2115,7 +2115,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 				)
 				if unresolved:
 					missing_list = ', '.join(sorted(unresolved))
-					raise PacAurGitError(f'Could not resolve providers for: {missing_list}')
+					raise GrimaurError(f'Could not resolve providers for: {missing_list}')
 				if missing_official:
 					install_official_packages(
 						missing_official,
@@ -2205,7 +2205,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 						visited=shared_visited,
 						preinstalled_official=shared_preinstalled_official,
 					)
-				except PacAurGitError as exc:
+				except GrimaurError as exc:
 					exit_code = 1
 					print(f'error installing {item.name}: {exc}', file=sys.stderr)
 			return exit_code
@@ -2231,7 +2231,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 			list_installed_packages()
 		else:
 			parser.error('Unknown command')
-	except PacAurGitError as exc:
+	except GrimaurError as exc:
 		print(f'error: {exc}', file=sys.stderr)
 		return 1
 
