@@ -133,6 +133,7 @@ def _bootstrap() -> int:
 def _check_online() -> int:
 	try:
 		ping('1.1.1.1')
+		# ideally we'd check ntp here and remove it from installer methods
 		return 0
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
