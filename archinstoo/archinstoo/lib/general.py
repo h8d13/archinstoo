@@ -414,8 +414,7 @@ def run(
 	return subprocess.run(
 		cmd,
 		input=input_data,
-		stdout=subprocess.PIPE,
-		stderr=subprocess.PIPE,
+		capture_output=True,
 		check=True,
 	)
 
