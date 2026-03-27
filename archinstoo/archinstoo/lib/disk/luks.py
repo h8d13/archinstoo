@@ -1,3 +1,4 @@
+import contextlib
 import secrets
 import shlex
 import string
@@ -114,8 +115,9 @@ class Luks2:
 		try:
 			result = run(cmd, input_data=passphrase)
 		except CalledProcessError as err:
-			output = err.stdout.decode().rstrip()
-			raise DiskError(f'Could not encrypt volume "{self.luks_dev_path}": {output}')
+			output = (err.stdout or b'').decode().rstrip()
+			err_output = (err.stderr or b'').decode().rstrip()
+			raise DiskError(f'Could not encrypt volume "{self.luks_dev_path}": {output} {err_output}'.rstrip())
 
 		debug(f'cryptsetup luksFormat output: {result.stdout.decode().rstrip()}')
 
@@ -147,6 +149,10 @@ class Luks2:
 
 		if not self.mapper_name:
 			raise ValueError('mapper name missing')
+
+		# Ensure dm-crypt target is loaded before attempting to open
+		with contextlib.suppress(Exception):
+			SysCommand(['modprobe', 'dm-crypt'])
 
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
 
