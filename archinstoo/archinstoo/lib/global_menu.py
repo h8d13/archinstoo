@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstoo.default_profiles.profile import Profile
+from archinstoo.default_profiles.profile import GreeterType, Profile
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
@@ -220,6 +220,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _missing_configs(self) -> list[str]:
 		item: MenuItem = self._item_group.find_by_key('auth_config')
 		auth_config: AuthenticationConfiguration | None = item.value
+		profile_config: ProfileConfiguration | None = self._item_group.find_by_key('profile_config').value
 
 		def check(s: str) -> bool:
 			item = self._item_group.find_by_key(s)
@@ -231,6 +232,9 @@ class GlobalMenu(AbstractMenu[None]):
 			missing.add(
 				tr('Either root-password or at least 1 user with elevated privileges must be specified'),
 			)
+
+		if profile_config and profile_config.greeter == GreeterType.Sddm and not (auth_config and auth_config.users):
+			missing.add(tr('SDDM requires a regular user (UID >= 1000) to log in'))
 
 		for item in self._item_group.items:
 			if item.mandatory:
