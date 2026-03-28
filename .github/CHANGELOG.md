@@ -2,7 +2,31 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
-## 0.1.4-0
+## 0.1.05-0
+
+    - Limine bootloader fixes
+        - Fix boot failure when EFI is mounted at `/efi` or `/boot/efi`
+            - `path_root` was incorrectly staying as `boot()` instead of `uuid(root)`,
+              causing kernel/initramfs paths to resolve on the EFI partition rather than root
+        - Fix `limine.conf` placed in wrong location for removable installs
+            - Config was written to `/boot/limine/` instead of alongside the EFI binary on the ESP
+        - Both bugs are upstream regressions from archinstall#3932
+    - AUR: fix install order to run after DE/WM profile
+        - Prevents AUR packages that depend on a desktop environment from failing
+    - grimAUR improvements
+        - Prefer `run0` over `sudo` in GUI mode
+        - Add `--depth=1` to all git clone commands
+
+        - Add kernel version and build date to env utils
+    - LUKS: explicitly load `dm_crypt` module before use
+    - `run()`: capture stderr from subprocess calls
+    - Installer: replace `SysCommand('sync')` with `os.sync()` builtin, remove custom `sync()` method
+    - Config: fix key name `archinstoo-language` → `archinstoo_language` in serialization/deserialization
+    - Repo: move ISO files into `isos/` subdirectory
+    - Docs: add multi-boot guidance for issue #100 (manual partitioning + `skip-boot` hint)
+    - Dependency updates: ruff 0.15.8, actions/upload-artifact v7, actions/checkout digest bump
+
+## 0.1.04-0
 
     - Bcachefs support
         - Add Bcachefs as a filesystem option
@@ -50,7 +74,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Help text updates
         - Various linting and structure cleanups
 
-## 0.1.3-1
+## 0.1.03-2
 
     - Refactor disk utils (DI Ext.)
     - Add `plasma-login-manager` greeter
@@ -74,7 +98,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Remove private prefixes from public API methods
         - Contributing docs: add testing notes
 
-## 0.1.3-0
+## 0.1.03-1
 
     - Encryption (#84)
         - Add choices for LUKS key derivation function (argon2id/pbkdf2)
@@ -99,7 +123,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
     - Chores
         - Update ruff to latest version
 
-## 0.1.2-0
+## 0.1.03-0
 
     - Encrypted `/boot` seperate `/efi` (GRUB + argon2id)
         - Constrain LUKS key slot PBKDF for boot partitions (`--pbkdf-memory 32768 --iter-time 200`)
@@ -122,7 +146,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Fix example configs
     - Fix install order: kernel headers/AUR before profiles
 
-## 0.1.1-1
+## 0.1.02-1
     - Add `smartmontools` to Server profiles (disk health monitoring)
         - This means original profiles list now only contains `xdg-utils | smartmontools` for desktops
 
@@ -143,7 +167,7 @@ Down from original list (the rest is all in logic or choices):
 		]
 ```
 
-## 0.1.1-0
+## 0.1.02-0
 
     - Graphics driver improvements
         - Add VM-specific options: `VM (software rendering)` and `VM (virtio-gpu)` allows to pick guest drivers
@@ -168,7 +192,7 @@ Down from original list (the rest is all in logic or choices):
         - Fix duplicate grub package installation on UEFI systems
         - Fix locale menu
 
-## 0.1.0-1
+## 0.1.01-1
 
     - New Security application category
         - AppArmor support with kernel LSM parameter (`lsm=landlock,lockdown,yama,integrity,apparmor,bpf`)
@@ -196,7 +220,7 @@ Down from original list (the rest is all in logic or choices):
         - Update test assertions for new Security model
     - Work on grimaur linting
 
-## 0.1.0-0
+## 0.1.01-0
 
     - ARM (aarch64) support
         - Parse ARM mirror list format (different HTML from x86)
