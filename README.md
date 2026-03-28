@@ -7,7 +7,8 @@
 A fork of `archinstall` with only `python-parted` as a dependency, many MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes. *Aims to make the code base more readable, maintainable and modifiable by anyone*.
 
 > [!TIP]
-> In the [ISO](https://archlinux.org/download/), you are root by default. Use `sudo` or equivalent, *if running from an existing system. Hwere you will need more [dependencies](./archinstoo/PKGBUILD)*
+> In the [ISO](https://archlinux.org/download/), you are root by default and have some tools available. 
+> Use `sudo` or equivalent, *if running from an existing system. Here you will need more [dependencies](./archinstoo/PKGBUILD)*
 
 ## Setup / Usage
 
