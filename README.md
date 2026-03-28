@@ -37,9 +37,6 @@ $ nmcli dev wifi connect "SSID" -a
 
 **0.1. Prep**
 
-> [!NOTE]
-> **For the lazy ones:** `bash <(curl -sSl https://evoquus.com/co)` *Does the same as bellow.*
-
 *If on the ISO instead of a live system*
 ```shell
 pacman-key --init
@@ -48,7 +45,6 @@ pacman -Sy git python
 
 ### **1. Get the source code**
 
-Get source:
 ```shell
 git clone --depth 1 https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
