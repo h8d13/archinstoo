@@ -234,7 +234,7 @@ class GlobalMenu(AbstractMenu[None]):
 			)
 
 		if profile_config and profile_config.greeter == GreeterType.Sddm and not (auth_config and auth_config.users):
-			missing.add(tr('SDDM requires a regular user (UID >= 1000) to log in'))
+			missing.add(tr('SDDM requires at least one regular user to log in'))
 
 		for item in self._item_group.items:
 			if item.mandatory:
