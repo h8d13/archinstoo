@@ -144,9 +144,6 @@ def perform_installation(
 			headers = [f'{kernel}-headers' for kernel in config.kernels]
 			installation.add_additional_packages(headers)
 
-		if config.aur_packages and config.auth_config:
-			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
-
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
 
@@ -177,6 +174,8 @@ def perform_installation(
 				installation.lock_root_account()
 
 		# We run the next defs last because they might depend on anything above
+		if config.aur_packages and config.auth_config:
+			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
 
 		# If the user provided a list of services to be enabled
 		# This might include system wide services or user specific

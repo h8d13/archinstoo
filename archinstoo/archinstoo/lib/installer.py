@@ -1479,18 +1479,10 @@ class Installer:
 			try:
 				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'
 				efi_dir_path_target = efi_partition.mountpoint / 'EFI'
-				if bootloader_removable:
-					efi_dir_path = efi_dir_path / 'BOOT'
-					efi_dir_path_target = efi_dir_path_target / 'BOOT'
-
-					boot_limine_path = self.target / 'boot' / 'limine'
-					boot_limine_path.mkdir(parents=True, exist_ok=True)
-					config_path = boot_limine_path / 'limine.conf'
-				else:
-					efi_dir_path = efi_dir_path / 'arch-limine'
-					efi_dir_path_target = efi_dir_path_target / 'arch-limine'
-
-					config_path = efi_dir_path / 'limine.conf'
+				subdir = 'BOOT' if bootloader_removable else 'arch-limine'
+				efi_dir_path = efi_dir_path / subdir
+				efi_dir_path_target = efi_dir_path_target / subdir
+				config_path = efi_dir_path / 'limine.conf'
 
 				efi_dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -1579,8 +1571,11 @@ class Installer:
 		config_contents = 'timeout: 5\n'
 
 		path_root = 'boot()'
-		if efi_partition and boot_partition != efi_partition:
-			path_root = f'uuid({boot_partition.partuuid})'
+		if efi_partition:
+			if boot_partition != efi_partition:
+				path_root = f'uuid({boot_partition.partuuid})'
+			elif efi_partition.mountpoint != Path('/boot') and isinstance(root, PartitionModification):
+				path_root = f'uuid({root.partuuid})'
 
 		for kernel in self.kernels:
 			if uki_enabled:
