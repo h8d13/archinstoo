@@ -7,15 +7,15 @@
 A fork of `archinstall` with only `python-parted` as a dependency, many MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes. *Aims to make the code base more readable, maintainable and modifiable by anyone*.
 
 > [!TIP]
-> In the [ISO](https://archlinux.org/download/), you are root by default. Use `sudo` or equivalent, *if running from an existing system.*
+> In the [ISO](https://archlinux.org/download/), you are root by default. Use `sudo` or equivalent, *if running from an existing system. Hwere you will need more [dependencies](./archinstoo/PKGBUILD)*
 
 ## Setup / Usage
 
 [Newb-Corner](.github/NEWB_CORNER.md)
 
 **0. Get internet access**
-
-Ethernet cable is plug and play. 
+> [!NOTE]
+> Ethernet cable is plug and play. 
 
 Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms` 3 times...
 
