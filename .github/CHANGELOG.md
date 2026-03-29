@@ -2,6 +2,20 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.05-1
+
+    - Bcachefs install fixes
+        - Add `xxhash` to packages when bcachefs is selected
+            - `libxxhash.so.0` was missing in the chroot causing DKMS build to fail at the objtool step, preventing bcachefs.ko from being built
+        - Deduplicate `_base_packages` before pacstrap
+            - Multiple bcachefs partitions (e.g. / + /home) caused duplicate packages
+    - ESP permissions fix for /boot mountpoint
+        - `fmask=0077,dmask=0077` now applied when ESP is mounted at `/boot` (was previously skipped, leaving random seed file world-accessible)
+    - PM: file:// custom repos inserted before [core] for priority
+    - Custom repos (file://) stripped from target pacman.conf on persist
+        - Install-time local cache repos no longer leak into the installed system
+
+
 ## 0.1.05-0
 
     - Limine bootloader fixes
