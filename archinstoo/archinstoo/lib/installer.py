@@ -856,9 +856,11 @@ class Installer:
 			self._base_packages.append(pkg)
 
 		# Install linux-headers and bcachefs-dkms if bcachefs is selected
+		# xxhash is required by objtool (part of linux-headers) at dkms build time
 		if fs_type == FilesystemType.Bcachefs:
 			self._base_packages.extend(f'{kernel}-headers' for kernel in self.kernels)
 			self._base_packages.append('bcachefs-dkms')
+			self._base_packages.append('xxhash')
 
 		# https://github.com/archlinux/archinstall/issues/1837
 		# https://github.com/koverstreet/bcachefs/issues/916
@@ -932,7 +934,7 @@ class Installer:
 			if locale_config.console_font.startswith('ter-'):
 				self._base_packages.append('terminus-font')
 
-		self.pacman.strap(self._base_packages)
+		self.pacman.strap(list(dict.fromkeys(self._base_packages)))
 		self._helper_flags['base-strapped'] = True
 
 		pacman_conf.persist()
@@ -963,7 +965,10 @@ class Installer:
 			debug(f'Root directory not found at {root_dir}, skipping chmod')
 
 		if 'bcachefs' in self._modules:
-			self.arch_chroot('dkms autoinstall', peek_output=True)
+			try:
+				self.arch_chroot('dkms autoinstall', peek_output=True)
+			except SysCallError as e:
+				error(f'dkms autoinstall failed, bcachefs module may not load: {e}')
 
 		if mkinitcpio and not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
