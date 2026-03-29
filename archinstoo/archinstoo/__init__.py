@@ -47,7 +47,7 @@ r"""ArchInstoo Linux Installer.
           ░░░░░░░░░░░           ░██████▓░█▒▓▓░░░░█▓▓█▒▓▓▓▓▓▒░▒▒▒ ▒▒▒░ ░ ░░
             ░░░░░░░░░░░░         ▓▒    ▓▓ ▒▓▓░░░░░░▒▒▒▒▒▓▓▓▓▒░░▒   ░▒▒▒░
 
-=> BL => FS => BASE => KERN/H => DRIVERS => USERS/GROUPS => PROFILES => APPS(CAT) => MISC.
+=> BL => FS => PM/BASE => KERN/H => DRIVERS => USERS/GROUPS => PROFILES => APPS(CAT) => MISC.
 Base refers to a minimal install:
 	=> Essential pkgs
 	=> Locales, console, kb
