@@ -123,7 +123,9 @@ class PacmanConfig:
 	def persist(self) -> None:
 		has_changes = self._repositories or self._custom_repositories or self._misc_options
 		if has_changes and self._config_remote_path and not self._config_path.samefile(self._config_remote_path):
-			copy2(self._config_path, self._config_remote_path)
+			content = self._config_path.read_text()
+			content = re.sub(r'\n\[[^\]]+\]\nSigLevel = [^\n]+\nServer = file://[^\n]+\n', '', content)
+			self._config_remote_path.write_text(content)
 
 	@classmethod
 	def apply_config(cls, config: PacmanConfiguration) -> None:
