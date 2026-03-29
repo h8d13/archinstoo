@@ -962,6 +962,9 @@ class Installer:
 		else:
 			debug(f'Root directory not found at {root_dir}, skipping chmod')
 
+		if 'bcachefs' in self._modules:
+			self.arch_chroot('dkms autoinstall', peek_output=True)
+
 		if mkinitcpio and not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
 
