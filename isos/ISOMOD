@@ -14,7 +14,7 @@ PRECLEAN="${PRECLEAN:-0}"
 CLEANUP="${CLEANUP:-1}"
 LOG_FILE="${LOG_FILE:-1}"
 # Requires 'pacman-contrib' if this is enabled
-CACHING="${CACHING:-0}"
+CACHING="${CACHING:-1}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 

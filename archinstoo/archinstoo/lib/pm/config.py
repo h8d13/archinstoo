@@ -92,8 +92,21 @@ class PacmanConfig:
 
 		# Append custom repositories (skip if already exists)
 		content_str = ''.join(content)
+		core_idx = next((i for i, line in enumerate(content) if re.match(r'^\[core\]', line)), None)
+
 		for custom in self._custom_repositories:
-			if f'[{custom.name}]' not in content_str:
+			if f'[{custom.name}]' in content_str:
+				continue
+			if custom.url.startswith('file://'):
+				# Insert before [core] to give priority (mirrors ISOMOD_CACHE behaviour)
+				insert_at = core_idx if core_idx is not None else len(content)
+				content[insert_at:insert_at] = [
+					f'[{custom.name}]\n',
+					f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n',
+					f'Server = {custom.url}\n',
+					'\n',
+				]
+			else:
 				content.append(f'\n[{custom.name}]\n')
 				content.append(f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n')
 				content.append(f'Server = {custom.url}\n')
