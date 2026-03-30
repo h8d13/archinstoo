@@ -81,11 +81,7 @@ cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed t
 echo "Mod ISO name..."
 sed -i 's/^iso_name=.*/iso_name="EVOQUUS"/' "$PROFILE_DIR/profiledef.sh"
 
-echo "Adding archinstoo to file_permissions..."
-sed -i '/^file_permissions=(/a\  ["/usr/local/bin/archinstoo"]="0:0:755"' "$PROFILE_DIR/profiledef.sh"
-
 echo "Modifying COW overlay size..."
-
 # Modify systemd-boot (efiboot) configs - add cow_spacesize=1G to options lines
 find "$PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i 's|\(options.*\)|\1 cow_spacesize=1G|' {} \;
 # Modify GRUB config - add cow_spacesize=1G to kernel boot parameters
@@ -140,6 +136,9 @@ echo "Adding to zsh history..."
 cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
 : 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstoo --debug --advanced
 HISTEOF
+
+echo "Adding archinstoo to file_permissions..."
+sed -i '/^file_permissions=(/a\  ["/usr/local/bin/archinstoo"]="0:0:755"' "$PROFILE_DIR/profiledef.sh"
 
 # add 'archinstoo' command to PATH
 echo "Adding archinstoo command..."
