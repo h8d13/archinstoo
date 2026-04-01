@@ -2135,7 +2135,7 @@ EndSection
 
 
 def accessibility_tools_in_use() -> bool:
-	return os.system('systemctl is-active --quiet espeakup.service') == 0
+	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0
 
 
 def run_aur_installation(packages: list[str], installation: Installer, users: list[User]) -> None:
