@@ -103,7 +103,6 @@ class ListManager[ValueT]:
 					raise ValueError('Unhandled return type')
 
 			if value in self._base_actions:
-				value = cast(str, value)
 				self._data = self.handle_action(value, None, self._data)
 			elif value in self._terminate_actions:
 				break

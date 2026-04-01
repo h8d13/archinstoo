@@ -1,5 +1,6 @@
 import contextlib
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -198,9 +199,9 @@ def perform_installation(
 			case PostInstallationAction.EXIT:
 				pass
 			case PostInstallationAction.REBOOT:
-				os.system('reboot')
+				subprocess.run(['reboot'], check=False)
 			case PostInstallationAction.POWEROFF:
-				os.system('poweroff')
+				subprocess.run(['poweroff'], check=False)
 			case PostInstallationAction.CHROOT:
 				with contextlib.suppress(Exception):
 					installation.drop_to_shell()

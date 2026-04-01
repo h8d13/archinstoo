@@ -2,6 +2,7 @@ import contextlib
 import curses
 import os
 import signal
+import subprocess
 import sys
 from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
@@ -1372,7 +1373,7 @@ class Tui:
 		clear_screen: bool = False,
 	) -> None:
 		if clear_screen:
-			os.system('clear')
+			subprocess.run(['clear'], check=False)
 
 		if Tui._t is None:
 			print(text, end=endl)
