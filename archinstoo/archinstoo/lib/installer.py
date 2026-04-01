@@ -475,6 +475,8 @@ class Installer:
 						break
 
 	def _generate_key_files_partitions(self) -> None:
+		root_is_encrypted = any(p.is_root() for p in self._disk_encryption.partitions)
+
 		for part_mod in self._disk_encryption.partitions:
 			gen_enc_file = self._disk_encryption.should_generate_encryption_file(part_mod)
 
@@ -486,18 +488,25 @@ class Installer:
 
 			if gen_enc_file and not part_mod.is_root():
 				debug(f'Creating key-file: {part_mod.dev_path}')
-				# GRUB has limited memory for argon2id decryption;
-				# constrain the keyfile slot too so GRUB can handle it
-				is_boot = part_mod.is_boot()
-				uses_argon2 = self._disk_encryption.pbkdf == LuksPbkdf.Argon2id
-				pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
-				iter_time = 200 if is_boot else None
-				luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
+				if root_is_encrypted:
+					# GRUB has limited memory for argon2id decryption;
+					# constrain the keyfile slot too so GRUB can handle it
+					is_boot = part_mod.is_boot()
+					uses_argon2 = self._disk_encryption.pbkdf == LuksPbkdf.Argon2id
+					pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
+					iter_time = 200 if is_boot else None
+					luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
+				else:
+					# Root is unencrypted — don't write a keyfile to plaintext disk;
+					# use a crypttab entry so systemd prompts for a passphrase instead.
+					luks_handler.create_crypttab_entry(self.target)
 
 			if self._disk_encryption.auto_unlock_root and part_mod.is_root():
 				self._create_root_keyfile(luks_handler)
 
 	def _generate_key_file_lvm_volumes(self) -> None:
+		root_is_encrypted = any(v.is_root() for v in self._disk_encryption.lvm_volumes)
+
 		for vol in self._disk_encryption.lvm_volumes:
 			gen_enc_file = self._disk_encryption.should_generate_encryption_file(vol)
 
@@ -509,7 +518,10 @@ class Installer:
 
 			if gen_enc_file and not vol.is_root():
 				debug(f'Creating key-file: {vol.dev_path}')
-				luks_handler.create_keyfile(self.target)
+				if root_is_encrypted:
+					luks_handler.create_keyfile(self.target)
+				else:
+					luks_handler.create_crypttab_entry(self.target)
 
 			if self._disk_encryption.auto_unlock_root and vol.is_root():
 				self._create_root_keyfile(luks_handler)
