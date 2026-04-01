@@ -192,6 +192,12 @@ class Luks2:
 			debug(f'Closing crypt device {child.name}')
 			SysCommand(f'cryptsetup close {child.name}')
 
+	def create_crypttab_entry(self, target_path: Path) -> None:
+		"""Create a crypttab entry without a keyfile so systemd prompts for a passphrase at boot.
+		Used when the root partition is unencrypted — writing a keyfile there would expose it in plaintext."""
+		crypttab_path = target_path / 'etc/crypttab'
+		self._crypttab(crypttab_path, Path('none'), options=['luks'])
+
 	def create_keyfile(
 		self,
 		target_path: Path,
