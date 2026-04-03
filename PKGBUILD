@@ -20,7 +20,7 @@ depends=(
   'python'
   'arch-install-scripts' #For pacstrap, genfstab, chroot
   'systemd' #For systemd-based operations
-  'mkinitcpio'#For generating initramfs
+  'mkinitcpio' #For generating initramfs
   'coreutils' #Basic utilities
   'util-linux' #For partition utilities
   'pciutils' #For PCI device detection
