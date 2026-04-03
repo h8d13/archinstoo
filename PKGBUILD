@@ -33,11 +33,11 @@ makedepends=(
   'python-pylint'
   'python-setuptools'
   'python-wheel'
-  'ruff'
   'nvchecker'
   'archiso' #Dev ISO more cow_space
   'tree' #For project tree output
   'pacman-contrib' #For dependency trees (count script and isomod)
+  # Note dev tools are usually handled through precommit
 )
 # marked as optional because they depend
 # on choices made during installation
