@@ -20,6 +20,7 @@ depends=(
   'python'
   'arch-install-scripts' #For pacstrap, genfstab, chroot
   'systemd' #For systemd-based operations
+  'mkinitcpio'#For generating initramfs
   'coreutils' #Basic utilities
   'util-linux' #For partition utilities
   'pciutils' #For PCI device detection
@@ -35,11 +36,16 @@ makedepends=(
   'python-wheel'
   'ruff'
   'nvchecker'
+  'archiso' #Dev ISO more cow_space
+  'tree' #For project tree output
+  'pacman-contrib' #For dependency trees (count script and isomod)
 )
 # marked as optional because they depend
 # on choices made during installation
 # also because they are expected on ISO
 # in a 'stable' state of release
+# you should obviously feel free to only select the ones you need
+
 optdepends=(
   'btrfs-progs' #For btrfs filesystem support
   'dosfstools' #For FAT/EFI filesystem support
@@ -50,9 +56,6 @@ optdepends=(
   'cryptsetup' #For LUKS encryption support
   'lvm2' #For LVM FS layout support
   'python-systemd' #System journal logging
-  'archiso' #Dev ISO more cow_space
-  'tree' #For project tree output
-  'pacman-contrib' #For dependency trees (count script and isomod)
 )
 provides=(archinstoo)
 replaces=(archinstoo)
