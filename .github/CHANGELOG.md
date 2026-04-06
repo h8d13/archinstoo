@@ -4,8 +4,8 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 ## 0.1.05-1
 
-    - Bcachefs install fixes
-        - Add `xxhash` to packages when bcachefs is selected
+    - Missing deps in linux-variant-headers
+        - Reported https://github.com/archlinux/archinstall/issues/4360
             - Fixed upstream https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188
         - Deduplicate `_base_packages` before pacstrap
             - Multiple bcachefs partitions (e.g. / + /home) caused duplicate packages
