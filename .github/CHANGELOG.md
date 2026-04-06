@@ -6,7 +6,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
     - Bcachefs install fixes
         - Add `xxhash` to packages when bcachefs is selected
-            - `libxxhash.so.0` was missing in the chroot causing DKMS build to fail at the objtool step, preventing bcachefs.ko from being built
+            - Fixed upstream https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188
         - Deduplicate `_base_packages` before pacstrap
             - Multiple bcachefs partitions (e.g. / + /home) caused duplicate packages
     - ESP permissions fix for /boot mountpoint
