@@ -22,7 +22,7 @@ from archinstoo.lib.models.mirrors import (
 )
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.network.utils import fetch_data_from_url
-from archinstoo.lib.output import FormattedOutput, debug
+from archinstoo.lib.output import FormattedOutput, debug, info
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -544,23 +544,41 @@ class MirrorListHandler:
 		# Only sort if we have remote mirror data with score/speed info
 		# Local mirrors lack this data and can be modified manually before-hand
 		# Or reflector potentially ran already
+		info(f'get_status_by_region: is_remote={_MirrorCache.is_remote}, speed_sort={speed_sort}, region={region}')
 		if _MirrorCache.is_remote and speed_sort:
 			# simple counter to show progress
 			# and current best to show another useful info
+			# Only show progress if we haven't tested yet (first call)
+			needs_testing = any(m._speed is None for m in region_list)
 			total = len(region_list)
 			best = 0.0
 			for i, mirror in enumerate(region_list, 1):
 				_ = mirror.speed
 				best = max(best, mirror.speed)
-				print(f'\rTesting mirror speeds {i}/{total} - best: {best / 1024 / 1024:.1f} MiB/s', end='', flush=True)
-				# do note that current best is based of a small db download and should get more bitrate on larger dls
-			print()
+				if needs_testing:
+					print(f'\rTesting mirror speeds {i}/{total} - best: {best / 1024 / 1024:.1f} MiB/s', end='', flush=True)
+					# do note that current best is based of a small db download and should get more bitrate on larger dls
+			if needs_testing:
+				print()
 
-			# Sort by speed descending (higher is better in bitrate form core.db download)
-			# Filter out mirrors that failed speed test (speed=0 means timeout/DNS failure)
-			return sorted([m for m in region_list if m.speed > 0], key=lambda mirror: -mirror.speed)
-		# just return as-is without sorting?
-		return region_list
+		# Filter out mirrors that failed speed test and keep only top N fastest
+		# Also filter by API score (lower is better) and delay (sync freshness)
+		TOP_N = 10
+		MAX_SCORE = 2.0  # Exclude mirrors with poor reliability score
+		MAX_DELAY = 3600  # Exclude mirrors more than 1 hour out of sync
+
+		working = [
+			m for m in region_list
+			if m._speed is not None and m._speed > 0
+			and (m.score is None or m.score < MAX_SCORE)
+			and (m.delay is None or m.delay < MAX_DELAY)
+		]
+		if _MirrorCache.is_remote and working:
+			sorted_mirrors = sorted(working, key=lambda m: -m._speed)[:TOP_N]
+			info(f'Mirror selection: {len(region_list)} tested, {len(working)} passed filters, keeping top {len(sorted_mirrors)}')
+			return sorted_mirrors
+		# Fallback: return untested mirrors as-is
+		return [m for m in region_list if m._speed is None or m._speed > 0]
 
 	def _parse_remote_mirror_list(self, mirrorlist: str) -> dict[str, list[MirrorStatusEntryV3]]:
 		mirror_status = MirrorStatusListV3.from_json(mirrorlist)

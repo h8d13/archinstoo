@@ -127,7 +127,7 @@ class Pacman:
 			cmd = f'pacman -S {" ".join(packages)} --noconfirm --needed'
 			bail = f'Package installation failed. See {logger.path} or above message for error details'
 		else:
-			cmd = f'pacstrap -C {PACMAN_CONF} -K {self.target} {" ".join(packages)} --noconfirm --needed'
+			cmd = f'pacstrap -C {PACMAN_CONF} -K -M {self.target} {" ".join(packages)} --noconfirm --needed'
 			bail = f'Pacstrap failed. See {logger.path} or above message for error details'
 
 		self.ask(

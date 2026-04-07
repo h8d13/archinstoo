@@ -578,7 +578,10 @@ class Installer:
 		regions_config = pacman_configuration.regions_config(speed_sort=True)
 		if regions_config:
 			debug(f'Mirrorlist:\n{regions_config}')
+			info(f'Writing mirrorlist to {mirrorlist_path} ({regions_config.count("Server =")} servers)')
 			mirrorlist_path.write_text(regions_config)
+		else:
+			info(f'No mirror regions configured, not writing mirrorlist to {mirrorlist_path}')
 
 		if custom_servers := pacman_configuration.custom_servers_config():
 			debug(f'Custom servers:\n{custom_servers}')
