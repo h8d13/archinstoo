@@ -97,5 +97,4 @@ is already importable (e.g. Alpine provides `py3-parted` ...).
 | `list_locales()` fallback | `lib/localization/utils.py` | Falls back to `/etc/locale.gen`, then hardcoded defaults when `/usr/share/i18n/SUPPORTED` is absent |
 | `lspci` guard | `lib/hardware.py` | Returns empty dict when `lspci` is not available |
 | `_pid_exists` portability | `lib/general.py` | Replaced `ps --no-headers` (procps-specific) with `os.kill(pid, 0)` |
-| Format retry + swapoff | `lib/disk/device_handler.py` | Releases swap before formatting; retries 3× on `in use` errors with udev settle |
 | `crypt.py` musl support | `lib/authentication/crypt.py` | Portable library discovery; correct `crypt_gensalt` symbol check via `lib['name']` (not `hasattr`); SHA-512 fallback when yescrypt is unsupported |

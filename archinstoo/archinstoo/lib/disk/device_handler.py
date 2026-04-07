@@ -1,6 +1,5 @@
 import contextlib
 import os
-import time
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -276,23 +275,12 @@ class DeviceHandler:
 
 		debug('Formatting filesystem:', ' '.join(cmd))
 
-		# Release swap if active on this device before formatting
-		with contextlib.suppress(SysCallError):
-			SysCommand(['swapoff', str(path)])
-
-		for attempt in range(3):
-			try:
-				SysCommand(cmd)
-				break
-			except SysCallError as err:
-				if 'in use' in err.message.lower() and attempt < 2:
-					debug(f'Device {path} busy, waiting and retrying (attempt {attempt + 1}/3)...')
-					self.udev_sync()
-					time.sleep(1)
-					continue
-				msg = f'Could not format {path} with {fs_type.value}: {err.message}'
-				error(msg)
-				raise DiskError(msg) from err
+		try:
+			SysCommand(cmd)
+		except SysCallError as err:
+			msg = f'Could not format {path} with {fs_type.value}: {err.message}'
+			error(msg)
+			raise DiskError(msg) from err
 
 	def encrypt(
 		self,

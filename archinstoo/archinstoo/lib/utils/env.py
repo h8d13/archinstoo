@@ -92,10 +92,6 @@ def kernel_info() -> str:
 	return f'{platform.release()} built {platform.version()}'
 
 
-# ---------------------------------------------------------------------------
-# Non-Arch host bootstrap helpers
-# ---------------------------------------------------------------------------
-
 _PACMAN_CONF = Path('/etc/pacman.conf')
 _PACMAN_D = Path('/etc/pacman.d')
 _MIRRORLIST = _PACMAN_D / 'mirrorlist'

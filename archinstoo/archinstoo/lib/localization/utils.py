@@ -6,10 +6,6 @@ from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import error
 from archinstoo.lib.utils.env import Os
 
-# ---------------------------------------------------------------------------
-# Keyboard layouts
-# ---------------------------------------------------------------------------
-
 
 def _list_keymaps_from_files() -> list[str]:
 	"""Fallback: enumerate console keymaps directly from kbd/keymaps files."""
@@ -33,11 +29,6 @@ def list_keyboard_languages() -> list[str]:
 
 def verify_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_keyboard_languages())
-
-
-# ---------------------------------------------------------------------------
-# X11 keyboard layouts
-# ---------------------------------------------------------------------------
 
 
 def _list_x11_layouts_from_files() -> list[str]:
@@ -82,11 +73,6 @@ def list_x11_keyboard_languages() -> list[str]:
 
 def verify_x11_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_x11_keyboard_languages())
-
-
-# ---------------------------------------------------------------------------
-# Active keyboard layout (read / write)
-# ---------------------------------------------------------------------------
 
 
 def get_kb_layout() -> str:
@@ -139,11 +125,6 @@ def set_kb_layout(locale: str) -> bool:
 	return True
 
 
-# ---------------------------------------------------------------------------
-# Console fonts
-# ---------------------------------------------------------------------------
-
-
 def list_console_fonts() -> list[str]:
 	font_dir = Path('/usr/share/kbd/consolefonts')
 	fonts: list[str] = []
@@ -160,11 +141,6 @@ def list_console_fonts() -> list[str]:
 			fonts.append(name)
 
 	return sorted(fonts, key=lambda x: (len(x), x))
-
-
-# ---------------------------------------------------------------------------
-# Locales
-# ---------------------------------------------------------------------------
 
 
 def list_locales() -> list[str]:
@@ -192,11 +168,6 @@ def list_locales() -> list[str]:
 		'zh_CN.UTF-8 UTF-8',
 		'ja_JP.UTF-8 UTF-8',
 	]
-
-
-# ---------------------------------------------------------------------------
-# Timezones
-# ---------------------------------------------------------------------------
 
 
 def list_timezones() -> list[str]:
