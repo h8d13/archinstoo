@@ -247,11 +247,7 @@ class _SysInfo:
 		"""
 		Returns detected graphics devices (cached)
 		"""
-		import shutil
-
 		cards: dict[str, str] = {}
-		if not shutil.which('lspci'):
-			return cards
 		for line in SysCommand('lspci'):
 			if b' VGA ' in line or b' 3D ' in line:
 				_, identifier = line.split(b': ', 1)
