@@ -31,13 +31,13 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.pathnames import ARCHISO_MOUNTPOINT
 
 from .luks import Luks2, unlock_luks2_dev
 from .utils import (
 	find_lsblk_info,
 	get_all_lsblk_info,
 	get_lsblk_info,
-	is_subpath,
 	mount,
 	umount,
 )
@@ -67,8 +67,6 @@ class DeviceHandler:
 		devices = getAllDevices()
 		devices.extend(self.get_loop_devices())
 
-		archiso_mountpoint = Path('/run/archiso/airootfs')
-
 		for device in devices:
 			if not (dev_lsblk_info := find_lsblk_info(device.path, all_lsblk_info)):
 				debug(f'Device lsblk info not found: {device.path}')
@@ -78,7 +76,7 @@ class DeviceHandler:
 				continue
 
 			# exclude archiso loop device
-			if dev_lsblk_info.mountpoint == archiso_mountpoint:
+			if dev_lsblk_info.mountpoint == ARCHISO_MOUNTPOINT:
 				continue
 
 			try:
@@ -194,7 +192,7 @@ class DeviceHandler:
 		if not lsblk_info.mountpoint:
 			try:
 				mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
-			except (SysCallError, DiskError):
+			except SysCallError, DiskError:
 				debug(f'Failed to mount {dev_path} for btrfs inspection, skipping')
 				return subvol_infos
 			mountpoint = self._TMP_BTRFS_MOUNT
@@ -687,7 +685,7 @@ class DeviceHandler:
 		for device in self.devices:
 			for part_info in device.partition_infos:
 				for mountpoint in part_info.mountpoints:
-					if is_subpath(mountpoint, base_mountpoint):
+					if mountpoint.is_relative_to(base_mountpoint):
 						path = Path(part_info.disk.device.path)
 						part_mods.setdefault(path, [])
 						part_mod = PartitionModification.from_existing_partition(part_info)

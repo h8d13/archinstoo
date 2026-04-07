@@ -3,7 +3,6 @@ import os
 import re
 import shlex
 import shutil
-import stat
 import subprocess
 import textwrap
 import time
@@ -16,6 +15,7 @@ from typing import Any, Self
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, get_parent_device_path, mount, swapon
+from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
 	DiskEncryption,
@@ -32,6 +32,7 @@ from archinstoo.lib.models.device import (
 	Unit,
 )
 from archinstoo.lib.models.packages import Repository
+from archinstoo.lib.pathnames import PACMAN_CONF
 from archinstoo.lib.pm import installed_package
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
@@ -564,7 +565,7 @@ class Installer:
 
 		root = self.target if on_target else Path('/')
 		mirrorlist_path = root / 'etc/pacman.d/mirrorlist'
-		pacman_conf_path = root / 'etc/pacman.conf'
+		pacman_conf_path = root / PACMAN_CONF.relative_to_root()
 
 		existing_content = pacman_conf_path.read_text()
 		if repos_config := pacman_configuration.repositories_config(existing_content):
@@ -1408,7 +1409,7 @@ class Installer:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 
 		if SysInfo.has_uefi() and uki_enabled:
-			grub_d = self.target / 'etc/grub.d'
+			grub_d = LPath(self.target) / 'etc/grub.d'
 			linux_file = grub_d / '10_linux'
 			uki_file = grub_d / '15_uki'
 
@@ -1428,10 +1429,9 @@ class Installer:
 			)
 
 			try:
-				mode = linux_file.stat().st_mode
-				linux_file.chmod(mode & ~(stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
 				uki_file.write_text(content)
-				uki_file.chmod(mode)
+				uki_file.add_exec()
+				linux_file.remove_exec()
 			except OSError:
 				error('Failed to enable UKI menu entries')
 		else:

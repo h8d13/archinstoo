@@ -1,10 +1,10 @@
 import threading
 from enum import Enum
-from pathlib import Path
 from typing import assert_never
 
 from archinstoo.lib.localization.utils import list_timezones
 from archinstoo.lib.models.packages import AvailablePackage, PackageGroup, Repository
+from archinstoo.lib.pathnames import PACMAN_CONF
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
 from archinstoo.lib.translationhandler import Language, tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
@@ -327,11 +327,10 @@ def add_number_of_parallel_downloads(preset: int | None = None) -> int | None:
 		case _:
 			assert_never(result.type_)
 
-	pacman_conf_path = Path('/etc/pacman.conf')
-	with pacman_conf_path.open() as f:
+	with PACMAN_CONF.open() as f:
 		pacman_conf = f.read().split('\n')
 
-	with pacman_conf_path.open('w') as fwrite:
+	with PACMAN_CONF.open('w') as fwrite:
 		for line in pacman_conf:
 			if 'ParallelDownloads' in line:
 				fwrite.write(f'ParallelDownloads = {downloads}\n')

@@ -3,11 +3,14 @@ import os
 import pwd
 import sys
 from collections.abc import Callable
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+	from _typeshed import DataclassInstance
 
 from .utils.unicode import unicode_ljust, unicode_rjust
 
@@ -15,7 +18,7 @@ from .utils.unicode import unicode_ljust, unicode_rjust
 class FormattedOutput:
 	@staticmethod
 	def _get_values(
-		o: Any,
+		o: DataclassInstance,
 		class_formatter: str | Callable | None = None,  # type: ignore[type-arg]
 		filter_list: list[str] = [],
 	) -> dict[str, Any]:
@@ -39,7 +42,7 @@ class FormattedOutput:
 			return cast(dict[str, Any], o.table_data())
 		if hasattr(o, 'json'):
 			return cast(dict[str, Any], o.json())
-		if is_dataclass(o) and not isinstance(o, type):
+		if not isinstance(o, type):
 			return asdict(o)
 		return cast(dict[str, Any], o.__dict__)
 

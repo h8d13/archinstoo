@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
 from archinstoo.lib.models.packages import Repository
+from archinstoo.lib.pathnames import PACMAN_CONF
 from archinstoo.lib.utils.env import Os
 
 # Standard Arch repos to ignore when detecting custom repos
@@ -28,11 +29,10 @@ if TYPE_CHECKING:
 
 class PacmanConfig:
 	def __init__(self, target: Path | None):
-		self._config_path = Path('/etc') / 'pacman.conf'
 		self._config_remote_path: Path | None = None
 
 		if target:
-			self._config_remote_path = target / 'etc' / 'pacman.conf'
+			self._config_remote_path = target / PACMAN_CONF.relative_to_root()
 
 		self._repositories: list[Repository] = []
 		self._custom_repositories: list[CustomRepository] = []
@@ -62,7 +62,7 @@ class PacmanConfig:
 			else:
 				repos_to_enable.append(repo.value)
 
-		content = self._config_path.read_text().splitlines(keepends=True)
+		content = PACMAN_CONF.read_text().splitlines(keepends=True)
 		options_found: set[str] = set()
 		last_opt_row = 0
 
@@ -113,17 +113,17 @@ class PacmanConfig:
 
 		# Apply temp using backup then revert on exit handler
 		if Os.running_from_host():
-			temp_copy = self._config_path.with_suffix('.bak')
-			copy2(self._config_path, temp_copy)
-			atexit.register(lambda: copy2(temp_copy, self._config_path))
+			temp_copy = PACMAN_CONF.with_suffix('.bak')
+			copy2(PACMAN_CONF, temp_copy)
+			atexit.register(lambda: copy2(temp_copy, PACMAN_CONF))
 
-		with open(self._config_path, 'w') as f:
+		with PACMAN_CONF.open('w') as f:
 			f.writelines(content)
 
 	def persist(self) -> None:
 		has_changes = self._repositories or self._custom_repositories or self._misc_options
-		if has_changes and self._config_remote_path and not self._config_path.samefile(self._config_remote_path):
-			content = self._config_path.read_text()
+		if has_changes and self._config_remote_path and not PACMAN_CONF.samefile(self._config_remote_path):
+			content = PACMAN_CONF.read_text()
 			content = re.sub(r'\n\[[^\]]+\]\nSigLevel = [^\n]+\nServer = file://[^\n]+\n', '', content)
 			self._config_remote_path.write_text(content)
 
@@ -144,7 +144,7 @@ class PacmanConfig:
 	@classmethod
 	def get_existing_custom_repos(cls) -> list[CustomRepository]:
 		"""Parse pacman.conf for existing custom repositories."""
-		content = Path('/etc/pacman.conf').read_text()
+		content = PACMAN_CONF.read_text()
 		repos: list[CustomRepository] = []
 
 		for match in re.finditer(r'\[([^\]]+)\]\s*\n([^[]*)', content):
