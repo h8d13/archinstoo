@@ -7,16 +7,28 @@ from archinstoo.lib.output import error
 from archinstoo.lib.utils.env import Os
 
 
-def _list_keymaps_from_files() -> list[str]:
-	"""Fallback: enumerate console keymaps directly from kbd/keymaps files."""
-	keymaps: list[str] = []
+def _list_keymaps_from_kbd_git() -> list[str]:
+	"""Fetch console keymap names from the upstream kbd git tree."""
+	import json
+	import urllib.request
 
-	for kbd_path in (Path('/usr/share/kbd/keymaps'), Path('/usr/share/keymaps')):
-		if not kbd_path.exists():
+	url = 'https://api.github.com/repos/legionus/kbd/git/trees/master?recursive=1'
+	req = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json'})
+	with urllib.request.urlopen(req, timeout=10) as resp:
+		tree = json.loads(resp.read().decode('utf-8'))
+
+	keymaps: list[str] = []
+	for entry in tree.get('tree', []):
+		if entry.get('type') != 'blob':
 			continue
-		keymaps.extend(path.stem.replace('.map', '') for path in kbd_path.rglob('*.map.gz'))
-		keymaps.extend(path.stem for path in kbd_path.rglob('*.map'))
-		break  # use the first directory that exists
+		path = entry['path']
+		if not path.startswith('data/keymaps/'):
+			continue
+		name = Path(path).name
+		if name.endswith('.map.gz'):
+			keymaps.append(name[: -len('.map.gz')])
+		elif name.endswith('.map'):
+			keymaps.append(name[: -len('.map')])
 
 	return sorted(set(keymaps))
 
@@ -24,36 +36,37 @@ def _list_keymaps_from_files() -> list[str]:
 def list_keyboard_languages() -> list[str]:
 	if shutil.which('localectl'):
 		return SysCommand('localectl --no-pager list-keymaps', environment_vars={'SYSTEMD_COLORS': '0'}).decode().splitlines()
-	return _list_keymaps_from_files()
+	try:
+		return _list_keymaps_from_kbd_git()
+	except Exception:
+		return []
 
 
 def verify_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_keyboard_languages())
 
 
-def _list_x11_layouts_from_files() -> list[str]:
-	"""Fallback: parse X11 layout names from xkb rules files."""
-	layouts: list[str] = []
+def _list_x11_layouts_from_xkb_git() -> list[str]:
+	"""Fetch X11 layout names from upstream xkeyboard-config."""
+	import urllib.request
 
-	for rules_path in (
-		Path('/usr/share/X11/xkb/rules/base.lst'),
-		Path('/usr/share/X11/xkb/rules/evdev.lst'),
-	):
-		if not rules_path.exists():
+	url = 'https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-config/-/raw/master/rules/base.lst'
+	with urllib.request.urlopen(url, timeout=10) as resp:
+		text = resp.read().decode('utf-8')
+
+	layouts: list[str] = []
+	in_layout_section = False
+	for line in text.splitlines():
+		if line.strip() == '! layout':
+			in_layout_section = True
 			continue
-		in_layout_section = False
-		for line in rules_path.read_text().splitlines():
-			if line.strip() == '! layout':
-				in_layout_section = True
-				continue
-			if line.startswith('!'):
-				in_layout_section = False
-				continue
-			if in_layout_section and line.strip():
-				parts = line.split()
-				if parts:
-					layouts.append(parts[0])
-		break
+		if line.startswith('!'):
+			in_layout_section = False
+			continue
+		if in_layout_section and line.strip():
+			parts = line.split()
+			if parts:
+				layouts.append(parts[0])
 
 	return sorted(set(layouts))
 
@@ -68,7 +81,10 @@ def list_x11_keyboard_languages() -> list[str]:
 			.decode()
 			.splitlines()
 		)
-	return _list_x11_layouts_from_files()
+	try:
+		return _list_x11_layouts_from_xkb_git()
+	except Exception:
+		return []
 
 
 def verify_x11_keyboard_layout(layout: str) -> bool:
@@ -126,21 +142,34 @@ def set_kb_layout(locale: str) -> bool:
 
 
 def list_console_fonts() -> list[str]:
-	font_dir = Path('/usr/share/kbd/consolefonts')
-	fonts: list[str] = []
+	try:
+		import json
+		import urllib.request
 
-	if font_dir.exists():
-		for f in font_dir.iterdir():
-			if f.name.startswith('README'):
+		url = 'https://api.github.com/repos/legionus/kbd/git/trees/master?recursive=1'
+		req = urllib.request.Request(url, headers={'Accept': 'application/vnd.github+json'})
+		with urllib.request.urlopen(req, timeout=10) as resp:
+			tree = json.loads(resp.read().decode('utf-8'))
+
+		fonts: list[str] = []
+		for entry in tree.get('tree', []):
+			if entry.get('type') != 'blob':
 				continue
-			name = f.name
+			path = entry['path']
+			if not path.startswith('data/consolefonts/'):
+				continue
+			name = Path(path).name
+			if name.startswith('README'):
+				continue
 			for suffix in ('.psfu.gz', '.psf.gz', '.gz'):
 				if name.endswith(suffix):
 					name = name[: -len(suffix)]
 					break
 			fonts.append(name)
 
-	return sorted(fonts, key=lambda x: (len(x), x))
+		return sorted(set(fonts), key=lambda x: (len(x), x))
+	except Exception:
+		return []
 
 
 def _valid_locale(line: str) -> bool:

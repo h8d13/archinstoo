@@ -10,6 +10,9 @@ Mainly to see which parts of codebase have either:
 
 Clean-up issues or Timing issues with weird disk configs
 
+The other side is also that sysd is available in the target either-way. 
+So was there really any major reason for it to be called on the host(often considered temp, ISO env) system.
+
 ---
 
 ## Target-side calls (keep as-is)
@@ -86,7 +89,7 @@ Added to `lib/utils/env.py`:
 | `ensure_pacman_configured()` | Writes a default mirrorlist and fetches `pacman.conf` from upstream when no repos are configured (e.g. Alpine). |
 | `ensure_keyring_initialized()` | Downloads `archlinux-keyring`, extracts it, and runs `pacman-key --init --populate` when the keyring is absent. |
 
-Called from `__init__._prepare()` before `pacman -Sy` so that pacman works on any host.
+Called from `__init__._prepare()` before `pacman -Sy` so that pacman works on any host, and remove the update altogether when not on an arch system.
 
 `_deps_available()` in `__init__` short-circuits the bootstrap when `python-pyparted`
 is already importable (e.g. Alpine provides `py3-parted` ...).
@@ -104,3 +107,6 @@ is already importable (e.g. Alpine provides `py3-parted` ...).
 | `crypt.py` musl support | `lib/authentication/crypt.py` | Portable library discovery; correct `crypt_gensalt` symbol check via `lib['name']` (not `hasattr`); SHA-512 fallback when yescrypt is unsupported |
 
 ---
+
+Clean up canonical sources and paths into a single file
+
