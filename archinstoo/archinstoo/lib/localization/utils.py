@@ -143,15 +143,20 @@ def list_console_fonts() -> list[str]:
 	return sorted(fonts, key=lambda x: (len(x), x))
 
 
+def _valid_locale(line: str) -> bool:
+	parts = line.split()
+	return len(parts) >= 2 and parts[0] != 'C.UTF-8'
+
+
 def list_locales() -> list[str]:
 	supported = Path('/usr/share/i18n/SUPPORTED')
 	if supported.exists():
-		return [line.rstrip() for line in supported.read_text().splitlines() if line and line != 'C.UTF-8 UTF-8']
+		return [line.rstrip() for line in supported.read_text().splitlines() if _valid_locale(line)]
 
 	# Fallback: uncommented entries in /etc/locale.gen
 	locale_gen = Path('/etc/locale.gen')
 	if locale_gen.exists():
-		locales = [line.strip() for line in locale_gen.read_text().splitlines() if line.strip() and not line.startswith('#')]
+		locales = [line.strip() for line in locale_gen.read_text().splitlines() if _valid_locale(line.strip())]
 		if locales:
 			return locales
 
@@ -169,7 +174,7 @@ def list_locales() -> list[str]:
 			if not line or line.startswith('#'):
 				continue
 			entry = line.replace('/', ' ', 1)
-			if entry != 'C.UTF-8 UTF-8':
+			if _valid_locale(entry):
 				locales.append(entry)
 		return locales
 	except Exception:
