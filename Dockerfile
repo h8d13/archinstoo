@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     coreutils \
     util-linux \
     pciutils \
-    kbd \
+    # kbd \ not needed with fallback
     git \
     # filesystem support mirrors PKGBUILD optdepends
     btrfs-progs \
