@@ -99,7 +99,7 @@ is already importable (e.g. Alpine provides `py3-parted` ...).
 |-----|------|--------|
 | `localectl` fallback | `lib/localization/utils.py` | All calls fall back to keymap file scan / vconsole.conf read when `localectl` is absent |
 | `timedatectl list-timezones` fallback | `lib/localization/utils.py` | Falls back to `/usr/share/zoneinfo` scan |
-| `list_locales()` fallback | `lib/localization/utils.py` | Falls back to `/etc/locale.gen`, then hardcoded defaults when `/usr/share/i18n/SUPPORTED` is absent |
+| `list_locales()` fallback | `lib/localization/utils.py` | Falls back to `/etc/locale.gen`, then fetch from glibc source as fallback (bootstrap) |
 | `_pid_exists` portability | `lib/general.py` | Replaced `ps --no-headers` (procps-specific) with `os.kill(pid, 0)` |
 | `crypt.py` musl support | `lib/authentication/crypt.py` | Portable library discovery; correct `crypt_gensalt` symbol check via `lib['name']` (not `hasattr`); SHA-512 fallback when yescrypt is unsupported |
 
