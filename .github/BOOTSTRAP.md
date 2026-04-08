@@ -1,6 +1,6 @@
 # Cross-Distro Host Support
 
-Goal: run archinstoo from **any Linux distro** as the host  Alpine, Debian, Fedora, Arch ISO, whatever.
+Goal: run `archinstoo` from **any Linux distro** as the host  Alpine, Debian, Fedora, Arch ISO, whatever.
 
 The host is treated as a throwaway bootstrap environment, which is a bit unjust as being able to run an app anywhere is important. 
 The target is what matters, but how you even run a program, or see its traces, is just as primordial.
