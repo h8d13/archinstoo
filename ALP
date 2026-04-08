@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# goal was to document building archinstoo from a non systemd host
+# this involved quite a bit of bootstrapping
+
 # ip link set eth0 up
 # udhcpc -i eth0
 
@@ -8,6 +11,8 @@
 
 # echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
 # echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+
+# apk update
 
 # apk add git
 # git clone -b dot-somework url
@@ -18,7 +23,7 @@ apk add --no-cache $(awk '{print $1}' << 'EOF'
     ca-certificates         # for https handshakes
     zstd                    # initial keyring
     eudev                   # device/udev
-    py3-pip                 # pip
+    py3-pip                 # pip no pyparted
     python3-dev             # python headers
     parted-dev              # libparted headers
     musl-dev                # libc headers

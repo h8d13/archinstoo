@@ -161,7 +161,7 @@ def list_console_fonts() -> list[str]:
 			name = Path(path).name
 			if name.startswith('README'):
 				continue
-			for suffix in ('.psfu.gz', '.psf.gz', '.gz'):
+			for suffix in ('.psfu.gz', '.psf.gz', '.gz', '.psfu', '.psf'):
 				if name.endswith(suffix):
 					name = name[: -len(suffix)]
 					break
