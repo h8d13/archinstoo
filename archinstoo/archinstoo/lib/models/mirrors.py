@@ -22,7 +22,9 @@ def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime 
 		return value
 	try:
 		return datetime.datetime.fromisoformat(value)
-	except ValueError, AttributeError:
+	except ValueError:
+		return None
+	except AttributeError:
 		return None
 
 
