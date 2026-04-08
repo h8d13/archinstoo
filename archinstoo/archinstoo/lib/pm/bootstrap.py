@@ -52,8 +52,6 @@ def _fetch_pacman_conf() -> str:
 	with urllib.request.urlopen(_PACMAN_CONF_URL, timeout=30) as resp:
 		content = resp.read().decode('utf-8')
 
-	# Relax signature checking — the keyring may not be set up yet
-	content = re.sub(r'^SigLevel\s*=.*$', 'SigLevel = Never', content, flags=re.MULTILINE)
 	# Remove DownloadUser — the alpm user won't exist on non-Arch hosts
 	content = re.sub(r'^DownloadUser\s*=.*\n', '', content, flags=re.MULTILINE)
 	return content

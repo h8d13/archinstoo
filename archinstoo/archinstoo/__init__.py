@@ -179,8 +179,8 @@ def _prepare() -> int:
 		try:
 			# non-Arch hosts need pacman + keyring bootstrapped from scratch
 			if Os.running_from_host() and not Os.running_from_arch():
-				pacman_conf()
 				keyring_init()
+				pacman_conf()
 			info('Fetching db...')
 			Pacman.run('-Sy', peek_output=True)
 			# non-Arch hosts have python deps pre-installed via host package manager
