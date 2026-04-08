@@ -74,9 +74,10 @@ from typing import TYPE_CHECKING
 from .lib import Pacman, output
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
+from .lib.pm.bootstrap import keyring_init, pacman_conf
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, _run_script, clean_cache, ensure_keyring_initialized, ensure_pacman_configured, is_root, is_venv, kernel_info, reload_python
+from .lib.utils.env import Os, _run_script, clean_cache, is_root, is_venv, kernel_info, reload_python
 from .lib.utils.net import ping
 
 if TYPE_CHECKING:
@@ -178,8 +179,8 @@ def _prepare() -> int:
 		try:
 			# non-Arch hosts need pacman + keyring bootstrapped from scratch
 			if Os.running_from_host() and not Os.running_from_arch():
-				ensure_pacman_configured()
-				ensure_keyring_initialized()
+				pacman_conf()
+				keyring_init()
 			info('Fetching db...')
 			Pacman.run('-Sy', peek_output=True)
 			# non-Arch hosts have python deps pre-installed via host package manager

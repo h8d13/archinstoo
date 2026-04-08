@@ -1,21 +1,9 @@
 from dataclasses import fields
 from functools import lru_cache
 
-from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.models.packages import AvailablePackage, LocalPackage, Repository
 from archinstoo.lib.output import debug
 from archinstoo.lib.pacman import Pacman
-
-
-def installed_package(package: str) -> LocalPackage | None:
-	try:
-		package_info = [line.decode().strip() for line in Pacman.run(f'-Q --info {package}')]
-
-		return _parse_package_output(package_info, LocalPackage)
-	except SysCallError:
-		pass
-
-	return None
 
 
 def _create_package_stub(repo: str, name: str, version: str) -> AvailablePackage:

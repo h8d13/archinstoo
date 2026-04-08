@@ -82,7 +82,9 @@ This is obviously not to say systemd bad, just that it should only be used withi
 ### 8. `installed_package('systemd')` : host systemd version probe
 - **File:** `lib/installer.py` (bootctl version gate)
 - **Status:**   Fixed : now runs `bootctl --version` inside the chroot and parses
-  the version from its output. No host pacman query. Import removed.
+  the version from its output. No host pacman query. Import removed. 
+
+COMPLETLY STRIPPED. SHould be checked from host
 
 ---
 
@@ -92,8 +94,8 @@ Added to `lib/utils/env.py`:
 
 | Function | Purpose |
 |----------|---------|
-| `ensure_pacman_configured()` | Fetches `pacman.conf` from upstream Arch GitLab and a live mirrorlist from `archlinux.org/mirrors/status/json/` when no repo sections exist in `/etc/pacman.conf`. Relaxes `SigLevel = Never` and removes `DownloadUser` so it works before the keyring and `alpm` user exist. |
-| `ensure_keyring_initialized()` | Scrapes `geo.mirror.pkgbuild.com` for the latest `archlinux-keyring` `.zst`, decompresses with `zstd`, extracts with `tarfile`, copies keys to `/usr/share/pacman/keyrings/`, then runs `pacman-key --init --populate archlinux`. No-op if the keyring is already present. |
+| `pacman_conf()` | Fetches `pacman.conf` from upstream Arch GitLab and a live mirrorlist from `archlinux.org/mirrors/status/json/` when no repo sections exist in `/etc/pacman.conf`. Relaxes `SigLevel = Never` and removes `DownloadUser` so it works before the keyring and `alpm` user exist. |
+| `keyring_init()` | Scrapes `geo.mirror.pkgbuild.com` for the latest `archlinux-keyring` `.zst`, decompresses with `zstd`, extracts with `tarfile`, copies keys to `/usr/share/pacman/keyrings/`, then runs `pacman-key --init --populate archlinux`. No-op if the keyring is already present. |
 
 Called from `__init__._prepare()` before any `pacman` invocation so that pacman works on any host.
 
