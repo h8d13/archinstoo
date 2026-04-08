@@ -4,7 +4,6 @@ import json
 import re
 import shutil
 import subprocess
-import tarfile
 import tempfile
 import urllib.request
 from pathlib import Path
@@ -72,8 +71,7 @@ def _fetch_keyring_package_url() -> str:
 
 def _extract_zst(zst_path: Path, dest: Path) -> None:
 	"""Decompress a .tar.zst archive into dest."""
-	with tarfile.open(zst_path) as tar:
-		tar.extractall(dest)
+	subprocess.run(['tar', '--zstd', '-xf', str(zst_path), '-C', str(dest)], check=True)
 
 
 def keyring_init() -> None:
