@@ -16,8 +16,10 @@ Mainly to see which parts of codebase have either:
 Clean-up issues or Timing issues with weird disk configs
 
 The other side is also that sysd is available in the target either-way. 
-So was there really any major reason for it to be called on the host (often considered temp, ISO env) system.
+So was there really any major reason for it to be called on the host (often considered temp, ISO env) system, or for other calls to prompt host at all.
 This is obviously not to say systemd bad, just that it should only be used within the target and not on the host.
+
+The rest of this document is how I've found a back-up for each issue:
 
 ---
 
