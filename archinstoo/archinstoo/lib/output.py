@@ -7,10 +7,7 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
-
-if TYPE_CHECKING:
-	from _typeshed import DataclassInstance
+from typing import Any, cast
 
 from .utils.unicode import unicode_ljust, unicode_rjust
 
@@ -18,7 +15,7 @@ from .utils.unicode import unicode_ljust, unicode_rjust
 class FormattedOutput:
 	@staticmethod
 	def _get_values(
-		o: DataclassInstance,
+		o: Any,
 		class_formatter: str | Callable | None = None,  # type: ignore[type-arg]
 		filter_list: list[str] = [],
 	) -> dict[str, Any]:
