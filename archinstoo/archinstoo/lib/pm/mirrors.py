@@ -568,13 +568,12 @@ class MirrorListHandler:
 		MAX_DELAY = 3600  # Exclude mirrors more than 1 hour out of sync
 
 		working = [
-			m for m in region_list
-			if m._speed is not None and m._speed > 0
-			and (m.score is None or m.score < MAX_SCORE)
-			and (m.delay is None or m.delay < MAX_DELAY)
+			m
+			for m in region_list
+			if m._speed is not None and m._speed > 0 and (m.score is None or m.score < MAX_SCORE) and (m.delay is None or m.delay < MAX_DELAY)
 		]
 		if _MirrorCache.is_remote and working:
-			sorted_mirrors = sorted(working, key=lambda m: -m._speed)[:TOP_N]
+			sorted_mirrors = sorted(working, key=lambda m: -(m._speed or 0))[:TOP_N]
 			info(f'Mirror selection: {len(region_list)} tested, {len(working)} passed filters, keeping top {len(sorted_mirrors)}')
 			return sorted_mirrors
 		# Fallback: return untested mirrors as-is

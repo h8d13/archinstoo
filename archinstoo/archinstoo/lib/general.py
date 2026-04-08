@@ -391,8 +391,10 @@ def _append_log(file: str, content: str) -> None:
 
 		if change_perm:
 			path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
-	except PermissionError, FileNotFoundError:
+	except PermissionError:
 		# If the file does not exist, ignore the error
+		pass
+	except FileNotFoundError:
 		pass
 
 
