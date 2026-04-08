@@ -132,7 +132,9 @@ def restore_perms(path: Path, recursive: bool = False) -> None:
 					os.chown(Path(root) / f, uid, gid)
 		else:
 			os.chown(path, uid, gid)
-	except KeyError, PermissionError:
+	except KeyError:
+		pass
+	except PermissionError:
 		pass
 
 
