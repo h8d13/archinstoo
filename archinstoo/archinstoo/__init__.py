@@ -76,7 +76,7 @@ from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, _run_script, clean_cache, ensure_keyring_initialized, is_root, is_venv, kernel_info, reload_python
+from .lib.utils.env import Os, _run_script, clean_cache, ensure_keyring_initialized, ensure_pacman_configured, is_root, is_venv, kernel_info, reload_python
 from .lib.utils.net import ping
 
 if TYPE_CHECKING:
@@ -178,7 +178,7 @@ def _prepare() -> int:
 		# note indent fully offlines installs should be possible
 		# instead of importing full handler use sys.argv directly
 		try:
-			# ensure_pacman_configured() moved to pmmirrors
+			ensure_pacman_configured()
 			ensure_keyring_initialized()
 			# non-Arch hosts have deps pre-installed via host package manager
 			if not non_arch_host and (rc := _bootstrap()):

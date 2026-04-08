@@ -529,10 +529,6 @@ class MirrorListHandler:
 			return False
 
 	def load_local_mirrors(self) -> None:
-		if not self._local_mirrorlist.exists():
-			from archinstoo.lib.utils.env import ensure_pacman_configured
-
-			ensure_pacman_configured()
 		with self._local_mirrorlist.open('r') as fp:
 			mirrorlist = fp.read()
 			_MirrorCache.data.update(self._parse_local_mirrors(mirrorlist))
