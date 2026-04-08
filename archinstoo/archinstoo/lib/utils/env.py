@@ -249,7 +249,7 @@ def clean_cache(root_dir: str) -> None:
 						deleted.append(full_path)
 					except Exception as e:
 						info(f'Failed to delete {full_path}: {e}')
-	except KeyboardInterrupt, PermissionError:
+	except PermissionError:
 		pass
 
 	if deleted:
