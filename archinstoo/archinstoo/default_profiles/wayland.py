@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
 
 from archinstoo.default_profiles.profile import DisplayServer, Profile, ProfileType

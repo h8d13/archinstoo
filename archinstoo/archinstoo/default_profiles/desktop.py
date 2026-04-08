@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Self, override
 
 from archinstoo.default_profiles.profile import GreeterType, Profile, ProfileType, SelectResult
