@@ -1,4 +1,6 @@
+import html.parser
 import importlib
+import json
 import os
 import platform
 import re
@@ -10,6 +12,7 @@ import tempfile
 import urllib.request
 from pathlib import Path
 from shutil import rmtree, which
+from typing import override
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.output import error, info
@@ -102,7 +105,6 @@ _MIRROR_STATUS_URL = 'https://archlinux.org/mirrors/status/json/'
 
 
 def _fetch_mirrorlist() -> str:
-	import json
 
 	info(f'Fetching mirrorlist from {_MIRROR_STATUS_URL}...')
 	with urllib.request.urlopen(_MIRROR_STATUS_URL, timeout=15) as resp:
@@ -143,8 +145,6 @@ def _fetch_pacman_conf() -> str:
 
 def _fetch_keyring_package_url() -> str:
 	"""Find the latest archlinux-keyring package URL from the geo mirror."""
-	import html.parser
-	from typing import override
 
 	class _LinkParser(html.parser.HTMLParser):
 		def __init__(self) -> None:
