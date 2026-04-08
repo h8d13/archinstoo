@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
