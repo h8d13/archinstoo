@@ -3,6 +3,9 @@
 # ip link set eth0 up
 # udhcpc -i eth0
 
+# echo "nameserver 8.8.8.8" > /etc/resolv.conf                                                                                                                   
+# echo "nameserver 1.1.1.1" >> /etc/resolv.conf 
+
 # echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
 # echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 
@@ -12,13 +15,14 @@
 # shellcheck disable=SC2046
 
 apk add --no-cache $(awk '{print $1}' << 'EOF'
+    ca-certificates         # for https handshakes
     zstd                    # initial keyring
     eudev                   # device/udev
     py3-pip                 # pip
     python3-dev             # python headers
     parted-dev              # libparted headers
-    gcc                     # c compiler
     musl-dev                # libc headers
+    gcc                     # c compiler
     pacman                  # arch package manager
     arch-install-scripts    # pacstrap, genfstab, etc
     coreutils               # gnu core utils
