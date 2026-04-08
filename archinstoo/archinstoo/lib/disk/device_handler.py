@@ -194,7 +194,7 @@ class DeviceHandler:
 		if not lsblk_info.mountpoint:
 			try:
 				mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
-			except SysCallError, DiskError:
+			except (SysCallError, DiskError):
 				debug(f'Failed to mount {dev_path} for btrfs inspection, skipping')
 				return subvol_infos
 			mountpoint = self._TMP_BTRFS_MOUNT

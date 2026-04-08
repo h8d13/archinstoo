@@ -147,7 +147,7 @@ init-import = true
 ignored-modules = ["parted"]
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py313"
 line-length = 160
 
 [tool.ruff.format]
