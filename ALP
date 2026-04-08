@@ -6,26 +6,34 @@
 # echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
 # echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 
-apk add --no-cache \
-    py3-pip \
-    python3-dev \
-    parted-dev \
-    gcc \
-    musl-dev \
-    pacman \
-    arch-install-scripts \
-    coreutils \
-    util-linux \
-    pciutils \
-    tzdata \
-    git \
-    dosfstools \
-    device-mapper \
-    btrfs-progs \
-    e2fsprogs \
-    f2fs-tools \
-    xfsprogs \
-    cryptsetup \
-    lvm2
+# apk add git
+# git clone -b dot-somework url
+
+# shellcheck disable=SC2046
+
+apk add --no-cache $(awk '{print $1}' << 'EOF'
+    zstd                    # initial keyring
+    eudev                   # device/udev
+    py3-pip                 # pip
+    python3-dev             # python headers
+    parted-dev              # libparted headers
+    gcc                     # c compiler
+    musl-dev                # libc headers
+    pacman                  # arch package manager
+    arch-install-scripts    # pacstrap, genfstab, etc
+    coreutils               # gnu core utils
+    util-linux              # lsblk, blkid, etc
+    pciutils                # lspci
+    tzdata                  # timezone data
+    dosfstools              # mkfs.fat
+    device-mapper           # dm-* devices
+    e2fsprogs               # mkfs.ext4
+    cryptsetup              # luks
+    lvm2                    # always checked
+    btrfs-progs             # optionals FS supports
+    f2fs-tools              # ...
+    xfsprogs                # ...
+EOF
+)
 
 pip install --break-system-packages pyparted

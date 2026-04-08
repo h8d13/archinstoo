@@ -127,8 +127,9 @@ def crypt_yescrypt(plaintext: str) -> str:
 	salt = crypt_gen_salt('$y$', rounds)
 	crypt_hash = libcrypt.crypt(enc_plaintext, salt)
 
-	# musl's crypt() signals unsupported algorithms with *0 / *1 sentinels
-	if crypt_hash is None or crypt_hash in (b'*0', b'*1'):
+	# musl doesn't return *0/*1 for unknown algorithms — it falls through to DES,
+	# which produces a hash that doesn't start with $y$.  Check the prefix too.
+	if crypt_hash is None or crypt_hash in (b'*0', b'*1') or not crypt_hash.startswith(b'$y$'):
 		debug('yescrypt not supported by this libc, falling back to SHA-512')
 		salt = crypt_gen_salt('$6$', 5000)
 		crypt_hash = libcrypt.crypt(enc_plaintext, salt)
