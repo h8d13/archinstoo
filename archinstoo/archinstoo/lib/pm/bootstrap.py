@@ -71,7 +71,10 @@ def _fetch_keyring_package_url() -> str:
 
 def _extract_zst(zst_path: Path, dest: Path) -> None:
 	"""Decompress a .tar.zst archive into dest."""
-	subprocess.run(['tar', '--zstd', '-xf', str(zst_path), '-C', str(dest)], check=True)
+	subprocess.run(['zstd', '-d', '-c', str(zst_path)], stdout=subprocess.PIPE, check=True)
+	subprocess.run(
+		['tar', '-xf', '-', '-C', str(dest)], input=subprocess.run(['zstd', '-d', '-c', str(zst_path)], capture_output=True, check=True).stdout, check=True
+	)
 
 
 def keyring_init() -> None:
