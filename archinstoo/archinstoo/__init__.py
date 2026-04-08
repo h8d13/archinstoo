@@ -62,6 +62,8 @@ Misc is up to preference, which is the entire goal of this project: enable & giv
 But also lets standards compete in a better environment. Banner made on 10/02/2026.
 """
 
+from __future__ import annotations
+
 import importlib
 import logging
 import sys
