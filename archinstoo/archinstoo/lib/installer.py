@@ -1,8 +1,6 @@
-import glob
 import os
 import re
 import shlex
-import shutil
 import subprocess
 import textwrap
 import time
@@ -773,9 +771,13 @@ class Installer:
 
 	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
 		# Copy (if any) iwd password and config files
-		if os.path.isdir('/var/lib/iwd/') and (psk_files := glob.glob('/var/lib/iwd/*.psk')):
-			if not os.path.isdir(f'{self.target}/var/lib/iwd'):
-				os.makedirs(f'{self.target}/var/lib/iwd')
+		iwd_dir = LPath('/var/lib/iwd')
+		if psk_files := list(iwd_dir.glob('*.psk')):
+			iwd_target = self.target / iwd_dir.relative_to_root()
+			iwd_target.mkdir(parents=True, exist_ok=True)
+
+			for psk in psk_files:
+				psk.copy(iwd_target / psk.name, preserve_metadata=True)
 
 			if enable_services:
 				# If we haven't installed the base yet (function called pre-maturely)
@@ -795,23 +797,20 @@ class Installer:
 					self.pacman.strap('iwd')
 					self.enable_service('iwd')
 
-			for psk in psk_files:
-				shutil.copy2(psk, f'{self.target}/var/lib/iwd/{os.path.basename(psk)}')
-
 		# Enable systemd-resolved by (forcefully) setting a symlink
 		# For further details see  https://wiki.archlinux.org/title/Systemd-resolved#DNS
 		resolv_config_path = self.target / 'etc/resolv.conf'
-		if resolv_config_path.exists():
-			os.unlink(resolv_config_path)
-		os.symlink('/run/systemd/resolve/stub-resolv.conf', resolv_config_path)
+		resolv_config_path.unlink(missing_ok=True)
+		resolv_config_path.symlink_to('/run/systemd/resolve/stub-resolv.conf')
 
 		# Copy (if any) systemd-networkd config files
-		if netconfigurations := glob.glob('/etc/systemd/network/*'):
-			if not os.path.isdir(f'{self.target}/etc/systemd/network/'):
-				os.makedirs(f'{self.target}/etc/systemd/network/')
+		network_dir = LPath('/etc/systemd/network')
+		if netconfigurations := list(network_dir.glob('*')):
+			network_target = self.target / network_dir.relative_to_root()
+			network_target.mkdir(parents=True, exist_ok=True)
 
 			for netconf_file in netconfigurations:
-				shutil.copy2(netconf_file, f'{self.target}/etc/systemd/network/{os.path.basename(netconf_file)}')
+				netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
 
 			if enable_services:
 				# If we haven't installed the base yet (function called pre-maturely)
@@ -1500,7 +1499,7 @@ class Installer:
 				efi_dir_path.mkdir(parents=True, exist_ok=True)
 
 				for file in ('BOOTIA32.EFI', 'BOOTX64.EFI'):
-					shutil.copy(limine_path / file, efi_dir_path)
+					(limine_path / file).copy(efi_dir_path)
 			except Exception as err:
 				raise DiskError(f'Failed to install Limine in {self.target}{efi_partition.mountpoint}: {err}')
 
@@ -1550,7 +1549,7 @@ class Installer:
 
 			try:
 				# The `limine-bios.sys` file contains stage 3 code.
-				shutil.copy(limine_path / 'limine-bios.sys', boot_limine_path)
+				(limine_path / 'limine-bios.sys').copy(boot_limine_path)
 
 				# `limine bios-install` deploys the stage 1 and 2 to the
 				self.arch_chroot(f'limine bios-install {parent_dev_path}', peek_output=True)
@@ -2162,7 +2161,7 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 
 	grimaur_src = Path(__file__).parent / 'grimaur.py'
 	grimaur_dest = installation.target / 'usr/local/bin/grimaur'
-	shutil.copy2(grimaur_src, grimaur_dest)
+	grimaur_src.copy(grimaur_dest, preserve_metadata=True)
 	grimaur_dest.chmod(0o755)
 
 	# Temporary NOPASSWD for pacman so makepkg -si works without a tty
