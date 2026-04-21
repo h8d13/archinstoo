@@ -278,7 +278,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 			if enc_config.encryption_password:
 				output += tr('Password') + f': {enc_config.encryption_password.hidden()}\n'
 
-			if enc_type != EncryptionType.NoEncryption:
+			if enc_type != EncryptionType.NO_ENCRYPTION:
 				output += tr('Iteration time') + f': {enc_config.iter_time or DEFAULT_ITER_TIME}ms\n'
 
 			if enc_config.partitions:

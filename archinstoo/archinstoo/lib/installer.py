@@ -86,7 +86,7 @@ class Installer:
 		self.kernels = kernels or ['linux']
 		self._disk_config = disk_config
 
-		self._disk_encryption = disk_config.disk_encryption or DiskEncryption(EncryptionType.NoEncryption)
+		self._disk_encryption = disk_config.disk_encryption or DiskEncryption(EncryptionType.NO_ENCRYPTION)
 		self.target: Path = target
 
 		self._helper_flags: dict[str, str | bool | None] = {
@@ -262,16 +262,16 @@ class Installer:
 		luks_handlers: dict[Any, Luks2] = {}
 
 		match self._disk_encryption.encryption_type:
-			case EncryptionType.NoEncryption:
+			case EncryptionType.NO_ENCRYPTION:
 				self._import_lvm()
 				self._mount_lvm_layout()
-			case EncryptionType.Luks:
+			case EncryptionType.LUKS:
 				luks_handlers = self._prepare_luks_partitions(self._disk_encryption.partitions)
-			case EncryptionType.LvmOnLuks:
+			case EncryptionType.LVM_ON_LUKS:
 				luks_handlers = self._prepare_luks_partitions(self._disk_encryption.partitions)
 				self._import_lvm()
 				self._mount_lvm_layout(luks_handlers)
-			case EncryptionType.LuksOnLvm:
+			case EncryptionType.LUKS_ON_LVM:
 				self._import_lvm()
 				luks_handlers = self._prepare_luks_lvm(self._disk_encryption.lvm_volumes)
 				self._mount_lvm_layout(luks_handlers)
@@ -380,13 +380,13 @@ class Installer:
 			options = list(part_mod.mount_options)
 
 			# restrict ESP permissions so bootctl doesn't warn about world-accessible seed files
-			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.Fat32:
+			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.FAT32:
 				for opt in ('fmask=0077', 'dmask=0077'):
 					if opt not in options:
 						options.append(opt)
 
 			mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
-		elif part_mod.fs_type == FilesystemType.Btrfs:
+		elif part_mod.fs_type == FilesystemType.BTRFS:
 			# Only mount BTRFS subvolumes that have mountpoints specified
 			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
 			if subvols_with_mountpoints:
@@ -399,11 +399,11 @@ class Installer:
 			swapon(part_mod.dev_path)
 
 	def _mount_lvm_vol(self, volume: LvmVolume) -> None:
-		if volume.fs_type != FilesystemType.Btrfs and volume.mountpoint and volume.dev_path:
+		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and volume.dev_path:
 			target = self.target / volume.relative_mountpoint
 			mount(volume.dev_path, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
-		if volume.fs_type == FilesystemType.Btrfs and volume.dev_path:
+		if volume.fs_type == FilesystemType.BTRFS and volume.dev_path:
 			# Only mount BTRFS subvolumes that have mountpoints specified
 			subvols_with_mountpoints = [sv for sv in volume.btrfs_subvols if sv.mountpoint is not None]
 			if subvols_with_mountpoints:
@@ -413,7 +413,7 @@ class Installer:
 		if not luks_handler.mapper_dev:
 			return
 
-		if part_mod.fs_type == FilesystemType.Btrfs and part_mod.btrfs_subvols:
+		if part_mod.fs_type == FilesystemType.BTRFS and part_mod.btrfs_subvols:
 			# Only mount BTRFS subvolumes that have mountpoints specified
 			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
 			if subvols_with_mountpoints:
@@ -427,11 +427,11 @@ class Installer:
 			mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=part_mod.mount_options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
-		if volume.fs_type != FilesystemType.Btrfs and volume.mountpoint and luks_handler.mapper_dev:
+		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and luks_handler.mapper_dev:
 			target = self.target / volume.relative_mountpoint
 			mount(luks_handler.mapper_dev, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
-		if volume.fs_type == FilesystemType.Btrfs and luks_handler.mapper_dev:
+		if volume.fs_type == FilesystemType.BTRFS and luks_handler.mapper_dev:
 			# Only mount BTRFS subvolumes that have mountpoints specified
 			subvols_with_mountpoints = [sv for sv in volume.btrfs_subvols if sv.mountpoint is not None]
 			if subvols_with_mountpoints:
@@ -453,11 +453,11 @@ class Installer:
 	def generate_key_files(self) -> None:
 		info(f'Generating key files for {self._disk_encryption.encryption_type.value}...')
 		match self._disk_encryption.encryption_type:
-			case EncryptionType.Luks:
+			case EncryptionType.LUKS:
 				self._generate_key_files_partitions()
-			case EncryptionType.LuksOnLvm:
+			case EncryptionType.LUKS_ON_LVM:
 				self._generate_key_file_lvm_volumes()
-			case EncryptionType.LvmOnLuks:
+			case EncryptionType.LVM_ON_LUKS:
 				# LvmOnLuks: the LUKS container holds an LVM PV, root is a volume inside it.
 				# The partition itself isn't "root", so _generate_key_files_partitions
 				# can't detect it via is_root(). Handle it directly here.
@@ -868,7 +868,7 @@ class Installer:
 
 		# Install linux-headers and bcachefs-dkms if bcachefs is selected
 		# xxhash is required by objtool (part of linux-headers) at dkms build time
-		if fs_type == FilesystemType.Bcachefs:
+		if fs_type == FilesystemType.BCACHEFS:
 			self._base_packages.extend(f'{kernel}-headers' for kernel in self.kernels)
 			self._base_packages.append('bcachefs-dkms')
 			self._base_packages.append('xxhash')
@@ -878,7 +878,7 @@ class Installer:
 		if fs_type.fs_type_mount in ('btrfs', 'bcachefs'):
 			self._disable_fstrim = True
 
-		if fs_type == FilesystemType.Bcachefs:
+		if fs_type == FilesystemType.BCACHEFS:
 			if 'bcachefs' not in self._modules:
 				self._modules.append('bcachefs')
 			if 'bcachefs' not in self._hooks and 'block' in self._hooks:
@@ -910,7 +910,7 @@ class Installer:
 					if vol.fs_type is not None:
 						self._prepare_fs_type(vol.fs_type, vol.mountpoint)
 
-			types = (EncryptionType.LvmOnLuks, EncryptionType.LuksOnLvm)
+			types = (EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM)
 			if self._disk_encryption.encryption_type in types:
 				self._prepare_encrypt(lvm)
 		else:
@@ -1157,7 +1157,7 @@ class Installer:
 		kernel_parameters = []
 
 		match self._disk_encryption.encryption_type:
-			case EncryptionType.LvmOnLuks:
+			case EncryptionType.LVM_ON_LUKS:
 				if not lvm.vg_name:
 					raise ValueError(f'Unable to determine VG name for {lvm.name}')
 
@@ -1170,12 +1170,12 @@ class Installer:
 
 				debug(f'LvmOnLuks, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'rd.luks.name={uuid}=cryptlvm root={lvm.safe_dev_path}')
-			case EncryptionType.LuksOnLvm:
+			case EncryptionType.LUKS_ON_LVM:
 				uuid = self._get_luks_uuid_from_mapper_dev(lvm.mapper_path)
 
 				debug(f'LuksOnLvm, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'rd.luks.name={uuid}=root root=/dev/mapper/root')
-			case EncryptionType.NoEncryption:
+			case EncryptionType.NO_ENCRYPTION:
 				debug(f'Identifying root lvm by mapper device: {lvm.dev_path}')
 				kernel_parameters.append(f'root={lvm.safe_dev_path}')
 
@@ -1341,7 +1341,7 @@ class Installer:
 		# enable GRUB cryptodisk before grub-install so crypto modules
 		# are embedded in the core image (required for encrypted /boot)
 		grub_default = self.target / 'etc/default/grub'
-		if self._disk_encryption.encryption_type != EncryptionType.NoEncryption:
+		if self._disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
 			config = grub_default.read_text()
 			config = re.sub(r'^#(GRUB_ENABLE_CRYPTODISK=y)', r'\1', config, flags=re.MULTILINE)
 			grub_default.write_text(config)

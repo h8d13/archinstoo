@@ -14,7 +14,6 @@ from archinstoo.lib.models.device import (
 	LvmLayoutType,
 	LvmVolume,
 	LvmVolumeGroup,
-	LvmVolumeStatus,
 	ModificationStatus,
 	PartitionFlag,
 	PartitionModification,
@@ -238,7 +237,7 @@ def _boot_partition(
 	using_gpt: bool,
 	uefi: bool,
 	bootloader: Bootloader | None = None,
-	filesystem_type: FilesystemType = FilesystemType.Ext4,
+	filesystem_type: FilesystemType = FilesystemType.EXT4,
 	using_subvolumes: bool = False,
 ) -> list[PartitionModification]:
 	partitions = []
@@ -249,12 +248,12 @@ def _boot_partition(
 		mountpoint = Path('/efi') if using_subvolumes else Path('/boot')
 		partitions.append(
 			PartitionModification(
-				status=ModificationStatus.Create,
-				type=PartitionType.Primary,
+				status=ModificationStatus.CREATE,
+				type=PartitionType.PRIMARY,
 				start=start,
 				length=Size(1, Unit.GiB, sector_size),
 				mountpoint=mountpoint,
-				fs_type=FilesystemType.Fat32,
+				fs_type=FilesystemType.FAT32,
 				flags=[PartitionFlag.ESP],
 			)
 		)
@@ -264,8 +263,8 @@ def _boot_partition(
 		if using_gpt and bootloader == Bootloader.Grub:
 			partitions.append(
 				PartitionModification(
-					status=ModificationStatus.Create,
-					type=PartitionType.Primary,
+					status=ModificationStatus.CREATE,
+					type=PartitionType.PRIMARY,
 					start=start,
 					length=Size(1, Unit.MiB, sector_size),
 					mountpoint=None,
@@ -276,11 +275,11 @@ def _boot_partition(
 			start = Size(2, Unit.MiB, sector_size)
 
 		# BIOS: /boot — GRUB can read the user's chosen fs, Limine only supports FAT
-		boot_fs = FilesystemType.Fat32 if bootloader == Bootloader.Limine else filesystem_type
+		boot_fs = FilesystemType.FAT32 if bootloader == Bootloader.Limine else filesystem_type
 		partitions.append(
 			PartitionModification(
-				status=ModificationStatus.Create,
-				type=PartitionType.Primary,
+				status=ModificationStatus.CREATE,
+				type=PartitionType.PRIMARY,
 				start=start,
 				length=Size(1, Unit.GiB, sector_size),
 				mountpoint=Path('/boot'),
@@ -317,15 +316,15 @@ def select_partition_table() -> PartitionTable:
 
 def select_main_filesystem_format(advanced: bool = False) -> FilesystemType:
 	items = [
-		MenuItem('btrfs', value=FilesystemType.Btrfs),
-		MenuItem('ext4', value=FilesystemType.Ext4),
-		MenuItem('xfs', value=FilesystemType.Xfs),
-		MenuItem('f2fs', value=FilesystemType.F2fs),
+		MenuItem('btrfs', value=FilesystemType.BTRFS),
+		MenuItem('ext4', value=FilesystemType.EXT4),
+		MenuItem('xfs', value=FilesystemType.XFS),
+		MenuItem('f2fs', value=FilesystemType.F2FS),
 	]
 
 	if advanced:
-		items.append(MenuItem('bcachefs', value=FilesystemType.Bcachefs))
-		items.append(MenuItem('ntfs', value=FilesystemType.Ntfs))
+		items.append(MenuItem('bcachefs', value=FilesystemType.BCACHEFS))
+		items.append(MenuItem('ntfs', value=FilesystemType.NTFS))
 
 	group = MenuItemGroup(items, sort_items=False)
 	result = SelectMenu[FilesystemType](
@@ -417,7 +416,7 @@ def suggest_single_disk_layout(
 	available_space = total_size
 	min_size_to_allow_home_part = Size(64, Unit.GiB, sector_size)
 
-	if filesystem_type == FilesystemType.Btrfs:
+	if filesystem_type == FilesystemType.BTRFS:
 		prompt = tr('Would you like to use BTRFS subvolumes with a default structure?') + '\n'
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(MenuItem.yes().value)
@@ -479,8 +478,8 @@ def suggest_single_disk_layout(
 	root_length = process_root_partition_size(total_size, sector_size) if using_home_partition else available_space - root_start
 
 	root_partition = PartitionModification(
-		status=ModificationStatus.Create,
-		type=PartitionType.Primary,
+		status=ModificationStatus.CREATE,
+		type=PartitionType.PRIMARY,
 		start=root_start,
 		length=root_length,
 		mountpoint=Path('/') if not using_subvolumes else None,
@@ -504,8 +503,8 @@ def suggest_single_disk_layout(
 			flags.append(PartitionFlag.LINUX_HOME)
 
 		home_partition = PartitionModification(
-			status=ModificationStatus.Create,
-			type=PartitionType.Primary,
+			status=ModificationStatus.CREATE,
+			type=PartitionType.PRIMARY,
 			start=home_start,
 			length=home_length,
 			mountpoint=Path('/home'),
@@ -535,7 +534,7 @@ def suggest_lvm_layout(
 	if not filesystem_type:
 		filesystem_type = select_main_filesystem_format(advanced=advanced)
 
-	if filesystem_type == FilesystemType.Btrfs:
+	if filesystem_type == FilesystemType.BTRFS:
 		prompt = tr('Would you like to use BTRFS subvolumes with a default structure?') + '\n'
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(MenuItem.yes().value)
@@ -587,7 +586,7 @@ def suggest_lvm_layout(
 	lvm_vol_group = LvmVolumeGroup(vg_grp_name, pvs=other_part)
 
 	root_vol = LvmVolume(
-		status=LvmVolumeStatus.Create,
+		status=ModificationStatus.CREATE,
 		name='root',
 		fs_type=filesystem_type,
 		length=root_vol_size,
@@ -600,7 +599,7 @@ def suggest_lvm_layout(
 
 	if home_volume:
 		home_vol = LvmVolume(
-			status=LvmVolumeStatus.Create,
+			status=ModificationStatus.CREATE,
 			name='home',
 			fs_type=filesystem_type,
 			length=home_vol_size,
