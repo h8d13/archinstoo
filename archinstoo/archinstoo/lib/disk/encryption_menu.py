@@ -138,15 +138,15 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 	def _check_dep_enc_type(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		return bool(enc_type and enc_type != EncryptionType.NoEncryption)
+		return bool(enc_type and enc_type != EncryptionType.NO_ENCRYPTION)
 
 	def _check_dep_partitions(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		return bool(enc_type and enc_type in [EncryptionType.Luks, EncryptionType.LvmOnLuks])
+		return bool(enc_type and enc_type in [EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS])
 
 	def _check_dep_lvm_vols(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		return bool(enc_type and enc_type == EncryptionType.LuksOnLvm)
+		return bool(enc_type and enc_type == EncryptionType.LUKS_ON_LVM)
 
 	def _check_dep_auto_unlock(self) -> bool:
 		return self._allow_auto_unlock and self._check_dep_enc_type()
@@ -166,13 +166,13 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
 			return None
 
-		if enc_type in [EncryptionType.Luks, EncryptionType.LvmOnLuks] and enc_partitions:
+		if enc_type in [EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS] and enc_partitions:
 			enc_lvm_vols = []
 
-		if enc_type == EncryptionType.LuksOnLvm:
+		if enc_type == EncryptionType.LUKS_ON_LVM:
 			enc_partitions = []
 
-		if enc_type != EncryptionType.NoEncryption and enc_password and (enc_partitions or enc_lvm_vols):
+		if enc_type != EncryptionType.NO_ENCRYPTION and enc_password and (enc_partitions or enc_lvm_vols):
 			return DiskEncryption(
 				encryption_password=enc_password,
 				encryption_type=enc_type,
@@ -251,7 +251,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		pbkdf = self._item_group.find_by_key('pbkdf').value
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
-		if pbkdf and enc_type != EncryptionType.NoEncryption:
+		if pbkdf and enc_type != EncryptionType.NO_ENCRYPTION:
 			return f'{tr("Key derivation function")}: {pbkdf.display_name()}'
 
 		return None
@@ -260,7 +260,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		iter_time = self._item_group.find_by_key('iter_time').value
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
-		if iter_time and enc_type != EncryptionType.NoEncryption:
+		if iter_time and enc_type != EncryptionType.NO_ENCRYPTION:
 			return f'{tr("Iteration time")}: {iter_time}ms'
 
 		return None
@@ -269,7 +269,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		auto_unlock = self._item_group.find_by_key('auto_unlock_root').value
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
-		if enc_type and enc_type != EncryptionType.NoEncryption:
+		if enc_type and enc_type != EncryptionType.NO_ENCRYPTION:
 			status = tr('Enabled') if auto_unlock else tr('Disabled')
 			return f'{tr("Auto unlock root")}: {status}'
 
@@ -283,7 +283,7 @@ def select_encryption_type(
 ) -> EncryptionType | None:
 	options: list[EncryptionType] = []
 
-	options = [EncryptionType.LvmOnLuks, EncryptionType.LuksOnLvm] if lvm_config else [EncryptionType.Luks]
+	options = [EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM] if lvm_config else [EncryptionType.LUKS]
 
 	if not preset:
 		preset = options[0]

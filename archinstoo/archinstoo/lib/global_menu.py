@@ -419,7 +419,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return all(u.password is not None for u in auth_config.users)
 
 	def _validate_disk_config(self, disk_config: DiskLayoutConfiguration) -> bool:
-		if (enc := disk_config.disk_encryption) and enc.encryption_type != EncryptionType.NoEncryption:
+		if (enc := disk_config.disk_encryption) and enc.encryption_type != EncryptionType.NO_ENCRYPTION:
 			return enc.encryption_password is not None
 		return True
 
@@ -762,7 +762,7 @@ class GlobalMenu(AbstractMenu[None]):
 		if self._uefi:
 			if efi_partition is None:
 				errors.append('EFI system partition (ESP) not found')
-			elif efi_partition.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
+			elif efi_partition.fs_type not in [FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32]:
 				errors.append('ESP must be formatted as a FAT filesystem')
 		elif boot_partition is None:
 			errors.append('Boot partition not found')
@@ -780,7 +780,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		if bootloader == Bootloader.Limine:
 			limine_boot = boot_partition or efi_partition
-			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.Fat12, FilesystemType.Fat16, FilesystemType.Fat32]:
+			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32]:
 				errors.append('Limine does not support booting with a non-FAT boot partition')
 
 		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():

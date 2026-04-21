@@ -19,12 +19,12 @@ from archinstoo.lib.tui.types import Alignment
 
 # Filesystem types that could contain a Linux root
 LINUX_FILESYSTEMS = {
-	FilesystemType.Ext2,
-	FilesystemType.Ext3,
-	FilesystemType.Ext4,
-	FilesystemType.Btrfs,
-	FilesystemType.Xfs,
-	FilesystemType.F2fs,
+	FilesystemType.EXT2,
+	FilesystemType.EXT3,
+	FilesystemType.EXT4,
+	FilesystemType.BTRFS,
+	FilesystemType.XFS,
+	FilesystemType.F2FS,
 }
 
 
@@ -42,7 +42,7 @@ def find_luks_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:
 	luks_partitions: list[LsblkInfo] = []
 
 	def _check_partition(lsblk_info: LsblkInfo) -> None:
-		if lsblk_info.fstype == FilesystemType.Crypto_luks.value:
+		if lsblk_info.fstype == FilesystemType.CRYPTO_LUKS.value:
 			luks_partitions.append(lsblk_info)
 
 		for child in lsblk_info.children:
