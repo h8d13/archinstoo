@@ -30,7 +30,7 @@ from archinstoo.lib.models.device import (
 	Unit,
 )
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.pathnames import PACMAN_CONF
+from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.pm import installed_package
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
@@ -561,9 +561,12 @@ class Installer:
 		"""
 		debug('Setting mirrors on ' + ('target' if on_target else 'live system'))
 
-		root = self.target if on_target else Path('/')
-		mirrorlist_path = root / 'etc/pacman.d/mirrorlist'
-		pacman_conf_path = root / PACMAN_CONF.relative_to_root()
+		if on_target:
+			mirrorlist_path = self.target / MIRRORLIST.relative_to_root()
+			pacman_conf_path = self.target / PACMAN_CONF.relative_to_root()
+		else:
+			mirrorlist_path = MIRRORLIST
+			pacman_conf_path = PACMAN_CONF
 
 		existing_content = pacman_conf_path.read_text()
 		if repos_config := pacman_configuration.repositories_config(existing_content):

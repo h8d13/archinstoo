@@ -1,7 +1,6 @@
 import atexit
 import re
 from pathlib import Path
-from shutil import copy2
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
@@ -114,8 +113,8 @@ class PacmanConfig:
 		# Apply temp using backup then revert on exit handler
 		if Os.running_from_host():
 			temp_copy = PACMAN_CONF.with_suffix('.bak')
-			copy2(PACMAN_CONF, temp_copy)
-			atexit.register(lambda: copy2(temp_copy, PACMAN_CONF))
+			PACMAN_CONF.copy(temp_copy, preserve_metadata=True)
+			atexit.register(lambda: temp_copy.copy(PACMAN_CONF, preserve_metadata=True))
 
 		with PACMAN_CONF.open('w') as f:
 			f.writelines(content)

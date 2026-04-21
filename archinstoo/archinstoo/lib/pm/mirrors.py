@@ -23,6 +23,7 @@ from archinstoo.lib.models.mirrors import (
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.network.utils import fetch_data_from_url
 from archinstoo.lib.output import FormattedOutput, debug
+from archinstoo.lib.pathnames import MIRRORLIST
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -447,7 +448,7 @@ class _MirrorCache:
 class MirrorListHandler:
 	def __init__(
 		self,
-		local_mirrorlist: Path = Path('/etc/pacman.d/mirrorlist'),
+		local_mirrorlist: Path = MIRRORLIST,
 	) -> None:
 		self._local_mirrorlist = local_mirrorlist
 
