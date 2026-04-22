@@ -819,6 +819,9 @@ class FilesystemType(StrEnum):
 	def is_crypto(self) -> bool:
 		return self == FilesystemType.CRYPTO_LUKS
 
+	def is_fat(self) -> bool:
+		return self in (FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32)
+
 	@property
 	def fs_type_mount(self) -> str:
 		match self:
