@@ -1,10 +1,11 @@
+from pathlib import Path
 from typing import override
 
 from archinstoo.default_profiles.profile import GreeterType, Profile
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
-from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, FilesystemType, PartitionModification
+from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, PartitionModification
 from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
@@ -762,7 +763,7 @@ class GlobalMenu(AbstractMenu[None]):
 		if self._uefi:
 			if efi_partition is None:
 				errors.append('EFI system partition (ESP) not found')
-			elif efi_partition.fs_type not in [FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32]:
+			elif efi_partition.fs_type is None or not efi_partition.fs_type.is_fat():
 				errors.append('ESP must be formatted as a FAT filesystem')
 		elif boot_partition is None:
 			errors.append('Boot partition not found')
@@ -780,8 +781,17 @@ class GlobalMenu(AbstractMenu[None]):
 
 		if bootloader == Bootloader.Limine:
 			limine_boot = boot_partition or efi_partition
-			if limine_boot is not None and limine_boot.fs_type not in [FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32]:
+			if limine_boot is not None and (limine_boot.fs_type is None or not limine_boot.fs_type.is_fat()):
 				errors.append('Limine does not support booting with a non-FAT boot partition')
+
+			# When the ESP is the boot partition but mounted outside /boot and
+			# UKI is disabled, kernels end up on the root filesystem which
+			# Limine cannot access.
+			if not bootloader_config.uki and efi_partition is not None and efi_partition == boot_partition and efi_partition.mountpoint != Path('/boot'):
+				errors.append(
+					f'Limine requires kernels on a FAT partition. The ESP is mounted at {efi_partition.mountpoint}, '
+					'enable UKI or add a separate /boot partition to install Limine.'
+				)
 
 		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():
 			errors.append('rEFInd can only be used on UEFI systems')
