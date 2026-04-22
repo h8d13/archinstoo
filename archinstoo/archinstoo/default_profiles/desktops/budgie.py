@@ -14,12 +14,12 @@ class BudgieProfile(XorgProfile):
 		return [
 			'materia-gtk-theme',
 			'budgie',
-			'mate-terminal',
-			'nemo',
+			'konsole',
+			'dolphin',
 			'papirus-icon-theme',
 		]
 
 	@property
 	@override
 	def default_greeter_type(self) -> GreeterType:
-		return GreeterType.LightdmSlick
+		return GreeterType.Sddm
