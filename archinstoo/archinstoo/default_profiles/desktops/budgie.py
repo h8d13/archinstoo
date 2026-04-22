@@ -1,10 +1,10 @@
 from typing import override
 
 from archinstoo.default_profiles.profile import GreeterType, ProfileType
-from archinstoo.default_profiles.xorg import XorgProfile
+from archinstoo.default_profiles.wayland import WaylandProfile
 
 
-class BudgieProfile(XorgProfile):
+class BudgieProfile(WaylandProfile):
 	def __init__(self) -> None:
 		super().__init__('Budgie', ProfileType.DesktopEnv)
 
