@@ -1,9 +1,7 @@
 # Project Structure
 ```
 ./
-├── PKGBUILD
 ├── archinstoo/
-│   ├── __main__
 │   ├── default_profiles/
 │   │   ├── desktop
 │   │   ├── desktops/
@@ -88,6 +86,7 @@
 │   │   ├── interactions/
 │   │   │   ├── general_conf
 │   │   │   └── system_conf
+│   │   ├── linux_path
 │   │   ├── localization/
 │   │   │   ├── locale_menu
 │   │   │   └── utils
@@ -113,6 +112,7 @@
 │   │   │   └── utils
 │   │   ├── output
 │   │   ├── pacman
+│   │   ├── pathnames
 │   │   ├── pm/
 │   │   │   ├── config
 │   │   │   ├── mirrors
@@ -122,17 +122,18 @@
 │   │   │   └── profiles_handler
 │   │   ├── translationhandler
 │   │   ├── tui/
+│   │   │   ├── content_editor
 │   │   │   ├── curses_menu
 │   │   │   ├── help
 │   │   │   ├── menu_item
 │   │   │   ├── prompts
 │   │   │   ├── result
-│   │   │   ├── script_editor
 │   │   │   └── types
 │   │   └── utils/
 │   │       ├── env
 │   │       ├── net
 │   │       └── unicode
+│   ├── __main__
 │   ├── schema.jsonc
 │   └── scripts/
 │       ├── count
@@ -149,6 +150,7 @@
 │   ├── config-custom.json
 │   ├── config-sample-full.json
 │   └── custom
+├── PKGBUILD
 ├── pyproject.toml
 └── tests/
     ├── conftest
@@ -157,5 +159,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 132 files
+24 directories, 134 files
 ```
