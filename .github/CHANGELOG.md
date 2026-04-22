@@ -2,6 +2,18 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.05-2
+
+    - Upstream syncs:
+        - Enum casing: `FilesystemType`, `ModificationStatus`, `PartitionType` migrated to `StrEnum` / UPPER_CASE
+        - Limine validation uses `FilesystemType.is_fat()`; block install when ESP is boot partition mounted outside `/boot` without UKI
+        - Power management: auto-enable `power-profiles-daemon.service` / `tuned.service` based on selection
+        - New `LPath` helper and `pathnames` module (centralizes `ARCHISO_MOUNTPOINT`, `PACMAN_CONF`)
+        - Installer ordering, mirrors, pacman config, budgie profile, general.py tweaks
+    - Docs: refresh project structure tree
+    - Enable ruff `RUF051` (if-key-in-dict-del)
+    - Dependency updates
+
 ## 0.1.05-1
 
     - Missing deps in linux-variant-headers
