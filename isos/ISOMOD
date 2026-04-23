@@ -15,6 +15,8 @@ CLEANUP="${CLEANUP:-1}"
 LOG_FILE="${LOG_FILE:-1}"
 # Requires 'pacman-contrib' if this is enabled
 CACHING="${CACHING:-1}"
+# bcachefs support (removed from mainline kernel 6.18+, needs DKMS)
+ISOMOD_BCACHEFS="${ISOMOD_BCACHEFS:-0}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -92,17 +94,21 @@ find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i 's|\(APPEND.*archiso.*\)
 echo "Mod pkg list and MOTD..."
 {
     echo "git"
-    # bcachefs support (removed from mainline kernel 6.18+, needs DKMS)
-    echo "linux-headers"
-    echo "bcachefs-dkms"
-    echo "bcachefs-tools"
-    echo "dkms"
 } >> "$PROFILE_DIR/packages.x86_64"
 
-# Ensure bcachefs DKMS module is built and loaded at boot
-echo "Adding bcachefs DKMS boot service..."
-mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
-cat > "$PROFILE_DIR/airootfs/etc/systemd/system/bcachefs-dkms.service" << 'SVCEOF'
+if [ "$ISOMOD_BCACHEFS" = "1" ]; then
+    echo "Adding bcachefs packages..."
+    {
+        echo "linux-headers"
+        echo "bcachefs-dkms"
+        echo "bcachefs-tools"
+        echo "dkms"
+    } >> "$PROFILE_DIR/packages.x86_64"
+
+    # Ensure bcachefs DKMS module is built and loaded at boot
+    echo "Adding bcachefs DKMS boot service..."
+    mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+    cat > "$PROFILE_DIR/airootfs/etc/systemd/system/bcachefs-dkms.service" << 'SVCEOF'
 [Unit]
 Description=Build and load bcachefs DKMS module
 After=local-fs.target
@@ -117,7 +123,8 @@ ExecStart=/usr/sbin/modprobe bcachefs
 [Install]
 WantedBy=multi-user.target
 SVCEOF
-ln -sf /etc/systemd/system/bcachefs-dkms.service "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/bcachefs-dkms.service"
+    ln -sf /etc/systemd/system/bcachefs-dkms.service "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/bcachefs-dkms.service"
+fi
 
 # Append custom MOTD
 cat >> "$PROFILE_DIR/airootfs/etc/motd" << EOF
