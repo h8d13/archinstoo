@@ -15,6 +15,7 @@ from archinstoo.lib.models.application import ApplicationConfiguration, ZramConf
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
+from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
@@ -69,6 +70,7 @@ class ArchConfig:
 	hostname: str = 'archlinux'
 	kernels: list[str] = field(default_factory=lambda: ['linux'])
 	kernel_headers: bool = False
+	firmware: FirmwareConfiguration = field(default_factory=FirmwareConfiguration)
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
@@ -95,6 +97,7 @@ class ArchConfig:
 			'swap': self.swap,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
+			'firmware': self.firmware.json(),
 			'profile_config': self.profile_config.json() if self.profile_config else None,
 			'hostname': self.hostname,
 			'auth_config': self.auth_config.json() if self.auth_config else None,
@@ -161,6 +164,8 @@ class ArchConfig:
 			arch_config.swap = ZramConfiguration.parse_arg(swap)
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
+		if firmware := args_config.get('firmware'):
+			arch_config.firmware = FirmwareConfiguration.parse_arg(firmware)
 		arch_config.ntp = args_config.get('ntp', True)
 
 		return arch_config

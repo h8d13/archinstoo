@@ -3,6 +3,7 @@ from typing import assert_never
 from archinstoo.default_profiles.profile import Profile
 from archinstoo.lib.hardware import GfxDriver, SysInfo
 from archinstoo.lib.models.application import ZramAlgorithm, ZramConfiguration
+from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -169,6 +170,63 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 			return ZramConfiguration(enabled=True, algorithm=algo, recomp_algorithm=recomp_algo)
 		case ResultType.Reset:
 			raise ValueError('Unhandled result type')
+
+
+def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> FirmwareConfiguration:
+	header = tr('Full installs the linux-firmware meta package (~600 MB).') + '\n'
+	header += tr('Minimal skips firmware entirely (safe for most VMs using virtio).') + '\n'
+	header += tr('Vendor lets you pick only the firmware subpackages you need.') + '\n'
+
+	type_items = [MenuItem(t.value, value=t) for t in FirmwareType]
+	type_group = MenuItemGroup(type_items, sort_items=False)
+	type_group.set_default_by_value(FirmwareType.FULL)
+	type_group.set_focus_by_value(preset.firmware_type)
+
+	result = SelectMenu[FirmwareType](
+		type_group,
+		header=header,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Firmware')),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Reset:
+			return FirmwareConfiguration()
+		case ResultType.Selection:
+			firmware_type = result.get_value()
+		case _:
+			assert_never(result.type_)
+
+	if firmware_type != FirmwareType.VENDOR:
+		return FirmwareConfiguration(firmware_type=firmware_type)
+
+	vendor_items = [MenuItem(v.value, value=v) for v in FirmwareVendor]
+	vendor_group = MenuItemGroup(vendor_items, sort_items=True)
+	vendor_group.set_selected_by_value(preset.vendors)
+
+	vendor_result = SelectMenu[FirmwareVendor](
+		vendor_group,
+		header=tr('Select firmware subpackages:') + '\n',
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min(tr('Firmware vendors')),
+		multi=True,
+	).run()
+
+	match vendor_result.type_:
+		case ResultType.Skip:
+			vendors = preset.vendors
+		case ResultType.Selection:
+			vendors = vendor_result.get_values()
+		case ResultType.Reset:
+			vendors = []
+		case _:
+			assert_never(vendor_result.type_)
+
+	return FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=vendors)
 
 
 def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | None:

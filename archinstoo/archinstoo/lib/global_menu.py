@@ -26,10 +26,11 @@ from .interactions.general_conf import (
 	select_ntp,
 	select_timezone,
 )
-from .interactions.system_conf import select_kernel, select_swap
+from .interactions.system_conf import select_firmware, select_kernel, select_swap
 from .localization.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
+from .models.firmware import FirmwareConfiguration, FirmwareType
 from .models.locale import LocaleConfiguration
 from .models.mirrors import PacmanConfiguration
 from .models.network import NetworkConfiguration, NicType
@@ -128,6 +129,13 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_kernel,
 				mandatory=False,
 				key='kernels',
+			),
+			MenuItem(
+				text=tr('Firmware'),
+				value=FirmwareConfiguration(),
+				action=select_firmware,
+				preview_action=self._prev_firmware,
+				key='firmware',
 			),
 			MenuItem(
 				text=tr('Profile'),
@@ -715,6 +723,15 @@ class GlobalMenu(AbstractMenu[None]):
 			output += f'{tr("Headers")}: {status}'
 			return output
 		return None
+
+	def _prev_firmware(self, item: MenuItem) -> str | None:
+		config: FirmwareConfiguration | None = item.value
+		if not config:
+			return None
+		output = f'{tr("Firmware")}: {config.firmware_type.value}'
+		if config.firmware_type == FirmwareType.VENDOR and config.vendors:
+			output += '\n' + ', '.join(v.value for v in config.vendors)
+		return output
 
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:
 		bootloader_config: BootloaderConfiguration | None = item.value

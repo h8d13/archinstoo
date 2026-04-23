@@ -29,6 +29,7 @@ from archinstoo.lib.models.device import (
 	SubvolumeModification,
 	Unit,
 )
+from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.pm import installed_package
@@ -50,8 +51,8 @@ from .output import debug, error, info, log, logger, warn
 from .pm import Pacman
 from .pm.config import PacmanConfig
 
-# Base packages installed by default
-__base_packages__ = ['base', 'linux-firmware']
+# Base packages installed by default (firmware added based on FirmwareConfiguration)
+__base_packages__ = ['base']
 
 # Available kernel options
 __kernels__ = ['linux', 'linux-lts', 'linux-zen', 'linux-hardened']
@@ -67,6 +68,7 @@ class Installer:
 		disk_config: DiskLayoutConfiguration,
 		base_packages: list[str] = [],
 		kernels: list[str] | None = None,
+		firmware: FirmwareConfiguration | None = None,
 		*,
 		handler: ArchConfigHandler | None = None,
 		device_handler: DeviceHandler | None = None,
@@ -83,6 +85,7 @@ class Installer:
 		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/h8d13/archinstoo/issues'
 
 		self._base_packages = base_packages or __base_packages__.copy()
+		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
 		self.kernels = kernels or ['linux']
 		self._disk_config = disk_config
 
