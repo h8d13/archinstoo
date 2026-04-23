@@ -19,7 +19,6 @@ class PlasmaProfile(WaylandProfile):
 			'kate',
 			'dolphin',
 			'ark',
-			'plasma-workspace',
 		]
 
 	@property
