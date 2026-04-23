@@ -62,10 +62,6 @@ class AudioApp:
 	) -> None:
 		debug(f'Installing audio server: {audio_config.audio.value}')
 
-		if audio_config.audio == Audio.NO_AUDIO:
-			debug('No audio server selected, skipping installation.')
-			return
-
 		if SysInfo.requires_sof_fw():
 			install_session.add_additional_packages('sof-firmware')
 

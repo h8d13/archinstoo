@@ -43,7 +43,6 @@ class DisplayServer(Enum):
 
 
 class GreeterType(Enum):
-	Nogreeter = ''
 	Lightdm = 'lightdm-gtk-greeter'
 	LightdmSlick = 'lightdm-slick-greeter'
 	PlasmaLoginManager = 'plasma-login-manager'

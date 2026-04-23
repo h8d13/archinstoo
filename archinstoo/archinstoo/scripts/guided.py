@@ -14,7 +14,6 @@ from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_aur_installation, run_custom_user_commands
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
-from archinstoo.lib.models import Bootloader
 from archinstoo.lib.models.device import (
 	DiskLayoutType,
 	EncryptionType,
@@ -120,7 +119,7 @@ def perform_installation(
 			users = config.auth_config.users if config.auth_config else None
 			application_handler.install_applications(installation, app_config, users)
 
-		if config.bootloader_config and config.bootloader_config.bootloader != Bootloader.NO_BOOTLOADER:
+		if config.bootloader_config and config.bootloader_config.bootloader is not None:
 			installation.add_bootloader(config.bootloader_config.bootloader, config.bootloader_config.uki, config.bootloader_config.removable)
 
 		if disk_config.has_default_btrfs_vols():

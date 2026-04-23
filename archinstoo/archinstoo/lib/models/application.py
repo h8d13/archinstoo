@@ -17,7 +17,6 @@ class BluetoothConfigSerialization(TypedDict):
 
 
 class Audio(StrEnum):
-	NO_AUDIO = 'No audio server'
 	PIPEWIRE = auto()
 	PULSEAUDIO = auto()
 

@@ -158,7 +158,7 @@ class ArchConfig:
 		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config)
 
 		if bootloader := args_config.get('bootloader_config'):
-			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader, args.skip_boot)
+			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader)
 
 		if (swap := args_config.get('swap')) is not None:
 			arch_config.swap = ZramConfiguration.parse_arg(swap)

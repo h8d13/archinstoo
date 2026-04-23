@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models import Audio
 from archinstoo.lib.models.application import ApplicationConfiguration
 from archinstoo.lib.models.users import User
 
@@ -26,7 +25,7 @@ class ApplicationHandler:
 		if app_config.bluetooth_config and app_config.bluetooth_config.enabled:
 			BluetoothApp().install(install_session)
 
-		if app_config.audio_config and app_config.audio_config.audio != Audio.NO_AUDIO:
+		if app_config.audio_config:
 			AudioApp().install(
 				install_session,
 				app_config.audio_config,

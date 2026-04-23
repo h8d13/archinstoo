@@ -176,6 +176,7 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 	"""
 
 	items = [MenuItem(n.display_msg(), value=n) for n in NicType]
+	items.append(MenuItem(text=tr('None'), value=None))
 	group = MenuItemGroup(items, sort_items=True)
 
 	if preset:
@@ -195,7 +196,10 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 		case ResultType.Reset:
 			return None
 		case ResultType.Selection:
-			config = result.get_value()
+			config = result.item().value
+
+			if config is None:
+				return None
 
 			match config:
 				case NicType.ISO:

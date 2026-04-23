@@ -256,6 +256,7 @@ def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServi
 
 def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration | None:
 	items = [MenuItem(a.value, value=a) for a in Audio]
+	items.append(MenuItem(text=tr('None'), value=None))
 	group = MenuItemGroup(items)
 
 	if preset:
@@ -272,7 +273,8 @@ def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration
 		case ResultType.Skip:
 			return preset
 		case ResultType.Selection:
-			return AudioConfiguration(audio=result.get_value())
+			audio = result.item().value
+			return AudioConfiguration(audio=audio) if audio else None
 		case ResultType.Reset:
 			raise ValueError('Unhandled result type')
 
