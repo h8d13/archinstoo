@@ -75,6 +75,7 @@ def select_driver(
 		return driver.packages_text(servers, k)
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
+	items.append(MenuItem(text=tr('None'), value=None))
 	group = MenuItemGroup(items, sort_items=True)
 	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
 		default_driver = GfxDriver.MesaOpenSource
@@ -113,7 +114,7 @@ def select_driver(
 		case ResultType.Reset:
 			return None
 		case ResultType.Selection:
-			return result.get_value()
+			return result.item().value
 
 
 def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> ZramConfiguration:

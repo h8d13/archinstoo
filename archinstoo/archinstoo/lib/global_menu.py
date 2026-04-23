@@ -750,7 +750,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
 
-		if not bootloader_config or bootloader_config.bootloader == Bootloader.NO_BOOTLOADER:
+		if not bootloader_config or bootloader_config.bootloader is None:
 			return errors
 
 		bootloader = bootloader_config.bootloader

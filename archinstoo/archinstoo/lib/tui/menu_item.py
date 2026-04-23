@@ -79,7 +79,12 @@ class MenuItemGroup:
 			raise ValueError('Menu must have at least one item')
 
 		if sort_items:
-			menu_items = sorted(menu_items, key=lambda x: x.text) if sort_case_sensitive else sorted(menu_items, key=lambda x: x.text.lower())
+			# Items with value=None (e.g. explicit "None" options) always sort last
+			menu_items = (
+				sorted(menu_items, key=lambda x: (x.value is None, x.text))
+				if sort_case_sensitive
+				else sorted(menu_items, key=lambda x: (x.value is None, x.text.lower()))
+			)
 
 		self._filter_pattern: str = ''
 		self._checkmarks: bool = checkmarks

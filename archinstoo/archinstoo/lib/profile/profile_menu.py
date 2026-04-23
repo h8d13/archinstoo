@@ -168,7 +168,8 @@ def select_greeter(
 	preset: GreeterType | None = None,
 ) -> GreeterType | None:
 	if not profile or profile.is_greeter_supported():
-		items = [MenuItem(greeter.name if greeter == GreeterType.Nogreeter else greeter.value, value=greeter) for greeter in GreeterType]
+		items = [MenuItem(greeter.value, value=greeter) for greeter in GreeterType]
+		items.append(MenuItem(text=tr('None'), value=None))
 		group = MenuItemGroup(items, sort_items=True)
 
 		default: GreeterType | None = None
@@ -191,7 +192,7 @@ def select_greeter(
 			case ResultType.Skip:
 				return preset
 			case ResultType.Selection:
-				return result.get_value()
+				return result.item().value
 			case ResultType.Reset:
 				raise ValueError('Unhandled result type')
 

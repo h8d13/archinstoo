@@ -7,15 +7,11 @@ from archinstoo.lib.translationhandler import tr
 
 
 class Bootloader(Enum):
-	NO_BOOTLOADER = 'No bootloader'
 	Systemd = 'Systemd-boot'
 	Grub = 'Grub'
 	Efistub = 'Efistub'
 	Limine = 'Limine'
 	Refind = 'Refind'
-
-	def has_uki_support(self) -> bool:
-		return self != Bootloader.NO_BOOTLOADER
 
 	def has_removable_support(self) -> bool:
 		match self:
@@ -28,17 +24,11 @@ class Bootloader(Enum):
 		return self.value
 
 	@classmethod
-	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
-		if skip_boot:
-			return cls.NO_BOOTLOADER
-		return cls.Grub
-
-	@classmethod
-	def from_arg(cls, bootloader: str, skip_boot: bool) -> Self:
+	def from_arg(cls, bootloader: str) -> Self:
 		# to support old configuration files
 		bootloader = bootloader.capitalize()
 
-		bootloader_options = [e.value for e in cls if e != cls.NO_BOOTLOADER or skip_boot is True]
+		bootloader_options = [e.value for e in cls]
 
 		if bootloader not in bootloader_options:
 			values = ', '.join(bootloader_options)
@@ -50,31 +40,34 @@ class Bootloader(Enum):
 
 @dataclass
 class BootloaderConfiguration:
-	bootloader: Bootloader
+	bootloader: Bootloader | None
 	uki: bool = False
 	removable: bool = True
 
 	def json(self) -> dict[str, Any]:
-		return {'bootloader': self.bootloader.json(), 'uki': self.uki, 'removable': self.removable}
+		return {'bootloader': self.bootloader.json() if self.bootloader else None, 'uki': self.uki, 'removable': self.removable}
 
 	@classmethod
-	def parse_arg(cls, config: dict[str, Any], skip_boot: bool) -> Self:
-		bootloader = Bootloader.from_arg(config.get('bootloader', ''), skip_boot)
+	def parse_arg(cls, config: dict[str, Any]) -> Self:
+		raw = config.get('bootloader')
+		bootloader = Bootloader.from_arg(raw) if raw else None
 		uki = config.get('uki', False)
 		removable = config.get('removable', True)
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	@classmethod
 	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
-		bootloader = Bootloader.get_default(uefi, skip_boot)
-		removable = uefi and bootloader.has_removable_support()
-		uki = uefi and bootloader.has_uki_support()
+		bootloader = None if skip_boot else Bootloader.Grub
+		removable = uefi and bootloader is not None and bootloader.has_removable_support()
+		uki = uefi and bootloader is not None
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	def preview(self, uefi: bool) -> str:
-		text = f'{tr("Bootloader")}: {self.bootloader.value}'
+		text = f'{tr("Bootloader")}: {self.bootloader.value if self.bootloader else tr("None")}'
 		text += '\n'
-		if uefi and self.bootloader.has_uki_support():
+		if self.bootloader is None:
+			return text
+		if uefi:
 			uki_string = tr('Enabled') if self.uki else tr('Disabled')
 			text += f'UKI: {uki_string}'
 			text += '\n'
