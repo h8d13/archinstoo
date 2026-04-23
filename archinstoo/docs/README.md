@@ -99,6 +99,7 @@
 │   │   │   ├── authentication
 │   │   │   ├── bootloader
 │   │   │   ├── device
+│   │   │   ├── firmware
 │   │   │   ├── locale
 │   │   │   ├── mirrors
 │   │   │   ├── network
@@ -159,5 +160,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 134 files
+24 directories, 135 files
 ```
