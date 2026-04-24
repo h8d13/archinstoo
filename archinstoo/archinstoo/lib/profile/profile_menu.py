@@ -57,7 +57,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			),
 			MenuItem(
 				text=tr('Greeter'),
-				action=lambda x: select_greeter(preset=x),
+				action=self.select_greeter,
 				value=self._profile_config.greeter if self._profile_config.profiles and self._profile_config.is_greeter_supported() else None,
 				enabled=bool(self._profile_config.profiles and self._profile_config.is_greeter_supported()),
 				preview_action=self._prev_greeter,
@@ -100,6 +100,11 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			self._item_group.find_by_key('greeter').value = None
 
 		return profiles
+
+	def select_greeter(self, preset: GreeterType | None = None) -> GreeterType | None:
+		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
+		profile = profiles[0] if profiles else None
+		return select_greeter(profile=profile, preset=preset)
 
 	def select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
 		driver = preset
@@ -168,7 +173,11 @@ def select_greeter(
 	preset: GreeterType | None = None,
 ) -> GreeterType | None:
 	if not profile or profile.is_greeter_supported():
-		items = [MenuItem(greeter.value, value=greeter) for greeter in GreeterType]
+		needs_seatd = profile is not None and (
+			profile.custom_settings.get('seat_access') == 'seatd'
+			or any(p.custom_settings.get('seat_access') == 'seatd' for p in (profile.current_selection or []))
+		)
+		items = [MenuItem(g.value, value=g) for g in GreeterType if not (needs_seatd and g.uses_logind())]
 		items.append(MenuItem(text=tr('None'), value=None))
 		group = MenuItemGroup(items, sort_items=True)
 

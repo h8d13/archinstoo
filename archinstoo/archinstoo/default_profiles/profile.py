@@ -52,6 +52,16 @@ class GreeterType(Enum):
 	Greetd = 'greetd'
 	CosmicSession = 'cosmic-greeter'
 
+	def uses_logind(self) -> bool:
+		# These greeters depend on polkit/elogind and hold seat0, which collides with seatd.
+		return self in {
+			GreeterType.Lightdm,
+			GreeterType.LightdmSlick,
+			GreeterType.Sddm,
+			GreeterType.Gdm,
+			GreeterType.PlasmaLoginManager,
+		}
+
 
 class SelectResult(Enum):
 	NewSelection = auto()

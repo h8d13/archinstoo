@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstoo.default_profiles.profile import GreeterType, ProfileType
+from archinstoo.default_profiles.profile import ProfileType
 from archinstoo.default_profiles.wayland import WaylandProfile
 
 
@@ -29,8 +29,3 @@ class NiriProfile(WaylandProfile):
 			'xdg-desktop-portal-gnome',
 			'xdg-desktop-portal-gtk',
 		]
-
-	@property
-	@override
-	def default_greeter_type(self) -> GreeterType:
-		return GreeterType.Lightdm

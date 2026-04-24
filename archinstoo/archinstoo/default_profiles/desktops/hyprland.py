@@ -11,6 +11,8 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 class HyprlandProfile(WaylandProfile):
+	_default_greeter_non_seatd = GreeterType.Sddm
+
 	def __init__(self) -> None:
 		super().__init__('Hyprland', ProfileType.WindowMgr)
 
@@ -33,11 +35,6 @@ class HyprlandProfile(WaylandProfile):
 			'grim',
 			'slurp',
 		]
-
-	@property
-	@override
-	def default_greeter_type(self) -> GreeterType:
-		return GreeterType.Sddm
 
 	@property
 	@override
