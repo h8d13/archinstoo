@@ -52,8 +52,10 @@ class GreeterType(Enum):
 	Greetd = 'greetd'
 	CosmicSession = 'cosmic-greeter'
 
-	def uses_logind(self) -> bool:
-		# These greeters depend on polkit/elogind and hold seat0, which collides with seatd.
+	def conflicts_with_seatd(self) -> bool:
+		# Graphical display managers hold a session with DRM master open at handoff,
+		# so a seatd-based compositor (sway/niri/etc.) can't take over the GPU.
+		# TTY/session-transparent greeters (ly, greetd, cosmic-greeter) don't.
 		return self in {
 			GreeterType.Lightdm,
 			GreeterType.LightdmSlick,
