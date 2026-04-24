@@ -2095,9 +2095,8 @@ class Installer:
 	def user_set_shell(self, user: str, shell: str) -> bool:
 		info(f'Setting shell for {user} to {shell}')
 
-		cmd = ['arch-chroot', '-S', str(self.target), 'chsh', '-s', shell, user]
 		try:
-			run(cmd)
+			self.arch_chroot(['chsh', '-s', shell, user])
 			return True
 		except CalledProcessError as err:
 			debug(f'Error setting user shell: {err}')
@@ -2105,9 +2104,8 @@ class Installer:
 
 	def chown(self, owner: str, path: str, options: list[str] | None = None) -> bool:
 		options = options or []
-		cmd = ['arch-chroot', '-S', str(self.target), 'chown', *options, owner, path]
 		try:
-			run(cmd)
+			self.arch_chroot(['chown', *options, owner, path])
 			return True
 		except CalledProcessError as err:
 			debug(f'Error changing ownership of {path}: {err}')
