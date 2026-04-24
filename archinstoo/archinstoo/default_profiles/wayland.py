@@ -29,7 +29,7 @@ class WaylandProfile(Profile):
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		if self.custom_settings.get('seat_access') == 'seatd':
 			for user in users:
-				install_session.arch_chroot(f'usermod -a -G seat {user.username}')
+				install_session.arch_chroot(['usermod', '-a', '-G', 'seat', user.username])
 
 	@property
 	@override
