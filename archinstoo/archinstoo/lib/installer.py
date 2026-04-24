@@ -1957,22 +1957,45 @@ class Installer:
 	def create_users(
 		self,
 		users: User | list[User],
-		privilege_escalation: PrivilegeEscalation = PrivilegeEscalation.Sudo,
+		privilege_escalation: PrivilegeEscalation | None = PrivilegeEscalation.Sudo,
 	) -> None:
 		if not isinstance(users, list):
 			users = [users]
 
 		# Install the privilege escalation package
-		if User.any_elevated(users):
+		if privilege_escalation is not None and User.any_elevated(users):
 			self.pacman.strap(privilege_escalation.packages())
+
+		self._configure_makepkg(privilege_escalation)
 
 		for user in users:
 			self._create_user(user, privilege_escalation)
 
+	def _configure_makepkg(self, privilege_escalation: PrivilegeEscalation | None) -> None:
+		# makepkg tries sudo then su by default, only doas/run0 need an override
+		if privilege_escalation is None:
+			return
+
+		auth_binary = {
+			PrivilegeEscalation.Doas: 'doas',
+			PrivilegeEscalation.Run0: 'run0',
+		}.get(privilege_escalation)
+
+		if auth_binary is None:
+			return
+
+		makepkg_conf = self.target / 'etc/makepkg.conf'
+		if not makepkg_conf.exists():
+			return
+
+		content = makepkg_conf.read_text()
+		content = content.replace('#PACMAN_AUTH=()', f'PACMAN_AUTH=({auth_binary})')
+		makepkg_conf.write_text(content)
+
 	def _create_user(
 		self,
 		user: User,
-		privilege_escalation: PrivilegeEscalation = PrivilegeEscalation.Sudo,
+		privilege_escalation: PrivilegeEscalation | None = PrivilegeEscalation.Sudo,
 	) -> None:
 		info(f'Creating user {user.username}')
 
@@ -2000,8 +2023,8 @@ class Installer:
 					self.enable_sudo(user)
 				case PrivilegeEscalation.Doas:
 					self.enable_doas(user)
-				case PrivilegeEscalation.Run0:
-					pass  # run0 uses polkit - wheel group membership is sufficient
+				case PrivilegeEscalation.Run0 | None:
+					pass  # run0/su via wheel group - no extra config needed
 
 		for stash_url in user.stash_urls:
 			self._clone_user_stash(user.username, stash_url)
