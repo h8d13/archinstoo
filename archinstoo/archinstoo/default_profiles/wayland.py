@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.profile import DisplayServer, Profile, ProfileType
+from archinstoo.default_profiles.profile import DisplayServer, GreeterType, Profile, ProfileType
 from archinstoo.lib.translationhandler import tr
 
 if TYPE_CHECKING:
@@ -9,6 +9,10 @@ if TYPE_CHECKING:
 
 
 class WaylandProfile(Profile):
+	# seatd is incompatible with logind-based greeters (lightdm/sddm/gdm);
+	# subclasses set their preferred non-seatd greeter here.
+	_default_greeter_non_seatd: GreeterType = GreeterType.Lightdm
+
 	def __init__(
 		self,
 		name: str = 'Wayland',
@@ -26,6 +30,13 @@ class WaylandProfile(Profile):
 		if self.custom_settings.get('seat_access') == 'seatd':
 			for user in users:
 				install_session.arch_chroot(f'usermod -a -G seat {user.username}')
+
+	@property
+	@override
+	def default_greeter_type(self) -> GreeterType:
+		if self.custom_settings.get('seat_access') == 'seatd':
+			return GreeterType.Ly
+		return self._default_greeter_non_seatd
 
 	@override
 	def preview_text(self) -> str:

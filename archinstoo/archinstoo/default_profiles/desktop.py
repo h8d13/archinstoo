@@ -33,7 +33,7 @@ class DesktopProfile(Profile):
 	@override
 	def default_greeter_type(self) -> GreeterType | None:
 		combined_greeters: dict[GreeterType, int] = {}
-		for profile in self.current_selection:
+		for profile in sorted(self.current_selection, key=lambda p: p.custom_settings.get('seat_access') != 'seatd'):
 			if profile.default_greeter_type:
 				combined_greeters.setdefault(profile.default_greeter_type, 0)
 				combined_greeters[profile.default_greeter_type] += 1

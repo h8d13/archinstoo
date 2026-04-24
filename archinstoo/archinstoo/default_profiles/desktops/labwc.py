@@ -1,7 +1,7 @@
 from typing import override
 
 from archinstoo.default_profiles.desktops import SeatAccess
-from archinstoo.default_profiles.profile import GreeterType, ProfileType
+from archinstoo.default_profiles.profile import ProfileType
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -30,11 +30,6 @@ class LabwcProfile(WaylandProfile):
 			'alacritty',
 			'labwc',
 		] + additional
-
-	@property
-	@override
-	def default_greeter_type(self) -> GreeterType:
-		return GreeterType.Lightdm
 
 	@property
 	@override
