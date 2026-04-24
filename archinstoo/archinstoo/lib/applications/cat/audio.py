@@ -42,15 +42,25 @@ class AudioApp:
 			service_dir.mkdir(parents=True, exist_ok=True)
 
 			# Set ownership of the entire user catalogue
-			install_session.arch_chroot(f'chown -R {user.username}:{user.username} /home/{user.username}')
+			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}'])
 
 			# symlink in the correct pipewire systemd items
 			install_session.arch_chroot(
-				f'ln -sf /usr/lib/systemd/user/pipewire-pulse.service /home/{user.username}/.config/systemd/user/default.target.wants/pipewire-pulse.service',
+				[
+					'ln',
+					'-sf',
+					'/usr/lib/systemd/user/pipewire-pulse.service',
+					f'/home/{user.username}/.config/systemd/user/default.target.wants/pipewire-pulse.service',
+				],
 				run_as=user.username,
 			)
 			install_session.arch_chroot(
-				f'ln -sf /usr/lib/systemd/user/pipewire-pulse.socket /home/{user.username}/.config/systemd/user/default.target.wants/pipewire-pulse.socket',
+				[
+					'ln',
+					'-sf',
+					'/usr/lib/systemd/user/pipewire-pulse.socket',
+					f'/home/{user.username}/.config/systemd/user/default.target.wants/pipewire-pulse.socket',
+				],
 				run_as=user.username,
 			)
 

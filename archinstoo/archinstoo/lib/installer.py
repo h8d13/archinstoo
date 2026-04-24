@@ -674,7 +674,7 @@ class Installer:
 
 		if (Path('/usr') / 'share' / 'zoneinfo' / zone).exists():
 			(Path(self.target) / 'etc' / 'localtime').unlink(missing_ok=True)
-			self.arch_chroot(f'ln -s /usr/share/zoneinfo/{zone} /etc/localtime')
+			self.arch_chroot(['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime'])
 			return True
 
 		warn(f'Time zone {zone} does not exist, continuing with system default')
@@ -768,6 +768,8 @@ class Installer:
 	) -> SysCommand | subprocess.CompletedProcess[bytes]:
 		# argv list form avoids argv/shell-injection when arguments come from user or config input.
 		if isinstance(cmd, list):
+			if run_as:
+				cmd = ['su', '-', run_as, '-c', shlex.join(cmd)]
 			argv = cmd if self.target == Path('/') else ['arch-chroot', '-S', str(self.target), *cmd]
 			return run(argv)
 

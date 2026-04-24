@@ -26,4 +26,4 @@ class ShellApp:
 		for user in users:
 			shell_path = f'/usr/bin/{user.shell.value}'
 			debug(f'Setting shell to {shell_path} for {user.username}')
-			install_session.arch_chroot(f'chsh -s {shell_path} {user.username}')
+			install_session.arch_chroot(['chsh', '-s', shell_path, user.username])
