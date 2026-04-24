@@ -797,6 +797,13 @@ class GlobalMenu(AbstractMenu[None]):
 		if bootloader == Bootloader.Systemd and efi_partition and not boot_partition and not bootloader_config.uki:
 			errors.append('systemd-boot with ESP at /efi requires UKI or a separate XBOOTLDR /boot partition')
 
+		if bootloader in (Bootloader.Systemd, Bootloader.Efistub, Bootloader.Refind) and not SysInfo.has_uefi():
+			errors.append(f'{bootloader.value} requires a UEFI system')
+
+		# Firmware reads the kernel directly from the boot partition, which must be FAT.
+		if bootloader == Bootloader.Efistub and boot_partition is not None and (boot_partition.fs_type is None or not boot_partition.fs_type.is_fat()):
+			errors.append('Efistub does not support booting with a non-FAT boot partition')
+
 		if bootloader == Bootloader.Limine:
 			limine_boot = boot_partition or efi_partition
 			if limine_boot is not None and (limine_boot.fs_type is None or not limine_boot.fs_type.is_fat()):
@@ -810,9 +817,6 @@ class GlobalMenu(AbstractMenu[None]):
 					f'Limine requires kernels on a FAT partition. The ESP is mounted at {efi_partition.mountpoint}, '
 					'enable UKI or add a separate /boot partition to install Limine.'
 				)
-
-		elif bootloader == Bootloader.Refind and not SysInfo.has_uefi():
-			errors.append('rEFInd can only be used on UEFI systems')
 
 		return errors
 
