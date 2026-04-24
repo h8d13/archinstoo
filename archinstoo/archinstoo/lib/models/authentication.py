@@ -22,7 +22,7 @@ class AuthenticationSerialization(TypedDict):
 	lock_root_account: NotRequired[bool]
 	root_enc_password: NotRequired[str]
 	users: NotRequired[list[UserSerialization]]
-	privilege_escalation: NotRequired[str]
+	privilege_escalation: NotRequired[str | None]
 
 
 @dataclass
@@ -30,7 +30,7 @@ class AuthenticationConfiguration:
 	root_enc_password: Password | None = None
 	users: list[User] = field(default_factory=list)
 	lock_root_account: bool = False
-	privilege_escalation: PrivilegeEscalation = PrivilegeEscalation.Sudo
+	privilege_escalation: PrivilegeEscalation | None = PrivilegeEscalation.Sudo
 
 	@property
 	def has_elevated_users(self) -> bool:
@@ -49,8 +49,9 @@ class AuthenticationConfiguration:
 		if users := args.get('users'):
 			auth_config.users = User.parse_arguments(users)
 
-		if priv_esc := args.get('privilege_escalation'):
-			auth_config.privilege_escalation = PrivilegeEscalation(priv_esc)
+		if 'privilege_escalation' in args:
+			priv_esc = args.get('privilege_escalation')
+			auth_config.privilege_escalation = PrivilegeEscalation(priv_esc) if priv_esc else None
 
 		return auth_config
 
@@ -61,7 +62,7 @@ class AuthenticationConfiguration:
 			config['lock_root_account'] = self.lock_root_account
 
 		if self.privilege_escalation != PrivilegeEscalation.Sudo:
-			config['privilege_escalation'] = self.privilege_escalation.value
+			config['privilege_escalation'] = self.privilege_escalation.value if self.privilege_escalation else None
 
 		if self.users:
 			config['users'] = [u.json() for u in self.users]

@@ -416,7 +416,8 @@ class GlobalMenu(AbstractMenu[None]):
 
 			if auth_config.users:
 				output += FormattedOutput.as_table(auth_config.users) + '\n'
-				output += f'{tr("Privilege esc")}: {auth_config.privilege_escalation.value}\n'
+				priv_esc = auth_config.privilege_escalation.value if auth_config.privilege_escalation else tr('None')
+				output += f'{tr("Privilege esc")}: {priv_esc}\n'
 
 			return output
 

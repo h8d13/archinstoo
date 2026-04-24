@@ -105,12 +105,13 @@ def select_root_password(preset: str | None = None) -> Password | None:
 	return get_password(text=tr('Root password'), allow_skip=True)
 
 
-def select_privilege_escalation(preset: PrivilegeEscalation) -> PrivilegeEscalation:
+def select_privilege_escalation(preset: PrivilegeEscalation | None) -> PrivilegeEscalation | None:
 	items = [MenuItem(method.value, value=method) for method in PrivilegeEscalation]
+	items.append(MenuItem(text=tr('None'), value=None))
 	group = MenuItemGroup(items)
 	group.set_selected_by_value(preset)
 
-	result = SelectMenu[PrivilegeEscalation](
+	result = SelectMenu[PrivilegeEscalation | None](
 		group,
 		alignment=Alignment.CENTER,
 		frame=FrameProperties.min(tr('Privilege escalation')),
@@ -119,7 +120,7 @@ def select_privilege_escalation(preset: PrivilegeEscalation) -> PrivilegeEscalat
 
 	match result.type_:
 		case ResultType.Selection:
-			return result.get_value()
+			return result.item().value
 		case ResultType.Skip:
 			return preset
 		case _:
