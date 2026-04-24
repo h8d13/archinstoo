@@ -19,6 +19,7 @@ class PlasmaProfile(WaylandProfile):
 			'kate',
 			'dolphin',
 			'ark',
+			'bluedevil',
 		]
 
 	@property
