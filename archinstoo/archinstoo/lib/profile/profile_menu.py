@@ -177,7 +177,7 @@ def select_greeter(
 			profile.custom_settings.get('seat_access') == 'seatd'
 			or any(p.custom_settings.get('seat_access') == 'seatd' for p in (profile.current_selection or []))
 		)
-		items = [MenuItem(g.value, value=g) for g in GreeterType if not (needs_seatd and g.uses_logind())]
+		items = [MenuItem(g.value, value=g) for g in GreeterType if not (needs_seatd and g.conflicts_with_seatd())]
 		items.append(MenuItem(text=tr('None'), value=None))
 		group = MenuItemGroup(items, sort_items=True)
 
