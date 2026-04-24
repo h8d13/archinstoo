@@ -27,4 +27,4 @@ class DockerProfile(Profile):
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		for user in users:
-			install_session.arch_chroot(f'usermod -a -G docker {user.username}')
+			install_session.arch_chroot(['usermod', '-a', '-G', 'docker', user.username])
