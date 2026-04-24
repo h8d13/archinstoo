@@ -760,7 +760,17 @@ class Installer:
 			return SysCommand(cmd, peek_output=peek_output)
 		return SysCommand(f'arch-chroot -S {self.target} {cmd}', peek_output=peek_output)
 
-	def arch_chroot(self, cmd: str, run_as: str | None = None, peek_output: bool = False) -> SysCommand:
+	def arch_chroot(
+		self,
+		cmd: str | list[str],
+		run_as: str | None = None,
+		peek_output: bool = False,
+	) -> SysCommand | subprocess.CompletedProcess[bytes]:
+		# argv list form avoids argv/shell-injection when arguments come from user or config input.
+		if isinstance(cmd, list):
+			argv = cmd if self.target == Path('/') else ['arch-chroot', '-S', str(self.target), *cmd]
+			return run(argv)
+
 		if run_as:
 			cmd = f'su - {run_as} -c {shlex.quote(cmd)}'
 
@@ -1999,23 +2009,23 @@ class Installer:
 	) -> None:
 		info(f'Creating user {user.username}')
 
-		cmd = 'useradd -m'
+		cmd = ['useradd', '-m']
 
 		if user.elev:
-			cmd += ' -G wheel'
+			cmd += ['-G', 'wheel']
 
-		cmd += f' {user.username}'
+		cmd.append(user.username)
 
 		try:
 			self.arch_chroot(cmd)
-		except SysCallError:
+		except CalledProcessError:
 			# user may already exist (e.g. installing onto running system)
 			info(f'User {user.username} already exists, skipping creation')
 
 		self.set_user_password(user)
 
 		for group in user.groups:
-			self.arch_chroot(f'gpasswd -a {user.username} {group}')
+			self.arch_chroot(['gpasswd', '-a', user.username, group])
 
 		if user.elev:
 			match privilege_escalation:
@@ -2037,13 +2047,16 @@ class Installer:
 		url, _, branch = stash_url.partition('#')
 		repo_name = url.rstrip('/').split('/')[-1].removesuffix('.git')
 		stash_dir = f'/home/{username}/.stash'
-		clone_cmd = f'git clone --depth 1 -b {branch} {url}' if branch else f'git clone --depth 1 {url}'
+		clone_cmd = ['git', 'clone', '--depth', '1']
+		if branch:
+			clone_cmd += ['-b', branch]
+		clone_cmd += [url, f'{stash_dir}/{repo_name}']
 
 		try:
-			self.arch_chroot(f'mkdir -p {stash_dir}')
-			self.arch_chroot(f'{clone_cmd} {stash_dir}/{repo_name}')
-			self.arch_chroot(f'chown -R {username}:{username} {stash_dir}')
-		except SysCallError as err:
+			self.arch_chroot(['mkdir', '-p', stash_dir])
+			self.arch_chroot(clone_cmd)
+			self.arch_chroot(['chown', '-R', f'{username}:{username}', stash_dir])
+		except CalledProcessError as err:
 			error(f'Failed to clone stash for {username}: {err}')
 
 	def set_user_password(self, user: User) -> bool:
