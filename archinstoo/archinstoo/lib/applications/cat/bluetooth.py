@@ -17,7 +17,7 @@ class BluetoothApp:
 	@property
 	def services(self) -> list[str]:
 		return [
-			'bluetooth.service',
+			'bluetooth',
 		]
 
 	def install(self, install_session: Installer) -> None:

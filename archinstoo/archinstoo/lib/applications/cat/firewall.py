@@ -23,13 +23,13 @@ class FirewallApp:
 	@property
 	def ufw_services(self) -> list[str]:
 		return [
-			'ufw.service',
+			'ufw',
 		]
 
 	@property
 	def fwd_services(self) -> list[str]:
 		return [
-			'firewalld.service',
+			'firewalld',
 		]
 
 	def install(

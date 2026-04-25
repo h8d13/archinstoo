@@ -24,13 +24,13 @@ class PowerManagementApp:
 	@property
 	def ppd_services(self) -> list[str]:
 		return [
-			'power-profiles-daemon.service',
+			'power-profiles-daemon',
 		]
 
 	@property
 	def tuned_services(self) -> list[str]:
 		return [
-			'tuned.service',
+			'tuned',
 		]
 
 	def install(

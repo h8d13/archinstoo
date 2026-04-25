@@ -33,12 +33,12 @@ class NetworkHandler:
 				if profile_config and profile_config.profiles and profile_config.has_desktop_profile():
 					installation.add_additional_packages('network-manager-applet')
 
-				installation.enable_service('NetworkManager.service')
+				installation.enable_service('NetworkManager')
 
 				# special handling for NM iwd service + conf
 				if network_config.type == NicType.NM_IWD:
 					installation.configure_nm_iwd()
-					installation.disable_service('iwd.service')
+					installation.disable_service('iwd')
 
 			case NicType.MANUAL:
 				for nic in network_config.nics:

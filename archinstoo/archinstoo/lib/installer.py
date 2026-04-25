@@ -1043,14 +1043,14 @@ class Installer:
 
 			self.pacman.strap('cronie')
 			self.pacman.strap('timeshift')
-			self.enable_service('cronie.service')
+			self.enable_service('cronie')
 
 		if bootloader and bootloader == Bootloader.Grub:
 			debug('Setting up grub integration for either')
 			self.pacman.strap('grub-btrfs')
 			self.pacman.strap('inotify-tools')
 			self._configure_grub_btrfsd(snapshot_type)
-			self.enable_service('grub-btrfsd.service')
+			self.enable_service('grub-btrfsd')
 
 	def setup_swap(
 		self,
@@ -1071,7 +1071,7 @@ class Installer:
 						comp_line += f' {recomp_algo.value} (type=idle)'
 					zram_conf.write(f'compression-algorithm = {comp_line}\n')
 
-			self.enable_service('systemd-zram-setup@zram0.service')
+			self.enable_service('systemd-zram-setup@zram0')
 
 			self._zram_enabled = True
 		else:

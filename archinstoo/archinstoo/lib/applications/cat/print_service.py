@@ -14,7 +14,7 @@ class PrintServiceApp:
 	@property
 	def services(self) -> list[str]:
 		return [
-			'cups.service',
+			'cups',
 		]
 
 	def install(self, install_session: Installer) -> None:
