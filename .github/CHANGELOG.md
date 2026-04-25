@@ -2,6 +2,28 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.06-0
+
+    - Explicit vendor firmware selection
+        - New `firmware.py` model + `system_conf` interaction wired into global menu and guided script
+    - Rework explicit `None` options
+        - Always last in the menu, returns `None` to config
+        - Available in `Greeter`, `Graphics driver`, `Network`, `Audio`, `Bootloader`
+    - LIVE KDE ISO
+        - New `isos/ISOMOD_LIVE` script
+        - Plasma profile cleanups (drop redundant entry, add missing `bluedevil`)
+        - Switch plasma to new plasma-login-manager (PLM)
+    - Seatd vs logind conflict (#4471)
+        - Return `ly` greeter when `seatd` is selected
+        - Guard `uses_logind()` to filter based on `seat_access` selection (`needs_seatd`)
+        - Drop `default_greeter_type` from most Wayland profiles (works for aggregate profiles)
+    - Wire `makepkg.conf` to `elev` (privilege escalation selection)
+    - Installer edge case fix on non-Arch host distros
+    - Upstream syncs
+        - #4443 installer cleanup
+        - #4473 new pattern for commands + port across call sites (audio, docker, shell, installer)
+        - #4474 port smaller validations into global menu
+
 ## 0.1.05-2
 
     - Upstream syncs:
