@@ -82,6 +82,7 @@ class Security(StrEnum):
 	FAIL2BAN = auto()
 	PAM_U2F = 'pam-u2f'
 	SBCTL = auto()
+	AUDIT = auto()
 
 
 class SecurityConfigSerialization(TypedDict):

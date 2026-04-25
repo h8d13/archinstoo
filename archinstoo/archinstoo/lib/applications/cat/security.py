@@ -17,7 +17,7 @@ class SecurityApp:
 	@property
 	def apparmor_services(self) -> list[str]:
 		return [
-			'apparmor.service',
+			'apparmor',
 		]
 
 	@property
@@ -62,7 +62,7 @@ class SecurityApp:
 				case Security.FAIL2BAN:
 					debug('Installing security: Fail2ban')
 					install_session.add_additional_packages([tool.value])
-					install_session.enable_service('fail2ban.service')
+					install_session.enable_service('fail2ban')
 
 				case Security.PAM_U2F:
 					debug('Installing security: pam-u2f')
@@ -71,3 +71,8 @@ class SecurityApp:
 				case Security.SBCTL:
 					debug('Installing security: sbctl')
 					install_session.add_additional_packages(['sbctl'])
+
+				case Security.AUDIT:
+					debug('Installing security: audit')
+					install_session.add_additional_packages(['audit'])
+					install_session.enable_service('auditd')

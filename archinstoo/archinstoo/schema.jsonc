@@ -176,7 +176,8 @@
 		"bubblewrap": ["bubblewrap"],
 		"fail2ban": ["fail2ban"],
 		"pam_u2f": ["pam-u2f"],
-		"sbctl": ["sbctl"]
+		"sbctl": ["sbctl"],
+		"audit": ["audit"]
 	},
 
 	"network": {
