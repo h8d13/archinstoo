@@ -4,12 +4,6 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_GLOB="archinstoo-*.pkg.tar.zst"
 
-if [ "$USER" = "root" ]; then
-    ELEV=""
-else
-    ELEV="${ELEV:-sudo}"
-fi
-
 go_to () {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
 }
@@ -59,7 +53,7 @@ case "$1" in
 	;;
 	-i|--install)
 	go_to
- 	$ELEV pacman -U --overwrite '*' $PKG_GLOB
+ 	pacman -U --overwrite '*' $PKG_GLOB
 	;;
 	-ul | --up-logs)
 	go_to
@@ -80,9 +74,9 @@ case "$1" in
 	go_to
 	. ./PKGBUILD
 	if [ "$2" = "-o" ] || [ "$2" = "--opt" ]; then
-		$ELEV pacman -Sy --needed "${depends[@]}" "${optdepends[@]}"
+		pacman -Sy --needed "${depends[@]}" "${optdepends[@]}"
 	else
-		$ELEV pacman -Sy --needed "${depends[@]}"
+		pacman -Sy --needed "${depends[@]}"
 	fi
 	;;
 	*)

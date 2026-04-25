@@ -1,8 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-ELEV="${ELEV:-sudo}"
 cd archinstoo || exit 1
-
 # launch venv and run archinstall
 
 if [ ! -d ".venv" ]; then
@@ -13,4 +11,4 @@ else
     . .venv/bin/activate
 fi
 
-"$ELEV" .venv/bin/python -B -m archinstoo "$@"
+.venv/bin/python -B -m archinstoo "$@"
