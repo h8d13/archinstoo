@@ -1,11 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-if [ "$USER" = "root" ]; then
-    ELEV=""
-else
-    ELEV="${ELEV:-sudo}"
-fi
+cd archinstoo || exit 1
 # help / list / size 
-# do not need root but we append it for most features
-# can be launched with ELEV=doas env var
-(cd archinstoo && $ELEV python -B -m archinstoo "$@") && cd ..
+# do not need root
+(python -B -m archinstoo "$@") && cd ..
