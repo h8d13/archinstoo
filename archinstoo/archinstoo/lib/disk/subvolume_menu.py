@@ -9,6 +9,8 @@ from archinstoo.lib.tui.prompts import prompt_dir
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment
 
+from .layouts import get_default_btrfs_subvols
+
 
 class SubvolumeMenu(ListManager[SubvolumeModification]):
 	def __init__(
@@ -87,8 +89,6 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 				data = [d for d in data if d.name != new_subvolume.name]
 				data += [new_subvolume]
 		elif action == self._actions[1]:  # default layout
-			from .conf import get_default_btrfs_subvols
-
 			data = get_default_btrfs_subvols()
 		elif entry is not None:  # edit/delete
 			if action == self._actions[2]:  # edit subvolume
