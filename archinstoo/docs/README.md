@@ -72,9 +72,11 @@
 │   │   │   ├── disk_menu
 │   │   │   ├── encryption_menu
 │   │   │   ├── filesystem
+│   │   │   ├── layouts
 │   │   │   ├── luks
 │   │   │   ├── lvm
 │   │   │   ├── partitioning_menu
+│   │   │   ├── selectors
 │   │   │   ├── subvolume_menu
 │   │   │   └── utils
 │   │   ├── exceptions
@@ -160,5 +162,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 135 files
+24 directories, 137 files
 ```
