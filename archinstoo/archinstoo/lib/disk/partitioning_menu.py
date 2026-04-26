@@ -24,6 +24,7 @@ from archinstoo.lib.tui.prompts import prompt_dir
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
+from .layouts import suggest_single_disk_layout
 from .subvolume_menu import SubvolumeMenu
 
 
@@ -591,8 +592,6 @@ class PartitioningList(ListManager[DiskSegment]):
 		# that this operation will erase those modifications
 		if any(not entry.exists() for entry in data) and not self._reset_confirmation():
 			return None
-
-		from .conf import suggest_single_disk_layout
 
 		return suggest_single_disk_layout(self._device, advanced=self._advanced)
 
