@@ -101,6 +101,15 @@ ignore_missing_imports = true
 targets = ["archinstoo"]
 exclude = ["/tests"]
 
+[tool.importlinter]
+root_package = "archinstoo"
+include_external_packages = false
+
+[[tool.importlinter.contracts]]
+name = "No circular imports between sibling subpackages"
+type = "acyclic_siblings"
+ancestors = ["archinstoo", "archinstoo.**"]
+
 [tool.pytest]
 pythonpath = ["."]
 addopts = [
