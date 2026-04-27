@@ -5,12 +5,15 @@ from functools import cached_property
 from pathlib import Path
 from typing import Self, cast
 
-from archinstoo.default_profiles.profile import DisplayServer
-
 from .exceptions import SysCallError
 from .general import SysCommand
 from .output import debug
 from .translationhandler import tr
+
+
+class DisplayServer(Enum):
+	X11 = 'x11'
+	Wayland = 'wayland'
 
 
 class CpuVendor(Enum):

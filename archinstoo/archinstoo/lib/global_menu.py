@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import override
 
-from archinstoo.default_profiles.profile import GreeterType, Profile
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.models.application import ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, PartitionModification
 from archinstoo.lib.pm import list_available_packages
+from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -27,8 +27,8 @@ from .interactions.general_conf import (
 	select_timezone,
 )
 from .interactions.system_conf import select_firmware, select_kernel, select_swap
-from .localization.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
+from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration, FirmwareType
 from .models.locale import LocaleConfiguration
@@ -883,9 +883,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 	@staticmethod
 	def _default_profile() -> Profile:
-		from archinstoo.default_profiles.minimal import MinimalProfile
-
-		return MinimalProfile()
+		return Profile('Minimal', ProfileType.Minimal)
 
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu

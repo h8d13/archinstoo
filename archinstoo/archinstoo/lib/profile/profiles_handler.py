@@ -6,12 +6,12 @@ from tempfile import NamedTemporaryFile
 from types import ModuleType
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstoo.default_profiles.profile import DisplayServer, GreeterType, Profile
 from archinstoo.lib.hardware import GfxDriver
 from archinstoo.lib.models.profile import ProfileConfiguration
-from archinstoo.lib.network.utils import fetch_data_from_url
 from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.profile.base import GreeterType, Profile
 from archinstoo.lib.translationhandler import tr
+from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -336,17 +336,3 @@ class ProfileHandler:
 		for profile in self.get_top_level_profiles():
 			if profile.name not in excluded_profiles:
 				profile.reset()
-
-	def display_servers(self, profile: Profile) -> set[DisplayServer]:
-		"""
-		Returns the set of display servers required by this profile.
-		Aggregates requirements from sub-profiles if present.
-		Profiles inherit from XorgProfile or WaylandProfile to specify their display server.
-		"""
-		if profile.current_selection:
-			# Aggregate requirements from sub-profiles
-			servers = set()
-			for sub_profile in profile.current_selection:
-				servers.update(sub_profile.display_servers())
-			return servers
-		return set()

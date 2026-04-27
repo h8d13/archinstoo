@@ -1,5 +1,6 @@
 from typing import override
 
+from archinstoo.lib.authentication.password_prompt import get_password
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.device import (
@@ -17,7 +18,6 @@ from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import get_password
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 

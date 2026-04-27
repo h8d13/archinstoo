@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
-from archinstoo.lib.authentication.crypt import crypt_yescrypt
+from archinstoo.lib.crypt import crypt_yescrypt
 from archinstoo.lib.translationhandler import tr
 
 

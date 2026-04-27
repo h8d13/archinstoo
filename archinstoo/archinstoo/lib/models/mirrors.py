@@ -9,9 +9,8 @@ from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict, override
 
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.network.utils import DownloadTimer, fetch_data_from_url
 from archinstoo.lib.output import debug
-from archinstoo.lib.utils.net import ping
+from archinstoo.lib.utils.net import DownloadTimer, fetch_data_from_url, ping
 
 
 def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:

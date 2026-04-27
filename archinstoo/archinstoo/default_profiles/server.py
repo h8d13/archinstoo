@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Self, override
 
-from archinstoo.default_profiles.profile import Profile, ProfileType, SelectResult
 from archinstoo.lib.models.users import User
 from archinstoo.lib.output import info
+from archinstoo.lib.profile.base import Profile, ProfileType, SelectResult
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

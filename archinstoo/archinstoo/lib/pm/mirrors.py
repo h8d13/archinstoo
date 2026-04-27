@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import ClassVar, override
 
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.interactions import add_number_of_parallel_downloads
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.mirrors import (
@@ -21,14 +20,15 @@ from archinstoo.lib.models.mirrors import (
 	SignOption,
 )
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.network.utils import fetch_data_from_url
 from archinstoo.lib.output import FormattedOutput, debug
 from archinstoo.lib.pathnames import MIRRORLIST
+from archinstoo.lib.pm.parallel_downloads_prompt import add_number_of_parallel_downloads
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.utils.net import fetch_data_from_url
 
 
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
