@@ -97,15 +97,15 @@ A `man` page is also available `man -l docs/archinstoo.1`
 
 See [Headless](./.github/HEADLESS.md) for example server install to play minecraft.
 
-See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. *Uses grimAUR directly during install*
+See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. *Uses a modified version of`grimaur` [aur-helper](https://github.com/mackilanu/grimaur) directly during install* 
 
 See [Multi-boot](./.github/MULTI_BOOT.md) for example to boot multiple OSes.
-
-See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
 See [Security](./.github/SECURITY.md) for hardening installs/best practices.
 
 See [Build-ISOs](./.github/BUILD_ISOS.md) to create your own install mediums.
+
+See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
 ## Testing
 
@@ -132,5 +132,3 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 ---
 
 See `archinstall` [upstream](https://github.com/archlinux/archinstall)
-
-See `grimaur` [aur-helper](https://github.com/mackilanu/grimaur)
