@@ -1643,11 +1643,38 @@ def print_search_results(results: Sequence[SearchResult]) -> None:
 			print(line)
 
 
+def format_update_candidate(index: int, candidate: UpdateCandidate) -> list[str]:
+	index_label = style(f'{index:>2})', CYAN)
+	name_part = style(candidate.name, BOLD)
+	current_version = candidate.installed_version or '?'
+	if candidate.target_version:
+		target_label = candidate.target_version
+	elif candidate.remote_head:
+		target_label = f'{candidate.remote_head[:7]}'
+	else:
+		target_label = 'unknown'
+	change = f'{current_version} -> {target_label}'
+	meta_bits: list[str] = []
+	if candidate.remote_head and not candidate.target_version:
+		meta_bits.append('git commit')
+	line = f'{index_label} {name_part} {style(change, GREEN)}'
+	if meta_bits:
+		line += f' {style("[" + ", ".join(meta_bits) + "]", DIM)}'
+	return [line]
+
+
+def print_update_candidates(candidates: Sequence[UpdateCandidate]) -> None:
+	for index, candidate in enumerate(candidates, start=1):
+		for line in format_update_candidate(index, candidate):
+			print(line)
+
+
 def interactive_select_updates(
 	candidates: Sequence[UpdateCandidate],
 ) -> list[UpdateCandidate]:
 	if not candidates:
 		return []
+	print_update_candidates(candidates)
 	prompt_text = style(
 		'Select packages to update (Enter for all, q to quit): ',
 		YELLOW,

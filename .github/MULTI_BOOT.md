@@ -22,4 +22,4 @@ For same disks, you might be using another app to format, resize, etc before-han
 
 Then you can use `Manual Partitioning`, anything left marked as `Existing` will not be formated. 
 
-Already have a bootloader: `skip-boot` will allow you to skip BL selection in the menu.
+Already have a bootloader: `--skip-boot` will allow you to skip BL selection in the menu and `None` will do the same.
