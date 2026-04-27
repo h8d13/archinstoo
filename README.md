@@ -105,6 +105,8 @@ See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
 See [Security](./.github/SECURITY.md) for hardening installs/best practices.
 
+See [Build-ISOs](./.github/BUILD_ISOS.md) to create your own install mediums.
+
 ## Testing
 
 **Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md).
@@ -121,7 +123,7 @@ Any help in this regard is deeply appreciated, as testing takes just as long if 
 
 ## Building sources
 
-The idea being to promote **option 2** to use archinstoo latest. Always, since fixes are often time critical.
+The idea being to promote **option 2** to use archinstoo latest non-dev. Always, since fixes are often time critical.
 
 1. For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
 
