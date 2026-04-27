@@ -442,7 +442,6 @@ def select_pacman_options(preset: list[str]) -> list[str]:
 class _MirrorCache:
 	data: ClassVar[dict[str, list[MirrorStatusEntryV3]]] = {}
 	is_remote: bool = False
-	sort_info_shown: bool = False
 
 
 class MirrorListHandler:

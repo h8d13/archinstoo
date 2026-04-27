@@ -365,12 +365,6 @@ class SysCommand:
 			return self.session.exit_code
 		return None
 
-	@property
-	def trace_log(self) -> bytes | None:
-		if self.session:
-			return self.session._trace_log
-		return None
-
 
 def _append_log(file: str, content: str) -> None:
 	path = logger.directory / file

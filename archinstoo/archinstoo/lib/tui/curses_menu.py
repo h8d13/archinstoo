@@ -1402,7 +1402,7 @@ class Tui:
 		tui.screen.clear()
 		return Tui.t()._main_loop(component)
 
-	def _sig_win_resize(self, signum: int, frame: FrameType | None) -> None:
+	def _sig_win_resize(self, _signum: int, _frame: FrameType | None) -> None:
 		curses.endwin()
 		self._screen = curses.initscr()
 		curses.resizeterm(*self._screen.getmaxyx())

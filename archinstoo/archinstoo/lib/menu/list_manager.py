@@ -53,10 +53,6 @@ class ListManager[ValueT]:
 
 		self._last_choice: ValueT | str | None = None
 
-	@property
-	def last_choice(self) -> ValueT | str | None:
-		return self._last_choice
-
 	def is_last_choice_cancel(self) -> bool:
 		if self._last_choice is not None:
 			return self._last_choice == self._cancel_action
