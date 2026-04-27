@@ -25,6 +25,8 @@ Flags (env vars, all optional):
 | `ELEV` | `sudo` | Privilege escalation command (`doas`, etc.) |
 | `ISO_PROFILE` | `ISOMOD_CACHE` | `ISOMOD_CACHE` reads `${ISO_PROFILE}.conf` for the package list |
 
-Requires `archiso`. Add `pacman-contrib` if you enable caching. Don't run as root, scripts elevate when needed. Output goes to `isos/a/`.
+Requires `archiso` and `pacman-contrib` if you enable caching. 
 
-> Do read through all of it (relatively short) to understand what is going on. Process takes about 5 minutes depending on packages selected.
+**Don't run as root**, scripts elevate when needed. Output goes to `isos/a/`.
+
+> Do read through it (relatively short) to understand what is going on. Process takes about 5 minutes depending on packages selected.
