@@ -158,12 +158,13 @@
 │   └── custom
 ├── PKGBUILD
 ├── pyproject.toml
-└── tests/
-    ├── conftest
-    ├── data/
-    │   └── test_config.json
-    ├── test_args
-    └── test_configuration_output
+├── tests/
+│   ├── conftest
+│   ├── data/
+│   │   └── test_config.json
+│   ├── test_args
+│   └── test_configuration_output
+└── vulture_whitelist
 
-24 directories, 140 files
+24 directories, 141 files
 ```
