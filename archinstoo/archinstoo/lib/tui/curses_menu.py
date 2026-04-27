@@ -344,11 +344,6 @@ class EditViewport(AbstractViewport):
 
 		self._main_win.refresh()
 
-	def textbox_value(self) -> str:
-		if not self._textbox:
-			return ''
-		return self._textbox.gather().strip()
-
 	def redraw_text(self, text: str, cursor_pos: int) -> None:
 		if not self._edit_win:
 			return

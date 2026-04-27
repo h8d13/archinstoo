@@ -375,12 +375,6 @@ class Size:
 		value = int(self._normalize() / target_unit.value)
 		return Size(value, target_unit, self.sector_size)
 
-	def as_text(self) -> str:
-		return self.format_size(
-			self.unit,
-			self.sector_size,
-		)
-
 	def format_size(
 		self,
 		target_unit: Unit,
@@ -816,9 +810,6 @@ class FilesystemType(StrEnum):
 	# with the usage from this enum
 	CRYPTO_LUKS = 'crypto_LUKS'
 
-	def is_crypto(self) -> bool:
-		return self == FilesystemType.CRYPTO_LUKS
-
 	def is_fat(self) -> bool:
 		return self in (FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32)
 
@@ -1110,9 +1101,6 @@ class LvmVolumeGroup:
 			lvm_pvs,
 			[LvmVolume.parse_arg(vol) for vol in arg['volumes']],
 		)
-
-	def contains_lv(self, lv: LvmVolume) -> bool:
-		return lv in self.volumes
 
 
 class _LvmVolumeSerialization(TypedDict):
@@ -1428,11 +1416,6 @@ class EncryptionType(StrEnum):
 			tr('LVM on LUKS'): cls.LVM_ON_LUKS,
 			tr('LUKS on LVM'): cls.LUKS_ON_LVM,
 		}
-
-	@classmethod
-	def text_to_type(cls, text: str) -> Self:
-		mapping = cls._encryption_type_mapper()
-		return mapping[text]
 
 	def type_to_text(self) -> str:
 		mapping = self._encryption_type_mapper()

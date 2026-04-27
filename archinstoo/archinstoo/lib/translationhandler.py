@@ -20,9 +20,6 @@ class Language:
 		name = self.name_en
 		return f'{name} ({self.translation_percent}%)'
 
-	def is_match(self, lang_or_translated_lang: str) -> bool:
-		return bool(self.name_en == lang_or_translated_lang or self.translated_lang == lang_or_translated_lang)
-
 	def json(self) -> str:
 		return self.name_en
 

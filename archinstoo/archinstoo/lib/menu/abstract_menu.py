@@ -28,12 +28,9 @@ class AbstractMenu[ValueT]:
 		self._reset_warning = reset_warning
 		self._bug_report_url = bug_report_url
 
-		self.is_context_mgr = False
-
 		self._sync_from_config()
 
 	def __enter__(self, *args: Any, **kwargs: Any) -> Self:
-		self.is_context_mgr = True
 		return self
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
