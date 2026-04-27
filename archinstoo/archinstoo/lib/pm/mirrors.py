@@ -22,7 +22,7 @@ from archinstoo.lib.models.mirrors import (
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import FormattedOutput, debug
 from archinstoo.lib.pathnames import MIRRORLIST
-from archinstoo.lib.pm.parallel_downloads_prompt import add_number_of_parallel_downloads
+from archinstoo.lib.pm.config import set_parallel_downloads
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -269,7 +269,7 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 			),
 			MenuItem(
 				text=tr('Parallel Downloads'),
-				action=add_number_of_parallel_downloads,
+				action=set_parallel_downloads,
 				value=self._mirror_config.parallel_downloads,
 				preview_action=self._prev_parallel_downloads,
 				key='parallel_downloads',
