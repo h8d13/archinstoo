@@ -52,7 +52,11 @@ from .pm import Pacman
 from .pm.config import PacmanConfig
 
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
-__base_packages__ = ['base']
+# mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
+# pacman picks the first initramfs provider from the host's pacman.conf, which on non-Arch
+# hosts (EndeavourOS prefers dracut, etc.) breaks the installer's mkinitcpio() and
+# _config_uki() methods that assume mkinitcpio is present in the chroot.
+__base_packages__ = ['base', 'mkinitcpio']
 
 # Available kernel options
 __kernels__ = ['linux', 'linux-lts', 'linux-zen', 'linux-hardened']
@@ -1791,8 +1795,6 @@ class Installer:
 	) -> None:
 		if not efi_partition or not efi_partition.mountpoint:
 			raise ValueError(f'Could not detect ESP at mountpoint {self.target}')
-
-		self.pacman.strap('mkinitcpio')
 
 		# Set up kernel command line
 		with open(self.target / 'etc/kernel/cmdline', 'w') as cmdline:
