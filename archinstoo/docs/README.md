@@ -27,7 +27,6 @@
 │   │   │   ├── xfce4
 │   │   │   └── xmonad
 │   │   ├── minimal
-│   │   ├── profile
 │   │   ├── server
 │   │   ├── servers/
 │   │   │   ├── cockpit
@@ -60,12 +59,14 @@
 │   │   ├── args
 │   │   ├── authentication/
 │   │   │   ├── authentication_menu
-│   │   │   ├── crypt
+│   │   │   ├── password_prompt
 │   │   │   ├── shell
 │   │   │   └── users_menu
 │   │   ├── bootloader/
 │   │   │   └── bootloader_menu
+│   │   ├── checkpoints
 │   │   ├── configuration
+│   │   ├── crypt
 │   │   ├── disk/
 │   │   │   ├── conf
 │   │   │   ├── device_handler
@@ -90,11 +91,11 @@
 │   │   │   └── system_conf
 │   │   ├── linux_path
 │   │   ├── localization/
-│   │   │   ├── locale_menu
 │   │   │   └── utils
 │   │   ├── menu/
 │   │   │   ├── abstract_menu
 │   │   │   ├── list_manager
+│   │   │   ├── locale_menu
 │   │   │   └── menu_helper
 │   │   ├── models/
 │   │   │   ├── application
@@ -110,17 +111,20 @@
 │   │   │   ├── service
 │   │   │   └── users
 │   │   ├── network/
+│   │   │   ├── interfaces
 │   │   │   ├── network_handler
-│   │   │   ├── network_menu
-│   │   │   └── utils
+│   │   │   └── network_menu
 │   │   ├── output
 │   │   ├── pacman
 │   │   ├── pathnames
 │   │   ├── pm/
 │   │   │   ├── config
 │   │   │   ├── mirrors
-│   │   │   └── packages
+│   │   │   ├── packages
+│   │   │   └── parallel_downloads_prompt
 │   │   ├── profile/
+│   │   │   ├── base
+│   │   │   ├── driver_select
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
 │   │   ├── translationhandler
@@ -162,5 +166,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 137 files
+24 directories, 141 files
 ```
