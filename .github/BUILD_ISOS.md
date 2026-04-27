@@ -29,4 +29,4 @@ Requires `archiso` and `pacman-contrib` if you enable caching.
 
 **Don't run as root**, scripts elevate when needed. Output goes to `isos/a/`.
 
-> Do read through it (relatively short) to understand what is going on. Process takes about 5 minutes depending on packages selected.
+> Do read through it (relatively short) to understand what is going on. Process takes 5 minutes depending on selections.
