@@ -7,10 +7,10 @@ from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import get_password
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
+from .password_prompt import get_password
 from .users_menu import select_users
 
 

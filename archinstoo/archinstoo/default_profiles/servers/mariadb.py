@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.profile import Profile, ProfileType
+from archinstoo.lib.profile.base import Profile, ProfileType
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer

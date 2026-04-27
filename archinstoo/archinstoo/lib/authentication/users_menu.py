@@ -6,9 +6,10 @@ from archinstoo.lib.models.users import Shell, SupplementaryGroup, User
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import get_password
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+
+from .password_prompt import get_password
 
 
 class UserList(ListManager[User]):

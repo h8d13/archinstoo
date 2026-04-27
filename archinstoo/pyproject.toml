@@ -104,6 +104,7 @@ exclude = ["/tests"]
 [tool.importlinter]
 root_package = "archinstoo"
 include_external_packages = false
+exclude_type_checking_imports = true
 
 [[tool.importlinter.contracts]]
 name = "No circular imports between sibling subpackages"

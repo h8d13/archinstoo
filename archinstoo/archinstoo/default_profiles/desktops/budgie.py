@@ -1,7 +1,7 @@
 from typing import override
 
-from archinstoo.default_profiles.profile import GreeterType, ProfileType
 from archinstoo.default_profiles.wayland import WaylandProfile
+from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 
 class BudgieProfile(WaylandProfile):

@@ -3,7 +3,7 @@ from typing import assert_never, override
 
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
-from archinstoo.lib.network.utils import list_interfaces
+from archinstoo.lib.network.interfaces import list_interfaces
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

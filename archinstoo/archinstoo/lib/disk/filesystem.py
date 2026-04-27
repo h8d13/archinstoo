@@ -2,7 +2,6 @@ import math
 import time
 from pathlib import Path
 
-from archinstoo.lib.interactions.general_conf import confirm_abort
 from archinstoo.lib.models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
@@ -21,6 +20,7 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import debug, info
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
+from archinstoo.lib.tui.prompts import confirm_abort
 
 from .device_handler import DeviceHandler
 from .luks import Luks2

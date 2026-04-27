@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, override
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
-from archinstoo.default_profiles.profile import DisplayServer, GreeterType, Profile
-from archinstoo.lib.hardware import GfxDriver
-from archinstoo.lib.interactions.system_conf import select_driver
+from archinstoo.lib.hardware import DisplayServer, GfxDriver
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.profile import ProfileConfiguration
+from archinstoo.lib.profile.base import GreeterType, Profile
+from archinstoo.lib.profile.driver_select import select_driver
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

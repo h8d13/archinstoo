@@ -1,6 +1,7 @@
 from typing import override
 
-from archinstoo.default_profiles.profile import DisplayServer, Profile, ProfileType
+from archinstoo.lib.hardware import DisplayServer
+from archinstoo.lib.profile.base import Profile, ProfileType
 from archinstoo.lib.translationhandler import tr
 
 

@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Self
 
+from archinstoo.lib.hardware import DisplayServer
 from archinstoo.lib.translationhandler import tr
 
 if TYPE_CHECKING:
@@ -35,11 +36,6 @@ class ProfileType(Enum):
 # WaylandProfile returns nothing, expected to be deps
 # this reduces by about 140 pkgs ISSUES#4057
 # which was added in hardware.py regardless
-
-
-class DisplayServer(Enum):
-	X11 = 'x11'
-	Wayland = 'wayland'
 
 
 class GreeterType(Enum):
@@ -146,10 +142,17 @@ class Profile:
 		return self.profile_type == ProfileType.Desktop
 
 	def display_servers(self) -> set[DisplayServer]:
-		from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
-		handler = ProfileHandler()
-		return handler.display_servers(self)
+		"""
+		Returns the set of display servers required by this profile.
+		Aggregates requirements from sub-profiles if present.
+		Profiles inherit from XorgProfile or WaylandProfile to specify their display server.
+		"""
+		if self.current_selection:
+			servers: set[DisplayServer] = set()
+			for sub_profile in self.current_selection:
+				servers.update(sub_profile.display_servers())
+			return servers
+		return set()
 
 	def preview_text(self) -> str:
 		"""

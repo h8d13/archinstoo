@@ -16,7 +16,7 @@ def reset_conf() -> bool:
 	try:
 		default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
 		info('Fetching default pacman.conf from upstream...')
-		from .network.utils import fetch_data_from_url
+		from .utils.net import fetch_data_from_url
 
 		conf_data = fetch_data_from_url(default_pm_conf)
 		Path('/etc/pacman.conf').write_text(conf_data)

@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstoo.default_profiles.profile import Profile, ProfileType
+from archinstoo.lib.profile.base import Profile, ProfileType
 
 
 class JavaProfile(Profile):

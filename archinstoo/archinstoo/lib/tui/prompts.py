@@ -1,66 +1,28 @@
 from pathlib import Path
 
-from archinstoo.lib.models.users import Password, PasswordStrength
 from archinstoo.lib.translationhandler import tr
 
-from .curses_menu import EditMenu
+from .curses_menu import EditMenu, SelectMenu
+from .menu_item import MenuItem, MenuItemGroup
 from .result import ResultType
-from .types import Alignment
+from .types import Alignment, Orientation
 
 
-def get_password(
-	text: str,
-	header: str | None = None,
-	allow_skip: bool = False,
-	preset: str | None = None,
-	skip_confirmation: bool = False,
-) -> Password | None:
-	failure: str | None = None
+def confirm_abort() -> None:
+	prompt = tr('Do you really want to abort?') + '\n'
+	group = MenuItemGroup.yes_no()
 
-	while True:
-		user_hdr = None
-		if failure is not None:
-			user_hdr = f'{header}\n{failure}\n'
-		elif header is not None:
-			user_hdr = header
+	result = SelectMenu[bool](
+		group,
+		header=prompt,
+		allow_skip=False,
+		alignment=Alignment.CENTER,
+		columns=2,
+		orientation=Orientation.HORIZONTAL,
+	).run()
 
-		result = EditMenu(
-			text,
-			header=user_hdr,
-			alignment=Alignment.CENTER,
-			allow_skip=allow_skip,
-			default_text=preset,
-			hide_input=True,
-		).input()
-
-		if allow_skip and (not result.has_item() or not result.text()):
-			return None
-
-		password = Password(plaintext=result.text())
-		strength = PasswordStrength.strength(result.text())
-
-		if skip_confirmation:
-			return password
-
-		strength_line = f'{tr("Password strength")}: {strength.value}'
-
-		if header is not None:
-			confirmation_header = f'{header}{tr("Password")}: {password.hidden()}\n{strength_line}\n'
-		else:
-			confirmation_header = f'{tr("Password")}: {password.hidden()}\n{strength_line}\n'
-
-		result = EditMenu(
-			tr('Confirm password'),
-			header=confirmation_header,
-			alignment=Alignment.CENTER,
-			allow_skip=False,
-			hide_input=True,
-		).input()
-
-		if password._plaintext == result.text():
-			return password
-
-		failure = tr('The confirmation password did not match, please try again')
+	if result.item() == MenuItem.yes():
+		raise SystemExit(0)
 
 
 def prompt_dir(

@@ -1,5 +1,6 @@
 from typing import override
 
+from archinstoo.lib.localization.utils import list_console_fonts, list_keyboard_languages, list_locales, set_kb_layout
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.translationhandler import tr
@@ -7,8 +8,6 @@ from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
-
-from .utils import list_console_fonts, list_keyboard_languages, list_locales, set_kb_layout
 
 
 class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):

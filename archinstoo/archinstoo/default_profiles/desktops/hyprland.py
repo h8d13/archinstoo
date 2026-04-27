@@ -1,8 +1,8 @@
 from typing import override
 
 from archinstoo.default_profiles.desktops import SeatAccess
-from archinstoo.default_profiles.profile import GreeterType, ProfileType
 from archinstoo.default_profiles.wayland import WaylandProfile
+from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

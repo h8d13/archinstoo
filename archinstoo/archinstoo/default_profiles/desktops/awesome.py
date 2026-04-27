@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.profile import ProfileType
 from archinstoo.default_profiles.xorg import XorgProfile
+from archinstoo.lib.profile.base import ProfileType
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
