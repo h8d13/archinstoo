@@ -120,8 +120,7 @@
 │   │   ├── pm/
 │   │   │   ├── config
 │   │   │   ├── mirrors
-│   │   │   ├── packages
-│   │   │   └── parallel_downloads_prompt
+│   │   │   └── packages
 │   │   ├── profile/
 │   │   │   ├── base
 │   │   │   ├── driver_select
@@ -166,5 +165,5 @@
     ├── test_args
     └── test_configuration_output
 
-24 directories, 141 files
+24 directories, 140 files
 ```
