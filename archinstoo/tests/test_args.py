@@ -2,7 +2,6 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-from archinstoo.default_profiles.profile import GreeterType
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments
 from archinstoo.lib.hardware import GfxDriver
 from archinstoo.lib.models.application import (
@@ -34,6 +33,7 @@ from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.users import Password, Shell, User
+from archinstoo.lib.profile.base import GreeterType
 from archinstoo.lib.translationhandler import translation_handler
 
 
