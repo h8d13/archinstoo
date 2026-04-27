@@ -8,21 +8,44 @@ set -e #uo pipefail
 
 THREADS="${THREADS:-$(nproc)}"
 # Build stage 1 ISO with slight modifs
-# Requires 'archiso' 
+# Requires 'archiso'
 SILENT_MODE="${SILENT_MODE:-0}"
 PRECLEAN="${PRECLEAN:-0}"
 CLEANUP="${CLEANUP:-1}"
 LOG_FILE="${LOG_FILE:-1}"
-# Requires 'pacman-contrib' if this is enabled
-CACHING="${CACHING:-1}"
 # bcachefs support (removed from mainline kernel 6.18+, needs DKMS)
 ISOMOD_BCACHEFS="${ISOMOD_BCACHEFS:-0}"
+
+# LIVE=1 -> ship a Plasma live session with autologin and a normal user.
+# LIVE=0 -> minimal installer ISO, lands at root shell, run 'archinstoo'.
+LIVE="${LIVE:-0}"
+
+# Live-mode only (ignored when LIVE=0)
+LIVE_USER="${LIVE_USER:-live}"
+LIVE_PASS="${LIVE_PASS:-live}"
+AUTOLOGIN="${AUTOLOGIN:-1}"
+
+# Requires 'pacman-contrib' if this is enabled
+CACHING="${CACHING:-1}"
+
+# Defaults that differ by mode
+if [ "$LIVE" = "1" ]; then
+    COW_SIZE="${COW_SIZE:-2G}"
+    ISO_NAME_TAG="EVOQUUS_LIVE"
+    ISO_LABEL_TAG="mod_archlinux_live"
+    LOG_TAG="z_isomod_live"
+else
+    COW_SIZE="${COW_SIZE:-1G}"
+    ISO_NAME_TAG="EVOQUUS"
+    ISO_LABEL_TAG="mod_archlinux"
+    LOG_TAG="z_isomod"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Setup logging if enabled
 if [ "$LOG_FILE" = "1" ]; then
-    LOG_PATH="$SCRIPT_DIR/z_isomod_$(date '+%Y%m%d_%H%M%S').log"
+    LOG_PATH="$SCRIPT_DIR/${LOG_TAG}_$(date '+%Y%m%d_%H%M%S').log"
     exec > >(tee -a "$LOG_PATH") 2>&1
     echo "Logging to: $LOG_PATH"
 fi
@@ -31,7 +54,7 @@ WORK_DIR="$SCRIPT_DIR/archiso_work" # tmp
 OUTPUT_DIR="$SCRIPT_DIR/a"
 BUILD_DATE=$(date '+%Y.%m.%d')
 
-ISO_LABEL="mod_archlinux-${BUILD_DATE}"
+ISO_LABEL="${ISO_LABEL_TAG}-${BUILD_DATE}"
 
 # Cleanup function
 cleanup() {
@@ -81,20 +104,47 @@ echo "Copy releng profile..."
 cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed to copy releng profile"
 
 echo "Mod ISO name..."
-sed -i 's/^iso_name=.*/iso_name="EVOQUUS"/' "$PROFILE_DIR/profiledef.sh"
+sed -i "s/^iso_name=.*/iso_name=\"${ISO_NAME_TAG}\"/" "$PROFILE_DIR/profiledef.sh"
 
-echo "Modifying COW overlay size..."
-# Modify systemd-boot (efiboot) configs - add cow_spacesize=1G to options lines
-find "$PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i 's|\(options.*\)|\1 cow_spacesize=1G|' {} \;
-# Modify GRUB config - add cow_spacesize=1G to kernel boot parameters
-sed -i 's|\(linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux.*\)|\1 cow_spacesize=1G|' "$PROFILE_DIR/grub/grub.cfg"
-# Modify SYSLINUX configs - add cow_spacesize=1G to APPEND lines
-find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i 's|\(APPEND.*archiso.*\)|\1 cow_spacesize=1G|' {} \;
+echo "Modifying COW overlay size to ${COW_SIZE}..."
+# Modify systemd-boot (efiboot) configs
+find "$PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i "s|\(options.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
+# Modify GRUB config
+sed -i "s|\(linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux.*\)|\1 cow_spacesize=${COW_SIZE}|" "$PROFILE_DIR/grub/grub.cfg"
+# Modify SYSLINUX configs
+find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i "s|\(APPEND.*archiso.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
 
-echo "Mod pkg list and MOTD..."
-{
-    echo "git"
-} >> "$PROFILE_DIR/packages.x86_64"
+echo "Mod pkg list..."
+if [ "$LIVE" = "1" ]; then
+    # Plasma live session (mirrors archinstoo PlasmaProfile)
+    {
+        echo "sudo"
+        echo "git"
+        # KDE Plasma (from default_profiles/desktops/plasma.py)
+        echo "plasma-desktop"
+        echo "plasma-pa"
+        echo "kscreen"
+        echo "konsole"
+        echo "dolphin"
+        echo "ark"
+        # Greeter (PlasmaProfile.default_greeter_type = Sddm)
+        echo "sddm"
+        # Wayland session runtime bits
+        echo "qt6-wayland"
+        # Audio / portals / fonts for a usable live session
+        echo "pipewire"
+        echo "pipewire-pulse"
+        echo "pipewire-alsa"
+        echo "wireplumber"
+        echo "xdg-utils"
+        echo "ttf-dejavu"
+        echo "networkmanager"
+    } >> "$PROFILE_DIR/packages.x86_64"
+else
+    {
+        echo "git"
+    } >> "$PROFILE_DIR/packages.x86_64"
+fi
 
 if [ "$ISOMOD_BCACHEFS" = "1" ]; then
     echo "Adding bcachefs packages..."
@@ -126,31 +176,106 @@ SVCEOF
     ln -sf /etc/systemd/system/bcachefs-dkms.service "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/bcachefs-dkms.service"
 fi
 
-# Append custom MOTD
-cat >> "$PROFILE_DIR/airootfs/etc/motd" << EOF
+if [ "$LIVE" = "1" ]; then
+    echo "Staging live-user first-boot setup (user: '$LIVE_USER')..."
+    # Grant wheel sudo — this file is safe to ship as-is (doesn't conflict with pacstrap)
+    mkdir -p "$PROFILE_DIR/airootfs/etc/sudoers.d"
+    echo "%wheel ALL=(ALL:ALL) ALL" > "$PROFILE_DIR/airootfs/etc/sudoers.d/10-wheel"
+    sed -i '/^file_permissions=(/a\  ["/etc/sudoers.d/10-wheel"]="0:0:0440"' "$PROFILE_DIR/profiledef.sh"
+
+    # Setup script runs once at boot, creates the user via real useradd so pacstrap's
+    # /etc/passwd, /etc/shadow, /etc/group stay intact (prevents UID/GID collisions
+    # with system users like sddm, polkitd, uuidd, systemd-journal, etc).
+    mkdir -p "$PROFILE_DIR/airootfs/usr/local/bin"
+    cat > "$PROFILE_DIR/airootfs/usr/local/bin/live-user-setup" << SETUPEOF
+#!/bin/bash
+set -e
+if ! id "$LIVE_USER" >/dev/null 2>&1; then
+    useradd -m -G wheel,audio,video,input,storage,optical,network -s /bin/bash "$LIVE_USER"
+    echo "$LIVE_USER:$LIVE_PASS" | chpasswd
+fi
+touch /var/lib/.live-user-created
+SETUPEOF
+    chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/live-user-setup"
+    sed -i '/^file_permissions=(/a\  ["/usr/local/bin/live-user-setup"]="0:0:0755"' "$PROFILE_DIR/profiledef.sh"
+
+    mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system"
+    cat > "$PROFILE_DIR/airootfs/etc/systemd/system/live-user-setup.service" << 'UNITEOF'
+[Unit]
+Description=Create live user on first boot
+DefaultDependencies=no
+After=local-fs.target systemd-tmpfiles-setup.service
+Before=sysinit.target display-manager.service sddm.service systemd-user-sessions.service
+ConditionPathExists=!/var/lib/.live-user-created
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/live-user-setup
+
+[Install]
+WantedBy=sysinit.target
+UNITEOF
+    mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/sysinit.target.wants"
+    ln -sf /etc/systemd/system/live-user-setup.service "$PROFILE_DIR/airootfs/etc/systemd/system/sysinit.target.wants/live-user-setup.service"
+
+    echo "Enabling services (NetworkManager + SDDM)..."
+    mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+    mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/graphical.target.wants"
+    # Switch default target to graphical
+    ln -sf /usr/lib/systemd/system/graphical.target "$PROFILE_DIR/airootfs/etc/systemd/system/default.target"
+    ln -sf /usr/lib/systemd/system/NetworkManager.service "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
+    ln -sf /usr/lib/systemd/system/sddm.service "$PROFILE_DIR/airootfs/etc/systemd/system/display-manager.service"
+
+    if [ "$AUTOLOGIN" = "1" ]; then
+        echo "Configuring SDDM autologin for $LIVE_USER..."
+        mkdir -p "$PROFILE_DIR/airootfs/etc/sddm.conf.d"
+        cat > "$PROFILE_DIR/airootfs/etc/sddm.conf.d/autologin.conf" << EOF
+[Autologin]
+User=$LIVE_USER
+Session=plasma
+EOF
+    fi
+else
+    # Installer mode: custom MOTD + zsh history hint
+    cat >> "$PROFILE_DIR/airootfs/etc/motd" << EOF
 
         Archinstoo Mods Projects
         Media Gen: ${BUILD_DATE}
-        
+
         Connect to the internet.
         Then 'archinstoo' for TUI installer.
 
 EOF
 
-# add git clone command to zsh history
-# allows for arrow up faster testing
-echo "Adding to zsh history..."
-cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
+    # add git clone command to zsh history (arrow up faster testing)
+    echo "Adding to zsh history..."
+    cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
 : 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstoo --debug --advanced
 HISTEOF
+fi
 
 echo "Adding archinstoo to file_permissions..."
 sed -i '/^file_permissions=(/a\  ["/usr/local/bin/archinstoo"]="0:0:755"' "$PROFILE_DIR/profiledef.sh"
 
-# add 'archinstoo' command to PATH
+# add 'archinstoo' command to PATH (form differs by mode: live runs as $LIVE_USER + sudo)
 echo "Adding archinstoo command..."
 mkdir -p "$PROFILE_DIR/airootfs/usr/local/bin"
-cat > "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo" << 'CMDEOF'
+if [ "$LIVE" = "1" ]; then
+    cat > "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo" << 'CMDEOF'
+#!/bin/bash
+set -e
+sudo pacman-key --init
+if [ -d "$HOME/archinstoo" ]; then
+    git -C "$HOME/archinstoo" pull
+else
+    git clone https://github.com/h8d13/archinstoo "$HOME/archinstoo"
+fi
+cd "$HOME/archinstoo/archinstoo"
+exec sudo python -m archinstoo --debug "$@"
+CMDEOF
+else
+    cat > "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo" << 'CMDEOF'
 #!/bin/bash
 set -e
 pacman-key --init
@@ -162,6 +287,7 @@ fi
 cd /root/archinstoo/archinstoo
 exec python -m archinstoo --debug "$@"
 CMDEOF
+fi
 chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo"
 
 echo "Styling pacman.conf (Color + ILoveCandy)..."
@@ -186,6 +312,7 @@ fi
 
 # show pre info
 echo "Building ISO with mkarchiso..."
+echo "Mode: $([ "$LIVE" = "1" ] && echo "LIVE (Plasma)" || echo "Installer")"
 echo "Silent mode: $SILENT_MODE"
 echo "Using $THREADS threads for build"
 
