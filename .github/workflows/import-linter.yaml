@@ -9,7 +9,7 @@ jobs:
               with:
                 python-version: '3.14'
             - run: pip install import-linter
-            - name: Check for circular imports (informational, does not fail the build)
+            - name: Check for circular imports SCC Syblings Check
               continue-on-error: true
               working-directory: archinstoo
               run: lint-imports
