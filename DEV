@@ -27,7 +27,7 @@ case "$1" in
 	-t | --tree)
 	go_to
 	{
-		echo '# Project Structure'
+		echo '# Project Tree'
 		echo '```'
 		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
 		echo '```'
