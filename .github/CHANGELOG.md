@@ -2,6 +2,32 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.06-1
+
+    - Sibling import cycle cleanup (internal restructuring)
+        - 24 -> 3 cycle-breaking edges across `archinstoo.lib` (`grimp`/`import-linter`)
+        - Move `crypt.py` out of `authentication/` (leaf util)
+        - Move `fetch_data_from_url` / `DownloadTimer` from `network/` into `utils/net.py`
+        - Move `confirm_abort` into `tui/prompts.py`; `get_password` into `authentication/password_prompt.py`
+        - Move `add_number_of_parallel_downloads` into `pm/config.set_parallel_downloads`
+        - Move `select_driver` into `profile/driver_select.py`
+        - Promote `default_profiles/profile.py` -> `lib/profile/base.py`
+        - Move `DisplayServer` enum into `hardware.py`; inline `Profile.display_servers()` (drop lazy handler call)
+        - Rename `network/utils.py` -> `network/interfaces.py`
+    - CI track-only checks (`continue-on-error: true`)
+        - Add `import-linter` sibling-acyclicity contract
+        - Add `vulture` dead-code detection (with `vulture_whitelist.py` for false positives)
+    - Remove dead code surfaced by `vulture` (~17 symbols across `installer.py`, `models/device.py`, `tui/`, etc.)
+    - `disk` module split (`disk.layouts` + `disk.selectors`) to reduce circular-dep risk
+    - `ISOMOD_LIVE` script merged into `ISOMOD` via `LIVE=1` flag (single source for installer + Plasma live-session ISO)
+    - AUR update menu: wire up `format_update_candidate` print loop in `interactive_select_updates`
+    - Add `mkinitcpio` to `__base_packages__` (#4484 upstream port)
+        - Pacstrap installs deterministically; avoids dracut/etc. being picked up on non-Arch hosts (EndeavourOS prefers dracut)
+        - Various other upstream ports
+    - Add `audit` security option
+    - Drop `ELEV` workaround hacks
+    - Docs: new `.github/BUILD_ISOS.md` for ISO scripts and flags
+
 ## 0.1.06-0
 
     - Explicit vendor firmware selection
