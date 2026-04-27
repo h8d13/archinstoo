@@ -12,9 +12,9 @@ PROFILE_DIR="${PROFILE_DIR:-$SCRIPT_DIR/archiso_profile}"
 SILENT_MODE="${SILENT_MODE:-0}"
 
 # Load profile config
-iso_profile="${iso_profile:-ISOMOD_CACHE}"
+ISO_PROFILE="${ISO_PROFILE:-ISOMOD_CACHE}"
 
-PROFILE_LIST="$SCRIPT_DIR/$iso_profile.conf"
+PROFILE_LIST="$SCRIPT_DIR/$ISO_PROFILE.conf"
 
 # Check for system updates
 command -v checkupdates >/dev/null 2>&1 && [ -n "$(checkupdates 2>/dev/null)" ] && \
@@ -31,7 +31,7 @@ if [ ! -f "$PROFILE_LIST" ]; then
     exit 0
 fi
 
-echo "Creating local package repository for $iso_profile packages..."
+echo "Creating local package repository for $ISO_PROFILE packages..."
 
 # Read packages from profile (skip comments and empty lines)
 packages=$(grep -v '^#' "$PROFILE_LIST" | grep -v '^$' | tr '\n' ' ')
