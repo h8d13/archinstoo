@@ -97,7 +97,7 @@ A `man` page is also available `man -l docs/archinstoo.1`
 
 See [Headless](./.github/HEADLESS.md) for example server install to play minecraft.
 
-See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. *Uses a modified version of`grimaur` [aur-helper](https://github.com/mackilanu/grimaur) directly during install* 
+See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. *Uses a modified [`grimaur`](https://github.com/mackilanu/grimaur) during install* 
 
 See [Multi-boot](./.github/MULTI_BOOT.md) for example to boot multiple OSes.
 
