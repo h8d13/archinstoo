@@ -146,3 +146,5 @@ Countless times, but aside from that is pretty smooth sailing and the OS gets ou
 	- If you are not looking to learn command lines and/or reading docs
 
 This is the last and key point, other distros might be easier/better fit for you if you do not wish to dive deeper into your system's inner workings. But if you are interested, my guess is that you will like it here.
+
+Rolling distros enable installers to become tools/artifacts rather than just projects. This means it doesn't have to be more features and more users, but simply adpating to it's time, maintaining worthy code, choices, occasionally helping out ecosystem and issue trackers. This is possible structurally because of the team at Arch Linux and using directly the tools they make available.

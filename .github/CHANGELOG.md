@@ -564,8 +564,8 @@ Down from original list (the rest is all in logic or choices):
 ## 0.0.01-0
 
     - Change PKGBUILD strucs for proper dependency mngmnt
-        - Remove python-cryptography
-        - Remove python-textual
+        - Remove python-cryptography -> Only ever used to encrypt config file which now assumes passwords/disk passwords to never be resumed.
+        - Remove python-textual -> Keep ncurses for portability
         - Add __init__ check of deps
     - Simplify auth config to be inside global config
         - Never output passwords/FDE related
