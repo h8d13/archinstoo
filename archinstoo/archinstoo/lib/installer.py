@@ -12,7 +12,7 @@ from typing import Any, Self
 
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
-from archinstoo.lib.disk.utils import get_lsblk_by_mountpoint, get_lsblk_info, get_parent_device_path, mount, swapon
+from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
@@ -23,11 +23,8 @@ from archinstoo.lib.models.device import (
 	LuksPbkdf,
 	LvmVolume,
 	PartitionModification,
-	SectorSize,
-	Size,
 	SnapshotType,
 	SubvolumeModification,
-	Unit,
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.packages import Repository
@@ -174,14 +171,6 @@ class Installer:
 
 		return False
 
-	def remove_mod(self, mod: str) -> None:
-		if mod in self._modules:
-			self._modules.remove(mod)
-
-	def append_mod(self, mod: str) -> None:
-		if mod not in self._modules:
-			self._modules.append(mod)
-
 	def _verify_service_stop(self) -> None:
 		# Check for essential services statuses based on
 		# architecture and parse results for prints
@@ -242,25 +231,7 @@ class Installer:
 			else:
 				info(tr('Arch Linux keyring sync completed'))
 
-	def _verify_boot_part(self) -> None:
-		"""
-		Check that mounted /boot device has at minimum size for installation
-		The reason this check is here is to catch pre-mounted device configuration and potentially
-		configured one that has not gone through any previous checks (e.g. --silence mode)
-
-		NOTE: this function should be run AFTER running the mount_ordered_layout function
-		"""
-		boot_mount = self.target / 'boot'
-		lsblk_info = get_lsblk_by_mountpoint(boot_mount)
-
-		if len(lsblk_info) > 0 and lsblk_info[0].size < Size(200, Unit.MiB, SectorSize.default()):
-			raise DiskError(
-				f'The boot partition mounted at {boot_mount} is not large enough to install a boot loader. '
-				f'Please resize it to at least 200MiB and re-run the installation.',
-			)
-
 	def sanity_check(self) -> None:
-		# self._verify_boot_part()
 		self._verify_service_stop()
 
 	def mount_ordered_layout(self) -> None:
@@ -2094,16 +2065,6 @@ class Installer:
 			return True
 		except SysCallError as err:
 			error(f'Failed to lock root account: {err}')
-			return False
-
-	def user_set_shell(self, user: str, shell: str) -> bool:
-		info(f'Setting shell for {user} to {shell}')
-
-		try:
-			self.arch_chroot(['chsh', '-s', shell, user])
-			return True
-		except CalledProcessError as err:
-			debug(f'Error setting user shell: {err}')
 			return False
 
 	def chown(self, owner: str, path: str, options: list[str] | None = None) -> bool:

@@ -36,15 +36,6 @@ class Os:
 		return ''
 
 	@staticmethod
-	def running_from_arch() -> bool:
-		# confirm its arch host
-		return Os.running_from_who() == 'arch'
-
-	# match Os.running_from_who():
-	# case 'alpine':
-	# do something else
-
-	@staticmethod
 	def locate_binary(name: str) -> str:
 		if path := which(name):
 			return path

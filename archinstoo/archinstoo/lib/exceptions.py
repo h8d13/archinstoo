@@ -26,14 +26,6 @@ class ServiceException(Exception):
 	pass
 
 
-class PackageError(Exception):
-	pass
-
-
-class Deprecated(Exception):
-	pass
-
-
 class DownloadTimeout(Exception):
 	"""
 	Download timeout exception raised by DownloadTimer.

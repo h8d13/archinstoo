@@ -44,6 +44,7 @@ venv
 **/install.log
 .DS_Store
 .cstore/*
+**/report*.txt
 **/cmd_history.txt
 **/*.*~
 **/*.sig

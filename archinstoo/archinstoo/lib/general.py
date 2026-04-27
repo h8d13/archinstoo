@@ -28,10 +28,6 @@ def clear_vt100_escape_codes(data: bytes) -> bytes:
 	return re.sub(_VT100_ESCAPE_REGEX_BYTES, b'', data)
 
 
-def clear_vt100_escape_codes_from_str(data: str) -> str:
-	return re.sub(_VT100_ESCAPE_REGEX, '', data)
-
-
 def jsonify(obj: Any, safe: bool = True) -> Any:
 	"""
 	Converts objects into json.dumps() compatible nested dictionaries.
@@ -187,10 +183,6 @@ class SysCommandWorker:
 		if not self.started:
 			return self.execute()
 		return True
-
-	def tell(self) -> int:
-		self.make_sure_we_are_executing()
-		return self._trace_log_pos
 
 	def seek(self, pos: int) -> None:
 		self.make_sure_we_are_executing()
