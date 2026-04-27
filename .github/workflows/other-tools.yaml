@@ -1,5 +1,5 @@
 on: [push]
-name: tools (track-only)
+name: other tools (track-only)
 jobs:
     import-linter:
         runs-on: ubuntu-latest
@@ -9,7 +9,7 @@ jobs:
               with:
                 python-version: '3.14'
             - run: pip install import-linter
-            - name: Check for circular imports SCC Syblings Check
+            - name: Check for circular imports (SCC) Syblings Check
               continue-on-error: true
               working-directory: archinstoo
               run: lint-imports
@@ -21,7 +21,7 @@ jobs:
               with:
                 python-version: '3.14'
             - run: pip install vulture
-            - name: Check for dead code (default_profiles/*Profile false positives - dynamically loaded by ProfileHandler)
+            - name: Check for dead code
               continue-on-error: true
               working-directory: archinstoo
-              run: vulture archinstoo --min-confidence 60
+              run: vulture
