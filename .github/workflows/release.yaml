@@ -1,0 +1,30 @@
+name: Release on PKGBUILD version bump
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'PKGBUILD'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Read pkgver and pkgrel
+        id: pkgver
+        run: |
+          pkgver=$(grep -E '^pkgver=' PKGBUILD | cut -d= -f2)
+          pkgrel=$(grep -E '^pkgrel=' PKGBUILD | cut -d= -f2)
+          echo "tag=v${pkgver}-${pkgrel}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.pkgver.outputs.tag }}
+          name: ${{ steps.pkgver.outputs.tag }}
+          body: "Changelog: https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md"
