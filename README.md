@@ -128,11 +128,14 @@ Accurate reports/PRs will be addressed in a timely manner: [Issues](https://gith
 
 The idea being to promote **option 2** to use archinstoo latest non-dev. Always, since fixes are often time critical.
 
-1. For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
+1. For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker` but also more optionals.
 
-2. In case of **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part.
+2. In case of **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part directly from git.
 
-> A lot of the dependencies are registered as `optdepends` because they are expected on the ISO in stable state of release (and because they depend on user selection). You can run `sudo ./DEV -h2t -o` to check you have all of them, **when running from a non-ISO env.**
+```shell
+./DEV -b            # build
+sudo ./DEV -i       # install locally
+```
 
 ---
 
