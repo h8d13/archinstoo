@@ -209,7 +209,14 @@ class Installer:
 		info('Tearing down target mounts and mappings')
 		# Use `umount -R` directly: the disk.utils.umount helper expects a block device path
 		# and runs lsblk against it, which does not work for the target mountpoint root.
-		SysCommand(['umount', '-R', str(self.target)])
+		# Fall back to lazy unmount if something (e.g. a leftover arch-chroot -S scope) is
+		# still holding the tree: lazy detaches the mounts so the underlying mappers can
+		# still be closed cleanly afterwards.
+		try:
+			SysCommand(['umount', '-R', str(self.target)])
+		except SysCallError:
+			warn(f'{self.target} busy, retrying with lazy unmount')
+			SysCommand(['umount', '-R', '-l', str(self.target)])
 
 		enc = self._disk_encryption
 		lvm_cfg = self._disk_config.lvm_config
