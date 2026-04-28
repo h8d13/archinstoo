@@ -2,10 +2,11 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
-## 0.1.07-4
+## 0.1.07-5
 
     - CI: add `release.yaml` workflow to auto-publish a GitHub release when `PKGBUILD` `pkgver`/`pkgrel` change
     - Publish `.tar.gz` as official format
+    - Fix deps pinning, remove 'procps-ng' dep by usning python internals
 
 ## 0.1.07-0
 

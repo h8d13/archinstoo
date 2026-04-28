@@ -9,7 +9,7 @@
 
 pkgname=archinstoo
 pkgver=0.1.07
-pkgrel=4
+pkgrel=5
 pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"
@@ -29,6 +29,8 @@ depends=(
   'git'
 )
 # base-devel tools are assumed for dev
+# QEMU is also useful to test faster 
+# but testing on actual hardware wins
 makedepends=(
   'python-build'
   'python-installer'
