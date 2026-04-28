@@ -117,6 +117,29 @@ mkdir -p "$PROFILE_DIR/airootfs/root" || error_exit "Failed to create airootfs"
 if [ "$MINIMAL" = "1" ]; then
     echo "Copy baseline profile..."
     cp -r /usr/share/archiso/configs/baseline/* "$PROFILE_DIR" || error_exit "Failed to copy baseline profile"
+    # baseline ships no pacman.d/hooks/, so /etc/pacman.d/mirrorlist stays fully
+    # commented and pacman has no servers. Borrow releng's uncomment-mirrors hook.
+    echo "Borrowing releng pacman hooks (mirrorlist uncomment)..."
+    mkdir -p "$PROFILE_DIR/airootfs/etc/pacman.d/hooks"
+    cp /usr/share/archiso/configs/releng/airootfs/etc/pacman.d/hooks/uncomment-mirrors.hook \
+       "$PROFILE_DIR/airootfs/etc/pacman.d/hooks/" \
+       || error_exit "Failed to copy uncomment-mirrors hook"
+    cp /usr/share/archiso/configs/releng/airootfs/etc/pacman.d/hooks/zzzz99-remove-custom-hooks-from-airootfs.hook \
+       "$PROFILE_DIR/airootfs/etc/pacman.d/hooks/" \
+       || error_exit "Failed to copy custom-hooks-removal hook"
+    # baseline lacks pacman keyring init: /etc/pacman.d/gnupg is on read-only
+    # squashfs so pacman-key --init can't write there. Borrow releng's tmpfs
+    # mount + pacman-init.service so the keyring is set up at boot.
+    echo "Borrowing releng pacman keyring init units..."
+    mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+    cp /usr/share/archiso/configs/releng/airootfs/etc/systemd/system/etc-pacman.d-gnupg.mount \
+       "$PROFILE_DIR/airootfs/etc/systemd/system/" \
+       || error_exit "Failed to copy gnupg tmpfs mount unit"
+    cp /usr/share/archiso/configs/releng/airootfs/etc/systemd/system/pacman-init.service \
+       "$PROFILE_DIR/airootfs/etc/systemd/system/" \
+       || error_exit "Failed to copy pacman-init.service"
+    ln -sf /etc/systemd/system/pacman-init.service \
+       "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/pacman-init.service"
 else
     echo "Copy releng profile..."
     cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed to copy releng profile"
