@@ -49,9 +49,9 @@ elif [ "$MINIMAL" = "1" ]; then
     LOG_TAG="z_isomod_min"
 else
     COW_SIZE="${COW_SIZE:-1G}"
-    ISO_NAME_TAG="EVOQUUS"
+    ISO_NAME_TAG="EVOQUUS_DEF"
     ISO_LABEL_TAG="mod_archlinux"
-    LOG_TAG="z_isomod"
+    LOG_TAG="z_isomod_def"
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
