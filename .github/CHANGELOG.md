@@ -2,6 +2,24 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.07-0
+
+    - TPM2 auto-unlock for LUKS-encrypted installs (opt-in)
+        - New `Installer.enroll_tpm2()` runs `systemd-cryptenroll --tpm2-device=auto` in chroot at bootloader-install time
+        - Hardware-gated menu toggle: only appears when `/sys/class/tpm/*/tpm_version_major == 2` (`SysInfo.has_tpm2()`)
+        - Multi-select PCR picker restricted to firmware-time PCRs (0, 1, 2, 3, 7) that are stable host->target
+        - Default `0+7` (firmware + Secure Boot state); passphrase keyslot stays as fallback
+        - Adds `rd.luks.options=tpm2-device=auto` to kernel cmdline so sd-encrypt attempts TPM2 unlock at boot
+        - Transient unlock keyfile follows `_create_root_keyfile` convention (`/etc/cryptsetup-keys.d/`), unlinked after enrollment
+    - Post-install artifacts synced into target for debugging
+        - `/etc/archinstoo.d/<UTC-timestamp>-install.log` and `<UTC-timestamp>-config.json`
+        - Runs in `Installer.__exit__` on both success and failure paths
+    - Target teardown on successful install (`_teardown_target`)
+        - Encryption-topology-aware order: unmount tree, deactivate VGs, close LUKS mappers
+        - Lazy `umount -R -l` fallback for stuck mountpoints (e.g. leftover `arch-chroot -S` scopes)
+        - `cryptsetup close --deferred` so the close completes asynchronously without blocking on residual fds
+        - Removes the prior reboot-required UX after a clean install
+
 ## 0.1.06-1
 
     - Sibling import cycle cleanup (internal restructuring)
