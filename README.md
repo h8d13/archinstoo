@@ -51,7 +51,7 @@ git clone --depth 1 https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
 ```
 
-### **2. Run the code
+### **2. Run the code**
 
 ```shell
 python -m archinstoo [args] # try -h or --help
