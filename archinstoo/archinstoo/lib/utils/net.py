@@ -31,7 +31,7 @@ def _build_icmp(payload: bytes) -> bytes:
 def ping(hostname: str, timeout: int = 5) -> int:
 	"""ICMP ping, returns latency in ms or -1 on failure."""
 	watchdog = select.epoll()
-	started = time.time()
+	started = time.monotonic()
 	random_identifier = f'archinstoo-{random.randint(1000, 9999)}'.encode()
 
 	icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
@@ -41,13 +41,13 @@ def ping(hostname: str, timeout: int = 5) -> int:
 	icmp_socket.sendto(icmp_packet, (hostname, 0))
 	latency = -1
 
-	while latency == -1 and time.time() - started < timeout:
+	while latency == -1 and time.monotonic() - started < timeout:
 		try:
 			for _fileno, _event in watchdog.poll(0.1):
 				response, _ = icmp_socket.recvfrom(1024)
 				icmp_type = struct.unpack('!B', response[20:21])[0]
 				if icmp_type == 0 and response[-len(random_identifier) :] == random_identifier:
-					latency = round((time.time() - started) * 1000)
+					latency = round((time.monotonic() - started) * 1000)
 					break
 		except OSError:
 			break
@@ -85,12 +85,12 @@ class DownloadTimer:
 			self.previous_handler = signal.signal(signal.SIGALRM, self.raise_timeout)  # type: ignore[assignment]
 			self.previous_timer = signal.alarm(self.timeout)
 
-		self.start_time = time.time()
+		self.start_time = time.monotonic()
 		return self
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
 		if self.start_time:
-			time_delta = time.time() - self.start_time
+			time_delta = time.monotonic() - self.start_time
 			signal.alarm(0)
 			self.time = time_delta
 			if self.timeout > 0:
