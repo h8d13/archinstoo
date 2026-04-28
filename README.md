@@ -133,10 +133,7 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 2. In case of **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part from git.
 
 ```shell
-./DEV -b            # build
-sudo ./DEV -i       # install locally
+makepkg -cf ./archinstoo/PKGBUILD  # or use the desired PKGBUILD, with your preferred AUR helper.
 ```
-
----
 
 See `archinstall` [upstream](https://github.com/archlinux/archinstall)
