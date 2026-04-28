@@ -18,7 +18,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Encryption-topology-aware order: unmount tree, deactivate VGs, close LUKS mappers
         - Lazy `umount -R -l` fallback for stuck mountpoints (e.g. leftover `arch-chroot -S` scopes)
         - `cryptsetup close --deferred` so the close completes asynchronously without blocking on residual fds
-        - Removes the prior reboot-required UX after a clean install
+        - Host left in a clean state after install: re-running the installer no longer requires a reboot to clear stale mounts/mappers
 
 ## 0.1.06-1
 
