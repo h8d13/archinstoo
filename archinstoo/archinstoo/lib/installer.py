@@ -15,7 +15,7 @@ from typing import Any, Self
 
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
-from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon
+from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon, umount
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
@@ -163,6 +163,7 @@ class Installer:
 		self._sync_artifacts_to_target()
 
 		if not (missing_steps := self.post_install_check()):
+			self._teardown_target()
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
 			log(msg, fg='green')
 
@@ -199,6 +200,45 @@ class Installer:
 				cfg_dst.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
 		except Exception as e:
 			warn(f'Failed to sync install artifacts to target: {e}')
+
+	def _teardown_target(self) -> None:
+		# Reverse what we set up: unmount the target tree, deactivate VGs, close LUKS mappers.
+		# Order is encryption-topology dependent: close inner mappers before deactivating
+		# the outer ones that hold them. Failures propagate: we know exactly what we opened,
+		# so a failure here is a real bug, not best-effort cleanup.
+		info('Tearing down target mounts and mappings')
+		umount(self.target, recursive=True)
+
+		enc = self._disk_encryption
+		lvm_cfg = self._disk_config.lvm_config
+
+		def _close_luks(dev_path: Path, mapper_name: str | None) -> None:
+			if mapper_name is None:
+				return
+			Luks2(dev_path, mapper_name=mapper_name).lock()
+
+		def _deactivate_vgs() -> None:
+			if not lvm_cfg:
+				return
+			for vg in lvm_cfg.vol_groups:
+				self._device_handler.lvm_vg_deactivate(vg.name)
+
+		match enc.encryption_type:
+			case EncryptionType.LUKS_ON_LVM:
+				# LUKS sits on top of LVs, close LUKS first, then deactivate VGs.
+				for vol in enc.lvm_volumes:
+					_close_luks(vol.safe_dev_path, vol.mapper_name)
+				_deactivate_vgs()
+			case EncryptionType.LVM_ON_LUKS:
+				# VGs sit on LUKS PV, deactivate VGs first, then close LUKS.
+				_deactivate_vgs()
+				for part in enc.partitions:
+					_close_luks(part.safe_dev_path, part.mapper_name)
+			case EncryptionType.LUKS:
+				for part in enc.partitions:
+					_close_luks(part.safe_dev_path, part.mapper_name)
+			case EncryptionType.NO_ENCRYPTION:
+				_deactivate_vgs()
 
 	def _verify_service_stop(self) -> None:
 		# Check for essential services statuses based on
