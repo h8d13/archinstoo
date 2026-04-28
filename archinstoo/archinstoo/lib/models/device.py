@@ -1433,6 +1433,7 @@ class DiskEncryption:
 	pbkdf: LuksPbkdf = LuksPbkdf.Argon2id
 	auto_unlock_root: bool = False
 	tpm2_unlock: bool = False
+	tpm2_pcrs: str = '0+7'
 
 	def __post_init__(self) -> None:
 		if self.encryption_type in [EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS] and not self.partitions:
