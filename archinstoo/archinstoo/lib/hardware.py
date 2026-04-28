@@ -267,6 +267,22 @@ class SysInfo:
 		return _sys_info.has_uefi
 
 	@staticmethod
+	def has_tpm2() -> bool:
+		# Detects a TPM 2.0 chip via /sys/class/tpm/<dev>/tpm_version_major == 2.
+		# Filters out TPM 1.2 chips, which systemd-cryptenroll cannot bind to.
+		tpm_dir = Path('/sys/class/tpm')
+		if not tpm_dir.is_dir():
+			return False
+		for dev in tpm_dir.iterdir():
+			ver_file = dev / 'tpm_version_major'
+			try:
+				if ver_file.read_text().strip() == '2':
+					return True
+			except OSError:
+				continue
+		return False
+
+	@staticmethod
 	def _bitness() -> int | None:
 		return _sys_info.efi_bitness
 
