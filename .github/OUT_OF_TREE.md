@@ -2,7 +2,8 @@
 
 For some hardware using the AUR for drivers is inevitable
 
-Hence why you can now use `--advanced` to get AUR support built-in using `grimaur`
+Hence why you can now use `--advanced` to get AUR support built-in 
+> *Uses a modified [`grimaur`](https://github.com/mackilanu/grimaur) during install*
 
 => Make sure **to toggle kernel headers** from your desired variant(s) if you are building DKMS modules.
 
