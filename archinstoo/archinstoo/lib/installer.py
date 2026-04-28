@@ -202,16 +202,9 @@ class Installer:
 			warn(f'Failed to sync install artifacts to target: {e}')
 
 	def _teardown_target(self) -> None:
-		# Reverse what we set up: unmount the target tree, deactivate VGs, close LUKS mappers.
-		# Order is encryption-topology dependent: close inner mappers before deactivating
-		# the outer ones that hold them. Failures propagate: we know exactly what we opened,
-		# so a failure here is a real bug, not best-effort cleanup.
+		# Order: unmount, deactivate VGs, close LUKS. Inner mappers close before the outer
+		# ones that hold them.
 		info('Tearing down target mounts and mappings')
-		# Use `umount -R` directly: the disk.utils.umount helper expects a block device path
-		# and runs lsblk against it, which does not work for the target mountpoint root.
-		# Fall back to lazy unmount if something (e.g. a leftover arch-chroot -S scope) is
-		# still holding the tree: lazy detaches the mounts so the underlying mappers can
-		# still be closed cleanly afterwards.
 		try:
 			SysCommand(['umount', '-R', str(self.target)])
 		except SysCallError:
@@ -619,13 +612,8 @@ class Installer:
 		if not devices:
 			return
 
-		# systemd ships systemd-cryptenroll, but TPM2 backend needs tpm2-tss at runtime.
-		# Bootloader install may pull it in later, but enrollment happens first.
-		self.pacman.strap('tpm2-tss')
-
 		# Stash the existing passphrase as a transient unlock keyfile under the standard
-		# LUKS keyfile dir (same convention as _create_root_keyfile). /tmp does not work:
-		# arch-chroot -S gives the chroot a private tmpfs that shadows host-written files.
+		# LUKS keyfile dir (same convention as _create_root_keyfile).
 		key_in_chroot = '/etc/cryptsetup-keys.d/.tpm2-bootstrap.key'
 		key_in_target = self.target / key_in_chroot.lstrip('/')
 		key_in_target.parent.mkdir(parents=True, exist_ok=True)
