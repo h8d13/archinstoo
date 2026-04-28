@@ -36,15 +36,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: ${{ env.VER }}
+          name: ${{ env.VER }}-${{ env.SHA }}
           make_latest: true
           files: /tmp/archinstoo-${{ env.VER }}.tar.gz
           body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
 
-      - name: Publish archived release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.SHA }}
-          name: ${{ env.VER }} (${{ env.SHA }})
-          files: /tmp/archinstoo-${{ env.VER }}.tar.gz
-          body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
