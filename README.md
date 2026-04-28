@@ -119,7 +119,7 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 
 Usually reproduced then tested on actual/appropriate hardware.
 
-Any help in this regard is deeply appreciated, as testing takes just as long if not longer than coding.
+Any help in this regard is deeply appreciated, as testing takes just as long, if not longer, than coding.
 
 Accurate reports/PRs will be addressed in a timely manner: [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](./.github/CONTRIBUTING.md)
 
