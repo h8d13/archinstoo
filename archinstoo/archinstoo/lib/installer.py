@@ -570,6 +570,10 @@ class Installer:
 		if not devices:
 			return
 
+		# systemd ships systemd-cryptenroll, but TPM2 backend needs tpm2-tss at runtime.
+		# Bootloader install may pull it in later, but enrollment happens first.
+		self.pacman.strap('tpm2-tss')
+
 		# /tmp keyfile inside the chroot — written without trailing newline so the
 		# whole file is treated as the passphrase by cryptenroll.
 		key_in_chroot = '/tmp/.luks_unlock_tpm2.key'
