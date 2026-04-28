@@ -17,16 +17,25 @@ LOG_FILE="${LOG_FILE:-1}"
 ISOMOD_BCACHEFS="${ISOMOD_BCACHEFS:-0}"
 
 # LIVE=1 -> ship a Plasma live session with autologin and a normal user.
-# LIVE=0 -> minimal installer ISO, lands at root shell, run 'archinstoo'.
+# LIVE=0 -> installer ISO, lands at root shell, run 'archinstoo'.
 LIVE="${LIVE:-0}"
-
 # Live-mode only (ignored when LIVE=0)
 LIVE_USER="${LIVE_USER:-live}"
 LIVE_PASS="${LIVE_PASS:-live}"
 AUTOLOGIN="${AUTOLOGIN:-1}"
 
+# MINIMAL=1 -> use archiso 'baseline' profile (~12 pkgs) + network tools + archinstoo deps.
+# MINIMAL=0 -> use archiso 'releng' profile (full installer environment).
+# Mutually exclusive with LIVE=1.
+MINIMAL="${MINIMAL:-0}"
+
 # Requires 'pacman-contrib' if this is enabled
-CACHING="${CACHING:-1}"
+CACHING="${CACHING:-0}"
+
+if [ "$LIVE" = "1" ] && [ "$MINIMAL" = "1" ]; then
+    echo "ERROR: LIVE=1 and MINIMAL=1 are mutually exclusive" >&2
+    exit 1
+fi
 
 # Defaults that differ by mode
 if [ "$LIVE" = "1" ]; then
@@ -34,6 +43,11 @@ if [ "$LIVE" = "1" ]; then
     ISO_NAME_TAG="EVOQUUS_LIVE"
     ISO_LABEL_TAG="mod_archlinux_live"
     LOG_TAG="z_isomod_live"
+elif [ "$MINIMAL" = "1" ]; then
+    # No COW_SIZE default: keep archiso's stock 256M (skip the bump below)
+    ISO_NAME_TAG="EVOQUUS_MIN"
+    ISO_LABEL_TAG="mod_archlinux_min"
+    LOG_TAG="z_isomod_min"
 else
     COW_SIZE="${COW_SIZE:-1G}"
     ISO_NAME_TAG="EVOQUUS"
@@ -100,22 +114,60 @@ mkdir -p "$PROFILE_DIR" || error_exit "Failed to create profile directory"
 echo "Creating root FS..."
 mkdir -p "$PROFILE_DIR/airootfs/root" || error_exit "Failed to create airootfs"
 
-echo "Copy releng profile..."
-cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed to copy releng profile"
+if [ "$MINIMAL" = "1" ]; then
+    echo "Copy baseline profile..."
+    cp -r /usr/share/archiso/configs/baseline/* "$PROFILE_DIR" || error_exit "Failed to copy baseline profile"
+else
+    echo "Copy releng profile..."
+    cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed to copy releng profile"
+fi
 
 echo "Mod ISO name..."
 sed -i "s/^iso_name=.*/iso_name=\"${ISO_NAME_TAG}\"/" "$PROFILE_DIR/profiledef.sh"
 
-echo "Modifying COW overlay size to ${COW_SIZE}..."
-# Modify systemd-boot (efiboot) configs
-find "$PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i "s|\(options.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
-# Modify GRUB config
-sed -i "s|\(linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux.*\)|\1 cow_spacesize=${COW_SIZE}|" "$PROFILE_DIR/grub/grub.cfg"
-# Modify SYSLINUX configs
-find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i "s|\(APPEND.*archiso.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
+if [ -n "${COW_SIZE:-}" ]; then
+    echo "Modifying COW overlay size to ${COW_SIZE}..."
+    # Modify systemd-boot (efiboot) configs
+    find "$PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i "s|\(options.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
+    # Modify GRUB config
+    sed -i "s|\(linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux.*\)|\1 cow_spacesize=${COW_SIZE}|" "$PROFILE_DIR/grub/grub.cfg"
+    # Modify SYSLINUX configs
+    find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i "s|\(APPEND.*archiso.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
+else
+    echo "Keeping archiso stock COW overlay size."
+fi
 
 echo "Mod pkg list..."
-if [ "$LIVE" = "1" ]; then
+if [ "$MINIMAL" = "1" ]; then
+    # baseline (~12 pkgs) + network tools + archinstoo runtime deps + fs tools
+    {
+        # network: both NetworkManager and iwd, user picks at runtime
+        echo "networkmanager"
+        echo "iwd"
+        echo "wpa_supplicant"
+        echo "dhcpcd"
+        # archinstoo runtime deps (from PKGBUILD depends=)
+        echo "python"
+        echo "python-pyparted"
+        echo "arch-install-scripts"
+        echo "coreutils"
+        echo "util-linux"
+        echo "pciutils"
+        echo "kbd"
+        echo "libxcrypt"
+        echo "pacman"
+        echo "git"
+        # filesystem tools (from PKGBUILD optdepends=)
+        echo "btrfs-progs"
+        echo "dosfstools"
+        echo "e2fsprogs"
+        echo "f2fs-tools"
+        echo "ntfs-3g"
+        echo "xfsprogs"
+        echo "cryptsetup"
+        echo "lvm2"
+    } >> "$PROFILE_DIR/packages.x86_64"
+elif [ "$LIVE" = "1" ]; then
     # Plasma live session (mirrors archinstoo PlasmaProfile)
     {
         echo "sudo"
@@ -237,6 +289,13 @@ Session=plasma
 EOF
     fi
 else
+    if [ "$MINIMAL" = "1" ]; then
+        # baseline doesn't enable any network service by default
+        echo "Enabling NetworkManager (MINIMAL mode)..."
+        mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+        ln -sf /usr/lib/systemd/system/NetworkManager.service \
+            "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
+    fi
     # Installer mode: custom MOTD + zsh history hint
     cat >> "$PROFILE_DIR/airootfs/etc/motd" << EOF
 
@@ -248,11 +307,19 @@ else
 
 EOF
 
-    # add git clone command to zsh history (arrow up faster testing)
-    echo "Adding to zsh history..."
-    cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
+    # add git clone command to shell history (arrow up faster testing)
+    if [ "$MINIMAL" = "1" ]; then
+        # baseline ships bash, not zsh
+        echo "Adding to bash history..."
+        cat > "$PROFILE_DIR/airootfs/root/.bash_history" << 'HISTEOF'
+pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstoo --debug --advanced
+HISTEOF
+    else
+        echo "Adding to zsh history..."
+        cat > "$PROFILE_DIR/airootfs/root/.zsh_history" << 'HISTEOF'
 : 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstoo --debug --advanced
 HISTEOF
+    fi
 fi
 
 echo "Adding archinstoo to file_permissions..."
@@ -312,7 +379,13 @@ fi
 
 # show pre info
 echo "Building ISO with mkarchiso..."
-echo "Mode: $([ "$LIVE" = "1" ] && echo "LIVE (Plasma)" || echo "Installer")"
+if [ "$LIVE" = "1" ]; then
+    echo "Mode: LIVE (Plasma)"
+elif [ "$MINIMAL" = "1" ]; then
+    echo "Mode: MINIMAL (baseline + net + archinstoo deps)"
+else
+    echo "Mode: Default"
+fi
 echo "Silent mode: $SILENT_MODE"
 echo "Using $THREADS threads for build"
 
