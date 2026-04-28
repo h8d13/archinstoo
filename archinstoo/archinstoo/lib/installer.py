@@ -623,10 +623,12 @@ class Installer:
 		# Bootloader install may pull it in later, but enrollment happens first.
 		self.pacman.strap('tpm2-tss')
 
-		# /tmp keyfile inside the chroot — written without trailing newline so the
-		# whole file is treated as the passphrase by cryptenroll.
-		key_in_chroot = '/tmp/.luks_unlock_tpm2.key'
+		# Stash the existing passphrase as a transient unlock keyfile under the standard
+		# LUKS keyfile dir (same convention as _create_root_keyfile). /tmp does not work:
+		# arch-chroot -S gives the chroot a private tmpfs that shadows host-written files.
+		key_in_chroot = '/etc/cryptsetup-keys.d/.tpm2-bootstrap.key'
 		key_in_target = self.target / key_in_chroot.lstrip('/')
+		key_in_target.parent.mkdir(parents=True, exist_ok=True)
 
 		try:
 			key_in_target.write_bytes(password.plaintext.encode())
