@@ -223,7 +223,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 ## 0.1.03-0
 
-    - Encrypted `/boot` seperate `/efi` (GRUB + argon2id)
+    - Encrypted `/boot` separate `/efi` (GRUB + argon2id)
         - Constrain LUKS key slot PBKDF for boot partitions (`--pbkdf-memory 32768 --iter-time 200`)
         - Apply same constraints to keyfile generation (`luksAddKey`) so GRUB can decrypt both slots
         - Add `--batch-mode` to `cryptsetup open` for non-interactive unlock
@@ -270,7 +270,7 @@ Down from original list (the rest is all in logic or choices):
     - Graphics driver improvements
         - Add VM-specific options: `VM (software rendering)` and `VM (virtio-gpu)` allows to pick guest drivers
         - `Mesa (open-source)` auto-detects vulkan-intel or vulkan-radeon based on hardware
-        - Plan future implemetation for other drivers
+        - Plan future implementation for other drivers
         - Virtual: `vulkan-driver` 
         ALREADY COVERED: `nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast, vulkan-virtio, vulkan-nouveau`
         MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno, vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
@@ -350,7 +350,7 @@ Down from original list (the rest is all in logic or choices):
     - TUI improvements
         - Remove hjkl nav in favor of type-to-search anywhere
         - Fix number key selection
-        - Add `greetd` greeter choice (hopefuly cage option soon)
+        - Add `greetd` greeter choice (hopefully cage option soon)
     - Code quality
         - Lazy imports in `__init__.py`
         - Move `ROOTLESS_SCRIPTS` to `__init__.py`, fix `--list` formatting
@@ -578,7 +578,7 @@ Down from original list (the rest is all in logic or choices):
 
     - Change structure to be more readable
         - Editor/PCH goes to top level
-        - Rest fo checks are specific to archinstall
+        - Rest of checks are specific to archinstall
         - Seperate into DEV / ONLINE PKGBUILDS
     - Add dev/run helpers bash
     - Remove UV from runners

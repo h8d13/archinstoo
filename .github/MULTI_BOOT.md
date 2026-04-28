@@ -1,6 +1,6 @@
 # Multi Operating Systems
 
-> Easiest way is to use **seperate disks** (this limits cases of over-writing important data)
+> Easiest way is to use **separate disks** (this limits cases of over-writing important data)
 
 Second is to check that your hardware supports `Other OS` secure boot options if planning to use with Windows 11.
 

@@ -49,7 +49,7 @@ Historically this list from `default_profiles/desktop.py`
 			'xdg-utils',
 		]
 ```
-(Which I have already been tearing appart) 
+(Which I have already been tearing apart) 
 Used to hardcode stuff like `htop vim wpa_supplicant ...`
 
 My goal is this, to keep reducing hard-coded "standard" to choices/logic options.
@@ -105,7 +105,7 @@ Dev
 
 Development branches are intentionally experimental, sometimes exploring ideas that may never land upstream. This freedom enables rapid iteration and early testing of new technologies without burdening stable users.
 
-In a fast-moving, deeply technical codebase, correctness and architecture must come first. And exeprimental features are fun to test:
+In a fast-moving, deeply technical codebase, correctness and architecture must come first. And experimental features are fun to test:
 Bcachesfs support when it was dropped by mr Torvalds, CachyOS kernel support, etc 
 
 To conclude this I also think some priorities should be met, as working on visual changes should not be a priority to a codebase that moves fast, and has stuff that backlogs quite quickly. 
@@ -147,4 +147,4 @@ Countless times, but aside from that is pretty smooth sailing and the OS gets ou
 
 This is the last and key point, other distros might be easier/better fit for you if you do not wish to dive deeper into your system's inner workings. But if you are interested, my guess is that you will like it here.
 
-Rolling distros enable installers to become tools/artifacts rather than just projects. This means it doesn't have to be more features and more users, but simply adpating to it's time, maintaining worthy code, choices, occasionally helping out ecosystem and issue trackers. This is possible structurally because of the team at Arch Linux and using directly the tools they make available.
+Rolling distros enable installers to become tools/artifacts rather than just projects. This means it doesn't have to be more features and more users, but simply adapting to it's time, maintaining worthy code, choices, occasionally helping out ecosystem and issue trackers. This is possible structurally because of the team at Arch Linux and using directly the tools they make available.
