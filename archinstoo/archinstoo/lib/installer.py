@@ -549,6 +549,54 @@ class Installer:
 		if kf_path not in self._files:
 			self._files.append(kf_path)
 
+	def enroll_tpm2(self) -> None:
+		# Add a TPM2 keyslot to every encrypted device using systemd-cryptenroll.
+		# Requires systemd-cryptenroll in the chroot (provided by base/systemd) and a TPM 2.0
+		# device on the host. Existing passphrase keyslot remains as fallback.
+		if not self._disk_encryption.tpm2_unlock:
+			return
+		if self._disk_encryption.encryption_type == EncryptionType.NO_ENCRYPTION:
+			return
+		if not (password := self._disk_encryption.encryption_password):
+			warn('TPM2 enrollment skipped: no encryption password available')
+			return
+
+		devices: list[Path] = []
+		if self._disk_encryption.encryption_type in (EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS):
+			devices.extend(p.safe_dev_path for p in self._disk_encryption.partitions)
+		elif self._disk_encryption.encryption_type == EncryptionType.LUKS_ON_LVM:
+			devices.extend(v.safe_dev_path for v in self._disk_encryption.lvm_volumes)
+
+		if not devices:
+			return
+
+		# /tmp keyfile inside the chroot — written without trailing newline so the
+		# whole file is treated as the passphrase by cryptenroll.
+		key_in_chroot = '/tmp/.luks_unlock_tpm2.key'
+		key_in_target = self.target / key_in_chroot.lstrip('/')
+
+		try:
+			key_in_target.write_bytes(password.plaintext.encode())
+			key_in_target.chmod(0o400)
+
+			for dev in devices:
+				info(f'Enrolling TPM2 keyslot for {dev}')
+				try:
+					self.arch_chroot(
+						[
+							'systemd-cryptenroll',
+							f'--unlock-key-file={key_in_chroot}',
+							'--tpm2-device=auto',
+							'--tpm2-pcrs=0+7',
+							str(dev),
+						]
+					)
+				except (SysCallError, CalledProcessError) as e:
+					warn(f'TPM2 enrollment failed for {dev}: {e}')
+		finally:
+			if key_in_target.exists():
+				key_in_target.unlink()
+
 	def post_install_check(self, *args: str, **kwargs: str) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
 
@@ -1218,6 +1266,9 @@ class Installer:
 		if self._zram_enabled:
 			kernel_parameters.append('zswap.enabled=0')
 
+		if self._disk_encryption.tpm2_unlock and self._disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
+			kernel_parameters.append('rd.luks.options=tpm2-device=auto')
+
 		if id_root:
 			for sub_vol in root.btrfs_subvols:
 				if sub_vol.is_root():
@@ -1879,6 +1930,9 @@ class Installer:
 		:param bootloader_removable: Whether to install to removable media location (UEFI only, for GRUB and Limine)
 		"""
 		self._flip_bmp(self.target / 'usr/share/systemd/bootctl/splash-arch.bmp')
+
+		# Run before bootloader install so kernel cmdline reflects rd.luks.options=tpm2-device=auto
+		self.enroll_tpm2()
 
 		efi_partition = self._get_efi_partition()
 		boot_partition = self._get_boot_partition()
