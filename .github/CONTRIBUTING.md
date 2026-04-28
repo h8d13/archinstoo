@@ -51,7 +51,7 @@ git commit
 # describe what this commit fixes, ideally one fix per commit
 git push
 ```
-Then open the PR with explanations too.
+Then open the PR with explanations too, link to ressources/issues.
 
 ## Discussions
 
