@@ -33,3 +33,5 @@ Requires `archiso` and `pacman-contrib` if you enable caching.
 > Do read through it (relatively short) to understand what is going on. Process takes 5 minutes depending on selections.
 
 See [archiso-releng](https://gitlab.archlinux.org/archlinux/archiso/-/tree/master/configs/releng) and [archiso-baseline](https://gitlab.archlinux.org/archlinux/archiso/-/tree/master/configs/baseline) (used by `MINIMAL=1`).
+
+Size references: Minimal ~550M - Regular ~1.4G - Live ~2G
