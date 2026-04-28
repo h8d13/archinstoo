@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
-from archinstoo.lib.models.application import ApplicationConfiguration, ZramConfiguration
+from archinstoo.lib.models.application import DEFAULT_KERNEL, ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, PartitionModification
 from archinstoo.lib.pm import list_available_packages
@@ -124,7 +124,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text=tr('Kernels'),
-				value=['linux'],
+				value=[DEFAULT_KERNEL.value],
 				action=self._select_kernel,
 				preview_action=self._prev_kernel,
 				mandatory=False,
