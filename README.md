@@ -93,7 +93,7 @@ A `man` page is also available `man -l docs/archinstoo.1`
 
 ## Use cases
 
-See [Headless](./.github/HEADLESS.md) for example server install to play minecraft.
+See [Headless](./.github/HEADLESS.md) for example server install to play minecraft/run tailscale nodes.
 
 See [Multi-boot](./.github/MULTI_BOOT.md) for example to boot multiple OSes.
 
