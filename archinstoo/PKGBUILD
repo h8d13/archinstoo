@@ -6,8 +6,8 @@
 # Contributor: Anton Hvornum <torxed@archlinux.org>
 
 pkgname=archinstoo-git
-pkgver=r5325.cc1cbcc6
-pkgrel=1
+pkgver=r5754.39c5e672
+pkgrel=0
 pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"
@@ -21,8 +21,17 @@ depends=(
   'util-linux' #For partition utilities
   'pciutils' #For PCI device detection
   'kbd' #For keyboard layout configuration
+  'libxcrypt'
   'pacman'
-  'git'
+  'git' #cloning stashes
+  'btrfs-progs' #btrfs filesystem support
+  'dosfstools' #FAT EFI filesystem support
+  'e2fsprogs' #ext4 filesystem support
+  'f2fs-tools' #f2fs filesystem support
+  'ntfs-3g' #NTFS filesystem support
+  'xfsprogs' #XFS filesystem support
+  'cryptsetup' #LUKS encryption support
+  'lvm2' #LVM layout support
 )
 makedepends=(
   'python-build'
@@ -31,15 +40,7 @@ makedepends=(
   'python-wheel'
 )
 optdepends=(
-  'btrfs-progs: btrfs filesystem support'
-  'dosfstools: FAT EFI filesystem support'
-  'e2fsprogs: ext4 filesystem support'
-  'f2fs-tools: f2fs filesystem support'
-  'ntfs-3g: NTFS filesystem support'
-  'xfsprogs: XFS filesystem support'
-  'cryptsetup: LUKS encryption support'
-  'lvm2: LVM layout support'
-  'python-systemd: system journal logging'
+  'python-systemd: Adds journald logging'
 )
 provides=(archinstoo)
 replaces=(archinstoo)
