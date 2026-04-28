@@ -7,7 +7,7 @@
 A fork of `archinstall` with only `python-parted` as a dependency, many MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes. *Aims to make the code base more readable, maintainable and modifiable by anyone*.
 
 > [!TIP]
-> In the [ISO](https://archlinux.org/download/), you are root by default and have some tools available. 
+> In the [ISO](https://archlinux.org/download/), you are root by default and have some tools available.
 > Use `sudo` or equivalent, *if running from an existing system. Here you will need more [dependencies](./archinstoo/PKGBUILD)*
 
 ## Setup / Usage
@@ -16,7 +16,7 @@ A fork of `archinstall` with only `python-parted` as a dependency, many MORE cho
 
 **0. Get internet access**
 > [!NOTE]
-> Ethernet cable is plug and play. 
+> Ethernet cable is plug and play.
 
 Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms` 3 times...
 
@@ -73,7 +73,7 @@ To test fixes see: [Contributing](./.github/CONTRIBUTING.md)
 > You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
 Or modify existing ones direcly. Can also see here for [examples](./archinstoo/examples)
 
-You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported. 
+You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported.
 
 ```yaml
 Available options:
@@ -91,13 +91,13 @@ The full structure of the project can be consulted through [`TREE`](./archinstoo
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
-A `man` page is also available `man -l docs/archinstoo.1` 
+A `man` page is also available `man -l docs/archinstoo.1`
 
 ## Use cases
 
 See [Headless](./.github/HEADLESS.md) for example server install to play minecraft.
 
-See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. *Uses a modified [`grimaur`](https://github.com/mackilanu/grimaur) during install* 
+See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. *Uses a modified [`grimaur`](https://github.com/mackilanu/grimaur) during install*
 
 See [Multi-boot](./.github/MULTI_BOOT.md) for example to boot multiple OSes.
 
@@ -109,15 +109,17 @@ See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
 ## Testing
 
-**Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md).
+**Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md)
 
-To see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md) 
+To see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md)
 
 The process would be the same with `git clone -b <branch> <url>` to test a specific fix.
 
-Usually reproduced then tested on actual/appropriate hardware. 
+Usually reproduced then tested on actual/appropriate hardware.
 
-Any help in this regard is deeply appreciated, as testing takes just as long if not longer than coding. 
+Any help in this regard is deeply appreciated, as testing takes just as long if not longer than coding.
+
+Accurate reports will be addressed in a timely manner: [Issues](https://github.com/h8d13/archinstoo/issues)
 
 ---
 

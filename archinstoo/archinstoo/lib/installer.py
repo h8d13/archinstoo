@@ -163,6 +163,7 @@ class Installer:
 		self._sync_artifacts_to_target()
 
 		if not (missing_steps := self.post_install_check()):
+			self._teardown_target()
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
 			log(msg, fg='green')
 
@@ -199,6 +200,47 @@ class Installer:
 				cfg_dst.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
 		except Exception as e:
 			warn(f'Failed to sync install artifacts to target: {e}')
+
+	def _teardown_target(self) -> None:
+		# Order: unmount, deactivate VGs, close LUKS. Inner mappers close before the outer
+		# ones that hold them.
+		info('Tearing down target mounts and mappings')
+		try:
+			SysCommand(['umount', '-R', str(self.target)])
+		except SysCallError:
+			warn(f'{self.target} busy, retrying with lazy unmount')
+			SysCommand(['umount', '-R', '-l', str(self.target)])
+
+		enc = self._disk_encryption
+		lvm_cfg = self._disk_config.lvm_config
+
+		def _close_luks(dev_path: Path, mapper_name: str | None) -> None:
+			if mapper_name is None:
+				return
+			Luks2(dev_path, mapper_name=mapper_name).lock()
+
+		def _deactivate_vgs() -> None:
+			if not lvm_cfg:
+				return
+			for vg in lvm_cfg.vol_groups:
+				self._device_handler.lvm_vg_deactivate(vg.name)
+
+		match enc.encryption_type:
+			case EncryptionType.LUKS_ON_LVM:
+				# LUKS sits on top of LVs, close LUKS first, then deactivate VGs.
+				for vol in enc.lvm_volumes:
+					_close_luks(vol.safe_dev_path, vol.mapper_name)
+				_deactivate_vgs()
+			case EncryptionType.LVM_ON_LUKS:
+				# VGs sit on LUKS PV, deactivate VGs first, then close LUKS.
+				_deactivate_vgs()
+				for part in enc.partitions:
+					_close_luks(part.safe_dev_path, part.mapper_name)
+			case EncryptionType.LUKS:
+				for part in enc.partitions:
+					_close_luks(part.safe_dev_path, part.mapper_name)
+			case EncryptionType.NO_ENCRYPTION:
+				_deactivate_vgs()
 
 	def _verify_service_stop(self) -> None:
 		# Check for essential services statuses based on
@@ -548,6 +590,61 @@ class Installer:
 
 		if kf_path not in self._files:
 			self._files.append(kf_path)
+
+	def enroll_tpm2(self) -> None:
+		# Add a TPM2 keyslot to every encrypted device using systemd-cryptenroll.
+		# Requires systemd-cryptenroll in the chroot (provided by base/systemd) and a TPM 2.0
+		# device on the host. Existing passphrase keyslot remains as fallback.
+		if not self._disk_encryption.tpm2_unlock:
+			return
+		if self._disk_encryption.encryption_type == EncryptionType.NO_ENCRYPTION:
+			return
+		if not (password := self._disk_encryption.encryption_password):
+			warn('TPM2 enrollment skipped: no encryption password available')
+			return
+
+		devices: list[Path] = []
+		if self._disk_encryption.encryption_type in (EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS):
+			devices.extend(p.safe_dev_path for p in self._disk_encryption.partitions)
+		elif self._disk_encryption.encryption_type == EncryptionType.LUKS_ON_LVM:
+			devices.extend(v.safe_dev_path for v in self._disk_encryption.lvm_volumes)
+
+		if not devices:
+			return
+
+		pcrs = self._disk_encryption.tpm2_pcrs or '0+7'
+
+		# Stash the existing passphrase as a transient unlock keyfile under the standard
+		# LUKS keyfile dir (same convention as _create_root_keyfile).
+		key_in_chroot = '/etc/cryptsetup-keys.d/.tpm2-bootstrap.key'
+		key_in_target = self.target / key_in_chroot.lstrip('/')
+		key_in_target.parent.mkdir(parents=True, exist_ok=True)
+
+		try:
+			key_in_target.write_bytes(password.plaintext.encode())
+			key_in_target.chmod(0o400)
+
+			for dev in devices:
+				info(f'Enrolling TPM2 keyslot for {dev} bound to PCR {pcrs}')
+				try:
+					self.arch_chroot(
+						[
+							'systemd-cryptenroll',
+							f'--unlock-key-file={key_in_chroot}',
+							'--tpm2-device=auto',
+							f'--tpm2-pcrs={pcrs}',
+							str(dev),
+						]
+					)
+				except CalledProcessError as e:
+					stderr = e.stderr.decode(errors='replace').strip() if e.stderr else ''
+					stdout = e.stdout.decode(errors='replace').strip() if e.stdout else ''
+					warn(f'TPM2 enrollment failed for {dev} (exit {e.returncode}): {stderr or stdout or e}')
+				except SysCallError as e:
+					warn(f'TPM2 enrollment failed for {dev}: {e}')
+		finally:
+			if key_in_target.exists():
+				key_in_target.unlink()
 
 	def post_install_check(self, *args: str, **kwargs: str) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
@@ -1218,6 +1315,9 @@ class Installer:
 		if self._zram_enabled:
 			kernel_parameters.append('zswap.enabled=0')
 
+		if self._disk_encryption.tpm2_unlock and self._disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
+			kernel_parameters.append('rd.luks.options=tpm2-device=auto')
+
 		if id_root:
 			for sub_vol in root.btrfs_subvols:
 				if sub_vol.is_root():
@@ -1879,6 +1979,9 @@ class Installer:
 		:param bootloader_removable: Whether to install to removable media location (UEFI only, for GRUB and Limine)
 		"""
 		self._flip_bmp(self.target / 'usr/share/systemd/bootctl/splash-arch.bmp')
+
+		# Run before bootloader install so kernel cmdline reflects rd.luks.options=tpm2-device=auto
+		self.enroll_tpm2()
 
 		efi_partition = self._get_efi_partition()
 		boot_partition = self._get_boot_partition()
