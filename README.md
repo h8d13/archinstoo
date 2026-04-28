@@ -108,7 +108,8 @@ See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported h
 
 ## Testing
 
-**Philosophy:** Simplify, No backwards-compat, Move fast. **Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md)
+**Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). 
+**Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md)
 
 To see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md)
 
