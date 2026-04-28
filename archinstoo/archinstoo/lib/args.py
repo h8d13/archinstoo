@@ -77,12 +77,7 @@ class ArchConfig:
 	timezone: str | None = None
 	services: list[str | UserService] = field(default_factory=list)
 	sysctl: list[str] = field(default_factory=list)
-	custom_commands: list[str] = field(
-		default_factory=lambda: [
-			'#arch-chroot via bash tmp files # lines are ignored',
-			'#ex: su - user -c "bash ~/.stash/repo/install.sh"',
-		]
-	)
+	custom_commands: list[str] = field(default_factory=list)
 
 	def safe_json(self) -> dict[str, Any]:
 		# Order matches global menu
