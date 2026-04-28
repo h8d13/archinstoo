@@ -1,10 +1,13 @@
 import os
 import re
 import shlex
+import shutil
+import stat
 import subprocess
 import textwrap
 import time
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import CalledProcessError
 from types import TracebackType
@@ -147,6 +150,7 @@ class Installer:
 		if exc_type is not None:
 			error(str(exc_value))
 
+			self._sync_artifacts_to_target()
 			Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
 			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
 
@@ -155,6 +159,8 @@ class Installer:
 
 		info(tr('Syncing the system...'))
 		os.sync()
+
+		self._sync_artifacts_to_target()
 
 		if not (missing_steps := self.post_install_check()):
 			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
@@ -170,6 +176,29 @@ class Installer:
 		warn(f'Submit this zip file as an issue to {self._bug_report_url}/issues')
 
 		return False
+
+	def _sync_artifacts_to_target(self) -> None:
+		# Copy the run log and saved user config into the target so they survive reboot
+		# at /etc/archinstoo.d/<timestamp>-{install.log,config.json} for post-install debugging.
+		try:
+			dest_dir = self.target / 'etc' / 'archinstoo.d'
+			dest_dir.mkdir(mode=0o755, exist_ok=True)
+
+			ts = datetime.now(tz=UTC).strftime('%Y-%m-%dT%H-%M')
+			log_src = logger.path
+			cfg_src = logger.directory / 'user_configuration.json'
+
+			if log_src.exists():
+				log_dst = dest_dir / f'{ts}-install.log'
+				shutil.copy2(log_src, log_dst)
+				log_dst.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
+
+			if cfg_src.exists():
+				cfg_dst = dest_dir / f'{ts}-config.json'
+				shutil.copy2(cfg_src, cfg_dst)
+				cfg_dst.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
+		except Exception as e:
+			warn(f'Failed to sync install artifacts to target: {e}')
 
 	def _verify_service_stop(self) -> None:
 		# Check for essential services statuses based on
