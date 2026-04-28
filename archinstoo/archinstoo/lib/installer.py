@@ -612,6 +612,8 @@ class Installer:
 		if not devices:
 			return
 
+		pcrs = self._disk_encryption.tpm2_pcrs or '0+7'
+
 		# Stash the existing passphrase as a transient unlock keyfile under the standard
 		# LUKS keyfile dir (same convention as _create_root_keyfile).
 		key_in_chroot = '/etc/cryptsetup-keys.d/.tpm2-bootstrap.key'
@@ -623,14 +625,14 @@ class Installer:
 			key_in_target.chmod(0o400)
 
 			for dev in devices:
-				info(f'Enrolling TPM2 keyslot for {dev}')
+				info(f'Enrolling TPM2 keyslot for {dev} bound to PCR {pcrs}')
 				try:
 					self.arch_chroot(
 						[
 							'systemd-cryptenroll',
 							f'--unlock-key-file={key_in_chroot}',
 							'--tpm2-device=auto',
-							'--tpm2-pcrs=0+7',
+							f'--tpm2-pcrs={pcrs}',
 							str(dev),
 						]
 					)
