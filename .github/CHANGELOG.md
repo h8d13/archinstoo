@@ -2,6 +2,10 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.07-1
+
+    - CI: add `release.yaml` workflow to auto-publish a GitHub release when `PKGBUILD` `pkgver`/`pkgrel` change (tag format `v<pkgver>-<pkgrel>`)
+
 ## 0.1.07-0
 
     - TPM2 auto-unlock for LUKS-encrypted installs (opt-in)
