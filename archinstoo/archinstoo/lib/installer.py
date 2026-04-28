@@ -41,6 +41,7 @@ from .disk.luks import Luks2, unlock_luks2_dev
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
+from .models.application import DEFAULT_KERNEL
 from .models.authentication import PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration
@@ -57,9 +58,6 @@ from .pm.config import PacmanConfig
 # hosts (EndeavourOS prefers dracut, etc.) breaks the installer's mkinitcpio() and
 # _config_uki() methods that assume mkinitcpio is present in the chroot.
 __base_packages__ = ['base', 'mkinitcpio']
-
-# Available kernel options
-__kernels__ = ['linux', 'linux-lts', 'linux-zen', 'linux-hardened']
 
 # Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
@@ -90,7 +88,7 @@ class Installer:
 
 		self._base_packages = base_packages or __base_packages__.copy()
 		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
-		self.kernels = kernels or ['linux']
+		self.kernels = kernels or [DEFAULT_KERNEL.value]
 		self._disk_config = disk_config
 
 		self._disk_encryption = disk_config.disk_encryption or DiskEncryption(EncryptionType.NO_ENCRYPTION)

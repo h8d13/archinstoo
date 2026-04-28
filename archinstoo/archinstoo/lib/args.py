@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Self, cast
 from urllib.request import Request, urlopen
 
-from archinstoo.lib.models.application import ApplicationConfiguration, ZramConfiguration
+from archinstoo.lib.models.application import DEFAULT_KERNEL, ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
@@ -68,7 +68,7 @@ class ArchConfig:
 	auth_config: AuthenticationConfiguration | None = None
 	swap: ZramConfiguration | None = None
 	hostname: str = 'archlinux'
-	kernels: list[str] = field(default_factory=lambda: ['linux'])
+	kernels: list[str] = field(default_factory=lambda: [DEFAULT_KERNEL.value])
 	kernel_headers: bool = False
 	firmware: FirmwareConfiguration = field(default_factory=FirmwareConfiguration)
 	ntp: bool = True

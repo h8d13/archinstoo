@@ -1,6 +1,6 @@
 from typing import assert_never
 
-from archinstoo.lib.models.application import ZramAlgorithm, ZramConfiguration
+from archinstoo.lib.models.application import DEFAULT_KERNEL, Kernel, ZramAlgorithm, ZramConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -16,17 +16,13 @@ def select_kernel(preset: list[str] = []) -> list[str]:
 	:return: The string as a selected kernel
 	:rtype: string
 	"""
-	kernels = ['linux', 'linux-lts', 'linux-zen', 'linux-hardened']
-	default_kernel = 'linux'
+	preset_kernels = [Kernel(p) for p in preset if p in Kernel._value2member_map_]
 
-	items = [MenuItem(k, value=k) for k in kernels]
+	group = MenuItemGroup.from_enum(Kernel, sort_items=True, preset=preset_kernels)
+	group.set_default_by_value(DEFAULT_KERNEL)
+	group.set_focus_by_value(DEFAULT_KERNEL)
 
-	group = MenuItemGroup(items, sort_items=True)
-	group.set_default_by_value(default_kernel)
-	group.set_focus_by_value(default_kernel)
-	group.set_selected_by_value(preset)
-
-	result = SelectMenu[str](
+	result = SelectMenu[Kernel](
 		group,
 		allow_skip=True,
 		allow_reset=True,
@@ -41,7 +37,7 @@ def select_kernel(preset: list[str] = []) -> list[str]:
 		case ResultType.Reset:
 			return []
 		case ResultType.Selection:
-			return result.get_values()
+			return [k.value for k in result.get_values()]
 
 
 def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> ZramConfiguration:
