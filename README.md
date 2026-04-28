@@ -103,6 +103,8 @@ See [Build-ISOs](./.github/BUILD_ISOS.md) to create your own install mediums.
 
 See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
+See [Cachy-Kernels](./.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
+
 See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. 
 > *Uses a modified [`grimaur`](https://github.com/mackilanu/grimaur) during install*
 
