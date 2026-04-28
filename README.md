@@ -132,7 +132,7 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 2. In case of **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part.
 
-> A lot of the dependencies are registered as `optdepends` because they are expected on the ISO in stable state of release. You can run `sudo ./DEV -h2t -o` to check you have all of them, when runnign from a non-ISO env.
+> A lot of the dependencies are registered as `optdepends` because they are expected on the ISO in stable state of release (and because they depend on user selection). You can run `sudo ./DEV -h2t -o` to check you have all of them, **when running from a non-ISO env.**
 
 ---
 
