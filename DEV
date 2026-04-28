@@ -72,6 +72,7 @@ case "$1" in
     ;;
 	-h2t | --host-to-target)
 	go_to
+	# this checks dependencies for dev workflow from top level PKGBUILD
 	. ./PKGBUILD
 	if [ "$2" = "-o" ] || [ "$2" = "--opt" ]; then
 		pacman -Sy --needed "${depends[@]}" "${optdepends[@]}"
