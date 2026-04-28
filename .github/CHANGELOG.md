@@ -2,10 +2,10 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
-## 0.1.07-3
+## 0.1.07-4
 
     - CI: add `release.yaml` workflow to auto-publish a GitHub release when `PKGBUILD` `pkgver`/`pkgrel` change
-    - Publish .tar.gz as official format + sha archive
+    - Publish `.tar.gz` as official format
 
 ## 0.1.07-0
 
