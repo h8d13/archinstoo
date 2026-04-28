@@ -15,7 +15,7 @@ from typing import Any, Self
 
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
-from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon, umount
+from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
@@ -207,7 +207,9 @@ class Installer:
 		# the outer ones that hold them. Failures propagate: we know exactly what we opened,
 		# so a failure here is a real bug, not best-effort cleanup.
 		info('Tearing down target mounts and mappings')
-		umount(self.target, recursive=True)
+		# Use `umount -R` directly: the disk.utils.umount helper expects a block device path
+		# and runs lsblk against it, which does not work for the target mountpoint root.
+		SysCommand(['umount', '-R', str(self.target)])
 
 		enc = self._disk_encryption
 		lvm_cfg = self._disk_config.lvm_config
