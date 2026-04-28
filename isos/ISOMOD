@@ -33,8 +33,7 @@ MINIMAL="${MINIMAL:-0}"
 CACHING="${CACHING:-0}"
 
 if [ "$LIVE" = "1" ] && [ "$MINIMAL" = "1" ]; then
-    echo "ERROR: LIVE=1 and MINIMAL=1 are mutually exclusive" >&2
-    exit 1
+    echo "ERROR: LIVE=1 and MINIMAL=1 are mutually exclusive" && exit 1
 fi
 
 # Defaults that differ by mode
