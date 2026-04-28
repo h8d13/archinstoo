@@ -19,16 +19,32 @@ jobs:
         run: |
           PKGVER=$(grep -E '^pkgver=' PKGBUILD | cut -d= -f2)
           PKGREL=$(grep -E '^pkgrel=' PKGBUILD | cut -d= -f2)
-          echo "TAG=v${PKGVER}-${PKGREL}" >> "$GITHUB_ENV"
+          echo "VER=v${PKGVER}-${PKGREL}" >> "$GITHUB_ENV"
+          echo "SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
       - name: Create release archive
-        run: tar --exclude='.git' -czf archinstoo-${{ env.TAG }}.tar.gz .
+        run: tar --exclude='.git' -czf /tmp/archinstoo-${{ env.VER }}.tar.gz -C "$GITHUB_WORKSPACE" .
 
-      - name: Publish release
+      - name: Delete existing latest tag
+        run: |
+          git push origin :refs/tags/latest || true
+          gh release delete latest --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish rolling latest
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG }}
-          name: ${{ env.TAG }}
+          tag_name: latest
+          name: ${{ env.VER }}
           make_latest: true
-          files: archinstoo-${{ env.TAG }}.tar.gz
+          files: /tmp/archinstoo-${{ env.VER }}.tar.gz
+          body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
+
+      - name: Publish archived release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.SHA }}
+          name: ${{ env.VER }} (${{ env.SHA }})
+          files: /tmp/archinstoo-${{ env.VER }}.tar.gz
           body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
