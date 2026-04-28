@@ -1,6 +1,7 @@
 from typing import override
 
 from archinstoo.lib.authentication.password_prompt import get_password
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.device import (
@@ -105,6 +106,14 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				preview_action=self._preview,
 				key='auto_unlock_root',
 			),
+			MenuItem(
+				text=tr('TPM2 auto unlock'),
+				action=self._select_tpm2_unlock,
+				value=self._enc_config.tpm2_unlock,
+				dependencies=[self._check_dep_tpm2],
+				preview_action=self._preview,
+				key='tpm2_unlock',
+			),
 		]
 
 	def _select_lvm_vols(self, preset: list[LvmVolume]) -> list[LvmVolume]:
@@ -151,6 +160,34 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def _check_dep_auto_unlock(self) -> bool:
 		return self._allow_auto_unlock and self._check_dep_enc_type()
 
+	def _check_dep_tpm2(self) -> bool:
+		return SysInfo.has_tpm2() and self._check_dep_enc_type()
+
+	def _select_tpm2_unlock(self, preset: bool) -> bool:
+		prompt = tr('Bind a TPM2 keyslot to the LUKS device(s) so the disk auto-unlocks at boot ?') + '\n'
+		prompt += tr('Bound to PCR 0+7 (firmware + bootloader/secureboot state).') + '\n'
+		prompt += tr('Passphrase keyslot stays as fallback.') + '\n'
+
+		group = MenuItemGroup.yes_no()
+		group.set_focus_by_value(preset)
+
+		result = SelectMenu[bool](
+			group,
+			header=prompt,
+			columns=2,
+			orientation=Orientation.HORIZONTAL,
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
+
+		match result.type_:
+			case ResultType.Skip:
+				return preset
+			case ResultType.Selection:
+				return result.item() == MenuItem.yes()
+			case _:
+				return preset
+
 	@override
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
 		super().run(additional_title=additional_title)
@@ -162,6 +199,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_partitions = self._item_group.find_by_key('partitions').value
 		enc_lvm_vols = self._item_group.find_by_key('lvm_volumes').value
 		auto_unlock_root: bool = self._item_group.find_by_key('auto_unlock_root').value or False
+		tpm2_unlock: bool = self._item_group.find_by_key('tpm2_unlock').value or False
 
 		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
 			return None
@@ -181,6 +219,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				iter_time=iter_time or DEFAULT_ITER_TIME,
 				pbkdf=pbkdf or LuksPbkdf.Argon2id,
 				auto_unlock_root=auto_unlock_root,
+				tpm2_unlock=tpm2_unlock,
 			)
 
 		return None
@@ -208,6 +247,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if (auto_unlock := self._prev_auto_unlock_root()) is not None:
 			output += f'\n{auto_unlock}'
+
+		if (tpm2 := self._prev_tpm2_unlock()) is not None:
+			output += f'\n{tpm2}'
 
 		if not output:
 			return None
@@ -274,6 +316,17 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			return f'{tr("Auto unlock root")}: {status}'
 
 		return None
+
+	def _prev_tpm2_unlock(self) -> str | None:
+		enc_type = self._item_group.find_by_key('encryption_type').value
+		if not enc_type or enc_type == EncryptionType.NO_ENCRYPTION:
+			return None
+		if not SysInfo.has_tpm2():
+			return None
+
+		tpm2 = self._item_group.find_by_key('tpm2_unlock').value
+		status = tr('Enabled') if tpm2 else tr('Disabled')
+		return f'{tr("TPM2 auto unlock")}: {status}'
 
 
 def select_encryption_type(
