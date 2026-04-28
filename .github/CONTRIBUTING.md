@@ -42,7 +42,7 @@ Therefore, guidelines and style changes to the code might come into effect as we
 For each patch create a branch specifically targeted to fix something, `master` should stay clean and accept these patches if tested/reproduced.
 It also means it should be the stable branch and single source of truth.
 
-For your submitted patches you'll likely need to accomodate yourself with branches easily:
+For your submitted patches you'll likely need to accommodate yourself with branches easily:
 ```
 git checkout <existing>
 git checkout -b <new>
@@ -51,7 +51,7 @@ git commit
 # describe what this commit fixes, ideally one fix per commit
 git push
 ```
-Then open the PR with explanations too, link to ressources/issues.
+Then open the PR with explanations too, link to resources/issues.
 
 ## Discussions
 
@@ -59,7 +59,7 @@ Currently, questions, bugs and suggestions should be reported through [GitHub is
 
 ## Coding convention
 
-All rules/exlusions can be consulted in the master `pyproject.toml` file
+All rules/exclusions can be consulted in the master `pyproject.toml` file
 
 Most of these style guidelines have been put into place after the fact *(in an attempt to clean up the code)*.<br>
 There might therefore be older code which does not follow the coding convention and the code is subject to change.
@@ -83,7 +83,7 @@ Can be consulted within [PCH](./.pre-commit-config.yaml)
 ## Submitting Changes
 
 Archinstoo uses GitHub's pull-request workflow and all contributions in terms of code should be done through pull requests.
-Direct pushes to master are premitted to code-owners.
+Direct pushes to master are permitted to code-owners.
 
 Anyone interested in archinstoo may review your code. One of the core developers will merge your pull request when they
 think it is ready. For every pull request, we aim to promptly either merge it or say why it is not yet ready; or edit it and merge directly.

@@ -20,7 +20,7 @@ A fork of `archinstall` with only `python-parted` as a dependency, many MORE cho
 
 Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms` 3 times...
 
-*You can then skip wifi setup bellow*
+*You can then skip wifi setup below*
 
 **For Wifi**:
 ```shell
@@ -69,7 +69,7 @@ Make your pizzas. *Una pizza con funghi e prosciutto.*
 ## Modify/Extend
 
 > You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
-Or modify existing ones direcly. Can also see here for [examples](./archinstoo/examples)
+Or modify existing ones directly. Can also see here for [examples](./archinstoo/examples)
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported.
 
