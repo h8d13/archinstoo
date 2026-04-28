@@ -1,4 +1,4 @@
-name: Release on PKGBUILD version bump
+name: release
 
 on:
   push:
@@ -13,18 +13,22 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@v4
 
-      - name: Read pkgver and pkgrel
-        id: pkgver
+      - name: Set version info
         run: |
-          pkgver=$(grep -E '^pkgver=' PKGBUILD | cut -d= -f2)
-          pkgrel=$(grep -E '^pkgrel=' PKGBUILD | cut -d= -f2)
-          echo "tag=v${pkgver}-${pkgrel}" >> "$GITHUB_OUTPUT"
+          PKGVER=$(grep -E '^pkgver=' PKGBUILD | cut -d= -f2)
+          PKGREL=$(grep -E '^pkgrel=' PKGBUILD | cut -d= -f2)
+          echo "TAG=v${PKGVER}-${PKGREL}" >> "$GITHUB_ENV"
 
-      - name: Create release
+      - name: Create release archive
+        run: tar --exclude='.git' -czf archinstoo-${{ env.TAG }}.tar.gz .
+
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.pkgver.outputs.tag }}
-          name: ${{ steps.pkgver.outputs.tag }}
-          body: "Changelog: https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md"
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+          make_latest: true
+          files: archinstoo-${{ env.TAG }}.tar.gz
+          body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
