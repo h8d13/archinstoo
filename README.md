@@ -68,8 +68,6 @@ Make your pizzas. *Una pizza con funghi e prosciutto.*
 
 ## Modify/Extend
 
-To test fixes see: [Contributing](./.github/CONTRIBUTING.md)
-
 > You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
 Or modify existing ones direcly. Can also see here for [examples](./archinstoo/examples)
 
