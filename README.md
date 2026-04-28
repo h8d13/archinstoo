@@ -133,7 +133,9 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 2. In case of **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part from git.
 
 ```shell
-makepkg -cf ./archinstoo/PKGBUILD  # or use the desired PKGBUILD, with your preferred AUR helper.
+# not cloned yet
+wget https://raw.githubusercontent.com/h8d13/archinstoo/refs/heads/master/archinstoo/PKGBUILD
+makepkg -c # or use the desired PKGBUILD, with your preferred AUR helper.
 ```
 
 See `archinstall` [upstream](https://github.com/archlinux/archinstall)
