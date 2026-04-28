@@ -250,10 +250,10 @@ class Installer:
 		if not self._args.skip_ntp:
 			info(tr('Waiting for NTP time synchronization...'))
 
-			started_wait = time.time()
+			started_wait = time.monotonic()
 			notified = False
 			while True:
-				if not notified and time.time() - started_wait > 5:
+				if not notified and time.monotonic() - started_wait > 5:
 					notified = True
 					warn(tr('NTP sync taking longer than expected, still waiting...'))
 
