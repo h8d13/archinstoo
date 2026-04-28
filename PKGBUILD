@@ -28,6 +28,7 @@ depends=(
   'pacman'
   'git'
 )
+# base-devel tools are assumed for dev
 makedepends=(
   'python-build'
   'python-installer'
