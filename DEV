@@ -67,8 +67,8 @@ case "$1" in
 	go_to
 	git grep -ni "$2"
 	;;
-    -tf | --test-full)
-    ./RUN --config examples/config-sample-full.json
+    -tc | --test-config)
+    ./RUN --advanced --config examples/config-sample-full.json
     ;;
 	-h2t | --host-to-target)
 	go_to
