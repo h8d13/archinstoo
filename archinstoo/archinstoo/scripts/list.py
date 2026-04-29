@@ -1,7 +1,7 @@
 import glob
 from pathlib import Path
 
-from archinstoo import ROOTLESS_SCRIPTS
+from archinstoo import DEFAULT, ROOTLESS_SCRIPTS
 
 scripts = [Path(x).stem for x in glob.glob(f'{Path(__file__).parent}/*.py') if Path(x).stem not in ('__init__', 'list')]
 
@@ -12,9 +12,12 @@ all_scripts = rootless + root
 width = max(len(s) for s in all_scripts)
 
 print('Available options:')
-
+print(' 	      [*] requires root')
 for name in rootless:
 	print(f'    {name}')
 
 for name in root:
-	print(f'    {name:<{width}}  [*] requires root')
+	if name in DEFAULT:
+		print(f'    {name:<{width}}  [*] < DEFAULT')
+	else:
+		print(f'    {name:<{width}}  [*]')

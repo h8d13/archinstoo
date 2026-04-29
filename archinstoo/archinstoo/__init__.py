@@ -90,7 +90,8 @@ hard_depends = ('python-pyparted',)
 # rootless/needsroot utilities
 
 # scripts that don't need root
-ROOTLESS_SCRIPTS = {'list', 'size', 'mirror'}
+ROOTLESS_SCRIPTS = {'list', 'size', 'mirror', 'count'}
+DEFAULT = 'guided'
 
 
 def _log_env_info() -> None:
