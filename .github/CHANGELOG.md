@@ -5,26 +5,17 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 ## 0.1.08-0
 
     - Auto-detect firmware vendors from PCI bus
-        - New `_SysInfo.firmware_vendors` cached probe reads `/sys/bus/pci/devices/*/vendor`
-          and maps to `FirmwareVendor` enum names (NVIDIA, INTEL, REALTEK, BROADCOM, ATHEROS,
-          MEDIATEK, QCOM, AMDGPU/RADEON)
+        - New `_SysInfo.firmware_vendors` cached probe reads `/sys/bus/pci/devices/*/vendor` maps to `FirmwareVendor` enum names
         - AMD disambiguation via `/sys/bus/pci/devices/*/driver` symlink (amdgpu vs radeon)
         - VM short-circuit (`SysInfo.is_vm()`) skips PCI scan on virtio-only hosts
-        - `select_firmware()` seeds the multi-select with detected vendors only when no preset
-          is loaded — saved configs with explicit picks still win
+        - `select_firmware()` seeds the multi-select with detected vendors only when no preset is loaded saved configs with explicit picks still win
     - Refactor: `DisplayServer` moved out of `hardware.py`
-        - Now lives in `lib/profile/base.py` next to `ProfileType` / `GreeterType` / `SelectResult`
-          where it conceptually belongs (it's a profile-derived choice, not a hardware probe)
-        - `GfxDriver.gfx_packages()` no longer bundles xorg-server/xorg-xinit — those are a
-          display-server concern, now added by `profiles_handler.install_gfx_driver` when X11
-          is in use
-        - Multi-profile X11+Wayland selection now correctly includes X11 base packages (passes
-          aggregated `profile_config.display_servers()` instead of first-profile-only)
-    - `info(..., step=True)` for major install-phase banners
+        - Now lives in `lib/profile/base.py` next to `ProfileType` / `GreeterType` / `SelectResult` (it's a profile-derived choice, not a hardware probe)
+        - `GfxDriver.gfx_packages()` no longer bundles xorg-server/xorg-xinit
+        - Multi-profile X11+Wayland selection now correctly includes X11 base packages (passes aggregated `profile_config.display_servers()` 
+    - `info(..., step=True)` for major install-phases
         - Prepends `==>` (cyan) and trailing blank line for visual separation
-        - Wired at `mount_ordered_layout`, `minimal_installation`, `add_bootloader`,
-          `create_users`, `genfstab` — banners carry concrete config (target path + encryption
-          mode, kernel list + hostname, bootloader name + boot partition, user count + names)
+        - Wired at `mount_ordered_layout`, `minimal_installation`, `add_bootloader`, `create_users`, `genfstab`
     - `cleanup.py` module extracted from `installer.py` (#4496 upstream port)
         - `teardown_layout` / `swapoff_layout` / `close_luks` as free functions
         - `__exit__` runs teardown via `try/finally` on every exit (success and failure paths)
