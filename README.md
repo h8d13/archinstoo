@@ -75,14 +75,16 @@ You can make plugins easily `--script list` for `archinstoo`, anything inside `s
 
 ```yaml
 Available options:
+              [*] requires root
+    count
     mirror
     size
-    count    [*] requires root
-    format   [*] requires root
-    guided   [*] requires root < DEFAULT
-    live     [*] requires root
-    minimal  [*] requires root
-    rescue   [*] requires root
+    format    [*]
+    guided    [*] < DEFAULT
+    live      [*]
+    minimal   [*]
+    packages  [*]
+    rescue    [*]
 ```
 
 The full structure of the project can be consulted through [`TREE`](./archinstoo)
