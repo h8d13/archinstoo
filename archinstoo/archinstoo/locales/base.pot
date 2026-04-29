@@ -1048,3 +1048,7 @@ msgstr ""
 msgid ""
 "LVM disk encryption with more than 2 partitions is currently not supported"
 msgstr ""
+
+#, python-brace-format
+msgid "Default: {}ms, Recommended range: 1000-60000"
+msgstr ""
