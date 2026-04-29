@@ -26,12 +26,10 @@ class HyprlandProfile(WaylandProfile):
 			'dunst',
 			'kitty',
 			'uwsm',
-			'dolphin',
 			'wofi',
 			'xdg-desktop-portal-hyprland',
 			'qt5-wayland',
 			'qt6-wayland',
-			'polkit-kde-agent',
 			'grim',
 			'slurp',
 		]
