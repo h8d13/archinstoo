@@ -1,5 +1,6 @@
 from typing import assert_never
 
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.application import DEFAULT_KERNEL, Kernel, ZramAlgorithm, ZramConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.translationhandler import tr
@@ -129,7 +130,10 @@ def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> 
 
 	vendor_items = [MenuItem(v.value, value=v) for v in FirmwareVendor]
 	vendor_group = MenuItemGroup(vendor_items, sort_items=True)
-	vendor_group.set_selected_by_value(preset.vendors)
+
+	# Seed selection from PCI detection only when the user has no prior preset.
+	initial_vendors = preset.vendors or [FirmwareVendor[name] for name in SysInfo.firmware_vendor_names()]
+	vendor_group.set_selected_by_value(initial_vendors)
 
 	vendor_result = SelectMenu[FirmwareVendor](
 		vendor_group,

@@ -27,13 +27,11 @@ def select_driver(
 		else:
 			options = list(GfxDriver)
 
-	servers = profile.display_servers() if profile else None
-
 	def preview_driver(x: MenuItem, k: list[str] | None = kernels) -> str | None:
 		if x.value is None:
 			return None
 		driver: GfxDriver = x.value
-		return driver.packages_text(servers, k)
+		return driver.packages_text(k)
 
 	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
 	items.append(MenuItem(text=tr('None'), value=None))

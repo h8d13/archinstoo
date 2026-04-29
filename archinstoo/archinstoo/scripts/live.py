@@ -6,12 +6,12 @@ from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_ar
 from archinstoo.lib.authentication.shell import ShellApp
 from archinstoo.lib.configuration import ConfigurationHandler
 from archinstoo.lib.global_menu import GlobalMenu
-from archinstoo.lib.hardware import DisplayServer
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_aur_installation, run_custom_user_commands
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, info
+from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 

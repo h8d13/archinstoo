@@ -6,10 +6,10 @@ from tempfile import NamedTemporaryFile
 from types import ModuleType
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstoo.lib.hardware import GfxDriver
+from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.output import debug, error, info
-from archinstoo.lib.profile.base import GreeterType, Profile
+from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.utils.net import fetch_data_from_url
 
@@ -191,11 +191,10 @@ class ProfileHandler:
 			with open(path, 'w') as file:
 				file.write(filedata)
 
-	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, profile: Profile | None = None) -> None:
+	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
 
-		display_servers = profile.display_servers() if profile else None
-		driver_pkgs = driver.gfx_packages(display_servers, install_session.kernels)
+		driver_pkgs = driver.gfx_packages(install_session.kernels)
 
 		if driver.use_dkms(install_session.kernels):
 			debug(f'Non-standard kernel selected, installing DKMS variant of {driver.value}')
@@ -203,18 +202,23 @@ class ProfileHandler:
 			install_session.add_additional_packages(headers)
 
 		pkg_names = [p.value for p in driver_pkgs]
+
+		# Add X11 base packages if any selected profile uses X11. Wayland is handled by
+		# the DE/WM itself via package deps, so it gets nothing here.
+		if DisplayServer.X11 in display_servers:
+			pkg_names += [GfxPackage.XorgServer.value, GfxPackage.XorgXinit.value]
+
 		install_session.add_additional_packages(pkg_names)
 
 	def install_profile_config(self, install_session: Installer, profile_config: ProfileConfiguration) -> None:
 		if not profile_config.profiles:
 			return
 
-		# Install gfx driver first as some desktops might need to satisfy deps (vulkan-driver virtual group)
-		if profile_config.gfx_driver and profile_config.display_servers():
-			for profile in profile_config.profiles:
-				if profile.display_servers():
-					self.install_gfx_driver(install_session, profile_config.gfx_driver, profile)
-					break
+		# Install gfx driver first as some desktops might need to satisfy deps (vulkan-driver virtual group).
+		# Pass the aggregated display servers across all selected profiles so mixed X11+Wayland picks
+		# correctly include the X11 base packages.
+		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
+			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers)
 
 		# Install all selected profiles AFTER
 		for profile in profile_config.profiles:
