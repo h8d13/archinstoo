@@ -274,7 +274,14 @@ def info(
 	bg: str | None = None,
 	reset: bool = False,
 	font: list[Font] = [],
+	step: bool = False,
 ) -> None:
+	if step:
+		# Mark a major install phase: prepend ==> (cyan unless caller overrode fg)
+		# and emit a trailing blank line for visual separation.
+		log('==>', *msgs, level=level, fg='cyan' if fg == 'white' else fg, bg=bg, reset=reset, font=font)
+		log('', level=level)
+		return
 	log(*msgs, level=level, fg=fg, bg=bg, reset=reset, font=font)
 
 

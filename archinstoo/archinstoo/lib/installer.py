@@ -149,8 +149,7 @@ class Installer:
 		try:
 			if exc_type is not None:
 				error(str(exc_value))
-
-				self._sync_artifacts_to_target()
+				# do not sync artifacts to target on error
 				Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
 				Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
 
@@ -163,7 +162,11 @@ class Installer:
 			self._sync_artifacts_to_target()
 
 			if not (missing_steps := self.post_install_check()):
-				msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
+				msg = (
+					'Installation completed without any errors.\n'
+					f'Log files available at {logger.directory} and in target {ARTIFACTS_STORE}.\n'
+					'You may reboot when ready.\n'
+				)
 				log(msg, fg='green')
 
 				return True
@@ -173,7 +176,7 @@ class Installer:
 				warn(f' - {step}')
 
 			warn(f'Detailed error logs can be found at: {logger.directory}')
-			warn(f'Submit this zip file as an issue to {self._bug_report_url}/issues')
+			warn(f'Please submit this issue to {self._bug_report_url}/issues')
 
 			return False
 		finally:
@@ -280,7 +283,6 @@ class Installer:
 		self._verify_service_stop()
 
 	def mount_ordered_layout(self) -> None:
-		info('Mounting ordered layout')
 		self._layout_teardown_required = True
 
 		luks_handlers: dict[Any, Luks2] = {}
@@ -568,8 +570,7 @@ class Installer:
 
 	def enroll_tpm2(self) -> None:
 		# Add a TPM2 keyslot to every encrypted device using systemd-cryptenroll.
-		# Requires systemd-cryptenroll in the chroot (provided by base/systemd) and a TPM 2.0
-		# device on the host. Existing passphrase keyslot remains as fallback.
+		# Existing passphrase keyslot remains as fallback. Checks tpm2 availability.
 		if not self._disk_encryption.tpm2_unlock:
 			return
 		if self._disk_encryption.encryption_type == EncryptionType.NO_ENCRYPTION:
@@ -638,7 +639,7 @@ class Installer:
 		:on_target: Whether to set the mirrors on the target system or the live system.
 		:param on_target: bool
 		"""
-		debug('Setting mirrors on ' + ('target' if on_target else 'live system'))
+		info('Setting mirrors on ' + ('target' if on_target else 'live system'))
 
 		if on_target:
 			mirrorlist_path = self.target / MIRRORLIST.relative_to_root()
@@ -674,8 +675,6 @@ class Installer:
 
 	def genfstab(self, flags: str = '-pU') -> None:
 		fstab_path = self.target / 'etc' / 'fstab'
-		info(f'Updating {fstab_path}')
-
 		try:
 			gen_fstab = SysCommand(f'genfstab {flags} -f {self.target} {self.target}').output()
 		except SysCallError as err:
@@ -965,7 +964,6 @@ class Installer:
 		if fs_type == FilesystemType.BCACHEFS:
 			self._base_packages.extend(f'{kernel}-headers' for kernel in self.kernels)
 			self._base_packages.append('bcachefs-dkms')
-			self._base_packages.append('xxhash')
 
 		# https://github.com/archlinux/archinstall/issues/1837
 		# https://github.com/koverstreet/bcachefs/issues/916
@@ -994,6 +992,8 @@ class Installer:
 		locale_config: LocaleConfiguration | None = LocaleConfiguration.default(),
 		timezone: str | None = None,
 	) -> None:
+		info('Installing base system', step=True)
+
 		if self._disk_config.lvm_config:
 			lvm = 'lvm2'
 			self.add_additional_packages(lvm)
@@ -1971,7 +1971,7 @@ class Installer:
 		if root is None:
 			raise ValueError(f'Could not detect root at mountpoint {self.target}')
 
-		info(f'Adding bootloader {bootloader.value} to {boot_partition.dev_path}')
+		info(f'Adding bootloader {bootloader.value} to {boot_partition.dev_path}', step=True)
 
 		# validate removable bootloader option
 		if bootloader_removable:
