@@ -1,6 +1,4 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
 cd archinstoo || exit 1
-# help / list / size 
-# do not need root
 (python -B -m archinstoo "$@") && cd ..
