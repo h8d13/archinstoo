@@ -149,7 +149,7 @@ class Installer:
 		try:
 			if exc_type is not None:
 				error(str(exc_value))
-				# do not sync artifacts to target on error
+				self._sync_artifacts_to_target()
 				Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
 				Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
 
