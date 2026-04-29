@@ -68,6 +68,7 @@
 │   │   ├── configuration
 │   │   ├── crypt
 │   │   ├── disk/
+│   │   │   ├── cleanup
 │   │   │   ├── conf
 │   │   │   ├── device_handler
 │   │   │   ├── disk_menu
@@ -166,5 +167,5 @@
 │   └── test_configuration_output
 └── vulture_whitelist
 
-24 directories, 141 files
+24 directories, 142 files
 ```
