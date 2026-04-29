@@ -37,10 +37,6 @@ msgid "Installed packages"
 msgstr ""
 
 #, python-brace-format
-msgid "Environment type: {}"
-msgstr ""
-
-#, python-brace-format
 msgid ""
 "archinstoo {script} requires root privileges to run. See --help for more."
 msgstr ""
@@ -219,10 +215,6 @@ msgstr ""
 msgid "You need to enter a valid IP in IP-config mode"
 msgstr ""
 
-#, python-brace-format
-msgid "Select which mode to configure for \"{}\""
-msgstr ""
-
 msgid "Modes"
 msgstr ""
 
@@ -321,10 +313,6 @@ msgid "Stash URL"
 msgstr ""
 
 msgid "Username"
-msgstr ""
-
-#, python-brace-format
-msgid "Should \"{}\" be a superuser?\n"
 msgstr ""
 
 msgid "Shell"
@@ -764,12 +752,6 @@ msgstr ""
 msgid "Syncing the system..."
 msgstr ""
 
-msgid "Waiting for time sync (timedatectl show) to complete."
-msgstr ""
-
-msgid "Time synchronization not completing..."
-msgstr ""
-
 msgid ""
 "Skipping waiting for automatic time sync (this can cause issues if time is "
 "out of sync during installation)"
@@ -1051,4 +1033,146 @@ msgstr ""
 
 #, python-brace-format
 msgid "Default: {}ms, Recommended range: 1000-60000"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Security"
+msgstr ""
+
+msgid "Firmware"
+msgstr ""
+
+msgid "Firmware vendors"
+msgstr ""
+
+msgid "Sysctl"
+msgstr ""
+
+msgid "Entries"
+msgstr ""
+
+msgid "Start empty"
+msgstr ""
+
+msgid "Load optimized defaults"
+msgstr ""
+
+msgid "Partition table"
+msgstr ""
+
+msgid "Recompression algorithm"
+msgstr ""
+
+msgid "poweroff system"
+msgstr ""
+
+msgid "Set an editor globally through /etc/environment?"
+msgstr ""
+
+msgid "Would you like to install security tools?"
+msgstr ""
+
+msgid "SDDM requires at least one regular user to log in"
+msgstr ""
+
+msgid "Key derivation function"
+msgstr ""
+
+msgid "Auto unlock root"
+msgstr ""
+
+msgid "TPM2 auto unlock"
+msgstr ""
+
+msgid "TPM2 PCRs"
+msgstr ""
+
+msgid "Embed a keyfile in initramfs so root is auto-unlocked ?"
+msgstr ""
+
+msgid "This avoids entering encryption password twice on boot."
+msgstr ""
+
+msgid "Bind a TPM2 keyslot to the LUKS device(s) so the disk auto-unlocks at boot ?"
+msgstr ""
+
+msgid "PCR selection picked separately. Defaults to 0+7."
+msgstr ""
+
+msgid "Passphrase keyslot stays as fallback."
+msgstr ""
+
+msgid "Full installs the linux-firmware meta package (~600 MB)."
+msgstr ""
+
+msgid "Minimal skips firmware entirely (safe for most VMs using virtio)."
+msgstr ""
+
+msgid "Vendor lets you pick only the firmware subpackages you need."
+msgstr ""
+
+msgid "Select firmware subpackages:"
+msgstr ""
+
+msgid "Select idle recompression algorithm (skip for none):"
+msgstr ""
+
+msgid "Only packages such as base, linux, linux-firmware, efibootmgr and optional profile packages are installed."
+msgstr ""
+
+msgid "Waiting for NTP time synchronization..."
+msgstr ""
+
+msgid "NTP sync taking longer than expected, still waiting..."
+msgstr ""
+
+msgid "NTP time synchronization completed"
+msgstr ""
+
+msgid "Skipping NTP time sync (may cause issues if system time is incorrect)"
+msgstr ""
+
+msgid "Waiting for Arch Linux keyring sync..."
+msgstr ""
+
+msgid "Arch Linux keyring sync failed"
+msgstr ""
+
+msgid "Arch Linux keyring sync completed"
+msgstr ""
+
+msgid "Niri needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)"
+msgstr ""
+
+msgid "Choose an option to give Niri access to your hardware"
+msgstr ""
+
+msgid "This option enables the number of parallel downloads that can occur during package downloads"
+msgstr ""
+
+msgid "Enter the number of parallel downloads to be enabled.\n\nNote:\n"
+msgstr ""
+
+msgid " - Disable/Default : 0 ( Disables parallel downloading, allows only 1 download at a time )\n"
+msgstr ""
+
+#, python-brace-format
+msgid " - Maximum recommended value : {} ( Allows {} parallel downloads at a time )"
+msgstr ""
+
+msgid "Bad configurations:\n"
+msgstr ""
+
+msgid "VM detected: use VM (software rendering) or VM (virtio-gpu) options.\n"
+msgstr ""
+
+msgid "AMD detected: use All open-source, AMD / ATI, or Mesa (open-source) options.\n"
+msgstr ""
+
+msgid "Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n"
+msgstr ""
+
+msgid "Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n"
 msgstr ""
