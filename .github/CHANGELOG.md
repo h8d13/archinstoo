@@ -2,7 +2,42 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
-## 0.1.07-5
+## 0.1.08-0
+
+    - Auto-detect firmware vendors from PCI bus
+        - New `_SysInfo.firmware_vendors` cached probe reads `/sys/bus/pci/devices/*/vendor`
+          and maps to `FirmwareVendor` enum names (NVIDIA, INTEL, REALTEK, BROADCOM, ATHEROS,
+          MEDIATEK, QCOM, AMDGPU/RADEON)
+        - AMD disambiguation via `/sys/bus/pci/devices/*/driver` symlink (amdgpu vs radeon)
+        - VM short-circuit (`SysInfo.is_vm()`) skips PCI scan on virtio-only hosts
+        - `select_firmware()` seeds the multi-select with detected vendors only when no preset
+          is loaded — saved configs with explicit picks still win
+    - Refactor: `DisplayServer` moved out of `hardware.py`
+        - Now lives in `lib/profile/base.py` next to `ProfileType` / `GreeterType` / `SelectResult`
+          where it conceptually belongs (it's a profile-derived choice, not a hardware probe)
+        - `GfxDriver.gfx_packages()` no longer bundles xorg-server/xorg-xinit — those are a
+          display-server concern, now added by `profiles_handler.install_gfx_driver` when X11
+          is in use
+        - Multi-profile X11+Wayland selection now correctly includes X11 base packages (passes
+          aggregated `profile_config.display_servers()` instead of first-profile-only)
+    - `info(..., step=True)` for major install-phase banners
+        - Prepends `==>` (cyan) and trailing blank line for visual separation
+        - Wired at `mount_ordered_layout`, `minimal_installation`, `add_bootloader`,
+          `create_users`, `genfstab` — banners carry concrete config (target path + encryption
+          mode, kernel list + hostname, bootloader name + boot partition, user count + names)
+    - `cleanup.py` module extracted from `installer.py` (#4496 upstream port)
+        - `teardown_layout` / `swapoff_layout` / `close_luks` as free functions
+        - `__exit__` runs teardown via `try/finally` on every exit (success and failure paths)
+        - `_layout_teardown_required` flag guards no-op when nothing was mounted
+    - Minimal ISO support
+        - `isos/ISOMOD` reworked to optionally produce minimal ISOs (smaller, faster build)
+        - Doc updates with size references (`.github/BUILD_ISOS.md`)
+    - Post-install artifact sync uses `ARTIFACTS_STORE` constant from `pathnames.py`
+    - `_sync_artifacts_to_target` simplified (loop over `(src, dst)` pairs, drop `import stat`)
+    - Various docs refresh
+    - Various upstream syncs
+
+## 0.1.07-1
 
     - CI: add `release.yaml` workflow to auto-publish a GitHub release when `PKGBUILD` `pkgver`/`pkgrel` change
     - Publish `.tar.gz` as official format
