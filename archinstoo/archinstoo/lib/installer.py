@@ -164,7 +164,7 @@ class Installer:
 			if not (missing_steps := self.post_install_check()):
 				msg = (
 					'Installation completed without any errors.\n'
-					f'Log files available at {logger.directory} and in target /{ARTIFACTS_STORE}.\n'
+					f'Log files available at {logger.directory} and in target {ARTIFACTS_STORE}.\n'
 					'You may reboot when ready.\n'
 				)
 				log(msg, fg='green')
@@ -189,7 +189,7 @@ class Installer:
 		# Copy the run log and saved user config into the target so they survive reboot
 		# at /etc/archinstoo.d/<timestamp>-{install.log,config.json} for post-install debugging.
 		try:
-			dest_dir = self.target / ARTIFACTS_STORE
+			dest_dir = self.target / ARTIFACTS_STORE.relative_to_root()
 			dest_dir.mkdir(mode=0o755, exist_ok=True)
 
 			ts = datetime.now(tz=UTC).strftime('%Y-%m-%dT%H-%M')
