@@ -1176,3 +1176,15 @@ msgstr ""
 
 msgid "Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n"
 msgstr ""
+
+msgid "Customize packages"
+msgstr ""
+
+msgid "Toggle packages to install"
+msgstr ""
+
+msgid "Excluded packages"
+msgstr ""
+
+msgid "No packages excluded"
+msgstr ""

@@ -74,7 +74,7 @@ class ServerProfile(Profile):
 	@override
 	def install(self, install_session: Installer) -> None:
 		# Install common packages for all server profiles
-		install_session.add_additional_packages(self.packages)
+		install_session.add_additional_packages(self.effective_packages())
 
 		server_info = self.current_selection_names()
 		details = ', '.join(server_info)
@@ -82,7 +82,7 @@ class ServerProfile(Profile):
 
 		for server in self.current_selection:
 			info(f'Installing {server.name}...')
-			install_session.add_additional_packages(server.packages)
+			install_session.add_additional_packages(server.effective_packages())
 			install_session.enable_service(server.services)
 			server.install(install_session)
 
