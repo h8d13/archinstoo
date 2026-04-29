@@ -283,6 +283,7 @@ class Installer:
 		self._verify_service_stop()
 
 	def mount_ordered_layout(self) -> None:
+		info(f'Mounting ordered layout at {self.target} (encryption: {self._disk_encryption.encryption_type.value})', step=True)
 		self._layout_teardown_required = True
 
 		luks_handlers: dict[Any, Luks2] = {}
@@ -675,6 +676,7 @@ class Installer:
 
 	def genfstab(self, flags: str = '-pU') -> None:
 		fstab_path = self.target / 'etc' / 'fstab'
+		info(f'Generating {fstab_path}', step=True)
 		try:
 			gen_fstab = SysCommand(f'genfstab {flags} -f {self.target} {self.target}').output()
 		except SysCallError as err:
@@ -992,7 +994,7 @@ class Installer:
 		locale_config: LocaleConfiguration | None = LocaleConfiguration.default(),
 		timezone: str | None = None,
 	) -> None:
-		info('Installing base system', step=True)
+		info(f'Installing base system: kernels={", ".join(self.kernels)}, hostname={hostname or "(unset)"}', step=True)
 
 		if self._disk_config.lvm_config:
 			lvm = 'lvm2'
@@ -2053,6 +2055,8 @@ class Installer:
 	) -> None:
 		if not isinstance(users, list):
 			users = [users]
+
+		info(f'Creating {len(users)} user account(s): {", ".join(u.username for u in users)}', step=True)
 
 		# Install the privilege escalation package
 		if privilege_escalation is not None and User.any_elevated(users):
