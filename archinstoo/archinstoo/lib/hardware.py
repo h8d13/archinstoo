@@ -137,7 +137,7 @@ class GfxDriver(Enum):
 				packages += [
 					GfxPackage.Mesa,
 				]
-				# Add druver based on detection
+				# Add driver based on detection
 				if SysInfo.has_intel_graphics():
 					packages.append(GfxPackage.VulkanIntel)
 				elif SysInfo.has_amd_graphics():
@@ -256,6 +256,12 @@ class _SysInfo:
 		models/* import (avoids contributing to a hardware <-> models cycle).
 		Limited to high-yield consumer vendors; niche vendors stay manual.
 		"""
+		# Manual-only FirmwareVendor members (not auto-detected, ticked by the user)
+		#   LIQUIDIO  	Cavium LiquidIO server adapters
+		#   MARVELL   	Marvell devices
+		#   MELLANOX  	Mellanox Spectrum switches
+		#   NFP       	Netronome Flow Processors
+		#   QLOGIC    	QLogic devices
 		mapping: dict[str, tuple[str, ...]] = {
 			'0x10de': ('NVIDIA',),
 			'0x8086': ('INTEL',),
@@ -264,6 +270,7 @@ class _SysInfo:
 			'0x168c': ('ATHEROS',),
 			'0x0cf3': ('ATHEROS',),
 			'0x14c3': ('MEDIATEK',),
+			'0x17cb': ('QCOM',),
 		}
 
 		pci_devs = Path('/sys/bus/pci/devices')
