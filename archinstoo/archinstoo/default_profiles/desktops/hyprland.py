@@ -37,9 +37,8 @@ class HyprlandProfile(WaylandProfile):
 	@property
 	@override
 	def services(self) -> list[str]:
-		if pref := self.custom_settings.get('seat_access', None):
-			return [pref]
-		return []
+		pref = self.custom_settings.get('seat_access')
+		return [pref] if isinstance(pref, str) else []
 
 	def _select_seat_access(self) -> None:
 		# need to activate seat service and add to seat group
