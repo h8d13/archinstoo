@@ -11,11 +11,6 @@ from .output import debug
 from .translationhandler import tr
 
 
-class DisplayServer(Enum):
-	X11 = 'x11'
-	Wayland = 'wayland'
-
-
 class CpuVendor(Enum):
 	AuthenticAMD = 'amd'
 	GenuineIntel = 'intel'
@@ -83,8 +78,8 @@ class GfxDriver(Enum):
 			return False
 		return kernels is not None and any('-' in k for k in kernels)
 
-	def packages_text(self, servers: set[DisplayServer] | None = None, kernels: list[str] | None = None) -> str:
-		pkg_names = [p.value for p in self.gfx_packages(servers, kernels)]
+	def packages_text(self, kernels: list[str] | None = None) -> str:
+		pkg_names = [p.value for p in self.gfx_packages(kernels)]
 		text = tr('Installed packages') + ':\n'
 
 		for p in sorted(pkg_names):
@@ -92,14 +87,10 @@ class GfxDriver(Enum):
 
 		return text
 
-	def gfx_packages(self, servers: set[DisplayServer] | None = None, kernels: list[str] | None = None) -> list[GfxPackage]:
-		packages = []
-
-		if servers is None or DisplayServer.X11 in servers:
-			packages = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
-		# else: servers is empty set or doesn't contain X11
-		# this is then handled usually by deps of the DE/WM
-		# hidden from menu in default_profiles/profile.py
+	def gfx_packages(self, kernels: list[str] | None = None) -> list[GfxPackage]:
+		# GPU-vendor packages only. xorg-server/xorg-xinit are a display-server concern
+		# and added by the caller (profiles_handler.install_gfx_driver) when X11 is in use.
+		packages: list[GfxPackage] = []
 
 		match self:
 			case GfxDriver.AllOpenSource:
@@ -257,6 +248,57 @@ class _SysInfo:
 				cards[identifier.strip().decode('UTF-8')] = str(line)
 		return cards
 
+	@cached_property
+	def firmware_vendors(self) -> list[str]:
+		"""
+		Returns FirmwareVendor enum *names* matching detected PCI vendor IDs.
+		Returns names rather than enum instances so this module stays free of any
+		models/* import (avoids contributing to a hardware <-> models cycle).
+		Limited to high-yield consumer vendors; niche vendors stay manual.
+		"""
+		mapping: dict[str, tuple[str, ...]] = {
+			'0x10de': ('NVIDIA',),
+			'0x8086': ('INTEL',),
+			'0x10ec': ('REALTEK',),
+			'0x14e4': ('BROADCOM',),
+			'0x168c': ('ATHEROS',),
+			'0x0cf3': ('ATHEROS',),
+			'0x14c3': ('MEDIATEK',),
+		}
+
+		pci_devs = Path('/sys/bus/pci/devices')
+		if not pci_devs.is_dir():
+			return []
+
+		detected: set[str] = set()
+		for dev in pci_devs.iterdir():
+			try:
+				vendor = (dev / 'vendor').read_text().strip().lower()
+			except OSError:
+				continue
+
+			# AMD (0x1002) shares a vendor ID across GCN generations: amdgpu drives newer
+			# cards, radeon drives older. The kernel binds the right one on the live ISO,
+			# so the bound driver name tells us which firmware subpackage to suggest.
+			if vendor == '0x1002':
+				try:
+					driver = (dev / 'driver').readlink().name
+				except OSError:
+					driver = ''
+				if driver == 'amdgpu':
+					detected.add('AMDGPU')
+				elif driver == 'radeon':
+					detected.add('RADEON')
+				else:
+					# No AMD driver bound fall back to newer
+					detected.add('AMDGPU')
+				continue
+
+			if mapped := mapping.get(vendor):
+				detected.update(mapped)
+
+		return sorted(detected)
+
 
 _sys_info = _SysInfo()
 
@@ -309,6 +351,14 @@ class SysInfo:
 	@staticmethod
 	def has_intel_graphics() -> bool:
 		return any('intel' in x.lower() for x in _sys_info.graphics_devices)
+
+	@staticmethod
+	def firmware_vendor_names() -> list[str]:
+		# Skip the PCI scan on VMs. Returns FirmwareVendor enum names; caller resolves
+		# via FirmwareVendor[name] to keep this module free of any models import.
+		if SysInfo.is_vm():
+			return []
+		return _sys_info.firmware_vendors
 
 	@staticmethod
 	def cpu_vendor() -> CpuVendor | None:

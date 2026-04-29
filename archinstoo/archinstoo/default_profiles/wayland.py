@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.lib.hardware import DisplayServer
-from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
+from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile, ProfileType
 from archinstoo.lib.translationhandler import tr
 
 if TYPE_CHECKING:

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, override
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
-from archinstoo.lib.hardware import DisplayServer, GfxDriver
+from archinstoo.lib.hardware import GfxDriver
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.profile.base import GreeterType, Profile
@@ -122,11 +122,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 	def _prev_gfx(self, item: MenuItem) -> str | None:
 		if item.value:
 			driver = item.get_value().value
-			profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
-			servers: set[DisplayServer] = set()
-			for profile in profiles:
-				servers.update(profile.display_servers())
-			packages = item.get_value().packages_text(servers or None, self._kernels)
+			packages = item.get_value().packages_text(self._kernels)
 			return f'Driver: {driver}\n{packages}'
 		return None
 

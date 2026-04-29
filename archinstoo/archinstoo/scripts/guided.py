@@ -11,7 +11,6 @@ from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
-from archinstoo.lib.hardware import DisplayServer
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_aur_installation, run_custom_user_commands
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstoo.lib.models.device import (
@@ -21,6 +20,7 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 

@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Self, TypedDict
 
-from archinstoo.lib.hardware import DisplayServer, GfxDriver
-from archinstoo.lib.profile.base import GreeterType, Profile
+from archinstoo.lib.hardware import GfxDriver
+from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
