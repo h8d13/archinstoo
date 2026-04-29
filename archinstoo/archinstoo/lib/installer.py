@@ -13,6 +13,7 @@ from subprocess import CalledProcessError
 from types import TracebackType
 from typing import Any, Self
 
+from archinstoo.lib.disk.cleanup import teardown_layout
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon
@@ -131,6 +132,7 @@ class Installer:
 
 		self._zram_enabled = False
 		self._disable_fstrim = False
+		self._layout_teardown_required = False
 
 		self.pacman = Pacman(self.target)
 
@@ -145,36 +147,41 @@ class Installer:
 		return self
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
-		if exc_type is not None:
-			error(str(exc_value))
+		try:
+			if exc_type is not None:
+				error(str(exc_value))
+
+				self._sync_artifacts_to_target()
+				Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
+				Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
+
+				# Return None to propagate the exception
+				return None
+
+			info(tr('Syncing the system...'))
+			os.sync()
 
 			self._sync_artifacts_to_target()
-			Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
-			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
 
-			# Return None to propagate the exception
-			return None
+			if not (missing_steps := self.post_install_check()):
+				msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
+				log(msg, fg='green')
 
-		info(tr('Syncing the system...'))
-		os.sync()
+				return True
+			warn('Some required steps were not successfully installed/configured before leaving the installer:')
 
-		self._sync_artifacts_to_target()
+			for step in missing_steps:
+				warn(f' - {step}')
 
-		if not (missing_steps := self.post_install_check()):
-			self._teardown_target()
-			msg = f'Installation completed without any errors.\nLog files temporarily available at {logger.directory}.\nYou may reboot when ready.\n'
-			log(msg, fg='green')
+			warn(f'Detailed error logs can be found at: {logger.directory}')
+			warn(f'Submit this zip file as an issue to {self._bug_report_url}/issues')
 
-			return True
-		warn('Some required steps were not successfully installed/configured before leaving the installer:')
-
-		for step in missing_steps:
-			warn(f' - {step}')
-
-		warn(f'Detailed error logs can be found at: {logger.directory}')
-		warn(f'Submit this zip file as an issue to {self._bug_report_url}/issues')
-
-		return False
+			return False
+		finally:
+			try:
+				self._teardown_target()
+			except Exception as err:
+				warn(f'Failed to teardown installation target: {err}')
 
 	def _sync_artifacts_to_target(self) -> None:
 		# Copy the run log and saved user config into the target so they survive reboot
@@ -200,45 +207,17 @@ class Installer:
 			warn(f'Failed to sync install artifacts to target: {e}')
 
 	def _teardown_target(self) -> None:
-		# Order: unmount, deactivate VGs, close LUKS. Inner mappers close before the outer
-		# ones that hold them.
-		info('Tearing down target mounts and mappings')
-		try:
-			SysCommand(['umount', '-R', str(self.target)])
-		except SysCallError:
-			warn(f'{self.target} busy, retrying with lazy unmount')
-			SysCommand(['umount', '-R', '-l', str(self.target)])
+		if not self._layout_teardown_required:
+			debug('No mounted layout registered for teardown')
+			return
 
-		enc = self._disk_encryption
-		lvm_cfg = self._disk_config.lvm_config
-
-		def _close_luks(dev_path: Path, mapper_name: str | None) -> None:
-			if mapper_name is None:
-				return
-			Luks2(dev_path, mapper_name=mapper_name).lock()
-
-		def _deactivate_vgs() -> None:
-			if not lvm_cfg:
-				return
-			for vg in lvm_cfg.vol_groups:
-				self._device_handler.lvm_vg_deactivate(vg.name)
-
-		match enc.encryption_type:
-			case EncryptionType.LUKS_ON_LVM:
-				# LUKS sits on top of LVs, close LUKS first, then deactivate VGs.
-				for vol in enc.lvm_volumes:
-					_close_luks(vol.safe_dev_path, vol.mapper_name)
-				_deactivate_vgs()
-			case EncryptionType.LVM_ON_LUKS:
-				# VGs sit on LUKS PV, deactivate VGs first, then close LUKS.
-				_deactivate_vgs()
-				for part in enc.partitions:
-					_close_luks(part.safe_dev_path, part.mapper_name)
-			case EncryptionType.LUKS:
-				for part in enc.partitions:
-					_close_luks(part.safe_dev_path, part.mapper_name)
-			case EncryptionType.NO_ENCRYPTION:
-				_deactivate_vgs()
+		teardown_layout(
+			self.target,
+			self._disk_config,
+			self._disk_encryption,
+			self._device_handler,
+		)
+		self._layout_teardown_required = False
 
 	def _verify_service_stop(self) -> None:
 		# Check for essential services statuses based on
@@ -305,6 +284,7 @@ class Installer:
 
 	def mount_ordered_layout(self) -> None:
 		info('Mounting ordered layout')
+		self._layout_teardown_required = True
 
 		luks_handlers: dict[Any, Luks2] = {}
 
