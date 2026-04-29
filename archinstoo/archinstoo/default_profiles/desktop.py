@@ -95,12 +95,12 @@ class DesktopProfile(Profile):
 	@override
 	def install(self, install_session: Installer) -> None:
 		# Install common packages for all desktop environments
-		install_session.add_additional_packages(self.packages)
+		install_session.add_additional_packages(self.effective_packages())
 
 		for profile in self.current_selection:
 			info(f'Installing profile {profile.name}...')
 
-			install_session.add_additional_packages(profile.packages)
+			install_session.add_additional_packages(profile.effective_packages())
 			install_session.enable_service(profile.services)
 
 			profile.install(install_session)

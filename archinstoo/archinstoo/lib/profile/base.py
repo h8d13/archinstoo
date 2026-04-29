@@ -72,12 +72,10 @@ class Profile:
 		current_selection: list[Self] = [],
 		packages: list[str] = [],
 		services: list[str] = [],
-		advanced: bool = False,
 	) -> None:
 		self.name = name
 		self.profile_type = profile_type
-		self.custom_settings: dict[str, str | None] = {}
-		self.advanced = advanced
+		self.custom_settings: dict[str, str | list[str] | None] = {}
 
 		self.current_selection = current_selection
 		self._packages = packages
@@ -86,6 +84,10 @@ class Profile:
 	@property
 	def packages(self) -> list[str]:
 		return self._packages
+
+	def effective_packages(self) -> list[str]:
+		excluded = set(self.custom_settings.get('excluded_packages') or [])
+		return [p for p in self.packages if p not in excluded]
 
 	@property
 	def services(self) -> list[str]:

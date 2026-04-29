@@ -4,9 +4,9 @@ if TYPE_CHECKING:
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 from archinstoo.lib.hardware import GfxDriver
-from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
+from archinstoo.lib.menu.abstract_menu import CONFIG_KEY, AbstractSubMenu
 from archinstoo.lib.models.profile import ProfileConfiguration
-from archinstoo.lib.profile.base import GreeterType, Profile
+from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.profile.driver_select import select_driver
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -45,6 +45,15 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 				value=self._profile_config.profiles,
 				preview_action=self._preview_profiles,
 				key='profiles',
+			),
+			MenuItem(
+				text=tr('Customize packages'),
+				action=self._customize_packages,
+				value=None,
+				preview_action=self._prev_customize_packages,
+				enabled=any(p.profile_type != ProfileType.Minimal for p in self._profile_config.profiles),
+				dependencies=['profiles'],
+				key=f'{CONFIG_KEY}_customize_packages',
 			),
 			MenuItem(
 				text=tr('Graphics driver'),
@@ -99,12 +108,44 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			self._item_group.find_by_key('gfx_driver').value = None
 			self._item_group.find_by_key('greeter').value = None
 
+		customize_item = self._item_group.find_by_key(f'{CONFIG_KEY}_customize_packages')
+		if customize_item is not None:
+			customize_item.enabled = any(p.profile_type != ProfileType.Minimal for p in profiles)
+
 		return profiles
 
 	def select_greeter(self, preset: GreeterType | None = None) -> GreeterType | None:
 		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
 		profile = profiles[0] if profiles else None
 		return select_greeter(profile=profile, preset=preset)
+
+	def _customize_packages(self, preset: None = None) -> None:
+		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
+		targets = [p for pr in profiles for p in [pr, *(pr.current_selection or [])]]
+
+		for profile in targets:
+			pkgs = profile.packages
+			if not pkgs:
+				continue
+
+			excluded = set(profile.custom_settings.get('excluded_packages') or [])
+			group = MenuItemGroup([MenuItem(p, value=p) for p in sorted(pkgs)])
+			group.set_selected_by_value([p for p in pkgs if p not in excluded])
+
+			result = SelectMenu[str](
+				group,
+				header=tr('Toggle packages to install') + '\n',
+				allow_skip=True,
+				alignment=Alignment.CENTER,
+				frame=FrameProperties.min(profile.name),
+				multi=True,
+			).run()
+
+			if result.type_ != ResultType.Selection:
+				continue
+
+			new_excluded = [p for p in pkgs if p not in set(result.get_values() or [])]
+			profile.custom_settings['excluded_packages'] = new_excluded or None
 
 	def select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
 		driver = preset
@@ -118,6 +159,13 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 					break
 
 		return driver
+
+	def _prev_customize_packages(self, item: MenuItem) -> str | None:
+		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
+		excluded = sorted({pkg for pr in profiles for p in [pr, *(pr.current_selection or [])] for pkg in (p.custom_settings.get('excluded_packages') or [])})
+		if not excluded:
+			return tr('No packages excluded')
+		return tr('Excluded packages') + ':\n' + '\n'.join(f'\t- {pkg}' for pkg in excluded)
 
 	def _prev_gfx(self, item: MenuItem) -> str | None:
 		if item.value:

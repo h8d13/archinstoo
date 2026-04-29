@@ -17,12 +17,10 @@ class WaylandProfile(Profile):
 		self,
 		name: str = 'Wayland',
 		profile_type: ProfileType = ProfileType.Wayland,
-		advanced: bool = False,
 	):
 		super().__init__(
 			name,
 			profile_type,
-			advanced=advanced,
 		)
 
 	@override

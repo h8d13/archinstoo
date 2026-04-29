@@ -9,12 +9,10 @@ class XorgProfile(Profile):
 		self,
 		name: str = 'Xorg',
 		profile_type: ProfileType = ProfileType.Xorg,
-		advanced: bool = False,
 	):
 		super().__init__(
 			name,
 			profile_type,
-			advanced=advanced,
 		)
 
 	@override
