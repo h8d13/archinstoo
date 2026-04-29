@@ -2,7 +2,6 @@ import os
 import re
 import shlex
 import shutil
-import stat
 import subprocess
 import textwrap
 import time
@@ -32,7 +31,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF
+from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.pm import installed_package
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
@@ -187,22 +186,20 @@ class Installer:
 		# Copy the run log and saved user config into the target so they survive reboot
 		# at /etc/archinstoo.d/<timestamp>-{install.log,config.json} for post-install debugging.
 		try:
-			dest_dir = self.target / 'etc' / 'archinstoo.d'
+			dest_dir = self.target / ARTIFACTS_STORE
 			dest_dir.mkdir(mode=0o755, exist_ok=True)
 
 			ts = datetime.now(tz=UTC).strftime('%Y-%m-%dT%H-%M')
-			log_src = logger.path
-			cfg_src = logger.directory / 'user_configuration.json'
+			artifacts = [
+				(logger.path, f'{ts}-install.log'),
+				(logger.directory / 'user_configuration.json', f'{ts}-config.json'),
+			]
 
-			if log_src.exists():
-				log_dst = dest_dir / f'{ts}-install.log'
-				shutil.copy2(log_src, log_dst)
-				log_dst.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
-
-			if cfg_src.exists():
-				cfg_dst = dest_dir / f'{ts}-config.json'
-				shutil.copy2(cfg_src, cfg_dst)
-				cfg_dst.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
+			for src, dst_name in artifacts:
+				if src.exists():
+					dst = dest_dir / dst_name
+					shutil.copy2(src, dst)
+					dst.chmod(0o640)
 		except Exception as e:
 			warn(f'Failed to sync install artifacts to target: {e}')
 
