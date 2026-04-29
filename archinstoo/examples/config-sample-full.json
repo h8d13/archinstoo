@@ -181,12 +181,19 @@
     },
     "swap": {
         "enabled": true,
-        "algorithm": "lz4"
+        "algorithm": "lz4",
+        "recomp_algorithm": "zstd"
     },
     "kernels": [
         "linux-zen"
     ],
-    "kernel_headers": true,
+    "kernel_headers": false,
+    "firmware": {
+        "firmware_type": "vendor",
+        "vendors": [
+            "linux-firmware-intel"
+        ]
+    },
     "profile_config": {
         "profiles": [
             {
