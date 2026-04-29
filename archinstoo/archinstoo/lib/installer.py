@@ -164,7 +164,7 @@ class Installer:
 			if not (missing_steps := self.post_install_check()):
 				msg = (
 					'Installation completed without any errors.\n'
-					f'Log files available at {logger.directory} and in target {ARTIFACTS_STORE}.\n'
+					f'Log files available at {logger.directory} and in target /{ARTIFACTS_STORE}.\n'
 					'You may reboot when ready.\n'
 				)
 				log(msg, fg='green')
