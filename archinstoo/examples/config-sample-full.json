@@ -250,9 +250,6 @@
         "editor_config": {
             "editor": "micro"
         },
-        "power_management_config": {
-            "power_management": "power-profiles-daemon"
-        },
         "security_config": {
             "tools": [
                 "fail2ban"
@@ -277,6 +274,6 @@
     ],
     "custom_commands": [
         "#arch-chroot via bash tmp files # lines are ignored",
-        "#ex: su - user -c \"bash ~/.stash/repo/install.sh\""
+        "#ex: su - myuser -c \"bash ~/.stash/repo/install.sh\""
     ]
 }
