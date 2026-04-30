@@ -861,6 +861,18 @@ class Installer:
 		with open(f'{self.target}/etc/systemd/network/10-{nic.iface}.network', 'a') as netconf:
 			netconf.write(str(conf))
 
+	def link_resolved_stub(self) -> None:
+		"""Point /etc/resolv.conf at systemd-resolved's stub.
+
+		Required for any path that relies on resolved for DNS (ISO copy, iwd
+		standalone). NetworkManager paths skip this since NM writes its own
+		/etc/resolv.conf.
+		https://wiki.archlinux.org/title/Systemd-resolved#DNS
+		"""
+		resolv = self.target / 'etc/resolv.conf'
+		resolv.unlink(missing_ok=True)
+		resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
+
 	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
 		# Copy (if any) iwd password and config files
 		iwd_dir = LPath('/var/lib/iwd')
@@ -889,11 +901,7 @@ class Installer:
 					self.pacman.strap('iwd')
 					self.enable_service('iwd')
 
-		# Enable systemd-resolved by (forcefully) setting a symlink
-		# For further details see  https://wiki.archlinux.org/title/Systemd-resolved#DNS
-		resolv_config_path = self.target / 'etc/resolv.conf'
-		resolv_config_path.unlink(missing_ok=True)
-		resolv_config_path.symlink_to('/run/systemd/resolve/stub-resolv.conf')
+		self.link_resolved_stub()
 
 		# Copy (if any) systemd-networkd config files
 		network_dir = LPath('/etc/systemd/network')
@@ -927,10 +935,18 @@ class Installer:
 		iwd_backend_conf.write_text('[device]\nwifi.backend=iwd\n')
 
 	def configure_iwd_standalone(self) -> None:
-		# Let iwd handle DHCP/DNS itself; resolved picks up its DNS via the symlink.
+		# iwd handles wireless DHCP/DNS itself (NameResolvingService=systemd
+		# hands DNS to resolved). Wired interfaces are managed by
+		# systemd-networkd via a wildcard DHCP config.
 		iwd_conf_dir = self.target / 'etc/iwd'
 		iwd_conf_dir.mkdir(parents=True, exist_ok=True)
 		(iwd_conf_dir / 'main.conf').write_text('[General]\nEnableNetworkConfiguration=true\n\n[Network]\nNameResolvingService=systemd\n')
+
+		networkd_dir = self.target / 'etc/systemd/network'
+		networkd_dir.mkdir(parents=True, exist_ok=True)
+		(networkd_dir / '20-wired.network').write_text('[Match]\nName=en*\nName=eth*\n\n[Network]\nDHCP=yes\n')
+
+		self.link_resolved_stub()
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		with open(f'{self.target}/etc/mkinitcpio.conf', 'r+') as mkinit:
