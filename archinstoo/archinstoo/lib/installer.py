@@ -184,15 +184,15 @@ class Installer:
 
 	def _sync_artifacts_to_target(self) -> None:
 		# Copy the run log and saved user config into the target so they survive reboot
-		# at /etc/archinstoo.d/<timestamp>-{install.log,config.json} for post-install debugging.
+		# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for post-install debugging.
 		try:
 			dest_dir = self.target / ARTIFACTS_STORE.relative_to_root()
 			dest_dir.mkdir(mode=0o755, exist_ok=True)
 
 			ts = datetime.now(tz=UTC).strftime('%Y-%m-%dT%H-%M')
 			artifacts = [
-				(logger.path, f'{ts}-install.log'),
-				(logger.directory / 'user_configuration.json', f'{ts}-config.json'),
+				(logger.path, f'{ts}_install.log'),
+				(logger.directory / 'user_configuration.json', f'{ts}_config.json'),
 			]
 
 			for src, dst_name in artifacts:
