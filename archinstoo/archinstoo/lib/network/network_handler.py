@@ -44,6 +44,7 @@ class NetworkHandler:
 				installation.add_additional_packages(['iwd'])
 				installation.configure_iwd_standalone()
 				installation.enable_service('iwd')
+				installation.enable_service('systemd-networkd')
 				installation.enable_service('systemd-resolved')
 
 			case NicType.MANUAL:

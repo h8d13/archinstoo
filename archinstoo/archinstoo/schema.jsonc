@@ -57,13 +57,13 @@
 
 	// -- Desktop Environments --
 	"profiles": {
-		"KDE Plasma": ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "plasma-workspace"],
+		"KDE Plasma": ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "bluedevil"],
 		"GNOME": ["gnome", "gnome-tweaks"],
 		"Xfce4": ["xfce4", "xfce4-goodies", "pavucontrol", "gvfs", "xarchiver"],
 		"Cinnamon": ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed", "xdg-user-dirs-gtk"],
-		"MATE": ["mate", "mate-extra"],
-		"Budgie": ["materia-gtk-theme", "budgie", "mate-terminal", "nemo", "papirus-icon-theme"],
-		"LXQt": ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "gnu-free-fonts", "l3afpad", "slock"],
+		"Mate": ["mate", "mate-extra"],
+		"Budgie": ["materia-gtk-theme", "budgie", "dolphin", "konsole", "papirus-icon-theme"],
+		"Lxqt": ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "gnu-free-fonts", "l3afpad", "slock"],
 		"Cutefish": ["cutefish", "noto-fonts"],
 		"Deepin": ["deepin", "deepin-terminal", "deepin-editor"],
 		"Cosmic": ["cosmic", "xdg-user-dirs"],
@@ -72,7 +72,7 @@
 		"Hyprland": ["hyprland", "dunst", "kitty", "uwsm", "wofi", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "grim", "slurp"],
 		"Sway": ["sway", "swaybg", "swaylock", "swayidle", "waybar", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "foot", "xorg-xwayland"],
 		"River": ["foot", "xdg-desktop-portal-wlr", "river"],
-		"Niri": ["niri", "alacritty", "fuzzel", "mako", "xorg-xwayland", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome"],
+		"Niri": ["niri", "alacritty", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"],
 		"Labwc": ["alacritty", "labwc"],
 
 		// -- Xorg WMs --
@@ -92,11 +92,13 @@
 		"Mariadb": ["mariadb"],
 		"Lighttpd": ["lighttpd"],
 		"Tomcat": ["tomcat10"],
-		"Cockpit": ["cockpit", "udisks2", "packagekit"]
+		"Cockpit": ["cockpit", "udisks2", "packagekit"],
+		"Java": ["jre-openjdk-headless"],
+		"Tailscale": ["tailscale"]
 	},
 
 	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
-	"xorg_profiles": ["Xfce4", "Cinnamon", "MATE", "Budgie", "LXQt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
+	"xorg_profiles": ["Xfce4", "Cinnamon", "Mate", "Budgie", "Lxqt", "Cutefish", "Deepin", "i3-wm", "Bspwm", "Awesome", "Enlightenment", "Qtile", "Xmonad"],
 
 	// each desktop specifies a default greeter
 	// None is always available (stored as null in config) and any greeter can be picked
