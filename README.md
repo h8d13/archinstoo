@@ -109,7 +109,7 @@ See [Cachy-Kernels](./.github/CACHY_KERNELS.md) for swapping to their kernels po
 
 See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. 
 
-See other docs: [.github]((./.github/)
+See other docs: [.github](./.github/)
 
 ## Testing
 
