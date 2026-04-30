@@ -182,7 +182,7 @@ class Installer:
 			except Exception as err:
 				warn(f'Failed to teardown installation target: {err}')
 
-	def _sync_artifacts_to_target(self) -> None:
+	def sync_artifacts_to_target(self) -> None:
 		# Copy the run log and saved user config into the target so they survive reboot
 		# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for post-install debugging.
 		try:

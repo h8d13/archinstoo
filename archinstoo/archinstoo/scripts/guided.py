@@ -190,14 +190,14 @@ def perform_installation(
 
 		debug(f'Disk states after installing:\n{disk_layouts()}')
 
-		# Persist install log + saved config to /etc/archinstoo.d before the post-install
-		# menu, so a direct reboot/poweroff doesn't lose them (subprocess.run('reboot')
-		# kills the process before __exit__ runs).
-		installation._sync_artifacts_to_target()
-
 		with Tui():
 			elapsed_time = time.monotonic() - start_time
 			action = select_post_installation(elapsed_time)
+
+		# Persist install log + saved config to /etc/archinstoo.d after the menu so the
+		# log captures everything up to the action. subprocess.run('reboot'/'poweroff')
+		# kills the process before __exit__ runs, so syncing here is the last chance.
+		installation.sync_artifacts_to_target()
 
 		match action:
 			case PostInstallationAction.EXIT:
