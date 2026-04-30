@@ -583,8 +583,6 @@ class GlobalMenu(AbstractMenu[None]):
 	#   tcp_mtu_probing = 1: work around ICMP black holes (RFC 4821)
 	#
 	# Security
-	#   rp_filter = 1: strict reverse-path, prevents IP spoofing (CIS 3.3.7)
-	#     overrides systemd 50-default.conf which sets 2 (loose mode)
 	#   accept_redirects = 0: block ICMP redirect MITM (CIS 3.3.2)
 	#   secure_redirects = 0: belt-and-suspenders with above (CIS 3.3.3)
 	#   use_tempaddr = 2: IPv6 privacy extensions, rotate addresses (RFC 4941)
@@ -626,8 +624,6 @@ class GlobalMenu(AbstractMenu[None]):
 			'net.ipv4.tcp_mtu_probing = 1',
 			'',
 			'# Security',
-			'net.ipv4.conf.all.rp_filter = 1',
-			'net.ipv4.conf.default.rp_filter = 1',
 			'net.ipv4.conf.all.accept_redirects = 0',
 			'net.ipv4.conf.default.accept_redirects = 0',
 			'net.ipv4.conf.all.secure_redirects = 0',
