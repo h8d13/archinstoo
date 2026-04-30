@@ -44,22 +44,22 @@ def collect(config: dict[str, Any]) -> set[str]:
 		pkgs.update(f'{k}-headers' for k in kernels)
 
 	# bootloader
-	bl = config.get('bootloader_config', {})
+	bl = config.get('bootloader_config') or {}
 	bl_name = bl.get('bootloader', '')
 	if bl_name in SCHEMA['bootloaders']:
 		pkgs.update(SCHEMA['bootloaders'][bl_name])
 
 	# user packages
-	for p in config.get('packages', []):
+	for p in config.get('packages', []) or []:
 		if p:
 			pkgs.add(p)
 
 	# profile
-	pc = config.get('profile_config', {})
-	profile = pc.get('profile', {})
+	pc = config.get('profile_config') or {}
+	profile = pc.get('profile') or {}
 	main = profile.get('main', '')
-	details = profile.get('details', [])
-	custom_settings = profile.get('custom_settings', {})
+	details = profile.get('details', []) or []
+	custom_settings = profile.get('custom_settings') or {}
 	profiles = SCHEMA['profiles']
 
 	if main:
@@ -70,7 +70,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 			pkgs.update(profiles[name])
 
 		# seat_access for sway/river/niri/labwc
-		settings = custom_settings.get(name, {})
+		settings = custom_settings.get(name) or {}
 		if seat := settings.get('seat_access'):
 			pkgs.add(seat)
 
@@ -94,76 +94,76 @@ def collect(config: dict[str, Any]) -> set[str]:
 			pkgs.update(f'{k}-headers' for k in kernels)
 
 	# network
-	net = config.get('network_config', {})
+	net = config.get('network_config') or {}
 	net_type = net.get('type', '')
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
-		if main == 'Desktop':
+		if main == 'Desktop' and net_type in ('nm', 'nm_iwd'):
 			pkgs.update(SCHEMA['network']['nm_desktop_extra'])
 
 	# privilege escalation
-	auth = config.get('auth_config', {})
+	auth = config.get('auth_config') or {}
 	priv_esc = auth.get('privilege_escalation', 'sudo')
 	if priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
 	# applications
-	app = config.get('app_config', {})
+	app = config.get('app_config') or {}
 
-	if app.get('bluetooth_config', {}).get('enabled', False):
+	if (app.get('bluetooth_config') or {}).get('enabled', False):
 		pkgs.update(SCHEMA['bluetooth'])
 
-	audio = app.get('audio_config', {}).get('audio', '')
+	audio = (app.get('audio_config') or {}).get('audio', '')
 	if audio in SCHEMA['audio']:
 		pkgs.update(SCHEMA['audio'][audio])
 
-	pm = app.get('power_management_config', {}).get('power_management', '')
+	pm = (app.get('power_management_config') or {}).get('power_management', '')
 	if pm in SCHEMA['power_management']:
 		pkgs.update(SCHEMA['power_management'][pm])
 
-	if app.get('print_service_config', {}).get('enabled', False):
+	if (app.get('print_service_config') or {}).get('enabled', False):
 		pkgs.update(SCHEMA['printing'])
 
-	fw = app.get('firewall_config', {}).get('firewall', '')
+	fw = (app.get('firewall_config') or {}).get('firewall', '')
 	if fw in SCHEMA['firewalls']:
 		pkgs.update(SCHEMA['firewalls'][fw])
 
-	for tool in app.get('management_config', {}).get('tools', []):
+	for tool in (app.get('management_config') or {}).get('tools', []) or []:
 		if tool in SCHEMA['management']:
 			pkgs.update(SCHEMA['management'][tool])
 
-	for tool in app.get('security_config', {}).get('tools', []):
+	for tool in (app.get('security_config') or {}).get('tools', []) or []:
 		if tool in SCHEMA['security']:
 			pkgs.update(SCHEMA['security'][tool])
 
-	monitor = app.get('monitor_config', {}).get('monitor', '')
+	monitor = (app.get('monitor_config') or {}).get('monitor', '')
 	if monitor in SCHEMA['monitors']:
 		pkgs.update(SCHEMA['monitors'][monitor])
 
-	editor = app.get('editor_config', {}).get('editor', '')
+	editor = (app.get('editor_config') or {}).get('editor', '')
 	if editor in SCHEMA['editors']:
 		pkgs.update(SCHEMA['editors'][editor])
 
 	# shells (per-user in auth_config)
-	for user in auth.get('users', []):
+	for user in auth.get('users', []) or []:
 		shell = user.get('shell', '')
 		if shell in SCHEMA['shells']:
 			pkgs.update(SCHEMA['shells'][shell])
 
 	# filesystem tools
-	disk = config.get('disk_config', {})
+	disk = config.get('disk_config') or {}
 	fs_tools = SCHEMA['filesystem_tools']
-	for dev in disk.get('device_modifications', []):
-		for part in dev.get('partitions', []):
+	for dev in disk.get('device_modifications', []) or []:
+		for part in dev.get('partitions', []) or []:
 			if (fs := part.get('fs_type', '')) in fs_tools:
 				pkgs.update(fs_tools[fs])
-		for vol in dev.get('lvm_config', {}).get('volumes', []):
+		for vol in (dev.get('lvm_config') or {}).get('volumes', []) or []:
 			if (fs := vol.get('fs_type', '')) in fs_tools:
 				pkgs.update(fs_tools[fs])
 
 	# snapshots
-	btrfs = disk.get('btrfs_options', {})
-	snapshot = btrfs.get('snapshot_config', {})
+	btrfs = disk.get('btrfs_options') or {}
+	snapshot = btrfs.get('snapshot_config') or {}
 	snap_type = snapshot.get('type', '')
 	if snap_type in SCHEMA['snapshots']:
 		pkgs.update(SCHEMA['snapshots'][snap_type])
@@ -172,7 +172,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 			pkgs.update(SCHEMA['grub_btrfs'])
 
 	# swap
-	swap = config.get('swap', {})
+	swap = config.get('swap') or {}
 	if swap.get('enabled', False):
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
