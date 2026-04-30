@@ -69,7 +69,7 @@
 		"Cosmic": ["cosmic", "xdg-user-dirs"],
 
 		// -- Wayland WMs --
-		"Hyprland": ["hyprland", "dunst", "kitty", "uwsm", "dolphin", "wofi", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "polkit-kde-agent", "grim", "slurp"],
+		"Hyprland": ["hyprland", "dunst", "kitty", "uwsm", "wofi", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "grim", "slurp"],
 		"Sway": ["sway", "swaybg", "swaylock", "swayidle", "waybar", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "foot", "xorg-xwayland"],
 		"River": ["foot", "xdg-desktop-portal-wlr", "river"],
 		"Niri": ["niri", "alacritty", "fuzzel", "mako", "xorg-xwayland", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome"],
