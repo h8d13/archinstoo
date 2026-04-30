@@ -72,12 +72,14 @@ def collect(config: dict[str, Any]) -> set[str]:
 		custom_settings = tp.get('custom_settings') or {}
 
 		for name in tp_details:
+			settings = custom_settings.get(name) or {}
+			excluded = set(settings.get('excluded_packages') or [])
+
 			if name in profiles:
-				pkgs.update(profiles[name])
+				pkgs.update(p for p in profiles[name] if p not in excluded)
 
 			# seat_access for sway/river/niri/labwc
-			settings = custom_settings.get(name) or {}
-			if seat := settings.get('seat_access'):
+			if (seat := settings.get('seat_access')) and seat not in excluded:
 				pkgs.add(seat)
 
 	main = next(iter(mains), '')
