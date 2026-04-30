@@ -190,29 +190,49 @@ def _clean_dep(name: str) -> str | None:
 	return name or None
 
 
-def resolve_deps(explicit: set[str]) -> set[str]:
-	"""Resolve the full dependency tree via pactree -sul (sync, unique, linear)."""
+_TREE_PREFIX_RE = re.compile(r'^[\s│├└─]*')
+
+
+def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str], list[str]]:
+	"""Resolve the full dependency tree via `pactree -s`.
+
+	`-s` keeps tree formatting and emits "<pkg> provides <virtual>" so we can
+	recover the real package name when a dep is satisfied by a .so virtual.
+	`-u` (unique) is omitted because it sometimes collapses such lines to the
+	bare virtual, hiding the providing package (e.g. networkmanager →
+	wpa_supplicant → pcsclite → polkit gets shown as just libpolkit-gobject-1.so).
+
+	If `target` is given, also return explicit packages whose closure contains it.
+	"""
 	resolved: set[str] = set()
+	roots_for_target: list[str] = []
 
 	pkgs = sorted(explicit)
 	total = len(pkgs)
 
 	for i, pkg in enumerate(pkgs, 1):
-		if pkg in resolved:
-			print(f'\r  {i}/{total} | resolved: {len(resolved)}', end='', flush=True)
-			continue
+		deps: set[str] = set()
 		try:
-			output = SysCommand(f'pactree -sul {pkg}')
+			output = SysCommand(f'pactree -s {pkg}')
 			for line in output:
-				raw = line.decode().strip()
-				if name := _clean_dep(raw):
-					resolved.add(name)
+				raw = line.decode().rstrip()
+				if not raw:
+					continue
+				m = _TREE_PREFIX_RE.match(raw)
+				rest = raw[m.end() if m else 0 :].split(' provides ', 1)[0]
+				if name := _clean_dep(rest):
+					deps.add(name)
 		except Exception:
-			resolved.add(pkg)
+			deps.add(pkg)
+
+		resolved.update(deps)
+		if target and pkg != target and target in deps:
+			roots_for_target.append(pkg)
+
 		print(f'\r  {i}/{total} | resolved: {len(resolved)}', end='', flush=True)
 
 	print()
-	return resolved
+	return resolved, roots_for_target
 
 
 def count() -> None:
@@ -221,6 +241,7 @@ def count() -> None:
 		description='Count packages from a saved config (resolves deps)',
 	)
 	parser.add_argument('config', type=str, help='Path to user_configuration.json')
+	parser.add_argument('--why', metavar='PKG', help='Show which explicit packages pull in PKG and the dep chain')
 
 	args = parser.parse_args()
 
@@ -232,9 +253,17 @@ def count() -> None:
 	print(f'\nExplicit packages: {len(explicit)}')
 	print('Resolving dependencies...')
 
-	resolved = resolve_deps(explicit)
+	resolved, roots = resolve_deps(explicit, target=args.why)
 
 	print(f'\nTotal packages (with deps): {len(resolved)}')
+
+	if args.why:
+		if not roots:
+			print(f"\n'{args.why}' is not pulled in by this config.")
+		else:
+			print(f"\n'{args.why}' is pulled in by {len(roots)} explicit package(s):")
+			for root in sorted(roots):
+				print(f'  {root}')
 
 
 count()
