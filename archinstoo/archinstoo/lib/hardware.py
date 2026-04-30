@@ -252,8 +252,6 @@ class _SysInfo:
 	def firmware_vendors(self) -> list[str]:
 		"""
 		Returns FirmwareVendor enum *names* matching detected PCI vendor IDs.
-		Returns names rather than enum instances so this module stays free of any
-		models/* import (avoids contributing to a hardware <-> models cycle).
 		Limited to high-yield consumer vendors; niche vendors stay manual.
 		"""
 		# Manual-only FirmwareVendor members (not auto-detected, ticked by the user)
