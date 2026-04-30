@@ -9,6 +9,7 @@ class NicType(Enum):
 	ISO = 'iso'
 	NM = 'nm'
 	NM_IWD = 'nm_iwd'
+	IWD = 'iwd'
 	MANUAL = 'manual'
 
 	def display_msg(self) -> str:
@@ -19,6 +20,8 @@ class NicType(Enum):
 				return tr('Use Network Manager (default backend)')
 			case NicType.NM_IWD:
 				return tr('Use Network Manager (iwd backend)')
+			case NicType.IWD:
+				return tr('Use iwd standalone (no Network Manager)')
 			case NicType.MANUAL:
 				return tr('Manual configuration')
 
@@ -124,6 +127,8 @@ class NetworkConfiguration:
 				return cls(NicType.NM)
 			case NicType.NM_IWD:
 				return cls(NicType.NM_IWD)
+			case NicType.IWD:
+				return cls(NicType.IWD)
 			case NicType.MANUAL:
 				nics_arg = config.get('nics', [])
 				if nics_arg:

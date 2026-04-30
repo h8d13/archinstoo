@@ -40,6 +40,12 @@ class NetworkHandler:
 					installation.configure_nm_iwd()
 					installation.disable_service('iwd')
 
+			case NicType.IWD:
+				installation.add_additional_packages(['iwd'])
+				installation.configure_iwd_standalone()
+				installation.enable_service('iwd')
+				installation.enable_service('systemd-resolved')
+
 			case NicType.MANUAL:
 				for nic in network_config.nics:
 					installation.configure_nic(nic)

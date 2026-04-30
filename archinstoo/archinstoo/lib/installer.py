@@ -926,6 +926,12 @@ class Installer:
 		iwd_backend_conf = nm_conf_dir / 'wifi_backend.conf'
 		iwd_backend_conf.write_text('[device]\nwifi.backend=iwd\n')
 
+	def configure_iwd_standalone(self) -> None:
+		# Let iwd handle DHCP/DNS itself; resolved picks up its DNS via the symlink.
+		iwd_conf_dir = self.target / 'etc/iwd'
+		iwd_conf_dir.mkdir(parents=True, exist_ok=True)
+		(iwd_conf_dir / 'main.conf').write_text('[General]\nEnableNetworkConfiguration=true\n\n[Network]\nNameResolvingService=systemd\n')
+
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		with open(f'{self.target}/etc/mkinitcpio.conf', 'r+') as mkinit:
 			content = mkinit.read()

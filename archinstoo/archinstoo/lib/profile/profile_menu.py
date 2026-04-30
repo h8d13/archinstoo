@@ -116,7 +116,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 
 	def select_greeter(self, preset: GreeterType | None = None) -> GreeterType | None:
 		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
-		profile = profiles[0] if profiles else None
+		profile = next((p for p in profiles if p.is_greeter_supported()), None)
 		return select_greeter(profile=profile, preset=preset)
 
 	def _customize_packages(self, preset: None = None) -> None:

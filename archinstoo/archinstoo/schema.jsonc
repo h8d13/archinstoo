@@ -183,6 +183,7 @@
 	"network": {
 		"nm": ["networkmanager", "wpa_supplicant"],
 		"nm_iwd": ["networkmanager", "iwd"],
+		"iwd": ["iwd"],
 		// nm adds network-manager-applet for desktop profiles
 		"nm_desktop_extra": ["network-manager-applet"]
 	}

@@ -208,6 +208,8 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 					return NetworkConfiguration(NicType.NM)
 				case NicType.NM_IWD:
 					return NetworkConfiguration(NicType.NM_IWD)
+				case NicType.IWD:
+					return NetworkConfiguration(NicType.IWD)
 				case NicType.MANUAL:
 					preset_nics = preset.nics if preset else []
 					nics = ManualNetworkConfig(tr('Configure interfaces'), preset_nics).run()
