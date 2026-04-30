@@ -56,23 +56,31 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	# profile
 	pc = config.get('profile_config') or {}
-	profile = pc.get('profile') or {}
-	main = profile.get('main', '')
-	details = profile.get('details', []) or []
-	custom_settings = profile.get('custom_settings') or {}
+	top_profiles = pc.get('profiles') or []
 	profiles = SCHEMA['profiles']
+	mains: set[str] = set()
+	details: list[str] = []
 
-	if main:
-		pkgs.update(SCHEMA['profile_base'])
+	for tp in top_profiles:
+		main = tp.get('main', '')
+		if main:
+			mains.add(main)
+			pkgs.update(SCHEMA['profile_base'])
 
-	for name in details:
-		if name in profiles:
-			pkgs.update(profiles[name])
+		tp_details = tp.get('details', []) or []
+		details.extend(tp_details)
+		custom_settings = tp.get('custom_settings') or {}
 
-		# seat_access for sway/river/niri/labwc
-		settings = custom_settings.get(name) or {}
-		if seat := settings.get('seat_access'):
-			pkgs.add(seat)
+		for name in tp_details:
+			if name in profiles:
+				pkgs.update(profiles[name])
+
+			# seat_access for sway/river/niri/labwc
+			settings = custom_settings.get(name) or {}
+			if seat := settings.get('seat_access'):
+				pkgs.add(seat)
+
+	main = next(iter(mains), '')
 
 	# greeter
 	greeter = pc.get('greeter', '')
@@ -98,7 +106,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	net_type = net.get('type', '')
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
-		if main == 'Desktop' and net_type in ('nm', 'nm_iwd'):
+		if 'Desktop' in mains and net_type in ('nm', 'nm_iwd'):
 			pkgs.update(SCHEMA['network']['nm_desktop_extra'])
 
 	# privilege escalation
