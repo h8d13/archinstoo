@@ -10,4 +10,4 @@ Hence why you can now use `--advanced` to get AUR support built-in
 *For obvious reason another disclaimer here* is to make sure you know to trust what you are installing.
 Especially with the automated nature of the installs and that sufficiently harden a machine for your use cases and limit AUR usage.
 
-Directly supported [hardware](../archinstoo/lib/hardware.py) can all be seen here through detection.
+Directly supported [hardware](./archinstoo/archinstoo/lib/hardware.py) can all be seen here through detection.
