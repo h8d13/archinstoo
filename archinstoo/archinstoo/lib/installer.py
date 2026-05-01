@@ -1100,6 +1100,14 @@ class Installer:
 			info(f'Running post-installation hook: {function}')
 			function(self)
 
+	def _btrfs_snapshot_type(self) -> SnapshotType | None:
+		"""Return the configured btrfs snapshot type, or None."""
+		if not self._disk_config.has_default_btrfs_vols():
+			return None
+		btrfs_options = self._disk_config.btrfs_options
+		snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
+		return snapshot_config.snapshot_type if snapshot_config else None
+
 	def setup_btrfs_snapshot(
 		self,
 		snapshot_type: SnapshotType,
@@ -1969,13 +1977,7 @@ class Installer:
 		data[offset:] = b''.join(reversed(rows))
 		path.write_bytes(data)
 
-	def add_bootloader(
-		self,
-		bootloader: Bootloader,
-		uki_enabled: bool = False,
-		bootloader_removable: bool = False,
-		keep_standalone_initramfs: bool = False,
-	) -> None:
+	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False) -> None:
 		"""
 		Adds a bootloader to the installation instance.
 		Archinstoo supports one of five types:
@@ -1988,8 +1990,6 @@ class Installer:
 		:param bootloader: Type of bootloader to be added
 		:param uki_enabled: Whether to use unified kernel images
 		:param bootloader_removable: Whether to install to removable media location (UEFI only, for GRUB and Limine)
-		:param keep_standalone_initramfs: When UKI is enabled, also keep standalone initramfs.
-			Required for grub-btrfs snapshot entries, which cannot consume a UKI.
 		"""
 		self._flip_bmp(self.target / 'usr/share/systemd/bootctl/splash-arch.bmp')
 
@@ -2021,7 +2021,9 @@ class Installer:
 				bootloader_removable = False
 
 		if uki_enabled:
-			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone_initramfs)
+			# grub-btrfs cannot consume a UKI for snapshot entries; keep standalone initramfs alongside.
+			keep_standalone = bootloader == Bootloader.Grub and self._btrfs_snapshot_type() is not None
+			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone)
 
 		match bootloader:
 			case Bootloader.Systemd:

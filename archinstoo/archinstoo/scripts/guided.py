@@ -13,7 +13,6 @@ from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_aur_installation, run_custom_user_commands
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
-from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	DiskLayoutType,
 	EncryptionType,
@@ -120,29 +119,16 @@ def perform_installation(
 			users = config.auth_config.users if config.auth_config else None
 			application_handler.install_applications(installation, app_config, users)
 
-		# Determine if grub-btrfs will be installed; if so, UKI must keep a standalone
-		# initramfs alongside the UKI, since grub-btrfs cannot generate snapshot entries
-		# from a UKI (it emits `linux` + `initrd` entries and needs initramfs-linux.img).
-		btrfs_snapshot_type = None
+		if config.bootloader_config and config.bootloader_config.bootloader is not None:
+			installation.add_bootloader(config.bootloader_config.bootloader, config.bootloader_config.uki, config.bootloader_config.removable)
+
 		if disk_config.has_default_btrfs_vols():
 			btrfs_options = disk_config.btrfs_options
 			snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
-			btrfs_snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
-
-		if config.bootloader_config and config.bootloader_config.bootloader is not None:
-			keep_standalone_initramfs = (
-				config.bootloader_config.uki and config.bootloader_config.bootloader == Bootloader.Grub and btrfs_snapshot_type is not None
-			)
-			installation.add_bootloader(
-				config.bootloader_config.bootloader,
-				config.bootloader_config.uki,
-				config.bootloader_config.removable,
-				keep_standalone_initramfs=keep_standalone_initramfs,
-			)
-
-		if btrfs_snapshot_type is not None:
-			bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
-			installation.setup_btrfs_snapshot(btrfs_snapshot_type, bootloader)
+			snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
+			if snapshot_type:
+				bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
+				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
 
 		# If user selected to copy the current ISO network configuration
 		# Perform a copy of the config
