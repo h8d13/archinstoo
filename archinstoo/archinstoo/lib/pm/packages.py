@@ -113,9 +113,8 @@ def _parse_package_output[PackageType: (AvailablePackage, LocalPackage)](
 	current_key: str | None = None
 
 	for line in package_meta:
-		# Lines starting with whitespace are continuations of the previous
-		# field — pacman wraps long values and emits each entry of multi-value
-		# fields like "Optional Deps" on its own indented line.
+		# indented lines continue the previous field's value (wrapped
+		# descriptions and multi-entry fields like Optional Deps)
 		if line and line[0] in ' \t':
 			if current_key:
 				package[current_key] += ' ' + line.strip()
