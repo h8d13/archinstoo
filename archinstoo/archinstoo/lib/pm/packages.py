@@ -9,7 +9,7 @@ from archinstoo.lib.pacman import Pacman
 
 def installed_package(package: str) -> LocalPackage | None:
 	try:
-		package_info = [line.decode().strip() for line in Pacman.run(f'-Q --info {package}')]
+		package_info = [line.decode().rstrip() for line in Pacman.run(f'-Q --info {package}')]
 
 		return _parse_package_output(package_info, LocalPackage)
 	except SysCallError:
@@ -46,7 +46,7 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 		current_package = []
 
 		for line in Pacman.run(f'-Si {pkg_names}'):
-			dec_line = line.decode().strip()
+			dec_line = line.decode().rstrip()
 			current_package.append(dec_line)
 
 			if dec_line.startswith('Validated') and current_package:
@@ -108,14 +108,26 @@ def _parse_package_output[PackageType: (AvailablePackage, LocalPackage)](
 	package_meta: list[str],
 	cls: type[PackageType],
 ) -> PackageType:
-	package = {}
+	package: dict[str, str] = {}
 	valid_fields = {f.name for f in fields(cls)}
+	current_key: str | None = None
 
 	for line in package_meta:
+		# Lines starting with whitespace are continuations of the previous
+		# field — pacman wraps long values and emits each entry of multi-value
+		# fields like "Optional Deps" on its own indented line.
+		if line and line[0] in ' \t':
+			if current_key:
+				package[current_key] += ' ' + line.strip()
+			continue
+
 		if ':' in line:
 			key, value = line.split(':', 1)
 			key = _normalize_key_name(key)
 			if key in valid_fields:
 				package[key] = value.strip()
+				current_key = key
+			else:
+				current_key = None
 
 	return cls(**package)
