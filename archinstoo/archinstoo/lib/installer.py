@@ -1888,6 +1888,7 @@ class Installer:
 		self,
 		root: PartitionModification | LvmVolume,
 		efi_partition: PartitionModification | None,
+		keep_standalone_initramfs: bool = False,
 	) -> None:
 		if not efi_partition or not efi_partition.mountpoint:
 			raise ValueError(f'Could not detect ESP at mountpoint {self.target}')
@@ -1904,6 +1905,7 @@ class Installer:
 
 		image_re = re.compile('(.+_image="/([^"]+).+\n)')
 		uki_re = re.compile('#((.+_uki=")/[^/]+(.+\n))')
+		presets_re = re.compile(r'^(PRESETS=)\((.*)\)\s*$')
 
 		# Per-kernel os-release so GRUB UKI entries show the kernel variant
 		osrelease_dir = self.target / 'etc/os-release.d'
@@ -1925,8 +1927,10 @@ class Installer:
 			config = preset.read_text().splitlines(True)
 
 			for index, line in enumerate(config):
-				# Avoid storing redundant image file
+				# Avoid storing redundant image file (unless grub-btrfs needs it for snapshot entries)
 				if m := image_re.match(line):
+					if keep_standalone_initramfs:
+						continue
 					image = self.target / m.group(2)
 					image.unlink(missing_ok=True)
 					config[index] = '#' + m.group(1)
@@ -1937,6 +1941,11 @@ class Installer:
 						config[index] = m.group(1)
 				elif line.startswith('#default_options='):
 					config[index] = line.removeprefix('#').rstrip('\n').rstrip('"') + f' --osrelease /etc/os-release.d/{kernel}"\n'
+				elif keep_standalone_initramfs and (pm := presets_re.match(line)):
+					tokens = [t.strip().strip('\'"') for t in pm.group(2).split(',') if t.strip()]
+					if 'default' not in tokens:
+						tokens.insert(0, 'default')
+					config[index] = f'{pm.group(1)}({" ".join(repr(t) for t in tokens)})\n'
 
 			preset.write_text(''.join(config))
 
@@ -1960,7 +1969,13 @@ class Installer:
 		data[offset:] = b''.join(reversed(rows))
 		path.write_bytes(data)
 
-	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False) -> None:
+	def add_bootloader(
+		self,
+		bootloader: Bootloader,
+		uki_enabled: bool = False,
+		bootloader_removable: bool = False,
+		keep_standalone_initramfs: bool = False,
+	) -> None:
 		"""
 		Adds a bootloader to the installation instance.
 		Archinstoo supports one of five types:
@@ -1973,6 +1988,8 @@ class Installer:
 		:param bootloader: Type of bootloader to be added
 		:param uki_enabled: Whether to use unified kernel images
 		:param bootloader_removable: Whether to install to removable media location (UEFI only, for GRUB and Limine)
+		:param keep_standalone_initramfs: When UKI is enabled, also keep standalone initramfs.
+			Required for grub-btrfs snapshot entries, which cannot consume a UKI.
 		"""
 		self._flip_bmp(self.target / 'usr/share/systemd/bootctl/splash-arch.bmp')
 
@@ -2004,7 +2021,7 @@ class Installer:
 				bootloader_removable = False
 
 		if uki_enabled:
-			self._config_uki(root, efi_partition)
+			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone_initramfs)
 
 		match bootloader:
 			case Bootloader.Systemd:
