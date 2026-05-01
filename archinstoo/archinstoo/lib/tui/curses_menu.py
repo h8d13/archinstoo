@@ -1337,7 +1337,7 @@ class Tui:
 			self._set_up_colors()
 			self._screen.clear()
 
-		signal.signal(signal.SIGWINCH, self._sig_win_resize)
+		self._prev_sigwinch = signal.signal(signal.SIGWINCH, self._sig_win_resize)
 		self._screen.refresh()
 
 		return self
@@ -1355,6 +1355,9 @@ class Tui:
 		except Exception:
 			# this may happen when curses has not been initialized
 			pass
+
+		with contextlib.suppress(Exception):
+			signal.signal(signal.SIGWINCH, getattr(self, '_prev_sigwinch', None) or signal.SIG_DFL)
 
 		Tui._t = None
 
@@ -1403,13 +1406,18 @@ class Tui:
 		return Tui.t()._main_loop(component)
 
 	def _sig_win_resize(self, _signum: int, _frame: FrameType | None) -> None:
-		curses.endwin()
-		self._screen = curses.initscr()
-		curses.resizeterm(*self._screen.getmaxyx())
-		self._screen.clear()
-		self._screen.refresh()
-		if hasattr(self, '_component') and self._component is not None:  # pylint: disable=no-member
-			self._component.resize_win()  # pylint: disable=no-member
+		if Tui._t is None:
+			return
+		try:
+			curses.endwin()
+			self._screen = curses.initscr()
+			curses.resizeterm(*self._screen.getmaxyx())
+			self._screen.clear()
+			self._screen.refresh()
+			if hasattr(self, '_component') and self._component is not None:  # pylint: disable=no-member
+				self._component.resize_win()  # pylint: disable=no-member
+		except curses.error:
+			pass
 
 	def _main_loop[ValueT](self, component: AbstractCurses[ValueT]) -> Result[ValueT]:
 		self._component = component
