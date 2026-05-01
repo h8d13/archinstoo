@@ -1157,6 +1157,18 @@ class Installer:
 			self._configure_grub_btrfsd(snapshot_type)
 			self.enable_service('grub-btrfsd')
 
+			# grub-btrfs's 41_snapshots-btrfs hook defaults to /boot/grub, but archinstoo
+			# installs grub.cfg under <esp>/grub when the ESP isn't mounted at /boot
+			# (e.g. ESP at /efi). Override GRUB_BTRFS_GRUB_DIRNAME to match.
+			boot_dir = Path('/boot')
+			boot_partition = self._get_boot_partition()
+			if boot_partition is None and SysInfo.has_uefi():
+				boot_partition = self._get_efi_partition()
+			if boot_partition and boot_partition.mountpoint and boot_partition.mountpoint != boot_dir:
+				grub_btrfs_dir = self.target / 'etc/default/grub-btrfs'
+				grub_btrfs_dir.mkdir(parents=True, exist_ok=True)
+				(grub_btrfs_dir / 'config').write_text(f'GRUB_BTRFS_GRUB_DIRNAME="{boot_partition.mountpoint / "grub"}"\n')
+
 	def setup_swap(
 		self,
 		kind: str = 'zram',
