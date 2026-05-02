@@ -403,9 +403,11 @@ class Installer:
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
 			options = list(part_mod.mount_options)
 
-			# restrict ESP permissions so bootctl doesn't warn about world-accessible seed files
+			# restrict ESP permissions so bootctl doesn't warn about world-accessible seed files;
+			# when ESP is mounted at /boot, keep dirs 0755 so pacman doesn't warn on kernel installs
 			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.FAT32:
-				for opt in ('fmask=0077', 'dmask=0077'):
+				esp_opts = ('fmask=0137', 'dmask=0022') if part_mod.is_boot() else ('fmask=0077', 'dmask=0077')
+				for opt in esp_opts:
 					if opt not in options:
 						options.append(opt)
 
