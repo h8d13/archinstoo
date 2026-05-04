@@ -26,9 +26,9 @@ and needs to be rebuilt with more space for certain breaking updates.
 
 Usually build a `1GB` ISO to test dev builds (vs the original `256M`). And can be released more frequently.
 
-See [`isos/`](./isos/) to create custom ones directly. 
-
 You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace` on the ISO directly.
+
+> See [`ISOs`](./BUILD_ISOS.md) to create custom ones directly. 
 
 ### **Issues with signatures/keyring**
 
