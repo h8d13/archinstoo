@@ -10,11 +10,11 @@
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
 #
 # Usage:
-#   ./VM            - fresh disk, boot ISO
-#   ./VM keep   | k - reuse disk, boot ISO
-#   ./VM boot   | b - boot from installed disk (no ISO)
-#   ./VM clean  | c - remove disk and NVRAM (ISOs untouched)
-#   ./VM help   | h - show this help
+#   ./TVM            - fresh disk, boot ISO
+#   ./TVM keep   | k - reuse disk, boot ISO
+#   ./TVM boot   | b - boot from installed disk (no ISO)
+#   ./TVM clean  | c - remove disk and NVRAM (ISOs untouched)
+#   ./TVM help   | h - show this help
 #
 # Env overrides:
 #   DEV_ISO            explicit ISO path (skips discovery)
