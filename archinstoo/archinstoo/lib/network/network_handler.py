@@ -52,13 +52,13 @@ class NetworkHandler:
 				installation.enable_service('systemd-resolved')
 
 
-def _configure_nm_iwd(installation: 'Installer') -> None:
+def _configure_nm_iwd(installation: Installer) -> None:
 	nm_conf_dir = installation.target / 'etc/NetworkManager/conf.d'
 	nm_conf_dir.mkdir(parents=True, exist_ok=True)
 	(nm_conf_dir / 'wifi_backend.conf').write_text('[device]\nwifi.backend=iwd\n')
 
 
-def _configure_iwd_standalone(installation: 'Installer') -> None:
+def _configure_iwd_standalone(installation: Installer) -> None:
 	# iwd manages wireless only; systemd-networkd handles wired DHCP.
 	iwd_conf_dir = installation.target / 'etc/iwd'
 	iwd_conf_dir.mkdir(parents=True, exist_ok=True)
