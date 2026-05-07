@@ -928,26 +928,6 @@ class Installer:
 
 		return True
 
-	def configure_nm_iwd(self) -> None:
-		# Create NetworkManager config directory and write iwd backend conf
-		nm_conf_dir = self.target / 'etc/NetworkManager/conf.d'
-		nm_conf_dir.mkdir(parents=True, exist_ok=True)
-
-		iwd_backend_conf = nm_conf_dir / 'wifi_backend.conf'
-		iwd_backend_conf.write_text('[device]\nwifi.backend=iwd\n')
-
-	def configure_iwd_standalone(self) -> None:
-		# iwd handles wireless DHCP/DNS itself (NameResolvingService=systemd
-		# hands DNS to resolved). Wired interfaces are managed by
-		# systemd-networkd via a wildcard DHCP config.
-		iwd_conf_dir = self.target / 'etc/iwd'
-		iwd_conf_dir.mkdir(parents=True, exist_ok=True)
-		(iwd_conf_dir / 'main.conf').write_text('[General]\nEnableNetworkConfiguration=true\n\n[Network]\nNameResolvingService=systemd\n')
-
-		networkd_dir = self.target / 'etc/systemd/network'
-		networkd_dir.mkdir(parents=True, exist_ok=True)
-		(networkd_dir / '20-wired.network').write_text('[Match]\nName=en*\nName=eth*\n\n[Network]\nDHCP=yes\n')
-
 		self.link_resolved_stub()
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
