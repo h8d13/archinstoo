@@ -219,7 +219,7 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 		{handler.config.bug_report_url} and include the log file "{logger.path}".
 
 		Hint: To extract the log from a live ISO
-		curl -F 'file=@{logger.path}' https://0x0.st
+		curl --data-binary @{logger.path} https://paste.rs
 	""")
 
 	warn(text)
