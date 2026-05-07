@@ -2,6 +2,54 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.09-0
+
+    - UKI + grub-btrfs co-existence (#4505)
+        - `add_bootloader(..., keep_standalone_initramfs=True)` keeps `linux`/`initrd` artifacts alongside the UKI when the user picks GRUB + UKI + btrfs snapshots (grub-btrfs's snapshot entries cannot consume a UKI)
+        - `_config_uki` rewrites mkinitcpio presets: prepends `default` to `PRESETS=(...)`, skips the redundant-image unlink, leaves the standard initramfs in place
+        - Decision pulled into `scripts/guided.py` so `setup_btrfs_snapshot` runs after bootloader install with the correct flag
+    - Fix grub-btrfs cfg path when ESP is not at `/boot`
+        - grub-btrfs's `41_snapshots-btrfs` hook hardcodes `/boot/grub`; archinstoo writes `<esp>/grub` when the ESP mounts at `/efi`
+        - Now writes `/etc/default/grub-btrfs/config` with `GRUB_BTRFS_GRUB_DIRNAME="<esp>/grub"` so snapshot entries land in the right cfg
+    - `iwd` standalone option in network menu
+        - New `NicType.IWD` alongside existing `NM` and `NM_IWD`
+        - `Installer.configure_iwd_standalone()` writes `/etc/iwd/main.conf` with `EnableNetworkConfiguration=true` + `NameResolvingService=systemd` (iwd handles DHCP, systemd-resolved picks up DNS)
+        - `NetworkHandler` enables `iwd` + `systemd-resolved`, no NetworkManager pulled in
+        - `scripts/count.py` adjusted accordingly
+    - Profiles: package customization step
+        - New `Customize packages` menu item under `ProfileMenu`, multi-select toggle of each profile's package list
+        - Persists exclusions in `Profile.custom_settings['excluded_packages']`; only enabled when at least one selected profile is non-`Minimal`
+        - Drops dead-code "advanced" profile path
+    - `--list` rework
+        - Adds `count` to `ROOTLESS_SCRIPTS`
+        - New `DEFAULT = 'guided'` sentinel; `scripts/list.py` marks the default script in the listing and pulls the `[*] requires root` legend out of the per-row formatting
+    - TUI: SIGWINCH race condition in `Tui._sig_win_resize`
+        - Bails when `Tui._t is None` (signal can fire after teardown)
+        - Wraps `curses.endwin()`/`initscr()`/resize in `try/except curses.error`
+        - `__enter__` saves the previous SIGWINCH handler; `__exit__` restores it (was leaking into the host process after `Tui` exit)
+    - `pm/packages.py`: additional packages parsing
+        - `installed_package` / `enrich_package_info` switch `.strip()` -> `.rstrip()` so leading whitespace in pacman `-Q --info` / `-Si` output (continuation lines for multi-line fields) is preserved
+        - Avoids field merges when a value wraps onto the next line
+    - Log / artifact sync ordering
+        - `_sync_artifacts_to_target` promoted to public; called from `scripts/guided.py` rather than `Installer.__exit__`
+        - Sync now runs before the post-install menu (chroot, reboot, exit) so users picking "exit" still get the artifacts on target
+        - Sync also runs on the failure path
+        - `pathnames.ARTIFACTS_STORE` now relative to `/` so chroot-relative writes resolve correctly
+    - `share-log` curl hint switched from `0x0.st` (dead) to `paste.rs` (`curl --data-binary @<log> https://paste.rs`)
+    - `scripts/count.py` parsing fixes
+        - Excludes-count cleanup for profiles that contribute no packages
+        - Per-profile parsing reworked to match the new exclusion field
+    - `examples/config-sample-full.json`: add missing fields, drop stales from `schema.jsonc`
+    - `desktops/hyprland.py`: drop `polkit` (pulled in transitively); revert niri profile change
+    - Drop `cutefish` desktop profile (#4514, upstream-archived project)
+    - Locale fixes (#4500): missing `tr()` ids in encryption/profile menus, `.pot` regen
+    - `network/`: small helper for nic stub creation path
+    - `sysctl`: drop redundant duplicate lines
+    - Dev: `TVM` script (renamed from `VM`) for boot-time VM smoke-test (credits to softer)
+    - Deps: bump `mypy` to v2 (project + pre-commit mirror), pre-commit hooks resync
+    - Various docs refresh (BUILD_ISOS, DEP_CHAINS, link/block fixes)
+    - Various upstream syncs
+
 ## 0.1.08-0
 
     - Auto-detect firmware vendors from PCI bus
