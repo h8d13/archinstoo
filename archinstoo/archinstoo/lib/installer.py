@@ -928,8 +928,6 @@ class Installer:
 
 		return True
 
-		self.link_resolved_stub()
-
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		with open(f'{self.target}/etc/mkinitcpio.conf', 'r+') as mkinit:
 			content = mkinit.read()
