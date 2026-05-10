@@ -107,7 +107,7 @@ See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
 See [Cachy-Kernels](./.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
 
-See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. 
+See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
 
 See other docs: [.github](./.github/)
 
