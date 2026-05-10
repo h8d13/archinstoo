@@ -18,6 +18,6 @@ And you are done !
 ## Recent cards
 
 Is much easier: The only main thing to understand is that if you pick a kernel that is not mainline `linux` you will need `dkms`. (This is handled automatically).
-So using mainline kernel makes `pacman` updates easier.
+So using mainline kernel makes `pacman` updates easier/faster.
 
 [^1]: Arch news drop pascal support [link](https://archlinux.org/news/nvidia-590-driver-drops-pascal-support-main-packages-switch-to-open-kernel-modules/)
