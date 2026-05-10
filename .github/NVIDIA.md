@@ -9,7 +9,7 @@ You will need the AUR. See [this](./OUT_OF_TREE.md)
 ### Example on 1050Ti 
 
 0. Launch `archinstoo` with `--advanced` flag
-1. Skip `Graphics Driver`
+1. Skip `Graphics Driver` and toggle kernel headers in `kernel` menu.
 2. Add to AUR packages `nvidia-580xx-utils`
 3. Add to additional packages `libva-nvidia-driver`
 
