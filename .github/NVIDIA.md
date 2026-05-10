@@ -3,7 +3,17 @@
 ## Older cards 
 
 From the [wiki](https://wiki.archlinux.org/title/NVIDIA) you can gather that if you card is bellow 16XX[^1]
-You will need the AUR. See [this](./OUT_OF_TREE.md)
+
+You will need the AUR. See [this](./OUT_OF_TREE.md) 
+
+### Example on 1050Ti 
+
+0. Launch `archinstoo` with `--advanced` flag
+1. Skip `Graphics Driver`
+2. Add to AUR packages `nvidia-580xx-utils`
+3. Add to additional packages `libva-nvidia-driver`
+
+And you are done !
 
 ## Recent cards
 
