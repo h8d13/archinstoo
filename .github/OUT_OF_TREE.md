@@ -11,3 +11,5 @@ Hence why you can now use `--advanced` to get AUR support built-in
 Especially with the automated nature of the installs and that sufficiently harden a machine for your use cases and limit AUR usage.
 
 Directly supported [hardware](../archinstoo/archinstoo/lib/hardware.py) can all be seen here through detection.
+
+See also: [nVIDIA](./NVIDIA.md)
