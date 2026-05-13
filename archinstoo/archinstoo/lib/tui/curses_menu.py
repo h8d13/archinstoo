@@ -4,11 +4,9 @@ import signal
 import subprocess
 import sys
 from abc import ABCMeta, abstractmethod
-from collections.abc import Callable
 from curses.ascii import isprint
 from curses.textpad import Textbox
-from types import FrameType, TracebackType
-from typing import ClassVar, Literal, Self, override
+from typing import TYPE_CHECKING, ClassVar, Literal, Self, override
 
 from archinstoo.lib.translationhandler import tr
 
@@ -28,6 +26,10 @@ from .types import (
 	PreviewStyle,
 	ViewportEntry,
 )
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
+	from types import FrameType, TracebackType
 
 
 class AbstractCurses[ValueT](metaclass=ABCMeta):
@@ -363,7 +365,8 @@ class EditViewport(AbstractViewport):
 			self._main_win.refresh()
 
 	def edit(self, default_text: str | None = None) -> None:
-		assert self._edit_win and self._main_win
+		if not self._edit_win or not self._main_win:
+			raise RuntimeError('EditMenu.edit() called before windows initialized')
 
 		self._edit_win.erase()
 
@@ -532,8 +535,6 @@ class EditMenu(AbstractCurses[str]):
 	def input(self) -> Result[str]:
 		result = Tui.run(self)
 
-		assert not result.has_item() or isinstance(result.text(), str)
-
 		self._clear_all()
 		return result
 
@@ -555,8 +556,8 @@ class EditMenu(AbstractCurses[str]):
 			self._info_vp.erase()
 
 	def _get_input_text(self) -> str | None:
-		assert self._input_vp
-		assert self._info_vp
+		if not self._input_vp or not self._info_vp:
+			raise RuntimeError('EditMenu viewports not initialized')
 
 		text = self._real_input
 
@@ -617,7 +618,8 @@ class EditMenu(AbstractCurses[str]):
 		return self._last_state
 
 	def _redraw_input(self) -> None:
-		assert self._input_vp
+		if not self._input_vp:
+			raise RuntimeError('EditMenu input viewport not initialized')
 		display = '*' * len(self._real_input) if self._hide_input else self._real_input
 		self._input_vp.redraw_text(display, self._cursor_pos)
 
@@ -756,7 +758,8 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 
 		self._init_viewports(self._preview_size)
 
-		assert self._menu_vp is not None
+		if self._menu_vp is None:
+			raise RuntimeError('SelectMenu _init_viewports did not set _menu_vp')
 		self._items_state: MenuItemsState = MenuItemsState(  # type: ignore[unreachable]
 			self._item_group,
 			total_cols=self._horizontal_cols,
@@ -794,7 +797,8 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		self._clear_all()
 		self._max_height, self._max_width = Tui.t().max_yx
 		self._init_viewports(self._preview_size)
-		assert self._menu_vp is not None
+		if self._menu_vp is None:
+			raise RuntimeError('SelectMenu _init_viewports did not set _menu_vp')
 		self._items_state = MenuItemsState(
 			self._item_group,
 			total_cols=self._horizontal_cols,
@@ -1097,8 +1101,6 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		total_prev_rows: int,
 		available_rows: int,
 	) -> int | None:
-		assert self._preview_vp is not None
-
 		if total_prev_rows <= available_rows:
 			return None
 
@@ -1118,8 +1120,6 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		total_prev_rows: int,
 		available_rows: int,
 	) -> list[ViewportEntry]:
-		assert self._preview_vp is not None
-
 		start_row = 0 if total_prev_rows <= available_rows else self._prev_scroll_pos
 
 		end_row = start_row + available_rows
@@ -1318,7 +1318,8 @@ class Tui:
 
 	@classmethod
 	def t(cls) -> Self:
-		assert cls._t is not None
+		if cls._t is None:
+			raise RuntimeError('Tui not initialized; call Tui.init() first')
 		return cls._t
 
 	@staticmethod
@@ -1349,7 +1350,8 @@ class Tui:
 		return self
 
 	def stop(self) -> None:
-		try:
+		# this may happen when curses has not been initialized
+		with contextlib.suppress(Exception):
 			curses.nocbreak()
 
 			with contextlib.suppress(Exception):
@@ -1358,9 +1360,6 @@ class Tui:
 			curses.echo()
 			curses.curs_set(True)
 			curses.endwin()
-		except Exception:
-			# this may happen when curses has not been initialized
-			pass
 
 		with contextlib.suppress(Exception):
 			signal.signal(signal.SIGWINCH, getattr(self, '_prev_sigwinch', None) or signal.SIG_DFL)
@@ -1376,7 +1375,7 @@ class Tui:
 		clear_screen: bool = False,
 	) -> None:
 		if clear_screen:
-			subprocess.run(['clear'], check=False)
+			subprocess.run(['clear'], check=False)  # noqa: S607 - `clear` from $PATH on the live ISO
 
 		if Tui._t is None:
 			print(text, end=endl)

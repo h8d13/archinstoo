@@ -1,7 +1,7 @@
 import contextlib
 import os
-from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from parted import Device, Disk, DiskException, FileSystem, Geometry, IOException, Partition, PartitionException, freshDisk, getAllDevices, getDevice, newDisk
 
@@ -29,7 +29,6 @@ from archinstoo.lib.models.device import (
 	_DeviceInfo,
 	_PartitionInfo,
 )
-from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.pathnames import ARCHISO_MOUNTPOINT
 
@@ -41,6 +40,11 @@ from .utils import (
 	mount,
 	umount,
 )
+
+if TYPE_CHECKING:
+	from collections.abc import Iterable
+
+	from archinstoo.lib.models.users import Password
 
 
 class DeviceHandler:
@@ -721,7 +725,7 @@ class DeviceHandler:
 		@param dev_path:	Device path of the partition to be wiped.
 		@type dev_path:		str
 		"""
-		with open(dev_path, 'wb') as p:
+		with dev_path.open('wb') as p:
 			p.write(bytearray(1024))
 
 	def wipe_dev(self, block_device: BDevice) -> None:

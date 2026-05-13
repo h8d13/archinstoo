@@ -1,9 +1,8 @@
 from pathlib import Path
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.models.application import DEFAULT_KERNEL, ApplicationConfiguration, ZramConfiguration
-from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, PartitionModification
 from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
@@ -14,7 +13,6 @@ from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, Orientation
 
 from .applications.application_menu import ApplicationMenu
-from .args import ArchConfig
 from .authentication.authentication_menu import AuthenticationMenu
 from .bootloader.bootloader_menu import BootloaderMenu
 from .configuration import ConfigurationHandler
@@ -32,15 +30,20 @@ from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration, FirmwareType
 from .models.locale import LocaleConfiguration
-from .models.mirrors import PacmanConfiguration
 from .models.network import NetworkConfiguration, NicType
-from .models.packages import Repository
 from .models.profile import ProfileConfiguration
 from .network.network_menu import select_network
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
 from .translationhandler import Language, tr, translation_handler
+
+if TYPE_CHECKING:
+	from archinstoo.lib.models.authentication import AuthenticationConfiguration
+
+	from .args import ArchConfig
+	from .models.mirrors import PacmanConfiguration
+	from .models.packages import Repository
 
 
 class GlobalMenu(AbstractMenu[None]):
@@ -247,7 +250,8 @@ class GlobalMenu(AbstractMenu[None]):
 
 		for item in self._item_group.items:
 			if item.mandatory:
-				assert item.key is not None
+				if item.key is None:
+					raise RuntimeError(f'Mandatory menu item {item.text!r} has no key')
 				if not check(item.key):
 					missing.add(item.text)
 

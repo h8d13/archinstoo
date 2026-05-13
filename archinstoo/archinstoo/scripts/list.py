@@ -1,9 +1,8 @@
-import glob
 from pathlib import Path
 
 from archinstoo import DEFAULT, ROOTLESS_SCRIPTS
 
-scripts = [Path(x).stem for x in glob.glob(f'{Path(__file__).parent}/*.py') if Path(x).stem not in ('__init__', 'list')]
+scripts = [p.stem for p in Path(__file__).parent.glob('*.py') if p.stem not in ('__init__', 'list')]
 
 rootless = sorted(s for s in scripts if s in ROOTLESS_SCRIPTS)
 root = sorted(s for s in scripts if s not in ROOTLESS_SCRIPTS)

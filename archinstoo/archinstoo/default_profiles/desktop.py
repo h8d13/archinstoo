@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Self, override
 
-from archinstoo.lib.models.users import User
 from archinstoo.lib.output import info
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType, SelectResult
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
@@ -11,6 +10,7 @@ from archinstoo.lib.tui.types import FrameProperties, PreviewStyle
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.users import User
 
 
 class DesktopProfile(Profile):

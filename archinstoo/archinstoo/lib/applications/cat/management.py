@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import ManagementConfiguration
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.application import ManagementConfiguration
 
 
 class ManagementApp:

@@ -1,13 +1,16 @@
 import contextlib
 import time
-from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .exceptions import RequirementError
 from .general import SysCommand
 from .output import error, info, logger, warn
 from .pathnames import PACMAN_CONF
 from .translationhandler import tr
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
 
 # Helpers for exceptions

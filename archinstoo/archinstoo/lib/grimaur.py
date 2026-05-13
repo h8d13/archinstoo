@@ -30,11 +30,13 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections.abc import Iterable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+	from collections.abc import Iterable, Sequence
 
 
 def get_aur_remote() -> str:
@@ -205,7 +207,7 @@ def aur_rpc_call(params: dict[str, Any]) -> dict[str, Any] | list[Any]:
 	query = urllib.parse.urlencode(query_params, doseq=True)
 	url = f'{AUR_RPC_ENDPOINT}?{query}'
 	try:
-		with urllib.request.urlopen(url, timeout=10) as response:
+		with urllib.request.urlopen(url, timeout=10) as response:  # noqa: S310 - constant base URL (AUR_RPC_ENDPOINT)
 			status = response.getcode()
 			if status != 200:
 				disable_aur_rpc(f'status {status}')
@@ -313,7 +315,7 @@ def run_command(
 ) -> subprocess.CompletedProcess[str] | str:
 	"""Run a command, optionally capturing stdout, and surface errors nicely."""
 	try:
-		completed = subprocess.run(
+		completed = subprocess.run(  # noqa: S603 - cmd is project-controlled list
 			list(cmd),
 			cwd=str(cwd) if cwd else None,
 			check=check,
@@ -608,7 +610,7 @@ def compute_match_score(
 
 def _pacman_returns_zero(args: Sequence[str]) -> bool:
 	try:
-		proc = subprocess.run(
+		proc = subprocess.run(  # noqa: S603 - args is project-controlled pacman invocation
 			list(args),
 			stdout=subprocess.DEVNULL,
 			stderr=subprocess.DEVNULL,
@@ -643,8 +645,9 @@ def exists_in_sync_repo(package: str) -> bool:
 
 def is_dependency_satisfied(dep: str) -> bool:
 	try:
-		proc = subprocess.run(
-			['pacman', '-T', dep],
+		# pacman from $PATH on target system
+		proc = subprocess.run(  # noqa: S603
+			['pacman', '-T', dep],  # noqa: S607
 			stdout=subprocess.DEVNULL,
 			stderr=subprocess.DEVNULL,
 			text=True,
@@ -964,7 +967,7 @@ def fetch_git_file(package: str, path: str) -> str | None:
 	else:
 		url = f'{GITHUB_RAW_BASE}/{safe_package}/{safe_path}'
 	try:
-		with urllib.request.urlopen(url, timeout=10) as response:
+		with urllib.request.urlopen(url, timeout=10) as response:  # noqa: S310 - constant base URL (CGIT or GitHub raw)
 			if response.status != 200:
 				return None
 			data = response.read()
@@ -2082,12 +2085,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 	parser = build_parser()
 	args = parser.parse_args(argv_list)
 
-	dest_root = Path(os.path.expanduser(args.dest_root)).resolve()
+	dest_root = Path(args.dest_root).expanduser().resolve()
 	refresh: bool = bool(args.refresh)
 
 	# If /tmp is not writable (e.g. private mount in arch-chroot -S), fall back
 	# to a .tmp subdirectory inside dest-root so git/makepkg/curl still work
-	if not os.access('/tmp', os.W_OK):
+	if not os.access('/tmp', os.W_OK):  # noqa: S108 - probing system /tmp, not creating a file
 		fallback_tmp = dest_root / '.tmp'
 		fallback_tmp.mkdir(parents=True, exist_ok=True)
 		os.environ['TMPDIR'] = str(fallback_tmp)

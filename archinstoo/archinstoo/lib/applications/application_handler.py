@@ -1,8 +1,5 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import ApplicationConfiguration
-from archinstoo.lib.models.users import User
-
 from .cat.audio import AudioApp
 from .cat.bluetooth import BluetoothApp
 from .cat.editor import EditorApp
@@ -15,6 +12,8 @@ from .cat.security import SecurityApp
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.application import ApplicationConfiguration
+	from archinstoo.lib.models.users import User
 
 
 class ApplicationHandler:

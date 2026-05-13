@@ -5,12 +5,10 @@ import shutil
 import subprocess
 import textwrap
 import time
-from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import CalledProcessError
-from types import TracebackType
-from typing import Any, Self
+from typing import TYPE_CHECKING, Self
 
 from archinstoo.lib.disk.cleanup import teardown_layout
 from archinstoo.lib.disk.device_handler import DeviceHandler
@@ -30,13 +28,11 @@ from archinstoo.lib.models.device import (
 	SubvolumeModification,
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
-from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.pm import installed_package
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
 
-from .args import ArchConfigHandler
 from .disk.luks import Luks2, unlock_luks2_dev
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
@@ -45,12 +41,21 @@ from .models.application import DEFAULT_KERNEL
 from .models.authentication import PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration
-from .models.mirrors import PacmanConfiguration
-from .models.network import Nic
 from .models.users import User
 from .output import debug, error, info, log, logger, warn
 from .pm import Pacman
 from .pm.config import PacmanConfig
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
+	from types import TracebackType
+
+	from archinstoo.lib.models.packages import Repository
+
+	from .args import ArchConfigHandler
+	from .models.mirrors import PacmanConfiguration
+	from .models.network import Nic
+	from .models.service import UserService
 
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
 # mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
@@ -283,7 +288,7 @@ class Installer:
 		info(f'Mounting ordered layout at {self.target} (encryption: {self._disk_encryption.encryption_type.value})', step=True)
 		self._layout_teardown_required = True
 
-		luks_handlers: dict[Any, Luks2] = {}
+		luks_handlers: dict[PartitionModification | LvmVolume, Luks2] = {}
 
 		match self._disk_encryption.encryption_type:
 			case EncryptionType.NO_ENCRYPTION:
@@ -303,7 +308,7 @@ class Installer:
 		# mount all regular partitions
 		self._mount_partition_layout(luks_handlers)
 
-	def _mount_partition_layout(self, luks_handlers: dict[Any, Luks2]) -> None:
+	def _mount_partition_layout(self, luks_handlers: dict[PartitionModification | LvmVolume, Luks2]) -> None:
 		debug('Mounting partition layout')
 
 		# do not mount any PVs part of the LVM configuration
@@ -334,7 +339,7 @@ class Installer:
 				else:
 					self._mount_partition(part_mod)
 
-	def _mount_lvm_layout(self, luks_handlers: dict[Any, Luks2] = {}) -> None:
+	def _mount_lvm_layout(self, luks_handlers: dict[PartitionModification | LvmVolume, Luks2] = {}) -> None:
 		lvm_config = self._disk_config.lvm_config
 
 		if not lvm_config:
@@ -355,7 +360,7 @@ class Installer:
 	def _prepare_luks_partitions(
 		self,
 		partitions: list[PartitionModification],
-	) -> dict[PartitionModification, Luks2]:
+	) -> dict[PartitionModification | LvmVolume, Luks2]:
 		return {
 			part_mod: unlock_luks2_dev(
 				part_mod.dev_path,
@@ -382,7 +387,7 @@ class Installer:
 	def _prepare_luks_lvm(
 		self,
 		lvm_volumes: list[LvmVolume],
-	) -> dict[LvmVolume, Luks2]:
+	) -> dict[PartitionModification | LvmVolume, Luks2]:
 		return {
 			vol: unlock_luks2_dev(
 				vol.dev_path,
@@ -653,7 +658,7 @@ class Installer:
 		existing_content = pacman_conf_path.read_text()
 		if repos_config := pacman_configuration.repositories_config(existing_content):
 			debug(f'Pacman config: {repos_config}')
-			with open(pacman_conf_path, 'a') as fp:
+			with pacman_conf_path.open('a') as fp:
 				fp.write(repos_config)
 
 		# Speed test only for the live system, target reuses the same order
@@ -683,13 +688,13 @@ class Installer:
 		except SysCallError as err:
 			raise RequirementError(f'Could not generate fstab, strapping in packages most likely failed (disk out of space?)\n Error: {err}')
 
-		with open(fstab_path, 'ab') as fp:
+		with fstab_path.open('ab') as fp:
 			fp.write(gen_fstab)
 
 		if not fstab_path.is_file():
 			raise RequirementError('Could not create fstab file')
 
-		with open(fstab_path, 'a') as fp:
+		with fstab_path.open('a') as fp:
 			fp.writelines(f'{entry}\n' for entry in self._fstab_entries)
 
 	def set_hostname(self, hostname: str) -> None:
@@ -807,7 +812,7 @@ class Installer:
 		# Fix ownership of .config tree
 		self.chown(f'{user}:{user}', f'/home/{user}/.config', ['-R'])
 
-	def enable_services_from_config(self, services: list[Any]) -> None:
+	def enable_services_from_config(self, services: list[str | UserService]) -> None:
 		from .models.service import UserService
 
 		system_services = [s for s in services if isinstance(s, str)]
@@ -857,12 +862,13 @@ class Installer:
 		return self.run_command(cmd, peek_output=peek_output)
 
 	def drop_to_shell(self) -> None:
-		subprocess.check_call(f'arch-chroot {self.target}', shell=True)
+		# arch-chroot from $PATH on the live ISO; target is a project-controlled Path.
+		subprocess.check_call(['arch-chroot', str(self.target)])  # noqa: S603,S607
 
 	def configure_nic(self, nic: Nic) -> None:
 		conf = nic.as_systemd_config()
 
-		with open(f'{self.target}/etc/systemd/network/10-{nic.iface}.network', 'a') as netconf:
+		with (self.target / f'etc/systemd/network/10-{nic.iface}.network').open('a') as netconf:
 			netconf.write(str(conf))
 
 	def link_resolved_stub(self) -> None:
@@ -931,7 +937,7 @@ class Installer:
 		return True
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
-		with open(f'{self.target}/etc/mkinitcpio.conf', 'r+') as mkinit:
+		with (self.target / 'etc/mkinitcpio.conf').open('r+') as mkinit:
 			content = mkinit.read()
 			content = re.sub('\nMODULES=(.*)', f'\nMODULES=({" ".join(self._modules)})', content)
 			content = re.sub('\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self._binaries)})', content)
@@ -1161,7 +1167,7 @@ class Installer:
 			info('Setting up swap on zram')
 			self.pacman.strap('zram-generator')
 
-			with open(f'{self.target}/etc/systemd/zram-generator.conf', 'w') as zram_conf:
+			with (self.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
 				zram_conf.write('[zram0]\n')
 				zram_conf.write('zram-size = ram / 2\n')
 				if algo != ZramAlgorithm.Default:
@@ -1898,7 +1904,7 @@ class Installer:
 			raise ValueError(f'Could not detect ESP at mountpoint {self.target}')
 
 		# Set up kernel command line
-		with open(self.target / 'etc/kernel/cmdline', 'w') as cmdline:
+		with (self.target / 'etc/kernel/cmdline').open('w') as cmdline:
 			kernel_parameters = self._get_kernel_params(root)
 			cmdline.write(' '.join(kernel_parameters) + '\n')
 
@@ -2052,11 +2058,11 @@ class Installer:
 			# Guarantees sudoer confs directory recommended perms
 			sudoers_dir.chmod(0o440)
 			# Appends a reference to the sudoers file, because if we are here sudoers.d did not exist yet
-			with open(self.target / 'etc/sudoers', 'a') as sudoers:
+			with (self.target / 'etc/sudoers').open('a') as sudoers:
 				sudoers.write('@includedir /etc/sudoers.d\n')
 
 		# We count how many files are there already so we know which number to prefix the file with
-		num_of_rules_already = len(os.listdir(sudoers_dir))
+		num_of_rules_already = len(list(sudoers_dir.iterdir()))
 		file_num_str = f'{num_of_rules_already:02d}'  # We want 00_user1, 01_user2, etc
 
 		# Guarantees that username str does not contain invalid characters for a linux file name:
@@ -2275,7 +2281,7 @@ EndSection
 		return True
 
 	def _service_started(self, service_name: str) -> str | None:
-		if os.path.splitext(service_name)[1] not in ('.service', '.target', '.timer'):
+		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
 			service_name += '.service'  # Just to be safe
 
 		last_execution_time = (
@@ -2293,7 +2299,7 @@ EndSection
 		return last_execution_time
 
 	def _service_state(self, service_name: str) -> str:
-		if os.path.splitext(service_name)[1] not in ('.service', '.target', '.timer'):
+		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
 			service_name += '.service'  # Just to be safe
 
 		return SysCommand(
@@ -2303,7 +2309,7 @@ EndSection
 
 
 def accessibility_tools_in_use() -> bool:
-	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0
+	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0  # noqa: S607 - systemctl on live ISO
 
 
 def run_aur_installation(packages: list[str], installation: Installer, users: list[User]) -> None:
@@ -2343,12 +2349,13 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 
 def run_custom_user_commands(commands: list[str], installation: Installer) -> None:
 	for index, command in enumerate(commands):
-		script_path = f'/var/tmp/user-command.{index}.sh'
+		script_path = f'/var/tmp/user-command.{index}.sh'  # noqa: S108 - path inside install target, not host /tmp
 		chroot_path = f'{installation.target}/{script_path}'
 
 		# Do not throw error instead warn
 		info(f'Executing custom command "{command}" ...')
-		with open(chroot_path, 'w') as user_script:
+		chroot_path_p = Path(chroot_path)
+		with chroot_path_p.open('w') as user_script:
 			user_script.write(command)
 
 		try:
@@ -2356,4 +2363,4 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 		except SysCallError as e:
 			warn(f'Custom command "{command}" failed: {e}')
 		finally:
-			os.unlink(chroot_path)
+			chroot_path_p.unlink()

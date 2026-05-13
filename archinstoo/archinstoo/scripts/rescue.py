@@ -115,7 +115,7 @@ def mount_additional_filesystems(mount_point: Path, handler: DeviceHandler) -> N
 	info('Reading /etc/fstab to mount additional filesystems...')
 
 	try:
-		with open(fstab_path) as f:
+		with fstab_path.open() as f:
 			for line in f:
 				line = line.strip()
 

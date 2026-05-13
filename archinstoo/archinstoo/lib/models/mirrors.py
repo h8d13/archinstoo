@@ -104,13 +104,15 @@ class MirrorStatusEntryV3:
 			retry = 0
 			while retry < self._speedtest_retries and self._speed is None:
 				debug(f'Checking download speed of {self._hostname}[{self.score}] by fetching: {test_db}')
-				req = urllib.request.Request(url=test_db)
+
+				req = urllib.request.Request(url=test_db)  # noqa: S310
 
 				try:
-					with urllib.request.urlopen(req, None, 5) as handle, DownloadTimer(timeout=5) as timer:
+					with urllib.request.urlopen(req, None, 5) as handle, DownloadTimer(timeout=5) as timer:  # noqa: S310
 						size = len(handle.read())
 
-					assert timer.time is not None
+					if timer.time is None:
+						raise RuntimeError('DownloadTimer exited without recording time')
 					self._speed = size / timer.time
 					debug(f'    speed: {self._speed} ({int(self._speed / 1024 / 1024 * 100) / 100}MiB/s)')
 				# Do not retry error
@@ -136,7 +138,8 @@ class MirrorStatusEntryV3:
 	def latency(self) -> float | None:
 		if self._latency is None:
 			debug(f'Checking latency for {self.url}')
-			assert self._hostname is not None
+			if self._hostname is None:
+				raise RuntimeError(f'Mirror has no hostname: {self.url}')
 			self._latency = ping(self._hostname, timeout=2)
 			debug(f'  latency: {self._latency}')
 

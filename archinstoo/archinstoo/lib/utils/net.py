@@ -5,13 +5,15 @@ import socket
 import ssl
 import struct
 import time
-from types import FrameType, TracebackType
-from typing import Self, cast
+from typing import TYPE_CHECKING, Self, cast
 from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
 from archinstoo.lib.exceptions import DownloadTimeout
+
+if TYPE_CHECKING:
+	from types import FrameType, TracebackType
 
 
 def _calc_checksum(icmp_packet: bytes) -> int:
@@ -32,7 +34,7 @@ def ping(hostname: str, timeout: int = 5) -> int:
 	"""ICMP ping, returns latency in ms or -1 on failure."""
 	watchdog = select.epoll()
 	started = time.monotonic()
-	random_identifier = f'archinstoo-{random.randint(1000, 9999)}'.encode()
+	random_identifier = f'archinstoo-{random.randint(1000, 9999)}'.encode()  # noqa: S311 - ICMP echo id, not for crypto
 
 	icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
 	watchdog.register(icmp_socket, select.EPOLLIN | select.EPOLLHUP)
@@ -108,6 +110,10 @@ class DownloadTimer:
 
 
 def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout: int = 30) -> str:
+	from urllib.parse import urlparse
+	if urlparse(url).scheme not in ('http', 'https'):
+		raise ValueError(f'Refusing to fetch non-http(s) url: {url}')
+
 	ssl_context = ssl.create_default_context()
 	ssl_context.check_hostname = False
 	ssl_context.verify_mode = ssl.CERT_NONE
@@ -119,9 +125,9 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 		full_url = url
 
 	try:
-		response = urlopen(full_url, context=ssl_context, timeout=timeout)
+		response = urlopen(full_url, context=ssl_context, timeout=timeout)  # noqa: S310 - scheme restricted above
 		data = response.read().decode('UTF-8')
-		return cast(str, data)
+		return cast('str', data)
 	except URLError as e:
 		raise ValueError(f'Unable to fetch data from url: {url}\n{e}')
 	except Exception as e:

@@ -1,6 +1,5 @@
 from pathlib import Path
-
-from pytest import MonkeyPatch
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments
 from archinstoo.lib.hardware import GfxDriver
@@ -36,8 +35,11 @@ from archinstoo.lib.models.users import Password, Shell, User
 from archinstoo.lib.profile.base import GreeterType
 from archinstoo.lib.translationhandler import translation_handler
 
+if TYPE_CHECKING:
+	import pytest
 
-def test_default_args(monkeypatch: MonkeyPatch) -> None:
+
+def test_default_args(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr('sys.argv', ['archinstoo'])
 	handler = ArchConfigHandler()
 	args = handler.args
@@ -57,7 +59,7 @@ def test_default_args(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_correct_parsing_args(
-	monkeypatch: MonkeyPatch,
+	monkeypatch: pytest.MonkeyPatch,
 	config_fixture: Path,
 ) -> None:
 	monkeypatch.setattr(
@@ -101,7 +103,7 @@ def test_correct_parsing_args(
 
 
 def test_config_file_parsing(
-	monkeypatch: MonkeyPatch,
+	monkeypatch: pytest.MonkeyPatch,
 	config_fixture: Path,
 ) -> None:
 	monkeypatch.setattr(

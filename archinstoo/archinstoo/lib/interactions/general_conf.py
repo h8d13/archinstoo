@@ -147,7 +147,7 @@ def select_additional_packages(
 	# Additional packages (with some light weight error handling for invalid package names)
 	header = tr('Only packages such as base, linux, linux-firmware, efibootmgr and optional profile packages are installed.') + '\n'
 	header += tr('Note: base-devel is no longer installed by default. Add it here if you need build tools.') + '\n'
-	header += tr('Select any packages from the below list that should be installed additionally') + '\n'
+	header += tr('Select any packages from the below list that should be installed additionally') + '\n'  # noqa: S608 - menu prompt, not SQL
 
 	# there are over 15k packages so this needs to be quick
 	preset_packages: list[AvailablePackage | PackageGroup] = []

@@ -1,5 +1,4 @@
-from types import TracebackType
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from archinstoo.lib.output import error
 from archinstoo.lib.translationhandler import tr
@@ -7,6 +6,9 @@ from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Chars, FrameProperties, FrameStyle, PreviewStyle
+
+if TYPE_CHECKING:
+	from types import TracebackType
 
 CONFIG_KEY = '__config__'
 

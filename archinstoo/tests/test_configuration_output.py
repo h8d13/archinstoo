@@ -1,14 +1,16 @@
 import json
 from pathlib import Path
-
-from pytest import MonkeyPatch
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.args import ArchConfigHandler
 from archinstoo.lib.configuration import ConfigurationHandler
 
+if TYPE_CHECKING:
+	import pytest
+
 
 def test_user_config_roundtrip(
-	monkeypatch: MonkeyPatch,
+	monkeypatch: pytest.MonkeyPatch,
 	config_fixture: Path,
 ) -> None:
 	monkeypatch.setattr('sys.argv', ['archinstall', '--config', str(config_fixture)])

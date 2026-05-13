@@ -1,11 +1,13 @@
-from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from enum import Enum
 from functools import cached_property
-from typing import Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.utils.unicode import unicode_ljust
+
+if TYPE_CHECKING:
+	from collections.abc import Callable, Iterable
+	from enum import Enum
 
 
 @dataclass
@@ -27,7 +29,8 @@ class MenuItem:
 	_no: ClassVar[Self | None] = None
 
 	def get_value(self) -> Any:
-		assert self.value is not None
+		if self.value is None:
+			raise RuntimeError(f'MenuItem {self.text!r} has no value')
 		return self.value
 
 	@classmethod

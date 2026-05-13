@@ -68,6 +68,7 @@ enable_error_code = [
     "explicit-override",
     "ignore-without-code",
     "mutable-override",
+    "narrowed-type-not-subtype",
     "possibly-undefined",
     "redundant-expr",
     "redundant-self",
@@ -97,10 +98,6 @@ module = [
     "pytest",
 ]
 ignore_missing_imports = true
-
-[tool.bandit]
-targets = ["archinstoo"]
-exclude = ["/tests"]
 
 [tool.importlinter]
 root_package = "archinstoo"
@@ -193,13 +190,17 @@ select = [
     "PLC",    # Pylint conventions
     "PLE",    # Pylint errors
     "PLW",    # Pylint warnings
+    "PT",     # flake8-pytest-style
+    "PTH",    # flake8-use-pathlib
     "PYI",    # flake8-pyi
     "RET",    # flake8-return
     "RSE",    # flake8-raise
     "RUF",    # Ruff-specific rules
+    "S",      # flake8-bandit
     "SIM",    # flake8-simplify
     "SLOT",   # flake8-slot
     "T10",    # flake8-debugger
+    "TC",     # flake8-type-checking
     "TID252", # relative-imports
     "UP",     # pyupgrade
     "W",      # pycodestyle warnings
@@ -236,3 +237,8 @@ known-first-party = ["archinstoo"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"] # init hacks are standard.
 "**/lib/grimaur.py" = ["PLW0603"] # standalone CLI tool uses module-level globals by design
+"tests/*" = [
+    "S101",   # pytest uses assert
+    "S106",   # test fixtures use placeholder passwords
+    "S108",   # /tmp paths are symbolic test values
+]

@@ -1,4 +1,3 @@
-import os
 import platform
 from enum import Enum
 from functools import cached_property
@@ -19,7 +18,7 @@ class CpuVendor(Enum):
 	@classmethod
 	def get_vendor(cls, name: str) -> Self:
 		if vendor := getattr(cls, name, None):
-			return cast(Self, vendor)
+			return cast('Self', vendor)
 		debug(f"Unknown CPU vendor '{name}' detected.")
 		return cls._Unknown
 
@@ -157,28 +156,28 @@ class GfxDriver(Enum):
 
 
 class _SysInfo:
-	efi_path = '/sys/firmware/efi'
+	efi_path = Path('/sys/firmware/efi')
 
 	def __init__(self) -> None:
 		pass
 
 	@cached_property
 	def has_uefi(self) -> bool:
-		return os.path.isdir(self.efi_path)
+		return self.efi_path.is_dir()
 
 	@cached_property
 	def efi_bitness(self) -> int | None:
 		try:
-			with open(f'{self.efi_path}/fw_platform_size') as fw_ps:
+			with (self.efi_path / 'fw_platform_size').open() as fw_ps:
 				return int(fw_ps.read().strip())
-		except FileNotFoundError, OSError:
+		except (FileNotFoundError, OSError):
 			return None
 
 	@cached_property
 	def has_battery(self) -> bool:
 		for type_path in Path('/sys/class/power_supply/').glob('*/type'):
 			try:
-				with open(type_path) as f:
+				with type_path.open() as f:
 					if f.read().strip() == 'Battery':
 						return True
 			except OSError:
@@ -378,7 +377,7 @@ class SysInfo:
 	@staticmethod
 	def sys_vendor() -> str | None:
 		try:
-			with open('/sys/devices/virtual/dmi/id/sys_vendor') as vendor:
+			with Path('/sys/devices/virtual/dmi/id/sys_vendor').open() as vendor:
 				return vendor.read().strip()
 		except FileNotFoundError:
 			return None
@@ -386,7 +385,7 @@ class SysInfo:
 	@staticmethod
 	def product_name() -> str | None:
 		try:
-			with open('/sys/devices/virtual/dmi/id/product_name') as product:
+			with Path('/sys/devices/virtual/dmi/id/product_name').open() as product:
 				return product.read().strip()
 		except FileNotFoundError:
 			return None

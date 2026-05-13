@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
+	from archinstoo.lib.hardware import GfxDriver
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
-from archinstoo.lib.hardware import GfxDriver
 from archinstoo.lib.menu.abstract_menu import CONFIG_KEY, AbstractSubMenu
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
