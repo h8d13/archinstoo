@@ -297,6 +297,8 @@ class SectorSize:
 		match self.unit:
 			case Unit.sectors:
 				raise ValueError('Unit type sector not allowed for SectorSize')
+			case _:
+				pass
 
 	@classmethod
 	def default(cls) -> Self:

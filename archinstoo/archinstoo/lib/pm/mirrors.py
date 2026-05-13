@@ -204,6 +204,8 @@ class CustomMirrorServersList(ListManager[CustomServer]):
 				return CustomServer(uri)
 			case ResultType.Skip:
 				return preset
+			case _:
+				pass
 
 		return None
 

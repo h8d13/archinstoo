@@ -291,6 +291,8 @@ class PartitioningList(ListManager[DiskSegment]):
 				case 'remove_added_partitions':
 					if self._reset_confirmation():
 						data = [s for s in data if isinstance(s.segment, PartitionModification) and s.segment.is_exists_or_modify()]
+				case _:
+					pass
 		elif isinstance(entry.segment, PartitionModification):
 			partition = entry.segment
 			action_key = [k for k, v in self._actions.items() if v == action][0]
@@ -356,6 +358,8 @@ class PartitioningList(ListManager[DiskSegment]):
 					self._set_btrfs_subvolumes(partition)
 				case 'delete_partition':
 					data = self._delete_partition(partition, data)
+				case _:
+					pass
 		else:
 			part_mods = self.get_part_mods(data)
 			index = data.index(entry)
@@ -525,6 +529,8 @@ class PartitioningList(ListManager[DiskSegment]):
 				value = result.text()
 
 				size = self._validate_value(sector_size, max_size, value) if value else max_size
+			case _:
+				pass
 
 		assert size
 		return size

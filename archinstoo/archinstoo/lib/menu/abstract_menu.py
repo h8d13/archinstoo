@@ -120,6 +120,8 @@ class AbstractMenu[ValueT]:
 						break
 				case ResultType.Reset:
 					self._reset_items()
+				case _:
+					pass
 
 		self.sync_all_to_config()
 		return None

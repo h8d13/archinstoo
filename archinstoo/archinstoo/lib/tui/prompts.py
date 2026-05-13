@@ -63,5 +63,7 @@ def prompt_dir(
 			if not result.text():
 				return None
 			return Path(result.text())
+		case _:
+			pass
 
 	return None

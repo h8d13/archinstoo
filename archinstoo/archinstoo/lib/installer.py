@@ -483,6 +483,8 @@ class Installer:
 				self._generate_key_files_partitions()
 			case EncryptionType.LUKS_ON_LVM:
 				self._generate_key_file_lvm_volumes()
+			case EncryptionType.NO_ENCRYPTION:
+				pass
 			case EncryptionType.LVM_ON_LUKS:
 				# LvmOnLuks: the LUKS container holds an LVM PV, root is a volume inside it.
 				# The partition itself isn't "root", so _generate_key_files_partitions
@@ -1293,6 +1295,8 @@ class Installer:
 			case EncryptionType.NO_ENCRYPTION:
 				debug(f'Identifying root lvm by mapper device: {lvm.dev_path}')
 				kernel_parameters.append(f'root={lvm.safe_dev_path}')
+			case EncryptionType.LUKS:
+				pass
 
 		return kernel_parameters
 
