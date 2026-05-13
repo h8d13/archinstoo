@@ -1,4 +1,3 @@
-import builtins
 import json
 import math
 import uuid
@@ -8,7 +7,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, cast, override
 
 if TYPE_CHECKING:
+	import builtins
+
 	from archinstoo.lib.disk.device_handler import DeviceHandler
+	from archinstoo.lib.models.users import Password
 
 from uuid import UUID
 
@@ -16,7 +18,6 @@ import parted
 from parted import Disk, Geometry, Partition
 
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug
 from archinstoo.lib.translationhandler import tr
 
@@ -695,14 +696,14 @@ class DeviceGeometry:
 
 	@property
 	def start(self) -> int:
-		return cast(int, self._geometry.start)
+		return cast('int', self._geometry.start)
 
 	@property
 	def end(self) -> int:
-		return cast(int, self._geometry.end)
+		return cast('int', self._geometry.end)
 
 	def get_length(self, unit: Unit = Unit.sectors) -> int:
-		return cast(int, self._geometry.getLength(unit.name))
+		return cast('int', self._geometry.getLength(unit.name))
 
 	def table_data(self) -> dict[str, str | int]:
 		start = Size(self._geometry.start, Unit.sectors, self._sector_size)
@@ -746,9 +747,9 @@ class PartitionType(StrEnum):
 
 	def get_partition_code(self) -> int | None:
 		if self == PartitionType.PRIMARY:
-			return cast(int, parted.PARTITION_NORMAL)
+			return cast('int', parted.PARTITION_NORMAL)
 		if self == PartitionType.BOOT:
-			return cast(int, parted.PARTITION_BOOT)
+			return cast('int', parted.PARTITION_BOOT)
 		return None
 
 
@@ -1376,7 +1377,7 @@ class DeviceModification:
 		if self.wipe:
 			return partition_table.is_gpt()
 
-		return cast(bool, self.device.disk.type == PartitionTable.GPT.value)
+		return cast('bool', self.device.disk.type == PartitionTable.GPT.value)
 
 	def add_partition(self, partition: PartitionModification) -> None:
 		self.partitions.append(partition)

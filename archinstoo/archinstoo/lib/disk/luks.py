@@ -5,14 +5,18 @@ import string
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
-from types import TracebackType
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.disk.utils import get_lsblk_info, umount
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.general import SysCommand, SysCommandWorker, run
 from archinstoo.lib.models.device import DEFAULT_ITER_TIME, LuksPbkdf
-from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, info
+
+if TYPE_CHECKING:
+	from types import TracebackType
+
+	from archinstoo.lib.models.users import Password
 
 
 def generate_password(length: int = 64) -> str:
@@ -258,7 +262,7 @@ class Luks2:
 	) -> None:
 		debug(f'Adding crypttab entry for key {key_file}')
 
-		with open(crypttab_path, 'a') as crypttab:
+		with crypttab_path.open('a') as crypttab:
 			opt = ','.join(options)
 			uuid = self._get_luks_uuid()
 			row = f'{self.mapper_name} UUID={uuid} {key_file} {opt}\n'

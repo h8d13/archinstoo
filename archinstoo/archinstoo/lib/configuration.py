@@ -1,16 +1,19 @@
 import json
 import stat
-from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
-from .args import ArchConfig
 from .general import JSON
 from .output import debug, info, logger, restore_perms, warn
+
+if TYPE_CHECKING:
+	from pathlib import Path
+
+	from .args import ArchConfig
 
 
 class ConfigurationHandler:
@@ -89,8 +92,8 @@ class ConfigurationHandler:
 		config_file = cls._saved_config_path()
 		try:
 			if config_file.exists():
-				with open(config_file) as f:
-					return cast(dict[str, Any], json.load(f))
+				with config_file.open() as f:
+					return cast('dict[str, Any]', json.load(f))
 		except Exception as e:
 			warn(f'Failed to load saved config: {e}')
 		return None

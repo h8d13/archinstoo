@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.application import Audio, AudioConfiguration
-from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.users import User
 
 
 class AudioApp:

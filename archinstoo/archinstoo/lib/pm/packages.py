@@ -1,3 +1,4 @@
+import contextlib
 from dataclasses import fields
 from functools import lru_cache
 
@@ -41,7 +42,7 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 		return
 
 	# Batch fetch with single pacman call
-	try:
+	with contextlib.suppress(Exception):
 		pkg_names = ' '.join(p.name for p in to_enrich)
 		current_package = []
 
@@ -57,8 +58,6 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 						_update_package(p, detailed)
 						break
 				current_package = []
-	except Exception:
-		pass
 
 
 @lru_cache

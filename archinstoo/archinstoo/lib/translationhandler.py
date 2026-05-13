@@ -1,7 +1,6 @@
 import builtins
 import gettext
 import json
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast, override
@@ -78,8 +77,8 @@ class TranslationHandler:
 		locales_dir = self._get_locales_dir()
 		languages = Path.joinpath(locales_dir, self._languages)
 
-		with open(languages) as fp:
-			return cast(list[dict[str, str]], json.load(fp))
+		with languages.open() as fp:
+			return cast('list[dict[str, str]]', json.load(fp))
 
 	def _get_catalog_size(self, translation: gettext.NullTranslations) -> int:
 		"""
@@ -96,7 +95,7 @@ class TranslationHandler:
 		Get total messages that could be translated
 		"""
 		locales = self._get_locales_dir()
-		with open(f'{locales}/{self._base_pot}') as fp:
+		with (locales / self._base_pot).open() as fp:
 			lines = fp.readlines()
 			msgid_lines = [line for line in lines if 'msgid' in line]
 
@@ -139,7 +138,7 @@ class TranslationHandler:
 		Get a list of all known languages
 		"""
 		locales_dir = self._get_locales_dir()
-		filenames = os.listdir(locales_dir)
+		filenames = [p.name for p in locales_dir.iterdir()]
 
 		return [filename for filename in filenames if len(filename) == 2 or filename in ['pt_BR', 'zh-CN', 'zh-TW']]
 
@@ -155,7 +154,7 @@ class _DeferredTranslation:
 
 		# builtins._ is changed from _DeferredTranslation to GNUTranslations.gettext after
 		# Language.activate() is called
-		return cast(str, builtins._(self.message))  # type: ignore[attr-defined]
+		return cast('str', builtins._(self.message))  # type: ignore[attr-defined]
 
 
 def tr(message: str) -> str:

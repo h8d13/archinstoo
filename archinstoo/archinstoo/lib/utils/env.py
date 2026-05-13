@@ -28,8 +28,9 @@ class Os:
 	@staticmethod
 	def running_from_who() -> str:
 		# checks distro name
-		if os.path.exists('/etc/os-release'):
-			with open('/etc/os-release') as f:
+		os_release = Path('/etc/os-release')
+		if os_release.exists():
+			with os_release.open() as f:
 				for line in f:
 					if line.startswith('ID='):
 						return line.strip().split('=')[1]
@@ -53,7 +54,7 @@ def reload_python() -> None:
 	# skip reload during testing
 	if 'pytest' in sys.modules:
 		return
-	os.execv(sys.executable, [sys.executable, '-m', 'archinstoo'] + sys.argv[1:])
+	os.execv(sys.executable, [sys.executable, '-m', 'archinstoo'] + sys.argv[1:])  # noqa: S606 - explicit re-exec of current interpreter
 
 
 def is_root() -> bool:

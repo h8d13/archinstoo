@@ -3,18 +3,19 @@ import inspect
 from collections import Counter
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from types import ModuleType
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.hardware import GfxDriver, GfxPackage
-from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
+	from types import ModuleType
+
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.profile import ProfileConfiguration
 
 
 class ProfileSerialization(TypedDict):
@@ -183,12 +184,12 @@ class ProfileHandler:
 		# slick-greeter requires a config change
 		if greeter == GreeterType.LightdmSlick:
 			path = install_session.target.joinpath('etc/lightdm/lightdm.conf')
-			with open(path) as file:
+			with path.open() as file:
 				filedata = file.read()
 
 			filedata = filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter')
 
-			with open(path, 'w') as file:
+			with path.open('w') as file:
 				file.write(filedata)
 
 	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
@@ -284,7 +285,7 @@ class ProfileHandler:
 		Check if the provided profile file contains a
 		legacy profile definition
 		"""
-		with open(file) as fp:
+		with file.open() as fp:
 			for line in fp:
 				if '__packages__' in line:
 					return True

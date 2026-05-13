@@ -104,7 +104,7 @@ class ListManager[ValueT]:
 				break
 			else:  # an entry of the existing selection was chosen
 				selected_entry = result.get_value()
-				selected_entry = cast(ValueT, selected_entry)
+				selected_entry = cast('ValueT', selected_entry)
 
 				self._run_actions_on_entry(selected_entry)
 

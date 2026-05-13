@@ -38,7 +38,7 @@ def crypt_gen_salt(prefix: str | bytes, rounds: int) -> bytes:
 	if setting is None:
 		raise ValueError(f'crypt_gensalt() returned NULL for prefix {prefix!r} and rounds {rounds}')
 
-	return cast(bytes, setting)
+	return cast('bytes', setting)
 
 
 def crypt_yescrypt(plaintext: str) -> str:
@@ -67,4 +67,4 @@ def crypt_yescrypt(plaintext: str) -> str:
 	if crypt_hash is None:
 		raise ValueError('crypt() returned NULL')
 
-	return cast(bytes, crypt_hash).decode('utf-8')
+	return cast('bytes', crypt_hash).decode('utf-8')

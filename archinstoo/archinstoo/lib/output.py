@@ -2,7 +2,6 @@ import logging
 import os
 import pwd
 import sys
-from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
 from enum import Enum
@@ -10,6 +9,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
+	from collections.abc import Callable
+
 	from _typeshed import DataclassInstance
 
 from .utils.unicode import unicode_ljust, unicode_rjust
@@ -31,20 +32,20 @@ class FormattedOutput:
 			# if invoked per reference it has to be a standard function or a classmethod.
 			# A method of an instance does not make sense
 			if callable(class_formatter):
-				return cast(dict[str, Any], class_formatter(o, filter_list))
+				return cast('dict[str, Any]', class_formatter(o, filter_list))
 			# if is invoked by name we restrict it to a method of the class. No need to mess more
 			if hasattr(o, class_formatter) and callable(getattr(o, class_formatter)):
 				func = getattr(o, class_formatter)
-				return cast(dict[str, Any], func(filter_list))
+				return cast('dict[str, Any]', func(filter_list))
 
 			raise ValueError('Unsupported formatting call')
 		if hasattr(o, 'table_data'):
-			return cast(dict[str, Any], o.table_data())
+			return cast('dict[str, Any]', o.table_data())
 		if hasattr(o, 'json'):
-			return cast(dict[str, Any], o.json())
+			return cast('dict[str, Any]', o.json())
 		if not isinstance(o, type):
 			return asdict(o)
-		return cast(dict[str, Any], o.__dict__)
+		return cast('dict[str, Any]', o.__dict__)
 
 	@classmethod
 	def as_table(

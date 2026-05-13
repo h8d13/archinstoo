@@ -255,7 +255,7 @@ def count() -> None:
 
 	args = parser.parse_args()
 
-	with open(args.config) as f:
+	with Path(args.config).open() as f:
 		config = json.load(f)
 
 	explicit = collect(config)

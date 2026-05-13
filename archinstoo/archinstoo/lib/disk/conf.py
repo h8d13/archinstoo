@@ -1,4 +1,5 @@
-from archinstoo.lib.models.bootloader import Bootloader
+from typing import TYPE_CHECKING
+
 from archinstoo.lib.models.device import (
 	BDevice,
 	DeviceModification,
@@ -18,6 +19,9 @@ from .device_handler import DeviceHandler
 from .layouts import get_default_partition_layout, suggest_lvm_layout
 from .partitioning_menu import manual_partitioning
 from .selectors import select_device
+
+if TYPE_CHECKING:
+	from archinstoo.lib.models.bootloader import Bootloader
 
 
 def _manual_partitioning(

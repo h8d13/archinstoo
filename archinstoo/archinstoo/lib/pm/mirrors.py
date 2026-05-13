@@ -1,8 +1,7 @@
 import time
 import urllib.parse
 from functools import partial
-from pathlib import Path
-from typing import ClassVar, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
@@ -29,6 +28,9 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 from archinstoo.lib.utils.net import fetch_data_from_url
+
+if TYPE_CHECKING:
+	from pathlib import Path
 
 
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):

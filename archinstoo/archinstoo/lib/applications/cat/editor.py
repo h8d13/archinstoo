@@ -30,5 +30,5 @@ class EditorApp:
 		environment_path = install_session.target / 'etc' / 'environment'
 		debug(f'Setting EDITOR={editor_binary} in {environment_path}')
 
-		with open(environment_path, 'a') as f:
+		with environment_path.open('a') as f:
 			f.write(f'EDITOR={editor_binary}\n')

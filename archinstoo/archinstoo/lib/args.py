@@ -25,13 +25,13 @@ from archinstoo.lib.output import error, logger, warn
 from archinstoo.lib.translationhandler import Language, translation_handler
 
 
-def _set_direct(obj: Any, config: dict[str, Any], mapping: dict[str, str]) -> None:
+def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) -> None:
 	for key, attr in mapping.items():
 		if value := config.get(key):
 			setattr(obj, attr, value)
 
 
-def _set_parsed(obj: Any, config: dict[str, Any], mapping: dict[str, tuple[type, str]]) -> None:
+def _set_parsed(obj: object, config: dict[str, Any], mapping: dict[str, tuple[type, str]]) -> None:
 	for key, (klass, method) in mapping.items():
 		if value := config.get(key):
 			setattr(obj, key, getattr(klass, method)(value))
@@ -317,15 +317,15 @@ class ArchConfigHandler:
 		return self._cleanup_config(config)
 
 	def _fetch_from_url(self, url: str) -> str:
-		if urllib.parse.urlparse(url).scheme:
+		if urllib.parse.urlparse(url).scheme in ('http', 'https'):
 			try:
-				req = Request(url, headers={'User-Agent': 'ArchInstoo'})
-				with urlopen(req) as resp:
-					return cast(str, resp.read().decode('utf-8'))
+				req = Request(url, headers={'User-Agent': 'ArchInstoo'})  # noqa: S310 - scheme restricted above
+				with urlopen(req) as resp:  # noqa: S310 - scheme restricted above
+					return cast('str', resp.read().decode('utf-8'))
 			except urllib.error.HTTPError as err:
 				error(f'Could not fetch JSON from {url}: {err}')
 		else:
-			error('Not a valid url')
+			error('Not a valid url (only http/https allowed)')
 
 		sys.exit(1)
 

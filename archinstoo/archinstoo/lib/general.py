@@ -7,17 +7,19 @@ import stat
 import subprocess
 import sys
 import time
-from collections.abc import Iterator
 from datetime import date, datetime
 from enum import Enum
 from pathlib import Path
 from select import EPOLLHUP, EPOLLIN, epoll
-from types import TracebackType
-from typing import Any, Self, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 from .exceptions import SysCallError
 from .output import debug, error, logger
 from .utils.env import Os
+
+if TYPE_CHECKING:
+	from collections.abc import Iterator
+	from types import TracebackType
 
 # https://stackoverflow.com/a/43627833/929999
 _VT100_ESCAPE_REGEX = r'\x1B\[[?0-9;]*[a-zA-Z]'
@@ -28,7 +30,7 @@ def clear_vt100_escape_codes(data: bytes) -> bytes:
 	return re.sub(_VT100_ESCAPE_REGEX_BYTES, b'', data)
 
 
-def jsonify(obj: Any, safe: bool = True) -> Any:
+def jsonify(obj: object, safe: bool = True) -> Any:
 	"""
 	Converts objects into json.dumps() compatible nested dictionaries.
 	Setting safe to True skips dictionary keys starting with a bang (!)
@@ -105,8 +107,6 @@ class SysCommandWorker:
 		Contains will also move the current buffert position forward.
 		This is to avoid re-checking the same data when looking for output.
 		"""
-		assert isinstance(key, bytes)
-
 		index = self._trace_log.find(key, self._trace_log_pos)
 		if index >= 0:
 			self._trace_log_pos += index + len(key)
@@ -170,8 +170,7 @@ class SysCommandWorker:
 		return bool(self.started and not self.ended)
 
 	def write(self, data: bytes, line_ending: bool = True) -> int:
-		assert isinstance(data, bytes)  # TODO: Maybe we can support str as well and encode it
-
+		# TODO: Maybe we can support str as well and encode it
 		self.make_sure_we_are_executing()
 
 		if self.child_fd:
@@ -234,7 +233,7 @@ class SysCommandWorker:
 	def execute(self) -> bool:
 		import pty
 
-		if (old_dir := os.getcwd()) != self.working_directory:
+		if (old_dir := str(Path.cwd())) != self.working_directory:
 			os.chdir(str(self.working_directory))
 
 		# Note: If for any reason, we get a Python exception between here
@@ -249,7 +248,7 @@ class SysCommandWorker:
 			_cmd_history(self.cmd)
 
 			try:
-				os.execve(self.cmd[0], list(self.cmd), {**os.environ, **self.environment_vars})
+				os.execve(self.cmd[0], list(self.cmd), {**os.environ, **self.environment_vars})  # noqa: S606 - SysCommand intentionally runs without a shell
 			except FileNotFoundError:
 				error(f'{self.cmd[0]} does not exist.')
 				self.exit_code = 1
@@ -397,7 +396,7 @@ def run(
 ) -> subprocess.CompletedProcess[bytes]:
 	_cmd_history(cmd)
 
-	return subprocess.run(
+	return subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
 		cmd,
 		input=input_data,
 		capture_output=True,

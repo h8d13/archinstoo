@@ -1,6 +1,6 @@
 import math
 import time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.models.device import (
 	DiskEncryption,
@@ -23,8 +23,12 @@ from archinstoo.lib.tui.curses_menu import Tui
 from archinstoo.lib.tui.prompts import confirm_abort
 
 from .device_handler import DeviceHandler
-from .luks import Luks2
 from .lvm import lvm_group_info, lvm_vol_info
+
+if TYPE_CHECKING:
+	from pathlib import Path
+
+	from .luks import Luks2
 
 
 class FilesystemHandler:

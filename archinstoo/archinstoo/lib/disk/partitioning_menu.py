@@ -430,7 +430,8 @@ class PartitioningList(ListManager[DiskSegment]):
 		prompt = tr('Mountpoint')
 
 		mountpoint = prompt_dir(prompt, header, validate=False, allow_skip=False)
-		assert mountpoint
+		if mountpoint is None:
+			raise RuntimeError('prompt_dir returned None despite allow_skip=False')
 
 		return mountpoint
 
@@ -532,7 +533,8 @@ class PartitioningList(ListManager[DiskSegment]):
 			case _:
 				pass
 
-		assert size
+		if not size:
+			raise RuntimeError('Size prompt returned no value')
 		return size
 
 	def _has_efi_partition(self, data: list[DiskSegment]) -> bool:

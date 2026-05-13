@@ -1,7 +1,7 @@
 import contextlib
 import subprocess
 import time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
@@ -23,6 +23,9 @@ from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
+
+if TYPE_CHECKING:
+	from pathlib import Path
 
 
 def show_menu(config: ArchConfig, args: Arguments) -> None:
@@ -203,9 +206,9 @@ def perform_installation(
 			case PostInstallationAction.EXIT:
 				pass
 			case PostInstallationAction.REBOOT:
-				subprocess.run(['reboot'], check=False)
+				subprocess.run(['reboot'], check=False)  # noqa: S607 - systemd shutdown shim from $PATH
 			case PostInstallationAction.POWEROFF:
-				subprocess.run(['poweroff'], check=False)
+				subprocess.run(['poweroff'], check=False)  # noqa: S607 - systemd shutdown shim from $PATH
 			case PostInstallationAction.CHROOT:
 				with contextlib.suppress(Exception):
 					installation.drop_to_shell()

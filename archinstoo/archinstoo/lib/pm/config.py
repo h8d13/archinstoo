@@ -1,6 +1,6 @@
 import atexit
+import contextlib
 import re
-from pathlib import Path
 from typing import TYPE_CHECKING, assert_never
 
 from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
@@ -22,12 +22,10 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 
 	def validator(s: str | None) -> str | None:
 		if s is not None:
-			try:
+			with contextlib.suppress(Exception):
 				value = int(s)
 				if value >= 0:
 					return None
-			except Exception:
-				pass
 
 		return tr('Invalid download number')
 
@@ -78,6 +76,8 @@ _STANDARD_REPOS = {
 }
 
 if TYPE_CHECKING:
+	from pathlib import Path
+
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
 
 

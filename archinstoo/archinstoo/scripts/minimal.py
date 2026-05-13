@@ -1,4 +1,5 @@
-from pathlib import Path
+
+from typing import TYPE_CHECKING
 
 from archinstoo.default_profiles.minimal import MinimalProfile
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
@@ -14,6 +15,9 @@ from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
+
+if TYPE_CHECKING:
+	from pathlib import Path
 
 
 def perform_installation(

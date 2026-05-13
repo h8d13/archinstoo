@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.encryption_menu import DiskEncryptionMenu
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
-from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	DEFAULT_ITER_TIME,
 	BtrfsOptions,
@@ -23,6 +22,9 @@ from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 from .conf import select_disk_config, select_lvm_config
+
+if TYPE_CHECKING:
+	from archinstoo.lib.models.bootloader import Bootloader
 
 
 @dataclass
