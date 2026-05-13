@@ -1,4 +1,3 @@
-
 from typing import TYPE_CHECKING
 
 from archinstoo.default_profiles.minimal import MinimalProfile

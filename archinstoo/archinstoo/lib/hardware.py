@@ -170,7 +170,7 @@ class _SysInfo:
 		try:
 			with (self.efi_path / 'fw_platform_size').open() as fw_ps:
 				return int(fw_ps.read().strip())
-		except (FileNotFoundError, OSError):
+		except FileNotFoundError, OSError:
 			return None
 
 	@cached_property
