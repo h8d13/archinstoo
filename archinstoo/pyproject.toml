@@ -237,7 +237,7 @@ known-first-party = ["archinstoo"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"] # init hacks are standard.
 "**/lib/grimaur.py" = ["PLW0603"] # standalone CLI tool uses module-level globals by design
-"tests/*" = [
+"**/tests/**" = [
     "S101",   # pytest uses assert
     "S106",   # test fixtures use placeholder passwords
     "S108",   # /tmp paths are symbolic test values
