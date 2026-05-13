@@ -111,6 +111,7 @@ class DownloadTimer:
 
 def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout: int = 30) -> str:
 	from urllib.parse import urlparse
+
 	if urlparse(url).scheme not in ('http', 'https'):
 		raise ValueError(f'Refusing to fetch non-http(s) url: {url}')
 
