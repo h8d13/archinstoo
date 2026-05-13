@@ -2,25 +2,39 @@ import logging
 import os
 import pwd
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Protocol, TypeIs, cast, runtime_checkable
 
 if TYPE_CHECKING:
-	from collections.abc import Callable
+	from collections.abc import Callable, Sequence
 
 	from _typeshed import DataclassInstance
 
 from .utils.unicode import unicode_ljust, unicode_rjust
 
 
+@runtime_checkable
+class _HasTableData(Protocol):
+	def table_data(self) -> dict[str, Any]: ...
+
+
+@runtime_checkable
+class _HasJson(Protocol):
+	def json(self) -> dict[str, Any]: ...
+
+
+def _is_dataclass_instance(o: object) -> TypeIs[DataclassInstance]:
+	return is_dataclass(o) and not isinstance(o, type)
+
+
 class FormattedOutput:
 	@staticmethod
 	def _get_values(
-		o: DataclassInstance,
-		class_formatter: str | Callable | None = None,  # type: ignore[type-arg]
+		o: object,
+		class_formatter: str | Callable[[object, list[str]], dict[str, Any]] | None = None,
 		filter_list: list[str] = [],
 	) -> dict[str, Any]:
 		"""
@@ -32,26 +46,26 @@ class FormattedOutput:
 			# if invoked per reference it has to be a standard function or a classmethod.
 			# A method of an instance does not make sense
 			if callable(class_formatter):
-				return cast('dict[str, Any]', class_formatter(o, filter_list))
+				return class_formatter(o, filter_list)
 			# if is invoked by name we restrict it to a method of the class. No need to mess more
 			if hasattr(o, class_formatter) and callable(getattr(o, class_formatter)):
 				func = getattr(o, class_formatter)
 				return cast('dict[str, Any]', func(filter_list))
 
 			raise ValueError('Unsupported formatting call')
-		if hasattr(o, 'table_data'):
-			return cast('dict[str, Any]', o.table_data())
-		if hasattr(o, 'json'):
-			return cast('dict[str, Any]', o.json())
-		if not isinstance(o, type):
+		if isinstance(o, _HasTableData):
+			return o.table_data()
+		if isinstance(o, _HasJson):
+			return o.json()
+		if _is_dataclass_instance(o):
 			return asdict(o)
-		return cast('dict[str, Any]', o.__dict__)
+		return cast('dict[str, Any]', getattr(o, '__dict__', {}))
 
 	@classmethod
 	def as_table(
 		cls,
-		obj: list[Any],
-		class_formatter: str | Callable | None = None,  # type: ignore[type-arg]
+		obj: Sequence[object],
+		class_formatter: str | Callable[[object, list[str]], dict[str, Any]] | None = None,
 		filter_list: list[str] = [],
 		capitalize: bool = False,
 	) -> str:
