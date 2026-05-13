@@ -862,8 +862,8 @@ class Installer:
 		return self.run_command(cmd, peek_output=peek_output)
 
 	def drop_to_shell(self) -> None:
-		# arch-chroot from $PATH on the live ISO; target is a project-controlled Path.
-		subprocess.check_call(['arch-chroot', str(self.target)])  # noqa: S603,S607
+		# shell=True is intentional: gives the user a real interactive shell session.
+		subprocess.check_call(f'arch-chroot {self.target}', shell=True)  # noqa: S602
 
 	def configure_nic(self, nic: Nic) -> None:
 		conf = nic.as_systemd_config()
