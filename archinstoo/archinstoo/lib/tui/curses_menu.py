@@ -78,6 +78,8 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 				case ResultType.Selection:
 					if result.item() == MenuItem.yes():
 						return True
+				case _:
+					pass
 
 			return False
 
@@ -941,6 +943,8 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				case PreviewStyle.TOP:
 					menu_height = len(self._item_group.items)
 					prev_size = self._max_height - offset - menu_height
+				case PreviewStyle.NONE:
+					pass
 		else:
 			match self._preview_style:
 				case PreviewStyle.RIGHT:
@@ -949,6 +953,8 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 					prev_size = int((self._max_height - offset) * preview_size)
 				case PreviewStyle.TOP:
 					prev_size = int((self._max_height - offset) * preview_size)
+				case PreviewStyle.NONE:
+					pass
 
 		return prev_size
 

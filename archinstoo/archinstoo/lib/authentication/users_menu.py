@@ -106,6 +106,8 @@ class UserList(ListManager[User]):
 						urls.append(new_url)
 				else:
 					urls.remove(selected)
+			case _:
+				pass
 
 		return urls
 

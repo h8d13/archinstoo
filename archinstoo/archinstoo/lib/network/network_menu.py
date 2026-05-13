@@ -216,5 +216,7 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 
 					if nics:
 						return NetworkConfiguration(NicType.MANUAL, nics)
+				case _:
+					pass
 
 	return preset

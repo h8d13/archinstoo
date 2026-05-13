@@ -280,6 +280,8 @@ class GlobalMenu(AbstractMenu[None]):
 					preset = self._select_archinstoo_language(preset)
 				case 'theme':
 					self._select_theme()
+				case _:
+					pass
 
 		return preset
 
@@ -709,6 +711,8 @@ class GlobalMenu(AbstractMenu[None]):
 				pass
 			case ResultType.Selection:
 				self._arch_config.kernel_headers = result.item() == MenuItem.yes()
+			case _:
+				pass
 
 		return selected_kernels
 
