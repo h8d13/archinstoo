@@ -10,7 +10,6 @@
 │   │   │   ├── budgie
 │   │   │   ├── cinnamon
 │   │   │   ├── cosmic
-│   │   │   ├── cutefish
 │   │   │   ├── deepin
 │   │   │   ├── enlightenment
 │   │   │   ├── gnome
@@ -159,13 +158,12 @@
 │   └── custom
 ├── PKGBUILD
 ├── pyproject.toml
-├── tests/
-│   ├── conftest
-│   ├── data/
-│   │   └── test_config.json
-│   ├── test_args
-│   └── test_configuration_output
-└── vulture_whitelist
+└── tests/
+    ├── conftest
+    ├── data/
+    │   └── test_config.json
+    ├── test_args
+    └── test_configuration_output
 
-24 directories, 142 files
+24 directories, 140 files
 ```
