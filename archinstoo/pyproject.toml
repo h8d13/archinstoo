@@ -102,12 +102,6 @@ ignore_missing_imports = true
 targets = ["archinstoo"]
 exclude = ["/tests"]
 
-[tool.vulture]
-paths = ["archinstoo", "vulture_whitelist.py"]
-min_confidence = 60
-# Regenerate whitelist after big refactors:
-#   vulture archinstoo --make-whitelist > vulture_whitelist.py
-
 [tool.importlinter]
 root_package = "archinstoo"
 include_external_packages = false
@@ -167,7 +161,6 @@ ignored-modules = ["parted"]
 [tool.ruff]
 target-version = "py314"
 line-length = 160
-extend-exclude = ["vulture_whitelist.py"]
 
 [tool.ruff.format]
 indent-style = "tab"
