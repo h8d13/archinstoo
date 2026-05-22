@@ -37,12 +37,13 @@ makedepends=(
   'python-pylint'
   'python-setuptools'
   'python-wheel'
-  'nvchecker'
-  'archiso' #Dev ISO more cow_space
-  'tree' #For project tree output
-  'pacman-contrib' #For dependency trees (count script and isomod)
   # Note dev tools are usually handled through precommit
 )
+# 'nvchecker'
+# 'archiso' #Dev ISO more cow_space
+# 'tree' #For project tree output
+# 'pacman-contrib' #For dependency trees (count script and isomod)
+
 # marked as optional because they depend
 # on choices made during installation
 # also because they are expected on ISO
@@ -65,11 +66,6 @@ replaces=(archinstoo)
 source=()
 sha512sums=()
 b2sums=()
-
-check() {
-  cd "$srcdir/../archinstoo" || exit
-  ruff check --config pyproject.toml
-}
 
 build() {
   cd "$srcdir/../archinstoo" || exit
