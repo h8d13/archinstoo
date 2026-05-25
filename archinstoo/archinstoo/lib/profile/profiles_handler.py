@@ -176,6 +176,10 @@ class ProfileHandler:
 			case GreeterType.CosmicSession:
 				packages = ['cosmic-greeter']
 				service = ['cosmic-greeter']
+			case GreeterType.GreetdDms:
+				packages = ['greetd']
+				service = ['greetd']
+				service_disable = ['getty@tty1']
 
 		if packages:
 			install_session.add_additional_packages(packages)
@@ -213,6 +217,31 @@ class ProfileHandler:
 			# group exists only when seatd was installed; skip otherwise so usermod can't abort.
 			if 'seat:' in install_session.target.joinpath('etc/group').read_text():
 				install_session.arch_chroot(['usermod', '-a', '-G', 'seat', 'greeter'])
+
+		# dms-greeter runs inside quickshell, launched by greetd (installed by dms-shell-niri)
+		if greeter == GreeterType.GreetdDms:
+			path = install_session.target.joinpath('etc/greetd/config.toml')
+			path.parent.mkdir(parents=True, exist_ok=True)
+			path.write_text(
+				dedent("""\
+					[terminal]
+					vt = 1
+
+					[default_session]
+					user = "greeter"
+					command = "/usr/share/quickshell/dms/Modules/Greetd/assets/dms-greeter --command niri -p /usr/share/quickshell/dms"
+				""")
+			)
+
+			tmpfiles = install_session.target.joinpath('etc/tmpfiles.d/dms-greeter.conf')
+			tmpfiles.parent.mkdir(parents=True, exist_ok=True)
+			tmpfiles.write_text(
+				dedent("""\
+					#  Path                    Mode User    Group   Age Argument
+					d /var/cache/dms-greeter   0750 greeter greeter -
+					d /var/lib/greeter         0755 greeter greeter -
+				""")
+			)
 
 	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
