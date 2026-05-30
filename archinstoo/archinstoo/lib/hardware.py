@@ -260,6 +260,10 @@ class _SysInfo:
 		#   NFP       	Netronome Flow Processors
 		#   QLOGIC    	QLogic devices
 		mapping: dict[str, tuple[str, ...]] = {
+			# AMD (0x1002) shares one vendor ID across GCN generations: amdgpu firmware
+			# drives newer cards, radeon older. Suggest both rather than guessing from
+			# the live-ISO bound driver, which is fragile.
+			'0x1002': ('AMDGPU', 'RADEON'),
 			'0x10de': ('NVIDIA',),
 			'0x8086': ('INTEL',),
 			'0x10ec': ('REALTEK',),
@@ -279,23 +283,6 @@ class _SysInfo:
 			try:
 				vendor = (dev / 'vendor').read_text().strip().lower()
 			except OSError:
-				continue
-
-			# AMD (0x1002) shares a vendor ID across GCN generations: amdgpu drives newer
-			# cards, radeon drives older. The kernel binds the right one on the live ISO,
-			# so the bound driver name tells us which firmware subpackage to suggest.
-			if vendor == '0x1002':
-				try:
-					driver = (dev / 'driver').readlink().name
-				except OSError:
-					driver = ''
-				if driver == 'amdgpu':
-					detected.add('AMDGPU')
-				elif driver == 'radeon':
-					detected.add('RADEON')
-				else:
-					# No AMD driver bound fall back to newer
-					detected.add('AMDGPU')
 				continue
 
 			if mapped := mapping.get(vendor):
