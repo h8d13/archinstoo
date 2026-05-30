@@ -24,4 +24,4 @@ jobs:
             - name: Check for dead code
               continue-on-error: true
               working-directory: archinstoo
-              run: vulture
+              run: vulture archinstoo
