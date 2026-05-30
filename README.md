@@ -109,7 +109,7 @@ See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported h
 
 See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
-See all other docs: [.github](./.github/)
+See all other docs: [.github](./.github/) and [ArchWiki](https://wiki.archlinux.org/title/Main_page)
 
 ## Testing
 
