@@ -119,11 +119,9 @@ See all other docs: [.github](./.github/) and [ArchWiki](https://wiki.archlinux.
 
 To see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md)
 
-The process would be the same with `git clone -b <branch> <url>` to test a specific fix.
+The process would be the same with `git clone -b <branch> <url>` to test a specific fix. Usually reproduced then tested on **actual/appropriate hardware.**
 
-Usually reproduced then tested on actual/appropriate hardware.
-
-Any help in this regard is deeply appreciated, as testing takes just as long, if not longer, than coding.
+> Any help in this regard is deeply appreciated, as testing takes just as long, if not longer, than coding.
 
 Accurate reports/PRs will be addressed in a timely manner: [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](./.github/CONTRIBUTING.md)
 
