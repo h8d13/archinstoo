@@ -39,7 +39,7 @@ You may want to install one of these first instead of a WindowManager where more
 Network selection: Make sure to pick Network Manager (iwd) for Intel wifi cards. 
 Default backend for others. Or use minimal Copy from ISO (VMs, Desktops, example).
 
-## Languages Compat 🌐
+## Languages Compat
 
 You can add Google fonts for extended language support and setup mutiple keyboards once you have a basic system working.
 ```shell
