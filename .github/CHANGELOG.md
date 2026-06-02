@@ -18,19 +18,15 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Configure `/etc/makepkg.conf` directly
         - Validate AUR selection requires elevation
         - Update grimaur to new version -> respects makepkg properly now + other various changes
-    - Code quality
-        - Convert docstrings to plain `#` comments
-        - Logging fixes
-        - Clean up help text and user-facing messages
-    - Linting & testing
-        - Add `exhaustive-match` pattern (16 sites)
+    - Convert docstrings to plain `#` comments
+    - Logging fixes: Escaping using existing helpers
+    - Clean up help text and user-facing messages
+    - Add `exhaustive-match` pattern (16 sites)
         - Enable additional ruff rules (noqa S shell, cast reduction)
-        - Remove test hacks from upstream
-    - Admin & cleanup
-        - Remove easter-egg
-        - Docstring format updates
-        - Leave fork network
-        - Various docs refreshes
+    - Remove test hacks from upstream
+    - Remove easter-egg
+    - Leave fork network
+    - Various docs refreshes
 
 ## 0.1.09-0
 
