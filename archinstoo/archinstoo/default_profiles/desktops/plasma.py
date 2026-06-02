@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class PlasmaProfile(WaylandProfile):
 	def __init__(self) -> None:
-		super().__init__('kde plasma', ProfileType.DesktopEnv)
+		super().__init__('kde-plasma', ProfileType.DesktopEnv)
 
 	@property
 	@override

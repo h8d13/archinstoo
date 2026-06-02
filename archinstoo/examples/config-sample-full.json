@@ -199,10 +199,10 @@
             {
                 "main": "desktop",
                 "details": [
-                    "kde plasma"
+                    "kde-plasma"
                 ],
                 "custom_settings": {
-                    "kde plasma": {}
+                    "kde-plasma": {}
                 }
             },
             {

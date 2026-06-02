@@ -123,7 +123,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
 		if 'desktop' in mains and net_type in ('nm', 'nm_iwd'):
-			pkgs.update(SCHEMA['network']['nm_desktop_extra'])
+			pkgs.update(SCHEMA['network']['nm-desktop-extra'])
 
 	# privilege escalation
 	auth = config.get('auth_config') or {}
@@ -193,7 +193,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 		pkgs.update(SCHEMA['snapshots'][snap_type])
 		# grub + btrfs snapshots
 		if bl_name == 'grub':
-			pkgs.update(SCHEMA['grub_btrfs'])
+			pkgs.update(SCHEMA['grub_extra'])
 
 	# swap
 	swap = config.get('swap') or {}
