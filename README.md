@@ -138,4 +138,6 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
 
-**Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). See [Philosophy](./.github/PHILOSOPHY.md) 
+**Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). 
+
+See [Philosophy](./.github/PHILOSOPHY.md) 
