@@ -11,12 +11,10 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
 
 def select_kernel(preset: list[str] = []) -> list[str]:
-	"""
-	Asks the user to select a kernel for system.
-
-	:return: The string as a selected kernel
-	:rtype: string
-	"""
+	# Asks the user to select a kernel for system.
+	#
+	# :return: The string as a selected kernel
+	# :rtype: string
 	preset_kernels = [Kernel(p) for p in preset if p in Kernel._value2member_map_]
 
 	group = MenuItemGroup.from_enum(Kernel, sort_items=True, preset=preset_kernels)

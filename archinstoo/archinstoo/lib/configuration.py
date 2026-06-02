@@ -20,13 +20,10 @@ class ConfigurationHandler:
 	_USER_CONFIG_FILENAME = 'user_configuration.json'
 
 	def __init__(self, config: ArchConfig):
-		"""
-		Consolidated into one file
-
-		:param config: Archinstoo configuration object
-		:type config: ArchConfig
-		"""
-
+		# Consolidated into one file
+		#
+		# :param config: Archinstoo configuration object
+		# :type config: ArchConfig
 		self._config = config
 
 	@classmethod
@@ -106,7 +103,7 @@ class ConfigurationHandler:
 
 	@classmethod
 	def prompt_resume(cls) -> dict[str, Any] | None:
-		"""Prompt user to resume from saved config. Returns config dict or None."""
+		# Prompt user to resume from saved config. Returns config dict or None.
 		from .tui.result import ResultType
 
 		if not cls.has_saved_config():

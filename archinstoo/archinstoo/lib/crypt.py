@@ -42,12 +42,10 @@ def crypt_gen_salt(prefix: str | bytes, rounds: int) -> bytes:
 
 
 def crypt_yescrypt(plaintext: str) -> str:
-	"""
-	By default chpasswd in Arch uses PAM to hash the password with crypt_yescrypt
-	the PAM code https://github.com/linux-pam/linux-pam/blob/master/modules/pam_unix/support.c
-	shows that the hashing rounds are determined from YESCRYPT_COST_FACTOR in /etc/login.defs
-	If no value was specified (or commented out) a default of 5 is chosen
-	"""
+	# By default chpasswd in Arch uses PAM to hash the password with crypt_yescrypt
+	# the PAM code https://github.com/linux-pam/linux-pam/blob/master/modules/pam_unix/support.c
+	# shows that the hashing rounds are determined from YESCRYPT_COST_FACTOR in /etc/login.defs
+	# If no value was specified (or commented out) a default of 5 is chosen
 	if (value := _search_login_defs('YESCRYPT_COST_FACTOR')) is not None:
 		rounds = int(value)
 		if rounds < 3:

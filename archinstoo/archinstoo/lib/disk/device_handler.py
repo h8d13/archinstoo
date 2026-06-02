@@ -369,7 +369,7 @@ class DeviceHandler:
 				pass
 
 	def lvm_deactivate_vgs_on_device(self, device: BDevice) -> None:
-		"""Deactivate any LVM VGs using partitions on this device."""
+		# Deactivate any LVM VGs using partitions on this device.
 		# First try using partition_infos
 		for partition in device.partition_infos:
 			try:
@@ -624,9 +624,7 @@ class DeviceHandler:
 		modification: DeviceModification,
 		partition_table: PartitionTable | None = None,
 	) -> None:
-		"""
-		Create a partition table on the block device and create all partitions.
-		"""
+		# Create a partition table on the block device and create all partitions.
 		partition_table = partition_table or modification.partition_table or self.partition_table
 
 		# WARNING: the entire device will be wiped and all data lost
@@ -711,7 +709,7 @@ class DeviceHandler:
 
 	@staticmethod
 	def wipefs(dev_path: Path) -> bool:
-		"""Wipe all filesystem/LVM/RAID signatures from a device."""
+		# Wipe all filesystem/LVM/RAID signatures from a device.
 		try:
 			SysCommand(f'wipefs --all --force {dev_path}')
 			return True
@@ -720,20 +718,20 @@ class DeviceHandler:
 			return False
 
 	def _wipe(self, dev_path: Path) -> None:
-		"""
-		Wipe a device (partition or otherwise) of meta-data, be it file system, LVM, etc.
-		@param dev_path:	Device path of the partition to be wiped.
-		@type dev_path:		str
-		"""
+		#
+		# Wipe a device (partition or otherwise) of meta-data, be it file system, LVM, etc.
+		# @param dev_path:	Device path of the partition to be wiped.
+		# @type dev_path:		str
+		#
 		with dev_path.open('wb') as p:
 			p.write(bytearray(1024))
 
 	def wipe_dev(self, block_device: BDevice) -> None:
-		"""
-		Wipe the block device of meta-data, be it file system, LVM, etc.
-		This is not intended to be secure, but rather to ensure that
-		auto-discovery tools don't recognize anything here.
-		"""
+		#
+		# Wipe the block device of meta-data, be it file system, LVM, etc.
+		# This is not intended to be secure, but rather to ensure that
+		# auto-discovery tools don't recognize anything here.
+		#
 		info(f'Wiping partitions and metadata: {block_device.device_info.path}')
 
 		# Wipe filesystem signatures first to prevent auto-discovery tools

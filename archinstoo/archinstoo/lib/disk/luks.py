@@ -142,13 +142,11 @@ class Luks2:
 		return (mapper_dev := self.mapper_dev) is not None and mapper_dev.is_symlink()
 
 	def unlock(self, key_file: Path | None = None) -> None:
-		"""
-		Unlocks the luks device, an optional key file location for unlocking can be specified,
-		otherwise a default location for the key file will be used.
-
-		:param key_file: An alternative key file
-		:type key_file: Path
-		"""
+		# Unlocks the luks device, an optional key file location for unlocking can be specified,
+		# otherwise a default location for the key file will be used.
+		#
+		# :param key_file: An alternative key file
+		# :type key_file: Path
 		debug(f'Unlocking luks2 device: {self.luks_dev_path}')
 
 		if not self.mapper_name:
@@ -197,8 +195,8 @@ class Luks2:
 			SysCommand(f'cryptsetup close {child.name}')
 
 	def create_crypttab_entry(self, target_path: Path) -> None:
-		"""Create a crypttab entry without a keyfile so systemd prompts for a passphrase at boot.
-		Used when the root partition is unencrypted — writing a keyfile there would expose it in plaintext."""
+		# Create a crypttab entry without a keyfile so systemd prompts for a passphrase at boot.
+		# Used when the root partition is unencrypted — writing a keyfile there would expose it in plaintext.
 		crypttab_path = target_path / 'etc/crypttab'
 		self._crypttab(crypttab_path, Path('none'), options=['luks'])
 
@@ -209,9 +207,9 @@ class Luks2:
 		pbkdf_memory: int | None = None,
 		iter_time: int | None = None,
 	) -> None:
-		"""
-		Routine to create keyfiles, so it can be moved elsewhere
-		"""
+		#
+		# Routine to create keyfiles, so it can be moved elsewhere
+		#
 		if self.mapper_name is None:
 			raise ValueError('Mapper name must be provided')
 

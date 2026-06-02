@@ -171,10 +171,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 
 
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:
-	"""
-	Configure the network on the newly installed system
-	"""
-
+	# Configure the network on the newly installed system
 	items = [MenuItem(n.display_msg(), value=n) for n in NicType]
 	items.append(MenuItem(text=tr('None'), value=None))
 	group = MenuItemGroup(items, sort_items=True)

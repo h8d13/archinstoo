@@ -1281,7 +1281,7 @@ LIGHT_ACCENTS: set[str] = {'cyan', 'green', 'orange'}
 
 
 def _build_theme(mode: str, accent: str) -> dict[STYLE, tuple[int, int]]:
-	"""Build theme colors from mode (dark/light) and accent color."""
+	# Build theme colors from mode (dark/light) and accent color.
 	accent_color = ACCENT_COLORS.get(accent, curses.COLOR_CYAN)
 	menu_fg = curses.COLOR_BLACK if accent in LIGHT_ACCENTS else curses.COLOR_WHITE
 

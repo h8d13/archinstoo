@@ -85,7 +85,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 		return None
 
 	def has_elevated_users(self) -> bool:
-		"""Check if at least one elev user exists"""
+		# Check if at least one elev user exists
 		users: list[User] | None = self._item_group.find_by_key('users').value
 		return User.any_elevated(users) if users else False
 

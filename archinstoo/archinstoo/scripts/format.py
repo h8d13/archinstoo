@@ -30,11 +30,9 @@ def perform_installation(
 	handler: ArchConfigHandler,
 	device_handler: DeviceHandler,
 ) -> None:
-	"""
-	Performs the installation steps on a block device.
-	Only requirement is that the block devices are
-	formatted and setup prior to entering this function.
-	"""
+	# Performs the installation steps on a block device.
+	# Only requirement is that the block devices are
+	# formatted and setup prior to entering this function.
 	if not config.disk_config:
 		error('No disk configuration provided')
 		return

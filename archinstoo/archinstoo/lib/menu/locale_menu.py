@@ -157,13 +157,10 @@ def select_console_font(preset: str | None = None) -> str | None:
 
 
 def select_kb_layout(preset: str | None = None) -> str | None:
-	"""
-	Select keyboard layout
-
-	:return: The keyboard layout shortcut for the selected layout
-	:rtype: str
-	"""
-
+	# Select keyboard layout
+	#
+	# :return: The keyboard layout shortcut for the selected layout
+	# :rtype: str
 	kb_lang = list_keyboard_languages()
 	# sort alphabetically and then by length
 	sorted_kb_lang = sorted(kb_lang, key=lambda x: (len(x), x))

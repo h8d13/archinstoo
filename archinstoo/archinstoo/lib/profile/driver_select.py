@@ -17,13 +17,10 @@ def select_driver(
 	profile: Profile | None = None,
 	kernels: list[str] | None = None,
 ) -> GfxDriver | None:
-	"""
-	Somewhat convoluted function, whose job is simple.
-	Select a graphics driver from a pre-defined set of popular options.
-
-	This comment was stupid so I removed it. A profile should plain dictate
-	What it needs to run and be in minimal functional state.
-	"""
+	# Somewhat convoluted function, whose job is simple.
+	# Select a graphics driver from a pre-defined set of popular options.
+	# This comment was stupid so I removed it. A profile should plain dictate
+	# What it needs to run and be in minimal functional state.
 	if not options:
 		if SysInfo.arch() != 'x86_64':
 			# On ARM only mesa-based drivers are available

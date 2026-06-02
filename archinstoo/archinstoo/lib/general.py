@@ -31,10 +31,8 @@ def clear_vt100_escape_codes(data: bytes) -> bytes:
 
 
 def jsonify(obj: object, safe: bool = True) -> Any:
-	"""
-	Converts objects into json.dumps() compatible nested dictionaries.
-	Setting safe to True skips dictionary keys starting with a bang (!)
-	"""
+	# Converts objects into json.dumps() compatible nested dictionaries.
+	# Setting safe to True skips dictionary keys starting with a bang (!)
 
 	compatible_types = str, int, float, bool
 	if isinstance(obj, dict):
@@ -103,10 +101,8 @@ class SysCommandWorker:
 		self.remove_vt100_escape_codes_from_lines: bool = remove_vt100_escape_codes_from_lines
 
 	def __contains__(self, key: bytes) -> bool:
-		"""
-		Contains will also move the current buffert position forward.
-		This is to avoid re-checking the same data when looking for output.
-		"""
+		# Contains will also move the current buffert position forward.
+		# This is to avoid re-checking the same data when looking for output.
 		index = self._trace_log.find(key, self._trace_log_pos)
 		if index >= 0:
 			self._trace_log_pos += index + len(key)
@@ -313,11 +309,9 @@ class SysCommand:
 		return self.decode('UTF-8', errors='backslashreplace') or ''
 
 	def create_session(self) -> bool:
-		"""
-		Initiates a :ref:`SysCommandWorker` session in this class ``.session``.
-		It then proceeds to poll the process until it ends, after which it also
-		clears any printed output if ``.peek_output=True``.
-		"""
+		# Initiates a :ref:`SysCommandWorker` session in this class ``.session``.
+		# It then proceeds to poll the process until it ends, after which it also
+		# clears any printed output if ``.peek_output=True``.
 		if self.session:
 			return True
 

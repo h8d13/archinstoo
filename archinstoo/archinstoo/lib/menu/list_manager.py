@@ -18,23 +18,21 @@ class ListManager[ValueT]:
 		prompt: str | None = None,
 		allow_reset: bool = False,
 	):
-		"""
-		:param prompt:  Text which will appear at the header
-		type param: string
-
-		:param entries: list/dict of option to be shown / manipulated
-		type param: list
-
-		:param base_actions: list of actions that is displayed in the main list manager,
-		usually global actions such as 'Add...'
-		type param: list
-
-		:param sub_menu_actions: list of actions available for a chosen entry
-		type param: list
-
-		:param allow_reset: if True, Ctrl+C will reset/clear the selection
-		type param: bool
-		"""
+		# :param prompt:  Text which will appear at the header
+		# type param: string
+		#
+		# :param entries: list/dict of option to be shown / manipulated
+		# type param: list
+		#
+		# :param base_actions: list of actions that is displayed in the main list manager,
+		# usually global actions such as 'Add...'
+		# type param: list
+		#
+		# :param sub_menu_actions: list of actions available for a chosen entry
+		# type param: list
+		#
+		# :param allow_reset: if True, Ctrl+C will reset/clear the selection
+		# type param: bool
 		self._original_data = copy.deepcopy(entries)
 		self._data = copy.deepcopy(entries)
 
@@ -140,21 +138,21 @@ class ListManager[ValueT]:
 			self._data = self.handle_action(value, entry, self._data)
 
 	def selected_action_display(self, selection: ValueT) -> str:
-		"""
-		this will return the value to be displayed in the
-		"Select an action for '{}'" string
-		"""
+		#
+		# this will return the value to be displayed in the
+		# "Select an action for '{}'" string
+		#
 		raise NotImplementedError('Please implement me in the child class')
 
 	def handle_action(self, action: str, entry: ValueT | None, data: list[ValueT]) -> list[ValueT]:
-		"""
-		this function is called when a base action or
-		a specific action for an entry is triggered
-		"""
+		#
+		# this function is called when a base action or
+		# a specific action for an entry is triggered
+		#
 		raise NotImplementedError('Please implement me in the child class')
 
 	def filter_options(self, selection: ValueT, options: list[str]) -> list[str]:
-		"""
-		filter which actions to show for a specific selection
-		"""
+		#
+		# filter which actions to show for a specific selection
+		#
 		return options

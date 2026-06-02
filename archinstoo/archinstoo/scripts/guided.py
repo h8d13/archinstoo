@@ -49,11 +49,9 @@ def perform_installation(
 	application_handler: ApplicationHandler,
 	network_handler: NetworkHandler,
 ) -> None:
-	"""
-	Performs the installation steps on a block device.
-	Only requirement is that the block devices are
-	formatted and setup prior to entering this function.
-	"""
+	# Performs the installation steps on a block device.
+	# Only requirement is that the block devices are
+	# formatted and setup prior to entering this function.
 	start_time = time.monotonic()
 	info('Starting installation...')
 

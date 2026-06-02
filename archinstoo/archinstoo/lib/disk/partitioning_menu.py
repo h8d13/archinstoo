@@ -38,9 +38,7 @@ class FreeSpace:
 		return self.end - self.start
 
 	def table_data(self) -> dict[str, str]:
-		"""
-		Called for displaying data in table format
-		"""
+		# Called for displaying size data in table format
 		return {
 			'Start': self.start.format_size(Unit.sectors, self.start.sector_size, include_unit=False),
 			'End': self.end.format_size(Unit.sectors, self.start.sector_size, include_unit=False),
@@ -53,9 +51,7 @@ class DiskSegment:
 		self.segment = segment
 
 	def table_data(self) -> dict[str, str]:
-		"""
-		Called for displaying data in table format
-		"""
+		# Called for displaying data in table format
 		if isinstance(self.segment, PartitionModification):
 			return self.segment.table_data()
 

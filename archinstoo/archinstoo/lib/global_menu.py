@@ -259,13 +259,11 @@ class GlobalMenu(AbstractMenu[None]):
 
 	@override
 	def _is_config_valid(self) -> bool:
-		"""
-		Checks the validity of the current configuration.
-		"""
+		# Checks the validity of the current configuration.
 		return not (self._missing_configs() or self._validate_bootloader())
 
 	def _select_archinstoo_settings(self, preset: Language) -> Language:
-		"""Open settings submenu for language and theme selection."""
+		# Open settings submenu for language and theme selection.
 		items = [
 			MenuItem(text=tr('Language'), key='lang'),
 			MenuItem(text=tr('Theme'), key='theme'),
@@ -300,7 +298,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return language
 
 	def _select_theme(self) -> None:
-		"""Select a theme for the TUI (session-only, not persisted)."""
+		# Select a theme for the TUI (session-only, not persisted).
 		# Select mode (dark/light)
 		mode_items = [
 			MenuItem(text=tr('Dark'), value='dark'),
@@ -366,10 +364,8 @@ class GlobalMenu(AbstractMenu[None]):
 		return AuthenticationMenu(preset).run()
 
 	def _update_lang_text(self) -> None:
-		"""
-		The options for the global menu are generated with a static text;
-		each entry of the menu needs to be updated with the new translation
-		"""
+		# The options for the global menu are generated with a static text;
+		# each entry of the menu needs to be updated with the new translation
 		new_options = self._get_menu_options()
 
 		for o in new_options:
@@ -689,7 +685,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return None
 
 	def _select_kernel(self, preset: list[str]) -> list[str]:
-		"""Select kernels and then ask about kernel headers."""
+		# Select kernels and then ask about kernel headers.
 		selected_kernels = select_kernel(preset)
 
 		# Ask about kernel headers
@@ -745,12 +741,9 @@ class GlobalMenu(AbstractMenu[None]):
 		return None
 
 	def _validate_bootloader(self) -> list[str]:
-		"""
-		Checks the selected bootloader is valid for the selected filesystem
-		type of the boot partition.
-
-		Returns a list of error messages, empty if the configuration is valid.
-		"""
+		# Checks the selected bootloader is valid for the selected filesystem
+		# type of the boot partition.
+		# Returns a list of error messages, empty if the configuration is valid.
 		errors: list[str] = []
 
 		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value

@@ -12,11 +12,11 @@ class LPath(Path):
 		return self.relative_to(self.fs_root())
 
 	def add_exec(self) -> None:
-		"""Add execute permissions (mirrors `chmod +x`)."""
+		# Add execute permissions (mirrors `chmod +x`).
 		mode = self.stat().st_mode
 		self.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 	def remove_exec(self) -> None:
-		"""Remove execute permissions (mirrors `chmod -x`)."""
+		# Remove execute permissions (mirrors `chmod -x`).
 		mode = self.stat().st_mode
 		self.chmod(mode & ~(stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))

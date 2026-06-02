@@ -36,9 +36,7 @@ class TranslationHandler:
 		return self._translated_languages
 
 	def _get_translations(self) -> list[Language]:
-		"""
-		Load all translated languages and return a list of such
-		"""
+		# Load all translated languages and return a list of such
 		mappings = self._load_language_mappings()
 		defined_languages = self._provided_translations()
 
@@ -71,9 +69,7 @@ class TranslationHandler:
 		return languages
 
 	def _load_language_mappings(self) -> list[dict[str, str]]:
-		"""
-		Load the mapping table of all known languages
-		"""
+		# Load the mapping table of all known languages
 		locales_dir = self._get_locales_dir()
 		languages = Path.joinpath(locales_dir, self._languages)
 
@@ -81,9 +77,7 @@ class TranslationHandler:
 			return cast('list[dict[str, str]]', json.load(fp))
 
 	def _get_catalog_size(self, translation: gettext.NullTranslations) -> int:
-		"""
-		Get the number of translated messages for a translations
-		"""
+		# Get the number of translated messages for a translations
 		# this is a very naughty way of retrieving the data but
 		# there's no alternative method exposed unfortunately
 		catalog = translation._catalog  # type: ignore[attr-defined]
@@ -91,9 +85,7 @@ class TranslationHandler:
 		return len(messages)
 
 	def _get_total_active_messages(self) -> int:
-		"""
-		Get total messages that could be translated
-		"""
+		# Get total messages that could be translated
 		locales = self._get_locales_dir()
 		with (locales / self._base_pot).open() as fp:
 			lines = fp.readlines()
@@ -102,41 +94,31 @@ class TranslationHandler:
 		return len(msgid_lines) - 1  # don't count the first line which contains the metadata
 
 	def get_language_by_name(self, name: str) -> Language:
-		"""
-		Get a language object by it's name, e.g. English
-		"""
+		# Get a language object by it's name, e.g. English
 		try:
 			return next(filter(lambda x: x.name_en == name, self._translated_languages))
 		except Exception:
 			raise ValueError(f'No language with name found: {name}')
 
 	def get_language_by_abbr(self, abbr: str) -> Language:
-		"""
-		Get a language object by its abbreviation, e.g. en
-		"""
+		# Get a language object by its abbreviation, e.g. en
 		try:
 			return next(filter(lambda x: x.abbr == abbr, self._translated_languages))
 		except Exception:
 			raise ValueError(f'No language with abbreviation "{abbr}" found')
 
 	def activate(self, language: Language) -> None:
-		"""
-		Set the provided language as the current translation
-		"""
+		# Set the provided language as the current translation
 		# The install() call has the side effect of assigning GNUTranslations.gettext to builtins._
 		language.translation.install()
 
 	def _get_locales_dir(self) -> Path:
-		"""
-		Get the locales directory path
-		"""
+		# Get the locales directory path
 		cur_path = Path(__file__).parent.parent
 		return Path.joinpath(cur_path, 'locales')
 
 	def _provided_translations(self) -> list[str]:
-		"""
-		Get a list of all known languages
-		"""
+		# Get a list of all known languages
 		locales_dir = self._get_locales_dir()
 		filenames = [p.name for p in locales_dir.iterdir()]
 

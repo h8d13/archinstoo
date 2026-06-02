@@ -43,10 +43,8 @@ def perform_installation(
 	application_handler: ApplicationHandler,
 	network_handler: NetworkHandler,
 ) -> None:
-	"""
-	Configures the currently running system.
-	Uses pacman -S instead of pacstrap, no disk ops, no bootloader, no kernel.
-	"""
+	# Configures the currently running system.
+	# Uses pacman -S instead of pacstrap, no disk ops, no bootloader, no kernel.
 	start_time = time.monotonic()
 	info('Starting live configuration...')
 

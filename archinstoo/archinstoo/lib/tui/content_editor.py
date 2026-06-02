@@ -6,8 +6,7 @@ from .types import STYLE, Chars
 
 
 class ContentEditor:
-	"""A simple multi-line text editor for content."""
-
+	# A simple multi-line text editor for content.
 	def __init__(
 		self,
 		title: str = 'Editor',
@@ -25,7 +24,7 @@ class ContentEditor:
 		self._error_msg: str | None = None
 
 	def edit(self) -> str | None:
-		"""Open the editor and return the script content, or None"""
+		# Open the editor and return the script content, or None
 		screen = Tui.t().screen
 		curses.curs_set(1)
 		screen.keypad(True)
@@ -181,7 +180,7 @@ class ContentEditor:
 			self._cursor_x += 1
 
 	def _is_line_valid(self, line: str) -> bool:
-		"""Check if a line is valid in KVP mode."""
+		# Check if a line is valid in KVP mode.
 		stripped = line.strip()
 		if not stripped:
 			return True

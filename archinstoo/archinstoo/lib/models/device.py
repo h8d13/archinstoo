@@ -319,9 +319,7 @@ class SectorSize:
 		)
 
 	def normalize(self) -> int:
-		"""
-		will normalize the value of the unit to Byte
-		"""
+		# will normalize the value of the unit to Byte
 		return int(self.value * self.unit.value)
 
 
@@ -443,9 +441,7 @@ class Size:
 		return self - Size(1, Unit.MiB, self.sector_size)
 
 	def _normalize(self) -> int:
-		"""
-		will normalize the value of the unit to Byte
-		"""
+		# will normalize the value of the unit to Byte using previous helper + none check
 		if self.unit == Unit.sectors and self.sector_size is not None:
 			return self.value * self.sector_size.normalize()
 		return int(self.value * self.unit.value)
@@ -665,10 +661,8 @@ class SubvolumeModification:
 
 	@property
 	def relative_mountpoint(self) -> Path:
-		"""
-		Will return the relative path based on the anchor
-		e.g. Path('/mnt/test') -> Path('mnt/test')
-		"""
+		# Will return the relative path based on the anchor
+		# e.g. Path('/mnt/test') -> Path('mnt/test')
 		if self.mountpoint is not None:
 			return self.mountpoint.relative_to(self.mountpoint.anchor)
 
@@ -784,9 +778,7 @@ class PartitionFlag(PartitionFlagDataMixin, Enum):
 
 
 class PartitionGUID(Enum):
-	"""
-	A list of Partition type GUIDs (lsblk -o+PARTTYPE) can be found here: https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs
-	"""
+	# A list of Partition type GUIDs (lsblk -o+PARTTYPE) can be found here: https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs
 
 	LINUX_ROOT_X86_64 = '4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709'
 
@@ -949,10 +941,8 @@ class PartitionModification:
 
 	@property
 	def relative_mountpoint(self) -> Path:
-		"""
-		Will return the relative path based on the anchor
-		e.g. Path('/mnt/test') -> Path('mnt/test')
-		"""
+		# Will return the relative path based on the anchor
+		# e.g. Path('/mnt/test') -> Path('mnt/test')
 		if self.mountpoint:
 			return self.mountpoint.relative_to(self.mountpoint.anchor)
 
@@ -1021,9 +1011,7 @@ class PartitionModification:
 			self.set_flag(flag)
 
 	def json(self) -> _PartitionModificationSerialization:
-		"""
-		Called for configuration settings
-		"""
+		# Called for configuration settings
 		return {
 			'obj_id': self.obj_id,
 			'status': self.status.value,
@@ -1039,9 +1027,7 @@ class PartitionModification:
 		}
 
 	def table_data(self) -> dict[str, str]:
-		"""
-		Called for displaying data in table format
-		"""
+		# Called for displaying data in table format
 		part_mod = {
 			'Status': self.status.value,
 			'Device': str(self.dev_path) if self.dev_path else '',
@@ -1176,10 +1162,8 @@ class LvmVolume:
 
 	@property
 	def relative_mountpoint(self) -> Path:
-		"""
-		Will return the relative path based on the anchor
-		e.g. Path('/mnt/test') -> Path('mnt/test')
-		"""
+		# Will return the relative path based on the anchor
+		# e.g. Path('/mnt/test') -> Path('mnt/test')
 		if self.mountpoint is not None:
 			return self.mountpoint.relative_to(self.mountpoint.anchor)
 
@@ -1395,9 +1379,7 @@ class DeviceModification:
 		return next(filtered, None)
 
 	def json(self) -> _DeviceModificationSerialization:
-		"""
-		Called when generating configuration files
-		"""
+		# Called when generating configuration files
 		return {
 			'device': str(self.device.device_info.path),
 			'wipe': self.wipe,
@@ -1446,7 +1428,7 @@ class DiskEncryption:
 			raise ValueError('LuksOnLvm encryption require LMV volumes to be defined')
 
 	def _is_root_encrypted(self) -> bool:
-		"""Check if root partition/volume is in the encrypted set."""
+		# Check if root partition/volume is in the encrypted set.
 		return any(p.mountpoint == Path('/') for p in self.partitions) or any(v.mountpoint == Path('/') for v in self.lvm_volumes)
 
 	def should_generate_encryption_file(self, dev: PartitionModification | LvmVolume) -> bool:
