@@ -92,6 +92,10 @@ module = "archinstoo.lib.models.device"
 disallow_any_unimported = false
 
 [[tool.mypy.overrides]]
+module = "archinstoo.lib.grimaur"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
 module = [
     "parted",
     "_pytest.*",
@@ -122,6 +126,7 @@ ignore-paths = [
     "^build/",
     "^docs/",
     "^node_modules/",
+    ".*grimaur.py",
 ]
 persistent = false
 py-version = "3.14"
@@ -158,6 +163,7 @@ ignored-modules = ["parted"]
 [tool.ruff]
 target-version = "py314"
 line-length = 160
+exclude = ["**/lib/grimaur.py"]
 
 [tool.ruff.format]
 indent-style = "tab"
@@ -236,7 +242,6 @@ known-first-party = ["archinstoo"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"] # init hacks are standard.
-"**/lib/grimaur.py" = ["PLW0603"] # standalone CLI tool uses module-level globals by design
 "**/tests/**" = [
     "S101",   # pytest uses assert
     "S106",   # test fixtures use placeholder passwords

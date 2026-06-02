@@ -37,11 +37,9 @@ class Pacman:
 
 	@staticmethod
 	def run(args: str, default_cmd: str = 'pacman', peek_output: bool = False) -> SysCommand:
-		"""
-		A centralized function to call `pacman` from.
-		It also protects us from colliding with other running pacman sessions (if used locally).
-		The grace period is set to 10 minutes before exiting hard if another pacman instance is running.
-		"""
+		# A centralized function to call `pacman` from.
+		# It also protects us from colliding with other running pacman sessions (if used locally).
+		# The grace period is set to 10 minutes before exiting hard if another pacman instance is running.
 		pacman_db_lock = Path('/var/lib/pacman/db.lck')
 
 		if pacman_db_lock.exists():

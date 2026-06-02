@@ -187,9 +187,9 @@ class _SysInfo:
 
 	@cached_property
 	def cpu_info(self) -> dict[str, str]:
-		"""
-		Returns system cpu information
-		"""
+		#
+		# Returns system cpu information
+		#
 		cpu_info_path = Path('/proc/cpuinfo')
 		cpu: dict[str, str] = {}
 
@@ -203,9 +203,7 @@ class _SysInfo:
 
 	@cached_property
 	def mem_info(self) -> dict[str, int]:
-		"""
-		Returns system memory information
-		"""
+		# Returns system memory information
 		mem_info_path = Path('/proc/meminfo')
 		mem_info: dict[str, int] = {}
 
@@ -222,9 +220,7 @@ class _SysInfo:
 
 	@cached_property
 	def loaded_modules(self) -> list[str]:
-		"""
-		Returns loaded kernel modules
-		"""
+		# Returns loaded kernel modules
 		modules_path = Path('/proc/modules')
 		modules: list[str] = []
 
@@ -237,9 +233,7 @@ class _SysInfo:
 
 	@cached_property
 	def graphics_devices(self) -> dict[str, str]:
-		"""
-		Returns detected graphics devices (cached)
-		"""
+		# Returns detected graphics devices
 		cards: dict[str, str] = {}
 		for line in SysCommand('lspci'):
 			if b' VGA ' in line or b' 3D ' in line:
@@ -249,10 +243,9 @@ class _SysInfo:
 
 	@cached_property
 	def firmware_vendors(self) -> list[str]:
-		"""
-		Returns FirmwareVendor enum *names* matching detected PCI vendor IDs.
-		Limited to high-yield consumer vendors; niche vendors stay manual.
-		"""
+		# Returns FirmwareVendor enum *names* matching detected PCI vendor IDs.
+		# Limited to high-yield consumer vendors; niche vendors stay manual.
+		#
 		# Manual-only FirmwareVendor members (not auto-detected, ticked by the user)
 		#   LIQUIDIO  	Cavium LiquidIO server adapters
 		#   MARVELL   	Marvell devices

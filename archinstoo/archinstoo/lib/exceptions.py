@@ -27,6 +27,5 @@ class ServiceException(Exception):
 
 
 class DownloadTimeout(Exception):
-	"""
-	Download timeout exception raised by DownloadTimer.
-	"""
+	# Stub from archinstoo/archinstoo/lib/utils/net.py
+	pass

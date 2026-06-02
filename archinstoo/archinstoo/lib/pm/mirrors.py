@@ -384,13 +384,10 @@ def select_custom_mirror(preset: list[CustomRepository] = []) -> list[CustomRepo
 
 
 def select_optional_repositories(preset: list[Repository]) -> list[Repository]:
-	"""
-	Allows the user to select additional repositories (multilib, and testing) if desired.
-
-	:return: The string as a selected repository
-	:rtype: Repository
-	"""
-
+	# Allows the user to select additional repositories (multilib, and testing) if desired.
+	#
+	# :return: The string as a selected repository
+	# :rtype: Repository
 	repositories = [
 		Repository.Multilib,
 		Repository.MultilibTesting,
@@ -420,7 +417,7 @@ def select_optional_repositories(preset: list[Repository]) -> list[Repository]:
 
 
 def select_pacman_options(preset: list[str]) -> list[str]:
-	"""Select misc pacman.conf options like Color, ILoveCandy, etc."""
+	# Select misc pacman.conf options like Color, ILoveCandy, etc.
 	items = [MenuItem(opt, value=opt) for opt in PACMAN_OPTIONS]
 	group = MenuItemGroup(items, sort_items=False)
 	group.set_selected_by_value(preset)

@@ -102,7 +102,7 @@ class PacmanConfig:
 		self._custom_repositories = repos
 
 	def enable_options(self, options: list[str]) -> None:
-		"""Enable misc options like Color, ILoveCandy, VerbosePkgLists"""
+		# Enable misc options like Color, ILoveCandy, VerbosePkgLists
 		self._misc_options = options
 
 	def apply(self) -> None:
@@ -183,7 +183,7 @@ class PacmanConfig:
 
 	@classmethod
 	def apply_config(cls, config: PacmanConfiguration) -> None:
-		"""Apply a PacmanConfiguration to the live system."""
+		# Apply a PacmanConfiguration to the live system.
 		if not config.optional_repositories and not config.custom_repositories and not config.pacman_options:
 			return
 		pacman = cls(None)
@@ -197,7 +197,7 @@ class PacmanConfig:
 
 	@classmethod
 	def get_existing_custom_repos(cls) -> list[CustomRepository]:
-		"""Parse pacman.conf for existing custom repositories."""
+		# Parse pacman.conf for existing custom repositories.
 		content = PACMAN_CONF.read_text()
 		repos: list[CustomRepository] = []
 

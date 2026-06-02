@@ -14,7 +14,7 @@ from archinstoo.lib.utils.net import DownloadTimer, fetch_data_from_url, ping
 
 
 def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
-	"""Parse ISO datetime string, handling Z suffix and already-parsed values."""
+	# Parse ISO datetime string, handling Z suffix and already-parsed values.
 	if value is None:
 		return None
 	if isinstance(value, datetime.datetime):
@@ -228,7 +228,7 @@ class ArchLinuxDeMirrorEntry:
 		)
 
 	def to_v3_entry(self) -> dict[str, Any]:
-		"""Convert to MirrorStatusEntryV3 compatible format"""
+		# Convert to MirrorStatusEntryV3 compatible format
 		return {
 			'url': self.url,
 			'protocol': urllib.parse.urlparse(self.url).scheme,
@@ -272,7 +272,7 @@ class ArchLinuxDeMirrorList:
 
 	@classmethod
 	def fetch_all(cls, base_url: str) -> Self:
-		"""Fetch all paginated results from archlinux.de API"""
+		# Fetch all paginated results from archlinux.de API
 		limit = 100
 		first_page = cls.from_json(fetch_data_from_url(f'{base_url}?offset=0&limit={limit}'))
 		all_items = list(first_page.items)
@@ -285,7 +285,7 @@ class ArchLinuxDeMirrorList:
 		return cls(offset=0, limit=len(all_items), total=len(all_items), count=len(all_items), items=all_items)
 
 	def to_v3(self) -> MirrorStatusListV3:
-		"""Convert to MirrorStatusListV3 format"""
+		# Convert to MirrorStatusListV3 format
 		urls = [item.to_v3_entry() for item in self.items]
 		return MirrorStatusListV3.from_dict(
 			{

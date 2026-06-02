@@ -31,7 +31,7 @@ def _build_icmp(payload: bytes) -> bytes:
 
 
 def ping(hostname: str, timeout: int = 5) -> int:
-	"""ICMP ping, returns latency in ms or -1 on failure."""
+	# ICMP ping, returns latency in ms or -1 on failure.
 	watchdog = select.epoll()
 	started = time.monotonic()
 	random_identifier = f'archinstoo-{random.randint(1000, 9999)}'.encode()  # noqa: S311 - ICMP echo id, not for crypto
@@ -59,17 +59,12 @@ def ping(hostname: str, timeout: int = 5) -> int:
 
 
 class DownloadTimer:
-	"""
-	Context manager for timing downloads with timeouts.
-	"""
-
+	# Context manager for timing downloads with timeouts.
 	def __init__(self, timeout: int = 5):
-		"""
-		Args:
-			timeout:
-				The download timeout in seconds. The DownloadTimeout exception
-				will be raised in the context after this many seconds.
-		"""
+		# Args:
+		# timeout:
+		# The download timeout in seconds. The DownloadTimeout exception
+		# will be raised in the context after this many seconds.
 		self.time: float | None = None
 		self.start_time: float | None = None
 		self.timeout = timeout
@@ -77,9 +72,7 @@ class DownloadTimer:
 		self.previous_timer: int | None = None
 
 	def raise_timeout(self, _signl: int, _frame: FrameType | None) -> None:
-		"""
-		Raise the DownloadTimeout exception.
-		"""
+		# Raise the DownloadTimeout with time
 		raise DownloadTimeout(f'Download timed out after {self.timeout} second(s).')
 
 	def __enter__(self) -> Self:

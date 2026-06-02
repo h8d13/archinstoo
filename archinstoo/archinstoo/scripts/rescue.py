@@ -29,7 +29,7 @@ LINUX_FILESYSTEMS = {
 
 
 def activate_lvm_volumes() -> None:
-	"""Activate all LVM volume groups."""
+	# Activate all LVM volume groups.
 	try:
 		SysCommand(['vgchange', '-ay'])
 		info('LVM volume groups activated')
@@ -38,7 +38,7 @@ def activate_lvm_volumes() -> None:
 
 
 def find_luks_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:
-	"""Find all LUKS encrypted partitions."""
+	# Find all LUKS encrypted partitions.
 	luks_partitions: list[LsblkInfo] = []
 
 	def _check_partition(lsblk_info: LsblkInfo) -> None:
@@ -55,9 +55,7 @@ def find_luks_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:
 
 
 def find_linux_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:
-	"""
-	Looks for ext4, btrfs, xfs filesystems that are not currently mounted.
-	"""
+	# Looks for ext4, btrfs, xfs filesystems that are not currently mounted.
 	linux_partitions: list[LsblkInfo] = []
 	fs_values = {fs.value for fs in LINUX_FILESYSTEMS}
 
@@ -177,7 +175,7 @@ def unmount_all(mount_point: Path) -> None:
 
 
 def unlock_luks_partition(partition: LsblkInfo) -> Luks2 | None:
-	"""Prompt for password and unlock a LUKS partition."""
+	# Prompt for password and unlock a LUKS partition.
 	info(f'Found encrypted partition: {partition.path}')
 
 	# Generate a mapper name based on the partition
@@ -212,7 +210,7 @@ def unlock_luks_partition(partition: LsblkInfo) -> Luks2 | None:
 
 
 def select_partition(partitions: list[LsblkInfo]) -> LsblkInfo | None:
-	"""Display a menu for the user to select a partition."""
+	# Display a menu for the user to select a partition.
 
 	def _preview_partition(item: MenuItem) -> str | None:
 		partition: LsblkInfo = item.get_value()
@@ -259,7 +257,7 @@ def select_partition(partitions: list[LsblkInfo]) -> LsblkInfo | None:
 
 
 def select_luks_partitions(partitions: list[LsblkInfo]) -> list[LsblkInfo]:
-	"""Display a menu for the user to select LUKS partitions to unlock."""
+	# Display a menu for the user to select LUKS partitions to unlock.
 
 	def _preview_partition(item: MenuItem) -> str | None:
 		partition: LsblkInfo = item.get_value()
@@ -304,7 +302,7 @@ def select_luks_partitions(partitions: list[LsblkInfo]) -> list[LsblkInfo]:
 
 
 def rescue() -> None:
-	"""Main rescue mode entry point."""
+	# Main rescue mode entry point.
 	config_handler = get_arch_config_handler()
 	args = config_handler.args
 

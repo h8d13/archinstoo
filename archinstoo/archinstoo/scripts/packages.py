@@ -37,10 +37,8 @@ def perform_installation(
 	profile_handler: ProfileHandler,
 	application_handler: ApplicationHandler,
 ) -> None:
-	"""
-	Installs profiles, applications, and packages on the running system.
-	No disk ops, no bootloader, no kernel, no users.
-	"""
+	# Installs profiles, applications, and packages on the running system.
+	# No disk ops, no bootloader, no kernel, no users.
 	start_time = time.monotonic()
 	info('Starting package installation...')
 

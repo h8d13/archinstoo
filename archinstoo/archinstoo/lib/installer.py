@@ -80,10 +80,10 @@ class Installer:
 		handler: ArchConfigHandler | None = None,
 		device_handler: DeviceHandler | None = None,
 	):
-		"""
-		`Installer()` is the wrapper for most basic installation steps.
-		It also wraps :py:func:`~archinstoo.Installer.pacstrap` among other things.
-		"""
+		#
+		# `Installer()` is the wrapper for most basic installation steps.
+		# It also wraps :py:func:`~archinstoo.Installer.pacstrap` among other things.
+		#
 		from .args import Arguments
 
 		self._handler = handler
@@ -637,15 +637,13 @@ class Installer:
 		pacman_configuration: PacmanConfiguration,
 		on_target: bool = False,
 	) -> None:
-		"""
-		Set the mirror configuration for the installation.
-
-		:param pacman_configuration: The pacman configuration to use.
-		:type pacman_configuration: PacmanConfiguration
-
-		:on_target: Whether to set the mirrors on the target system or the live system.
-		:param on_target: bool
-		"""
+		# Set the mirror configuration for the installation.
+		#
+		# :param pacman_configuration: The pacman configuration to use.
+		# :type pacman_configuration: PacmanConfiguration
+		#
+		# :on_target: Whether to set the mirrors on the target system or the live system.
+		# :param on_target: bool
 		info('Setting mirrors on ' + ('target' if on_target else 'live system'))
 
 		if on_target:
@@ -2211,7 +2209,7 @@ class Installer:
 		info(f'Wrote to {vconsole_path} using {kb_vconsole} and {font_vconsole}')
 
 	def set_x11_keyboard(self, vconsole_layout: str) -> bool:
-		"""Write X11 keyboard config directly for Xorg profiles."""
+		# Write X11 keyboard config directly for Xorg profiles.
 		if not vconsole_layout.strip():
 			debug('X11 keyboard layout not specified, skipping')
 			return False

@@ -1,8 +1,7 @@
-"""Count packages that would be installed from a saved config.
-
-Resolves full dependency tree via pactree (pacman-contrib).
-Usage: archinstoo --script count path/to/user_configuration.json
-"""
+# Count packages that would be installed from a saved config.
+#
+# Resolves full dependency tree via pactree (pacman-contrib).
+# Usage: archinstoo --script count path/to/user_configuration.json
 
 import argparse
 import json
@@ -19,7 +18,7 @@ _schema_path = Path(__file__).parent.parent / 'schema.jsonc'
 
 
 def _load_schema() -> dict[str, Any]:
-	"""Load schema.jsonc, stripping // comments."""
+	# Load schema.jsonc, stripping // comments.
 	text = _schema_path.read_text()
 	text = re.sub(r'(?m)^\s*//.*$|(?<=,)\s*//.*$', '', text)
 	result: dict[str, Any] = json.loads(text)
@@ -191,7 +190,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 
 def _clean_dep(name: str) -> str | None:
-	"""Strip version constraints and filter out .so provides."""
+	# Strip version constraints and filter out .so provides.
 	if '.so' in name:
 		return None
 	# strip >=, <=, =, >, <
@@ -204,16 +203,16 @@ _TREE_PREFIX_RE = re.compile(r'^[\s│├└─]*')
 
 
 def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str], list[str]]:
-	"""Resolve the full dependency tree via `pactree -s`.
-
-	`-s` keeps tree formatting and emits "<pkg> provides <virtual>" so we can
-	recover the real package name when a dep is satisfied by a .so virtual.
-	`-u` (unique) is omitted because it sometimes collapses such lines to the
-	bare virtual, hiding the providing package (e.g. networkmanager →
-	wpa_supplicant → pcsclite → polkit gets shown as just libpolkit-gobject-1.so).
-
-	If `target` is given, also return explicit packages whose closure contains it.
-	"""
+	# Resolve the full dependency tree via `pactree -s`.
+	#
+	# `-s` keeps tree formatting and emits "<pkg> provides <virtual>" so we can
+	# recover the real package name when a dep is satisfied by a .so virtual.
+	# `-u` (unique) is omitted because it sometimes collapses such lines to the
+	# bare virtual, hiding the providing package (e.g. networkmanager →
+	# wpa_supplicant → pcsclite → polkit gets shown as just libpolkit-gobject-1.so).
+	#
+	# If `target` is given, also return explicit packages whose closure contains it.
+	#
 	resolved: set[str] = set()
 	roots_for_target: list[str] = []
 

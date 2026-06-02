@@ -65,9 +65,7 @@ def list_available_packages(
 	repositories: tuple[Repository, ...],
 	custom_repos: tuple[str, ...] = (),
 ) -> dict[str, AvailablePackage]:
-	"""
-	Returns a list of all available packages in the database
-	"""
+	# Returns a list of all available packages in the database
 	packages: dict[str, AvailablePackage] = {}
 
 	try:

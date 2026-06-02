@@ -37,11 +37,9 @@ class FormattedOutput:
 		class_formatter: str | Callable[[object, list[str]], dict[str, Any]] | None = None,
 		filter_list: list[str] = [],
 	) -> dict[str, Any]:
-		"""
-		the original values returned a dataclass as dict thru the call to some specific methods
-		this version allows thru the parameter class_formatter to call a dynamically selected formatting method.
-		Can transmit a filter list to the class_formatter,
-		"""
+		# the original values returned a dataclass as dict thru the call to some specific methods
+		# this version allows thru the parameter class_formatter to call a dynamically selected formatting method.
+		# Can transmit a filter list to the class_formatter,
 		if class_formatter:
 			# if invoked per reference it has to be a standard function or a classmethod.
 			# A method of an instance does not make sense
@@ -69,14 +67,13 @@ class FormattedOutput:
 		filter_list: list[str] = [],
 		capitalize: bool = False,
 	) -> str:
-		"""variant of as_table (subtly different code) which has two additional parameters
-		filter which is a list of fields which will be shown
-		class_formatter a special method to format the outgoing data
-
-		A general comment, the format selected for the output (a string where every data record is separated by newline)
-		is for compatibility with a print statement
-		As_table_filter can be a drop in replacement for as_table
-		"""
+		# variant of as_table (subtly different code) which has two additional parameters
+		# filter which is a list of fields which will be shown
+		# class_formatter a special method to format the outgoing data
+		#
+		# A general comment, the format selected for the output (a string where every data record is separated by newline)
+		# is for compatibility with a print statement
+		# As_table_filter can be a drop in replacement for as_table
 		raw_data = [cls._get_values(o, class_formatter, filter_list) for o in obj]
 
 		# determine the maximum column size
@@ -203,15 +200,15 @@ log_level = logging.INFO
 
 
 def _supports_color() -> bool:
-	"""
-	Found first reference here:
-		https://stackoverflow.com/questions/7445658/how-to-detect-if-the-console-does-support-ansi-escape-codes-in-python
-	And re-used this:
-		https://github.com/django/django/blob/master/django/core/management/color.py#L12
-
-	Return True if the running system's terminal supports color,
-	and False otherwise.
-	"""
+	#
+	# Found first reference here:
+	# https://stackoverflow.com/questions/7445658/how-to-detect-if-the-console-does-support-ansi-escape-codes-in-python
+	# And re-used this:
+	# https://github.com/django/django/blob/master/django/core/management/color.py#L12
+	#
+	# Return True if the running system's terminal supports color,
+	# and False otherwise.
+	#
 	from .utils.env import Os
 
 	supported_platform = sys.platform != 'win32' or Os.has_env('ANSICON')
@@ -237,14 +234,14 @@ def _stylize_output(
 	reset: bool,
 	font: list[Font] = [],
 ) -> str:
-	"""
-	Heavily influenced by:
-		https://github.com/django/django/blob/ae8338daf34fd746771e0678081999b656177bae/django/utils/termcolors.py#L13
-	Color options here:
-		https://askubuntu.com/questions/528928/how-to-do-underline-bold-italic-strikethrough-color-background-and-size-i
-
-	Adds styling to a text given a set of color arguments.
-	"""
+	#
+	# Heavily influenced by:
+	# https://github.com/django/django/blob/ae8338daf34fd746771e0678081999b656177bae/django/utils/termcolors.py#L13
+	# Color options here:
+	# https://askubuntu.com/questions/528928/how-to-do-underline-bold-italic-strikethrough-color-background-and-size-i
+	#
+	# Adds styling to a text given a set of color arguments.
+	#
 	colors = {
 		'black': '0',
 		'red': '1',
