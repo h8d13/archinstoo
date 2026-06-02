@@ -13,21 +13,18 @@ from archinstoo.lib.utils.env import Os
 
 
 def set_parallel_downloads(preset: int | None = None) -> int | None:
-	max_recommended = 5
+	max_recommended = 10
 
-	header = tr('This option enables the number of parallel downloads that can occur during package downloads') + '\n'
-	header += tr('Enter the number of parallel downloads to be enabled.\n\nNote:\n')
-	header += tr(' - Maximum recommended value : {} ( Allows {} parallel downloads at a time )').format(max_recommended, max_recommended) + '\n'
-	header += tr(' - Disable/Default : 0 ( Disables parallel downloading, allows only 1 download at a time )\n')
+	header = tr('Enter the number of parallel downloads (1-{})').format(max_recommended)
 
 	def validator(s: str | None) -> str | None:
 		if s is not None:
 			with contextlib.suppress(Exception):
 				value = int(s)
-				if value >= 0:
+				if 1 <= value <= max_recommended:
 					return None
 
-		return tr('Invalid download number')
+		return tr('Value must be between 1 and {}').format(max_recommended)
 
 	result = EditMenu(
 		tr('Number downloads'),
@@ -42,7 +39,7 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 		case ResultType.Skip:
 			return preset
 		case ResultType.Reset:
-			return 0
+			return 5
 		case ResultType.Selection:
 			downloads: int = int(result.text())
 		case _:
