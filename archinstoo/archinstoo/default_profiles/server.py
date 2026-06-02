@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class ServerProfile(Profile):
 	def __init__(self, current_value: list[Self] = []):
 		super().__init__(
-			'Server',
+			'server',
 			ProfileType.Server,
 			current_selection=current_value,
 		)

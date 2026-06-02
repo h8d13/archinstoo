@@ -15,17 +15,17 @@ class DisplayServer(Enum):
 
 class ProfileType(Enum):
 	# top level default_profiles
-	Server = 'Server'
-	Desktop = 'Desktop'
-	Xorg = 'Xorg'
-	Wayland = 'Wayland'
-	Minimal = 'Minimal'
-	Custom = 'Custom'
+	Server = 'server'
+	Desktop = 'desktop'
+	Xorg = 'xorg'
+	Wayland = 'wayland'
+	Minimal = 'minimal'
+	Custom = 'custom'
 	# detailed selection default_profiles
-	ServerType = 'ServerType'
-	WindowMgr = 'Window Manager'
-	DesktopEnv = 'Desktop Environment'
-	CustomType = 'CustomType'
+	ServerType = 'servertype'
+	WindowMgr = 'window manager'
+	DesktopEnv = 'desktop environment'
+	CustomType = 'customtype'
 
 	# Custom are place-holders
 	# wayland is hidden in menu

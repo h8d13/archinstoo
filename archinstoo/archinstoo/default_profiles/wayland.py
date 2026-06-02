@@ -15,7 +15,7 @@ class WaylandProfile(Profile):
 
 	def __init__(
 		self,
-		name: str = 'Wayland',
+		name: str = 'wayland',
 		profile_type: ProfileType = ProfileType.Wayland,
 	):
 		super().__init__(

@@ -887,7 +887,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 	@staticmethod
 	def _default_profile() -> Profile:
-		return Profile('Minimal', ProfileType.Minimal)
+		return Profile('minimal', ProfileType.Minimal)
 
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu
