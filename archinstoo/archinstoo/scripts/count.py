@@ -28,11 +28,26 @@ def _load_schema() -> dict[str, Any]:
 SCHEMA = _load_schema()
 
 
+def _firmware_packages(config: dict[str, Any]) -> tuple[list[str], set[str]]:
+	base_pkgs = SCHEMA['base'].copy()
+	extra_pkgs: set[str] = set()
+	firmware_cfg = config.get('firmware', {})
+	firmware_type = firmware_cfg.get('firmware_type', 'full')
+	if firmware_type in ('minimal', 'vendor'):
+		base_pkgs = [p for p in base_pkgs if p != 'linux-firmware']
+	if firmware_type == 'vendor':
+		vendors = firmware_cfg.get('vendors', [])
+		extra_pkgs.update(vendors)
+	return base_pkgs, extra_pkgs
+
+
 def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
-	# base
-	pkgs.update(SCHEMA['base'])
+	# base + firmware
+	base_pkgs, firmware_pkgs = _firmware_packages(config)
+	pkgs.update(base_pkgs)
+	pkgs.update(firmware_pkgs)
 
 	# kernels
 	kernels = config.get('kernels', ['linux'])
@@ -212,7 +227,6 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 	# wpa_supplicant → pcsclite → polkit gets shown as just libpolkit-gobject-1.so).
 	#
 	# If `target` is given, also return explicit packages whose closure contains it.
-	#
 	resolved: set[str] = set()
 	roots_for_target: list[str] = []
 

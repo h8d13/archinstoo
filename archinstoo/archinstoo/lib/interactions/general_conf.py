@@ -244,7 +244,7 @@ def select_aur_packages(preset: list[str] = []) -> list[str]:
 	from archinstoo.lib.grimaur import aur_rpc_info, exists_in_aur_mirror
 
 	base_header = tr('Enter AUR package names separated by commas') + '\n'
-	base_header += tr('base-devel and git will be installed automatically if needed') + '\n'
+	base_header += tr('base-devel, git and kernel-headers will be installed automatically') + '\n'
 
 	error_msg = ''
 	current_text = ', '.join(preset) if preset else ''
