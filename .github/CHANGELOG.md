@@ -12,6 +12,24 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Added `display_name()` methods for human-readable UI display
         - Schema keys aligned with enum `.value` fields
         - Saved configs with old casing require migration (altho most people use the menu directly, this will allow for better checks/tests)
+    - Hardware detection allow for vendor specific list in `Firmware`
+        - Updated `count.py` to work with new firmware choice logic
+    - Fix doas path resolution on grimaur installs
+        - Validate AUR selection requires elevation
+        - Update grimaur to new version
+    - Code quality
+        - Convert docstrings to plain `#` comments
+        - Logging fixes
+        - Clean up help text and user-facing messages
+    - Linting & testing
+        - Add `exhaustive-match` pattern (16 sites)
+        - Enable additional ruff rules (noqa S shell, cast reduction)
+        - Remove test hacks from upstream
+    - Admin & cleanup
+        - Remove easter-egg
+        - Docstring format updates
+        - Leave fork network
+        - Various docs refreshes
 
 ## 0.1.09-0
 
