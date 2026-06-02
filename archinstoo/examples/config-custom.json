@@ -42,10 +42,10 @@
         "profile": {
             "path": "./examples/custom.py",
             "details": [
-                "Xfce4"
+                "xfce4"
             ],
             "custom_settings": {
-                "Xfce4": {}
+                "xfce4": {}
             }
         },
         "gfx_driver": "all-open-source",

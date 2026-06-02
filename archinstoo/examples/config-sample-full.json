@@ -199,17 +199,17 @@
             {
                 "main": "desktop",
                 "details": [
-                    "KDE Plasma"
+                    "kde plasma"
                 ],
                 "custom_settings": {
-                    "KDE Plasma": {}
+                    "kde plasma": {}
                 }
             },
             {
                 "main": "server",
                 "details": [
-                    "Docker",
-                    "Sshd"
+                    "docker",
+                    "sshd"
                 ],
                 "custom_settings": {}
             }
