@@ -123,7 +123,7 @@ def perform_installation(
 
 		# AUR packages
 		if config.aur_packages and config.auth_config:
-			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
+			run_aur_installation(config.aur_packages, installation, config.auth_config)
 
 		# NTP
 		if config.ntp:

@@ -176,7 +176,7 @@ def perform_installation(
 
 		# We run the next defs last because they might depend on anything above
 		if config.aur_packages and config.auth_config:
-			run_aur_installation(config.aur_packages, installation, config.auth_config.users)
+			run_aur_installation(config.aur_packages, installation, config.auth_config)
 
 		# If the user provided a list of services to be enabled
 		# This might include system wide services or user specific
