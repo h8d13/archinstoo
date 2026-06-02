@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class BspwmProfile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Bspwm', ProfileType.WindowMgr)
+		super().__init__('bspwm', ProfileType.WindowMgr)
 
 	@property
 	@override

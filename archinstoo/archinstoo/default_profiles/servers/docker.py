@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class DockerProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Docker',
+			'docker',
 			ProfileType.ServerType,
 		)
 

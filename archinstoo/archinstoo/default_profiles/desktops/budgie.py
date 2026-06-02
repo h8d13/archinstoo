@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class BudgieProfile(WaylandProfile):
 	def __init__(self) -> None:
-		super().__init__('Budgie', ProfileType.DesktopEnv)
+		super().__init__('budgie', ProfileType.DesktopEnv)
 
 	@property
 	@override

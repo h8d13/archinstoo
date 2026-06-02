@@ -70,7 +70,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _prev_bootloader(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{tr("Bootloader")}: {item.value.value}'
+			return f'{tr("Bootloader")}: {item.value.display_name()}'
 		return None
 
 	def _prev_uki(self, item: MenuItem) -> str | None:
@@ -204,7 +204,7 @@ def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = F
 
 	default: Bootloader | None = None if skip_boot else Bootloader.Grub
 
-	items = [MenuItem(o.value, value=o) for o in options]
+	items = [MenuItem(o.display_name(), value=o) for o in options]
 	items.append(MenuItem(text=tr('None'), value=None))
 	group = MenuItemGroup(items)
 	group.set_default_by_value(default)

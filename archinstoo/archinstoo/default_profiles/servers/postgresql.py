@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class PostgresqlProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Postgresql',
+			'postgresql',
 			ProfileType.ServerType,
 		)
 

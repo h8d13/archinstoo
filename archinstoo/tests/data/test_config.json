@@ -31,7 +31,6 @@
       }
   },
   "auth_config": {
-      "root_enc_password": "password_hash",
       "users": [
           {
               "username": "user_name",
@@ -44,7 +43,7 @@
       "privilege_escalation": "doas"
   },
   "bootloader_config": {
-    "bootloader": "Systemd-boot",
+    "bootloader": "systemd-boot",
     "uki": false,
     "removable": false
   },
@@ -54,10 +53,10 @@
     {"unit": "syncthing.service", "user": "testuser", "linger": true}
   ],
   "disk_config": {
-    "config_type": "default_layout",
+    "config_type": "default-layout",
     "btrfs_options": {
       "snapshot_config": {
-        "type": "Snapper"
+        "type": "snapper"
       }
     },
     "device_modifications": [
@@ -207,21 +206,21 @@
     "firefox"
   ],
   "profile_config": {
-    "gfx_driver": "All open-source",
+    "gfx_driver": "all-open-source",
     "greeter": "lightdm-gtk-greeter",
     "profiles": [
       {
         "custom_settings": {
-          "Hyprland": {
+          "hyprland": {
             "seat_access": "polkit"
           },
-          "Sway": {
+          "sway": {
             "seat_access": "seatd"
           }
         },
         "details": [
-          "Sway",
-          "Hyprland"
+          "sway",
+          "hyprland"
         ],
         "main": "desktop"
       }

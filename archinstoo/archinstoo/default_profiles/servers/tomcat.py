@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import Profile, ProfileType
 class TomcatProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Tomcat',
+			'tomcat',
 			ProfileType.ServerType,
 		)
 

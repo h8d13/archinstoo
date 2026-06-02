@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import Profile, ProfileType
 class HttpdProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Httpd',
+			'httpd',
 			ProfileType.ServerType,
 		)
 

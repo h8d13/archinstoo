@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class AwesomeProfile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Awesome', ProfileType.WindowMgr)
+		super().__init__('awesome', ProfileType.WindowMgr)
 
 	@property
 	@override

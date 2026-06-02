@@ -7,11 +7,24 @@ from archinstoo.lib.translationhandler import tr
 
 
 class Bootloader(Enum):
-	Systemd = 'Systemd-boot'
-	Grub = 'Grub'
-	Efistub = 'Efistub'
-	Limine = 'Limine'
-	Refind = 'Refind'
+	Systemd = 'systemd-boot'
+	Grub = 'grub'
+	Efistub = 'efistub'
+	Limine = 'limine'
+	Refind = 'refind'
+
+	def display_name(self) -> str:
+		match self:
+			case Bootloader.Systemd:
+				return 'Systemd-boot'
+			case Bootloader.Grub:
+				return 'Grub'
+			case Bootloader.Efistub:
+				return 'Efistub'
+			case Bootloader.Limine:
+				return 'Limine'
+			case Bootloader.Refind:
+				return 'Refind'
 
 	def has_removable_support(self) -> bool:
 		match self:
@@ -63,7 +76,7 @@ class BootloaderConfiguration:
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	def preview(self, uefi: bool) -> str:
-		text = f'{tr("Bootloader")}: {self.bootloader.value if self.bootloader else tr("None")}'
+		text = f'{tr("Bootloader")}: {self.bootloader.display_name() if self.bootloader else tr("None")}'
 		text += '\n'
 		if self.bootloader is None:
 			return text

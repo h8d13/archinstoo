@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class Xfce4Profile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Xfce4', ProfileType.DesktopEnv)
+		super().__init__('xfce4', ProfileType.DesktopEnv)
 
 	@property
 	@override

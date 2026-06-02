@@ -38,9 +38,9 @@ class LuksPbkdf(Enum):
 
 
 class DiskLayoutType(Enum):
-	Default = 'default_layout'
-	Manual = 'manual_partitioning'
-	Pre_mount = 'pre_mounted_config'
+	Default = 'default-layout'
+	Manual = 'manual-partitioning'
+	Pre_mount = 'pre-mounted-config'
 
 	def display_msg(self) -> str:
 		match self:
@@ -1308,8 +1308,15 @@ class _SnapshotConfigSerialization(TypedDict):
 
 
 class SnapshotType(Enum):
-	Snapper = 'Snapper'
-	Timeshift = 'Timeshift'
+	Snapper = 'snapper'
+	Timeshift = 'timeshift'
+
+	def display_name(self) -> str:
+		match self:
+			case SnapshotType.Snapper:
+				return 'Snapper'
+			case SnapshotType.Timeshift:
+				return 'Timeshift'
 
 
 @dataclass

@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class EnlightenmentProfile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Enlightenment', ProfileType.WindowMgr)
+		super().__init__('enlightenment', ProfileType.WindowMgr)
 
 	@property
 	@override

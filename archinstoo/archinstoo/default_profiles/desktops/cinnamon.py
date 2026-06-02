@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class CinnamonProfile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Cinnamon', ProfileType.DesktopEnv)
+		super().__init__('cinnamon', ProfileType.DesktopEnv)
 
 	@property
 	@override

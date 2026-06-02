@@ -13,7 +13,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 class NiriProfile(WaylandProfile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Niri',
+			'niri',
 			ProfileType.WindowMgr,
 		)
 

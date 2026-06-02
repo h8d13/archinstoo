@@ -13,7 +13,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 class SwayProfile(WaylandProfile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Sway',
+			'sway',
 			ProfileType.WindowMgr,
 		)
 

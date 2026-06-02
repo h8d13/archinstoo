@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class MateProfile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Mate', ProfileType.DesktopEnv)
+		super().__init__('mate', ProfileType.DesktopEnv)
 
 	@property
 	@override

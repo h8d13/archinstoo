@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class GnomeProfile(WaylandProfile):
 	def __init__(self) -> None:
-		super().__init__('GNOME', ProfileType.DesktopEnv)
+		super().__init__('gnome', ProfileType.DesktopEnv)
 
 	@property
 	@override

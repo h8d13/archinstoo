@@ -264,7 +264,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 			return None
 
 		snapshot_config: SnapshotConfig = item.value
-		return tr('Snapshot type: {}').format(snapshot_config.snapshot_type.value)
+		return tr('Snapshot type: {}').format(snapshot_config.snapshot_type.display_name())
 
 	def _prev_disk_encryption(self, item: MenuItem) -> str | None:
 		disk_config: DiskLayoutConfiguration | None = self._item_group.find_by_key('disk_config').value
