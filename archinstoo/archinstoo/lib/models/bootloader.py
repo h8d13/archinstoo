@@ -38,9 +38,6 @@ class Bootloader(Enum):
 
 	@classmethod
 	def from_arg(cls, bootloader: str) -> Self:
-		# to support old configuration files
-		bootloader = bootloader.capitalize()
-
 		bootloader_options = [e.value for e in cls]
 
 		if bootloader not in bootloader_options:
