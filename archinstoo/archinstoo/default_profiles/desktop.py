@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class DesktopProfile(Profile):
 	def __init__(self, current_selection: list[Self] = []) -> None:
 		super().__init__(
-			'Desktop',
+			'desktop',
 			ProfileType.Desktop,
 			current_selection=current_selection,
 		)

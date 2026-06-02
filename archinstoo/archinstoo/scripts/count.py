@@ -107,7 +107,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	net_type = net.get('type', '')
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
-		if 'Desktop' in mains and net_type in ('nm', 'nm_iwd'):
+		if 'desktop' in mains and net_type in ('nm', 'nm_iwd'):
 			pkgs.update(SCHEMA['network']['nm_desktop_extra'])
 
 	# privilege escalation

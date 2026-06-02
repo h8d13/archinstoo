@@ -7,7 +7,7 @@ from archinstoo.lib.translationhandler import tr
 class XorgProfile(Profile):
 	def __init__(
 		self,
-		name: str = 'Xorg',
+		name: str = 'xorg',
 		profile_type: ProfileType = ProfileType.Xorg,
 	):
 		super().__init__(

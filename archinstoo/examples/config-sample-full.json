@@ -197,7 +197,7 @@
     "profile_config": {
         "profiles": [
             {
-                "main": "Desktop",
+                "main": "desktop",
                 "details": [
                     "KDE Plasma"
                 ],
@@ -206,7 +206,7 @@
                 }
             },
             {
-                "main": "Server",
+                "main": "server",
                 "details": [
                     "Docker",
                     "Sshd"
