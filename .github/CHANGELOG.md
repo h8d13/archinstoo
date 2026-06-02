@@ -2,6 +2,17 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.10-1
+
+    - Enum value parsing fixes and schema consistency
+
+## 0.1.10-0
+
+    - Enum normalization: all profiles, bootloaders, drivers, snapshot/network/disk types to lowercase/kebab-case
+        - Added `display_name()` methods for human-readable UI display
+        - Schema keys aligned with enum `.value` fields
+        - Saved configs with old casing require migration (altho most people use the menu directly, this will allow for better checks/tests)
+
 ## 0.1.09-0
 
     - UKI + grub-btrfs co-existence (#4505)
