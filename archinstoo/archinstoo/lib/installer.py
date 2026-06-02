@@ -2305,7 +2305,8 @@ def run_aur_installation(packages: list[str], installation: Installer, auth_conf
 			doas_conf = installation.target / 'etc/doas.conf'
 			aur_rule = doas_conf
 			with doas_conf.open('a') as doas:
-				doas.write(f'permit nopass {build_user.username} cmd /usr/bin/pacman\n')
+				doas.write(f'permit nopass {build_user.username} as root cmd /usr/bin/pacman\n')
+			doas_conf.chmod(0o644)
 		else:
 			sudoers_dir = installation.target / 'etc/sudoers.d'
 			aur_rule = sudoers_dir / '99-aur-build'
