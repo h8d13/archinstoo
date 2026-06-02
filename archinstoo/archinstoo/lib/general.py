@@ -154,10 +154,11 @@ class SysCommandWorker:
 			debug(str(exc_value))
 
 		if self.exit_code != 0:
+			cleaned_log = clear_vt100_escape_codes(self._trace_log)
 			raise SysCallError(
-				f'{self.cmd} exited with abnormal exit code [{self.exit_code}]: {str(self)[-500:]}',
+				f'{self.cmd} exited with abnormal exit code [{self.exit_code}]: {cleaned_log.decode("utf-8", errors="ignore")[-500:]}',
 				self.exit_code,
-				worker_log=self._trace_log,
+				worker_log=cleaned_log,
 			)
 
 	def is_alive(self) -> bool:
@@ -192,7 +193,6 @@ class SysCommandWorker:
 				except UnicodeDecodeError:
 					return False
 
-			output = re.sub(_VT100_ESCAPE_REGEX, '', output)
 			_cmd_output(output)
 
 			sys.stdout.write(output)

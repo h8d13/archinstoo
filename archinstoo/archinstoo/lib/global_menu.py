@@ -252,8 +252,8 @@ class GlobalMenu(AbstractMenu[None]):
 		if aur_packages_item.has_value() and aur_packages_item.value:
 			from archinstoo.lib.models.authentication import PrivilegeEscalation
 
-			if not auth_config or auth_config.privilege_escalation != PrivilegeEscalation.Sudo:
-				missing.add(tr('AUR packages require Sudo privilege escalation'))
+			if not auth_config or auth_config.privilege_escalation == PrivilegeEscalation.Run0:
+				missing.add(tr('AUR packages require Sudo or Doas privilege escalation (Run0 requires booted environment)'))
 
 		for item in self._item_group.items:
 			if item.mandatory:
