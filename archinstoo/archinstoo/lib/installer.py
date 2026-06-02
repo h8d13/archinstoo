@@ -2304,8 +2304,11 @@ def run_aur_installation(packages: list[str], installation: Installer, auth_conf
 		if priv_esc == PrivilegeEscalation.Doas:
 			doas_conf = installation.target / 'etc/doas.conf'
 			aur_rule = doas_conf
+			if not doas_conf.exists():
+				doas_conf.write_text('')
+			debug(f'Adding temporary doas rule for AUR build: permit nopass {build_user.username} as root')
 			with doas_conf.open('a') as doas:
-				doas.write(f'permit nopass {build_user.username} as root cmd /usr/bin/pacman\n')
+				doas.write(f'permit nopass {build_user.username} as root\n')
 			doas_conf.chmod(0o644)
 		else:
 			sudoers_dir = installation.target / 'etc/sudoers.d'
