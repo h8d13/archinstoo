@@ -605,7 +605,7 @@ class MirrorListHandler:
 			if line.startswith('### '):
 				current_region = line.removeprefix('### ').strip()
 				mirror_list.setdefault(current_region, [])
-			# ## header — country on x86, city subheader on ARM
+			# ## header country on x86, city subheader on ARM
 			elif line.startswith('## '):
 				if not has_countries:
 					current_region = line.removeprefix('## ').strip()

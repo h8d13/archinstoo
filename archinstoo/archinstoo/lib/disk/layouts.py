@@ -72,7 +72,7 @@ def _boot_partition(
 			)
 			start = Size(2, Unit.MiB, sector_size)
 
-		# BIOS: /boot — GRUB can read the user's chosen fs, Limine only supports FAT
+		# BIOS: /boot GRUB can read the user's chosen fs, Limine only supports FAT
 		boot_fs = FilesystemType.FAT32 if bootloader == Bootloader.Limine else filesystem_type
 		partitions.append(
 			PartitionModification(

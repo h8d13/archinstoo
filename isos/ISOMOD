@@ -252,7 +252,7 @@ fi
 
 if [ "$LIVE" = "1" ]; then
     echo "Staging live-user first-boot setup (user: '$LIVE_USER')..."
-    # Grant wheel sudo — this file is safe to ship as-is (doesn't conflict with pacstrap)
+    # Grant wheel sudo this file is safe to ship as-is (doesn't conflict with pacstrap)
     mkdir -p "$PROFILE_DIR/airootfs/etc/sudoers.d"
     echo "%wheel ALL=(ALL:ALL) ALL" > "$PROFILE_DIR/airootfs/etc/sudoers.d/10-wheel"
     sed -i '/^file_permissions=(/a\  ["/etc/sudoers.d/10-wheel"]="0:0:0440"' "$PROFILE_DIR/profiledef.sh"
