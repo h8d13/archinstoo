@@ -116,9 +116,7 @@ class GlobalMenu(AbstractMenu[None]):
 				action=self._pacman_configuration,
 				preview_action=self._prev_pacman_config,
 				key='pacman_config',
-				value_validator=lambda c: bool(
-					c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options or c.parallel_downloads != 5
-				),
+				value_validator=lambda c: bool(c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options),
 			),
 			MenuItem(
 				text=tr('Swap'),
