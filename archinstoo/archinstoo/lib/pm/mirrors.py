@@ -277,6 +277,7 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 				value=self._mirror_config.parallel_downloads,
 				preview_action=self._prev_parallel_downloads,
 				key='parallel_downloads',
+				value_validator=lambda v: v != 5,
 			),
 		]
 
