@@ -192,6 +192,7 @@ class SysCommandWorker:
 				except UnicodeDecodeError:
 					return False
 
+			output = re.sub(_VT100_ESCAPE_REGEX, '', output)
 			_cmd_output(output)
 
 			sys.stdout.write(output)

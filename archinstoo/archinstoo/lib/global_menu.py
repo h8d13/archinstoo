@@ -248,6 +248,13 @@ class GlobalMenu(AbstractMenu[None]):
 		if profile_config and profile_config.greeter == GreeterType.Sddm and not (auth_config and auth_config.users):
 			missing.add(tr('SDDM requires at least one regular user to log in'))
 
+		aur_packages_item = self._item_group.find_by_key('aur_packages')
+		if aur_packages_item.has_value() and aur_packages_item.value:
+			from archinstoo.lib.models.authentication import PrivilegeEscalation
+
+			if not auth_config or auth_config.privilege_escalation != PrivilegeEscalation.Sudo:
+				missing.add(tr('AUR packages require Sudo privilege escalation'))
+
 		for item in self._item_group.items:
 			if item.mandatory:
 				if item.key is None:

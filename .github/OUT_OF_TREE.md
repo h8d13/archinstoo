@@ -3,7 +3,7 @@
 For some hardware using the AUR for drivers is inevitable
 
 Hence why you can now use `--advanced` to get AUR support built-in 
-> *Uses a modified [`grimaur`](https://github.com/mackilanu/grimaur) during install*
+> Uses a modified [`grimaur`](../archinstoo/archinstoo/lib/grimaur.py) *during install*. As far as I known not many installers allow for this.
 
 => Make sure **to toggle kernel headers** from your desired variant(s) if you are building DKMS modules.
 
