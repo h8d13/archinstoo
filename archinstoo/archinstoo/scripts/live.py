@@ -48,7 +48,7 @@ def perform_installation(
 	start_time = time.monotonic()
 	info('Starting live configuration...')
 
-	# Dummy disk config — no actual disk operations
+	# Dummy disk config no actual disk operations
 	disk_config = DiskLayoutConfiguration(
 		config_type=DiskLayoutType.Pre_mount,
 		device_modifications=[],
@@ -63,7 +63,7 @@ def perform_installation(
 		kernels=[],
 		handler=handler,
 	) as installation:
-		# Mark base and bootloader as done — we're on a running system
+		# Mark base and bootloader as done we're on a running system
 		installation.set_helper_flag('base', True)
 		installation.set_helper_flag('bootloader', 'live')
 
@@ -154,7 +154,7 @@ def perform_installation(
 		if args.advanced and (cc := config.custom_commands):
 			run_custom_user_commands(cc, installation)
 
-		# No genfstab — we're on a running system
+		# No genfstab we're on a running system
 
 		elapsed_time = time.monotonic() - start_time
 		info(f'Live configuration completed in {elapsed_time:.1f}s')

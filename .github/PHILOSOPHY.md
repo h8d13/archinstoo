@@ -5,7 +5,7 @@ Why would someone want to code 12h a day something like this..?
 Roots
 ---
 
-When asked in 2005 whether he planned to automate more of the installation process — adding curses frontends, user creation wizards, etc — Judd Vinet, Arch's founder, replied:
+When asked in 2005 whether he planned to automate more of the installation process, adding curses frontends, user creation wizards, etc. Judd Vinet, Arch's founder, replied:
 
 > "Not really. A lot of people like our current installation script. One thing I'd like to have is a 'kickstart' style setup for sysadmins who install linux in labs or other settings where each install is more-or-less identical."
 >
@@ -89,7 +89,7 @@ The first major refactor removed too much. This iteration is more deliberate, bu
 Code Quality
 ---
 
-Hard-coded behavior acts as undocumented policy. Once embedded, it becomes invisible — accepted as “how things work” rather than questioned. Reducing these assumptions improves code readability, logical flow, and long-term adaptability.
+Hard-coded behavior acts as undocumented policy. Once embedded, it becomes invisible; accepted as “how things work” rather than questioned. Reducing these assumptions improves code readability, logical flow, and long-term adaptability.
 
 This approach naturally opens the door to alternatives (and competing standards), different privilege models, and non-default environments. Once the choice exists and works, using it becomes both empowering and satisfying.
 

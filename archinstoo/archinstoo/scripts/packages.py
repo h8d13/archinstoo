@@ -42,7 +42,7 @@ def perform_installation(
 	start_time = time.monotonic()
 	info('Starting package installation...')
 
-	# Dummy disk config — no actual disk operations
+	# Dummy disk config no actual disk operations
 	disk_config = DiskLayoutConfiguration(
 		config_type=DiskLayoutType.Pre_mount,
 		device_modifications=[],
@@ -54,7 +54,7 @@ def perform_installation(
 		disk_config,
 		kernels=[],
 	) as installation:
-		# Mark base and bootloader as done — we're on a running system
+		# Mark base and bootloader as done we're on a running system
 		installation.set_helper_flag('base', True)
 		installation.set_helper_flag('bootloader', 'packages')
 

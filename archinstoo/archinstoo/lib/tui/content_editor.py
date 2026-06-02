@@ -118,7 +118,7 @@ class ContentEditor:
 			self._running = False
 		elif key == curses.KEY_F2:  # F2 - save
 			if self._mode == 'kvp' and any(not self._is_line_valid(line) for line in self._lines):
-				self._error_msg = 'Invalid format — each line must be key = value'
+				self._error_msg = 'Invalid format each line must be key = value'
 			else:
 				self._saved = True
 				self._running = False

@@ -96,7 +96,7 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 
 
 def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> FirmwareConfiguration:
-	header = tr('Full installs the linux-firmware meta package (~600 MB).') + '\n'
+	header = tr('Full installs the linux-firmware meta package.') + '\n'
 	header += tr('Minimal skips firmware entirely (safe for most VMs using virtio).') + '\n'
 	header += tr('Vendor lets you pick only the firmware subpackages you need.') + '\n'
 

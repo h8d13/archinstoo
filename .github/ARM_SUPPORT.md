@@ -89,7 +89,7 @@ done
 wait $BSDTAR_PID
 echo ""
 
-# vconsole.conf — must exist before linux-rpi installs (mkinitcpio needs it)
+# vconsole.conf must exist before linux-rpi installs (mkinitcpio needs it)
 cat > /mnt/etc/vconsole.conf << 'EOF'
 KEYMAP=us
 EOF
@@ -109,13 +109,13 @@ arch-chroot /mnt /bin/bash -c '
     locale-gen
 '
 
-# Remove leftover U-Boot script files (but NOT kernel files — linux-rpi manages those)
+# Remove leftover U-Boot script files (but NOT kernel files linux-rpi manages those)
 rm -f /mnt/boot/boot.scr /mnt/boot/boot.txt /mnt/boot/mkscr
 
 # Add os_check=0 to whatever config.txt the packages set up (don't overwrite)
 grep -q "os_check" /mnt/boot/config.txt || sed -i '1i os_check=0' /mnt/boot/config.txt
 
-# Fix fstab — default references mmcblk0p1 which doesn't exist on USB boot
+# Fix fstab default references mmcblk0p1 which doesn't exist on USB boot
 BOOT_PARTUUID=$(blkid -s PARTUUID -o value "${DEVICE}1")
 ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DEVICE}2")
 cat > /mnt/etc/fstab << EOF
@@ -148,7 +148,7 @@ ln -sf /usr/lib/systemd/system/multi-user.target /mnt/etc/systemd/system/default
 mkdir -p /mnt/etc/systemd/system/getty.target.wants
 ln -sf /usr/lib/systemd/system/getty@.service /mnt/etc/systemd/system/getty.target.wants/getty@tty1.service
 
-# sshd — also generate host keys since sshd won't start without them
+# sshd also generate host keys since sshd won't start without them
 ssh-keygen -A -f /mnt
 mkdir -p /mnt/etc/systemd/system/multi-user.target.wants
 ln -sf /usr/lib/systemd/system/sshd.service /mnt/etc/systemd/system/multi-user.target.wants/sshd.service

@@ -529,7 +529,7 @@ class Installer:
 					iter_time = 200 if is_boot else None
 					luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
 				else:
-					# Root is unencrypted — don't write a keyfile to plaintext disk;
+					# Root is unencrypted don't write a keyfile to plaintext disk;
 					# use a crypttab entry so systemd prompts for a passphrase instead.
 					luks_handler.create_crypttab_entry(self.target)
 
