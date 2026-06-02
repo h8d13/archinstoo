@@ -8,7 +8,7 @@ A fork of `archinstall` an operating system installer for [archlinux](https://ar
 
 > [!TIP]
 > In the [ISO](https://archlinux.org/download/), you are root by default and have some tools available.
-> Use `sudo` or equivalent, *if running from an existing system. Here you will need more [dependencies](./archinstoo/PKGBUILD)*
+> Use `sudo` or equivalent, *if running from an existing system.*
 
 ## Setup / Usage
 
@@ -118,7 +118,7 @@ See all other docs: [.github](./.github/) and [ArchWiki](https://wiki.archlinux.
 
 **Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). 
 
-**Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md)
+**Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md) Here you will need more [dependencies](./archinstoo/PKGBUILD)
 
 To see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md)
 
