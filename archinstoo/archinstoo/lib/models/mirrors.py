@@ -415,7 +415,7 @@ class PacmanConfiguration:
 	optional_repositories: list[Repository] = field(default_factory=list)
 	custom_repositories: list[CustomRepository] = field(default_factory=list)
 	pacman_options: list[str] = field(default_factory=list)
-	parallel_downloads: int = 0
+	parallel_downloads: int = 5
 
 	@property
 	def region_names(self) -> str:
