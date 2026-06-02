@@ -38,7 +38,7 @@ from .exceptions import DiskError, HardwareIncompatibilityError, RequirementErro
 from .general import SysCommand, run
 from .hardware import SysInfo
 from .models.application import DEFAULT_KERNEL
-from .models.authentication import PrivilegeEscalation
+from .models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.locale import LocaleConfiguration
 from .models.users import User
@@ -2279,8 +2279,12 @@ def accessibility_tools_in_use() -> bool:
 	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0  # noqa: S607 - systemctl on live ISO
 
 
-def run_aur_installation(packages: list[str], installation: Installer, users: list[User]) -> None:
-	build_user = next((u for u in users if u.elev), None)
+def run_aur_installation(packages: list[str], installation: Installer, auth_config: AuthenticationConfiguration | None = None) -> None:
+	if not auth_config:
+		warn('No auth config provided, skipping AUR packages')
+		return
+
+	build_user = next((u for u in auth_config.users if u.elev), None)
 
 	if not build_user:
 		warn('No elevated user found, skipping AUR packages')
@@ -2293,13 +2297,21 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 	grimaur_src.copy(grimaur_dest, preserve_metadata=True)
 	grimaur_dest.chmod(0o755)
 
-	# Temporary NOPASSWD for pacman so makepkg -si works without a tty
-	sudoers_dir = installation.target / 'etc/sudoers.d'
-	aur_rule = sudoers_dir / '99-aur-build'
-	aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
-	aur_rule.chmod(0o440)
+	priv_esc = auth_config.privilege_escalation
+	aur_rule = None
 
 	try:
+		if priv_esc == PrivilegeEscalation.Doas:
+			doas_conf = installation.target / 'etc/doas.conf'
+			aur_rule = doas_conf
+			with doas_conf.open('a') as doas:
+				doas.write(f'permit nopass {build_user.username} cmd /usr/bin/pacman\n')
+		else:
+			sudoers_dir = installation.target / 'etc/sudoers.d'
+			aur_rule = sudoers_dir / '99-aur-build'
+			aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
+			aur_rule.chmod(0o440)
+
 		for pkg in packages:
 			info(f'Installing AUR package: {pkg}')
 			try:
@@ -2311,7 +2323,15 @@ def run_aur_installation(packages: list[str], installation: Installer, users: li
 			except SysCallError as e:
 				warn(f'AUR package "{pkg}" failed: {e}')
 	finally:
-		aur_rule.unlink(missing_ok=True)
+		if priv_esc == PrivilegeEscalation.Doas and aur_rule is not None and aur_rule.exists():
+			with aur_rule.open('r') as f:
+				lines = f.readlines()
+			with aur_rule.open('w') as f:
+				for line in lines:
+					if f'permit nopass {build_user.username} cmd /usr/bin/pacman' not in line:
+						f.write(line)
+		elif priv_esc != PrivilegeEscalation.Doas and aur_rule is not None:
+			aur_rule.unlink(missing_ok=True)
 
 
 def run_custom_user_commands(commands: list[str], installation: Installer) -> None:

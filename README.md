@@ -41,7 +41,8 @@ $ nmcli dev wifi connect "SSID" -a
 *If on the ISO instead of a live system*
 ```shell
 pacman-key --init
-pacman -Sy git python
+pacman -Syy
+pacman -S git python
 ```
 
 ### **1. Get the source code**
