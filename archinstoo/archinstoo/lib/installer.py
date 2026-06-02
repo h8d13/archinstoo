@@ -1978,7 +1978,7 @@ class Installer:
 		if root is None:
 			raise ValueError(f'Could not detect root at mountpoint {self.target}')
 
-		info(f'Adding bootloader {bootloader.value} to {boot_partition.dev_path}', step=True)
+		info(f'Adding bootloader {bootloader.display_name()} to {boot_partition.dev_path}', step=True)
 
 		# validate removable bootloader option
 		if bootloader_removable:
@@ -1986,7 +1986,7 @@ class Installer:
 				warn('Removable install requested but system is not UEFI; disabling.')
 				bootloader_removable = False
 			elif not bootloader.has_removable_support():
-				warn(f'Bootloader {bootloader.value} lacks removable support; disabling.')
+				warn(f'Bootloader {bootloader.display_name()} lacks removable support; disabling.')
 				bootloader_removable = False
 
 		if uki_enabled:

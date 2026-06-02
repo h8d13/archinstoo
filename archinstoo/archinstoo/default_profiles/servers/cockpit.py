@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import Profile, ProfileType
 class CockpitProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Cockpit',
+			'cockpit',
 			ProfileType.ServerType,
 		)
 

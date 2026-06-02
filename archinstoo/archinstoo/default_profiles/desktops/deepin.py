@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class DeepinProfile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Deepin', ProfileType.DesktopEnv)
+		super().__init__('deepin', ProfileType.DesktopEnv)
 
 	@property
 	@override

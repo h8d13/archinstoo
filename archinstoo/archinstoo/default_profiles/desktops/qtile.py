@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class QtileProfile(XorgProfile):
 	def __init__(self) -> None:
-		super().__init__('Qtile', ProfileType.WindowMgr)
+		super().__init__('qtile', ProfileType.WindowMgr)
 
 	@property
 	@override

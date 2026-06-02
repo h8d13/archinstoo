@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import Profile, ProfileType
 class NginxProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Nginx',
+			'nginx',
 			ProfileType.ServerType,
 		)
 

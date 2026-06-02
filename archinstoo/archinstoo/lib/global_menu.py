@@ -669,7 +669,7 @@ class GlobalMenu(AbstractMenu[None]):
 			if disk_layout_conf.btrfs_options:
 				btrfs_options = disk_layout_conf.btrfs_options
 				if btrfs_options.snapshot_config:
-					output += tr('Btrfs snapshot type: {}').format(btrfs_options.snapshot_config.snapshot_type.value) + '\n'
+					output += tr('Btrfs snapshot type: {}').format(btrfs_options.snapshot_config.snapshot_type.display_name()) + '\n'
 
 			return output
 
@@ -802,7 +802,7 @@ class GlobalMenu(AbstractMenu[None]):
 			errors.append('systemd-boot with ESP at /efi requires UKI or a separate XBOOTLDR /boot partition')
 
 		if bootloader in (Bootloader.Systemd, Bootloader.Efistub, Bootloader.Refind) and not SysInfo.has_uefi():
-			errors.append(f'{bootloader.value} requires a UEFI system')
+			errors.append(f'{bootloader.display_name()} requires a UEFI system')
 
 		# Firmware reads the kernel directly from the boot partition, which must be FAT.
 		if bootloader == Bootloader.Efistub and boot_partition is not None and (boot_partition.fs_type is None or not boot_partition.fs_type.is_fat()):
@@ -853,7 +853,7 @@ class GlobalMenu(AbstractMenu[None]):
 					output += f'  {profile.name}: ' + ', '.join(sub_names) + '\n'
 
 			if profile_config.gfx_driver:
-				output += tr('Graphics driver') + ': ' + profile_config.gfx_driver.value + '\n'
+				output += tr('Graphics driver') + ': ' + profile_config.gfx_driver.display_name() + '\n'
 
 			if profile_config.greeter:
 				output += tr('Greeter') + ': ' + profile_config.greeter.value + '\n'

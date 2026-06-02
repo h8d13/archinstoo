@@ -56,14 +56,33 @@ class GfxPackage(Enum):
 
 
 class GfxDriver(Enum):
-	AllOpenSource = 'All open-source'
-	AmdOpenSource = 'AMD / ATI (open-source)'
-	IntelOpenSource = 'Intel (open-source)'
-	NvidiaOpenKernel = 'Nvidia (open kernel module for newer GPUs, Turing+)'
-	NvidiaOpenSource = 'Nvidia (open-source nouveau driver)'
-	MesaOpenSource = 'Mesa (open-source)'
-	VMSoftware = 'VM (software rendering)'
-	VMVirtio = 'VM (virtio-gpu)'
+	AllOpenSource = 'all-open-source'
+	AmdOpenSource = 'amd-open-source'
+	IntelOpenSource = 'intel-open-source'
+	NvidiaOpenKernel = 'nvidia-open-kernel'
+	NvidiaOpenSource = 'nvidia-open-nouveau'
+	MesaOpenSource = 'mesa-open-source'
+	VMSoftware = 'vm-software'
+	VMVirtio = 'vm-virtio'
+
+	def display_name(self) -> str:
+		match self:
+			case GfxDriver.AllOpenSource:
+				return 'All open-source'
+			case GfxDriver.AmdOpenSource:
+				return 'AMD / ATI (open-source)'
+			case GfxDriver.IntelOpenSource:
+				return 'Intel (open-source)'
+			case GfxDriver.NvidiaOpenKernel:
+				return 'Nvidia (open kernel module for newer GPUs, Turing+)'
+			case GfxDriver.NvidiaOpenSource:
+				return 'Nvidia (open-source nouveau driver)'
+			case GfxDriver.MesaOpenSource:
+				return 'Mesa (open-source)'
+			case GfxDriver.VMSoftware:
+				return 'VM (software rendering)'
+			case GfxDriver.VMVirtio:
+				return 'VM (virtio-gpu)'
 
 	def has_dkms_variant(self) -> bool:
 		match self:

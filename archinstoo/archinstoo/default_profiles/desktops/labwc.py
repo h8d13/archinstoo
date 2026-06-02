@@ -13,7 +13,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 class LabwcProfile(WaylandProfile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Labwc',
+			'labwc',
 			ProfileType.WindowMgr,
 		)
 

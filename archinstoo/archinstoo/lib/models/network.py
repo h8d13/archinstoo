@@ -8,7 +8,7 @@ from archinstoo.lib.translationhandler import tr
 class NicType(Enum):
 	ISO = 'iso'
 	NM = 'nm'
-	NM_IWD = 'nm_iwd'
+	NM_IWD = 'nm-iwd'
 	IWD = 'iwd'
 	MANUAL = 'manual'
 

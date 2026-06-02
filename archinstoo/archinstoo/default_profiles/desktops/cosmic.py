@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 class CosmicProfile(WaylandProfile):
 	def __init__(self) -> None:
-		super().__init__('Cosmic', ProfileType.DesktopEnv)
+		super().__init__('cosmic', ProfileType.DesktopEnv)
 
 	@property
 	@override

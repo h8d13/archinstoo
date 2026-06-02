@@ -6,7 +6,7 @@ from archinstoo.lib.profile.base import Profile, ProfileType
 class LighttpdProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Lighttpd',
+			'lighttpd',
 			ProfileType.ServerType,
 		)
 

@@ -12,7 +12,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 class RiverProfile(WaylandProfile):
 	def __init__(self) -> None:
-		super().__init__('River', ProfileType.WindowMgr)
+		super().__init__('river', ProfileType.WindowMgr)
 
 		self.custom_settings = {'seat_access': None}
 

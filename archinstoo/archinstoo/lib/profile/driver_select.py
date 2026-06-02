@@ -34,7 +34,7 @@ def select_driver(
 		driver: GfxDriver = x.value
 		return driver.packages_text(k)
 
-	items = [MenuItem(o.value, value=o, preview_action=preview_driver) for o in options]
+	items = [MenuItem(o.display_name(), value=o, preview_action=preview_driver) for o in options]
 	items.append(MenuItem(text=tr('None'), value=None))
 	group = MenuItemGroup(items, sort_items=True)
 	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):

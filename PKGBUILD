@@ -8,7 +8,7 @@
 # Contributor: Hadean Eon <hadean-eon-dev@proton.me>
 
 pkgname=archinstoo
-pkgver=0.1.09
+pkgver=0.1.10
 pkgrel=0
 pkgdesc="Archinstall revamped"
 arch=(any)

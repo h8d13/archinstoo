@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 class MariadbProfile(Profile):
 	def __init__(self) -> None:
 		super().__init__(
-			'Mariadb',
+			'mariadb',
 			ProfileType.ServerType,
 		)
 

@@ -14,7 +14,7 @@ class HyprlandProfile(WaylandProfile):
 	_default_greeter_non_seatd = GreeterType.Sddm
 
 	def __init__(self) -> None:
-		super().__init__('Hyprland', ProfileType.WindowMgr)
+		super().__init__('hyprland', ProfileType.WindowMgr)
 
 		self.custom_settings = {'seat_access': None}
 

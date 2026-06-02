@@ -33,12 +33,12 @@
         ]
     },
     "bootloader_config": {
-        "bootloader": "Grub",
+        "bootloader": "grub",
         "uki": true,
         "removable": true
     },
     "disk_config": {
-        "config_type": "default_layout",
+        "config_type": "default-layout",
         "device_modifications": [
             {
                 "device": "/dev/nvme0n1",
@@ -175,7 +175,7 @@
         },
         "btrfs_options": {
             "snapshot_config": {
-                "type": "Timeshift"
+                "type": "timeshift"
             }
         }
     },
@@ -214,7 +214,7 @@
                 "custom_settings": {}
             }
         ],
-        "gfx_driver": "Intel (open-source)",
+        "gfx_driver": "intel-open-source",
         "greeter": "gdm"
     },
     "hostname": "archinstoo",
@@ -264,7 +264,7 @@
         }
     },
     "network_config": {
-        "type": "nm_iwd"
+        "type": "nm-iwd"
     },
     "timezone": "Europe/Berlin",
     "ntp": true,
@@ -281,6 +281,6 @@
     ],
     "custom_commands": [
         "#arch-chroot via bash tmp files # lines are ignored",
-        "#ex: su - myuser -c \"bash ~/.stash/repo/install.sh\""
+        "#ex: su - myuser -c 'bash ~/.stash/repo/install.sh'"
     ]
 }

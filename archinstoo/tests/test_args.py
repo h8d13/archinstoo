@@ -145,7 +145,6 @@ def test_config_file_parsing(
 			security_config=SecurityConfiguration(tools=[Security.APPARMOR, Security.FIREJAIL]),
 		),
 		auth_config=AuthenticationConfiguration(
-			root_enc_password=Password(enc_password='password_hash'),
 			users=[
 				User(
 					username='user_name',

@@ -111,7 +111,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 		if any(d in xorg_profiles for d in details):
 			pkgs.update(['xorg-server', 'xorg-xinit'])
 		# dkms for nvidia with non-standard kernels
-		if gfx == 'Nvidia (open kernel module for newer GPUs, Turing+)' and any('-' in k for k in kernels):
+		if gfx == 'nvidia-open-kernel' and any('-' in k for k in kernels):
 			pkgs.discard('nvidia-open')
 			pkgs.add('nvidia-open-dkms')
 			pkgs.add('dkms')
@@ -192,7 +192,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if snap_type in SCHEMA['snapshots']:
 		pkgs.update(SCHEMA['snapshots'][snap_type])
 		# grub + btrfs snapshots
-		if bl_name == 'Grub':
+		if bl_name == 'grub':
 			pkgs.update(SCHEMA['grub_btrfs'])
 
 	# swap
