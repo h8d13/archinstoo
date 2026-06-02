@@ -118,7 +118,7 @@ See all other docs: [.github](./.github/) and [ArchWiki](https://wiki.archlinux.
 
 **Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). 
 
-**Host-to-target** testing (without ISOs) [Philosophy](./.github/PHILOSOPHY.md) Here you will need more [dependencies](./archinstoo/PKGBUILD)
+**Host-to-target:** testing (without ISOs) Here you will need more [dependencies](./archinstoo/PKGBUILD)
 
 To see historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md)
 
@@ -138,10 +138,6 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 2. For **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part from git.
 
-```shell
-wget https://raw.githubusercontent.com/h8d13/archinstoo/refs/heads/master/archinstoo/PKGBUILD
-makepkg -c # or use the desired PKGBUILD, with your preferred AUR helper.
-sudo pacman -U archinstoo*.pkg.tar.zst #install locally
-```
+See [Philosophy](./.github/PHILOSOPHY.md) 
 
 See `archinstall` [upstream](https://github.com/archlinux/archinstall)
