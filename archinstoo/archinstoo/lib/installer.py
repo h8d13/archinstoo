@@ -559,9 +559,9 @@ class Installer:
 				self._create_root_keyfile(luks_handler)
 
 	def _create_root_keyfile(self, luks_handler: Luks2, mapper_name: str = 'root') -> None:
-		"""Create a keyfile at the sd-encrypt standard path and add it as a LUKS
-		key slot so the volume can be auto-unlocked from the initramfs.
-		sd-encrypt auto-detects keys at /etc/cryptsetup-keys.d/<name>.key."""
+		#sd-encrypt standard path and add it as a LUKS
+		#key slot so the volume can be auto-unlocked from the initramfs.
+		#sd-encrypt auto-detects keys at /etc/cryptsetup-keys.d/<name>.key.
 		kf_path = f'/etc/cryptsetup-keys.d/{mapper_name}.key'
 		keyfile = self.target / kf_path.lstrip('/')
 
@@ -872,13 +872,10 @@ class Installer:
 			netconf.write(str(conf))
 
 	def link_resolved_stub(self) -> None:
-		"""Point /etc/resolv.conf at systemd-resolved's stub.
-
-		Required for any path that relies on resolved for DNS (ISO copy, iwd
-		standalone). NetworkManager paths skip this since NM writes its own
-		/etc/resolv.conf.
-		https://wiki.archlinux.org/title/Systemd-resolved#DNS
-		"""
+		#Point /etc/resolv.conf at systemd-resolved's stub.
+		#Required for any path that relies on resolved for DNS (ISO copy, iwd
+		#standalone). NetworkManager paths skip this since NM writes its own.
+		# https://wiki.archlinux.org/title/Systemd-resolved#DNS
 		resolv = self.target / 'etc/resolv.conf'
 		resolv.unlink(missing_ok=True)
 		resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
@@ -1089,7 +1086,6 @@ class Installer:
 			function(self)
 
 	def _btrfs_snapshot_type(self) -> SnapshotType | None:
-		"""Return the configured btrfs snapshot type, or None."""
 		if not self._disk_config.has_default_btrfs_vols():
 			return None
 		btrfs_options = self._disk_config.btrfs_options
@@ -1967,16 +1963,9 @@ class Installer:
 		if not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
 
-
 	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False) -> None:
 		"""
 		Adds a bootloader to the installation instance.
-		Archinstoo supports one of five types:
-		* systemd-bootctl
-		* grub
-		* limine
-		* efistub
-		* refind
 
 		:param bootloader: Type of bootloader to be added
 		:param uki_enabled: Whether to use unified kernel images
