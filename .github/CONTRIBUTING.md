@@ -33,17 +33,21 @@ Any contributions through pull requests are welcome as this project aims to be a
 
 ### You can also help by testing or suggesting ideas:
 
-Many thanks to **@ShreshthTiwari, @dzamlo, @eososlinux** and some/many reddit/discord reporters too for the many indirect contribs, and time spent testing or drawing up reports. This in it's core, takes just as much time as coding since you need to test many scenarios.
+Many thanks to **@ShreshthTiwari, @dzamlo, @eososlinux** and some/many reddit/discord reporters too for the many indirect contribs. 
+Time spent testing or drawing up reports/digging info.
+This in it's core, takes just as much time as coding since often you need to test many scenarios.
 
-Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions. These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
+Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions. 
+These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
 
-## Branches
+## Fork & Branches
 
 For each patch create a branch specifically targeted to fix something, `master` should stay clean and accept these patches if tested/reproduced.
 It also means it should be the stable branch and single source of truth.
 
 For your submitted patches you'll likely need to accommodate yourself with branches easily:
-```
+```shell
+# fork first
 git checkout <existing>
 git checkout -b <new>
 git add <file(s)>
@@ -55,7 +59,7 @@ Then open the PR with explanations too, link to resources/issues.
 
 ## Discussions
 
-Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/h8d13/archinstoo/issues).<br>
+Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/h8d13/archinstoo/issues).
 
 ## Coding convention
 
@@ -76,8 +80,6 @@ This will install the pre-commit hook and run it every time a `git commit` is ex
 
 You can also use tools directly locally or in IDEs extensions.
 
-These might include stuff like: `ruff vulture mypy` etc. 
-
 Can be consulted within [PCH](./.pre-commit-config.yaml)
 
 ## Submitting Changes
@@ -93,9 +95,11 @@ To get your pull request merged sooner, you should explain why you are making th
 For example, you can point to a code sample that is outdated in terms of Arch Linux command lines. 
 
 It is also helpful to add links to online documentation or to the implementation of the code you are changing.
-Any related digging/testing is actually just as useful as code.
+Any related digging/testing is actually just as useful as the code itself.
 
 Original Creator:
 * Anton Hvornum ([@Torxed](https://github.com/Torxed))
 
 Modified for archinstoo dev: [@h8d13](https://github.com/h8d13)
+
+And finally thanks for being interested in `archinstoo` + good luck!
