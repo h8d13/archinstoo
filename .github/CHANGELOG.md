@@ -15,8 +15,9 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
     - Hardware detection allow for vendor specific list in `Firmware`
         - Updated `count.py` to work with new firmware choice logic
     - Fix doas path resolution on grimaur installs
+        - Configure `/etc/makepkg.conf` directly
         - Validate AUR selection requires elevation
-        - Update grimaur to new version
+        - Update grimaur to new version -> respects makepkg properly now + other various changes
     - Code quality
         - Convert docstrings to plain `#` comments
         - Logging fixes
