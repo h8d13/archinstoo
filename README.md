@@ -140,4 +140,4 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 See [Philosophy](./.github/PHILOSOPHY.md) 
 
-See `archinstall` [upstream](https://github.com/archlinux/archinstall)
+See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
