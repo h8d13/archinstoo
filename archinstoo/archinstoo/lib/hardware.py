@@ -267,7 +267,6 @@ class _SysInfo:
 		#
 		# Manual-only FirmwareVendor members (not auto-detected, ticked by the user)
 		#   LIQUIDIO  	Cavium LiquidIO server adapters
-		#   MARVELL   	Marvell devices
 		#   MELLANOX  	Mellanox Spectrum switches
 		#   NFP       	Netronome Flow Processors
 		#   QLOGIC    	QLogic devices
@@ -284,6 +283,9 @@ class _SysInfo:
 			'0x0cf3': ('ATHEROS',),
 			'0x14c3': ('MEDIATEK',),
 			'0x17cb': ('QCOM',),
+			# Marvell 88W8xxx wifi: 0x11ab legacy, 0x1b4b newer 88W/88SE
+			'0x11ab': ('MARVELL',),
+			'0x1b4b': ('MARVELL',),
 		}
 
 		pci_devs = Path('/sys/bus/pci/devices')
