@@ -16,6 +16,9 @@ He also said: *"Arch assumes you know what you're doing... it tends to stay out 
 Archinstoo carries this forward. The installer exists to give you an OS, not to make decisions for you.
 But it also exists to give you other tools you might need.
 
+> “Every good work of software starts by scratching a developer’s personal itch.”
+> ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
+
 Rebuilding more with less
 ---
 
