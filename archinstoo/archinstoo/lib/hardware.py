@@ -270,6 +270,7 @@ class _SysInfo:
 		#   MELLANOX  	Mellanox Spectrum switches
 		#   NFP       	Netronome Flow Processors
 		#   QLOGIC    	QLogic devices
+		# PCI vendor IDs cross-checked against /usr/share/hwdata/pci.ids
 		mapping: dict[str, tuple[str, ...]] = {
 			# AMD (0x1002) shares one vendor ID across GCN generations: amdgpu firmware
 			# drives newer cards, radeon older. Suggest both rather than guessing from
