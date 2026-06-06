@@ -11,6 +11,29 @@ from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.utils.env import Os
 
+# On a running host (not the ISO) /etc/pacman.conf is permanent, so anything we change to
+# drive pacstrap must be reverted. Snapshot lives at a stable, namespaced path so a user's
+# own pacman.bak is never touched and a good snapshot is never clobbered.
+_HOST_CONF_BACKUP = PACMAN_CONF.with_name(f'{PACMAN_CONF.name}.archinstoo.bak')
+
+
+def _restore_host_conf() -> None:
+	if _HOST_CONF_BACKUP.exists():
+		_HOST_CONF_BACKUP.copy(PACMAN_CONF, preserve_metadata=True)
+		_HOST_CONF_BACKUP.unlink()
+
+
+def guard_host_conf() -> None:
+	# Call once at startup. On host: heal a backup left by a crashed run (live conf was
+	# modified but never reverted), then snapshot the clean conf and restore it on exit.
+	# No-op on the ISO where /etc/pacman.conf is discarded on reboot.
+	if not Os.running_from_host():
+		return
+
+	_restore_host_conf()
+	PACMAN_CONF.copy(_HOST_CONF_BACKUP, preserve_metadata=True)
+	atexit.register(_restore_host_conf)
+
 
 def set_parallel_downloads(preset: int | None = None) -> int | None:
 	max_recommended = 10
@@ -162,12 +185,7 @@ class PacmanConfig:
 				content.append(f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n')
 				content.append(f'Server = {custom.url}\n')
 
-		# Apply temp using backup then revert on exit handler
-		if Os.running_from_host():
-			temp_copy = PACMAN_CONF.with_suffix('.bak')
-			PACMAN_CONF.copy(temp_copy, preserve_metadata=True)
-			atexit.register(lambda: temp_copy.copy(PACMAN_CONF, preserve_metadata=True))
-
+		# Host conf is snapshotted and restored on exit by guard_host_conf(); just write.
 		with PACMAN_CONF.open('w') as f:
 			f.writelines(content)
 

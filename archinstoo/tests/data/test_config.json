@@ -184,6 +184,10 @@
         "sign_option": "TrustAll"
       }
     ],
+    "pacman_options": [
+      "Color",
+      "ILoveCandy"
+    ],
     "parallel_downloads": 66
   },
   "network_config": {
