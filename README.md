@@ -48,7 +48,7 @@ pacman -S git python
 ### **1. Get the source code**
 
 ```shell
-git clone --depth 1 https://github.com/h8d13/archinstoo
+git clone https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
 ```
 
