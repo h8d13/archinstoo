@@ -42,7 +42,7 @@ $ nmcli dev wifi connect "SSID" -a
 ```shell
 pacman-key --init
 pacman -Syy
-pacman -S git python
+pacman -S git
 ```
 
 ### **1. Get the source code**
@@ -65,7 +65,7 @@ python -m archinstoo [args] # try -h or --help
 
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
-> Alternatively: There are 2 wrappers/helpers from the repo root: `./RUN`(regular) and `./DEV`(advanced) which perform similar steps to 1 and 2.
+> Alternatively: There are 0 wrappers/helpers from the repo root: `./RUN`(regular) and `./DEV`(advanced) which perform similar steps to 1 and 2.
 
 ---
 
