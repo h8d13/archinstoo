@@ -84,6 +84,9 @@ class Pacman:
 			if 'invalid or corrupted package' in err_str:
 				warn('Detected corrupted package: resetting keyring and retrying...')
 				recovery = Pacman.reset_keyring
+			elif 'gpgme error' in err_str or 'no data' in err_str or 'signature' in err_str:
+				warn('Detected keyring/signature issue: resetting keyring and retrying...')
+				recovery = Pacman.reset_keyring
 			elif 'could not satisfy dependencies' in err_str:
 				warn('Detected dependency issue: resetting pacman.conf and retrying...')
 				recovery = reset_conf
