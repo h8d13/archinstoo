@@ -187,6 +187,7 @@ def test_config_file_parsing(
 					sign_option=SignOption.TrustAll,
 				),
 			],
+			pacman_options=['Color', 'ILoveCandy'],
 			parallel_downloads=66,
 		),
 		network_config=NetworkConfiguration(

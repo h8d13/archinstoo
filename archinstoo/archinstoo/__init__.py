@@ -204,6 +204,13 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
 	_log_sys_info(args)
+
+	# On host, snapshot /etc/pacman.conf and restore it on exit so an H2T run never leaves
+	# the running system with a modified pacman.conf (heals a prior crashed run too).
+	from .lib.pm.config import guard_host_conf
+
+	guard_host_conf()
+
 	# usually 'guided' from default lib/args
 	_run_script(script)
 
