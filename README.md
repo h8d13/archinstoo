@@ -66,7 +66,7 @@ python -m archinstoo [args] # try -h or --help
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
 > [!TIP]
-> **Alternatively:** There are wrappers/helpers (which perform similar steps to 1 and 2) from the repo root:
+> **Alternatively:** There are wrappers/helpers (which perform similar steps to 1 and 2) from the **repo root**:
 
 ```shell
 ./RUN # regular
