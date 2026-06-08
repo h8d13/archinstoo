@@ -142,3 +142,5 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 2. For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without it's top part from git.
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
+
+A mirror of this repo can be found [here](https://gitlab.archlinux.org/h8d13/archinstoo/)
