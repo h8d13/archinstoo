@@ -7,7 +7,7 @@
 A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org). MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes. *Aims to make the code base more readable, maintainable and modifiable by anyone*.
 
 > [!TIP]
-> In the [ISO](https://archlinux.org/download/), you are root by default and have tools available.
+> In the [ISO](https://archlinux.org/download/), you are root by default.
 > Use `sudo` or equivalent, *when from an existing system.*
 
 ## Setup / Usage
