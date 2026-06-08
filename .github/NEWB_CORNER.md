@@ -15,7 +15,10 @@ If install speed matters to you (Current best 1m55)
 
 ## More tips in the menu 
 
-Take your time, **installing is fast**, make sure you went trhough everything you need. 
+Take your time, **installing is fast**, make sure you went trhough everything you need.
+
+> [!TIP]
+> Looking up your motherboard model, CPU/GPU, memory, disks, etc... Can often saves you lots of headaches.
 
 You may view main schema here: [Menu-Preview](./SCHEMA.md)
 
