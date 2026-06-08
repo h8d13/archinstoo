@@ -39,11 +39,6 @@ Since a lot can be handled through GUI and not config files.
 
 > You may want to install one of these first instead of a WindowManager where more **manual work** is expected.
 
-## Network 
-
-Network selection: Make sure to pick Network Manager (iwd) for Intel wifi cards or iwd standalone. 
-Default backend for others. Or use minimal Copy from ISO (VMs, Desktops, example).
-
 ## Languages Compat
 
 You can add Google fonts for extended language support and setup mutiple keyboards once you have a basic system working.
@@ -55,12 +50,12 @@ In additional packages section.
 
 ## Maintaining your system
 
-I am stuck:
+I am stuck stepbro:
 ```shell
 CTRL + ALT + Fx
 # x being an F key nbr
 ```
-This should let you access a tty
+This should let you access a tty, from there you can try to kill the problematic process or fix the issue.
 
 I dont know what I'm looking for:
 ```shell
@@ -69,11 +64,15 @@ pacman -Qi pkg
 pacman -Q | grep <pkg>
 ```
 
+You can also `|` (pipe) to other useful stuff like `less`, `head`, `tail`, etc...
+
 I want to learn about something:
 ```shell
 pacman -S man-db
 man <pkg>
 ```
+
+If you want to make your man pages look fancy: `export LESS='-RXF --use-color -Dd+r$Du+b'` in your `.zshrc` or `.bashrc`
 
 I want to have a clean system:
 ```shell
@@ -81,7 +80,7 @@ pacman -S pacman-contrib
 # tools for pacman
 paccache -r
 # cleans cache
-checkupdates   
+checkupdates 
 bash-completion 2.17.0-1 -> 2.17.0-2
 mkinitcpio 40-3 -> 40-4
 # visit archlinux.org/news ideally before updating
