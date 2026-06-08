@@ -5,7 +5,7 @@ import socket
 import ssl
 import struct
 import time
-from typing import TYPE_CHECKING, Self, cast
+from typing import TYPE_CHECKING, Self
 from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -13,6 +13,7 @@ from urllib.request import urlopen
 from archinstoo.lib.exceptions import DownloadTimeout
 
 if TYPE_CHECKING:
+	from collections.abc import Callable
 	from types import FrameType, TracebackType
 
 
@@ -68,7 +69,7 @@ class DownloadTimer:
 		self.time: float | None = None
 		self.start_time: float | None = None
 		self.timeout = timeout
-		self.previous_handler = None
+		self.previous_handler: Callable[[int, FrameType | None], object] | int | signal.Handlers | None = None
 		self.previous_timer: int | None = None
 
 	def raise_timeout(self, _signl: int, _frame: FrameType | None) -> None:
@@ -77,7 +78,7 @@ class DownloadTimer:
 
 	def __enter__(self) -> Self:
 		if self.timeout > 0:
-			self.previous_handler = signal.signal(signal.SIGALRM, self.raise_timeout)  # type: ignore[assignment]
+			self.previous_handler = signal.signal(signal.SIGALRM, self.raise_timeout)
 			self.previous_timer = signal.alarm(self.timeout)
 
 		self.start_time = time.monotonic()
@@ -120,8 +121,8 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 
 	try:
 		response = urlopen(full_url, context=ssl_context, timeout=timeout)  # noqa: S310 - scheme restricted above
-		data = response.read().decode('UTF-8')
-		return cast('str', data)
+		data: str = response.read().decode('UTF-8')
+		return data
 	except URLError as e:
 		raise ValueError(f'Unable to fetch data from url: {url}\n{e}')
 	except Exception as e:

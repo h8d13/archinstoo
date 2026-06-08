@@ -74,7 +74,12 @@ class TranslationHandler:
 		languages = Path.joinpath(locales_dir, self._languages)
 
 		with languages.open() as fp:
-			return cast('list[dict[str, str]]', json.load(fp))
+			data = json.load(fp)
+
+		if not isinstance(data, list) or not all(isinstance(entry, dict) for entry in data):
+			raise ValueError(f'Malformed {self._languages}: expected a JSON array of objects')
+
+		return data
 
 	def _get_catalog_size(self, translation: gettext.NullTranslations) -> int:
 		# Get the number of translated messages for a translations

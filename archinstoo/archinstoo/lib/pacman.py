@@ -73,7 +73,7 @@ class Pacman:
 			error(f'Keyring reset failed: {e}')
 			return False
 
-	def ask(self, error_message: str, bail_message: str, func: Callable, *args, **kwargs) -> None:  # type: ignore[no-untyped-def, type-arg]
+	def ask(self, error_message: str, bail_message: str, func: Callable[..., object], *args: object, **kwargs: object) -> None:
 		try:
 			func(*args, **kwargs)
 		except Exception as err:

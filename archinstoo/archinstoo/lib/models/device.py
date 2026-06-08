@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
 if TYPE_CHECKING:
 	import builtins
@@ -690,14 +690,17 @@ class DeviceGeometry:
 
 	@property
 	def start(self) -> int:
-		return cast('int', self._geometry.start)
+		start: int = self._geometry.start
+		return start
 
 	@property
 	def end(self) -> int:
-		return cast('int', self._geometry.end)
+		end: int = self._geometry.end
+		return end
 
 	def get_length(self, unit: Unit = Unit.sectors) -> int:
-		return cast('int', self._geometry.getLength(unit.name))
+		length: int = self._geometry.getLength(unit.name)
+		return length
 
 	def table_data(self) -> dict[str, str | int]:
 		start = Size(self._geometry.start, Unit.sectors, self._sector_size)
@@ -741,9 +744,11 @@ class PartitionType(StrEnum):
 
 	def get_partition_code(self) -> int | None:
 		if self == PartitionType.PRIMARY:
-			return cast('int', parted.PARTITION_NORMAL)
+			normal: int = parted.PARTITION_NORMAL
+			return normal
 		if self == PartitionType.BOOT:
-			return cast('int', parted.PARTITION_BOOT)
+			boot: int = parted.PARTITION_BOOT
+			return boot
 		return None
 
 
@@ -1368,7 +1373,8 @@ class DeviceModification:
 		if self.wipe:
 			return partition_table.is_gpt()
 
-		return cast('bool', self.device.disk.type == PartitionTable.GPT.value)
+		is_gpt: bool = self.device.disk.type == PartitionTable.GPT.value
+		return is_gpt
 
 	def add_partition(self, partition: PartitionModification) -> None:
 		self.partitions.append(partition)
