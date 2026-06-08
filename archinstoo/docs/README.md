@@ -151,6 +151,7 @@
 │       ├── mirror
 │       ├── packages
 │       ├── rescue
+│       ├── _resolve
 │       └── size
 ├── examples/
 │   ├── config-custom.json
@@ -163,7 +164,8 @@
     ├── data/
     │   └── test_config.json
     ├── test_args
-    └── test_configuration_output
+    ├── test_configuration_output
+    └── test_mirrors
 
-24 directories, 140 files
+24 directories, 142 files
 ```
