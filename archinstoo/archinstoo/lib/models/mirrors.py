@@ -25,7 +25,7 @@ def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime 
 		return None
 
 
-class _MirrorStatusEntryV3Json(TypedDict):
+class _MirrorEntry(TypedDict):
 	# Schema of one entry in archlinux.org/mirrors/status/json/ (version 3).
 	url: str
 	protocol: str
@@ -44,11 +44,11 @@ class _MirrorStatusEntryV3Json(TypedDict):
 	score: NotRequired[float | None]
 
 
-class _MirrorStatusListV3Json(TypedDict):
+class _MirrorList(TypedDict):
 	cutoff: int
 	last_check: str
 	num_checks: int
-	urls: list[_MirrorStatusEntryV3Json]
+	urls: list[_MirrorEntry]
 	version: int
 	check_frequency: NotRequired[int]
 
@@ -86,7 +86,7 @@ class MirrorStatusEntryV3:
 		debug(f'Loaded mirror {self._hostname}' + (f' with score {self.score}' if self.score else ''))
 
 	@classmethod
-	def from_dict(cls, data: _MirrorStatusEntryV3Json) -> Self:
+	def from_dict(cls, data: _MirrorEntry) -> Self:
 		return cls(
 			url=data['url'],
 			protocol=data['protocol'],
@@ -187,7 +187,7 @@ class MirrorStatusListV3:
 			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
 	@classmethod
-	def from_dict(cls, data: _MirrorStatusListV3Json) -> Self:
+	def from_dict(cls, data: _MirrorList) -> Self:
 		if data.get('version') != 3:
 			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
