@@ -36,7 +36,7 @@ Some better examples:
 
 Historically this list from `default_profiles/desktop.py`
 
-```
+```python
 	@property
 	@override
 	def packages(self) -> list[str]:

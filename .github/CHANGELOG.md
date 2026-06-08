@@ -371,7 +371,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 Down from original list (the rest is all in logic or choices):
 
-```
+```python
 	@property
 	@override
 	def packages(self) -> list[str]:
