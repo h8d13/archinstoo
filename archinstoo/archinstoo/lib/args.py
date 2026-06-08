@@ -8,7 +8,7 @@ from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Any, Self, cast
+from typing import Any, Self
 from urllib.request import Request, urlopen
 
 from archinstoo.lib.models.application import DEFAULT_KERNEL, ApplicationConfiguration, ZramConfiguration
@@ -321,7 +321,8 @@ class ArchConfigHandler:
 			try:
 				req = Request(url, headers={'User-Agent': 'ArchInstoo'})  # noqa: S310 - scheme restricted above
 				with urlopen(req) as resp:  # noqa: S310 - scheme restricted above
-					return cast('str', resp.read().decode('utf-8'))
+					content: str = resp.read().decode('utf-8')
+					return content
 			except urllib.error.HTTPError as err:
 				error(f'Could not fetch JSON from {url}: {err}')
 		else:

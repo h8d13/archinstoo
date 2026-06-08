@@ -111,7 +111,7 @@ class Installer:
 		if accessibility_tools_in_use():
 			self._base_packages.extend(__accessibility_packages__)
 
-		self.post_base_install: list[Callable] = []  # type: ignore[type-arg]
+		self.post_base_install: list[Callable[..., None]] = []
 
 		self._modules: list[str] = []
 		self._binaries: list[str] = []
