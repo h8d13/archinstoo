@@ -30,7 +30,7 @@ def clear_vt100_escape_codes(data: bytes) -> bytes:
 	return re.sub(_VT100_ESCAPE_REGEX_BYTES, b'', data)
 
 
-def jsonify(obj: object, safe: bool = True) -> Any:
+def jsonify(obj: object, safe: bool = True) -> Any:  # noqa: ANN401 - dynamic JSON serializer
 	# Converts objects into json.dumps() compatible nested dictionaries.
 	# Setting safe to True skips dictionary keys starting with a bang (!)
 
