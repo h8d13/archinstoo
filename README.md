@@ -4,7 +4,9 @@
 
 # What is `archinstoo`:
 
-A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org). MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes. *Aims to make the code base more readable, maintainable and modifiable by anyone*.
+A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org). 
+MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes. 
+*Aims to make the code base more readable, maintainable and modifiable by anyone*.
 
 > [!TIP]
 > In the [ISO](https://archlinux.org/download/), you are root by default.
@@ -124,7 +126,7 @@ See all other docs: [.github](https://github.com/h8d13/archinstoo/tree/master/.g
 
 **Host-to-target:** testing (without ISOs) Here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD)
 
-See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/blob/master/.github/CHANGELOG.md) and [Troubleshooting](https://github.com/h8d13/archinstoo/blob/master/.github/TROUBLESHOOT.md)
+See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/blob/master/.github/CHANGELOG.md)
 
 The process would be the same with `git clone -b <branch> <url>` to test a specific fix. Usually reproduced then tested on **actual/appropriate hardware.**
 
@@ -135,6 +137,8 @@ Accurate reports/PRs will be addressed in a timely manner: [Issues](https://gith
 **Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). 
 
 See [Philosophy](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md) 
+
+See [Troubleshooting](https://github.com/h8d13/archinstoo/blob/master/.github/TROUBLESHOOT.md)
 
 ---
 
