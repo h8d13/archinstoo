@@ -3,7 +3,7 @@ import gettext
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast, override
+from typing import cast, override  # noqa: TID251 - gettext runtime function
 
 
 @dataclass

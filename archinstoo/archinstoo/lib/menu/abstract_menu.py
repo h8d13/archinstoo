@@ -17,7 +17,7 @@ class AbstractMenu[ValueT]:
 	def __init__(
 		self,
 		item_group: MenuItemGroup,
-		config: Any,
+		config: Any,  # noqa: ANN401 - menu config can be any type
 		auto_cursor: bool = True,
 		allow_reset: bool = False,
 		reset_warning: str | None = None,
@@ -32,7 +32,7 @@ class AbstractMenu[ValueT]:
 
 		self._sync_from_config()
 
-	def __enter__(self, *args: Any, **kwargs: Any) -> Self:
+	def __enter__(self, *args: Any, **kwargs: Any) -> Self:  # noqa: ANN401 - passthrough
 		return self
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
@@ -133,7 +133,7 @@ class AbstractSubMenu[ValueT](AbstractMenu[ValueT]):
 	def __init__(
 		self,
 		item_group: MenuItemGroup,
-		config: Any,
+		config: Any,  # noqa: ANN401 - menu config can be any type
 		auto_cursor: bool = True,
 		allow_reset: bool = False,
 	):
