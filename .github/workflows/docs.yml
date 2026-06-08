@@ -3,6 +3,12 @@ name: docs
 on:
   push:
     branches: [master]
+    # Only rebuild when docs content or docs config changes.
+    paths:
+      - '**.md'
+      - mkdocs.yml
+      - .github/docs-requirements.txt
+      - .github/workflows/docs.yml
   workflow_dispatch:
 
 permissions:
