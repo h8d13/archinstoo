@@ -39,7 +39,7 @@ Since a lot can be handled through GUI and not config files.
 
 > You may want to install one of these first instead of a WindowManager where more **manual work** is expected.
 
-## Languages Compat
+## Languages compat
 
 You can add Google fonts for extended language support and setup mutiple keyboards once you have a basic system working.
 ```shell
