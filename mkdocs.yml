@@ -17,6 +17,12 @@ exclude_docs: |
 extra:
   generator: false
 
+# search is implicit by default, but listing plugins disables it - so re-add it.
+# callouts converts GitHub/Obsidian '> [!TIP]' alerts to Material admonitions.
+plugins:
+  - search
+  - callouts
+
 theme:
   name: material
   palette:
