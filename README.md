@@ -143,4 +143,5 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
 
-A mirror of this repo can be found [here](https://gitlab.archlinux.org/h8d13/archinstoo/)
+See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not on GitHub.
+
