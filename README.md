@@ -12,8 +12,6 @@ A fork of `archinstall` an operating system installer for [archlinux](https://ar
 
 ## Setup / Usage
 
-[Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md)
-
 **0. Get internet access**
 > [!NOTE]
 > Ethernet cable is plug and play.
@@ -104,6 +102,8 @@ A `man` page is also available `man -l docs/archinstoo.1`
 
 ## Use cases
 
+See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md) if you're just starting out with Arch.
+
 See [Headless](https://github.com/h8d13/archinstoo/blob/master/.github/HEADLESS.md) for example server install to play minecraft/run tailscale nodes.
 
 See [Multi-boot](https://github.com/h8d13/archinstoo/blob/master/.github/MULTI_BOOT.md) for example to boot multiple OSes.
@@ -149,4 +149,3 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
 
 See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not on GitHub.
-
