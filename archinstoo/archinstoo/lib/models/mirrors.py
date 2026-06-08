@@ -4,13 +4,13 @@ import json
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict, override
 
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug
-from archinstoo.lib.utils.net import DownloadTimer, fetch_data_from_url, ping
+from archinstoo.lib.utils.net import DownloadTimer, ping
 
 
 def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
@@ -23,6 +23,34 @@ def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime 
 		return datetime.datetime.fromisoformat(value)
 	except ValueError, AttributeError:
 		return None
+
+
+class _MirrorEntry(TypedDict):
+	# Schema of one entry in archlinux.org/mirrors/status/json/ (version 3).
+	url: str
+	protocol: str
+	active: bool
+	country: str
+	country_code: str
+	isos: bool
+	ipv4: bool
+	ipv6: bool
+	details: str
+	delay: NotRequired[int | None]
+	last_sync: NotRequired[str | None]
+	duration_avg: NotRequired[float | None]
+	duration_stddev: NotRequired[float | None]
+	completion_pct: NotRequired[float | None]
+	score: NotRequired[float | None]
+
+
+class _MirrorList(TypedDict):
+	cutoff: int
+	last_check: str
+	num_checks: int
+	urls: list[_MirrorEntry]
+	version: int
+	check_frequency: NotRequired[int]
 
 
 @dataclass
@@ -58,7 +86,7 @@ class MirrorStatusEntryV3:
 		debug(f'Loaded mirror {self._hostname}' + (f' with score {self.score}' if self.score else ''))
 
 	@classmethod
-	def from_dict(cls, data: dict[str, Any]) -> Self:
+	def from_dict(cls, data: _MirrorEntry) -> Self:
 		return cls(
 			url=data['url'],
 			protocol=data['protocol'],
@@ -159,7 +187,7 @@ class MirrorStatusListV3:
 			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
 	@classmethod
-	def from_dict(cls, data: dict[str, Any]) -> Self:
+	def from_dict(cls, data: _MirrorList) -> Self:
 		if data.get('version') != 3:
 			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
 
@@ -174,128 +202,6 @@ class MirrorStatusListV3:
 	@classmethod
 	def from_json(cls, data: str) -> Self:
 		return cls.from_dict(json.loads(data))
-
-	def to_json(self) -> str:
-		return json.dumps(
-			{
-				'cutoff': self.cutoff,
-				'last_check': self.last_check.isoformat(),
-				'num_checks': self.num_checks,
-				'urls': [asdict(u) for u in self.urls],
-				'version': self.version,
-			}
-		)
-
-
-@dataclass
-class ArchLinuxDeCountry:
-	code: str
-	name: str
-
-	@classmethod
-	def from_dict(cls, data: dict[str, Any]) -> Self:
-		return cls(code=data['code'], name=data['name'])
-
-
-@dataclass
-class ArchLinuxDeMirrorEntry:
-	url: str
-	host: str
-	country: ArchLinuxDeCountry | None = None
-	durationAvg: float | None = None
-	delay: int | None = None
-	durationStddev: float | None = None
-	completionPct: float | None = None
-	score: float | None = None
-	lastSync: datetime.datetime | None = None
-	ipv4: bool = True
-	ipv6: bool = False
-
-	@classmethod
-	def from_dict(cls, data: dict[str, Any]) -> Self:
-		return cls(
-			url=data['url'],
-			host=data['host'],
-			country=ArchLinuxDeCountry.from_dict(data['country']) if data.get('country') else None,
-			durationAvg=data.get('durationAvg'),
-			delay=data.get('delay'),
-			durationStddev=data.get('durationStddev'),
-			completionPct=data.get('completionPct'),
-			score=data.get('score'),
-			lastSync=_parse_datetime(data.get('lastSync')),
-			ipv4=data.get('ipv4', True),
-			ipv6=data.get('ipv6', False),
-		)
-
-	def to_v3_entry(self) -> dict[str, Any]:
-		# Convert to MirrorStatusEntryV3 compatible format
-		return {
-			'url': self.url,
-			'protocol': urllib.parse.urlparse(self.url).scheme,
-			'active': True,
-			'country': self.country.name if self.country else 'Worldwide',
-			'country_code': self.country.code if self.country else 'WW',
-			'isos': True,
-			'ipv4': self.ipv4,
-			'ipv6': self.ipv6,
-			'details': self.host,
-			'delay': self.delay,
-			'last_sync': self.lastSync,
-			'duration_avg': self.durationAvg,
-			'duration_stddev': self.durationStddev,
-			'completion_pct': self.completionPct,
-			'score': self.score,
-		}
-
-
-@dataclass
-class ArchLinuxDeMirrorList:
-	offset: int
-	limit: int
-	total: int
-	count: int
-	items: list[ArchLinuxDeMirrorEntry]
-
-	@classmethod
-	def from_dict(cls, data: dict[str, Any]) -> Self:
-		return cls(
-			offset=data['offset'],
-			limit=data['limit'],
-			total=data['total'],
-			count=data['count'],
-			items=[ArchLinuxDeMirrorEntry.from_dict(i) for i in data['items']],
-		)
-
-	@classmethod
-	def from_json(cls, data: str) -> Self:
-		return cls.from_dict(json.loads(data))
-
-	@classmethod
-	def fetch_all(cls, base_url: str) -> Self:
-		# Fetch all paginated results from archlinux.de API
-		limit = 100
-		first_page = cls.from_json(fetch_data_from_url(f'{base_url}?offset=0&limit={limit}'))
-		all_items = list(first_page.items)
-
-		for offset in range(limit, first_page.total, limit):
-			page = cls.from_json(fetch_data_from_url(f'{base_url}?offset={offset}&limit={limit}'))
-			all_items.extend(page.items)
-			debug(f'Fetched {len(all_items)}/{first_page.total} mirrors')
-
-		return cls(offset=0, limit=len(all_items), total=len(all_items), count=len(all_items), items=all_items)
-
-	def to_v3(self) -> MirrorStatusListV3:
-		# Convert to MirrorStatusListV3 format
-		urls = [item.to_v3_entry() for item in self.items]
-		return MirrorStatusListV3.from_dict(
-			{
-				'version': 3,
-				'cutoff': 3600,
-				'last_check': datetime.datetime.now(datetime.UTC),
-				'num_checks': 1,
-				'urls': urls,
-			}
-		)
 
 
 @dataclass

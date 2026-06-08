@@ -173,6 +173,7 @@ docstring-code-format = true
 [tool.ruff.lint]
 select = [
     "A",      # flake8-builtins
+    "ANN401", # any-type in signatures
     "ASYNC",  # flake8-async
     "B",      # flake8-bugbear
     "C4",     # flake8-comprehensions
@@ -207,6 +208,7 @@ select = [
     "SLOT",   # flake8-slot
     "T10",    # flake8-debugger
     "TC",     # flake8-type-checking
+    "TID251", # banned-api (typing.cast)
     "TID252", # relative-imports
     "UP",     # pyupgrade
     "W",      # pycodestyle warnings
@@ -239,6 +241,9 @@ max-complexity = 40
 
 [tool.ruff.lint.isort]
 known-first-party = ["archinstoo"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"typing.cast".msg = "avoid cast(); annotate the binding or validate at the boundary (add # noqa: TID251 with a reason if truly needed)"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"] # init hacks are standard.

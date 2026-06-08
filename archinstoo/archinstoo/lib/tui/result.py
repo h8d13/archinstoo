@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import cast
+from typing import cast  # noqa: TID251 - generic menu value type
 
 from .menu_item import MenuItem
 
