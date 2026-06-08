@@ -2,6 +2,27 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.11-0
+
+    - Documentation moved to MkDocs + Material, published to GitHub Pages via Actions
+        - Source stays in-repo (`.github/*.md`); `README.md` is the single-source index (symlink), cross-tree links made absolute
+        - GitHub-style `> [!TIP]` alerts render as Material admonitions (callouts plugin)
+        - Build/deploy only runs on `.md` or docs-config changes
+    - Type hygiene pass across the installer
+        - `cast` / explicit `Any` / `# type: ignore` cut down to genuine FFI/dynamic boundaries; `ANN401` + banned-`cast` ruff rules added as a ratchet against new ones
+        - JSON boundaries validated instead of cast; ctypes/parted reads typed via annotation
+        - archlinux.org mirror v3 schema modeled as `TypedDict`
+        - Removed the dead `archlinux.de` fallback (API is `410 Gone`) and a latent `to_json` datetime bug with it
+    - `scripts/size.py`: estimate target-system size from a saved config
+        - Reuses `count.py`'s package resolution (extracted to `scripts/_resolve.py`); sums sync-DB download/install sizes via `expac`
+        - `--unit` to pin the output unit, `--top N` for the largest packages
+    - Package manager fixes
+        - Never leave the host `pacman.conf` modified after a host-to-target run
+        - Route GPGME/signature sync errors to a keyring reset
+    - LUKS: surface `cryptsetup` error output when unlock fails (upstream fix credits to 0xdeadd)
+    - Hardware: add Marvell PCI IDs
+    - btrfs: level-1 zstd for the default layout (credits to Tiagoquix)
+
 ## 0.1.10-1
 
     - Enum value parsing fixes and schema consistency
