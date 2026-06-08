@@ -2,7 +2,7 @@
 
 1. `Disk config` & `Authentication` => Assumed to **not be resumed**
 
-Disk is self-explanatory and kinda risky always.
+Disk is self-explanatory and kinda risky always. *Multi-disk was removed because adding disks later on is trivial*
 
 They let decide where to install to set up `users/groups/elevation/shells` + `stashes`
 
@@ -55,7 +55,7 @@ Also all up to user preference, AUR hidden behind `--advanced` this allows to bu
 
 **Make sure to toggle `Kernel Headers` when doing so.**
 
-7. `Custom commands`
+7. `Systctl` & `Custom commands`
 
 This is experimental feature which allows me test some additional automation steps.
 
