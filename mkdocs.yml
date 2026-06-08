@@ -1,0 +1,65 @@
+site_name: archinstoo
+site_description: A fork of archinstall
+site_url: https://h8d13.github.io/archinstoo/
+copyright: archinstoo docs
+repo_url: https://github.com/h8d13/archinstoo
+repo_name: h8d13/archinstoo
+
+# Docs live alongside GitHub metadata in .github/; keep non-doc files out of the build.
+docs_dir: .github
+site_dir: site
+exclude_docs: |
+  workflows/
+  ISSUE_TEMPLATE/
+  CODEOWNERS
+  docs-requirements.txt
+
+extra:
+  generator: false
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Newcomers: NEWB_CORNER.md
+      - Troubleshooting: TROUBLESHOOT.md
+  - Guides:
+      - Headless install: HEADLESS.md
+      - Multi-boot: MULTI_BOOT.md
+      - NVIDIA: NVIDIA.md
+      - CachyOS kernels: CACHY_KERNELS.md
+      - ARM (Arch ALARM): ARM_SUPPORT.md
+      - Build your own ISOs: BUILD_ISOS.md
+      - AUR / out-of-tree: OUT_OF_TREE.md
+  - Reference:
+      - Configuration schema: SCHEMA.md
+      - Dependency chains: DEP_CHAINS.md
+  - Project:
+      - Changelog: CHANGELOG.md
+      - Contributing: CONTRIBUTING.md
+      - Security: SECURITY.md
+      - Philosophy: PHILOSOPHY.md

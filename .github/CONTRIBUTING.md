@@ -80,7 +80,7 @@ This will install the pre-commit hook and run it every time a `git commit` is ex
 
 You can also use tools directly locally or in IDEs extensions.
 
-Can be consulted within [PCH](./.pre-commit-config.yaml)
+Can be consulted within [PCH](https://github.com/h8d13/archinstoo/blob/master/.pre-commit-config.yaml)
 
 ## Submitting Changes
 
