@@ -61,7 +61,7 @@ python -m archinstoo [args] # try -h or --help
 
 ### **3. Enjoy your new system(s)**
 
-<img width="1888" height="915" alt="Screenshot_20260122_110553" src="https://github.com/user-attachments/assets/a2edcd1f-fe68-47d9-96ec-7b7f7a5de524" />
+<img width="1278" height="800" alt="Screenshot_20260608_165700" src="https://github.com/user-attachments/assets/3ac69a5c-31f6-4132-93e5-26bc0555768d" />
 
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
