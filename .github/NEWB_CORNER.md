@@ -15,9 +15,11 @@ If install speed matters to you (Current best 1m55)
 
 ## More tips in the menu 
 
+Take your time, **installing is fast**, make sure you went trhough everything you need. 
+
 You may view main schema here: [Menu-Preview](./SCHEMA.md)
 
-Typing let's you search.
+Typing let's you search in multi-select menus.
 
 ARROW keys lets you move around.
 
@@ -88,4 +90,3 @@ I have slow mirrors:
 sudo reflector --protocol https --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
 sudo pacman -Sy
 ```
-
