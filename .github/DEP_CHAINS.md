@@ -25,3 +25,9 @@ This is useful before commiting to an install and understanding why certain thin
 For a `seatd` only setup we'll have to jump a few hoops: Network option `Copy from ISO` or `iwd standalone` other NM options pull in `polkit`.
 
 `networkmanager → wpa_supplicant → pcsclite → polkit`
+
+---
+
+Similarly you can test the estimate final size of your install.
+
+Finish configuring in the TUI: then `./RUN --script size /path/to/config`
