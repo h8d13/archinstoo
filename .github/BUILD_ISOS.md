@@ -4,8 +4,8 @@ Scripts in `isos/` wrap `mkarchiso` to produce custom Arch ISOs. Run from the re
 
 | Script | Purpose |
 |---|---|
-| [`isos/ISOMOD`](../isos/ISOMOD) | Installer ISO with `archinstoo` baked in |
-| [`isos/ISOMOD_CACHE`](../isos/ISOMOD_CACHE) | Helper, pre-caches packages from `${ISO_PROFILE}.conf` |
+| [`isos/ISOMOD`](https://github.com/h8d13/archinstoo/blob/master/isos/ISOMOD) | Installer ISO with `archinstoo` baked in |
+| [`isos/ISOMOD_CACHE`](https://github.com/h8d13/archinstoo/blob/master/isos/ISOMOD_CACHE) | Helper, pre-caches packages from `${ISO_PROFILE}.conf` |
 
 Flags (env vars, all optional):
 

@@ -12,7 +12,7 @@ A fork of `archinstall` an operating system installer for [archlinux](https://ar
 
 ## Setup / Usage
 
-[Newb-Corner](.github/NEWB_CORNER.md)
+[Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md)
 
 **0. Get internet access**
 > [!NOTE]
@@ -72,7 +72,7 @@ Make your pizzas. *Una pizza con funghi e prosciutto.*
 ## Modify/Extend
 
 > You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
-Or modify existing ones directly. Can also see here for [examples](./archinstoo/examples)
+Or modify existing ones directly. Can also see here for [examples](https://github.com/h8d13/archinstoo/tree/master/archinstoo/examples)
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported.
 
@@ -90,7 +90,7 @@ Available options:
     rescue    [*]
 ```
 
-The full structure of the project can be consulted through [`TREE`](./archinstoo)
+The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/archinstoo)
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
@@ -98,33 +98,33 @@ A `man` page is also available `man -l docs/archinstoo.1`
 
 ## Use cases
 
-See [Headless](./.github/HEADLESS.md) for example server install to play minecraft/run tailscale nodes.
+See [Headless](https://github.com/h8d13/archinstoo/blob/master/.github/HEADLESS.md) for example server install to play minecraft/run tailscale nodes.
 
-See [Multi-boot](./.github/MULTI_BOOT.md) for example to boot multiple OSes.
+See [Multi-boot](https://github.com/h8d13/archinstoo/blob/master/.github/MULTI_BOOT.md) for example to boot multiple OSes.
 
-See [Security](./.github/SECURITY.md) for hardening installs/best practices.
+See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
 
-See [Build-ISOs](./.github/BUILD_ISOS.md) to create your own install mediums.
+See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_ISOS.md) to create your own install mediums.
 
-See [Cachy-Kernels](./.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
+See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
 
-See [Out-of-Tree](./.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
+See [Out-of-Tree](https://github.com/h8d13/archinstoo/blob/master/.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
 
-See [ARM-Support](./.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
+See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
-See all other docs: [.github](./.github/) and [ArchWiki](https://wiki.archlinux.org/title/Main_page)
+See all other docs: [.github](https://github.com/h8d13/archinstoo/tree/master/.github) and [ArchWiki](https://wiki.archlinux.org/title/Main_page)
 
 ## Testing
 
-**Host-to-target:** testing (without ISOs) Here you will need more [dependencies](./archinstoo/PKGBUILD)
+**Host-to-target:** testing (without ISOs) Here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD)
 
-See historical/latest changes [Changelog](./.github/CHANGELOG.md) and [Troubleshooting](./.github/TROUBLESHOOT.md)
+See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/blob/master/.github/CHANGELOG.md) and [Troubleshooting](https://github.com/h8d13/archinstoo/blob/master/.github/TROUBLESHOOT.md)
 
 The process would be the same with `git clone -b <branch> <url>` to test a specific fix. Usually reproduced then tested on **actual/appropriate hardware.**
 
 > Any help in this regard is deeply appreciated, as testing takes just as long, if not longer, than coding.
 
-Accurate reports/PRs will be addressed in a timely manner: [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](./.github/CONTRIBUTING.md)
+Accurate reports/PRs will be addressed in a timely manner: [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
 
 ---
 
@@ -134,10 +134,10 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 1. For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
 
-2. For **non-dev** can be seen here [`archinstoo/PKGBUILD`](./archinstoo/PKGBUILD) uses the repo without it's top part from git.
+2. For **non-dev** can be seen here [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without it's top part from git.
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
 
 **Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). 
 
-See [Philosophy](./.github/PHILOSOPHY.md) 
+See [Philosophy](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md) 

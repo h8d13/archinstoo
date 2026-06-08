@@ -1,33 +1,4 @@
-# Preview
-
-```
-Ctrl+C to clear, TAB to select multiple, Ctrl+H for full help - Guided mode
-
-Archinstoo settings    +   ┌─ Info ─────────────────────────────────────────────────────────────────────────────────┐
-  ───────────────────      │ Language: English (100%)                                                               │
-  Disk config              │ Theme: Dark / Blue                                                                     │
-  Authentication           │                                                                                        │
-  ───────────────────      │                                                                                        │
-  Locales                + │                                                                                        │
-  Pacman config            │                                                                                        │
-  Bootloader             + │                                                                                        │
-  Swap                   + │                                                                                        │
-  Kernels                + │                                                                                        │
-  Profile                + │                                                                                        │
-  Hostname               + │                                                                                        │
-  Applications             │                                                                                        │
-  Network config           │                                                                                        │
-  Timezone                 │                                                                                        │
-  Automatic time sync    + │                                                                                        │
-  Additional packages      │                                                                                        │
-  AUR packages             │                                                                                        │
-  Custom commands        + │                                                                                        │
-  ───────────────────      │                                                                                        │
-  Install                  │                                                                                        │
-  Abort					   │																					    │ 
-                           └────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
+# Walkthrough
 
 1. `Disk config` & `Authentication` => Assumed to **not be resumed**
 
@@ -46,7 +17,7 @@ A keymap is also set here.
 
 Repos, mirrors, misc options.
 
-3. `Bootloader` & `Swap` & `Kernels`/`Headers`
+3. `Bootloader` & `Swap` & `Kernels`/`Headers` & `Firmware`
 
 These are also self-explained. And critical. Can select several kernels.
 
@@ -92,8 +63,8 @@ This is experimental feature which allows me test some additional automation ste
 
 ## Working on customizing
 
-Configs and custom profiles references can be found in [`examples/`](../archinstoo/examples/)
+Configs and custom profiles references can be found in [`examples/`](https://github.com/h8d13/archinstoo/tree/master/archinstoo/examples)
 
-You can also add them directly in [`default_profiles/`](../archinstoo/archinstoo/default_profiles/) following other profiles as example or modify existing ones.
+You can also add them directly in [`default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/archinstoo/archinstoo/default_profiles) following other profiles as example or modify existing ones.
 
-And master [`schema.jsonc`](../archinstoo/archinstoo/schema.jsonc)
+And master [`schema.jsonc`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/schema.jsonc)
