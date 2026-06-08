@@ -1,12 +1,14 @@
 # Walkthrough
 
-1. `Disk config` & `Authentication` => Assumed to **not be resumed**
+## Menu items
+
+- `Disk config` & `Authentication` => Assumed to **not be resumed**
 
 Disk is self-explanatory and kinda risky always. *Multi-disk was removed because adding disks later on is trivial*
 
 They let decide where to install to set up `users/groups/elevation/shells` + `stashes`
 
-2. `Locales` & `Pacman` & `TZ`/`NTP` & `Hostname`
+- `Locales` & `Pacman` & `TZ`/`NTP` & `Hostname`
 
 This tries to follow the ArchWiki as close as possible.
 
@@ -17,20 +19,21 @@ A keymap is also set here.
 
 Repos, mirrors, misc options.
 
-3. `Bootloader` & `Swap` & `Kernels`/`Headers` & `Firmware`
+- `Bootloader` & `Swap` & `Kernels`/`Headers` & `Firmware`
 
 These are also self-explained. And critical. Can select several kernels.
 
-4. `Network`
+- `Network`
 
 Options here are also important: Both `NetworkManager`:
 	- Default backend `wpa_supplicant` (Others)
 	- IWD backend `iwd` managed by NM (Usually for Intel hardware)
 	- Copy from ISO (Use current config) minimal `systemd` network features
+	- IWD standalone
 
 Usually I pick Copy to ISO from VMs or a desktop (cabled) and other two options for laptops this allows for proper integration to `DE`or`WM`.
 
-5. `Applications` & `Profile`
+- `Applications` & `Profile`
 
 This is all up to user preference, can be multi-selected / some set the global default (like `Editor`) through `/etc/environment`
 
@@ -47,7 +50,9 @@ This is all up to user preference, can be multi-selected / some set the global d
   ← Back
 ```
 
-6. `Additional packages` & `AUR packages` 
+> Hardware drivers can also be skipped and added to AUR step bellow if needed.
+
+- `Additional packages` & `AUR packages` 
 
 You can also add something like `noto-fonts` variants at this step or anythign you would like in target really.
 
@@ -55,7 +60,7 @@ Also all up to user preference, AUR hidden behind `--advanced` this allows to bu
 
 **Make sure to toggle `Kernel Headers` when doing so.**
 
-7. `Systctl` & `Custom commands`
+- `Systctl` & `Custom commands`
 
 This is experimental feature which allows me test some additional automation steps.
 
