@@ -1,6 +1,5 @@
 import ctypes
 from pathlib import Path
-from typing import cast
 
 from archinstoo.lib.output import debug
 
@@ -33,12 +32,12 @@ def crypt_gen_salt(prefix: str | bytes, rounds: int) -> bytes:
 	if isinstance(prefix, str):
 		prefix = prefix.encode('utf-8')
 
-	setting = libcrypt.crypt_gensalt(prefix, rounds, None, 0)
+	setting: bytes | None = libcrypt.crypt_gensalt(prefix, rounds, None, 0)
 
 	if setting is None:
 		raise ValueError(f'crypt_gensalt() returned NULL for prefix {prefix!r} and rounds {rounds}')
 
-	return cast('bytes', setting)
+	return setting
 
 
 def crypt_yescrypt(plaintext: str) -> str:
@@ -60,9 +59,9 @@ def crypt_yescrypt(plaintext: str) -> str:
 	enc_plaintext = plaintext.encode('utf-8')
 	salt = crypt_gen_salt('$y$', rounds)
 
-	crypt_hash = libcrypt.crypt(enc_plaintext, salt)
+	crypt_hash: bytes | None = libcrypt.crypt(enc_plaintext, salt)
 
 	if crypt_hash is None:
 		raise ValueError('crypt() returned NULL')
 
-	return cast('bytes', crypt_hash).decode('utf-8')
+	return crypt_hash.decode('utf-8')

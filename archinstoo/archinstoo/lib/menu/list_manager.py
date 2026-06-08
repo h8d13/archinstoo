@@ -1,5 +1,5 @@
 import copy
-from typing import cast
+from typing import cast  # noqa: TID251 - generic menu value type
 
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.translationhandler import tr

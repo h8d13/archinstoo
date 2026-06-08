@@ -28,7 +28,7 @@ class MenuItem:
 	_yes: ClassVar[Self | None] = None
 	_no: ClassVar[Self | None] = None
 
-	def get_value(self) -> Any:
+	def get_value(self) -> Any:  # noqa: ANN401 - menu value can be any type
 		if self.value is None:
 			raise RuntimeError(f'MenuItem {self.text!r} has no value')
 		return self.value
@@ -144,19 +144,19 @@ class MenuItemGroup:
 		for item in self.items:
 			item.preview_action = action
 
-	def set_focus_by_value(self, value: Any) -> None:
+	def set_focus_by_value(self, value: Any) -> None:  # noqa: ANN401 - menu value can be any type
 		for item in self._menu_items:
 			if item.value == value:
 				self.focus_item = item
 				break
 
-	def set_default_by_value(self, value: Any) -> None:
+	def set_default_by_value(self, value: Any) -> None:  # noqa: ANN401 - menu value can be any type
 		for item in self._menu_items:
 			if item.value == value:
 				self.default_item = item
 				break
 
-	def set_selected_by_value(self, values: Any | list[Any] | None) -> None:
+	def set_selected_by_value(self, values: Any | list[Any] | None) -> None:  # noqa: ANN401 - menu value can be any type
 		if values is None:
 			return
 

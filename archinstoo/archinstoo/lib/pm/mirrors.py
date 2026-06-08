@@ -8,7 +8,6 @@ from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.mirrors import (
 	PACMAN_OPTIONS,
-	ArchLinuxDeMirrorList,
 	CustomRepository,
 	CustomServer,
 	MirrorRegion,
@@ -496,7 +495,6 @@ class MirrorListHandler:
 
 		attempts = 3
 
-		# Try archlinux.org first
 		for attempt_nr in range(attempts):
 			try:
 				data = fetch_data_from_url('https://archlinux.org/mirrors/status/json/')
@@ -504,17 +502,6 @@ class MirrorListHandler:
 				return True
 			except Exception as e:
 				debug(f'Error fetching from archlinux.org: {e}')
-				time.sleep(attempt_nr + 1)
-
-		# Fallback to archlinux.de
-		for attempt_nr in range(attempts):
-			try:
-				de_list = ArchLinuxDeMirrorList.fetch_all('https://www.archlinux.de/api/mirrors')
-				v3_list = de_list.to_v3()
-				_MirrorCache.data.update(self._parse_remote_mirror_list(v3_list.to_json()))
-				return True
-			except Exception as e:
-				debug(f'Error fetching from archlinux.de: {e}')
 				time.sleep(attempt_nr + 1)
 
 		debug('Unable to fetch mirror list remotely, falling back to local mirror list')

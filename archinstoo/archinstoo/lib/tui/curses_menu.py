@@ -758,12 +758,15 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 
 		self._init_viewports(self._preview_size)
 
-		if self._menu_vp is None:
+		# read through a typed local: mypy can't see _init_viewports populate
+		# the attribute, so a direct self._menu_vp check reads as unreachable
+		menu_vp: Viewport | None = self._menu_vp
+		if menu_vp is None:
 			raise RuntimeError('SelectMenu _init_viewports did not set _menu_vp')
-		self._items_state: MenuItemsState = MenuItemsState(  # type: ignore[unreachable]
+		self._items_state: MenuItemsState = MenuItemsState(
 			self._item_group,
 			total_cols=self._horizontal_cols,
-			total_rows=self._menu_vp.height,
+			total_rows=menu_vp.height,
 			with_frame=self._frame is not None,
 		)
 

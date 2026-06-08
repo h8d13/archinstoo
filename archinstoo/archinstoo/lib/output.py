@@ -6,7 +6,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, TypeIs, cast, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, TypeIs, runtime_checkable
 
 if TYPE_CHECKING:
 	from collections.abc import Callable, Sequence
@@ -48,7 +48,8 @@ class FormattedOutput:
 			# if is invoked by name we restrict it to a method of the class. No need to mess more
 			if hasattr(o, class_formatter) and callable(getattr(o, class_formatter)):
 				func = getattr(o, class_formatter)
-				return cast('dict[str, Any]', func(filter_list))
+				formatted: dict[str, Any] = func(filter_list)
+				return formatted
 
 			raise ValueError('Unsupported formatting call')
 		if isinstance(o, _HasTableData):
@@ -57,7 +58,8 @@ class FormattedOutput:
 			return o.json()
 		if _is_dataclass_instance(o):
 			return asdict(o)
-		return cast('dict[str, Any]', getattr(o, '__dict__', {}))
+		obj_dict: dict[str, Any] = getattr(o, '__dict__', {})
+		return obj_dict
 
 	@classmethod
 	def as_table(

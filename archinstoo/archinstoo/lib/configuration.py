@@ -1,6 +1,6 @@
 import json
 import stat
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
@@ -90,7 +90,15 @@ class ConfigurationHandler:
 		try:
 			if config_file.exists():
 				with config_file.open() as f:
-					return cast('dict[str, Any]', json.load(f))
+					data = json.load(f)
+
+				# Validate at the boundary: valid JSON of the wrong type (list/scalar/null,
+				# or dict with non-str keys) must fail here, not mid-install downstream.
+				if not isinstance(data, dict) or not all(isinstance(k, str) for k in data):
+					warn(f'Ignoring saved config: expected a JSON object with string keys, got {type(data).__name__}')
+					return None
+
+				return data
 		except Exception as e:
 			warn(f'Failed to load saved config: {e}')
 		return None
