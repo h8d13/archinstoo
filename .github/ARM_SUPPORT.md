@@ -1,5 +1,7 @@
 # Arch Alarm
 
+## Intro
+
 This method is more advanced and assumes you've **built a stage 1 correctly.**
 
 This usually involves the following:
@@ -183,12 +185,9 @@ This is a reduced version of `guided` that only aims to setup certain stuff.
 
 > Removes bootloaders and more things that are not needed for a running system.
 
-First `./DEV -h2t` downloads dependencies you may need (from the PKGBUILD). 
-
 Then `./RUN --script live` will bring you to a minimal menu that is aimed to run on a live system. 
 
 Through this you can set-up server usecases or desktops and more utilities you might need.
-
 
 <img width="1920" height="1080" alt="Screenshot 2026-02-05 15-32-36" src="https://github.com/user-attachments/assets/a0bdf9cd-a472-48f8-a5fc-7d5467381a30" />
 
