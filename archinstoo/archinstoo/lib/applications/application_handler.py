@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from .cat.audio import AudioApp
 from .cat.bluetooth import BluetoothApp
+from .cat.development import DevelopmentApp
 from .cat.editor import EditorApp
 from .cat.firewall import FirewallApp
 from .cat.management import ManagementApp
@@ -68,4 +69,10 @@ class ApplicationHandler:
 			SecurityApp().install(
 				install_session,
 				app_config.security_config,
+			)
+
+		if app_config.development_config and app_config.development_config.tools:
+			DevelopmentApp().install(
+				install_session,
+				app_config.development_config,
 			)

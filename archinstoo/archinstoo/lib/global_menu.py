@@ -367,7 +367,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return output
 
 	def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
-		return ApplicationMenu(preset).run()
+		return ApplicationMenu(preset, advanced=self._advanced).run()
 
 	def _select_authentication(self, preset: AuthenticationConfiguration | None) -> AuthenticationConfiguration | None:
 		return AuthenticationMenu(preset).run()
@@ -492,6 +492,11 @@ class GlobalMenu(AbstractMenu[None]):
 			if app_config.security_config and app_config.security_config.tools:
 				tools = ', '.join([t.value for t in app_config.security_config.tools])
 				output += f'{tr("Security")}: {tools}'
+				output += '\n'
+
+			if app_config.development_config and app_config.development_config.tools:
+				tools = ', '.join([t.value for t in app_config.development_config.tools])
+				output += f'{tr("Development")}: {tools}'
 				output += '\n'
 
 			return output

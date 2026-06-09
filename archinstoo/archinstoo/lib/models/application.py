@@ -99,6 +99,22 @@ class SecurityConfigSerialization(TypedDict):
 	tools: list[str]
 
 
+class Development(StrEnum):
+	RUSTUP = auto()
+	GO = auto()
+	JAVA = 'jdk-openjdk'
+	NODEJS = auto()
+	CLANG = auto()
+	BUILD = auto()
+	DEBUG = auto()
+	ZIG = auto()
+	LUA = auto()
+
+
+class DevelopmentConfigSerialization(TypedDict):
+	tools: list[str]
+
+
 class ZramAlgorithm(StrEnum):
 	Default = 'default'
 	ZSTD = auto()
@@ -124,6 +140,7 @@ class ApplicationSerialization(TypedDict):
 	monitor_config: NotRequired[MonitorConfigSerialization]
 	editor_config: NotRequired[EditorConfigSerialization]
 	security_config: NotRequired[SecurityConfigSerialization]
+	development_config: NotRequired[DevelopmentConfigSerialization]
 
 
 @dataclass
@@ -262,6 +279,22 @@ class SecurityConfiguration:
 		)
 
 
+@dataclass
+class DevelopmentConfiguration:
+	tools: list[Development]
+
+	def json(self) -> DevelopmentConfigSerialization:
+		return {
+			'tools': [t.value for t in self.tools],
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: DevelopmentConfigSerialization) -> Self:
+		return cls(
+			tools=[Development(t) for t in arg['tools']],
+		)
+
+
 @dataclass(frozen=True)
 class ZramConfiguration:
 	enabled: bool
@@ -291,6 +324,7 @@ class ApplicationConfiguration:
 	monitor_config: MonitorConfiguration | None = None
 	editor_config: EditorConfiguration | None = None
 	security_config: SecurityConfiguration | None = None
+	development_config: DevelopmentConfiguration | None = None
 
 	_config_parsers: ClassVar[dict[str, type]] = {
 		'bluetooth_config': BluetoothConfiguration,
@@ -302,6 +336,7 @@ class ApplicationConfiguration:
 		'monitor_config': MonitorConfiguration,
 		'editor_config': EditorConfiguration,
 		'security_config': SecurityConfiguration,
+		'development_config': DevelopmentConfiguration,
 	}
 
 	@classmethod

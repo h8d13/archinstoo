@@ -7,6 +7,8 @@ from archinstoo.lib.models.application import (
 	Audio,
 	AudioConfiguration,
 	BluetoothConfiguration,
+	Development,
+	DevelopmentConfiguration,
 	Editor,
 	EditorConfiguration,
 	Firewall,
@@ -32,7 +34,10 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 	def __init__(
 		self,
 		preset: ApplicationConfiguration | None = None,
+		advanced: bool = False,
 	):
+		self._advanced = advanced
+
 		if preset:
 			self._app_config = preset
 		else:
@@ -53,7 +58,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		return self._app_config
 
 	def _define_menu_options(self) -> list[MenuItem]:
-		return [
+		items = [
 			MenuItem(
 				text=tr('Bluetooth'),
 				action=select_bluetooth,
@@ -111,6 +116,19 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				key='security_config',
 			),
 		]
+
+		# development tooling is opt-in; only surfaced with --advanced
+		if self._advanced:
+			items.append(
+				MenuItem(
+					text=tr('Development'),
+					action=select_development,
+					preview_action=self._prev_development,
+					key='development_config',
+				),
+			)
+
+		return items
 
 	def _prev_power_management(self, item: MenuItem) -> str | None:
 		if item.value is not None:
@@ -172,6 +190,13 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			config: SecurityConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
 			return f'{tr("Security")}: {tools}'
+		return None
+
+	def _prev_development(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: DevelopmentConfiguration = item.value
+			tools = ', '.join([t.value for t in config.tools])
+			return f'{tr("Development")}: {tools}'
 		return None
 
 
@@ -404,5 +429,33 @@ def select_security(preset: SecurityConfiguration | None = None) -> SecurityConf
 			return preset
 		case ResultType.Selection:
 			return SecurityConfiguration(tools=result.get_values())
+		case ResultType.Reset:
+			return None
+
+
+def select_development(preset: DevelopmentConfiguration | None = None) -> DevelopmentConfiguration | None:
+	items = [MenuItem(d.value, value=d) for d in Development]
+	group = MenuItemGroup(items)
+
+	header = tr('Would you like to install development tools?') + '\n'
+
+	if preset:
+		group.set_selected_by_value(preset.tools)
+
+	result = SelectMenu[Development](
+		group,
+		header=header,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min(tr('Development')),
+		multi=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return DevelopmentConfiguration(tools=result.get_values())
 		case ResultType.Reset:
 			return None

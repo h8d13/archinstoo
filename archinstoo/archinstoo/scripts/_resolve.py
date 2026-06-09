@@ -160,6 +160,10 @@ def collect(config: dict[str, Any]) -> set[str]:
 		if tool in SCHEMA['security']:
 			pkgs.update(SCHEMA['security'][tool])
 
+	for tool in (app.get('development_config') or {}).get('tools', []) or []:
+		if tool in SCHEMA['development']:
+			pkgs.update(SCHEMA['development'][tool])
+
 	monitor = (app.get('monitor_config') or {}).get('monitor', '')
 	if monitor in SCHEMA['monitors']:
 		pkgs.update(SCHEMA['monitors'][monitor])

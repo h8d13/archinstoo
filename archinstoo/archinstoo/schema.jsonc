@@ -177,9 +177,21 @@
 		"firejail": ["firejail"],
 		"bubblewrap": ["bubblewrap"],
 		"fail2ban": ["fail2ban"],
-		"pam_u2f": ["pam-u2f"],
+		"pam-u2f": ["pam-u2f"],
 		"sbctl": ["sbctl"],
 		"audit": ["audit"]
+	},
+
+	"development": {
+		"rustup": ["rustup"],
+		"go": ["go"],
+		"jdk-openjdk": ["jdk-openjdk"],
+		"nodejs": ["nodejs", "npm"],
+		"clang": ["clang", "lld", "lldb"],
+		"build": ["cmake", "make", "ninja"],
+		"debug": ["gdb", "perf", "strace", "ltrace", "valgrind"],
+		"zig": ["zig"],
+		"lua": ["lua"]
 	},
 
 	"network": {

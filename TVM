@@ -90,7 +90,7 @@ require_iso() {
 	local iso
 	iso="$(find_iso)"
 	if [ -z "$iso" ]; then
-		err "No ISO found. Build one with isos/ISOMOD, drop one in $DEV_ISO_DIR/, or set DEV_ISO=/path/to.iso"
+		err "No ISO found. Build one with isos/ISOMOD, drop one in $DEV_ISO_DIR/ or $ISOMOD_OUT, or set DEV_ISO=/path/to.iso"
 	fi
 	printf '%s\n' "$iso"
 }
