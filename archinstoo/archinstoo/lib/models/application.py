@@ -120,6 +120,8 @@ class DevTool(StrEnum):
 	NINJA = auto()
 	MESON = auto()
 	GDB = auto()
+	LLVM = auto()
+	LLD = auto()
 	LLDB = auto()
 	PERF = auto()
 	STRACE = auto()

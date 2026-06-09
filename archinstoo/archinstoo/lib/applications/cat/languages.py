@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import Language
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
@@ -9,11 +8,6 @@ if TYPE_CHECKING:
 
 
 class LanguagesApp:
-	# toolchains needing more than their own package name; others map to [tool.value]
-	_extra_packages: ClassVar[dict[Language, list[str]]] = {
-		Language.CLANG: ['clang', 'lld'],
-	}
-
 	def install(
 		self,
 		install_session: Installer,
@@ -21,9 +15,6 @@ class LanguagesApp:
 	) -> None:
 		debug(f'Installing languages: {[t.value for t in language_config.tools]}')
 
-		packages: list[str] = []
-		for tool in language_config.tools:
-			packages += self._extra_packages.get(tool, [tool.value])
-
+		packages = [tool.value for tool in language_config.tools]
 		if packages:
 			install_session.add_additional_packages(packages)

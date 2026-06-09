@@ -187,7 +187,7 @@
 		"go": ["go"],
 		"jdk-openjdk": ["jdk-openjdk"],
 		"nodejs": ["nodejs"],
-		"clang": ["clang", "lld"],
+		"clang": ["clang"],
 		"zig": ["zig"],
 		"lua": ["lua"]
 	},
@@ -198,6 +198,8 @@
 		"ninja": ["ninja"],
 		"meson": ["meson"],
 		"gdb": ["gdb"],
+		"llvm": ["llvm"],
+		"lld": ["lld"],
 		"lldb": ["lldb"],
 		"perf": ["perf"],
 		"strace": ["strace"],
