@@ -2,7 +2,7 @@
 
 ## Grimaur
 
-For some hardware using the AUR for drivers is inevitable
+For some hardware using the AUR for drivers is inevitable: the fix is a build, not a firmware blob
 
 Hence why you can now use `--advanced` to get AUR support built-in 
 > Uses a modified [`grimaur`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/grimaur.py) *during install*. As far as I know not many installers allow for this.
