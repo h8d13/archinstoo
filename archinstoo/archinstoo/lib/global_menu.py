@@ -116,7 +116,9 @@ class GlobalMenu(AbstractMenu[None]):
 				action=self._pacman_configuration,
 				preview_action=self._prev_pacman_config,
 				key='pacman_config',
-				value_validator=lambda c: bool(c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options),
+				value_validator=lambda c: bool(
+					c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options
+				),
 			),
 			MenuItem(
 				text=tr('Swap'),
@@ -816,7 +818,12 @@ class GlobalMenu(AbstractMenu[None]):
 			# When the ESP is the boot partition but mounted outside /boot and
 			# UKI is disabled, kernels end up on the root filesystem which
 			# Limine cannot access.
-			if not bootloader_config.uki and efi_partition is not None and efi_partition == boot_partition and efi_partition.mountpoint != Path('/boot'):
+			if (
+				not bootloader_config.uki
+				and efi_partition is not None
+				and efi_partition == boot_partition
+				and efi_partition.mountpoint != Path('/boot')
+			):
 				errors.append(
 					f'Limine requires kernels on a FAT partition. The ESP is mounted at {efi_partition.mountpoint}, '
 					'enable UKI or add a separate /boot partition to install Limine.'

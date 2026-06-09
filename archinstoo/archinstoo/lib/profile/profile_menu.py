@@ -162,7 +162,9 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 
 	def _prev_customize_packages(self, item: MenuItem) -> str | None:
 		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
-		excluded = sorted({pkg for pr in profiles for p in [pr, *(pr.current_selection or [])] for pkg in (p.custom_settings.get('excluded_packages') or [])})
+		excluded = sorted(
+			{pkg for pr in profiles for p in [pr, *(pr.current_selection or [])] for pkg in (p.custom_settings.get('excluded_packages') or [])}
+		)
 		if not excluded:
 			return tr('No packages excluded')
 		return tr('Excluded packages') + ':\n' + '\n'.join(f'\t- {pkg}' for pkg in excluded)

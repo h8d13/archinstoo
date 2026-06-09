@@ -1308,7 +1308,9 @@ class Installer:
 	) -> list[str]:
 		kernel_parameters = []
 
-		kernel_parameters = self._get_kernel_params_lvm(root) if isinstance(root, LvmVolume) else self._get_kernel_params_partition(root, id_root, partuuid)
+		kernel_parameters = (
+			self._get_kernel_params_lvm(root) if isinstance(root, LvmVolume) else self._get_kernel_params_partition(root, id_root, partuuid)
+		)
 
 		# Zswap should be disabled when using zram.
 		# https://github.com/archlinux/archinstall/issues/881
@@ -1626,7 +1628,8 @@ class Installer:
 				raise DiskError(f'Failed to install Limine in {self.target}{efi_partition.mountpoint}: {err}')
 
 			hook_command = (
-				f'/usr/bin/cp /usr/share/limine/BOOTIA32.EFI {efi_dir_path_target}/ && /usr/bin/cp /usr/share/limine/BOOTX64.EFI {efi_dir_path_target}/'
+				f'/usr/bin/cp /usr/share/limine/BOOTIA32.EFI {efi_dir_path_target}/ '
+				f'&& /usr/bin/cp /usr/share/limine/BOOTX64.EFI {efi_dir_path_target}/'
 			)
 
 			if not bootloader_removable:

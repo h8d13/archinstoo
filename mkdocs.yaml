@@ -51,10 +51,9 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Reference:
-      - Configuration schema: SCHEMA.md
   - Getting Started:
+      - Configuration schema: SCHEMA.md
       - Newcomers: NEWB_CORNER.md
-      - Troubleshooting: TROUBLESHOOT.md
   - Others:
       - Headless install: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
@@ -69,3 +68,4 @@ nav:
       - Contributing: CONTRIBUTING.md
       - Security: SECURITY.md
       - Philosophy: PHILOSOPHY.md
+      - Troubleshooting: TROUBLESHOOT.md

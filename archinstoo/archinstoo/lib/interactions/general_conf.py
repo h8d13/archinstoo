@@ -22,7 +22,8 @@ def select_ntp(preset: bool = True) -> bool:
 	header = tr('Would you like to use automatic time synchronization (NTP) with the default time servers?\n') + '\n'
 	header += (
 		tr(
-			'Hardware time and other post-configuration steps might be required in order for NTP to work.\nFor more information, please check the Arch wiki',
+			'Hardware time and other post-configuration steps might be required in order for NTP to work.\n'
+			'For more information, please check the Arch wiki',
 		)
 		+ '\n'
 	)

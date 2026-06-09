@@ -163,6 +163,7 @@ ignored-modules = ["parted"]
 [tool.ruff]
 target-version = "py314"
 line-length = 160
+indent-width = 8
 exclude = ["**/lib/grimaur.py"]
 
 [tool.ruff.format]
