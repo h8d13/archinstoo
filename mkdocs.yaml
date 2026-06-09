@@ -50,7 +50,6 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Reference:
   - Getting Started:
       - Configuration schema: SCHEMA.md
       - Newcomers: NEWB_CORNER.md
