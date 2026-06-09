@@ -118,6 +118,7 @@ class DevTool(StrEnum):
 	CMAKE = auto()
 	MAKE = auto()
 	NINJA = auto()
+	MESON = auto()
 	GDB = auto()
 	LLDB = auto()
 	PERF = auto()

@@ -196,6 +196,7 @@
 		"cmake": ["cmake"],
 		"make": ["make"],
 		"ninja": ["ninja"],
+		"meson": ["meson"],
 		"gdb": ["gdb"],
 		"lldb": ["lldb"],
 		"perf": ["perf"],
