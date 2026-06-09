@@ -74,17 +74,18 @@ But for 5 years makepkg and similar major upstream projects support alternatives
 ```
 Anyways you start seeing the pattern... What is a 'standard' because it's actually needed, or what is a 'standard' because someone said it should be and left it in a file somewhere.
 
+Then `doas`, `run0` and simply `su` can become first class citizens. (Or any other priv-esc binary really.)
+
 The same philosophy applies to dependencies. By removing unnecessary Python libraries and reducing the dependency surface to what is actually required, archinstoo becomes lighter, clearer, and no less capable.
 
-For example, by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted`.
-
+For example, by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted` (and what is expected on ISOs)
 Without losing any functionality.
 
 ### Withstanding to-dos
 
 Working in a volunteer-driven project with limited feedback loops often means long-standing issues survive simply because they are hard to address incrementally. Archinstoo exists as a space where problems can be solved directly, not worked around.
 
-The first major refactor removed too much. This iteration is more deliberate, but still unapologetic about removing code that exists only to preserve behavior rather than correctness. But still removed considerable parts, often in favor of something else. 
+The first major refactor removed too much. This iteration is more deliberate, unapologetic about removing code that exists only to preserve behavior rather than correctness. But still removed considerable parts, often in favor of something else. 
 
 ### Code Quality
 
