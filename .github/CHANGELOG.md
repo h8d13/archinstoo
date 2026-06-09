@@ -4,6 +4,7 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 ## 0.1.11-1
 
+	- Add `Development` langs/tools under `--advanced` Allows for faster tooling for devs.
 	- Add `shfmt` to flow, run it on all files: follow https://docs.kernel.org/process/coding-style.html for 8 spaces = tab.
 
 ## 0.1.11-0
