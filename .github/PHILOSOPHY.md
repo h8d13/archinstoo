@@ -13,7 +13,10 @@ When asked in 2005 whether he planned to automate more of the installation proce
 He also said: *"Arch assumes you know what you're doing... it tends to stay out of your way."*
 
 Archinstoo carries this forward. The installer exists to give you an OS, not to make decisions for you.
-But it also exists to give you other tools you might need.
+But it also exists to give you other tools/scripts you might need.
+
+There is a true power in reproducible/modular automation as such, which surfaces problems in core logic or order of operations.
+And the "manual" enjoyer, might even enjoy reading trhough some of the source: since they will find direct references to both the holy Wiki and issues from other users.
 
 > “Every good work of software starts by scratching a developer’s personal itch.”
 > ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
