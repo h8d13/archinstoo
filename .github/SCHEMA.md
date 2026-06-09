@@ -47,6 +47,7 @@ This is all up to user preference, can be multi-selected / some set the global d
   Monitor
   Editor
   Security
+  Development (Advanced)
   ← Back
 ```
 
