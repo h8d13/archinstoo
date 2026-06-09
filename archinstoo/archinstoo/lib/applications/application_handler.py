@@ -2,9 +2,10 @@ from typing import TYPE_CHECKING
 
 from .cat.audio import AudioApp
 from .cat.bluetooth import BluetoothApp
-from .cat.development import DevelopmentApp
+from .cat.devtools import DevToolsApp
 from .cat.editor import EditorApp
 from .cat.firewall import FirewallApp
+from .cat.languages import LanguagesApp
 from .cat.management import ManagementApp
 from .cat.monitor import MonitorApp
 from .cat.power_management import PowerManagementApp
@@ -71,8 +72,17 @@ class ApplicationHandler:
 				app_config.security_config,
 			)
 
-		if app_config.development_config and app_config.development_config.tools:
-			DevelopmentApp().install(
-				install_session,
-				app_config.development_config,
-			)
+		if app_config.development_config:
+			dev_config = app_config.development_config
+
+			if dev_config.language_config and dev_config.language_config.tools:
+				LanguagesApp().install(
+					install_session,
+					dev_config.language_config,
+				)
+
+			if dev_config.devtool_config and dev_config.devtool_config.tools:
+				DevToolsApp().install(
+					install_session,
+					dev_config.devtool_config,
+				)

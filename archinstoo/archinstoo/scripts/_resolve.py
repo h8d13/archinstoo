@@ -41,6 +41,16 @@ def _firmware_packages(config: dict[str, Any]) -> tuple[list[str], set[str]]:
 	return base_pkgs, extra_pkgs
 
 
+def _development_packages(dev: dict[str, Any]) -> set[str]:
+	# development_config nests two à-la-carte tool lists; resolve both against the schema
+	pkgs: set[str] = set()
+	for section, schema_key in (('language_config', 'languages'), ('devtool_config', 'devtools')):
+		for tool in (dev.get(section) or {}).get('tools', []) or []:
+			if tool in SCHEMA[schema_key]:
+				pkgs.update(SCHEMA[schema_key][tool])
+	return pkgs
+
+
 def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
@@ -160,9 +170,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 		if tool in SCHEMA['security']:
 			pkgs.update(SCHEMA['security'][tool])
 
-	for tool in (app.get('development_config') or {}).get('tools', []) or []:
-		if tool in SCHEMA['development']:
-			pkgs.update(SCHEMA['development'][tool])
+	pkgs.update(_development_packages(app.get('development_config') or {}))
 
 	monitor = (app.get('monitor_config') or {}).get('monitor', '')
 	if monitor in SCHEMA['monitors']:

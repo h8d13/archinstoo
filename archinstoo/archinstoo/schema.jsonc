@@ -182,16 +182,26 @@
 		"audit": ["audit"]
 	},
 
-	"development": {
+	"languages": {
 		"rustup": ["rustup"],
 		"go": ["go"],
 		"jdk-openjdk": ["jdk-openjdk"],
-		"nodejs": ["nodejs", "npm"],
-		"clang": ["clang", "lld", "lldb"],
-		"build": ["cmake", "make", "ninja"],
-		"debug": ["gdb", "perf", "strace", "ltrace", "valgrind"],
+		"nodejs": ["nodejs"],
+		"clang": ["clang", "lld"],
 		"zig": ["zig"],
 		"lua": ["lua"]
+	},
+
+	"devtools": {
+		"cmake": ["cmake"],
+		"make": ["make"],
+		"ninja": ["ninja"],
+		"gdb": ["gdb"],
+		"lldb": ["lldb"],
+		"perf": ["perf"],
+		"strace": ["strace"],
+		"ltrace": ["ltrace"],
+		"valgrind": ["valgrind"]
 	},
 
 	"network": {

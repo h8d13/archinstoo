@@ -7,7 +7,6 @@ from archinstoo.lib.models.application import (
 	Audio,
 	AudioConfiguration,
 	BluetoothConfiguration,
-	Development,
 	DevelopmentConfiguration,
 	Editor,
 	EditorConfiguration,
@@ -28,6 +27,8 @@ from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+
+from .development_menu import DevelopmentMenu
 
 
 class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
@@ -193,11 +194,21 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		return None
 
 	def _prev_development(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: DevelopmentConfiguration = item.value
-			tools = ', '.join([t.value for t in config.tools])
-			return f'{tr("Development")}: {tools}'
-		return None
+		if item.value is None:
+			return None
+
+		config: DevelopmentConfiguration = item.value
+		lines = []
+
+		if config.language_config and config.language_config.tools:
+			tools = ', '.join([t.value for t in config.language_config.tools])
+			lines.append(f'{tr("Languages")}: {tools}')
+
+		if config.devtool_config and config.devtool_config.tools:
+			tools = ', '.join([t.value for t in config.devtool_config.tools])
+			lines.append(f'{tr("Build & Debug")}: {tools}')
+
+		return '\n'.join(lines) if lines else None
 
 
 def select_power_management(preset: PowerManagementConfiguration | None = None) -> PowerManagementConfiguration | None:
@@ -434,28 +445,4 @@ def select_security(preset: SecurityConfiguration | None = None) -> SecurityConf
 
 
 def select_development(preset: DevelopmentConfiguration | None = None) -> DevelopmentConfiguration | None:
-	items = [MenuItem(d.value, value=d) for d in Development]
-	group = MenuItemGroup(items)
-
-	header = tr('Would you like to install development tools?') + '\n'
-
-	if preset:
-		group.set_selected_by_value(preset.tools)
-
-	result = SelectMenu[Development](
-		group,
-		header=header,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min(tr('Development')),
-		multi=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return DevelopmentConfiguration(tools=result.get_values())
-		case ResultType.Reset:
-			return None
+	return DevelopmentMenu(preset).run()

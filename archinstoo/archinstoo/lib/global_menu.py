@@ -494,10 +494,18 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'{tr("Security")}: {tools}'
 				output += '\n'
 
-			if app_config.development_config and app_config.development_config.tools:
-				tools = ', '.join([t.value for t in app_config.development_config.tools])
-				output += f'{tr("Development")}: {tools}'
-				output += '\n'
+			if app_config.development_config:
+				dev_config = app_config.development_config
+
+				if dev_config.language_config and dev_config.language_config.tools:
+					tools = ', '.join([t.value for t in dev_config.language_config.tools])
+					output += f'{tr("Languages")}: {tools}'
+					output += '\n'
+
+				if dev_config.devtool_config and dev_config.devtool_config.tools:
+					tools = ', '.join([t.value for t in dev_config.devtool_config.tools])
+					output += f'{tr("Build & Debug")}: {tools}'
+					output += '\n'
 
 			return output
 

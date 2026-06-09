@@ -99,20 +99,40 @@ class SecurityConfigSerialization(TypedDict):
 	tools: list[str]
 
 
-class Development(StrEnum):
+class Language(StrEnum):
 	RUSTUP = auto()
 	GO = auto()
 	JAVA = 'jdk-openjdk'
 	NODEJS = auto()
 	CLANG = auto()
-	BUILD = auto()
-	DEBUG = auto()
 	ZIG = auto()
 	LUA = auto()
 
 
-class DevelopmentConfigSerialization(TypedDict):
+class LanguageConfigSerialization(TypedDict):
 	tools: list[str]
+
+
+# build + debug utilities, picked à la carte (one package per entry)
+class DevTool(StrEnum):
+	CMAKE = auto()
+	MAKE = auto()
+	NINJA = auto()
+	GDB = auto()
+	LLDB = auto()
+	PERF = auto()
+	STRACE = auto()
+	LTRACE = auto()
+	VALGRIND = auto()
+
+
+class DevToolConfigSerialization(TypedDict):
+	tools: list[str]
+
+
+class DevelopmentConfigSerialization(TypedDict):
+	language_config: NotRequired[LanguageConfigSerialization]
+	devtool_config: NotRequired[DevToolConfigSerialization]
 
 
 class ZramAlgorithm(StrEnum):
@@ -280,19 +300,58 @@ class SecurityConfiguration:
 
 
 @dataclass
-class DevelopmentConfiguration:
-	tools: list[Development]
+class LanguageConfiguration:
+	tools: list[Language]
 
-	def json(self) -> DevelopmentConfigSerialization:
+	def json(self) -> LanguageConfigSerialization:
 		return {
 			'tools': [t.value for t in self.tools],
 		}
 
 	@classmethod
-	def parse_arg(cls, arg: DevelopmentConfigSerialization) -> Self:
+	def parse_arg(cls, arg: LanguageConfigSerialization) -> Self:
 		return cls(
-			tools=[Development(t) for t in arg['tools']],
+			tools=[Language(t) for t in arg['tools']],
 		)
+
+
+@dataclass
+class DevToolConfiguration:
+	tools: list[DevTool]
+
+	def json(self) -> DevToolConfigSerialization:
+		return {
+			'tools': [t.value for t in self.tools],
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: DevToolConfigSerialization) -> Self:
+		return cls(
+			tools=[DevTool(t) for t in arg['tools']],
+		)
+
+
+@dataclass
+class DevelopmentConfiguration:
+	language_config: LanguageConfiguration | None = None
+	devtool_config: DevToolConfiguration | None = None
+
+	def json(self) -> DevelopmentConfigSerialization:
+		out: DevelopmentConfigSerialization = {}
+		if self.language_config:
+			out['language_config'] = self.language_config.json()
+		if self.devtool_config:
+			out['devtool_config'] = self.devtool_config.json()
+		return out
+
+	@classmethod
+	def parse_arg(cls, arg: DevelopmentConfigSerialization) -> Self:
+		config = cls()
+		if (lang := arg.get('language_config')) is not None:
+			config.language_config = LanguageConfiguration.parse_arg(lang)
+		if (devtool := arg.get('devtool_config')) is not None:
+			config.devtool_config = DevToolConfiguration.parse_arg(devtool)
+		return config
 
 
 @dataclass(frozen=True)
