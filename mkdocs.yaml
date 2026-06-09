@@ -67,5 +67,4 @@ nav:
       - Security: SECURITY.md
       - Philosophy: PHILOSOPHY.md
       - Troubleshooting: TROUBLESHOOT.md
-  - Changelog:
-      - What's new: CHANGELOG.md
+  - What's new: CHANGELOG.md
