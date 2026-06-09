@@ -6,7 +6,7 @@
 
 A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org). 
 
-> MORE choices, LESS packages installed in end-product, LESS complex flags, and MORE hot-fixes. 
+> MORE choices, LESS packages in end-product, LESS complex flags, and MORE hot-fixes. 
 
 *Aims to make the code base more readable, maintainable and modifiable by anyone*.
 
