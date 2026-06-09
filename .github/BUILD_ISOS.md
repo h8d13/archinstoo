@@ -1,11 +1,15 @@
 # Build your own ISOs
 
+## Intro
+
 Scripts in `isos/` wrap `mkarchiso` to produce custom Arch ISOs. Run from the repo root.
 
 | Script | Purpose |
 |---|---|
 | [`isos/ISOMOD`](https://github.com/h8d13/archinstoo/blob/master/isos/ISOMOD) | Installer ISO with `archinstoo` baked in |
 | [`isos/ISOMOD_CACHE`](https://github.com/h8d13/archinstoo/blob/master/isos/ISOMOD_CACHE) | Helper, pre-caches packages from `${ISO_PROFILE}.conf` |
+
+## Configure
 
 Flags (env vars, all optional):
 
@@ -26,7 +30,7 @@ Flags (env vars, all optional):
 | `ELEV` | `sudo` | Privilege escalation command (`doas`, etc.) |
 | `ISO_PROFILE` | `ISOMOD_CACHE` | `ISOMOD_CACHE` reads `${ISO_PROFILE}.conf` for the package list |
 
-Requires `archiso` and `pacman-contrib` if you enable caching. 
+Requires `archiso` and `pacman-contrib` if you enable caching. This is a flagship feature that allows for read-only installs (no network).
 
 **Don't run as root**, scripts elevate when needed. Output goes to `isos/a/`.
 
