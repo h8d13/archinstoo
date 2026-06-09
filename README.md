@@ -2,7 +2,7 @@
 
 <img width="1920" height="1080" alt="Group 1" src="https://github.com/user-attachments/assets/7f54d725-d10d-4447-983c-a01d44b9f915" />
 
-# What is `archinstoo`:
+## What is `archinstoo`:
 
 A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org). 
 
@@ -104,7 +104,7 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 
 A `man` page is also available `man -l docs/archinstoo.1`
 
-## Use cases
+### Use cases
 
 See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md) if you're just starting out with Arch.
 
@@ -124,7 +124,7 @@ See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/.github/ARM_SU
 
 See all other docs: [.github](https://github.com/h8d13/archinstoo/tree/master/.github) and [ArchWiki](https://wiki.archlinux.org/title/Main_page)
 
-## Testing
+### Testing
 
 **Host-to-target:** testing (without ISOs) Here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD)
 
