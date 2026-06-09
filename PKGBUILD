@@ -16,28 +16,28 @@ url="https://github.com/h8d13/archinstoo"
 license=(GPL-3.0-only)
 #internals first
 depends=(
-  'python-pyparted'
-  'python'
-  'arch-install-scripts' #For pacstrap, genfstab, chroot
-  'systemd' #For systemd-based operations
-  'coreutils' #Basic utilities
-  'util-linux' #For partition utilities
-  'pciutils' #For PCI device detection
-  'kbd' #For keyboard layout configuration
-  'libxcrypt'
-  'pacman'
-  'git'
+	'python-pyparted'
+	'python'
+	'arch-install-scripts' #For pacstrap, genfstab, chroot
+	'systemd'              #For systemd-based operations
+	'coreutils'            #Basic utilities
+	'util-linux'           #For partition utilities
+	'pciutils'             #For PCI device detection
+	'kbd'                  #For keyboard layout configuration
+	'libxcrypt'
+	'pacman'
+	'git'
 )
 # base-devel tools are assumed for dev
-# QEMU is also useful to test faster 
+# QEMU is also useful to test faster
 # but testing on actual hardware wins
 makedepends=(
-  'python-build'
-  'python-installer'
-  'python-pylint'
-  'python-setuptools'
-  'python-wheel'
-  # Note dev tools are usually handled through precommit
+	'python-build'
+	'python-installer'
+	'python-pylint'
+	'python-setuptools'
+	'python-wheel'
+	# Note dev tools are usually handled through precommit
 )
 # 'nvchecker'
 # 'archiso' #Dev ISO more cow_space
@@ -51,15 +51,15 @@ makedepends=(
 # you should obviously feel free to only select the ones you need
 
 optdepends=(
-  'btrfs-progs' #For btrfs filesystem support
-  'dosfstools' #For FAT/EFI filesystem support
-  'e2fsprogs' #For ext4 filesystem support
-  'f2fs-tools' #For f2fs filesystem support
-  'ntfs-3g' #For NTFS filesystem support
-  'xfsprogs' #For XFS filesystem support
-  'cryptsetup' #For LUKS encryption support
-  'lvm2' #For LVM FS layout support
-  'python-systemd' #System journal logging
+	'btrfs-progs'    #For btrfs filesystem support
+	'dosfstools'     #For FAT/EFI filesystem support
+	'e2fsprogs'      #For ext4 filesystem support
+	'f2fs-tools'     #For f2fs filesystem support
+	'ntfs-3g'        #For NTFS filesystem support
+	'xfsprogs'       #For XFS filesystem support
+	'cryptsetup'     #For LUKS encryption support
+	'lvm2'           #For LVM FS layout support
+	'python-systemd' #System journal logging
 )
 provides=(archinstoo)
 replaces=(archinstoo)
@@ -68,15 +68,15 @@ sha512sums=()
 b2sums=()
 
 build() {
-  cd "$srcdir/../archinstoo" || exit
+	cd "$srcdir/../archinstoo" || exit
 
-  rm -rf dist/ && rm -rf ./*.egg
-  python -m build --wheel --no-isolation
+	rm -rf dist/ && rm -rf ./*.egg
+	python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$srcdir/../archinstoo" || exit
+	cd "$srcdir/../archinstoo" || exit
 
-  python -m installer --destdir="$pkgdir" dist/*.whl
-  install -vDm 644 docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
+	python -m installer --destdir="$pkgdir" dist/*.whl
+	install -vDm 644 docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
 }

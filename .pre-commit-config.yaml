@@ -4,6 +4,12 @@ repos:
     rev: v0.10.0.1
     hooks:
     - id: shellcheck
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.13.1-1
+    hooks:
+      # enforce tab indentation in shell scripts
+    - id: shfmt
+      args: ["-i", "0", "-w"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.16
     hooks:

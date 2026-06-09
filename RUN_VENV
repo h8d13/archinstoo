@@ -4,11 +4,11 @@ cd archinstoo || exit 1
 # launch venv and run archinstall
 
 if [ ! -d ".venv" ]; then
-    python -m venv --system-site-packages .venv
-    . .venv/bin/activate
-    pip install -e .
+	python -m venv --system-site-packages .venv
+	. .venv/bin/activate
+	pip install -e .
 else
-    . .venv/bin/activate
+	. .venv/bin/activate
 fi
 
 .venv/bin/python -B -m archinstoo "$@"

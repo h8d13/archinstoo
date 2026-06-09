@@ -13,34 +13,34 @@ arch=(any)
 url="https://github.com/h8d13/archinstoo"
 license=(GPL-3.0-only)
 depends=(
-  'python-pyparted'
-  'python'
-  'arch-install-scripts' #For pacstrap, genfstab, chroot
-  'systemd' #For systemd-based operations
-  'coreutils' #Basic utilities
-  'util-linux' #For partition utilities
-  'pciutils' #For PCI device detection
-  'kbd' #For keyboard layout configuration
-  'libxcrypt'
-  'pacman'
-  'git' #cloning stashes
-  'btrfs-progs' #btrfs filesystem support
-  'dosfstools' #FAT EFI filesystem support
-  'e2fsprogs' #ext4 filesystem support
-  'f2fs-tools' #f2fs filesystem support
-  'ntfs-3g' #NTFS filesystem support
-  'xfsprogs' #XFS filesystem support
-  'cryptsetup' #LUKS encryption support
-  'lvm2' #LVM layout support
+	'python-pyparted'
+	'python'
+	'arch-install-scripts' #For pacstrap, genfstab, chroot
+	'systemd'              #For systemd-based operations
+	'coreutils'            #Basic utilities
+	'util-linux'           #For partition utilities
+	'pciutils'             #For PCI device detection
+	'kbd'                  #For keyboard layout configuration
+	'libxcrypt'
+	'pacman'
+	'git'         #cloning stashes
+	'btrfs-progs' #btrfs filesystem support
+	'dosfstools'  #FAT EFI filesystem support
+	'e2fsprogs'   #ext4 filesystem support
+	'f2fs-tools'  #f2fs filesystem support
+	'ntfs-3g'     #NTFS filesystem support
+	'xfsprogs'    #XFS filesystem support
+	'cryptsetup'  #LUKS encryption support
+	'lvm2'        #LVM layout support
 )
 makedepends=(
-  'python-build'
-  'python-installer'
-  'python-setuptools'
-  'python-wheel'
+	'python-build'
+	'python-installer'
+	'python-setuptools'
+	'python-wheel'
 )
 optdepends=(
-  'python-systemd: Adds journald logging'
+	'python-systemd: Adds journald logging'
 )
 provides=(archinstoo)
 replaces=(archinstoo)
@@ -48,19 +48,19 @@ source=("$pkgname::git+$url.git")
 sha512sums=('SKIP')
 
 pkgver() {
-  cd "$pkgname" || exit
-  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+	cd "$pkgname" || exit
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 build() {
-  cd "$pkgname/archinstoo" || exit
+	cd "$pkgname/archinstoo" || exit
 
-  python -m build --wheel --no-isolation
+	python -m build --wheel --no-isolation
 }
 
 package() {
-  cd "$pkgname/archinstoo" || exit
+	cd "$pkgname/archinstoo" || exit
 
-  python -m installer --destdir="$pkgdir" dist/*.whl
-  install -vDm 644 docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
+	python -m installer --destdir="$pkgdir" dist/*.whl
+	install -vDm 644 docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
 }

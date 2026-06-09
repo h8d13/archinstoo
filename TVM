@@ -41,117 +41,121 @@ ARG="${1:-default}"
 OVMF_CODE=""
 OVMF_VARS_ORIG=""
 
-err() { echo "ERROR: $*" >&2; exit 1; }
+err() {
+	echo "ERROR: $*" >&2
+	exit 1
+}
 
 probe_ovmf() {
-    local pairs=(
-        "/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd"
-        "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd:/usr/share/edk2-ovmf/x64/OVMF_VARS.fd"
-        "/usr/share/edk2/ovmf/OVMF_CODE.fd:/usr/share/edk2/ovmf/OVMF_VARS.fd"
-        "/usr/share/OVMF/OVMF_CODE_4M.fd:/usr/share/OVMF/OVMF_VARS_4M.fd"
-        "/usr/share/OVMF/OVMF_CODE.fd:/usr/share/OVMF/OVMF_VARS.fd"
-    )
-    local pair code vars
-    for pair in "${pairs[@]}"; do
-        code="${pair%%:*}"
-        vars="${pair##*:}"
-        if [ -f "$code" ] && [ -f "$vars" ]; then
-            OVMF_CODE="$code"
-            OVMF_VARS_ORIG="$vars"
-            return 0
-        fi
-    done
-    err "OVMF firmware not found. Install 'edk2-ovmf' (Arch), 'ovmf' (Debian/Ubuntu), or 'edk2-ovmf' (Fedora)."
+	local pairs=(
+		"/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd"
+		"/usr/share/edk2-ovmf/x64/OVMF_CODE.fd:/usr/share/edk2-ovmf/x64/OVMF_VARS.fd"
+		"/usr/share/edk2/ovmf/OVMF_CODE.fd:/usr/share/edk2/ovmf/OVMF_VARS.fd"
+		"/usr/share/OVMF/OVMF_CODE_4M.fd:/usr/share/OVMF/OVMF_VARS_4M.fd"
+		"/usr/share/OVMF/OVMF_CODE.fd:/usr/share/OVMF/OVMF_VARS.fd"
+	)
+	local pair code vars
+	for pair in "${pairs[@]}"; do
+		code="${pair%%:*}"
+		vars="${pair##*:}"
+		if [ -f "$code" ] && [ -f "$vars" ]; then
+			OVMF_CODE="$code"
+			OVMF_VARS_ORIG="$vars"
+			return 0
+		fi
+	done
+	err "OVMF firmware not found. Install 'edk2-ovmf' (Arch), 'ovmf' (Debian/Ubuntu), or 'edk2-ovmf' (Fedora)."
 }
 
 check_host_deps() {
-    local missing=() cmd
-    for cmd in qemu-system-x86_64 qemu-img; do
-        command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
-    done
-    if [ ${#missing[@]} -gt 0 ]; then
-        err "missing host commands: ${missing[*]} (install qemu-base)"
-    fi
+	local missing=() cmd
+	for cmd in qemu-system-x86_64 qemu-img; do
+		command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
+	done
+	if [ ${#missing[@]} -gt 0 ]; then
+		err "missing host commands: ${missing[*]} (install qemu-base)"
+	fi
 }
 
 find_iso() {
-    if [ -n "${DEV_ISO:-}" ]; then
-        [ -f "$DEV_ISO" ] || err "DEV_ISO=$DEV_ISO not found"
-        printf '%s\n' "$DEV_ISO"
-        return
-    fi
-    { ls -t "$ISOMOD_OUT"/*.iso "$DEV_ISO_DIR"/*.iso 2>/dev/null || true; } | head -n1
+	if [ -n "${DEV_ISO:-}" ]; then
+		[ -f "$DEV_ISO" ] || err "DEV_ISO=$DEV_ISO not found"
+		printf '%s\n' "$DEV_ISO"
+		return
+	fi
+	{ ls -t "$ISOMOD_OUT"/*.iso "$DEV_ISO_DIR"/*.iso 2>/dev/null || true; } | head -n1
 }
 
 require_iso() {
-    local iso
-    iso="$(find_iso)"
-    if [ -z "$iso" ]; then
-        err "No ISO found. Build one with isos/ISOMOD, drop one in $DEV_ISO_DIR/, or set DEV_ISO=/path/to.iso"
-    fi
-    printf '%s\n' "$iso"
+	local iso
+	iso="$(find_iso)"
+	if [ -z "$iso" ]; then
+		err "No ISO found. Build one with isos/ISOMOD, drop one in $DEV_ISO_DIR/, or set DEV_ISO=/path/to.iso"
+	fi
+	printf '%s\n' "$iso"
 }
 
 case "$ARG" in
-    -h|--help|help)
-        sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
-        exit 0
-        ;;
-    clean|c)
-        rm -fv "$DISK" "$OVMF_VARS"
-        exit 0
-        ;;
-    boot|b)
-        check_host_deps
-        probe_ovmf
-        [ -f "$DISK" ] || err "Disk missing, run without args first"
-        BOOT_ORDER="c"
-        ATTACH_ISO=false
-        ;;
-    keep|k)
-        check_host_deps
-        probe_ovmf
-        [ -f "$DISK" ] || err "Disk missing, run without args first"
-        require_iso >/dev/null
-        BOOT_ORDER="d"
-        ATTACH_ISO=true
-        ;;
-    default)
-        check_host_deps
-        probe_ovmf
-        require_iso >/dev/null
-        rm -f "$DISK"
-        qemu-img create -f qcow2 "$DISK" "$DISK_SIZE"
-        BOOT_ORDER="d"
-        ATTACH_ISO=true
-        ;;
-    *)
-        err "Unknown argument: $ARG (try -h)"
-        ;;
+-h | --help | help)
+	sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
+	exit 0
+	;;
+clean | c)
+	rm -fv "$DISK" "$OVMF_VARS"
+	exit 0
+	;;
+boot | b)
+	check_host_deps
+	probe_ovmf
+	[ -f "$DISK" ] || err "Disk missing, run without args first"
+	BOOT_ORDER="c"
+	ATTACH_ISO=false
+	;;
+keep | k)
+	check_host_deps
+	probe_ovmf
+	[ -f "$DISK" ] || err "Disk missing, run without args first"
+	require_iso >/dev/null
+	BOOT_ORDER="d"
+	ATTACH_ISO=true
+	;;
+default)
+	check_host_deps
+	probe_ovmf
+	require_iso >/dev/null
+	rm -f "$DISK"
+	qemu-img create -f qcow2 "$DISK" "$DISK_SIZE"
+	BOOT_ORDER="d"
+	ATTACH_ISO=true
+	;;
+*)
+	err "Unknown argument: $ARG (try -h)"
+	;;
 esac
 
 [ -f "$OVMF_VARS" ] || cp "$OVMF_VARS_ORIG" "$OVMF_VARS"
 
+# shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
 QEMU_ARGS=(
-    -machine q35
-    -cpu host
-    -enable-kvm
-    -m "$RAM"
-    -smp "$CPUS"
-    -drive "file=$DISK,format=qcow2,if=virtio"
-    -device virtio-net-pci,netdev=net0
-    -netdev user,id=net0
-    -vga "$VGA"
-    -display "$DISPLAY_BACKEND"
-    -monitor stdio
-    -drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
-    -drive "if=pflash,format=raw,file=$OVMF_VARS"
-    -boot "order=$BOOT_ORDER"
+	-machine q35
+	-cpu host
+	-enable-kvm
+	-m "$RAM"
+	-smp "$CPUS"
+	-drive "file=$DISK,format=qcow2,if=virtio"
+	-device virtio-net-pci,netdev=net0
+	-netdev user,id=net0
+	-vga "$VGA"
+	-display "$DISPLAY_BACKEND"
+	-monitor stdio
+	-drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
+	-drive "if=pflash,format=raw,file=$OVMF_VARS"
+	-boot "order=$BOOT_ORDER"
 )
 
 if [ "$ATTACH_ISO" = "true" ]; then
-    ISO="$(require_iso)"
-    QEMU_ARGS+=(-cdrom "$ISO")
+	ISO="$(require_iso)"
+	QEMU_ARGS+=(-cdrom "$ISO")
 fi
 
 exec qemu-system-x86_64 "${QEMU_ARGS[@]}"

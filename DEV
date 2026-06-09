@@ -4,73 +4,73 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_GLOB="archinstoo-*.pkg.tar.zst"
 
-go_to () {
+go_to() {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
 }
 
-pre_build () {
-    rm -f ./*-any.pkg.tar.zst
+pre_build() {
+	rm -f ./*-any.pkg.tar.zst
 }
 
-clean () {
-    rm -rf pkg src dist ./*.pkg.tar.zst.sig build ./*.egg-info ../*.egg-info ./*-git
+clean() {
+	rm -rf pkg src dist ./*.pkg.tar.zst.sig build ./*.egg-info ../*.egg-info ./*-git
 } # make sure no old sigs or build artifacts
 
-sign () {
-    gpg --detach-sign $PKG_GLOB
+sign() {
+	gpg --detach-sign $PKG_GLOB
 }
 verif() {
-    gpg --verify $PKG_GLOB.sig
+	gpg --verify $PKG_GLOB.sig
 }
 
 case "$1" in
-	-t | --tree)
+-t | --tree)
 	go_to
 	{
 		echo '# Project Tree'
 		echo '```'
 		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
 		echo '```'
-	} > docs/README.md
+	} >docs/README.md
 	;;
-	-c | --clean)
+-c | --clean)
 	go_to
 	clean && pre_build
 	;;
-	-b | --build)
+-b | --build)
 	go_to
 	pre_build
 	makepkg -Cf
 	clean
 	;;
-	-s | --sign)
+-s | --sign)
 	go_to
 	sign
 	;;
-	-sv | --verify-sig)
+-sv | --verify-sig)
 	go_to
 	verif
 	;;
-	-i|--install)
+-i | --install)
 	go_to
- 	pacman -U --overwrite '*' $PKG_GLOB
+	pacman -U --overwrite '*' $PKG_GLOB
 	;;
-	-ul | --up-logs)
+-ul | --up-logs)
 	go_to
 	curl -F 'file=@./logs/install.log' https://0x0.st
 	;;
-	-gl | --grep-logs)
+-gl | --grep-logs)
 	go_to
 	grep -i "$2" ./logs/install.log
 	;;
-	-gc | --grep-code)
+-gc | --grep-code)
 	go_to
 	git grep -ni "$2"
 	;;
-    -tc | --test-config)
-    ./RUN --advanced --config examples/config-sample-full.json
-    ;;
-	-h2t | --host-to-target)
+-tc | --test-config)
+	./RUN --advanced --config examples/config-sample-full.json
+	;;
+-h2t | --host-to-target)
 	go_to
 	# this checks dependencies for dev workflow from top level PKGBUILD
 	. ./PKGBUILD
@@ -80,7 +80,7 @@ case "$1" in
 		pacman -Sy --needed "${depends[@]}"
 	fi
 	;;
-	*)
+*)
 	# Pass through to archinstoo
 	./RUN "$@" --advanced --debug
 	;;
