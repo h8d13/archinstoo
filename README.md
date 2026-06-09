@@ -16,7 +16,7 @@ A fork of `archinstall` an operating system installer for [archlinux](https://ar
 
 ## Setup / Usage
 
-**0. Get internet access**
+### **1. Get internet access**
 > [!NOTE]
 > Ethernet cable is plug and play.
 
@@ -38,7 +38,7 @@ $ nmcli dev wifi connect "SSID" -a
 # alternative
 ```
 
-**0.1. Prep**
+### **2. Prep**
 
 *If on the ISO instead of a live system*
 ```shell
@@ -47,21 +47,21 @@ pacman -Syy
 pacman -S git
 ```
 
-### **1. Get the source code**
+### **3. Get the source code**
 
 ```shell
 git clone https://github.com/h8d13/archinstoo
 cd archinstoo/archinstoo
 ```
 
-### **2. Run the code**
+### **4. Run the code**
 
 ```shell
 python -m archinstoo [args] # try -h or --help
 # some options are behind --advanced
 ```
 
-### **3. Enjoy your new system(s)**
+### **5. Enjoy your new system(s)**
 
 <img width="1278" height="800" alt="Screenshot_20260608_165700" src="https://github.com/user-attachments/assets/3ac69a5c-31f6-4132-93e5-26bc0555768d" />
 
