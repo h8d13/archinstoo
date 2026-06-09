@@ -16,7 +16,7 @@ Archinstoo carries this forward. The installer exists to give you an OS, not to 
 But it also exists to give you other tools/scripts you might need.
 
 There is a true power in reproducible/modular automation as such, which surfaces problems in core logic or order of operations.
-And the "manual" enjoyer, might even enjoy reading trhough some of the source: since they will find direct references to both the holy Wiki and issues from other users.
+And the "manual" enjoyer, might even enjoy reading through some of the source: since they will find direct references to both the holy Wiki and issues from other users.
 
 > “Every good work of software starts by scratching a developer’s personal itch.”
 > ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
@@ -81,7 +81,7 @@ Then `doas`, `run0` and simply `su` can become first class citizens. (Or any oth
 
 The same philosophy applies to dependencies. By removing unnecessary Python libraries and reducing the dependency surface to what is actually required, archinstoo becomes lighter, clearer, and no less capable.
 
-For example, by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-parted` (and what is expected on ISOs)
+For example, by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that actually only depends on `python-pyparted` (and what is expected on ISOs)
 Without losing any functionality.
 
 ### Withstanding to-dos
@@ -96,7 +96,7 @@ Hard-coded behavior acts as undocumented policy. Once embedded, it becomes invis
 
 This approach naturally opens the door to alternatives (and competing standards), different privilege models, and non-default environments. Once the choice exists and works, using it becomes both empowering and satisfying.
 
-Linters and other tools to improve code programatically.
+Linters and other tools to improve code programmatically.
 
 ### Separation and pace
 
@@ -109,7 +109,7 @@ The master branch is intended to be a single source of truth that evolves alongs
 Development branches are intentionally experimental, sometimes exploring ideas that may never land upstream. This freedom enables rapid iteration and early testing of new technologies without burdening stable users.
 
 In a fast-moving, deeply technical codebase, correctness and architecture must come first. And experimental features are fun to test:
-Bcachesfs support when it was dropped by mr Torvalds, CachyOS kernel support, etc 
+Bcachefs support when it was dropped by Mr. Torvalds, CachyOS kernel support, etc.
 
 To conclude this I also think some priorities should be met, as working on visual changes should not be a priority to a codebase that moves fast, and has stuff that backlogs quite quickly. 
 
@@ -146,13 +146,13 @@ Keeping an install clean, and/or making it what you need it to be, you will also
 
 At the cost of sometimes having to be more careful: ie, manual interventions/following update prints. As seen on [NEWS](https://archlinux.org/news/)
 
-Countless times, but aside from that is pretty smooth sailing and the OS gets out of you way once you know what you are doing.
+Countless times, but aside from that is pretty smooth sailing and the OS gets out of your way once you know what you are doing.
 
 	- If you are not looking to learn command lines and/or reading docs
 
 This is the last and key point, other distros might be easier/better fit for you if you do not wish to dive deeper into your system's inner workings. But if you are interested, my guess is that you will like it here.
 
-Rolling distros enable installers to become tools/artifacts rather than just projects. This means it doesn't have to be more features and more users, but simply adapting to it's time, maintaining worthy code, choices, occasionally helping out ecosystem and issue trackers. This is possible structurally because of the team at Arch Linux and using directly the tools they make available.
+Rolling distros enable installers to become tools/artifacts rather than just projects. This means it doesn't have to be more features and more users, but simply adapting to its time, maintaining worthy code, choices, occasionally helping out ecosystem and issue trackers. This is possible structurally because of the team at Arch Linux and using directly the tools they make available.
 
 ### Personal Goals
 
@@ -160,7 +160,7 @@ Online most people know me as Hade:
 
 My goal with this project was the following
 - Speed up testing/dev
-- Enable more hardware (Out of three DKMS, ARM, ?)
+- Enable more hardware (Out-of-tree DKMS, ARM, ?)
 - Improve dark documentation areas around the installer
 
 Cheers for even reading any of this.
