@@ -72,8 +72,6 @@ pacman -S man-db
 man <pkg>
 ```
 
-If you want to make your man pages look fancy: `export LESS='-RXF --use-color -Dd+r$Du+b'` in your `.zshrc` or `.bashrc`
-
 I want to have a clean system:
 ```shell
 pacman -S pacman-contrib
