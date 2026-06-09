@@ -2,7 +2,7 @@
 
 ## Older cards 
 
-From the [wiki](https://wiki.archlinux.org/title/NVIDIA) you can gather that if you card is bellow 16XX[^1]
+From the [wiki](https://wiki.archlinux.org/title/NVIDIA) you can gather that if your card is below 16XX[^1]
 
 You will need the AUR. See [this](./OUT_OF_TREE.md) 
 

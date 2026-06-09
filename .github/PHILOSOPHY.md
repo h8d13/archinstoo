@@ -1,6 +1,8 @@
 # Just a tab of "Why"
 
-Why would someone want to code 12h a day something like this..?
+Why would someone want to code 12h a day something like this..? 
+
+¯\_(ツ)_/¯
 
 ## Roots
 

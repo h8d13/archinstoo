@@ -24,6 +24,6 @@ This can also be achieved through custom entries using `blkid` in `/etc/grub.d/4
 
 For same disks, you might be using another app to format, resize, etc before-hand.
 
-Then you can use `Manual Partitioning`, anything left marked as `Existing` will not be formated. 
+Then you can use `Manual Partitioning`, anything left marked as `Existing` will not be formatted. 
 
 Already have a bootloader: `--skip-boot` will allow you to skip BL selection in the menu and `None` will do the same.

@@ -46,7 +46,7 @@ Placed in the same location as the following:
 # so not needed if doing this from ARM host
 
 # this script will setup a stage 1 for ARM
-# fomratting/mounting
+# formatting/mounting
 # replacing the kernel and firmware
 # do some very basic set-up (ssh/locale/tty/fstab/cmdline/bootparams)
 

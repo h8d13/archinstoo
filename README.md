@@ -150,7 +150,7 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 1. For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
 
-2. For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without it's top part from git.
+2. For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
 

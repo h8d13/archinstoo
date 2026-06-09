@@ -14,7 +14,7 @@ Optionally after checking all works fine, remove the original kernel/headers and
 
 ## Why fork their repo-add
 
-Simply because we want an arch base, where Cachy doesn't take priority details are available in the repo itself.
+Simply because we want an arch base, where Cachy doesn't take priority. Details are available in the repo itself.
 - Do not replace pacman
 - Do not insert cachyos repos before regular ones
 

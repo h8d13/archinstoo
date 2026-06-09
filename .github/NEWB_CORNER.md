@@ -15,14 +15,14 @@ If install speed matters to you (Current best 1m55)
 
 ## More tips in the menu 
 
-Take your time, **installing is fast**, make sure you went trhough everything you need.
+Take your time, **installing is fast**, make sure you went through everything you need.
 
 > [!TIP]
-> Looking up your motherboard model, CPU/GPU, memory, disks, etc... Can often saves you lots of headaches.
+> Looking up your motherboard model, CPU/GPU, memory, disks, etc... Can often save you lots of headaches.
 
 You may view main schema here: [Menu-Preview](./SCHEMA.md)
 
-Typing let's you search in multi-select menus.
+Typing lets you search in multi-select menus.
 
 ARROW keys lets you move around.
 
@@ -41,7 +41,7 @@ Since a lot can be handled through GUI and not config files.
 
 ## Languages compat
 
-You can add Google fonts for extended language support and setup mutiple keyboards once you have a basic system working.
+You can add Google fonts for extended language support and setup multiple keyboards once you have a basic system working.
 ```shell
 noto-fonts-cjk         # Chinese, Japanese, Korean
 noto-fonts-extra       # Full extended symbols

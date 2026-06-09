@@ -4,7 +4,7 @@
 ## Intro 
 
 Servers choices allow for flexible control over what you want to do.
-You can select mutltiple profiles, if desired.
+You can select multiple profiles, if desired.
 
 ## Example 
 
@@ -38,7 +38,7 @@ Default port is `tailscale_ip:25565`
 
 ## Containers/firewalls
 
-Be sure to check you firewall configs if running several severs profiles.
+Be sure to check your firewall configs if running several server profiles.
 You can also use stuff like `docker` or `podman` to manage this in a more efficient way.
 
 Docker/Podman publish their own `iptables` chain that bypasses `ufw` but it still protects the host regardless.
@@ -48,6 +48,6 @@ Make sure to only enable needed ports or use reverse proxies.
 
 ## Others
 
-You can apply  the same logic to remotely anything.
+You can apply the same logic to remotely anything.
 
-In instance `SteamCMD` to run other game servers, or other Linux native server binaries like `terraria`.
+For instance `SteamCMD` to run other game servers, or other Linux native server binaries like `terraria`.

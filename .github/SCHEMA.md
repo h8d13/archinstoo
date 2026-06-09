@@ -6,7 +6,7 @@
 
 Disk is self-explanatory and kinda risky always. *Multi-disk was removed because adding disks later on is trivial*
 
-They let decide where to install to set up `users/groups/elevation/shells` + `stashes`
+They let you decide where to install to set up `users/groups/elevation/shells` + `stashes`
 
 - `Locales` & `Pacman` & `TZ`/`NTP` & `Hostname`
 
@@ -51,19 +51,19 @@ This is all up to user preference, can be multi-selected / some set the global d
   ← Back
 ```
 
-> Hardware drivers can also be skipped and added to AUR step bellow if needed.
+> Hardware drivers can also be skipped and added to AUR step below if needed.
 
 - `Additional packages` & `AUR packages` 
 
-You can also add something like `noto-fonts` variants at this step or anythign you would like in target really.
+You can also add something like `noto-fonts` variants at this step or anything you would like in target really.
 
 Also all up to user preference, AUR hidden behind `--advanced` this allows to build DKMS drivers.
 
 **Make sure to toggle `Kernel Headers` when doing so.**
 
-- `Systctl` & `Custom commands`
+- `Sysctl` & `Custom commands`
 
-This is experimental feature which allows me test some additional automation steps.
+This is an experimental feature which allows me to test some additional automation steps.
 
 ---
 

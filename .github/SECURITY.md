@@ -73,7 +73,7 @@ Whilst U2F keys were removed from the automated script (in favor of priv-esc cho
 
 ### Supported Versions
 
-Only the latest` master` is supported. Older tags receive no patches.
+Only the latest `master` is supported. Older tags receive no patches.
 
 ### Reporting a Vulnerability
 Please do not open a public issue. hadean-eon-dev@proton.me

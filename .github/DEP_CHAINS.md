@@ -25,7 +25,7 @@ Total packages (with deps): 574
   networkmanager
 ```
 
-This is useful before commiting to an install and understanding why certain things always do end up on your system (regardless of choices).
+This is useful before committing to an install and understanding why certain things always do end up on your system (regardless of choices).
 For a `seatd` only setup we'll have to jump a few hoops: Network option `Copy from ISO` or `iwd standalone` other NM options pull in `polkit`.
 
 `networkmanager → wpa_supplicant → pcsclite → polkit`

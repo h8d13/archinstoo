@@ -15,7 +15,7 @@ Small patches are preferred, and need to be tested from scratch (ISO env + Host-
 - Scripts
 
 ```
-├── __init.py__
+├── __init__.py
 │   ├── scripts
 │   │   ├── ...
 ```
@@ -30,13 +30,13 @@ This contains all the necessary logic and calls to different parts of the codeba
 ## Contrib
 
 Any contributions through pull requests are welcome as this project aims to be a community based project for Arch Linux.
-If not for code, documentation changes, testing and digging up docs or command lines/ideas/discussions are very also welcome!
+If not for code, documentation changes, testing and digging up docs or command lines/ideas/discussions are also very welcome!
 
 ### You can also help by testing or suggesting ideas:
 
 Many thanks to **@ShreshthTiwari, @dzamlo, @eososlinux** and some/many reddit/discord reporters too for the many indirect contribs. 
 Time spent testing or drawing up reports/digging info.
-This in it's core, takes just as much time as coding since often you need to test many scenarios.
+This in its core, takes just as much time as coding since often you need to test many scenarios.
 
 Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions. 
 These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
@@ -79,7 +79,7 @@ pre-commit install
 
 This will install the pre-commit hook and run it every time a `git commit` is executed.
 
-You can also use tools directly locally or in IDEs extensions.
+You can also use tools directly locally or in IDE extensions.
 
 Can be consulted within [PCH](https://github.com/h8d13/archinstoo/blob/master/.pre-commit-config.yaml)
 
