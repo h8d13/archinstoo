@@ -1,8 +1,12 @@
 # Dependency hell and minimalism
 
+## Find out without installing
+
 Basically to figure out why some things turn out the way they do:
 
 Using `pacman-contrib` we can explore full dep trees. This simulates the install flow and counts/parses recursive deps.
+
+You can simply exit the menu and select `Save selections`, you'll then find your config in the `logs/` directory.
 
 ```shell
 ./RUN --script count examples/config-sample-full.json --why polkit
@@ -27,6 +31,8 @@ For a `seatd` only setup we'll have to jump a few hoops: Network option `Copy fr
 `networkmanager → wpa_supplicant → pcsclite → polkit`
 
 ---
+
+## Space/Bandwidth
 
 Similarly you can test the estimate final size of your install.
 
