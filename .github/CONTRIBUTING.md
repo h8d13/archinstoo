@@ -30,6 +30,7 @@ This contains all the necessary logic and calls to different parts of the codeba
 ## Contrib
 
 Any contributions through pull requests are welcome as this project aims to be a community based project for Arch Linux.
+If not for code, documentation changes, testing and digging up docs or command lines/ideas/discussions are very also welcome!
 
 ### You can also help by testing or suggesting ideas:
 
