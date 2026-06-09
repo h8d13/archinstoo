@@ -2,6 +2,10 @@
 
 Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.11-1
+
+	- Add `shfmt` to flow, run it on all files: follow https://docs.kernel.org/process/coding-style.html for 8 spaces = tab.
+
 ## 0.1.11-0
 
     - Documentation moved to MkDocs + Material, published to GitHub Pages via Actions
