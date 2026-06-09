@@ -25,7 +25,7 @@ Some options are also given in the menu directly but **are always optional**.
 
 ---
 
-## Passwords/Users
+### Passwords/Users
 
 Strong Passwords & Usernames
 
@@ -53,15 +53,31 @@ Root account can **optionally be locked** in the TUI.
 
 ---
 
-## Guest users
+### Guest users
 
 Ex: siblings using the same system as you can set a user to have access to the same apps yet no terminal.
 In the menu you can simply create the user without elevated privileges and optionally `rbash`
 
-## Laptop Encryption
+### Laptop Encryption
 
 Highly recommended in case of theft. 
 
-## U2F
+### U2F
 
 Whilst U2F keys were removed from the automated script (in favor of priv-esc choices), you can still set them up with `systemd-cryptenroll` and `pam.d` for passwordless auth/2FA/etc.
+
+
+---
+
+## Policy
+
+### Supported Versions
+
+Only the latest` master` is supported. Older tags receive no patches.
+
+### Reporting a Vulnerability
+Please do not open a public issue. hadean-eon-dev@proton.me
+
+Or use GitHub's private vulnerability [reporting](https://github.com/h8d13/archinstoo/security/advisories/new).
+
+> Expect an initial response **within 24 hours.**
