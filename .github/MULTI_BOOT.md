@@ -1,5 +1,7 @@
 # Multi Operating Systems
 
+## With GRUB
+
 > Easiest way is to use **separate disks** (this limits cases of over-writing important data)
 
 Second is to check that your hardware supports `Other OS` secure boot options if planning to use with Windows 11.
@@ -17,6 +19,8 @@ This can also be achieved through custom entries using `blkid` in `/etc/grub.d/4
 *Other bootloaders* have their own ways of doing this.
 
 ---
+
+## Skipping bootloader
 
 For same disks, you might be using another app to format, resize, etc before-hand.
 
