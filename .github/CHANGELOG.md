@@ -1,30 +1,76 @@
 # Changelog
 
-Historical changes before I went rogue: [h8d13 commits master](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
+Historical changes/commits before I went rogue: 
+[upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
+
+Upstreamed fixes:
+
+- Missing deps in linux-variant-headers
+
+Reported [here](https://github.com/archlinux/archinstall/issues/4360)
+
+Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188)
+
+Pending upstream fixes:
+
+- Create `base-devel-flex` or modify existing `base-devel` pkg for `doas` alternative (`sudo` optional)
+
+Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-devel/-/work_items/7)
+
+## 0.1.12-0
+
+	- Add `cage` + `regreet` greeter option (greetd-based graphical login)
+		- Seatd-compatible Wayland login 
+		- `greeter` user joins the `seat` group only when seatd is
+		  installed, so non-seatd installs don't break
+	- Seat access: drop the greeter gate, still default to `ly` under seatd
+		- All greeters are selectable again instead of filtered out; seatd
+		  just preselects `ly` as a compatible baseline
+	- Mirrors: fix the speedtest timeout not bounding the connect phase
+		- Dead/multi-homed mirrors now skip in ~5s instead of ~40s
+		  (arm the timer before `urlopen`, not just around `read()`)
+	- Applications: `Development` no longer shows as modified when entered
+	  and left without selecting anything
+	- Help: add an `ESC` hint to the menu
+	- `TVM`: dev test VM gains sound and teardown
+	- Docs: refreshes, typo fixes, page split
 
 ## 0.1.11-1
 
-	- Add `Development` langs/tools under `--advanced` Allows for faster tooling for devs.
-	- Add `shfmt` to flow, run it on all files: follow https://docs.kernel.org/process/coding-style.html for 8 spaces = tab.
+	- Add `Development` langs/tools under `--advanced` Allows for faster tooling
+	  for devs.
+	- Add `shfmt` to flow, run it on all files: for 8 spaces = tab.
+		- Follows https://docs.kernel.org/process/coding-style.html
 
 ## 0.1.11-0
 
-    - Documentation moved to MkDocs + Material, published to GitHub Pages via Actions
-        - Source stays in-repo (`.github/*.md`); `README.md` is the single-source index (symlink), cross-tree links made absolute
-        - GitHub-style `> [!TIP]` alerts render as Material admonitions (callouts plugin)
+    - Documentation moved to MkDocs + Material, published to GitHub Pages via
+      Actions
+        - Source stays in-repo (`.github/*.md`); `README.md` is the
+          single-source index (symlink), cross-tree links made absolute
+        - GitHub-style `> [!TIP]` alerts render as Material admonitions
+          (callouts plugin)
         - Build/deploy only runs on `.md` or docs-config changes
     - Type hygiene pass across the installer
-        - `cast` / explicit `Any` / `# type: ignore` cut down to genuine FFI/dynamic boundaries; `ANN401` + banned-`cast` ruff rules added as a ratchet against new ones
-        - JSON boundaries validated instead of cast; ctypes/parted reads typed via annotation
+        - `cast` / explicit `Any` / `# type: ignore` cut down to genuine
+          FFI/dynamic boundaries
+        - `ANN401` + banned-`cast` ruff rules added as a ratchet against new
+          ones
+        - JSON boundaries validated instead of cast; ctypes/parted reads typed
+          via annotation
         - archlinux.org mirror v3 schema modeled as `TypedDict`
-        - Removed the dead `archlinux.de` fallback (API is `410 Gone`) and a latent `to_json` datetime bug with it
+        - Removed the dead `archlinux.de` fallback (API is `410 Gone`) and a
+          latent `to_json` datetime bug with it
     - `scripts/size.py`: estimate target-system size from a saved config
-        - Reuses `count.py`'s package resolution (extracted to `scripts/_resolve.py`); sums sync-DB download/install sizes via `expac`
+        - Reuses `count.py`'s package resolution (extracted to
+          `scripts/_resolve.py`); sums sync-DB download/install sizes via
+          `expac`
         - `--unit` to pin the output unit, `--top N` for the largest packages
     - Package manager fixes
         - Never leave the host `pacman.conf` modified after a host-to-target run
         - Route GPGME/signature sync errors to a keyring reset
-    - LUKS: surface `cryptsetup` error output when unlock fails (upstream fix credits to 0xdeadd)
+    - LUKS: surface `cryptsetup` error output when unlock fails (upstream fix
+      credits to 0xdeadd)
     - Hardware: add Marvell PCI IDs
     - btrfs: level-1 zstd for the default layout (credits to Tiagoquix)
 
@@ -34,16 +80,19 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 ## 0.1.10-0
 
-    - Enum normalization: all profiles, bootloaders, drivers, snapshot/network/disk types to lowercase/kebab-case
+    - Enum normalization: all profiles, bootloaders, drivers,
+      snapshot/network/disk types to lowercase/kebab-case
         - Added `display_name()` methods for human-readable UI display
         - Schema keys aligned with enum `.value` fields
-        - Saved configs with old casing require migration (altho most people use the menu directly, this will allow for better checks/tests)
+        - Saved configs with old casing require migration (altho most people use
+          the menu directly, this will allow for better checks/tests)
     - Hardware detection allow for vendor specific list in `Firmware`
         - Updated `count.py` to work with new firmware choice logic
     - Fix doas path resolution on grimaur installs
         - Configure `/etc/makepkg.conf` directly
         - Validate AUR selection requires elevation
-        - Update grimaur to new version -> respects makepkg properly now + other various changes
+        - Update grimaur to new version -> respects makepkg properly now + other
+          various changes
     - Convert docstrings to plain `#` comments
     - Logging fixes: Escaping using existing helpers
     - Clean up help text and user-facing messages
@@ -57,122 +106,187 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 ## 0.1.09-0
 
     - UKI + grub-btrfs co-existence (#4505)
-        - `add_bootloader(..., keep_standalone_initramfs=True)` keeps `linux`/`initrd` artifacts alongside the UKI when the user picks GRUB + UKI + btrfs snapshots (grub-btrfs's snapshot entries cannot consume a UKI)
-        - `_config_uki` rewrites mkinitcpio presets: prepends `default` to `PRESETS=(...)`, skips the redundant-image unlink, leaves the standard initramfs in place
-        - Decision pulled into `scripts/guided.py` so `setup_btrfs_snapshot` runs after bootloader install with the correct flag
+        - `add_bootloader(..., keep_standalone_initramfs=True)` keeps
+          `linux`/`initrd` artifacts alongside the UKI
+        - when the user picks GRUB + UKI + btrfs snapshots (grub-btrfs's
+          snapshot entries cannot consume a UKI)
+        - `_config_uki` rewrites mkinitcpio presets: prepends `default` to
+          `PRESETS=(...)`, skips the redundant-image unlink, leaves the standard
+          initramfs in place
+        - Decision pulled into `scripts/guided.py` so `setup_btrfs_snapshot`
+          runs after bootloader install with the correct flag
     - Fix grub-btrfs cfg path when ESP is not at `/boot`
-        - grub-btrfs's `41_snapshots-btrfs` hook hardcodes `/boot/grub`; archinstoo writes `<esp>/grub` when the ESP mounts at `/efi`
-        - Now writes `/etc/default/grub-btrfs/config` with `GRUB_BTRFS_GRUB_DIRNAME="<esp>/grub"` so snapshot entries land in the right cfg
+        - grub-btrfs's `41_snapshots-btrfs` hook hardcodes `/boot/grub`;
+          archinstoo writes `<esp>/grub` when the ESP mounts at `/efi`
+        - Now writes `/etc/default/grub-btrfs/config` with
+          `GRUB_BTRFS_GRUB_DIRNAME="<esp>/grub"` so snapshot entries land in the
+          right cfg
     - `iwd` standalone option in network menu
         - New `NicType.IWD` alongside existing `NM` and `NM_IWD`
-        - `Installer.configure_iwd_standalone()` writes `/etc/iwd/main.conf` with `EnableNetworkConfiguration=true` + `NameResolvingService=systemd` (iwd handles DHCP, systemd-resolved picks up DNS)
-        - `NetworkHandler` enables `iwd` + `systemd-resolved`, no NetworkManager pulled in
+        - `Installer.configure_iwd_standalone()` writes `/etc/iwd/main.conf`
+          with `EnableNetworkConfiguration=true` +
+          `NameResolvingService=systemd` (iwd handles DHCP, systemd-resolved
+          picks up DNS)
+        - `NetworkHandler` enables `iwd` + `systemd-resolved`, no NetworkManager
+          pulled in
         - `scripts/count.py` adjusted accordingly
     - Profiles: package customization step
-        - New `Customize packages` menu item under `ProfileMenu`, multi-select toggle of each profile's package list
-        - Persists exclusions in `Profile.custom_settings['excluded_packages']`; only enabled when at least one selected profile is non-`Minimal`
+        - New `Customize packages` menu item under `ProfileMenu`, multi-select
+          toggle of each profile's package list
+        - Persists exclusions in `Profile.custom_settings['excluded_packages']`;
+          only enabled when at least one selected profile is non-`Minimal`
         - Drops dead-code "advanced" profile path
     - `--list` rework
         - Adds `count` to `ROOTLESS_SCRIPTS`
-        - New `DEFAULT = 'guided'` sentinel; `scripts/list.py` marks the default script in the listing and pulls the `[*] requires root` legend out of the per-row formatting
+        - New `DEFAULT = 'guided'` sentinel; `scripts/list.py` marks the default
+          script in the listing and pulls the `[*] requires root` legend out of
+          the per-row formatting
     - TUI: SIGWINCH race condition in `Tui._sig_win_resize`
         - Bails when `Tui._t is None` (signal can fire after teardown)
-        - Wraps `curses.endwin()`/`initscr()`/resize in `try/except curses.error`
-        - `__enter__` saves the previous SIGWINCH handler; `__exit__` restores it (was leaking into the host process after `Tui` exit)
+        - Wraps `curses.endwin()`/`initscr()`/resize in `try/except
+          curses.error`
+        - `__enter__` saves the previous SIGWINCH handler; `__exit__` restores
+          it (was leaking into the host process after `Tui` exit)
     - `pm/packages.py`: additional packages parsing
-        - `installed_package` / `enrich_package_info` switch `.strip()` -> `.rstrip()` so leading whitespace in pacman `-Q --info` / `-Si` output (continuation lines for multi-line fields) is preserved
+        - `installed_package` / `enrich_package_info` switch `.strip()` ->
+          `.rstrip()` so leading whitespace in pacman `-Q --info` / `-Si` output
+          (continuation lines for multi-line fields) is preserved
         - Avoids field merges when a value wraps onto the next line
     - Log / artifact sync ordering
-        - `_sync_artifacts_to_target` promoted to public; called from `scripts/guided.py` rather than `Installer.__exit__`
-        - Sync now runs before the post-install menu (chroot, reboot, exit) so users picking "exit" still get the artifacts on target
+        - `_sync_artifacts_to_target` promoted to public; called from
+          `scripts/guided.py` rather than `Installer.__exit__`
+        - Sync now runs before the post-install menu (chroot, reboot, exit) so
+          users picking "exit" still get the artifacts on target
         - Sync also runs on the failure path
-        - `pathnames.ARTIFACTS_STORE` now relative to `/` so chroot-relative writes resolve correctly
-    - `share-log` curl hint switched from `0x0.st` (dead) to `paste.rs` (`curl --data-binary @<log> https://paste.rs`)
+        - `pathnames.ARTIFACTS_STORE` now relative to `/` so chroot-relative
+          writes resolve correctly
+    - `share-log` curl hint switched from `0x0.st` (dead) to `paste.rs` (`curl
+      --data-binary @<log> https://paste.rs`)
     - `scripts/count.py` parsing fixes
         - Excludes-count cleanup for profiles that contribute no packages
         - Per-profile parsing reworked to match the new exclusion field
-    - `examples/config-sample-full.json`: add missing fields, drop stales from `schema.jsonc`
-    - `desktops/hyprland.py`: drop `polkit` (pulled in transitively); revert niri profile change
+    - `examples/config-sample-full.json`: add missing fields, drop stales from
+      `schema.jsonc`
+    - `desktops/hyprland.py`: drop `polkit` (pulled in transitively); revert
+      niri profile change
     - Drop `cutefish` desktop profile (#4514, upstream-archived project)
-    - Locale fixes (#4500): missing `tr()` ids in encryption/profile menus, `.pot` regen
+    - Locale fixes (#4500): missing `tr()` ids in encryption/profile menus,
+      `.pot` regen
     - `network/`: small helper for nic stub creation path
     - `sysctl`: drop redundant duplicate lines
-    - Dev: `TVM` script (renamed from `VM`) for boot-time VM smoke-test (credits to softer)
-    - Deps: bump `mypy` to v2 (project + pre-commit mirror), pre-commit hooks resync
+    - Dev: `TVM` script (renamed from `VM`) for boot-time VM smoke-test (credits
+      to softer)
+    - Deps: bump `mypy` to v2 (project + pre-commit mirror), pre-commit hooks
+      resync
     - Various docs refresh (BUILD_ISOS, DEP_CHAINS, link/block fixes)
     - Various upstream syncs
 
 ## 0.1.08-0
 
     - Auto-detect firmware vendors from PCI bus
-        - New `_SysInfo.firmware_vendors` cached probe reads `/sys/bus/pci/devices/*/vendor` maps to `FirmwareVendor` enum names
-        - AMD disambiguation via `/sys/bus/pci/devices/*/driver` symlink (amdgpu vs radeon)
-        - VM short-circuit (`SysInfo.is_vm()`) skips PCI scan on virtio-only hosts
-        - `select_firmware()` seeds the multi-select with detected vendors only when no preset is loaded saved configs with explicit picks still win
+        - New `_SysInfo.firmware_vendors` cached probe reads
+          `/sys/bus/pci/devices/*/vendor` maps to `FirmwareVendor` enum names
+        - AMD disambiguation via `/sys/bus/pci/devices/*/driver` symlink (amdgpu
+          vs radeon)
+        - VM short-circuit (`SysInfo.is_vm()`) skips PCI scan on virtio-only
+          hosts
+        - `select_firmware()` seeds the multi-select with detected vendors only
+          when no preset is loaded saved configs with explicit picks still win
     - Refactor: `DisplayServer` moved out of `hardware.py`
-        - Now lives in `lib/profile/base.py` next to `ProfileType` / `GreeterType` / `SelectResult` (it's a profile-derived choice, not a hardware probe)
+        - Now lives in `lib/profile/base.py` next to `ProfileType` /
+          `GreeterType` / `SelectResult` (it's a profile-derived choice, not a
+          hardware probe)
         - `GfxDriver.gfx_packages()` no longer bundles xorg-server/xorg-xinit
-        - Multi-profile X11+Wayland selection now correctly includes X11 base packages (passes aggregated `profile_config.display_servers()` 
+        - Multi-profile X11+Wayland selection now correctly includes X11 base
+          packages (passes aggregated `profile_config.display_servers()`
     - `info(..., step=True)` for major install-phases
         - Prepends `==>` (cyan) and trailing blank line for visual separation
-        - Wired at `mount_ordered_layout`, `minimal_installation`, `add_bootloader`, `create_users`, `genfstab`
+        - Wired at `mount_ordered_layout`, `minimal_installation`,
+          `add_bootloader`, `create_users`, `genfstab`
     - `cleanup.py` module extracted from `installer.py` (#4496 upstream port)
         - `teardown_layout` / `swapoff_layout` / `close_luks` as free functions
-        - `__exit__` runs teardown via `try/finally` on every exit (success and failure paths)
+        - `__exit__` runs teardown via `try/finally` on every exit (success and
+          failure paths)
         - `_layout_teardown_required` flag guards no-op when nothing was mounted
     - Minimal ISO support
-        - `isos/ISOMOD` reworked to optionally produce minimal ISOs (smaller, faster build)
+        - `isos/ISOMOD` reworked to optionally produce minimal ISOs (smaller,
+          faster build)
         - Doc updates with size references (`.github/BUILD_ISOS.md`)
-    - Post-install artifact sync uses `ARTIFACTS_STORE` constant from `pathnames.py`
-    - `_sync_artifacts_to_target` simplified (loop over `(src, dst)` pairs, drop `import stat`)
+    - Post-install artifact sync uses `ARTIFACTS_STORE` constant from
+      `pathnames.py`
+    - `_sync_artifacts_to_target` simplified (loop over `(src, dst)` pairs, drop
+      `import stat`)
     - Various docs refresh
     - Various upstream syncs
 
 ## 0.1.07-1
 
-    - CI: add `release.yaml` workflow to auto-publish a GitHub release when `PKGBUILD` `pkgver`/`pkgrel` change
+    - CI: add `release.yaml` workflow to auto-publish a GitHub release when
+      `PKGBUILD` `pkgver`/`pkgrel` change
     - Publish `.tar.gz` as official format
     - Fix deps pinning, remove 'procps-ng' dep by using python internals
 
 ## 0.1.07-0
 
     - TPM2 auto-unlock for LUKS-encrypted installs (opt-in)
-        - New `Installer.enroll_tpm2()` runs `systemd-cryptenroll --tpm2-device=auto` in chroot at bootloader-install time
-        - Hardware-gated menu toggle: only appears when `/sys/class/tpm/*/tpm_version_major == 2` (`SysInfo.has_tpm2()`)
-        - Multi-select PCR picker restricted to firmware-time PCRs (0, 1, 2, 3, 7) that are stable host->target
-        - Default `0+7` (firmware + Secure Boot state); passphrase keyslot stays as fallback
-        - Adds `rd.luks.options=tpm2-device=auto` to kernel cmdline so sd-encrypt attempts TPM2 unlock at boot
-        - Transient unlock keyfile follows `_create_root_keyfile` convention (`/etc/cryptsetup-keys.d/`), unlinked after enrollment
+        - New `Installer.enroll_tpm2()` runs `systemd-cryptenroll
+          --tpm2-device=auto` in chroot at bootloader-install time
+        - Hardware-gated menu toggle: only appears when
+          `/sys/class/tpm/*/tpm_version_major == 2` (`SysInfo.has_tpm2()`)
+        - Multi-select PCR picker restricted to firmware-time PCRs (0, 1, 2, 3,
+          7) that are stable host->target
+        - Default `0+7` (firmware + Secure Boot state); passphrase keyslot stays
+          as fallback
+        - Adds `rd.luks.options=tpm2-device=auto` to kernel cmdline so
+          sd-encrypt attempts TPM2 unlock at boot
+        - Transient unlock keyfile follows `_create_root_keyfile` convention
+          (`/etc/cryptsetup-keys.d/`), unlinked after enrollment
     - Post-install artifacts synced into target for debugging
-        - `/etc/archinstoo.d/<UTC-timestamp>-install.log` and `<UTC-timestamp>-config.json`
+        - `/etc/archinstoo.d/<UTC-timestamp>-install.log` and
+          `<UTC-timestamp>-config.json`
         - Runs in `Installer.__exit__` on both success and failure paths
     - Target teardown on successful install (`_teardown_target`)
-        - Encryption-topology-aware order: unmount tree, deactivate VGs, close LUKS mappers
-        - Lazy `umount -R -l` fallback for stuck mountpoints (e.g. leftover `arch-chroot -S` scopes)
-        - `cryptsetup close --deferred` so the close completes asynchronously without blocking on residual fds
-        - Host left in a clean state after install: re-running the installer no longer requires a reboot to clear stale mounts/mappers
+        - Encryption-topology-aware order: unmount tree, deactivate VGs, close
+          LUKS mappers
+        - Lazy `umount -R -l` fallback for stuck mountpoints (e.g. leftover
+          `arch-chroot -S` scopes)
+        - `cryptsetup close --deferred` so the close completes asynchronously
+          without blocking on residual fds
+        - Host left in a clean state after install: re-running the installer no
+          longer requires a reboot to clear stale mounts/mappers
 
 ## 0.1.06-1
 
     - Sibling import cycle cleanup (internal restructuring)
-        - 24 -> 3 cycle-breaking edges across `archinstoo.lib` (`grimp`/`import-linter`)
+        - 24 -> 3 cycle-breaking edges across `archinstoo.lib`
+          (`grimp`/`import-linter`)
         - Move `crypt.py` out of `authentication/` (leaf util)
-        - Move `fetch_data_from_url` / `DownloadTimer` from `network/` into `utils/net.py`
-        - Move `confirm_abort` into `tui/prompts.py`; `get_password` into `authentication/password_prompt.py`
-        - Move `add_number_of_parallel_downloads` into `pm/config.set_parallel_downloads`
+        - Move `fetch_data_from_url` / `DownloadTimer` from `network/` into
+          `utils/net.py`
+        - Move `confirm_abort` into `tui/prompts.py`; `get_password` into
+          `authentication/password_prompt.py`
+        - Move `add_number_of_parallel_downloads` into
+          `pm/config.set_parallel_downloads`
         - Move `select_driver` into `profile/driver_select.py`
         - Promote `default_profiles/profile.py` -> `lib/profile/base.py`
-        - Move `DisplayServer` enum into `hardware.py`; inline `Profile.display_servers()` (drop lazy handler call)
+        - Move `DisplayServer` enum into `hardware.py`; inline
+          `Profile.display_servers()` (drop lazy handler call)
         - Rename `network/utils.py` -> `network/interfaces.py`
     - CI track-only checks (`continue-on-error: true`)
         - Add `import-linter` sibling-acyclicity contract
-        - Add `vulture` dead-code detection (with `vulture_whitelist.py` for false positives)
-    - Remove dead code surfaced by `vulture` (~17 symbols across `installer.py`, `models/device.py`, `tui/`, etc.)
-    - `disk` module split (`disk.layouts` + `disk.selectors`) to reduce circular-dep risk
-    - `ISOMOD_LIVE` script merged into `ISOMOD` via `LIVE=1` flag (single source for installer + Plasma live-session ISO)
-    - AUR update menu: wire up `format_update_candidate` print loop in `interactive_select_updates`
+        - Add `vulture` dead-code detection (with `vulture_whitelist.py` for
+          false positives)
+    - Remove dead code surfaced by `vulture` (~17 symbols across `installer.py`,
+      `models/device.py`, `tui/`, etc.)
+    - `disk` module split (`disk.layouts` + `disk.selectors`) to reduce
+      circular-dep risk
+    - `ISOMOD_LIVE` script merged into `ISOMOD` via `LIVE=1` flag (single source
+      for installer + Plasma live-session ISO)
+    - AUR update menu: wire up `format_update_candidate` print loop in
+      `interactive_select_updates`
     - Add `mkinitcpio` to `__base_packages__` (#4484 upstream port)
-        - Pacstrap installs deterministically; avoids dracut/etc. being picked up on non-Arch hosts (EndeavourOS prefers dracut)
+        - Pacstrap installs deterministically; avoids dracut/etc. being picked
+          up on non-Arch hosts (EndeavourOS prefers dracut)
         - Various other upstream ports
     - Add `audit` security option
     - Drop `ELEV` workaround hacks
@@ -181,62 +295,77 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 ## 0.1.06-0
 
     - Explicit vendor firmware selection
-        - New `firmware.py` model + `system_conf` interaction wired into global menu and guided script
+        - New `firmware.py` model + `system_conf` interaction wired into global
+          menu and guided script
     - Rework explicit `None` options
         - Always last in the menu, returns `None` to config
-        - Available in `Greeter`, `Graphics driver`, `Network`, `Audio`, `Bootloader`
+        - Available in `Greeter`, `Graphics driver`, `Network`, `Audio`,
+          `Bootloader`
     - LIVE KDE ISO
         - New `isos/ISOMOD_LIVE` script
-        - Plasma profile cleanups (drop redundant entry, add missing `bluedevil`)
+        - Plasma profile cleanups (drop redundant entry, add missing
+          `bluedevil`)
         - Switch plasma to new plasma-login-manager (PLM)
     - Seatd vs logind conflict (#4471)
         - Return `ly` greeter when `seatd` is selected
-        - Guard `uses_logind()` to filter based on `seat_access` selection (`needs_seatd`)
-        - Drop `default_greeter_type` from most Wayland profiles (works for aggregate profiles)
+        - Guard `uses_logind()` to filter based on `seat_access` selection
+          (`needs_seatd`)
+        - Drop `default_greeter_type` from most Wayland profiles (works for
+          aggregate profiles)
     - Wire `makepkg.conf` to `elev` (privilege escalation selection)
     - Installer edge case fix on non-Arch host distros
     - Upstream syncs
         - #4443 installer cleanup
-        - #4473 new pattern for commands + port across call sites (audio, docker, shell, installer)
+        - #4473 new pattern for commands + port across call sites (audio,
+          docker, shell, installer)
         - #4474 port smaller validations into global menu
 
 ## 0.1.05-2
 
     - Upstream syncs:
-        - Enum casing: `FilesystemType`, `ModificationStatus`, `PartitionType` migrated to `StrEnum` / UPPER_CASE
-        - Limine validation uses `FilesystemType.is_fat()`; block install when ESP is boot partition mounted outside `/boot` without UKI
-        - Power management: auto-enable `power-profiles-daemon.service` / `tuned.service` based on selection
-        - New `LPath` helper and `pathnames` module (centralizes `ARCHISO_MOUNTPOINT`, `PACMAN_CONF`)
-        - Installer ordering, mirrors, pacman config, budgie profile, general.py tweaks
+        - Enum casing: `FilesystemType`, `ModificationStatus`, `PartitionType`
+          migrated to `StrEnum` / UPPER_CASE
+        - Limine validation uses `FilesystemType.is_fat()`; block install when
+          ESP is boot partition mounted outside `/boot` without UKI
+        - Power management: auto-enable `power-profiles-daemon.service` /
+          `tuned.service` based on selection
+        - New `LPath` helper and `pathnames` module (centralizes
+          `ARCHISO_MOUNTPOINT`, `PACMAN_CONF`)
+        - Installer ordering, mirrors, pacman config, budgie profile, general.py
+          tweaks
     - Docs: refresh project structure tree
     - Enable ruff `RUF051` (if-key-in-dict-del)
     - Dependency updates
 
 ## 0.1.05-1
 
-    - Missing deps in linux-variant-headers
-        - Reported https://github.com/archlinux/archinstall/issues/4360
-            - Fixed upstream https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188
-        - Deduplicate `_base_packages` before pacstrap
-            - Multiple bcachefs partitions (e.g. / + /home) caused duplicate packages
+    - Deduplicate `_base_packages` before pacstrap
+        - Multiple bcachefs partitions (e.g. / + /home) caused duplicate
+          packages
     - ESP permissions fix for /boot mountpoint
-        - `fmask=0077,dmask=0077` now applied when ESP is mounted at `/boot` (was previously skipped, leaving random seed file world-accessible)
+        - `fmask=0077,dmask=0077` now applied when ESP is mounted at `/boot`
+          (was previously skipped, leaving random seed file world-accessible)
     - PM: file:// custom repos inserted before [core] for priority
     - Custom repos (file://) stripped from target pacman.conf on persist
-        - Install-time local cache repos no longer leak into the installed system
+        - Install-time local cache repos no longer leak into the installed
+          system
 
 
 ## 0.1.05-0
 
     - Limine bootloader fixes
         - Fix boot failure when EFI is mounted at `/efi` or `/boot/efi`
-            - `path_root` was incorrectly staying as `boot()` instead of `uuid(root)`,
-              causing kernel/initramfs paths to resolve on the EFI partition rather than root
+            - `path_root` was incorrectly staying as `boot()` instead of
+              `uuid(root)`,
+              causing kernel/initramfs paths to resolve on the EFI partition
+              rather than root
         - Fix `limine.conf` placed in wrong location for removable installs
-            - Config was written to `/boot/limine/` instead of alongside the EFI binary on the ESP
+            - Config was written to `/boot/limine/` instead of alongside the EFI
+              binary on the ESP
         - Both bugs are upstream regressions from archinstall#3932
     - AUR: fix install order to run after DE/WM profile
-        - Prevents AUR packages that depend on a desktop environment from failing
+        - Prevents AUR packages that depend on a desktop environment from
+          failing
     - grimAUR improvements
         - Prefer `run0` over `sudo` in GUI mode
         - Add `--depth=1` to all git clone commands
@@ -244,11 +373,15 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Add kernel version and build date to env utils
     - LUKS: explicitly load `dm_crypt` module before use
     - `run()`: capture stderr from subprocess calls
-    - Installer: replace `SysCommand('sync')` with `os.sync()` builtin, remove custom `sync()` method
-    - Config: fix key name `archinstoo-language` → `archinstoo_language` in serialization/deserialization
+    - Installer: replace `SysCommand('sync')` with `os.sync()` builtin, remove
+      custom `sync()` method
+    - Config: fix key name `archinstoo-language` → `archinstoo_language` in
+      serialization/deserialization
     - Repo: move ISO files into `isos/` subdirectory
-    - Docs: add multi-boot guidance for issue #100 (manual partitioning + `skip-boot` hint)
-    - Dependency updates: ruff 0.15.8, actions/upload-artifact v7, actions/checkout digest bump
+    - Docs: add multi-boot guidance for issue #100 (manual partitioning +
+      `skip-boot` hint)
+    - Dependency updates: ruff 0.15.8, actions/upload-artifact v7,
+      actions/checkout digest bump
 
 ## 0.1.04-0
 
@@ -274,7 +407,8 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Skip keyfile generation and use password prompt for unencrypted root
     - TUI input fixes
         - Fix dsync behaviors on TUI inputs (behave like insert mode)
-        - Delete/backspace works correctly and never overwrites current selected char
+        - Delete/backspace works correctly and never overwrites current selected
+          char
     - LVM refactor
         - Refactor LVM logic
     - Advanced mode
@@ -302,13 +436,18 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
     - Refactor disk utils (DI Ext.)
     - Add `plasma-login-manager` greeter
-        - Add `PlasmaLoginManager` to `GreeterType` enum, schema, and install logic
+        - Add `PlasmaLoginManager` to `GreeterType` enum, schema, and install
+          logic
     - LVM fixes for `/efi`-only layouts
-        - Fix `suggest_lvm_layout` crashing when no `/boot` partition exists (fallback to `/efi`)
-        - Fix `/efi` partition not being formatted before LVM setup in `filesystem.py`
-        - Exclude `/efi` from LVM physical volumes in both `/efi`-only and `/efi`+`/boot` layouts
+        - Fix `suggest_lvm_layout` crashing when no `/boot` partition exists
+          (fallback to `/efi`)
+        - Fix `/efi` partition not being formatted before LVM setup in
+          `filesystem.py`
+        - Exclude `/efi` from LVM physical volumes in both `/efi`-only and
+          `/efi`+`/boot` layouts
     - Bootloader defaults fix
-        - Fix UKI and Removable disabled by default for GRUB (regression from `df046f01` merge)
+        - Fix UKI and Removable disabled by default for GRUB (regression from
+          `df046f01` merge)
         - `get_default()` was receiving `skip_boot` as `uefi` parameter
     - Encryption improvements (#86 follow ups)
         - Refactor LUKS UUID helper from `device_handler` to `luks.py`
@@ -326,8 +465,10 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
     - Encryption (#84)
         - Add choices for LUKS key derivation function (argon2id/pbkdf2)
-        - Add auto-unlock option for non-UKI/GRUB setups (shorter iters for mem restrictions)
-        - Switch from `encrypt` hook to `sd-encrypt` with systemd initramfs hooks
+        - Add auto-unlock option for non-UKI/GRUB setups (shorter iters for mem
+          restrictions)
+        - Switch from `encrypt` hook to `sd-encrypt` with systemd initramfs
+          hooks
         - Update `schema.jsonc` for new encryption fields
         - New `EncryptionType` and derivation models in device module
     - Security applications
@@ -344,19 +485,21 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
         - Fix resume behavior for multiple settings
         - Fix profile names for `httpd` and `sshd` servers
         - Update `config-sample-full.json` with new fields
-    - Chores
-        - Update ruff to latest version
 
 ## 0.1.03-0
 
     - Encrypted `/boot` separate `/efi` (GRUB + argon2id)
-        - Constrain LUKS key slot PBKDF for boot partitions (`--pbkdf-memory 32768 --iter-time 200`)
-        - Apply same constraints to keyfile generation (`luksAddKey`) so GRUB can decrypt both slots
+        - Constrain LUKS key slot PBKDF for boot partitions (`--pbkdf-memory
+          32768 --iter-time 200`)
+        - Apply same constraints to keyfile generation (`luksAddKey`) so GRUB
+          can decrypt both slots
         - Add `--batch-mode` to `cryptsetup open` for non-interactive unlock
     - ESP mount security
         - Mount FAT32 ESP with `fmask=0077,dmask=0077` (root-only access)
-        - Applied at mount time in installer for both Default and Manual partitioning
-    - Default BTRFS layout: mount ESP at `/efi` so `/boot` stays in `@` subvolume
+        - Applied at mount time in installer for both Default and Manual
+          partitioning
+    - Default BTRFS layout: mount ESP at `/efi` so `/boot` stays in `@`
+      subvolume
     - User services and multi-profile support
         - New `UserService` model for per-user systemd `--user` services
         - Service enable/disable during installation
@@ -372,7 +515,8 @@ Historical changes before I went rogue: [h8d13 commits master](https://github.co
 
 ## 0.1.02-1
     - Add `smartmontools` to Server profiles (disk health monitoring)
-        - This means original profiles list now only contains `xdg-utils | smartmontools` for desktops
+        - This means original profiles list now only contains `xdg-utils |
+          smartmontools` for desktops
 
 Down from original list (the rest is all in logic or choices):
 
@@ -394,23 +538,33 @@ Down from original list (the rest is all in logic or choices):
 ## 0.1.02-0
 
     - Graphics driver improvements
-        - Add VM-specific options: `VM (software rendering)` and `VM (virtio-gpu)` allows to pick guest drivers
-        - `Mesa (open-source)` auto-detects vulkan-intel or vulkan-radeon based on hardware
+        - Add VM-specific options: `VM (software rendering)` and `VM
+          (virtio-gpu)` allows to pick guest drivers
+        - `Mesa (open-source)` auto-detects vulkan-intel or vulkan-radeon based
+          on hardware
         - Plan future implementation for other drivers
         - Virtual: `vulkan-driver` 
-        ALREADY COVERED: `nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast, vulkan-virtio, vulkan-nouveau`
-        MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno, vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
-        - Fix gfx driver installation OoO: now installs BEFORE profiles to satisfy vulkan-driver dependency.
-            - This avoid pulling in nvidia-utils on a non-nvidia install because none was installed yet, default or 1st choice
+        ALREADY COVERED: `nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast`
+        `vulkan-virtio, vulkan-nouveau`
+        MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno` 
+        `vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
+        - Fix gfx driver installation OoO: now installs BEFORE profiles to
+          satisfy vulkan-driver dependency.
+            - This avoid pulling in nvidia-utils on a non-nvidia install because
+              none was installed yet, default or 1st choice
         - Update recommendation text with VM detection hint
     - Pacman config changes
         - Move `parallel_downloads` setting into Pacman config submenu
-        - Fix misc options (ILoveCandy) not applied when option doesn't exist in pacman.conf
+        - Fix misc options (ILoveCandy) not applied when option doesn't exist in
+          pacman.conf
     - Profile fixes
-        - Rename `desktop_base` to `profile_base` (applies to any profile, not just desktop)
-        - Move `wireless_tools` to wpa_supplicant backend installation (remove from always installed)
+        - Rename `desktop_base` to `profile_base` (applies to any profile, not
+          just desktop)
+        - Move `wireless_tools` to wpa_supplicant backend installation (remove
+          from always installed)
         - Fix profile types: DesktopEnv → WindowMgr
-        - Add `preview_text` to WaylandProfile (shows "Type: X (Wayland) or (Xorg)")
+        - Add `preview_text` to WaylandProfile (shows "Type: X (Wayland) or
+          (Xorg)")
     - Bug fixes
         - Fix guided.py advanced options disappearing on install
         - Fix duplicate grub package installation on UEFI systems
@@ -419,7 +573,8 @@ Down from original list (the rest is all in logic or choices):
 ## 0.1.01-1
 
     - New Security application category
-        - AppArmor support with kernel LSM parameter (`lsm=landlock,lockdown,yama,integrity,apparmor,bpf`)
+        - AppArmor support with kernel LSM parameter
+          (`lsm=landlock,lockdown,yama,integrity,apparmor,bpf`)
         - Firejail namespace-based sandboxing
         - Bubblewrap low-level sandboxing
         - Multi-select menu allowing any combination of tools
@@ -432,10 +587,12 @@ Down from original list (the rest is all in logic or choices):
     - Add poweroff option to post-installation menu
         - Useful for VM testing workflows
     - Installer improvements
-        - Add `add_kernel_param()` method for applications to set kernel parameters
+        - Add `add_kernel_param()` method for applications to set kernel
+          parameters
         - Order:
             - Move user creation before application installation
-            - Move application installation before bootloader (kernel params now included in bootloader config)
+            - Move application installation before bootloader (kernel params now
+              included in bootloader config)
     - CI/Workflow changes
         - Remove publish workflow
         - Trigger only on pushes
@@ -450,7 +607,8 @@ Down from original list (the rest is all in logic or choices):
         - Parse ARM mirror list format (different HTML from x86)
         - Filter out `reflector` on non-x86_64 (not packaged for ARM)
         - Remove `vi` from desktop_base (conflicts with vi compat on ARM)
-        - Skip filesystem ops when `wipe=False` on existing partitions and safe copies
+        - Skip filesystem ops when `wipe=False` on existing partitions and safe
+          copies
         - Graphics driver menu shows only Mesa on ARM
     - Live mode (`--script live`)
         - New `scripts/live.py` for configuring the running system in-place
@@ -463,7 +621,8 @@ Down from original list (the rest is all in logic or choices):
         - Fix `/tmp` writability inside chroot for `makepkg`
         - Out-of-tree DKMS module builds
     - Graphics driver overhaul
-        - Replace `VMOpenSource` with `MesaOpenSource` (mesa + libva-mesa-driver)
+        - Replace `VMOpenSource` with `MesaOpenSource` (mesa +
+          libva-mesa-driver)
         - VMs and ARM both default to Mesa group
     - Boot / EFI fixes
         - Move EFI bitness check to `hardware.py`
@@ -525,20 +684,25 @@ Down from original list (the rest is all in logic or choices):
         - Allow swap partitions in the encryption selection menu
         - Add `swap` mapper name (consistent with `root`/`home` naming)
         - Call `swapon` on the LUKS mapper device for encrypted swap
-        - Manually add swap fstab entry (genfstab doesn't capture swap mount points)
+        - Manually add swap fstab entry (genfstab doesn't capture swap mount
+          points)
         - Generate keyfile and crypttab entry for passwordless unlock at boot
     - Fix multi-select ENTER key behavior
-        - ENTER now only confirms selection, no longer auto-selects the focused item
+        - ENTER now only confirms selection, no longer auto-selects the focused
+          item
         - TAB/SPACE remain the toggle keys for individual items
     - TUI search improvements
-        - Auto-activate search when typing any letter (no longer need to press `/` first)
+        - Auto-activate search when typing any letter (no longer need to press
+          `/` first)
         - Remove `/` requirement from help text
     - Remove `--silent` flag
         - Disk and Authentication config are always required interactively
-        - Remove `silent` param from `Pacman`, `ConfigurationHandler.prompt_resume()`
+        - Remove `silent` param from `Pacman`,
+          `ConfigurationHandler.prompt_resume()`
         - Fix custom commands only running with `--advanced` flag
     - Fix final confirmation prompt using recursion
-        - Replace recursive `return guided()` / `return format_disk()` with `while` loop
+        - Replace recursive `return guided()` / `return format_disk()` with
+          `while` loop
         - Fix `sudo` mention to `elevated privileges` in validation message
     - Console fonts listing
         - Skip `README*` files in `/usr/share/kbd/consolefonts/`
@@ -560,7 +724,8 @@ Down from original list (the rest is all in logic or choices):
     - Start building `env` utils for support to build on alpine
     - Rework `--script list` to show what needs root or not
     - Add actual custom examples #71 
-    - Add `count` script that let's you map out how many pkgs would be installed by a profile
+    - Add `count` script that let's you map out how many pkgs would be installed
+      by a profile
     - Add schema.jsonc with all the possible packages installed
     - Add mirrors progress indicator and average bit rate
     - Style changes use `SystemExit` instead of importing sys on every file
@@ -578,11 +743,13 @@ Down from original list (the rest is all in logic or choices):
 
     - Manual partitioning improvements
         - Add "Create empty layout (wipe all)" option for fresh starts
-        - Add "Default layout" option in manual partitioning for brtfs subvolumes
+        - Add "Default layout" option in manual partitioning for brtfs
+          subvolumes
         - Manual partitioning highlighted by default
         - Add udev_sync calls between disk operations for timing issues
         - Remove partprobe (redundant with disk.commit)
-        - Add mount_fs to all formatting calls (attempt fixes #4164 vfat mount issues)
+        - Add mount_fs to all formatting calls (attempt fixes #4164 vfat mount
+          issues)
         - Always log mount disk operations
     - Init/startup refactor
         - Rework init with cleaner OS imports and lazy args
@@ -597,9 +764,7 @@ Down from original list (the rest is all in logic or choices):
         - Fix shell not being set for user
         - Remove hardcoded sudo mention
         - Grub as default bootloader
-    - Chores
-        - Update ruff to v0.14.14
-        - Code comments and structure cleanup
+    - Code comments and structure cleanup
 
 ## 0.0.01-6
 
@@ -615,7 +780,8 @@ Down from original list (the rest is all in logic or choices):
         - Use `DisplayServer.X11` check instead of profile type checks
         - Verify layout inside chroot where X11 is installed
         - Strip vconsole suffixes (-latin1, -nodeadkeys, etc.) for X11 format
-        - Remove Boot module that had complex systemd-spwn logic for setting this
+        - Remove Boot module that had complex systemd-spwn logic for setting
+          this
     - Remove unused `is_xorg_type_profile()` method
     - Use `profile.display_servers()` for graphics driver installation check
     - Network refactor with DI pattern
@@ -626,22 +792,26 @@ Down from original list (the rest is all in logic or choices):
 ## 0.0.01-5
 
     - Dependency Injection refactor (from archinstoo issues #4149)
-        - Remove module-level singletons: device_handler, profile_handler, mirror_list_handler, application_handler
+        - Remove module-level singletons: device_handler, profile_handler,
+          mirror_list_handler, application_handler
         - Consumer classes accept optional handler params with fallback defaults
         - Keep logger and translation_handler as singletons
     - Add `Os` class wrapper for environment variables
         - `Os.get_env()`, `Os.set_env()`, `Os.has_env()`
     - Merge `resumehandler.py` into `ConfigurationHandler`
         - Add `ConfigurationHandler.prompt_resume()` method
-        - Fix resume config loading bug (config was captured before resume check)
+        - Fix resume config loading bug (config was captured before resume
+          check)
     - Menu UX improvements
-        - Move Disk config and Authentication to top (assumed encryption empty/same for auth)
+        - Move Disk config and Authentication to top (assumed encryption
+          empty/same for auth)
         - Add `MenuItem.separator()` factory method for visual separators
         - Change "Cancel" to "Back" in sub-menus (ListManager)
         - Move Archinstoo settings to bottom with Install/Abort
     - Update tests and docs for refactors
     - New `logs/` dir for outputs (restore_perms on h2t mode)
-    - Move `tui/` into `lib/` for more readable imports / flat lib / honest architecture
+    - Move `tui/` into `lib/` for more readable imports / flat lib / honest
+      architecture
         - A lot of UI code is called from lib interactions or similar
         - Having them as siblings when they are interlaced is misleading
     - Separate `env` module in utils for these types of checks
@@ -681,7 +851,6 @@ Down from original list (the rest is all in logic or choices):
         - Remove init_time timestamp mechanism
     - Add examples (custom commands, priv esc, deps)
     - Docs refresh
-    - Create `base-devel-flex` pkg for `doas` alternative
 
 ## 0.0.01-3
 
@@ -714,7 +883,8 @@ Down from original list (the rest is all in logic or choices):
 ## 0.0.01-0
 
     - Change PKGBUILD strucs for proper dependency mngmnt
-        - Remove python-cryptography -> Only ever used to encrypt config file which now assumes passwords/disk passwords to never be resumed.
+        - Remove python-cryptography -> Only ever used to encrypt config file
+          which now assumes passwords/disk passwords to never be resumed.
         - Remove python-textual -> Keep ncurses for portability
         - Add __init__ check of deps
     - Simplify auth config to be inside global config
@@ -722,7 +892,8 @@ Down from original list (the rest is all in logic or choices):
         - Load config but never creds (disk/auth config to do only)
         - Offer choice to delete all of contents post-install
         - Lock root and doas alternative
-    - Add resume/abort features with proper deletions of cfg archlinux/archinstall#4035
+    - Add resume/abort features with proper deletions of cfg
+      archlinux/archinstall#4035
     - Wayland/x11 major refactor
         - Nvidia fixes
         - Sway, River, Niri fixes
