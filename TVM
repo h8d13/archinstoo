@@ -164,15 +164,5 @@ if [ "$ATTACH_ISO" = "true" ]; then
 	QEMU_ARGS+=(-cdrom "$ISO")
 fi
 
-QEMU_PID=""
-cleanup() {
-	if [ -n "$QEMU_PID" ]; then
-		kill "$QEMU_PID" 2>/dev/null || true
-	fi
-	stty sane 2>/dev/null || true # -monitor stdio can leave the tty raw on abrupt window-close
-}
-trap cleanup EXIT INT TERM
-
-qemu-system-x86_64 "${QEMU_ARGS[@]}" &
-QEMU_PID=$!
-wait "$QEMU_PID"
+trap 'stty sane' EXIT
+qemu-system-x86_64 "${QEMU_ARGS[@]}"
