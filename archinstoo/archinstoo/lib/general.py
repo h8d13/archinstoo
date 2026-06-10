@@ -77,6 +77,7 @@ class SysCommandWorker:
 		environment_vars: dict[str, str] | None = None,
 		working_directory: str = './',
 		remove_vt100_escape_codes_from_lines: bool = True,
+		silent: bool = False,
 	):
 		if isinstance(cmd, str):
 			cmd = shlex.split(cmd)
@@ -86,6 +87,8 @@ class SysCommandWorker:
 
 		self.cmd = cmd
 		self.peek_output = peek_output
+		# silent: still capture peeked output to cmd_output.txt, but don't echo it to the terminal
+		self.silent = silent
 		# define the standard locale for command outputs. For now the C ascii one. Can be overridden
 		self.environment_vars = {'LC_ALL': 'C'}
 		if environment_vars:
@@ -147,10 +150,11 @@ class SysCommandWorker:
 				os.close(self.child_fd)
 
 		if self.peek_output:
-			# To make sure any peaked output didn't leave us hanging
-			# on the same line we were on.
-			sys.stdout.write('\n')
-			sys.stdout.flush()
+			if not self.silent:
+				# To make sure any peaked output didn't leave us hanging
+				# on the same line we were on.
+				sys.stdout.write('\n')
+				sys.stdout.flush()
 			_cmd_output_flush()
 
 		if exc_type is not None:
@@ -198,8 +202,9 @@ class SysCommandWorker:
 
 			_cmd_output(output)
 
-			sys.stdout.write(output)
-			sys.stdout.flush()
+			if not self.silent:
+				sys.stdout.write(output)
+				sys.stdout.flush()
 
 		return True
 
@@ -274,9 +279,11 @@ class SysCommand:
 		environment_vars: dict[str, str] | None = None,
 		working_directory: str = './',
 		remove_vt100_escape_codes_from_lines: bool = True,
+		silent: bool = False,
 	):
 		self.cmd = cmd
 		self.peek_output = peek_output
+		self.silent = silent
 		self.environment_vars = environment_vars
 		self.working_directory = working_directory
 		self.remove_vt100_escape_codes_from_lines = remove_vt100_escape_codes_from_lines
@@ -325,13 +332,14 @@ class SysCommand:
 			environment_vars=self.environment_vars,
 			remove_vt100_escape_codes_from_lines=self.remove_vt100_escape_codes_from_lines,
 			working_directory=self.working_directory,
+			silent=self.silent,
 		) as session:
 			self.session = session
 
 			while not self.session.ended:
 				self.session.poll()
 
-		if self.peek_output:
+		if self.peek_output and not self.silent:
 			sys.stdout.write('\n')
 			sys.stdout.flush()
 
