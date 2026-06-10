@@ -107,7 +107,7 @@ class UserSerialization(TypedDict):
 	username: str
 	elev: bool
 	groups: list[str]
-	enc_password: str | None
+	enc_password: NotRequired[str | None]
 	stash_urls: NotRequired[list[str]]
 	shell: NotRequired[str]
 
@@ -167,9 +167,9 @@ class User:
 		}
 
 	def json(self) -> UserSerialization:
+		# enc_password is intentionally never serialized (re-prompted on config load), like root_enc_password
 		return {
 			'username': self.username,
-			'enc_password': None,
 			'elev': self.elev,
 			'groups': self.groups,
 			'stash_urls': self.stash_urls,

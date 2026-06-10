@@ -1,5 +1,13 @@
 # Troubleshooting
 
+
+## Helping us help you
+
+Log files are available in `./archinstoo/logs/*` relative to where you ran. 
+
+These contain 4 files: `cmd_history.txt`, `cmd_output.txt` and `install.log` (+ your `user_configuration.json`)
+Depending on the issue all 4 can be useful.
+
 ## Known issues
 
 ### **Issues with dependencies**
