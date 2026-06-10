@@ -656,6 +656,9 @@ class Installer:
 			key_in_target.write_bytes(password.plaintext.encode())
 			key_in_target.chmod(0o400)
 
+			# inherited by cryptenroll below: keep PIN/touch prompts plain text
+			os.environ['SYSTEMD_EMOJI'] = '0'
+
 			info(f'FIDO2 token: {token.path} ({token.manufacturer} {token.product})')
 			# Touch/PIN prompts are easy to miss in the install output;
 			# block until the user is watching before systemd-cryptenroll starts.
