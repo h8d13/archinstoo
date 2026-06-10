@@ -1,6 +1,5 @@
 # Troubleshooting
 
-
 ## Helping us help you
 
 Log files are available in `./archinstoo/logs/*` relative to where you ran. 
