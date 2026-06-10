@@ -48,7 +48,7 @@ class DiskLayoutType(Enum):
 			case DiskLayoutType.Default:
 				return tr('Use a best-effort default partition layout')
 			case DiskLayoutType.Lvm:
-				return tr('Logical Volumes Mgr default')
+				return tr('Default layout (LVM)')
 			case DiskLayoutType.Manual:
 				return tr('Manual Partitioning')
 			case DiskLayoutType.Pre_mount:
