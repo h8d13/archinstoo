@@ -219,11 +219,7 @@ def select_greeter(
 	preset: GreeterType | None = None,
 ) -> GreeterType | None:
 	if not profile or profile.is_greeter_supported():
-		needs_seatd = profile is not None and (
-			profile.custom_settings.get('seat_access') == 'seatd'
-			or any(p.custom_settings.get('seat_access') == 'seatd' for p in (profile.current_selection or []))
-		)
-		items = [MenuItem(g.value, value=g) for g in GreeterType if not (needs_seatd and g.conflicts_with_seatd())]
+		items = [MenuItem(g.value, value=g) for g in GreeterType]
 		items.append(MenuItem(text=tr('None'), value=None))
 		group = MenuItemGroup(items, sort_items=True)
 
