@@ -120,7 +120,7 @@ def get_default_btrfs_subvols(home_volume: bool = True) -> list[SubvolumeModific
 	return subvols
 
 
-def suggest_single_disk_layout(
+def suggest_disk_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
 	separate_home: bool | None = None,
@@ -128,7 +128,7 @@ def suggest_single_disk_layout(
 	advanced: bool = False,
 ) -> DeviceModification:
 	if not filesystem_type:
-		filesystem_type = select_main_filesystem_format(advanced=advanced)
+		filesystem_type = select_main_filesystem_format(advanced=advanced, allow_lvm=True)
 
 	sector_size = device.device_info.sector_size
 	total_size = device.device_info.total_size
@@ -170,7 +170,7 @@ def suggest_single_disk_layout(
 	for part in boot_partitions:
 		device_modification.add_partition(part)
 
-	if separate_home is False or using_subvolumes or total_size < min_size_to_allow_home_part:
+	if separate_home is False or using_subvolumes or filesystem_type == FilesystemType.LVM or total_size < min_size_to_allow_home_part:
 		using_home_partition = False
 	elif separate_home:
 		using_home_partition = True
@@ -201,7 +201,7 @@ def suggest_single_disk_layout(
 		type=PartitionType.PRIMARY,
 		start=root_start,
 		length=root_length,
-		mountpoint=Path('/') if not using_subvolumes else None,
+		mountpoint=None if using_subvolumes or filesystem_type == FilesystemType.LVM else Path('/'),
 		fs_type=filesystem_type,
 		mount_options=mount_options,
 	)
@@ -351,7 +351,7 @@ def get_default_partition_layout(
 	bootloader: Bootloader | None = None,
 	advanced: bool = False,
 ) -> DeviceModification:
-	return suggest_single_disk_layout(
+	return suggest_disk_layout(
 		device,
 		filesystem_type=filesystem_type,
 		bootloader=bootloader,

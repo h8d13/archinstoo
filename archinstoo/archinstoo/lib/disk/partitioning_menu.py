@@ -24,7 +24,7 @@ from archinstoo.lib.tui.prompts import prompt_dir
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
-from .layouts import suggest_single_disk_layout
+from .layouts import suggest_disk_layout
 from .subvolume_menu import SubvolumeMenu
 
 
@@ -600,7 +600,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		if any(not entry.exists() for entry in data) and not self._reset_confirmation():
 			return None
 
-		return suggest_single_disk_layout(self._device, advanced=self._advanced)
+		return suggest_disk_layout(self._device, advanced=self._advanced)
 
 
 def manual_partitioning(
