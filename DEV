@@ -8,15 +8,6 @@ go_to() {
 }
 
 case "$1" in
--t | --tree)
-	go_to
-	{
-		echo '# Project Tree'
-		echo '```'
-		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
-		echo '```'
-	} >docs/README.md
-	;;
 -b | --branch)
 	git checkout "$2"
 	./RUN "$@" --advanced --debug
@@ -48,6 +39,15 @@ case "$1" in
 -gc | --grep-code)
 	go_to
 	git grep -ni "$2"
+	;;
+-t | --tree)
+	go_to
+	{
+		echo '# Project Tree'
+		echo '```'
+		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
+		echo '```'
+	} >docs/README.md
 	;;
 *)
 	# Pass through to archinstoo

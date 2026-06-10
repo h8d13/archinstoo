@@ -809,6 +809,8 @@ class FilesystemType(StrEnum):
 	# this is not a FS known to parted, so be careful
 	# with the usage from this enum
 	CRYPTO_LUKS = 'crypto_LUKS'
+	# marker for an LVM physical volume: not formatted (pvcreate handles it), not mounted directly
+	LVM = 'lvm'
 
 	def is_fat(self) -> bool:
 		return self in (FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32)

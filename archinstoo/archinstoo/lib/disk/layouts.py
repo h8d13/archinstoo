@@ -279,6 +279,7 @@ def suggest_lvm_layout(
 
 	boot_part: PartitionModification | None = None
 	other_part: list[PartitionModification] = []
+	lvm_marked: list[PartitionModification] = []
 
 	efi_part: PartitionModification | None = None
 
@@ -288,8 +289,15 @@ def suggest_lvm_layout(
 				boot_part = part
 			elif part.is_efi():
 				efi_part = part
+			elif part.fs_type == FilesystemType.LVM:
+				lvm_marked.append(part)
 			else:
 				other_part.append(part)
+
+	# explicit PVs (partitions marked as LVM) win; otherwise fall back to every
+	# remaining partition so the default-layout flow keeps working unchanged
+	if lvm_marked:
+		other_part = lvm_marked
 
 	if not boot_part:
 		boot_part = efi_part

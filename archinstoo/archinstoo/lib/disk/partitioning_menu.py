@@ -346,6 +346,9 @@ class PartitioningList(ListManager[DiskSegment]):
 						partition.mountpoint = None
 						if BtrfsMountOption.noatime.value not in partition.mount_options:
 							partition.mount_options.append(BtrfsMountOption.noatime.value)
+					# an LVM physical volume is consumed by a volume group, not mounted directly
+					if fs_type == FilesystemType.LVM:
+						partition.mountpoint = None
 				case 'btrfs_mark_compressed':
 					self._toggle_mount_option(partition, BtrfsMountOption.compress)
 				case 'btrfs_mark_nodatacow':
