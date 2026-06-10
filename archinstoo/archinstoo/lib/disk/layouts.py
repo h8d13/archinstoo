@@ -243,8 +243,8 @@ def suggest_lvm_layout(
 	advanced: bool = False,
 	home_volume: bool = True,
 ) -> LvmConfiguration:
-	if disk_config.config_type != DiskLayoutType.Default:
-		raise ValueError('LVM suggested volumes are only available for default partitioning')
+	if disk_config.config_type not in (DiskLayoutType.Default, DiskLayoutType.Manual):
+		raise ValueError('LVM suggested volumes are only available for default or manual partitioning')
 
 	root_only = not home_volume  # user intent, captured before the subvolume path flips home_volume
 

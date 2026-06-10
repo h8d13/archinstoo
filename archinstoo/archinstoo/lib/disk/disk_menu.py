@@ -121,7 +121,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 	def _check_dep_lvm(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
 
-		return bool(disk_layout_conf and disk_layout_conf.config_type == DiskLayoutType.Default)
+		return bool(disk_layout_conf and disk_layout_conf.config_type in (DiskLayoutType.Default, DiskLayoutType.Manual))
 
 	def _check_dep_btrfs(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
