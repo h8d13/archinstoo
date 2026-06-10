@@ -668,11 +668,7 @@ class Installer:
 				info(f'Enrolling FIDO2 keyslot for {dev}')
 				info('Touch the token when it blinks; a PIN prompt may appear first')
 				try:
-					# Host-side on purpose, with the terminal inherited: arch-chroot -S
-					# wraps commands in a transient systemd service with no controlling
-					# TTY, so cryptenroll's PIN/touch ceremony dies before the token ever
-					# blinks. cryptenroll only edits the LUKS2 header on the block device,
-					# so the chroot adds nothing (upstream's HSM flow is host-side too).
+					# stdio stays inherited: the PIN/touch prompts are interactive
 					subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
 						[  # noqa: S607 - systemd-cryptenroll from $PATH on the live ISO
 							'systemd-cryptenroll',
@@ -1391,8 +1387,9 @@ class Installer:
 			kernel_parameters.append('zswap.enabled=0')
 
 		if self._disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
-			# Single rd.luks.options= since repeated non-UUID occurrences override
-			# each other in systemd-cryptsetup-generator.
+			# All options must be joined into a single rd.luks.options=: systemd's
+			# cryptsetup-generator does not merge repeated non-UUID occurrences, the
+			# last one wins, so separate tpm2/fido2 params would silently drop one.
 			luks_options = []
 			if self._disk_encryption.tpm2_unlock:
 				luks_options.append('tpm2-device=auto')
