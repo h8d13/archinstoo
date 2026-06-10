@@ -59,10 +59,7 @@ class ConfigurationHandler:
 				preview_frame=FrameProperties.max(tr('Configuration')),
 			).run()
 
-			if result.item() != MenuItem.yes():
-				return False
-
-		return True
+			return result.item() == MenuItem.yes()
 
 	def _save_file(self, path: Path, content: str) -> None:
 		path.write_text(content)
