@@ -43,6 +43,8 @@ class MenuKeys(Enum):
 	BACKSPACE = frozenset({127, 263})
 	# Help view: ctrl+h
 	HELP = frozenset({8})
+	# Quit/abort menu: ctrl+q
+	QUIT = frozenset({17})
 	# Scroll up: PGUP
 	SCROLL_UP = frozenset({339})
 	# Scroll down: PGDOWN

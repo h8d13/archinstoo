@@ -3,6 +3,7 @@ import curses
 import signal
 import subprocess
 import sys
+import termios
 from abc import ABCMeta, abstractmethod
 from curses.ascii import isprint
 from curses.textpad import Textbox
@@ -86,7 +87,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			return False
 
 	def help_text(self) -> str:
-		return tr('Ctrl+C to clear, TAB to select multiple, ESC to go back, Ctrl+H for full help')
+		return tr('Ctrl+C to clear, TAB to select multiple, ESC to go back, Ctrl+Q to quit, Ctrl+H for full help')
 
 	def _show_help(self) -> None:
 		help_text = Help.get_help_text()
@@ -1213,6 +1214,11 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._clear_all()
 				self._show_help()
 				return None
+			case MenuKeys.QUIT:
+				# show the abort menu (save / abort / cancel) from anywhere; cancel just returns here
+				if Tui._abort_handler is not None:
+					Tui._abort_handler()
+				return None
 			case MenuKeys.ACCEPT:
 				if self._multi:
 					if self._item_group.is_mandatory_fulfilled():
@@ -1312,6 +1318,12 @@ class Tui:
 	_t: ClassVar[Self | None] = None
 	_mode: ClassVar[str] = 'dark'
 	_accent: ClassVar[str] = 'blue'
+	# global Ctrl+Q handler; the top menu registers its abort flow (save / abort / cancel)
+	_abort_handler: ClassVar[Callable[[], None] | None] = None
+
+	@classmethod
+	def set_abort_handler(cls, handler: Callable[[], None] | None) -> None:
+		cls._abort_handler = handler
 
 	def __enter__(self) -> None:
 		if Tui._t is None:
@@ -1344,6 +1356,14 @@ class Tui:
 		curses.cbreak()
 		curses.curs_set(0)
 		curses.set_escdelay(25)
+
+		# disable XON/XOFF flow control so Ctrl+Q (and Ctrl+S) reach getch() instead of the tty;
+		# curses.endwin() restores the original termios on teardown
+		with contextlib.suppress(Exception):
+			fd = sys.stdin.fileno()
+			attrs = termios.tcgetattr(fd)
+			attrs[0] &= ~(termios.IXON | termios.IXOFF)
+			termios.tcsetattr(fd, termios.TCSANOW, attrs)
 
 		self._screen.keypad(True)
 		self._screen.scrollok(True)
