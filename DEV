@@ -2,25 +2,9 @@
 # shellcheck disable=SC1091,SC2154,SC2086
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PKG_GLOB="archinstoo-*.pkg.tar.zst"
 
 go_to() {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
-}
-
-pre_build() {
-	rm -f ./*-any.pkg.tar.zst
-}
-
-clean() {
-	rm -rf pkg src dist ./*.pkg.tar.zst.sig build ./*.egg-info ../*.egg-info ./*-git
-} # make sure no old sigs or build artifacts
-
-sign() {
-	gpg --detach-sign $PKG_GLOB
-}
-verif() {
-	gpg --verify $PKG_GLOB.sig
 }
 
 case "$1" in
@@ -33,27 +17,9 @@ case "$1" in
 		echo '```'
 	} >docs/README.md
 	;;
--c | --clean)
-	go_to
-	clean && pre_build
-	;;
--b | --build)
-	go_to
-	pre_build
-	makepkg -Cf
-	clean
-	;;
--s | --sign)
-	go_to
-	sign
-	;;
--sv | --verify-sig)
-	go_to
-	verif
-	;;
--i | --install)
-	go_to
-	pacman -U --overwrite '*' $PKG_GLOB
+-b | --branch)
+	git checkout "$2"
+	./RUN "$@" --advanced --debug
 	;;
 -ul | --up-logs)
 	go_to
