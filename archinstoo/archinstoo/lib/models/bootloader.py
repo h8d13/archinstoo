@@ -53,9 +53,15 @@ class BootloaderConfiguration:
 	bootloader: Bootloader | None
 	uki: bool = False
 	removable: bool = True
+	quiet: bool = False
 
 	def json(self) -> dict[str, Any]:
-		return {'bootloader': self.bootloader.json() if self.bootloader else None, 'uki': self.uki, 'removable': self.removable}
+		return {
+			'bootloader': self.bootloader.json() if self.bootloader else None,
+			'uki': self.uki,
+			'removable': self.removable,
+			'quiet': self.quiet,
+		}
 
 	@classmethod
 	def parse_arg(cls, config: dict[str, Any]) -> Self:
@@ -63,7 +69,8 @@ class BootloaderConfiguration:
 		bootloader = Bootloader.from_arg(raw) if raw else None
 		uki = config.get('uki', False)
 		removable = config.get('removable', True)
-		return cls(bootloader=bootloader, uki=uki, removable=removable)
+		quiet = config.get('quiet', False)
+		return cls(bootloader=bootloader, uki=uki, removable=removable, quiet=quiet)
 
 	@classmethod
 	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
@@ -85,4 +92,5 @@ class BootloaderConfiguration:
 			removable_string = tr('Enabled') if self.removable else tr('Disabled')
 			text += f'{tr("Removable")}: {removable_string}'
 			text += '\n'
+		text += '{}: {}\n'.format(tr('Quiet boot'), tr('Enabled') if self.quiet else tr('Disabled'))
 		return text

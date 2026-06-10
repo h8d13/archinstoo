@@ -66,6 +66,13 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				key='removable',
 				enabled=removable_enabled,
 			),
+			MenuItem(
+				text=tr('Quiet boot'),
+				action=self._select_quiet,
+				value=self._bootloader_conf.quiet,
+				preview_action=self._prev_quiet,
+				key='quiet',
+			),
 		]
 
 	def _prev_bootloader(self, item: MenuItem) -> str | None:
@@ -83,6 +90,10 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		if item.value:
 			return tr('Will install to /EFI/BOOT/ (removable location, safe default)')
 		return tr('Will install to custom location with NVRAM entry')
+
+	def _prev_quiet(self, item: MenuItem) -> str | None:
+		state = tr('Enabled') if item.value else tr('Disabled')
+		return '{}: {}'.format(tr('Quiet boot'), state)
 
 	@override
 	def run(
@@ -115,6 +126,29 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			removable_item.enabled = True
 
 		return bootloader
+
+	def _select_quiet(self, preset: bool) -> bool:
+		prompt = tr('Add "quiet" to the kernel command line for a quieter boot?') + '\n'
+
+		group = MenuItemGroup.yes_no()
+		group.set_focus_by_value(preset)
+
+		result = SelectMenu[bool](
+			group,
+			header=prompt,
+			columns=2,
+			orientation=Orientation.HORIZONTAL,
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
+
+		match result.type_:
+			case ResultType.Skip:
+				return preset
+			case ResultType.Selection:
+				return result.item() == MenuItem.yes()
+			case ResultType.Reset:
+				raise ValueError('Unhandled result type')
 
 	def _select_uki(self, preset: bool) -> bool:
 		prompt = tr('Would you like to use unified kernel images?') + '\n'

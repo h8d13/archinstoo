@@ -1968,9 +1968,13 @@ class Installer:
 		if not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
 
-	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False) -> None:
+	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False, quiet: bool = False) -> None:
 		# Run before bootloader install so kernel cmdline reflects rd.luks.options=tpm2-device=auto
+		# but is extensively gated and a no-op if not present/selected
 		self.enroll_tpm2()
+
+		if quiet and 'quiet' not in self._kernel_params:
+			self._kernel_params.append('quiet')
 
 		efi_partition = self._get_efi_partition()
 		boot_partition = self._get_boot_partition()
