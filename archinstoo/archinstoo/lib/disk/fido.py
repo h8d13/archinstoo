@@ -17,9 +17,11 @@ class Fido2:
 		# Output is a human readable table; columns are located via the
 		# header since PRODUCT values contain spaces:
 		#
-		# PATH         MANUFACTURER PRODUCT
-		# /dev/hidraw1 Yubico       YubiKey OTP+FIDO+CCID
+		# PATH         MANUFACTURER PRODUCT               COMPATIBLE RK ...
+		# /dev/hidraw1 Yubico       YubiKey OTP+FIDO+CCID ✓          ✓  ...
 		#
+		# Newer systemd appends feature columns (COMPATIBLE RK CLIENTPIN UP
+		# UV ALWAYSUV), so PRODUCT must be cut there instead of end-of-line.
 		# Cached: menu previews re-run this on every redraw.
 		if cls._loaded and not reload:
 			return cls._devices
@@ -32,17 +34,19 @@ class Fido2:
 
 		manufacturer_pos = 0
 		product_pos = 0
+		product_end = -1
 		devices: list[Fido2Device] = []
 
 		for line in ret.stdout.decode().splitlines():
 			if '/dev' not in line:
 				manufacturer_pos = line.find('MANUFACTURER')
 				product_pos = line.find('PRODUCT')
+				product_end = line.find('COMPATIBLE')
 				continue
 
 			path = line[:manufacturer_pos].rstrip()
 			manufacturer = line[manufacturer_pos:product_pos].rstrip()
-			product = line[product_pos:].rstrip()
+			product = line[product_pos : product_end if product_end >= 0 else None].rstrip()
 
 			devices.append(Fido2Device(Path(path), manufacturer, product))
 

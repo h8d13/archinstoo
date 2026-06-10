@@ -649,8 +649,7 @@ class Installer:
 
 		# Stash the existing passphrase as a transient unlock keyfile under the standard
 		# LUKS keyfile dir (same convention as _create_root_keyfile).
-		key_in_chroot = '/etc/cryptsetup-keys.d/.fido2-bootstrap.key'
-		key_in_target = self.target / key_in_chroot.lstrip('/')
+		key_in_target = self.target / 'etc/cryptsetup-keys.d/.fido2-bootstrap.key'
 		key_in_target.parent.mkdir(parents=True, exist_ok=True)
 
 		try:
@@ -666,19 +665,24 @@ class Installer:
 				info(f'Enrolling FIDO2 keyslot for {dev}')
 				info('Touch the token when it blinks; a PIN prompt may appear first')
 				try:
-					self.arch_chroot(
-						[
+					# Host-side on purpose, with the terminal inherited: arch-chroot -S
+					# wraps commands in a transient systemd service with no controlling
+					# TTY, so cryptenroll's PIN/touch ceremony dies before the token ever
+					# blinks. cryptenroll only edits the LUKS2 header on the block device,
+					# so the chroot adds nothing (upstream's HSM flow is host-side too).
+					subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
+						[  # noqa: S607 - systemd-cryptenroll from $PATH on the live ISO
 							'systemd-cryptenroll',
-							f'--unlock-key-file={key_in_chroot}',
+							f'--unlock-key-file={key_in_target}',
 							f'--fido2-device={token.path}',
 							str(dev),
-						]
+						],
+						check=True,
 					)
 				except CalledProcessError as e:
-					stderr = e.stderr.decode(errors='replace').strip() if e.stderr else ''
-					stdout = e.stdout.decode(errors='replace').strip() if e.stdout else ''
-					warn(f'FIDO2 enrollment failed for {dev} (exit {e.returncode}): {stderr or stdout or e}')
-				except SysCallError as e:
+					# stdio is inherited, cryptenroll's own error is already on screen
+					warn(f'FIDO2 enrollment failed for {dev} (exit {e.returncode})')
+				except FileNotFoundError as e:
 					warn(f'FIDO2 enrollment failed for {dev}: {e}')
 		finally:
 			if key_in_target.exists():
