@@ -1215,9 +1215,16 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._show_help()
 				return None
 			case MenuKeys.QUIT:
+				# guard reentrancy: the abort menu is itself a SelectMenu, so Ctrl+Q inside it would stack another
+				if Tui._abort_active:
+					return None
 				# show the abort menu (save / abort / cancel) from anywhere; cancel just returns here
 				if Tui._abort_handler is not None:
-					Tui._abort_handler()
+					Tui._abort_active = True
+					try:
+						Tui._abort_handler()
+					finally:
+						Tui._abort_active = False
 				return None
 			case MenuKeys.ACCEPT:
 				if self._multi:
@@ -1320,6 +1327,7 @@ class Tui:
 	_accent: ClassVar[str] = 'blue'
 	# global Ctrl+Q handler; the top menu registers its abort flow (save / abort / cancel)
 	_abort_handler: ClassVar[Callable[[], None] | None] = None
+	_abort_active: ClassVar[bool] = False
 
 	@classmethod
 	def set_abort_handler(cls, handler: Callable[[], None] | None) -> None:
