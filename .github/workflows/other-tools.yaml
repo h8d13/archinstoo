@@ -1,5 +1,5 @@
 on: [push]
-name: other tools (track-only)
+name: Other tools (track-only)
 jobs:
     import-linter:
         runs-on: ubuntu-latest

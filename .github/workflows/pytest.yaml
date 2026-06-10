@@ -1,5 +1,5 @@
 on: [ push ]
-name: pytest test validation
+name: Pytest test validation
 jobs:
     pytest:
         runs-on: ubuntu-latest

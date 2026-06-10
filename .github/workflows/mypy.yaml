@@ -1,5 +1,5 @@
 on: [ push ]
-name: mypy type checking
+name: Mypy type checking
 jobs:
     mypy:
         runs-on: ubuntu-latest

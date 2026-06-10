@@ -1,5 +1,5 @@
 on: [ push ]
-name: ruff check formatting
+name: Ruff check formatting
 jobs:
   ruff_format_check:
     runs-on: ubuntu-latest
