@@ -13,7 +13,7 @@ Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/
 
 Pending upstream fixes:
 
-- Create `base-devel-flex` or modify existing `base-devel` pkg for `doas` alternative (`sudo` optional)
+- Modify existing `base-devel` pkg for `doas` or alternatives (`sudo` optional)
 
 Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-devel/-/work_items/7)
 
