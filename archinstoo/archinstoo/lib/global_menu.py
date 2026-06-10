@@ -69,6 +69,9 @@ class GlobalMenu(AbstractMenu[None]):
 
 		super().__init__(self._item_group, config=arch_config)
 
+		# make the abort menu (save / abort / cancel) reachable via Ctrl+Q from any submenu
+		Tui.set_abort_handler(lambda: self._handle_abort(None))
+
 		# Apply pacman config if loaded from file
 		if arch_config.pacman_config:
 			PacmanConfig.apply_config(arch_config.pacman_config)
@@ -646,7 +649,6 @@ class GlobalMenu(AbstractMenu[None]):
 			'net.core.default_qdisc = fq',
 			'net.ipv4.tcp_fastopen = 3',
 			'net.ipv4.tcp_mtu_probing = 1',
-			'',
 			'# Security',
 			'net.ipv4.conf.all.accept_redirects = 0',
 			'net.ipv4.conf.default.accept_redirects = 0',
@@ -656,7 +658,6 @@ class GlobalMenu(AbstractMenu[None]):
 			'net.ipv6.conf.default.use_tempaddr = 2',
 			'kernel.kptr_restrict = 2',
 			'kernel.yama.ptrace_scope = 1',
-			'',
 			'# Performance',
 			'kernel.sched_autogroup_enabled = 0',
 			'vm.vfs_cache_pressure = 50',
