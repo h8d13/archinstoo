@@ -22,7 +22,9 @@ if TYPE_CHECKING:
 	from types import TracebackType
 
 # https://stackoverflow.com/a/43627833/929999
-_VT100_ESCAPE_REGEX = r'\x1B\[[?0-9;]*[a-zA-Z]'
+# expanded strip ANSI/VT100 escapes: CSI (\x1B[...), OSC (\x1B]...BEL/ST), and single Fe escapes.
+# order matters: CSI and OSC must precede the Fe branch or \x1B] matches as a 2-char escape.
+_VT100_ESCAPE_REGEX = r'\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1B]*(?:\x07|\x1B\\)|[@-Z\\^_])'
 _VT100_ESCAPE_REGEX_BYTES = _VT100_ESCAPE_REGEX.encode()
 
 
@@ -382,7 +384,10 @@ def _cmd_history(cmd: list[str]) -> None:
 
 
 def _cmd_output(output: str) -> None:
-	_append_log('cmd_output.txt', output)
+	# clean here, not in peak(): stdout still wants the raw colored stream
+	cleaned = re.sub(_VT100_ESCAPE_REGEX, '', output)
+	cleaned = re.sub(r'[^\n]*\r', '', cleaned)  # collapse progress-bar redraws to the final frame
+	_append_log('cmd_output.txt', cleaned)
 
 
 def run(
