@@ -136,7 +136,10 @@ class MirrorStatusEntryV3:
 				req = urllib.request.Request(url=test_db)  # noqa: S310
 
 				try:
-					with urllib.request.urlopen(req, None, 5) as handle, DownloadTimer(timeout=5) as timer:  # noqa: S310
+					# timer first: arms SIGALRM before urlopen so the timeout bounds the connect
+					# phase too, not just read(). Else a multi-homed unreachable mirror walks every
+					# dead address at 5s each (Errno 101 / pre-403 stalls) before skipping.
+					with DownloadTimer(timeout=5) as timer, urllib.request.urlopen(req, None, 5) as handle:  # noqa: S310
 						size = len(handle.read())
 
 					if timer.time is None:
