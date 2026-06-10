@@ -53,7 +53,7 @@ nav:
   - Getting Started:
       - Configuration schema: SCHEMA.md
       - Newcomers: NEWB_CORNER.md
-  - Others:
+  - Cases:
       - Headless install: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
       - nVIDIA: NVIDIA.md
