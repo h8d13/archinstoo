@@ -32,6 +32,9 @@ class WaylandProfile(Profile):
 	@property
 	@override
 	def default_greeter_type(self) -> GreeterType:
+		# Graphical display managers hold a session with DRM master open at handoff,
+		# so a seatd-based compositor (sway/niri/etc.) can't take over the GPU.
+		# TTY/session-transparent greeters (ly, greetd, cosmic-greeter) don't.
 		if self.custom_settings.get('seat_access') == 'seatd':
 			return GreeterType.Ly
 		return self._default_greeter_non_seatd

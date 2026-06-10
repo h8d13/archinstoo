@@ -43,19 +43,8 @@ class GreeterType(Enum):
 	Gdm = 'gdm'
 	Ly = 'ly'
 	Greetd = 'greetd'
+	Regreet = 'regreet'
 	CosmicSession = 'cosmic-greeter'
-
-	def conflicts_with_seatd(self) -> bool:
-		# Graphical display managers hold a session with DRM master open at handoff,
-		# so a seatd-based compositor (sway/niri/etc.) can't take over the GPU.
-		# TTY/session-transparent greeters (ly, greetd, cosmic-greeter) don't.
-		return self in {
-			GreeterType.Lightdm,
-			GreeterType.LightdmSlick,
-			GreeterType.Sddm,
-			GreeterType.Gdm,
-			GreeterType.PlasmaLoginManager,
-		}
 
 
 class SelectResult(Enum):

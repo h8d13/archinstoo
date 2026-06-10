@@ -168,6 +168,11 @@ class ProfileHandler:
 			case GreeterType.Greetd:
 				packages = ['greetd']
 				service = ['greetd']
+			case GreeterType.Regreet:
+				# regreet (GUI) runs inside the cage kiosk compositor, launched by greetd
+				packages = ['greetd', 'greetd-regreet', 'cage']
+				service = ['greetd']
+				service_disable = ['getty@tty1']
 			case GreeterType.CosmicSession:
 				packages = ['cosmic-greeter']
 				service = ['cosmic-greeter']
@@ -189,6 +194,17 @@ class ProfileHandler:
 
 			with path.open('w') as file:
 				file.write(filedata)
+
+		# regreet has no default config; greetd's stock config.toml runs the tty agreety greeter
+		if greeter == GreeterType.Regreet:
+			path = install_session.target.joinpath('etc/greetd/config.toml')
+			with path.open('w') as file:
+				file.write('[terminal]\nvt = 1\n\n[default_session]\ncommand = "cage -s -- regreet"\nuser = "greeter"\n')
+
+			# under seatd the greeter joins seat, else its cage compositor can't open DRM.
+			# group exists only when seatd was installed; skip otherwise so usermod can't abort.
+			if 'seat:' in install_session.target.joinpath('etc/group').read_text():
+				install_session.arch_chroot(['usermod', '-a', '-G', 'seat', 'greeter'])
 
 	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
