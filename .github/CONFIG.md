@@ -10,6 +10,8 @@ This is handy if you want to go back to the terminal quickly before installling.
 
 **DISK AND USER/ROOT PASSWORDS** are never resumed.
 
+The file is named: `user_configuration`
+
 ---
 
 ## Backwards-compat
