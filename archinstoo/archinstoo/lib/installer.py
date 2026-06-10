@@ -1103,6 +1103,12 @@ class Installer:
 			}
 
 			for config_name, mountpoint in snapper.items():
+				# snapper create-config makes its own .snapshots subvolume and errors if one exists
+				# (e.g. a manual layout that pre-created it); skip rather than abort the whole install
+				if (self.target / mountpoint.lstrip('/') / '.snapshots').exists():
+					info(f'snapper: .snapshots already present at {mountpoint}, skipping create-config')
+					continue
+
 				command = [
 					'arch-chroot',
 					'-S',
