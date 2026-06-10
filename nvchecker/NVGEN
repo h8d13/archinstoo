@@ -35,7 +35,6 @@ PKGBUILD_REL = ROOT / 'archinstoo' / 'PKGBUILD'
 def load_schema() -> dict:
 	"""Load schema.jsonc, stripping // comments."""
 	import json
-
 	text = SCHEMA_PATH.read_text()
 	text = re.sub(r'(?m)^\s*//.*$|(?<=,)\s*//.*$', '', text)
 	return json.loads(text)
@@ -44,7 +43,7 @@ def load_schema() -> dict:
 def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 	"""Extract bash array from PKGBUILD (depends, optdepends, etc)."""
 	text = path.read_text()
-	pattern = rf'{name}=\(\s*([\s\S]*?)\)'
+	pattern = rf"{name}=\(\s*([\s\S]*?)\)"
 	match = re.search(pattern, text)
 	if not match:
 		return []
@@ -64,15 +63,17 @@ def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 def expand_group(name: str) -> list[str]:
 	"""Expand a package group to its members using pacman."""
 	import subprocess
-
 	log(f'  expanding group: {name}')
 	try:
-		result = subprocess.run(['pacman', '-Sqg', name], capture_output=True, text=True, check=True)
+		result = subprocess.run(
+			['pacman', '-Sqg', name],
+			capture_output=True, text=True, check=True
+		)
 		pkgs = result.stdout.strip().split('\n') if result.stdout.strip() else []
 		log(f'    -> {len(pkgs)} packages')
 		return pkgs
 	except subprocess.CalledProcessError:
-		log('    -> failed')
+		log(f'    -> failed')
 		return []
 
 
@@ -87,16 +88,8 @@ def extract_schema_packages(schema: dict) -> set[str]:
 
 	# Package groups to expand
 	groups = {
-		'gnome',
-		'xfce4',
-		'xfce4-goodies',
-		'mate',
-		'mate-extra',
-		'lxqt',
-		'deepin',
-		'budgie',
-		'cosmic',
-		'cutefish',
+		'gnome', 'xfce4', 'xfce4-goodies', 'mate', 'mate-extra',
+		'lxqt', 'deepin', 'budgie', 'cosmic', 'cutefish',
 	}
 	expanded: set[str] = set()
 
@@ -123,7 +116,6 @@ def extract_schema_packages(schema: dict) -> set[str]:
 
 def detect_source(pkg: str) -> str:
 	return 'pacman'
-
 
 def generate_toml() -> str:
 	log('Loading schema...')
@@ -170,9 +162,9 @@ def generate_toml() -> str:
 	def add_section(title: str, pkgs: set[str]):
 		if not pkgs:
 			return
-		lines.append('# ============================================================')
+		lines.append(f'# ============================================================')
 		lines.append(f'# {title}')
-		lines.append('# ============================================================')
+		lines.append(f'# ============================================================')
 		for pkg in sorted(pkgs):
 			lines.append(f'[{pkg}]')
 			lines.append(f'source = "{detect_source(pkg)}"')
