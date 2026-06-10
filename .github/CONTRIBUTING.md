@@ -84,6 +84,8 @@ You can also use tools directly locally or in IDE extensions.
 
 Can be consulted within [PCH](https://github.com/h8d13/archinstoo/blob/master/.pre-commit-config.yaml)
 
+Pre-commit requires: `pkgconf` and `gcc` as well as `parted` on the host.
+
 ## Submitting Changes
 
 Archinstoo uses GitHub's pull-request workflow and all contributions in terms of code should be done through pull requests.
