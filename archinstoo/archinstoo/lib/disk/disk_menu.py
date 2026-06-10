@@ -10,6 +10,7 @@ from archinstoo.lib.models.device import (
 	DiskLayoutConfiguration,
 	DiskLayoutType,
 	EncryptionType,
+	FilesystemType,
 	LvmConfiguration,
 	SnapshotConfig,
 	SnapshotType,
@@ -121,7 +122,14 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 	def _check_dep_lvm(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
 
-		return bool(disk_layout_conf and disk_layout_conf.config_type in (DiskLayoutType.Default, DiskLayoutType.Manual))
+		if not disk_layout_conf:
+			return False
+
+		# manual: only offer LVM once at least one partition is marked as a PV (fs = lvm)
+		if disk_layout_conf.config_type == DiskLayoutType.Manual:
+			return any(p.fs_type == FilesystemType.LVM for mod in disk_layout_conf.device_modifications for p in mod.partitions)
+
+		return disk_layout_conf.config_type == DiskLayoutType.Default
 
 	def _check_dep_btrfs(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
