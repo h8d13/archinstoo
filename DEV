@@ -21,18 +21,6 @@ case "$1" in
 	git checkout "$2"
 	./RUN "$@" --advanced --debug
 	;;
--ul | --up-logs)
-	go_to
-	curl --data-binary @./logs/install.log https://paste.rs
-	;;
--gl | --grep-logs)
-	go_to
-	grep -i "$2" ./logs/install.log
-	;;
--gc | --grep-code)
-	go_to
-	git grep -ni "$2"
-	;;
 -tc | --test-config)
 	./RUN --advanced --config examples/config-sample-full.json
 	;;
@@ -48,6 +36,18 @@ case "$1" in
 	else
 		pacman -Sy --needed "${depends[@]}"
 	fi
+	;;
+-ul | --up-logs)
+	go_to
+	curl --data-binary @./logs/install.log https://paste.rs
+	;;
+-gl | --grep-logs)
+	go_to
+	grep -i "$2" ./logs/install.log
+	;;
+-gc | --grep-code)
+	go_to
+	git grep -ni "$2"
 	;;
 *)
 	# Pass through to archinstoo
