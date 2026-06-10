@@ -647,6 +647,12 @@ class EditMenu(AbstractCurses[str]):
 				return 7
 			return 0
 
+		# Ctrl-Q: abort menu; on cancel the textbox terminates and kickoff redraws with input preserved
+		if key == 17:
+			self._clear_all()
+			Tui.trigger_abort()
+			return 7
+
 		# Enter: accept
 		if key == 10:
 			self._last_state = Result(ResultType.Selection, None)
@@ -1215,16 +1221,8 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._show_help()
 				return None
 			case MenuKeys.QUIT:
-				# guard reentrancy: the abort menu is itself a SelectMenu, so Ctrl+Q inside it would stack another
-				if Tui._abort_active:
-					return None
 				# show the abort menu (save / abort / cancel) from anywhere; cancel just returns here
-				if Tui._abort_handler is not None:
-					Tui._abort_active = True
-					try:
-						Tui._abort_handler()
-					finally:
-						Tui._abort_active = False
+				Tui.trigger_abort()
 				return None
 			case MenuKeys.ACCEPT:
 				if self._multi:
@@ -1332,6 +1330,18 @@ class Tui:
 	@classmethod
 	def set_abort_handler(cls, handler: Callable[[], None] | None) -> None:
 		cls._abort_handler = handler
+
+	@classmethod
+	def trigger_abort(cls) -> None:
+		# guard reentrancy: the abort menu is itself a SelectMenu, so Ctrl+Q inside it would stack another
+		if cls._abort_active:
+			return
+		if cls._abort_handler is not None:
+			cls._abort_active = True
+			try:
+				cls._abort_handler()
+			finally:
+				cls._abort_active = False
 
 	def __enter__(self) -> None:
 		if Tui._t is None:

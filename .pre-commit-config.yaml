@@ -1,4 +1,6 @@
 default_stages: ['pre-commit']
+# nvchecker/ is a dev tool, not part of the shipped package
+exclude: ^nvchecker/
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1

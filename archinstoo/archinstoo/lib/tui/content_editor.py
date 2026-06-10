@@ -98,7 +98,7 @@ class ContentEditor:
 			screen.addstr(status_y + 1, 0, self._error_msg[: max_x - 1], highlight)
 		else:
 			pos_info = f'Ln {self._cursor_y + 1}, Col {self._cursor_x + 1}'
-			help_text = 'F2:save  F10/Esc:cancel  Ctrl-C:clear'
+			help_text = 'F2:save  F10/Esc:cancel  Ctrl-C:clear  Ctrl-Q:quit'
 			screen.addstr(status_y + 1, 0, help_text, normal)
 			screen.addstr(status_y + 1, max_x - len(pos_info) - 1, pos_info, normal)
 
@@ -116,6 +116,9 @@ class ContentEditor:
 
 		if key in (27, curses.KEY_F10):  # ESC or F10 - cancel
 			self._running = False
+		elif key == 17:  # Ctrl+Q - abort menu; restore editor cursor after it closes
+			Tui.trigger_abort()
+			curses.curs_set(1)
 		elif key == curses.KEY_F2:  # F2 - save
 			if self._mode == 'kvp' and any(not self._is_line_valid(line) for line in self._lines):
 				self._error_msg = 'Invalid format each line must be key = value'
