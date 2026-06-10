@@ -131,8 +131,9 @@ def select_lvm_config(
 ) -> LvmConfiguration | None:
 	preset_value = preset.config_type.display_msg() if preset else None
 	default_mode = LvmLayoutType.Default.display_msg()
+	no_home_mode = LvmLayoutType.NoHome.display_msg()
 
-	items = [MenuItem(default_mode, value=default_mode)]
+	items = [MenuItem(default_mode, value=default_mode), MenuItem(no_home_mode, value=no_home_mode)]
 	group = MenuItemGroup(items)
 	group.set_focus_by_value(preset_value)
 
@@ -152,5 +153,7 @@ def select_lvm_config(
 		case ResultType.Selection:
 			if result.get_value() == default_mode:
 				return suggest_lvm_layout(disk_config, advanced=advanced)
+			if result.get_value() == no_home_mode:
+				return suggest_lvm_layout(disk_config, advanced=advanced, home_volume=False)
 
 	return None

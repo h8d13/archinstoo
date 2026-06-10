@@ -1054,6 +1054,7 @@ class PartitionModification:
 
 class LvmLayoutType(Enum):
 	Default = 'default'
+	NoHome = 'no_home'
 
 	# Manual = 'manual_lvm'
 
@@ -1061,6 +1062,8 @@ class LvmLayoutType(Enum):
 		match self:
 			case LvmLayoutType.Default:
 				return tr('Default layout')
+			case LvmLayoutType.NoHome:
+				return tr('Root only')
 			# case LvmLayoutType.Manual:
 			# 	return str(_('Manual configuration'))
 

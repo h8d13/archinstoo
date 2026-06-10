@@ -103,16 +103,21 @@ def process_root_partition_size(total_size: Size, sector_size: SectorSize) -> Si
 	return Size(value=length, unit=Unit.GiB, sector_size=sector_size)
 
 
-def get_default_btrfs_subvols() -> list[SubvolumeModification]:
+def get_default_btrfs_subvols(home_volume: bool = True) -> list[SubvolumeModification]:
 	# https://btrfs.wiki.kernel.org/index.php/FAQ
 	# https://unix.stackexchange.com/questions/246976/btrfs-subvolume-uuid-clash
 	# https://github.com/classy-giraffe/easy-arch/blob/main/easy-arch.sh
-	return [
+	subvols = [
 		SubvolumeModification(Path('@'), Path('/')),
 		SubvolumeModification(Path('@home'), Path('/home')),
 		SubvolumeModification(Path('@log'), Path('/var/log')),
 		SubvolumeModification(Path('@pkg'), Path('/var/cache/pacman/pkg')),
 	]
+
+	if not home_volume:
+		subvols = [s for s in subvols if s.mountpoint != Path('/home')]
+
+	return subvols
 
 
 def suggest_single_disk_layout(
@@ -236,13 +241,15 @@ def suggest_lvm_layout(
 	filesystem_type: FilesystemType | None = None,
 	vg_grp_name: str = 'ArchinstooVg',
 	advanced: bool = False,
+	home_volume: bool = True,
 ) -> LvmConfiguration:
 	if disk_config.config_type != DiskLayoutType.Default:
 		raise ValueError('LVM suggested volumes are only available for default partitioning')
 
+	root_only = not home_volume  # user intent, captured before the subvolume path flips home_volume
+
 	using_subvolumes = False
 	btrfs_subvols = []
-	home_volume = True
 	mount_options = []
 
 	if not filesystem_type:
@@ -267,7 +274,7 @@ def suggest_lvm_layout(
 		mount_options = select_mount_options()
 
 	if using_subvolumes:
-		btrfs_subvols = get_default_btrfs_subvols()
+		btrfs_subvols = get_default_btrfs_subvols(home_volume=home_volume)
 		home_volume = False
 
 	boot_part: PartitionModification | None = None
@@ -297,6 +304,10 @@ def suggest_lvm_layout(
 	root_vol_size = process_root_partition_size(total_vol_available, SectorSize.default())
 	home_vol_size = total_vol_available - root_vol_size
 
+	# explicit root-only (no subvolumes): give the whole VG to root, no /home volume
+	if root_only and not using_subvolumes:
+		root_vol_size = total_vol_available
+
 	lvm_vol_group = LvmVolumeGroup(vg_grp_name, pvs=other_part)
 
 	root_vol = LvmVolume(
@@ -322,7 +333,8 @@ def suggest_lvm_layout(
 
 		lvm_vol_group.volumes.append(home_vol)
 
-	return LvmConfiguration(LvmLayoutType.Default, [lvm_vol_group])
+	layout_type = LvmLayoutType.NoHome if root_only else LvmLayoutType.Default
+	return LvmConfiguration(layout_type, [lvm_vol_group])
 
 
 def get_default_partition_layout(
