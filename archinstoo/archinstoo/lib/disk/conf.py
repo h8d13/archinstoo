@@ -5,7 +5,6 @@ from archinstoo.lib.models.device import (
 	DeviceModification,
 	DiskLayoutConfiguration,
 	DiskLayoutType,
-	FilesystemType,
 	LvmConfiguration,
 	LvmLayoutType,
 )
@@ -58,14 +57,12 @@ def select_disk_config(
 		return None
 
 	default_layout = DiskLayoutType.Default.display_msg()
-	default_lvm = DiskLayoutType.Lvm.display_msg()
 	manual_mode = DiskLayoutType.Manual.display_msg()
 	pre_mount_mode = DiskLayoutType.Pre_mount.display_msg()
 
 	items = [
 		MenuItem(manual_mode, value=manual_mode),
 		MenuItem(default_layout, value=default_layout),
-		MenuItem(default_lvm, value=default_lvm),
 		MenuItem(pre_mount_mode, value=pre_mount_mode),
 	]
 	group = MenuItemGroup(items, sort_items=False)
@@ -118,22 +115,6 @@ def select_disk_config(
 					config_type=DiskLayoutType.Default,
 					device_modifications=[modification],
 				)
-			if result.get_value() == default_lvm:
-				# the data partition becomes an LVM PV, so its filesystem is irrelevant: build a
-				# single data partition non-interactively and ask filesystem once in the LVM layer.
-				modification = get_default_partition_layout(
-					device,
-					filesystem_type=FilesystemType.EXT4,
-					separate_home=False,
-					bootloader=bootloader,
-					advanced=advanced,
-				)
-				lvm_disk_config = DiskLayoutConfiguration(
-					config_type=DiskLayoutType.Lvm,
-					device_modifications=[modification],
-				)
-				lvm_disk_config.lvm_config = select_lvm_config(lvm_disk_config, advanced=advanced)
-				return lvm_disk_config
 			if result.get_value() == manual_mode and (manual_modification := _manual_partitioning(None, device, advanced=advanced)) is not None:
 				return DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Manual,
