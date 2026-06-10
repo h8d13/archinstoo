@@ -386,7 +386,8 @@ def _cmd_history(cmd: list[str]) -> None:
 def _cmd_output(output: str) -> None:
 	# clean here, not in peak(): stdout still wants the raw colored stream
 	cleaned = re.sub(_VT100_ESCAPE_REGEX, '', output)
-	cleaned = re.sub(r'[^\n]*\r', '', cleaned)  # collapse progress-bar redraws to the final frame
+	cleaned = cleaned.replace('\r\n', '\n')  # the pty's ONLCR delivers every \n as \r\n
+	cleaned = re.sub(r'[^\n]*\r', '', cleaned)  # collapse bare-\r progress redraws to the final frame
 	_append_log('cmd_output.txt', cleaned)
 
 
