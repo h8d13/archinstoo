@@ -44,6 +44,10 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		self._lvm_config = lvm_config
 		self._allow_auto_unlock = allow_auto_unlock
 
+		# refresh token list once per menu entry; dep checks and the
+		# selector hit the cache on every redraw afterwards
+		Fido2.get_cryptenroll_devices(reload=True)
+
 		menu_options = self._define_menu_options()
 		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
 
@@ -130,7 +134,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				text=tr('FIDO2 auto unlock'),
 				action=self._select_fido2_device,
 				value=self._enc_config.fido2_device,
-				dependencies=[self._check_dep_enc_type],
+				dependencies=[self._check_dep_fido2],
 				preview_action=self._preview,
 				key='fido2_device',
 			),
@@ -182,6 +186,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 	def _check_dep_tpm2(self) -> bool:
 		return SysInfo.has_tpm2() and self._check_dep_enc_type()
+
+	def _check_dep_fido2(self) -> bool:
+		return bool(Fido2.get_cryptenroll_devices()) and self._check_dep_enc_type()
 
 	def _check_dep_tpm2_pcrs(self) -> bool:
 		return self._check_dep_tpm2() and bool(self._item_group.find_by_key('tpm2_unlock').value)
