@@ -160,7 +160,8 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		disk_config = select_disk_config(preset, bootloader=self._bootloader, advanced=self._advanced)
 
 		if disk_config != preset:
-			self._menu_item_group.find_by_key('lvm_config').value = None
+			# carry an inline-defined lvm_config (fs=lvm in the default flow) into the peer item; else reset
+			self._menu_item_group.find_by_key('lvm_config').value = disk_config.lvm_config if disk_config else None
 			self._menu_item_group.find_by_key('disk_encryption').value = None
 
 		return disk_config

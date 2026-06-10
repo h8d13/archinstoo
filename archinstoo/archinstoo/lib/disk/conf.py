@@ -5,6 +5,7 @@ from archinstoo.lib.models.device import (
 	DeviceModification,
 	DiskLayoutConfiguration,
 	DiskLayoutType,
+	FilesystemType,
 	LvmConfiguration,
 	LvmLayoutType,
 )
@@ -111,10 +112,14 @@ def select_disk_config(
 
 			if result.get_value() == default_layout:
 				modification = get_default_partition_layout(device, bootloader=bootloader, advanced=advanced)
-				return DiskLayoutConfiguration(
+				disk_config = DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Default,
 					device_modifications=[modification],
 				)
+				# choosing lvm as the fs marks a PV, so open the volume menu (Default / Root only) inline
+				if any(p.fs_type == FilesystemType.LVM for mod in disk_config.device_modifications for p in mod.partitions):
+					disk_config.lvm_config = select_lvm_config(disk_config, advanced=advanced)
+				return disk_config
 			if result.get_value() == manual_mode and (manual_modification := _manual_partitioning(None, device, advanced=advanced)) is not None:
 				return DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Manual,
