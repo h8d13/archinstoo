@@ -309,12 +309,14 @@ def suggest_lvm_layout(
 		[p.length for p in other_part],
 		Size(0, Unit.B, SectorSize.default()),
 	)
-	root_vol_size = process_root_partition_size(total_vol_available, SectorSize.default())
-	home_vol_size = total_vol_available - root_vol_size
-
-	# explicit root-only (no subvolumes): give the whole VG to root, no /home volume
-	if root_only and not using_subvolumes:
+	if home_volume:
+		# separate /home LV: cap root, give the remainder to /home
+		root_vol_size = process_root_partition_size(total_vol_available, SectorSize.default())
+		home_vol_size = total_vol_available - root_vol_size
+	else:
+		# no separate /home LV (root-only, or btrfs subvolumes carry /home): root spans the whole VG
 		root_vol_size = total_vol_available
+		home_vol_size = Size(0, Unit.B, SectorSize.default())
 
 	lvm_vol_group = LvmVolumeGroup(vg_grp_name, pvs=other_part)
 
