@@ -388,6 +388,8 @@ def _cmd_output(output: str) -> None:
 	cleaned = re.sub(_VT100_ESCAPE_REGEX, '', output)
 	cleaned = cleaned.replace('\r\n', '\n')  # the pty's ONLCR delivers every \n as \r\n
 	cleaned = re.sub(r'[^\n]*\r', '', cleaned)  # collapse bare-\r progress redraws to the final frame
+	cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', cleaned)  # leftover C0 controls (SI/SO/BEL/...), keep \t \n
+	cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)  # in-place redraws leave runs of blank lines; collapse to one
 	_append_log('cmd_output.txt', cleaned)
 
 
