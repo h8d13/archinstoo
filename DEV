@@ -57,7 +57,7 @@ case "$1" in
 	;;
 -ul | --up-logs)
 	go_to
-	curl -F 'file=@./logs/install.log' https://0x0.st
+	curl --data-binary @./logs/install.log https://paste.rs
 	;;
 -gl | --grep-logs)
 	go_to

@@ -43,20 +43,19 @@ $ nmcli dev wifi connect "SSID" -a
 *If on the ISO instead of a live system*
 ```shell
 pacman-key --init
-pacman -Syy
-pacman -S git
+pacman -Syy git
 ```
 
 ### **3. Get the source code**
 
 ```shell
 git clone https://github.com/h8d13/archinstoo
-cd archinstoo/archinstoo
 ```
 
 ### **4. Run the code**
 
 ```shell
+cd archinstoo/archinstoo
 python -m archinstoo [args] # try -h or --help
 # some options are behind --advanced
 ```
@@ -68,7 +67,7 @@ python -m archinstoo [args] # try -h or --help
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
 > [!TIP]
-> **Alternatively:** There are wrappers/helpers (which perform similar steps to 3 and 4) from the **repo root**:
+> **Alternatively:** There are wrappers/helpers (which perform similar step to 4) from the **repo root**:
 
 ```shell
 ./RUN # regular
