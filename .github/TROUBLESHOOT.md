@@ -5,7 +5,9 @@
 Log files are available in `./archinstoo/logs/*` relative to where you ran. 
 
 These contain 4 files: `cmd_history.txt`, `cmd_output.txt` and `install.log` (+ your `user_configuration.json`)
-Depending on the issue all 4 can be useful.
+Depending on the issue all 4 can be useful. 
+
+If you do not want to open a public issue feel free to contact directly: hadean-eon-dev@proton.me
 
 ## Known issues
 
