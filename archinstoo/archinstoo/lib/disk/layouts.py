@@ -243,7 +243,7 @@ def suggest_lvm_layout(
 	advanced: bool = False,
 	home_volume: bool = True,
 ) -> LvmConfiguration:
-	if disk_config.config_type != DiskLayoutType.Default:
+	if disk_config.config_type not in (DiskLayoutType.Default, DiskLayoutType.Lvm):
 		raise ValueError('LVM suggested volumes are only available for default partitioning')
 
 	root_only = not home_volume  # user intent, captured before the subvolume path flips home_volume
@@ -340,12 +340,14 @@ def suggest_lvm_layout(
 def get_default_partition_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
+	separate_home: bool | None = None,
 	bootloader: Bootloader | None = None,
 	advanced: bool = False,
 ) -> DeviceModification:
 	return suggest_single_disk_layout(
 		device,
 		filesystem_type=filesystem_type,
+		separate_home=separate_home,
 		bootloader=bootloader,
 		advanced=advanced,
 	)

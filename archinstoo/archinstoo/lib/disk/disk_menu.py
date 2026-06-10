@@ -21,7 +21,7 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
-from .conf import select_disk_config, select_lvm_config
+from .conf import select_disk_config
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.bootloader import Bootloader
@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 @dataclass
 class DiskMenuConfig:
 	disk_config: DiskLayoutConfiguration | None
-	lvm_config: LvmConfiguration | None
 	btrfs_snapshot_config: SnapshotConfig | None
 	disk_encryption: DiskEncryption | None
 
@@ -49,7 +48,6 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		if not disk_layout_config:
 			self._disk_menu_config = DiskMenuConfig(
 				disk_config=None,
-				lvm_config=None,
 				btrfs_snapshot_config=None,
 				disk_encryption=None,
 			)
@@ -58,7 +56,6 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 
 			self._disk_menu_config = DiskMenuConfig(
 				disk_config=disk_layout_config,
-				lvm_config=disk_layout_config.lvm_config,
 				disk_encryption=disk_layout_config.disk_encryption,
 				btrfs_snapshot_config=snapshot_config,
 			)
@@ -82,14 +79,6 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 				key='disk_config',
 			),
 			MenuItem(
-				text='LVM',
-				action=self._select_lvm_config,
-				value=self._disk_menu_config.lvm_config,
-				preview_action=self._prev_lvm_config,
-				dependencies=[self._check_dep_lvm],
-				key='lvm_config',
-			),
-			MenuItem(
 				text=tr('Disk encryption'),
 				action=self._select_disk_encryption,
 				preview_action=self._prev_disk_encryption,
@@ -111,17 +100,11 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		super().run(additional_title=additional_title)
 
 		if self._disk_menu_config.disk_config:
-			self._disk_menu_config.disk_config.lvm_config = self._disk_menu_config.lvm_config
 			self._disk_menu_config.disk_config.btrfs_options = BtrfsOptions(snapshot_config=self._disk_menu_config.btrfs_snapshot_config)
 			self._disk_menu_config.disk_config.disk_encryption = self._disk_menu_config.disk_encryption
 			return self._disk_menu_config.disk_config
 
 		return None
-
-	def _check_dep_lvm(self) -> bool:
-		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
-
-		return bool(disk_layout_conf and disk_layout_conf.config_type == DiskLayoutType.Default)
 
 	def _check_dep_btrfs(self) -> bool:
 		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
@@ -133,11 +116,11 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 
 	def _select_disk_encryption(self, preset: DiskEncryption | None) -> DiskEncryption | None:
 		disk_config: DiskLayoutConfiguration | None = self._item_group.find_by_key('disk_config').value
-		lvm_config: LvmConfiguration | None = self._item_group.find_by_key('lvm_config').value
 
 		if not disk_config:
 			return preset
 
+		lvm_config = disk_config.lvm_config
 		modifications = disk_config.device_modifications
 
 		if not DiskEncryption.validate_enc(modifications, lvm_config):
@@ -160,23 +143,9 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		disk_config = select_disk_config(preset, bootloader=self._bootloader, advanced=self._advanced)
 
 		if disk_config != preset:
-			self._menu_item_group.find_by_key('lvm_config').value = None
 			self._menu_item_group.find_by_key('disk_encryption').value = None
 
 		return disk_config
-
-	def _select_lvm_config(self, preset: LvmConfiguration | None) -> LvmConfiguration | None:
-		disk_config: DiskLayoutConfiguration | None = self._item_group.find_by_key('disk_config').value
-
-		if not disk_config:
-			return preset
-
-		lvm_config = select_lvm_config(disk_config, preset=preset, advanced=self._advanced)
-
-		if lvm_config != preset:
-			self._menu_item_group.find_by_key('disk_encryption').value = None
-
-		return lvm_config
 
 	def _select_btrfs_snapshots(self, preset: SnapshotConfig | None) -> SnapshotConfig | None:
 		preset_type = preset.snapshot_type if preset else None
@@ -234,17 +203,16 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 					output_btrfs += FormattedOutput.as_table(partition.btrfs_subvols) + '\n'
 
 			output = output_partition + output_btrfs
+
+			if disk_layout_conf.lvm_config:
+				output += '\n' + self._lvm_preview(disk_layout_conf.lvm_config)
+
 			return output.rstrip()
 
 		return None
 
-	def _prev_lvm_config(self, item: MenuItem) -> str | None:
-		if not item.value:
-			return None
-
-		lvm_config: LvmConfiguration = item.value
-
-		output = '{}: {}\n'.format(tr('Configuration'), lvm_config.config_type.display_msg())
+	def _lvm_preview(self, lvm_config: LvmConfiguration) -> str:
+		output = ''
 
 		for vol_gp in lvm_config.vol_groups:
 			pv_table = FormattedOutput.as_table(vol_gp.pvs)
@@ -255,9 +223,9 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 			lvm_volumes = FormattedOutput.as_table(vol_gp.volumes)
 			output += '\n\n{}:\n{}'.format(tr('Volumes'), lvm_volumes)
 
-			return output
+			break
 
-		return None
+		return output
 
 	def _prev_btrfs_snapshots(self, item: MenuItem) -> str | None:
 		if not item.value:

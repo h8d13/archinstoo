@@ -39,6 +39,7 @@ class LuksPbkdf(Enum):
 
 class DiskLayoutType(Enum):
 	Default = 'default-layout'
+	Lvm = 'lvm-layout'
 	Manual = 'manual-partitioning'
 	Pre_mount = 'pre-mounted-config'
 
@@ -46,6 +47,8 @@ class DiskLayoutType(Enum):
 		match self:
 			case DiskLayoutType.Default:
 				return tr('Use a best-effort default partition layout')
+			case DiskLayoutType.Lvm:
+				return tr('Default layout (LVM)')
 			case DiskLayoutType.Manual:
 				return tr('Manual Partitioning')
 			case DiskLayoutType.Pre_mount:
