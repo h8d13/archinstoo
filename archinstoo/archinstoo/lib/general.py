@@ -151,6 +151,7 @@ class SysCommandWorker:
 			# on the same line we were on.
 			sys.stdout.write('\n')
 			sys.stdout.flush()
+			_cmd_output_flush()
 
 		if exc_type is not None:
 			debug(str(exc_value))
@@ -383,14 +384,53 @@ def _cmd_history(cmd: list[str]) -> None:
 	_append_log('cmd_history.txt', content)
 
 
+class _CmdOutputLog:
+	# the pty delivers redraw output in fragments, so blank-line capping and partial-line
+	# assembly carry state across writes; flush() drains the trailing partial at command end.
+	def __init__(self) -> None:
+		self._buffer = ''
+		self._blank_run = 0
+
+	def write(self, output: str) -> None:
+		cleaned = re.sub(_VT100_ESCAPE_REGEX, '', output)
+		cleaned = cleaned.replace('\r\n', '\n')  # the pty's ONLCR delivers every \n as \r\n
+		cleaned = re.sub(r'[^\n]*\r', '', cleaned)  # collapse bare-\r progress redraws to the final frame
+		cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', cleaned)  # leftover C0 controls (SI/SO/BEL/...), keep \t \n
+
+		self._buffer += cleaned
+		*lines, self._buffer = self._buffer.split('\n')  # keep the trailing partial line buffered
+
+		out = []
+		for line in lines:
+			if line.strip():
+				self._blank_run = 0
+				out.append(line)
+			else:
+				# in-place redraws leave runs of blank lines; keep at most one
+				self._blank_run += 1
+				if self._blank_run <= 1:
+					out.append('')
+
+		if out:
+			_append_log('cmd_output.txt', '\n'.join(out) + '\n')
+
+	def flush(self) -> None:
+		if self._buffer:
+			_append_log('cmd_output.txt', self._buffer + '\n')
+		self._buffer = ''
+		self._blank_run = 0
+
+
+_cmd_output_log = _CmdOutputLog()
+
+
 def _cmd_output(output: str) -> None:
 	# clean here, not in peak(): stdout still wants the raw colored stream
-	cleaned = re.sub(_VT100_ESCAPE_REGEX, '', output)
-	cleaned = cleaned.replace('\r\n', '\n')  # the pty's ONLCR delivers every \n as \r\n
-	cleaned = re.sub(r'[^\n]*\r', '', cleaned)  # collapse bare-\r progress redraws to the final frame
-	cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', cleaned)  # leftover C0 controls (SI/SO/BEL/...), keep \t \n
-	cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)  # in-place redraws leave runs of blank lines; collapse to one
-	_append_log('cmd_output.txt', cleaned)
+	_cmd_output_log.write(output)
+
+
+def _cmd_output_flush() -> None:
+	_cmd_output_log.flush()
 
 
 def run(
