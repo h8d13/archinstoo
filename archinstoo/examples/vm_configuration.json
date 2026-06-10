@@ -1,0 +1,181 @@
+{
+    "bug_report_url": "https://github.com/h8d13/archinstoo",
+    "script": "guided",
+    "archinstoo_language": "English",
+    "locale_config": {
+        "kb_layout": "us",
+        "sys_lang": "en_US.UTF-8",
+        "sys_enc": "UTF-8",
+        "console_font": "default8x16"
+    },
+    "pacman_config": {
+        "mirror_regions": {
+            "Germany": [
+                "http://ftp.tu-chemnitz.de/pub/linux/archlinux/$repo/os/$arch",
+                "https://ftp.tu-chemnitz.de/pub/linux/archlinux/$repo/os/$arch",
+                "http://ftp.hosteurope.de/mirror/ftp.archlinux.org/$repo/os/$arch",
+                "http://ftp.gwdg.de/pub/linux/archlinux/$repo/os/$arch",
+                "http://ftp.uni-kl.de/pub/linux/archlinux/$repo/os/$arch",
+                "http://ftp.uni-bayreuth.de/linux/archlinux/$repo/os/$arch",
+                "http://ftp-stud.hs-esslingen.de/pub/Mirrors/archlinux/$repo/os/$arch",
+                "http://ftp.spline.inf.fu-berlin.de/mirrors/archlinux/$repo/os/$arch",
+                "https://ftp.spline.inf.fu-berlin.de/mirrors/archlinux/$repo/os/$arch",
+                "http://mirror.selfnet.de/archlinux/$repo/os/$arch",
+                "https://mirror.selfnet.de/archlinux/$repo/os/$arch",
+                "http://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch",
+                "https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch",
+                "http://artfiles.org/archlinux.org/$repo/os/$arch",
+                "http://mirror.fra10.de.leaseweb.net/archlinux/$repo/os/$arch",
+                "https://mirror.fra10.de.leaseweb.net/archlinux/$repo/os/$arch",
+                "http://mirrors.n-ix.net/archlinux/$repo/os/$arch",
+                "https://mirrors.n-ix.net/archlinux/$repo/os/$arch",
+                "http://mirror.netcologne.de/archlinux/$repo/os/$arch",
+                "https://mirror.netcologne.de/archlinux/$repo/os/$arch",
+                "http://linux.rz.rub.de/archlinux/$repo/os/$arch",
+                "http://ftp.fau.de/archlinux/$repo/os/$arch",
+                "https://ftp.fau.de/archlinux/$repo/os/$arch",
+                "http://mirror.23m.com/archlinux/$repo/os/$arch",
+                "https://mirror.23m.com/archlinux/$repo/os/$arch",
+                "http://mirror.metalgamer.eu/archlinux/$repo/os/$arch",
+                "https://mirror.metalgamer.eu/archlinux/$repo/os/$arch",
+                "http://mirrors.niyawe.de/archlinux/$repo/os/$arch",
+                "https://mirrors.niyawe.de/archlinux/$repo/os/$arch",
+                "http://ftp.uni-hannover.de/archlinux/$repo/os/$arch",
+                "https://mirror.pseudoform.org/$repo/os/$arch",
+                "http://arch.jensgutermuth.de/$repo/os/$arch",
+                "https://arch.jensgutermuth.de/$repo/os/$arch",
+                "http://mirror.ubrco.de/archlinux/$repo/os/$arch",
+                "https://mirror.ubrco.de/archlinux/$repo/os/$arch",
+                "http://archlinux.mirror.iphh.net/$repo/os/$arch",
+                "http://archlinux.thaller.ws/$repo/os/$arch",
+                "https://archlinux.thaller.ws/$repo/os/$arch",
+                "http://de.mirrors.cicku.me/archlinux/$repo/os/$arch",
+                "https://de.mirrors.cicku.me/archlinux/$repo/os/$arch",
+                "https://mirror.bethselamin.de/$repo/os/$arch",
+                "http://packages.oth-regensburg.de/archlinux/$repo/os/$arch",
+                "https://packages.oth-regensburg.de/archlinux/$repo/os/$arch",
+                "https://arch.unixpeople.org/$repo/os/$arch",
+                "http://mirror.wtnet.de/archlinux/$repo/os/$arch",
+                "https://mirror.wtnet.de/archlinux/$repo/os/$arch",
+                "http://mirror.kumi.systems/archlinux/$repo/os/$arch",
+                "https://mirror.kumi.systems/archlinux/$repo/os/$arch",
+                "http://arch.phinau.de/$repo/os/$arch",
+                "https://arch.phinau.de/$repo/os/$arch",
+                "https://mirror.dogado.de/archlinux/$repo/os/$arch",
+                "http://mirror.clientvps.com/archlinux/$repo/os/$arch",
+                "https://mirror.clientvps.com/archlinux/$repo/os/$arch",
+                "http://ftp.agdsn.de/pub/mirrors/archlinux/$repo/os/$arch",
+                "https://ftp.agdsn.de/pub/mirrors/archlinux/$repo/os/$arch",
+                "http://mirrors.xtom.de/archlinux/$repo/os/$arch",
+                "https://mirrors.xtom.de/archlinux/$repo/os/$arch",
+                "http://mirror.moson.org/arch/$repo/os/$arch",
+                "https://mirror.moson.org/arch/$repo/os/$arch",
+                "http://mirror.pagenotfound.de/archlinux/$repo/os/$arch",
+                "https://mirror.pagenotfound.de/archlinux/$repo/os/$arch",
+                "https://de.arch.mirror.kescher.at/$repo/os/$arch",
+                "http://os.codefionn.eu/archlinux/$repo/os/$arch",
+                "https://os.codefionn.eu/archlinux/$repo/os/$arch",
+                "http://mirrors.janbruckner.de/archlinux/$repo/os/$arch",
+                "https://mirrors.janbruckner.de/archlinux/$repo/os/$arch",
+                "http://mirror.informatik.tu-freiberg.de/arch/$repo/os/$arch",
+                "https://mirror.informatik.tu-freiberg.de/arch/$repo/os/$arch",
+                "https://berlin.mirror.pkgbuild.com/$repo/os/$arch",
+                "https://frankfurt.mirror.pkgbuild.com/$repo/os/$arch",
+                "http://mirror.cmt.de/archlinux/$repo/os/$arch",
+                "https://mirror.cmt.de/archlinux/$repo/os/$arch",
+                "http://mirror.sunred.org/archlinux/$repo/os/$arch",
+                "https://mirror.sunred.org/archlinux/$repo/os/$arch",
+                "http://mirror.lcarilla.de/archlinux/$repo/os/$arch",
+                "https://mirror.lcarilla.de/archlinux/$repo/os/$arch",
+                "https://archlinux.richard-neumann.de/$repo/os/$arch",
+                "http://mirror.hugo-betrugo.de/archlinux/$repo/os/$arch",
+                "https://mirror.hugo-betrugo.de/archlinux/$repo/os/$arch",
+                "https://de.arch.niranjan.co/$repo/os/$arch",
+                "https://files.hadiko.de/pub/dists/arch/$repo/os/$arch",
+                "https://de-nue.soulharsh007.dev/archlinux/$repo/os/$arch",
+                "https://de.repo.c48.uk/arch/$repo/os/$arch",
+                "http://mirror.as20647.net/archlinux/$repo/os/$arch",
+                "http://mirror.ipb.de/archlinux/$repo/os/$arch",
+                "https://mirror.as20647.net/archlinux/$repo/os/$arch",
+                "https://mirror.ipb.de/archlinux/$repo/os/$arch",
+                "http://mirrors.aminvakil.com/archlinux/$repo/os/$arch",
+                "https://mirrors.aminvakil.com/archlinux/$repo/os/$arch",
+                "http://mirrors.purring.online/arch/$repo/os/$arch",
+                "https://mirrors.purring.online/arch/$repo/os/$arch",
+                "http://arch.owochle.app/$repo/os/$arch",
+                "https://arch.owochle.app/$repo/os/$arch",
+                "http://arch.mirror.cloud.thatcyberlynx.de/$repo/os/$arch",
+                "https://arch.mirror.cloud.thatcyberlynx.de/$repo/os/$arch",
+                "http://de.mirror.shibe.party/archlinux/$repo/os/$arch",
+                "https://de.mirror.shibe.party/archlinux/$repo/os/$arch",
+                "http://mirror.diyarciftci.xyz/archlinux/$repo/os/$arch",
+                "https://mirror.diyarciftci.xyz/archlinux/$repo/os/$arch",
+                "http://archlinux.roshak.xyz/$repo/os/$arch",
+                "https://archlinux.roshak.xyz/$repo/os/$arch",
+                "http://arch.ljkx.org/$repo/os/$arch",
+                "https://arch.ljkx.org/$repo/os/$arch",
+                "https://de.mirrors.mk/archlinux/$repo/os/$arch",
+                "http://mirrors.foxmire.space/archlinux/$repo/os/$arch",
+                "https://mirrors.foxmire.space/archlinux/$repo/os/$arch"
+            ]
+        },
+        "custom_servers": [],
+        "optional_repositories": [],
+        "custom_repositories": [],
+        "pacman_options": [
+            "Color",
+            "VerbosePkgLists",
+            "ILoveCandy"
+        ],
+        "parallel_downloads": 10
+    },
+    "bootloader_config": {
+        "bootloader": "grub",
+        "uki": true,
+        "removable": true
+    },
+    "disk_config": null,
+    "swap": {
+        "enabled": true,
+        "algorithm": "default",
+        "recomp_algorithm": null
+    },
+    "kernels": [
+        "linux"
+    ],
+    "kernel_headers": false,
+    "firmware": {
+        "firmware_type": "minimal"
+    },
+    "profile_config": {
+        "profiles": [
+            {
+                "main": "minimal",
+                "details": [],
+                "custom_settings": {}
+            }
+        ],
+        "gfx_driver": null,
+        "greeter": null
+    },
+    "hostname": "vmtesting",
+    "auth_config": null,
+    "app_config": {
+        "monitor_config": {
+            "monitor": "bottom"
+        },
+        "editor_config": {
+            "editor": "vi"
+        }
+    },
+    "network_config": {
+        "type": "iwd"
+    },
+    "timezone": "Europe/Paris",
+    "ntp": true,
+    "packages": [],
+    "aur_packages": [],
+    "services": [],
+    "sysctl": [],
+    "custom_commands": []
+}

@@ -70,6 +70,9 @@ case "$1" in
 -tc | --test-config)
 	./RUN --advanced --config examples/config-sample-full.json
 	;;
+-vc | --vm-config)
+	./RUN --advanced --config examples/vm_configuration.json
+	;;
 -h2t | --host-to-target)
 	go_to
 	# this checks dependencies for dev workflow from top level PKGBUILD
