@@ -3,6 +3,7 @@ import inspect
 from collections import Counter
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.hardware import GfxDriver, GfxPackage
@@ -198,8 +199,16 @@ class ProfileHandler:
 		# regreet has no default config; greetd's stock config.toml runs the tty agreety greeter
 		if greeter == GreeterType.Regreet:
 			path = install_session.target.joinpath('etc/greetd/config.toml')
-			with path.open('w') as file:
-				file.write('[terminal]\nvt = 1\n\n[default_session]\ncommand = "cage -s -- regreet"\nuser = "greeter"\n')
+			path.write_text(
+				dedent("""\
+					[terminal]
+					vt = 1
+
+					[default_session]
+					command = "dbus-run-session cage -s -mlast -d -- regreet"
+					user = "greeter"
+				""")
+			)
 
 			# under seatd the greeter joins seat, else its cage compositor can't open DRM.
 			# group exists only when seatd was installed; skip otherwise so usermod can't abort.

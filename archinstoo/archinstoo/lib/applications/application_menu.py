@@ -502,7 +502,10 @@ def select_security(preset: SecurityConfiguration | None = None) -> SecurityConf
 
 
 def select_development(preset: DevelopmentConfiguration | None = None) -> DevelopmentConfiguration | None:
-	return DevelopmentMenu(preset).run()
+	config = DevelopmentMenu(preset).run()
+	if config.language_config is None and config.devtool_config is None:
+		return None
+	return config
 
 
 def select_languages(preset: LanguageConfiguration | None = None) -> LanguageConfiguration | None:

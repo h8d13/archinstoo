@@ -1,7 +1,8 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-# sudo pacman -S --needed qemu-base qemu-ui-gtk edk2-ovmf
+# sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 # (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set DISPLAY_BACKEND to match)
+# (audio backend is a separate pkg: qemu-audio-pipewire (default), qemu-audio-pa, qemu-audio-alsa; set AUDIO_BACKEND to match)
 # Dev test VM for archinstoo. Boots an ISO (built by isos/ISOMOD) under QEMU.
 # ISO building is intentionally NOT done here, use isos/ISOMOD for that.
 # Credits to @Softer, modified for archinstoo.
@@ -22,6 +23,7 @@
 #   DISK_SIZE          new disk size (default 30G)
 #   DISPLAY_BACKEND    qemu -display value (default 'gtk,zoom-to-fit=off')
 #   VGA                qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
+#   AUDIO_BACKEND      qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
 
 set -euo pipefail
 
@@ -36,6 +38,7 @@ RAM="${RAM:-4G}"
 CPUS="${CPUS:-4}"
 DISPLAY_BACKEND="${DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
 VGA="${VGA:-std}"
+AUDIO_BACKEND="${AUDIO_BACKEND:-pipewire}"
 ARG="${1:-default}"
 
 OVMF_CODE=""
@@ -147,6 +150,9 @@ QEMU_ARGS=(
 	-netdev user,id=net0
 	-vga "$VGA"
 	-display "$DISPLAY_BACKEND"
+	-audiodev "$AUDIO_BACKEND,id=snd0"
+	-device ich9-intel-hda
+	-device hda-duplex,audiodev=snd0
 	-monitor stdio
 	-drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
 	-drive "if=pflash,format=raw,file=$OVMF_VARS"
@@ -158,4 +164,15 @@ if [ "$ATTACH_ISO" = "true" ]; then
 	QEMU_ARGS+=(-cdrom "$ISO")
 fi
 
-exec qemu-system-x86_64 "${QEMU_ARGS[@]}"
+QEMU_PID=""
+cleanup() {
+	if [ -n "$QEMU_PID" ]; then
+		kill "$QEMU_PID" 2>/dev/null || true
+	fi
+	stty sane 2>/dev/null || true # -monitor stdio can leave the tty raw on abrupt window-close
+}
+trap cleanup EXIT INT TERM
+
+qemu-system-x86_64 "${QEMU_ARGS[@]}" &
+QEMU_PID=$!
+wait "$QEMU_PID"
