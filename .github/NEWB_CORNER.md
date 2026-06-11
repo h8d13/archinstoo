@@ -19,6 +19,7 @@ Take your time, **installing is fast**, make sure you went through everything yo
 
 > [!TIP]
 > Looking up your motherboard model, CPU/GPU, memory, disks, etc... Can often save you lots of headaches.
+> You can use `lspci` and `lsusb`. On certain hardware you may need to select `Firmware` > `vendor` (Ex: Marvell WiFi cards)
 
 You may view main schema here: [Menu-Preview](./SCHEMA.md)
 
