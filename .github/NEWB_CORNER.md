@@ -3,7 +3,7 @@
 ## Flashing the USB
 
 You can use [rufus](https://rufus.ie/) for Winslows or [KDEImageWriter](https://apps.kde.org/isoimagewriter/) from Linux (or dd)
-> Select mbr/gpt according to your hardware (usually gpt for newer hardware) 
+> Select mbr/gpt according to your hardware (usually gpt for newer hardware)
 
 Then when pressing "start" **use dd mode** for full copy.
 
@@ -13,7 +13,7 @@ This is usually f2, f10, f12 or DEL or other combinations depending on manufactu
 Do check that you are using your best hub/USB keys (usually blue USBs are for 3.x+ or even better in USB-C)
 If install speed matters to you (Current best 1m55)
 
-## More tips in the menu 
+## More tips in the menu
 
 Take your time, **installing is fast**, make sure you went through everything you need.
 
@@ -40,6 +40,10 @@ Since a lot can be handled through GUI and not config files.
 > You may want to install one of these first instead of a WindowManager where more **manual work** is expected.
 
 ## Languages compat
+
+On the ISO, you can `loadkeys <somekblayout>`, you can also check available ones:
+
+`localectl list-keymaps`
 
 You can add Google fonts for extended language support and setup multiple keyboards once you have a basic system working.
 ```shell
@@ -78,7 +82,7 @@ pacman -S pacman-contrib
 # tools for pacman
 paccache -r
 # cleans cache
-checkupdates 
+checkupdates
 bash-completion 2.17.0-1 -> 2.17.0-2
 mkinitcpio 40-3 -> 40-4
 # visit archlinux.org/news ideally before updating
