@@ -166,4 +166,4 @@ My goal with this project was the following
 - Improve dark documentation areas around the installer
 - Make the installer work from any linux (which I've attempted already in a project named `partstoob`)
 
-Cheers for even reading any of this.
+Cheers for even reading any of this, if you are looking to read more I wrote [this](../PAST_CONTRIBS.md). At the end of 2025.
