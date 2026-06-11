@@ -16,6 +16,10 @@ exclude_docs: |
 
 extra:
   generator: false
+  social:
+    - icon: fontawesome/brands/gitlab
+      link: https://gitlab.archlinux.org/h8d13/archinstoo/
+      name: GitLab mirror
 
 # search is implicit by default, but listing plugins disables it - so re-add it.
 # callouts converts GitHub/Obsidian '> [!TIP]' alerts to Material admonitions.
