@@ -159,7 +159,7 @@ See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this 
 
 <div align="center">
 
-Made with ♥
+Made with ♡
 
 [Star this repo](https://github.com/h8d13/archinstoo) · [Bugs/Features](https://github.com/h8d13/archinstoo/issues/new) · [Discussions](https://github.com/h8d13/archinstoo/discussions)
 
