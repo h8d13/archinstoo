@@ -12,7 +12,7 @@ They let you decide where to install to set up `users/groups/elevation/shells` +
 
 This tries to follow the ArchWiki as close as possible.
 
-These are main auto configurations that are found on the system or need to be setup. This is usually done through `systemctl` calls or `/etc` 
+These are main auto configurations that are found on the system or need to be setup. This is usually done through `systemctl` calls or `/etc`
 
 `terminus-font` is auto-added when requested as a console font through `/etc/vconsole.conf`
 A keymap is also set here.
@@ -38,7 +38,7 @@ Usually I pick Copy to ISO from VMs or a desktop (cabled) and other two options 
 This is all up to user preference, can be multi-selected / some set the global default (like `Editor`) through `/etc/environment`
 
 ```
-  Bluetooth            
+  Bluetooth
   Audio
   Print service
   Firewall
@@ -53,7 +53,7 @@ This is all up to user preference, can be multi-selected / some set the global d
 
 > Hardware drivers can also be skipped and added to AUR step below if needed.
 
-- `Additional packages` & `AUR packages` 
+- `Additional packages` & `AUR packages`
 
 You can also add something like `noto-fonts` variants at this step or anything you would like in target really.
 
