@@ -30,7 +30,7 @@ Some options are also given in the menu directly but **are always optional**.
     - SSH/Server hardening
 
 3. Additionals
-    - apparmor 
+    - apparmor
     - firejail
     - fail2ban
     - bubblewrap
@@ -64,7 +64,7 @@ Usernames are more flexible:
 
     Root: Strong separate password, different from user accounts
 
-Root account can **optionally be locked** in the TUI. 
+Root account can **optionally be locked** in the TUI.
 
 ---
 
@@ -75,7 +75,7 @@ In the menu you can simply create the user without elevated privileges and optio
 
 ### Laptop Encryption
 
-Highly recommended in case of theft. 
+Highly recommended in case of theft.
 
 ### U2F
 
