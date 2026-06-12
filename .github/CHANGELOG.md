@@ -1,26 +1,12 @@
 # Changelog
 
-Historical changes/commits before I went rogue: 
+Historical changes/commits before I went rogue:
 [upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
-
-Upstreamed fixes:
-
-- Missing deps in linux-variant-headers
-
-Reported [here](https://github.com/archlinux/archinstall/issues/4360)
-
-Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188)
-
-Pending upstream fixes:
-
-- Modify existing `base-devel` pkg for `doas` or alternatives (`sudo` optional)
-
-Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-devel/-/work_items/7)
 
 ## 0.1.12-0
 
 	- Add `cage` + `regreet` greeter option (greetd-based graphical login)
-		- Seatd-compatible Wayland login 
+		- Seatd-compatible Wayland login
 		- `greeter` user joins the `seat` group only when seatd is
 		  installed, so non-seatd installs don't break
 	- Seat access: drop the greeter gate, still default to `ly` under seatd
@@ -543,10 +529,10 @@ Down from original list (the rest is all in logic or choices):
         - `Mesa (open-source)` auto-detects vulkan-intel or vulkan-radeon based
           on hardware
         - Plan future implementation for other drivers
-        - Virtual: `vulkan-driver` 
+        - Virtual: `vulkan-driver`
         ALREADY COVERED: `nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast`
         `vulkan-virtio, vulkan-nouveau`
-        MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno` 
+        MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno`
         `vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
         - Fix gfx driver installation OoO: now installs BEFORE profiles to
           satisfy vulkan-driver dependency.
@@ -723,7 +709,7 @@ Down from original list (the rest is all in logic or choices):
 ## 0.0.01-8
     - Start building `env` utils for support to build on alpine
     - Rework `--script list` to show what needs root or not
-    - Add actual custom examples #71 
+    - Add actual custom examples #71
     - Add `count` script that let's you map out how many pkgs would be installed
       by a profile
     - Add schema.jsonc with all the possible packages installed
