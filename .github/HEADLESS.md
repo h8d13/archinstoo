@@ -1,12 +1,11 @@
 # Headless options
 
-
-## Intro 
+## Intro
 
 Servers choices allow for flexible control over what you want to do.
 You can select multiple profiles, if desired.
 
-## Example 
+## Example
 
 In this example we'll set up a `tailscale` host to not have to do any port forwarding for Minecraft.
 
@@ -34,9 +33,9 @@ Launch the server and enjoy playing with your friends.
 
 <img width="1715" height="478" alt="image" src="https://github.com/user-attachments/assets/e9487a15-f46f-4e13-999f-bed3eae0798c" />
 
-Default port is `tailscale_ip:25565` 
+Default port is `tailscale_ip:25565`
 
-## Containers/firewalls
+## Containers/Firewalls
 
 Be sure to check your firewall configs if running several server profiles.
 You can also use stuff like `docker` or `podman` to manage this in a more efficient way.
