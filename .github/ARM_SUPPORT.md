@@ -14,7 +14,7 @@ This usually involves the following:
 
 At this stage you should have a minimal install with only kernel/and bootloader/FS.
 
-This usually involves using `qemu-user-static qemu-user-static-binfmt` from an x86 Arch host.
+This involves using `qemu-user-static qemu-user-static-binfmt` from an x86 Arch host.
 
 ---
 
@@ -73,8 +73,8 @@ parted -s -a optimal "$DEVICE" mkpart primary fat32 1MiB $END_S
 parted -s -a optimal "$DEVICE" mkpart primary ext4 $END_S 100%
 parted -s "$DEVICE" set 1 boot on
 
-mkfs.vfat -F 32 "${DEVICE}1" 
-mkfs.ext4 -F "${DEVICE}2" 
+mkfs.vfat -F 32 "${DEVICE}1"
+mkfs.ext4 -F "${DEVICE}2"
 
 mount "${DEVICE}2" /mnt
 mkdir /mnt/boot
@@ -181,11 +181,11 @@ umount /mnt/boot /mnt
 
 At this point we assume you have a working boot setup and a tty or access to terminal.
 
-This is a reduced version of `guided` that only aims to setup certain stuff. 
+This is a reduced version of `guided` that only aims to setup certain stuff.
 
 > Removes bootloaders and more things that are not needed for a running system.
 
-Then `./RUN --script live` will bring you to a minimal menu that is aimed to run on a live system. 
+Then `./RUN --script live` will bring you to a minimal menu that is aimed to run on a live system.
 
 Through this you can set-up server usecases or desktops and more utilities you might need.
 
