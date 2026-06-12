@@ -9,7 +9,7 @@ Best places are probably `args.py` and `scripts/` themselves. Then `installer.py
 ### Code standards
 
 Small patches are preferred, and need to be tested from scratch (ISO env + Host-2-Target)
-Usually the first steps involve finding bugs or having a good idea! 
+Usually the first steps involve finding bugs or having a good idea!
 
 ### Structure
 
@@ -20,7 +20,7 @@ Usually the first steps involve finding bugs or having a good idea!
 │   ├── scripts
 │   │   ├── ...
 ```
-These are used as a mods system, that can be used to run different kinds of installs/utilities. 
+These are used as a mods system, that can be used to run different kinds of installs/utilities.
 Default being `guided` and `--script list` just returns all files in this dir.
 
 - Config files only ever store all but encryption / auth info
@@ -35,11 +35,11 @@ If not for code, documentation changes, testing and digging up docs or command l
 
 ### You can also help by testing or suggesting ideas:
 
-Many thanks to **@ShreshthTiwari, @dzamlo, @eososlinux** and some/many reddit/discord reporters too for the many indirect contribs. 
+Many thanks to **@ShreshthTiwari, @dzamlo, @eososlinux** and some/many reddit/discord reporters too for the many indirect contribs.
 Time spent testing or drawing up reports/digging info.
 This in its core, takes just as much time as coding since often you need to test many scenarios.
 
-Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions. 
+Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions.
 These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
 
 ## Fork & Branches
@@ -53,7 +53,7 @@ For your submitted patches you'll likely need to accommodate yourself with branc
 git checkout <existing>
 git checkout -b <new>
 git add <file(s)>
-git commit 
+git commit
 # describe what this commit fixes, ideally one fix per commit
 git push
 ```
@@ -94,9 +94,9 @@ Direct pushes to master are permitted to code-owners.
 Anyone interested in archinstoo may review your code. One of the core developers will merge your pull request when they
 think it is ready. For every pull request, we aim to promptly either merge it or say why it is not yet ready; or edit it and merge directly.
 
-To get your pull request merged sooner, you should explain why you are making the change (and small patches). 
+To get your pull request merged sooner, you should explain why you are making the change (and small patches).
 
-For example, you can point to a code sample that is outdated in terms of Arch Linux command lines. 
+For example, you can point to a code sample that is outdated in terms of Arch Linux command lines.
 
 It is also helpful to add links to online documentation or to the implementation of the code you are changing.
 Any related digging/testing is actually just as useful as the code itself.
@@ -104,6 +104,6 @@ Any related digging/testing is actually just as useful as the code itself.
 Original Creator:
 * Anton Hvornum ([@Torxed](https://github.com/Torxed))
 
-Modified for archinstoo dev: [@h8d13](https://github.com/h8d13)
+Modified By: [@h8d13](https://github.com/h8d13)
 
 And finally thanks for being interested in `archinstoo` + good luck!
