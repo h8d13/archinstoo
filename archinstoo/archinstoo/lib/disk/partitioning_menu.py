@@ -24,7 +24,7 @@ from archinstoo.lib.tui.prompts import prompt_dir
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
-from .layouts import suggest_single_disk_layout
+from .layouts import suggest_disk_layout
 from .subvolume_menu import SubvolumeMenu
 
 
@@ -346,6 +346,9 @@ class PartitioningList(ListManager[DiskSegment]):
 						partition.mountpoint = None
 						if BtrfsMountOption.noatime.value not in partition.mount_options:
 							partition.mount_options.append(BtrfsMountOption.noatime.value)
+					# an LVM physical volume is consumed by a volume group, not mounted directly
+					if fs_type == FilesystemType.LVM:
+						partition.mountpoint = None
 				case 'btrfs_mark_compressed':
 					self._toggle_mount_option(partition, BtrfsMountOption.compress)
 				case 'btrfs_mark_nodatacow':
@@ -597,7 +600,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		if any(not entry.exists() for entry in data) and not self._reset_confirmation():
 			return None
 
-		return suggest_single_disk_layout(self._device, advanced=self._advanced)
+		return suggest_disk_layout(self._device, advanced=self._advanced)
 
 
 def manual_partitioning(

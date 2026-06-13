@@ -96,8 +96,8 @@ class FilesystemHandler:
 	) -> None:
 		# Format can be given an overriding path, for instance /dev/null to test
 		# the formatting functionality and in essence the support for the given filesystem.
-		# don't touch existing partitions or raw partitions (e.g. BIOS boot ef02)
-		create_or_modify_parts = [p for p in partitions if p.is_create_or_modify() and p.fs_type is not None]
+		# don't touch existing partitions or raw partitions (e.g. BIOS boot ef02), or LVM PVs (pvcreate handles those)
+		create_or_modify_parts = [p for p in partitions if p.is_create_or_modify() and p.fs_type is not None and p.fs_type is not FilesystemType.LVM]
 
 		self._validate_partitions(create_or_modify_parts)
 

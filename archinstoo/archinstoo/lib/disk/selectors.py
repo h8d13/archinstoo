@@ -88,7 +88,7 @@ def select_partition_table() -> PartitionTable:
 			raise ValueError('Unhandled result type')
 
 
-def select_main_filesystem_format(advanced: bool = False) -> FilesystemType:
+def select_main_filesystem_format(advanced: bool = False, allow_lvm: bool = False) -> FilesystemType:
 	items = [
 		MenuItem('btrfs', value=FilesystemType.BTRFS),
 		MenuItem('ext4', value=FilesystemType.EXT4),
@@ -99,6 +99,10 @@ def select_main_filesystem_format(advanced: bool = False) -> FilesystemType:
 	if advanced:
 		items.append(MenuItem('bcachefs', value=FilesystemType.BCACHEFS))
 		items.append(MenuItem('ntfs', value=FilesystemType.NTFS))
+
+	# LVM marks the data partition a PV, so no throwaway root fs is asked before the LVM step
+	if allow_lvm:
+		items.append(MenuItem('lvm', value=FilesystemType.LVM))
 
 	group = MenuItemGroup(items, sort_items=False)
 	result = SelectMenu[FilesystemType](
