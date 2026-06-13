@@ -57,7 +57,7 @@ git commit
 # describe what this commit fixes, ideally one fix per commit
 git push
 ```
-Then open the PR with explanations too, link to resources/issues.
+Then open the PR with explanations too, link to resources/issues. If your commits are well scoped/documented you can skip most theatrics.
 
 ## Discussions
 
