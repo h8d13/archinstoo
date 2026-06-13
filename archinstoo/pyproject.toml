@@ -33,7 +33,7 @@ dev = [
     "pre-commit==4.6.0",
     "ruff==0.15.17",
     "pylint==4.0.5",
-    "pytest==9.0.3",
+    "pytest==9.1.0",
 ]
 
 [project.scripts]
