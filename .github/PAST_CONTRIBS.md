@@ -182,7 +182,7 @@ Working from simple is also much easier, because I didn't have to care about som
 
 But here I had best of both worlds: a simple codebase where I can make crazier changes and the original to compare to.
 
-I also contribute to an AUR helper called [Grimaur](https://github.com/ryk4rd/grimaur).
+I also contribute to an AUR helper called [grimoire](https://github.com/ryk4rd/grimoire).
 
 ---
 

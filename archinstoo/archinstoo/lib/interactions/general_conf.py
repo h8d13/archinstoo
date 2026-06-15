@@ -242,7 +242,7 @@ def select_additional_packages(
 
 
 def select_aur_packages(preset: list[str] = []) -> list[str]:
-	from archinstoo.lib.grimaur import aur_rpc_info, exists_in_aur_mirror
+	from archinstoo.lib.grimoire import exists_in_aur_mirror
 
 	base_header = tr('Enter AUR package names separated by commas') + '\n'
 	base_header += tr('base-devel, git and kernel-headers will be installed automatically') + '\n'
@@ -279,7 +279,7 @@ def select_aur_packages(preset: list[str] = []) -> list[str]:
 					return []
 
 				Tui.print(tr('Validating AUR packages...'), clear_screen=True)
-				invalid = [n for n in names if not aur_rpc_info(n) and not exists_in_aur_mirror(n)]
+				invalid = [n for n in names if not exists_in_aur_mirror(n)]
 
 				if not invalid:
 					return names

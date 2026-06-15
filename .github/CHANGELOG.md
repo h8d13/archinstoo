@@ -74,10 +74,10 @@ Historical changes/commits before I went rogue:
           the menu directly, this will allow for better checks/tests)
     - Hardware detection allow for vendor specific list in `Firmware`
         - Updated `count.py` to work with new firmware choice logic
-    - Fix doas path resolution on grimaur installs
+    - Fix doas path resolution on grimoire installs
         - Configure `/etc/makepkg.conf` directly
         - Validate AUR selection requires elevation
-        - Update grimaur to new version -> respects makepkg properly now + other
+        - Update grimoire to new version -> respects makepkg properly now + other
           various changes
     - Convert docstrings to plain `#` comments
     - Logging fixes: Escaping using existing helpers
@@ -352,7 +352,7 @@ Historical changes/commits before I went rogue:
     - AUR: fix install order to run after DE/WM profile
         - Prevents AUR packages that depend on a desktop environment from
           failing
-    - grimAUR improvements
+    - grimoire improvements
         - Prefer `run0` over `sudo` in GUI mode
         - Add `--depth=1` to all git clone commands
 
@@ -466,7 +466,7 @@ Historical changes/commits before I went rogue:
         - Refactor UEFI references across bootloader menu and models (cf)
     - Error handling
         - Refactor error reporting for bad configs in global menu
-        - Rename error variables in `grimaur.py` for consistency
+        - Rename error variables in `grimoire.py` for consistency
     - Resume and config fixes
         - Fix resume behavior for multiple settings
         - Fix profile names for `httpd` and `sshd` servers
@@ -585,7 +585,7 @@ Down from original list (the rest is all in logic or choices):
     - Test updates
         - Add security_config to test fixtures
         - Update test assertions for new Security model
-    - Work on grimaur linting
+    - Work on grimoire linting
 
 ## 0.1.01-0
 
@@ -602,7 +602,7 @@ Down from original list (the rest is all in logic or choices):
         - Skips `arch-chroot` wrapper when target is `/`
         - Disables disk, bootloader, kernel menu items
     - AUR support
-        - Full AUR builder (`grimaur.py`) with temporary non-root user
+        - Full AUR builder (`grimoire.py`) with temporary non-root user
         - AUR packages menu item (gated behind `--advanced`)
         - Fix `/tmp` writability inside chroot for `makepkg`
         - Out-of-tree DKMS module builds

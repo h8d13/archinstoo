@@ -2303,10 +2303,10 @@ def run_aur_installation(packages: list[str], installation: Installer, auth_conf
 
 	installation.add_additional_packages(['base-devel', 'git'])
 
-	grimaur_src = Path(__file__).parent / 'grimaur.py'
-	grimaur_dest = installation.target / 'usr/local/bin/grimaur'
-	grimaur_src.copy(grimaur_dest, preserve_metadata=True)
-	grimaur_dest.chmod(0o755)
+	grimoire_src = Path(__file__).parent / 'grimoire.py'
+	grimoire_dest = installation.target / 'usr/local/bin/grimoire'
+	grimoire_src.copy(grimoire_dest, preserve_metadata=True)
+	grimoire_dest.chmod(0o755)
 
 	priv_esc = auth_config.privilege_escalation
 	aur_rule = None
@@ -2331,7 +2331,7 @@ def run_aur_installation(packages: list[str], installation: Installer, auth_conf
 			info(f'Installing AUR package: {pkg}')
 			try:
 				installation.arch_chroot(
-					f'grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
+					f'grimoire --no-color install --repo AUR {shlex.quote(pkg)} --noconfirm',
 					run_as=build_user.username,
 					peek_output=True,
 				)

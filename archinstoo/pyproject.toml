@@ -92,7 +92,7 @@ module = "archinstoo.lib.models.device"
 disallow_any_unimported = false
 
 [[tool.mypy.overrides]]
-module = "archinstoo.lib.grimaur"
+module = "archinstoo.lib.grimoire"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
@@ -126,7 +126,7 @@ ignore-paths = [
     "^build/",
     "^docs/",
     "^node_modules/",
-    ".*grimaur.py",
+    ".*grimoire.py",
 ]
 persistent = false
 py-version = "3.14"
@@ -164,7 +164,7 @@ ignored-modules = ["parted"]
 target-version = "py314"
 line-length = 160
 indent-width = 8
-exclude = ["**/lib/grimaur.py"]
+exclude = ["**/lib/grimoire.py"]
 
 [tool.ruff.format]
 indent-style = "tab"
