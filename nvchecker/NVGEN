@@ -1,57 +1,74 @@
 #!/usr/bin/env python3
-"""Generate nvchecker.toml from PKGBUILDs and schema.jsonc.
+"""Generate and run nvchecker for archinstoo's tracked packages.
 
-Tracks:
+Tracks (into nvchecker.toml) the Arch packages archinstoo touches:
 - Direct dependencies (PKGBUILD depends)
 - Optional dependencies (PKGBUILD optdepends)
 - All installable packages (schema.jsonc)
 
-Usage:
-    ./NVGEN > nvchecker.toml
+Subcommands:
+    ./NVGEN gen            write nvchecker.toml in place (default; --stdout to pipe)
+    ./NVGEN check          gen + nvchecker + nvcmp, print what's new
+                           (--sync runs `sudo pacman -Sy` first for fresh data)
+    ./NVGEN take --all     promote new_ver.json into old_ver.json (ack everything)
+    ./NVGEN take PKG...     ack only the named packages
 
-Then install and run nvchecker:
-    pacman -S nvchecker
-    nvchecker -c nvchecker.toml        # First run creates new_ver.json
-    nvcmp -c nvchecker.toml            # Compare and show updated packages
-    nvtake -c nvchecker.toml PKG...    # Mark packages as seen/processed
+How nvchecker works: pacman entries read the LOCAL sync db, so results are only
+as fresh as the last `pacman -Sy` (use `check --sync`). Paths in [__config__]
+resolve relative to the toml, not cwd. No keyfile needed (pacman is local).
 """
 
+import argparse
+import json
+import os
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
-
-def log(msg: str) -> None:
-	"""Print progress to stderr."""
-	print(msg, file=sys.stderr)
-
-
-ROOT = Path(__file__).parent.parent  # nvchecker/ -> repo root
+NVDIR = Path(__file__).parent
+ROOT = NVDIR.parent  # nvchecker/ -> repo root
+TOML = NVDIR / 'nvchecker.toml'
 SCHEMA_PATH = ROOT / 'archinstoo' / 'archinstoo' / 'schema.jsonc'
 PKGBUILD_DEV = ROOT / 'PKGBUILD'
 PKGBUILD_REL = ROOT / 'archinstoo' / 'PKGBUILD'
 
+def log(msg: str) -> None:
+	# progress to stderr so `gen --stdout` stays pipe-clean
+	print(msg, file=sys.stderr)
+
+
+def _require(binary: str) -> None:
+	if not shutil.which(binary):
+		sys.exit(f'error: {binary} not found; install with `pacman -S nvchecker`')
+
+def _needs_update() -> bool:
+	try:
+		log('Checking sync mirrors up to date...')
+		subprocess.run('checkupdates', check=True)
+		return True
+	except CalledProcessError as e: 
+		
 
 def load_schema() -> dict:
-	"""Load schema.jsonc, stripping // comments."""
-	import json
+	# strip // comments, then parse as json
 	text = SCHEMA_PATH.read_text()
 	text = re.sub(r'(?m)^\s*//.*$|(?<=,)\s*//.*$', '', text)
 	return json.loads(text)
 
 
 def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
-	"""Extract bash array from PKGBUILD (depends, optdepends, etc)."""
+	# extract a bash array (depends, optdepends, ...) from a PKGBUILD
 	text = path.read_text()
-	pattern = rf"{name}=\(\s*([\s\S]*?)\)"
+	pattern = rf'{name}=\(\s*([\s\S]*?)\)'
 	match = re.search(pattern, text)
 	if not match:
 		return []
 
 	content = match.group(1)
-	# Extract quoted strings, strip comments and version info
+	# quoted strings, minus 'pkg: description' suffixes and version constraints
 	items = re.findall(r"['\"]([^'\"]+)['\"]", content)
-	# Clean: 'systemd: description' -> 'systemd', strip versions
 	cleaned = []
 	for item in items:
 		pkg = item.split(':')[0].split('>=')[0].split('<=')[0].split('=')[0].strip()
@@ -61,35 +78,31 @@ def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 
 
 def expand_group(name: str) -> list[str]:
-	"""Expand a package group to its members using pacman."""
-	import subprocess
+	# resolve a package group to its members via pacman
 	log(f'  expanding group: {name}')
 	try:
 		result = subprocess.run(
 			['pacman', '-Sqg', name],
-			capture_output=True, text=True, check=True
+			capture_output=True,
+			text=True,
+			check=True,
 		)
 		pkgs = result.stdout.strip().split('\n') if result.stdout.strip() else []
 		log(f'    -> {len(pkgs)} packages')
 		return pkgs
 	except subprocess.CalledProcessError:
-		log(f'    -> failed')
+		log('    -> failed')
 		return []
 
 
 def extract_schema_packages(schema: dict) -> set[str]:
-	"""Recursively extract all package names from schema.
-
-	Only extracts strings from lists (actual package names).
-	Dict keys are profile/category names, not packages.
-	Expands package groups to their members.
-	"""
+	# collect package names (list strings only; dict keys are category labels).
+	# meta-packages that are really groups get expanded to their members.
 	pkgs: set[str] = set()
 
-	# Package groups to expand
 	groups = {
 		'gnome', 'xfce4', 'xfce4-goodies', 'mate', 'mate-extra',
-		'lxqt', 'deepin', 'budgie', 'cosmic', 'cutefish',
+		'lxqt', 'deepin', 'budgie', 'cosmic',
 	}
 	expanded: set[str] = set()
 
@@ -117,6 +130,7 @@ def extract_schema_packages(schema: dict) -> set[str]:
 def detect_source(pkg: str) -> str:
 	return 'pacman'
 
+
 def generate_toml() -> str:
 	log('Loading schema...')
 	schema = load_schema()
@@ -131,40 +145,26 @@ def generate_toml() -> str:
 	log('Extracting packages from schema...')
 	schema_pkgs = extract_schema_packages(schema)
 
-	# Build output
 	lines = [
 		'# nvchecker.toml - Auto-generated by NVGEN',
 		'# Tracks all packages used by archinstoo',
 		'#',
-		'# Regenerate: ./NVGEN > nvchecker.toml',
-		'#',
-		'# Usage:',
-		'#   pacman -Sy                    # Sync db first (pacman source uses local db)',
-		'#   nvchecker -c nvchecker.toml   # Check versions (creates/updates new_ver.json)',
-		'#   nvcmp -c nvchecker.toml       # Compare old vs new versions',
-		'#   nvtake -c nvchecker.toml PKG  # Mark package as seen (or --all)',
+		'# Regenerate: ./NVGEN gen',
+		'# Check:      ./NVGEN check [--sync]',
+		'# Acknowledge: ./NVGEN take --all',
 		'',
 		'[__config__]',
 		'oldver = "old_ver.json"',
 		'newver = "new_ver.json"',
 		'',
-		'# ============================================================',
-		'# ARCHINSTOO',
-		'# ============================================================',
-		'[archinstoo]',
-		'source = "git"',
-		'git = "https://github.com/h8d13/archinstoo"',
-		'branch = "master"',
-		'use_commit = true',
-		'',
 	]
 
-	def add_section(title: str, pkgs: set[str]):
+	def add_section(title: str, pkgs: set[str]) -> None:
 		if not pkgs:
 			return
-		lines.append(f'# ============================================================')
+		lines.append('# ============================================================')
 		lines.append(f'# {title}')
-		lines.append(f'# ============================================================')
+		lines.append('# ============================================================')
 		for pkg in sorted(pkgs):
 			lines.append(f'[{pkg}]')
 			lines.append(f'source = "{detect_source(pkg)}"')
@@ -174,11 +174,94 @@ def generate_toml() -> str:
 	add_section('OPTIONAL DEPENDENCIES', optdepends - depends)
 	add_section('INSTALLABLE PACKAGES', schema_pkgs - depends - optdepends)
 
-	total = len(depends) + len(optdepends - depends) + len(schema_pkgs - depends - optdepends) + 1  # +1 for archinstoo
+	total = len(depends | optdepends | schema_pkgs)
 	log(f'Done: {total} packages tracked')
 
 	return '\n'.join(lines)
 
 
+def write_toml() -> None:
+	# write atomically so a mid-generation crash can't leave an empty config
+	# (the old `./NVGEN > nvchecker.toml` truncated the file before running)
+	toml = generate_toml()
+	tmp = TOML.with_name(TOML.name + '.tmp')
+	tmp.write_text(toml + '\n')
+	os.replace(tmp, TOML)
+	log(f'wrote {TOML}')
+
+
+def cmd_gen(args: argparse.Namespace) -> int:
+	if args.stdout:
+		print(generate_toml())
+	else:
+		write_toml()
+	return 0
+
+
+def cmd_check(args: argparse.Namespace) -> int:
+	_require('nvchecker')
+	_require('nvcmp')
+	write_toml()
+
+	if args.sync:
+		log('syncing pacman db (sudo pacman -Sy)...')
+		subprocess.run(['sudo', 'pacman', '-Sy'], check=True)
+
+	# fetch quietly (errors still surface); nvcmp is the human-readable report
+	nv = ['nvchecker', '-c', str(TOML), '-l', 'warning']
+	if args.failures:
+		nv.append('--failures')
+	if args.tries:
+		nv += ['-t', str(args.tries)]
+	if args.entry:
+		nv += ['-e', args.entry]
+	rc = subprocess.run(nv).returncode
+
+	diff = subprocess.run(['nvcmp', '-c', str(TOML)], capture_output=True, text=True)
+	out = diff.stdout.strip()
+	if out:
+		print(out)
+	else:
+		log('no changes since last `take`')
+	return rc
+
+
+def cmd_take(args: argparse.Namespace) -> int:
+	_require('nvtake')
+	if not args.all and not args.pkgs:
+		sys.exit('error: give package names or --all')
+	cmd = ['nvtake', '-c', str(TOML)]
+	if args.all:
+		cmd.append('--all')
+	cmd += args.pkgs
+	return subprocess.run(cmd).returncode
+
+
+def main() -> int:
+	parser = argparse.ArgumentParser(prog='NVGEN', description='Generate and run nvchecker for archinstoo.')
+	sub = parser.add_subparsers(dest='cmd')
+
+	p_gen = sub.add_parser('gen', help='write nvchecker.toml in place')
+	p_gen.add_argument('--stdout', action='store_true', help='print to stdout instead of writing the file')
+	p_gen.set_defaults(func=cmd_gen)
+
+	p_check = sub.add_parser('check', help='regen, run nvchecker, show nvcmp diff')
+	p_check.add_argument('--sync', action='store_true', help='run `sudo pacman -Sy` first for fresh data')
+	p_check.add_argument('--failures', action='store_true', help='exit 3 if any entry fails to fetch')
+	p_check.add_argument('-t', '--tries', type=int, help='retry N times on network errors')
+	p_check.add_argument('-e', '--entry', help='only check the named entry (debugging)')
+	p_check.set_defaults(func=cmd_check)
+
+	p_take = sub.add_parser('take', help='acknowledge versions (nvtake)')
+	p_take.add_argument('-a', '--all', action='store_true', help='acknowledge every changed package')
+	p_take.add_argument('pkgs', nargs='*', help='specific packages to acknowledge')
+	p_take.set_defaults(func=cmd_take)
+
+	args = parser.parse_args()
+	if not args.cmd:  # bare `./NVGEN` == gen to file
+		return cmd_gen(argparse.Namespace(stdout=False))
+	return args.func(args)
+
+
 if __name__ == '__main__':
-	print(generate_toml())
+	raise SystemExit(main())
