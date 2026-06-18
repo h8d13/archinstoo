@@ -5,8 +5,10 @@
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
+from archinstoo.lib.exceptions import RequirementError
 from archinstoo.scripts._resolve import collect, resolve_deps
 
 
@@ -28,7 +30,10 @@ def count() -> None:
 	print(f'\nExplicit packages/meta/groups: {len(explicit)}')
 	print('Resolving dependencies...')
 
-	resolved, roots = resolve_deps(explicit, target=args.why)
+	try:
+		resolved, roots = resolve_deps(explicit, target=args.why)
+	except RequirementError as e:
+		sys.exit(f'error: {e}')
 
 	print(f'\nTotal packages (with deps): {len(resolved)}')
 

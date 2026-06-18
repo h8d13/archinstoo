@@ -6,14 +6,13 @@
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
+from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import SectorSize, Size, Unit
-from archinstoo.lib.utils.env import Os
-from archinstoo.scripts._resolve import collect, resolve_deps
-
-Os.locate_binary('expac')
+from archinstoo.scripts._resolve import _requirements, collect, resolve_deps
 
 # Binary, disk-relevant units only; the full Unit enum goes up to yottabytes.
 _UNIT_CHOICES = ('B', 'KiB', 'MiB', 'GiB', 'TiB')
@@ -65,12 +64,18 @@ def size() -> None:
 	with Path(args.config).open() as f:
 		config = json.load(f)
 
+	if not _requirements('expac'):
+		sys.exit('error: expac not found; install pacman-contrib')
+
 	explicit = collect(config)
 
 	print(f'\nExplicit packages/meta/groups: {len(explicit)}')
 	print('Resolving dependencies...')
 
-	resolved, _ = resolve_deps(explicit)
+	try:
+		resolved, _ = resolve_deps(explicit)
+	except RequirementError as e:
+		sys.exit(f'error: {e}')
 
 	print(f'Total packages (with deps): {len(resolved)}')
 	print('Querying sizes...')
