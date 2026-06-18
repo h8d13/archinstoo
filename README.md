@@ -113,11 +113,15 @@ See [Multi-Boot](https://github.com/h8d13/archinstoo/blob/master/.github/MULTI_B
 
 See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
 
-See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_ISOS.md) to create your own install mediums.
-
 See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
 
 See [Out-of-Tree](https://github.com/h8d13/archinstoo/blob/master/.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
+
+### More advanced
+
+See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_ISOS.md) to create your own install mediums.
+
+See [Distros](https://github.com/h8d13/archinstoo/tree/master/distros) for example install from a Debian testing host. 
 
 See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
