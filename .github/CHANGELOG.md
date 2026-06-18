@@ -156,8 +156,6 @@ Historical changes/commits before I went rogue:
     - `desktops/hyprland.py`: drop `polkit` (pulled in transitively); revert
       niri profile change
     - Drop `cutefish` desktop profile (#4514, upstream-archived project)
-    - Locale fixes (#4500): missing `tr()` ids in encryption/profile menus,
-      `.pot` regen
     - `network/`: small helper for nic stub creation path
     - `sysctl`: drop redundant duplicate lines
     - Dev: `TVM` script (renamed from `VM`) for boot-time VM smoke-test (credits
