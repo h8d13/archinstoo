@@ -2,7 +2,7 @@
 
 <img width="1920" height="1080" alt="Group 1" src="https://github.com/user-attachments/assets/7f54d725-d10d-4447-983c-a01d44b9f915" />
 
-## What is `archinstoo`:
+## What is `archinstoo`
 
 A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org).
 
