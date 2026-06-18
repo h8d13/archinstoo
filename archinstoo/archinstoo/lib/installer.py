@@ -225,6 +225,13 @@ class Installer:
 		# architecture and parse results for prints
 		# https://github.com/archlinux/archinstall/issues/3688
 		# be more descriptive about status in code + what user sees
+		if Os.running_from_host():
+			# NTP/reflector/keyring-wkd-sync are live-ISO startup units; a host
+			# has none of them, so the waits would block forever (the wkd-sync
+			# timer never appears -> _service_started stays None).
+			debug('Running from host, skipping ISO service-stop checks')
+			return
+
 		if not self._args.skip_ntp:
 			info('Waiting for NTP time synchronization...')
 

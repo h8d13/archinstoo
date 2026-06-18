@@ -1,7 +1,7 @@
 # flake.nix
 # Usage: nix develop
 # clone <url> cd
-# sudo nix develop --command ./RUN
+# sudo nix develop --extra-experimental-features 'nix-command flakes' --command ./RUN
 {
 	inputs = {
 		nixpkgs.url     = "github:NixOS/nixpkgs/nixos-unstable";
