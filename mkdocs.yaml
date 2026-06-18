@@ -14,9 +14,6 @@ exclude_docs: |
   CODEOWNERS
   docs-requirements.txt
 
-extra_css:
-  - stylesheets/extra.css
-
 extra:
   generator: false
   social:
@@ -60,9 +57,9 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started:
-      - Configuration schema: SCHEMA.md
       - Newcomers: NEWB_CORNER.md
       - JSON file: CONFIG.md
+      - Config schema: SCHEMA.md
   - Cases:
       - Headless install: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
