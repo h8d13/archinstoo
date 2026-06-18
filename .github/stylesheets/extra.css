@@ -3,7 +3,15 @@
 .md-header__source {
   display: flex;
   align-items: center;
-  gap: .6rem;
+  gap: .4rem;
   max-width: none;
   width: auto;
+}
+
+/* GitLab mirror: icon only, no repository label, no fixed-width padding. */
+.md-source--icon-only {
+  flex: none;
+}
+.md-source--icon-only .md-source__icon {
+  padding: 0;
 }
