@@ -151,6 +151,12 @@ class Installer:
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
 		try:
+			if exc_type is KeyboardInterrupt:
+				# User abort, not a crash: no bug-report prompt. finally still
+				# tears down mounts; propagate for the top level to exit clean.
+				warn('Installation interrupted by user, tearing down target...')
+				return None
+
 			if exc_type is not None:
 				error(str(exc_value))
 				Tui.print(str(f'[!] A log file has been created here: {logger.path}'))
@@ -225,11 +231,11 @@ class Installer:
 		# architecture and parse results for prints
 		# https://github.com/archlinux/archinstall/issues/3688
 		# be more descriptive about status in code + what user sees
-		if Os.running_from_host():
-			# NTP/reflector/keyring-wkd-sync are live-ISO startup units; a host
-			# has none of them, so the waits would block forever (the wkd-sync
-			# timer never appears -> _service_started stays None).
-			debug('Running from host, skipping ISO service-stop checks')
+		if Os.running_from_host() and not Os.running_from_arch():
+			# NTP/reflector/keyring-wkd-sync are live-ISO startup units; a
+			# foreign host has none of them, so the waits would block forever
+			# (the wkd-sync timer never appears -> _service_started stays None).
+			debug('Running from foreign host, skipping ISO service-stop checks')
 			return
 
 		if not self._args.skip_ntp:
