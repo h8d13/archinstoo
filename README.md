@@ -121,7 +121,7 @@ See [Out-of-Tree](https://github.com/h8d13/archinstoo/blob/master/.github/OUT_OF
 
 See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_ISOS.md) to create your own install mediums.
 
-See [Distros](https://github.com/h8d13/archinstoo/tree/master/distros) for example install from a Debian testing host. 
+See [Distros](https://github.com/h8d13/archinstoo/tree/master/distros) for installing from different distros.
 
 See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
