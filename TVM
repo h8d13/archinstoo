@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2154
 # sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 # (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set DISPLAY_BACKEND to match)

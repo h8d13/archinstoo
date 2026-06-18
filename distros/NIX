@@ -12,8 +12,7 @@ pkgs.mkShell {
     arch-install-scripts
     git
 
-    # Python + parted
-    (python3.withPackages (ps: [ ps.pyparted ]))
+    (python314.withPackages (ps: [ ps.pyparted ]))
 
     # Filesystem tools
     dosfstools
