@@ -157,7 +157,7 @@ See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this 
 
 ---
 
-<div align="center">
+<div align="center" markdown>
 
 Made with ♡
 

@@ -29,6 +29,7 @@ plugins:
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     - scheme: default
       toggle:
@@ -45,6 +46,7 @@ theme:
     - content.code.copy
 
 markdown_extensions:
+  - md_in_html
   - admonition
   - footnotes
   - toc:
