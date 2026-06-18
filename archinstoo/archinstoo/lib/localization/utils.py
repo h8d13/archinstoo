@@ -128,11 +128,32 @@ def list_console_fonts() -> list[str]:
 
 
 def list_timezones() -> list[str]:
-	return (
-		SysCommand(
+	try:
+		out = SysCommand(
 			'timedatectl --no-pager list-timezones',
 			environment_vars={'SYSTEMD_COLORS': '0'},
-		)
-		.decode()
-		.splitlines()
-	)
+		).decode()
+		if out.strip():
+			return out.splitlines()
+	except SysCallError:
+		pass
+
+	# timedatectl talks to systemd-timedated over dbus; on a host with no
+	# running timedated the call blocks until the dbus activation timeout
+	# (looks hung). Read the tz db off disk instead.
+	return _scan_timezones()
+
+
+def _scan_timezones() -> list[str]:
+	# zone1970.tab / zone.tab list the canonical zone names in their last
+	# tab-separated column (lines starting with # are comments).
+	root = Path('/usr/share/zoneinfo')
+	for tab in ('zone1970.tab', 'zone.tab'):
+		tabfile = root / tab
+		if not tabfile.is_file():
+			continue
+		zones = {cols[2] for line in tabfile.read_text().splitlines() if not line.startswith('#') and len(cols := line.split('\t')) >= 3}
+		if zones:
+			zones.add('UTC')
+			return sorted(zones)
+	return []
