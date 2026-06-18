@@ -8,4 +8,4 @@ And can be found bellow:
 | Host | `arch-install-scripts` | `pacman` | Script | Tested |
 |------|------------------------|----------|--------|--------|
 | Debian | V | V | [DEB](./DEB) | X |
-| Nix | V | V | [DEB](./DEB) | X |
+| Nix | V | V | [NIX](./NIX) | X |

@@ -1,6 +1,6 @@
 # shell.nix
 # Usage: nix-shell -p git
-# clone then cd
+# clone <url> then cd
 # nix-shell distros/NIX
 
 { pkgs ? import <nixpkgs> {} }:

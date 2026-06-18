@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from archinstoo.lib.exceptions import ServiceException, SysCallError
@@ -7,14 +8,31 @@ from archinstoo.lib.utils.env import Os
 
 
 def list_keyboard_languages() -> list[str]:
-	return (
-		SysCommand(
+	try:
+		out = SysCommand(
 			'localectl --no-pager list-keymaps',
 			environment_vars={'SYSTEMD_COLORS': '0'},
-		)
-		.decode()
-		.splitlines()
-	)
+		).decode()
+		if out.strip():
+			return out.splitlines()
+	except SysCallError:
+		pass
+
+	# localectl reads compiled-in FHS keymap dirs that don't exist on e.g.
+	# NixOS; fall back to scanning the kbd data directly.
+	return _scan_keymaps()
+
+
+def _scan_keymaps() -> list[str]:
+	# kbd keymap files (*.map[.gz]) live under different roots per distro;
+	# locate via the loadkeys binary's prefix, plus the common FHS spots.
+	roots = [Path('/usr/share/kbd/keymaps'), Path('/usr/share/keymaps')]
+	if loadkeys := shutil.which('loadkeys'):
+		prefix = Path(loadkeys).resolve().parent.parent
+		roots += [prefix / 'share/kbd/keymaps', prefix / 'share/keymaps']
+
+	names = {p.name.removesuffix('.gz').removesuffix('.map') for root in roots if root.is_dir() for p in root.rglob('*.map*')}
+	return sorted(names)
 
 
 def list_locales() -> list[str]:
