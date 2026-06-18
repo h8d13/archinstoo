@@ -81,7 +81,8 @@ class GlobalMenu(AbstractMenu[None]):
 				text='Theme',
 				action=self._select_theme,
 				preview_action=self._prev_theme,
-				key='theme',  # session-only TUI theme, not persisted
+				# CONFIG_KEY prefix: session-only TUI theme, excluded from config sync
+				key=f'{CONFIG_KEY}_theme',
 			),
 			MenuItem.separator(),  # critical - assumed empty and mandatory
 			MenuItem(

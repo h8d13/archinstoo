@@ -19,11 +19,10 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu.run(additional_title='- Pkgs mode')
 
 		# Only enable profile, applications, and packages
-		global_menu.set_enabled('theme', True)
 		global_menu.set_enabled('profile_config', True)
 		global_menu.set_enabled('app_config', True)
 		global_menu.set_enabled('packages', True)
-		global_menu.set_enabled('__config__', True)
+		global_menu.set_enabled('__config__', True)  # also enables session-only theme
 
 		# Skip mandatory checks
 		global_menu.set_mandatory('timezone', False)

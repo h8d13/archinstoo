@@ -72,6 +72,7 @@ from .lib import Pacman, output
 from .lib.checkpoints import _run_script, clean_cache
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
+from .lib.pm.bootstrap import keyring_init, pacman_conf
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info, reload_python
 from .lib.utils.net import ping
@@ -157,9 +158,16 @@ def _prepare() -> int:
 		# note indent fully offlines installs should be possible
 		# instead of importing full handler use sys.argv directly
 		try:
+			# a foreign host ships pacman but none of its config/keyring; build
+			# it first (conf before keyring: pacman-key reads pacman.conf).
+			foreign_host = Os.running_from_host() and not Os.running_from_arch()
+			if foreign_host:
+				pacman_conf()
+				keyring_init()
 			info('Fetching db...')
 			Pacman.run('-Sy', peek_output=True)
-			if rc := _bootstrap():
+			# python deps come from the host package manager on a foreign host
+			if not foreign_host and (rc := _bootstrap()):
 				return rc
 		except Exception as e:
 			error('Failed to prepare app.')
