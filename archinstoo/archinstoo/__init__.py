@@ -158,15 +158,16 @@ def _prepare() -> int:
 		# note indent fully offlines installs should be possible
 		# instead of importing full handler use sys.argv directly
 		try:
-			# non-Arch hosts ship pacman but none of its config/keyring; build
+			# a foreign host ships pacman but none of its config/keyring; build
 			# it first (conf before keyring: pacman-key reads pacman.conf).
-			if Os.running_from_host() and not Os.running_from_arch():
+			foreign_host = Os.running_from_host() and not Os.running_from_arch()
+			if foreign_host:
 				pacman_conf()
 				keyring_init()
 			info('Fetching db...')
 			Pacman.run('-Sy', peek_output=True)
-			# python deps come from the host package manager off Arch
-			if (Os.running_from_arch() or not Os.running_from_host()) and (rc := _bootstrap()):
+			# python deps come from the host package manager on a foreign host
+			if not foreign_host and (rc := _bootstrap()):
 				return rc
 		except Exception as e:
 			error('Failed to prepare app.')
