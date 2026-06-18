@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-r"""grimoire: Fetch, inspect, search, list, update, and install, remove.
+r"""grimoire: repos, fetch, inspect, build, search, list, update, install/remove/clean.
 
 It natively speaks all things `makepkg`. And works outside of AUR using `git`.
 I.e: Private software colletions, Public organizations repositories, ...
+
 What is defined as VUR (Virtual User Repo).
 Or official Arch Linux packages from their Gitlab.
 
@@ -20,6 +21,8 @@ Official repository dependencies are installed with pacman when they are missing
 
                 grimoire 0.1.3
 
+It was fully reworked following AUR malware SCA (13/06/26) to support any source...
+
 ASCII: Donovan Baker
 ## /* SPDX-FileCopyrightText: 2026
 # (O) Marcus A.
@@ -31,6 +34,7 @@ Requirements: git, base-devel, pacman, and sudo/doas/run0/su.
 """
 
 import argparse
+import contextlib
 import hashlib
 import heapq
 import json
@@ -46,55 +50,137 @@ import urllib.parse
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final, Literal, NamedTuple, overload
 
 if TYPE_CHECKING:
 	from collections.abc import Callable, Iterable, Iterator, Sequence
 
-__appname__ = "grimoire"
-__version__ = "dev"
+
+__appname__: Final = "grimoire"
+__version__: Final = "dev"
 
 
-RESET = "\033[0m"
-BOLD = "\033[1m"
-GREEN = "\033[32m"
-CYAN = "\033[36m"
-YELLOW = "\033[33m"
-RED = "\033[31m"
-DIM = "\033[2m"
-USE_COLOR = False
+DEBUG: Final = os.environ.get("DEBUG", "").lower() in ("1", "true", "yes")
 
 
-GITHUB_RAW_BASE = "https://raw.githubusercontent.com/archlinux/aur"
-_VCS_SUFFIXES = ("-git", "-vcs", "-svn", "-hg", "-bzr", "-darcs", "-cvs")
-_COMMON_AUR_SUFFIXES = ("-bin",)
-
-USE_SSH = False
-SHALLOW_CLONE = False
-DEBUG = os.environ.get("DEBUG", "").lower() in ("1", "true", "yes")
-# Set by main() to dest_root/.searchcache (same convention as the .tmp
-# fallback: dest_root works even in chroots where HOME/XDG may not).
-CACHE_DIR: Path | None = None
-CACHE_TTL = 3600
+RESET: 	Final = "\033[0m"
+BOLD: 	Final = "\033[1m"
+GREEN: 	Final = "\033[32m"
+CYAN: 	Final = "\033[36m"
+YELLOW: Final = "\033[33m"
+RED: 	Final = "\033[31m"
+DIM: 	Final = "\033[2m"
 
 
-_INSTALLED_CACHE: set[str] | None = None
-_ELEV_TOOLS = ("sudo", "doas", "run0", "su")  # order matters here
-_GLOBAL_VALUE_OPTIONS = {"--dest-root"}
+GITHUB_RAW_BASE: 	Final = "https://raw.githubusercontent.com/archlinux/aur"
+_VCS_SUFFIXES: 		Final = ("-git", "-vcs", "-svn", "-hg", "-bzr", "-darcs", "-cvs")
 
 
-_PACMAN_AUTH_RE = re.compile(r'^\s*PACMAN_AUTH\s*=\s*\(?\s*"?([^"\s)]+)"?')
-_PACMAN_DBPATH_RE = re.compile(r"^\s*DBPath\s*=\s*(\S+)")
-_DEP_SPLIT_RE = re.compile(r"[<>~=]+")
-_DESC_FIELD_RE = re.compile(r"%(\w+)%\n([^\n]*)")
-# Third-party repos (cachyos, ...) have no recipe, exclude from the templated search.
-_OFFICIAL_REPO_RE = re.compile(
-	r"^(core|extra|multilib)(-testing|-staging)?$|^(gnome|kde)-unstable$"
-)
-_HOSTISH_RE = re.compile(r"[a-z0-9-]+(\.[a-z0-9-]+)+$", re.IGNORECASE)
+# GPG owner-trust levels accepted by --min-trust (git's gpg.minTrustLevel).
+type TrustLevel = 	Literal["marginal", "fully", "ultimate"]
+# What `inspect` can render.
+type InspectTarget = 	Literal["info", "PKGBUILD", "SRCINFO"]
 
 
-_SRCINFO_KEYS = {
+_ELEV_TOOLS: 		Final = ("sudo", "doas", "run0", "su")  # order matters here
+_GLOBAL_VALUE_OPTIONS: 	Final = {"--dest-root"}
+
+
+_CONF_NAME: Final = "repos.ini"
+
+
+@dataclass
+class _RuntimeConfig:
+	# Process-wide runtime state, set once from argv in main() (replaces module globals
+	# so there's no `global` indirection). cache_dir is dest_root/.searchcache (works in
+	# chroots where HOME/XDG may not); inst_cache is the lazy, invalidatable pacman set.
+	use_color: 	bool = False
+	use_ssh: 	bool = False
+	use_shallow: 	bool = False
+	cache_dir: 	Path | None = None
+	cache_ttl: 	int = 3600
+	inst_cache: 	set[str] | None = None
+
+
+CONFIG = _RuntimeConfig()
+
+
+@dataclass(frozen=True, slots=True)
+class DependencySet:
+	depends:	set[str]
+	makedepends: 	set[str]
+	checkdepends: 	set[str]
+	optdepends: 	set[str]
+
+	@property
+	def all_build_deps(self) -> set[str]:
+		return self.depends | self.makedepends
+
+
+@dataclass(frozen=True, slots=True)
+class SearchResult:
+	name: 		str
+	version: 	str | None
+	description: 	str | None
+	installed: 	bool
+	score: 		int
+	# Display label for the source repo (alias/URL); None means the AUR.
+	source: 	str | None = None
+	# True when sourced from a local pacman sync DB (label as `db`, not a protocol).
+	from_db: 	bool = False
+	# Conf alias this result can be installed from (None = the AUR/default backend).
+	# Distinct from `source`: sync-DB results display their pacman repo but install
+	# via their alias (e.g. display "core", install via "ARCH").
+	repo_alias: 	str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateCandidate:
+	name: 			str
+	installed_version: 	str | None
+	target_version: 	str | None
+	remote_head: 		str | None
+	local_head: 		str | None
+
+
+class RepoRef(NamedTuple):
+	# One git mirror as (url, ref, subdir): ref is a branch/tag/commit, subdir selects
+	# a package dir inside a monorepo. The unit of a fallback/candidate chain.
+	url: 	str
+	branch: str | None = None
+	subdir: str | None = None
+
+
+class UpdateProbe(NamedTuple):
+	# What an update check learned about a package's upstream:
+	# (remote_version, remote_head, local_head). All None means "not found".
+	remote_version: str | None = None
+	remote_head: 	str | None = None
+	local_head: 	str | None = None
+
+
+class UpdateSpec(NamedTuple):
+	# One entry of the update source chain as (alias, url): a repos.ini section name
+	# or an explicit --repo-url. (None, None) is the built-in AUR backend.
+	alias: 	str | None = None
+	url: 	str | None = None
+
+
+class CloneSource(NamedTuple):
+	# A resolved git source for one package: primary URL (None = built-in AUR
+	# backend), ref, subdir, and ordered RepoRef fallbacks. Tuple-shaped so it still
+	# unpacks as (repo_url, branch, subdir, repo_fallbacks).
+	repo_url: 	str | None = None
+	branch: 	str | None = None
+	subdir: 	str | None = None
+	repo_fallbacks: list[RepoRef] | None = None
+
+
+class GrimoireErr(RuntimeError):
+	"""Wraps fatal errors coming from the helper."""
+
+
+_SRCINFO_KEYS: Final = {
 	"depends",
 	"makedepends",
 	"checkdepends",
@@ -105,7 +191,7 @@ _SRCINFO_KEYS = {
 }
 
 
-_GLOBAL_FLAG_OPTIONS = {
+_GLOBAL_FLAG_OPTIONS: Final = {
 	"--refresh",
 	"--no-color",
 	"--use-ssh",
@@ -120,7 +206,7 @@ _GLOBAL_FLAG_OPTIONS = {
 # strictly needed is a host whose user differs (aur.archlinux.org -> "aur"). The listed
 # hosts are also mirrored as child-process insteadOf rules (which the git@-default cannot
 # cover), so the common forges stay enumerated here.
-SSH_REWRITE_HOSTS = {
+SSH_REWRITE_HOSTS: Final = {
 	"github.com": "git",
 	"gitlab.com": "git",
 	"codeberg.org": "git",
@@ -128,11 +214,7 @@ SSH_REWRITE_HOSTS = {
 	"aur.archlinux.org": "aur",
 }
 
-
-_CONF_NAME = "repos.conf"
-# Written on first use when no repos.conf exists. Default source is [ARCH] (build
-# official packages from source); the AUR is opt-in (commented out).
-_DEFAULT_REPOS_CONF = """\
+_DEFAULT_CONF: Final = """\
 # Example grimoire config. Manage with `grimoire repo`.
 # Top takes precedence. Spaces do not matter.
 # Template support: {pkg} = package name, {pkgbase} = its pkgbase
@@ -142,54 +224,48 @@ _DEFAULT_REPOS_CONF = """\
 
 # Default: Arch's official packages.
 [ARCH]
-  https://gitlab.archlinux.org/archlinux/packaging/packages/{pkgbase}.git
+https://gitlab.archlinux.org/archlinux/packaging/packages/{pkgbase}.git
 
 # Off by default (AUR is opt-in).
 [AUR]
-  false
+false
 """
 
+_PACMAN_AUTH_RE: 	Final = re.compile(r'^\s*PACMAN_AUTH\s*=\s*\(?\s*"?([^"\s)]+)"?')
+_PACMAN_DBPATH_RE: 	Final = re.compile(r"^\s*DBPath\s*=\s*(\S+)")
+_DEP_SPLIT_RE: 		Final = re.compile(r"[<>~=]+")
+_DESC_FIELD_RE: 	Final = re.compile(r"%(\w+)%\n([^\n]*)")
 
-@dataclass(frozen=True)
-class DependencySet:
-	depends: set[str]
-	makedepends: set[str]
-	checkdepends: set[str]
-	optdepends: set[str]
-
-	@property
-	def all_build_deps(self) -> set[str]:
-		return self.depends | self.makedepends
-
-
-@dataclass(frozen=True)
-class SearchResult:
-	name: str
-	version: str | None
-	description: str | None
-	installed: bool
-	score: int
-	# Display label for the source repo (alias/URL); None means the AUR.
-	source: str | None = None
-	# True when sourced from a local pacman sync DB (label as `db`, not a protocol).
-	from_db: bool = False
-	# Conf alias this result can be installed from (None = the AUR/default backend).
-	# Distinct from `source`: sync-DB results display their pacman repo but install
-	# via their alias (e.g. display "core", install via "ARCH").
-	repo_alias: str | None = None
+# Third-party repos (cachyos, ...) have no recipe, exclude from the templated search.
+_OFFICIAL_REPO_RE: Final = re.compile(
+	r"^(core|extra|multilib)(-testing|-staging)?$|^(gnome|kde)-unstable$"
+)
+_HOSTISH_RE: Final = re.compile(r"[a-z0-9-]+(\.[a-z0-9-]+)+$", re.IGNORECASE)
 
 
-@dataclass(frozen=True)
-class UpdateCandidate:
-	name: str
-	installed_version: str | None
-	target_version: str | None
-	remote_head: str | None
-	local_head: str | None
+def style(text: str, *codes: str) -> str:
+	if not CONFIG.use_color or not codes:
+		return text
+	return "".join(codes) + text + RESET
 
 
-class AurGitError(RuntimeError):
-	"""Wraps fatal errors coming from the helper."""
+def prompt_confirm(message: str) -> bool:
+	if not sys.stdin.isatty():
+		return False
+	try:
+		response = input(message)
+	except EOFError:
+		return False
+	return response.strip().lower() in {"y", "yes"}
+
+
+def is_debug_package(name: str) -> bool:
+	return name.endswith("-debug")
+
+
+def is_vcs_package(name: str) -> bool:
+	# str.endswith takes a tuple of suffixes directly -- no per-suffix loop needed.
+	return name.endswith(_VCS_SUFFIXES)
 
 
 def get_aur_remote() -> str:
@@ -201,19 +277,19 @@ def _aur_mirror_lsremote_cmd(*patterns: str) -> list[str]:
 	return ["git", "ls-remote", "--heads", get_aur_remote(), *patterns]
 
 
-def _lsremote_first_sha(output: object) -> str | None:
-	for line in str(output).splitlines():
+def _lsremote_first_sha(output: str) -> str | None:
+	for line in output.splitlines():
 		parts = line.split()
 		if parts:
 			return parts[0]
 	return None
 
 
-def _lsremote_names(output: object) -> list[str]:
+def _lsremote_names(output: str) -> list[str]:
 	# Short ref names from `git ls-remote` lines (`<sha>\t<ref>` -> last ref segment),
 	# skipping lines that aren't exactly sha+ref.
 	names: list[str] = []
-	for line in str(output).splitlines():
+	for line in output.splitlines():
 		parts = line.split()
 		if len(parts) == 2:
 			names.append(parts[1].split("/")[-1])
@@ -244,56 +320,126 @@ def _pacman_db_path() -> Path:
 	return Path("/var/lib/pacman")
 
 
+def _iter_db_descs(db: Path, name_prefix: str | None) -> Iterator[dict[str, str]]:
+	# Desc-field dict for every package in one sync-DB tarball; a corrupt/unreadable DB
+	# yields nothing. name_prefix pre-filters members by dir (fast single-package path);
+	# `r:*` autodetects compression.
+	import tarfile
+
+	with (
+		contextlib.suppress(OSError, tarfile.TarError),
+		tarfile.open(db, "r:*") as tar,
+	):
+		for member in tar:
+			name = member.name
+			if not name.endswith("/desc"):
+				continue
+			if name_prefix is not None and not name.startswith(name_prefix):
+				continue
+			extracted = tar.extractfile(member)
+			if extracted is None:
+				continue
+			raw = extracted.read().decode("utf-8", "replace")
+			yield dict(_DESC_FIELD_RE.findall(raw))
+
+
 def _iter_sync_db_desc(
 	name_prefix: str | None = None,
 ) -> Iterator[tuple[str, dict[str, str]]]:
-	# Walk the pacman sync DBs yielding (repo, desc-fields) for every package `desc`
-	# entry. DBs may be gzip (Arch) or zstd (CachyOS); `r:*` autodetects. name_prefix
-	# skips members whose dir doesn't start with it before the parse (fast path for a
-	# single-package lookup).
-	import tarfile
-
+	# (repo, desc-fields) for every package in the OFFICIAL Arch sync DBs. Third-party
+	# repos (cachyos, a custom myrepo) have no Arch GitLab PKGBUILD, so they're skipped.
 	sync = _pacman_db_path() / "sync"
 	try:
 		dbs = sorted(sync.glob("*.db"))
 	except OSError:
 		return
 	for db in dbs:
-		repo = db.stem
-		if not _OFFICIAL_REPO_RE.match(repo):
+		if not _OFFICIAL_REPO_RE.match(db.stem):
+			continue
+		for fields in _iter_db_descs(db, name_prefix):
+			yield db.stem, fields
+
+
+def _local_db_descs(
+	name_prefix: str | None = None,
+) -> Iterator[tuple[str, Path]]:
+	# (pkgname, entry-dir) for each package in pacman's local db. Reading the dir
+	# directly avoids a ~50ms subprocess. Entries are name-version-release dirs;
+	# ALPM_DB_VERSION and other non-package files lack the two trailing -ver-rel parts.
+	# name_prefix pre-filters by dir name (single-package lookups stay cheap).
+	try:
+		entries = (_pacman_db_path() / "local").iterdir()
+	except OSError:
+		return
+	for entry in entries:
+		name = entry.name
+		if name_prefix is not None and not name.startswith(name_prefix):
+			continue
+		parts = name.rsplit("-", 2)
+		if len(parts) == 3:
+			yield parts[0], entry
+
+
+def _local_db_pkgbase(package: str) -> str | None:
+	# pkgname -> pkgbase from the LOCAL pacman db, covering foreign/AUR installs the sync
+	# DBs don't list (e.g. fontobene-qt-qt6 -> fontobene-qt). desc carries %BASE% only
+	# when it differs from the name. None when the package isn't installed locally.
+	for name, entry in _local_db_descs(f"{package}-"):
+		if name != package:
 			continue
 		try:
-			with tarfile.open(db, "r:*") as tar:
-				for member in tar:
-					name = member.name
-					if not name.endswith("/desc"):
-						continue
-					if name_prefix is not None and not name.startswith(name_prefix):
-						continue
-					extracted = tar.extractfile(member)
-					if extracted is None:
-						continue
-					yield (
-						repo,
-						dict(
-							_DESC_FIELD_RE.findall(
-								extracted.read().decode("utf-8", "replace")
-							)
-						),
-					)
-		except OSError, tarfile.TarError:
-			continue
+			raw = (entry / "desc").read_text()
+		except OSError:
+			return None
+		return dict(_DESC_FIELD_RE.findall(raw)).get("BASE") or package
+	return None
+
+
+def _db_pkgbase(package: str) -> str | None:
+	# pkgname -> pkgbase from the pacman DBs (each `desc` carries %BASE%): sync DBs for
+	# official split packages (amd-ucode -> linux-firmware), then the local db for
+	# foreign/AUR installs the sync DBs don't list. None when neither knows it.
+	for _repo, fields in _iter_sync_db_desc(f"{package}-"):
+		if fields.get("NAME") == package:
+			return fields.get("BASE") or package
+	return _local_db_pkgbase(package)
+
+
+def _aur_rpc_pkgbase(package: str) -> str | None:
+	# pkgname -> pkgbase from the AUR RPC: the only source for a split pkg that is neither
+	# installed nor in the sync DBs (a fresh `install`). Best-effort -- any network/parse
+	# failure or a miss returns None, so resolution stays offline-tolerant.
+	from urllib.request import urlopen
+
+	query = urllib.parse.urlencode({"arg[]": package})
+	url = f"https://aur.archlinux.org/rpc/v5/info?{query}"
+	if DEBUG:
+		print(f"+ GET {url}", file=sys.stderr)
+	try:
+		with urlopen(url, timeout=10) as response:  # noqa: S310 - hardcoded https AUR endpoint
+			data = json.loads(response.read().decode())
+	except (OSError, ValueError):
+		return None
+	for entry in data.get("results", []):
+		if entry.get("Name") == package:
+			base = entry.get("PackageBase")
+			return base if isinstance(base, str) and base else None
+	return None
 
 
 @cache
 def _resolve_pkgbase(package: str) -> str:
-	# pkgname -> pkgbase via the pacman sync DBs (each `desc` carries %BASE%). Lets a
-	# pkgbase-keyed forge (Arch GitLab, the AUR) be reached by package name even for
-	# split packages (amd-ucode -> linux-firmware). Falls back to the name if unknown.
-	for _repo, fields in _iter_sync_db_desc(f"{package}-"):
-		if fields.get("NAME") == package:
-			return fields.get("BASE") or package
-	return package
+	# DB-only pkgbase (no network), for the Arch GitLab {pkgbase} template -- a gitlab
+	# package's base comes from the sync DBs, never the AUR. Falls back to the name.
+	return _db_pkgbase(package) or package
+
+
+@cache
+def _aur_pkgbase(package: str) -> str:
+	# Branch name on the AUR git mirror (branch-per-pkgbase): DBs first, then the AUR RPC
+	# for an uninstalled split pkg. Used only at the mirror-access sites. Falls back to
+	# the name (a non-split pkg, or an offline RPC miss -- the clone then reports absence).
+	return _db_pkgbase(package) or _aur_rpc_pkgbase(package) or package
 
 
 @cache
@@ -309,6 +455,35 @@ def _sync_db_packages() -> tuple[tuple[str, str | None, str | None, str], ...]:
 		if name:
 			out.append((name, fields.get("VERSION"), fields.get("DESC"), repo))
 	return tuple(out)
+
+
+def _sync_db_signature() -> str | None:
+	# A cache key for the sync DBs' current state: name+mtime+size per *.db. Changes on
+	# `pacman -Sy`, so a list cached under it auto-invalidates when the DBs are refreshed.
+	sync = _pacman_db_path() / "sync"
+	try:
+		dbs = sorted(sync.glob("*.db"))
+	except OSError:
+		return None
+	parts: list[str] = []
+	for db in dbs:
+		try:
+			st = db.stat()
+		except OSError:
+			continue
+		parts.append(f"{db.name}:{int(st.st_mtime)}:{st.st_size}")
+	return "|".join(parts) or None
+
+
+def _sync_db_packages_cached() -> list[tuple[str, str | None, str | None, str]]:
+	# search re-parses every sync-DB tarball otherwise (~0.5s of tarfile/gzip work on a
+	# stock install); cache the enumerated list to disk so it survives across invocations,
+	# keyed on _sync_db_signature so `pacman -Sy` (or --refresh, via cache_ttl=0) expires it.
+	sig = _sync_db_signature()
+	if sig is None:
+		return list(_sync_db_packages())
+	key = "syncdb/" + hashlib.sha256(sig.encode()).hexdigest()[:16] + ".json"
+	return cached_json(key, CONFIG.cache_ttl, lambda: list(_sync_db_packages())) or []
 
 
 def _read_pacman_auth() -> str | None:
@@ -332,7 +507,7 @@ def _get_elev() -> str:
 	for tool in _ELEV_TOOLS:
 		if shutil.which(tool):
 			return tool
-	raise AurGitError("No privilege elevation tool found.")
+	raise GrimoireErr("No privilege elevation tool found.")
 
 
 def _elevate(cmd: list[str]) -> list[str]:
@@ -360,7 +535,7 @@ def _maybe_ssh_rewrite(url: str) -> str:
 
 
 def _remote_for(url: str) -> str:
-	return _maybe_ssh_rewrite(url) if USE_SSH else url
+	return _maybe_ssh_rewrite(url) if CONFIG.use_ssh else url
 
 
 # Mirror SSH_REWRITE_HOSTS as git insteadOf rules via GIT_CONFIG_* env vars
@@ -396,59 +571,96 @@ def _ensure_scheme(url: str) -> str:
 	return u
 
 
-def parse_repo_url(url: str) -> tuple[str, str | None, str | None]:
+def _split_forge_path(
+	parts: 		list[str],
+	markers: 	Sequence[str],
+	*,
+	ref_offset: 	int,
+	gate: 		Sequence[str] | None = None,
+) -> tuple[list[str], str, list[str]] | None:
+	# Find the first marker (idx >= 2 so <owner>/<repo> precede it), then read the ref at
+	# parts[idx+ref_offset] and the remainder as the subpath. ref_offset is 1 when the ref
+	# follows the marker directly (GitHub/Bitbucket), 2 when a {branch,tag,commit}-class
+	# segment sits between (GitLab/Gitea); gate, if set, must match that middle segment.
+	for marker in markers:
+		if marker not in parts:
+			continue
+		i = parts.index(marker)
+		if i < 2 or len(parts) <= i + ref_offset:
+			continue
+		if gate is not None and parts[i + 1] not in gate:
+			continue
+		return parts[:i], parts[i + ref_offset], parts[i + ref_offset + 1 :]
+	return None
+
+
+def parse_repo_url(url: str) -> RepoRef:
 	# Expand a forge directory/file URL to (clone_url, ref, subdir) so --repo-url can
 	# target a subdir. ref is taken as one path segment, so slash-branches need an
 	# explicit --rev/--subdir. Non-forge URLs fall through unchanged.
 	url = _ensure_scheme(url)
 	parsed = urllib.parse.urlparse(url)
 	if parsed.scheme not in ("http", "https"):
-		return url, None, None
+		return RepoRef(url, None, None)
 	parts = [p for p in parsed.path.split("/") if p]
 
-	def _rebuild(
-		repo_parts: list[str], ref: str, sub: list[str]
-	) -> tuple[str, str, str | None]:
+	def _rebuild(repo_parts: list[str], ref: str, sub: list[str]) -> RepoRef:
 		base = f"{parsed.scheme}://{parsed.netloc}/" + "/".join(repo_parts)
 		if not base.endswith(".git"):
 			base += ".git"
 		# A blob link usually points at the PKGBUILD itself; build in its dir.
 		if sub and sub[-1] in ("PKGBUILD", ".SRCINFO"):
 			sub = sub[:-1]
-		return base, ref, ("/".join(sub) or None)
+		return RepoRef(base, ref, ("/".join(sub) or None))
 
 	# GitHub: /<owner>/<repo>/{tree,blob,raw}/<ref>/<subpath...>
 	if parsed.netloc == "github.com":
-		for marker in ("tree", "blob", "raw"):
-			if marker in parts:
-				i = parts.index(marker)
-				if i >= 2 and len(parts) > i + 1:
-					return _rebuild(parts[:i], parts[i + 1], parts[i + 2 :])
+		hit = _split_forge_path(parts, ("tree", "blob", "raw"), ref_offset=1)
+		if hit:
+			return _rebuild(*hit)
 	# GitLab: /<owner>/<repo>/-/{tree,blob,raw}/<ref>/<subpath...>
-	if "-" in parts:
-		d = parts.index("-")
-		if d >= 2 and len(parts) > d + 2 and parts[d + 1] in ("tree", "blob", "raw"):
-			return _rebuild(parts[:d], parts[d + 2], parts[d + 3 :])
+	hit = _split_forge_path(parts, ("-",), ref_offset=2, gate=("tree", "blob", "raw"))
+	if hit:
+		return _rebuild(*hit)
 	# Bitbucket Cloud: /<workspace>/<repo>/{src,raw}/<ref>/<subpath...> (ref directly
 	# after the marker, no branch/tag/commit segment -- distinct from Gitea below).
 	if parsed.netloc == "bitbucket.org":
-		for marker in ("src", "raw"):
-			if marker in parts:
-				i = parts.index(marker)
-				if i >= 2 and len(parts) > i + 1:
-					return _rebuild(parts[:i], parts[i + 1], parts[i + 2 :])
+		hit = _split_forge_path(parts, ("src", "raw"), ref_offset=1)
+		if hit:
+			return _rebuild(*hit)
 	# Gitea/Codeberg/Forgejo: /<owner>/<repo>/{src,raw}/{branch,tag,commit}/<ref>/<subpath...>
-	for marker in ("src", "raw"):
-		if marker in parts:
-			i = parts.index(marker)
-			if (
-				i >= 2
-				and len(parts) > i + 2
-				and parts[i + 1] in ("branch", "tag", "commit")
-			):
-				return _rebuild(parts[:i], parts[i + 2], parts[i + 3 :])
+	hit = _split_forge_path(
+		parts, ("src", "raw"), ref_offset=2, gate=("branch", "tag", "commit")
+	)
+	if hit:
+		return _rebuild(*hit)
 
-	return url, None, None
+	return RepoRef(url, None, None)
+
+
+def _forge_raw_url(clone_url: str, ref: str, path: str) -> str | None:
+	# Raw-file URL for an HTTP existence probe -- the inverse of parse_repo_url's tree/raw
+	# parsing, for the forge hosts we recognise. None for anything else (self-hosted, unknown
+	# host), so the caller stays correct by falling back to the git tree probe.
+	parsed = urllib.parse.urlparse(clone_url)
+	if parsed.scheme not in ("http", "https") or not parsed.netloc:
+		return None
+	repo = parsed.path.lstrip("/").rstrip("/").removesuffix(".git")
+	if not repo:
+		return None
+	host = parsed.netloc
+	if host == "github.com":
+		# raw.githubusercontent.com/<repo>/<ref>/<path>: ref slot takes a branch/tag/sha.
+		return f"https://raw.githubusercontent.com/{repo}/{ref}/{path}"
+	if "gitlab" in host:
+		# GitLab /-/raw/<ref>/ resolves any ref; ?ref_type only disambiguates a branch/tag
+		# name clash, so omitting it keeps the existence check ref-type-agnostic.
+		return f"https://{host}/{repo}/-/raw/{ref}/{path}"
+	if host in ("bitbucket.org", "codeberg.org", "gitea.com"):
+		# Bitbucket + Gitea/Forgejo share /raw/<ref>/; urlopen follows Gitea's 303 to the
+		# canonical /raw/{branch,tag,commit}/ form, so this too stays ref-type-agnostic.
+		return f"https://{host}/{repo}/raw/{ref}/{path}"
+	return None
 
 
 def _repo_registry_path() -> Path:
@@ -456,17 +668,15 @@ def _repo_registry_path() -> Path:
 
 
 def _ensure_repos_conf() -> None:
-	# Seed a default repos.conf the first time a source is needed, so the default is
+	# Seed a default repos.ini the first time a source is needed, so the default is
 	# the official Arch repos (build from source) rather than the AUR. Best-effort:
 	# if the write fails, resolution falls back to the built-in AUR.
 	path = _repo_registry_path()
 	if path.exists():
 		return
-	try:
+	with contextlib.suppress(OSError):
 		path.parent.mkdir(parents=True, exist_ok=True)
-		path.write_text(_DEFAULT_REPOS_CONF)
-	except OSError:
-		pass
+		path.write_text(_DEFAULT_CONF)
 
 
 def load_repo_registry() -> dict[str, list[str]]:
@@ -507,7 +717,7 @@ def add_repo_alias(name: str, url: str) -> None:
 	# Edit the file textually so comments and commented-out sections survive.
 	if name == "AUR":
 		print(
-			"[AUR] is a reserved toggle (true/false); edit repos.conf to enable it.",
+			"[AUR] is a reserved toggle (true/false); edit repos.ini to enable it.",
 			file=sys.stderr,
 		)
 		return
@@ -523,11 +733,11 @@ def add_repo_alias(name: str, url: str) -> None:
 		if any(lines[k].strip() == url for k in range(idx + 1, end)):
 			print(f"'{url}' already registered under [{name}]", file=sys.stderr)
 			return
-		lines.insert(end, f"  {url}")
+		lines.insert(end, f"{url}")
 	else:
 		if lines and lines[-1].strip():
 			lines.append("")
-		lines += [header, f"  {url}"]
+		lines += [header, f"{url}"]
 	path.parent.mkdir(parents=True, exist_ok=True)
 	path.write_text("\n".join(lines) + "\n")
 	print(f"Added '{url}' to [{name}] in {path}")
@@ -552,7 +762,7 @@ def remove_repo_alias(name: str) -> None:
 def resolve_repo_alias(name: str) -> list[str]:
 	urls = load_repo_registry().get(name)
 	if not urls:
-		raise AurGitError(
+		raise GrimoireErr(
 			f"Unknown repo alias '{name}'. Add one with --repo-add URL {name}"
 		)
 	return urls
@@ -569,45 +779,95 @@ def _aur_enabled() -> bool:
 	return vals[0].strip().lower() not in ("false", "no", "off", "0", "disabled")
 
 
-def _default_repo() -> str | None:
-	# The source used when no --repo/--repo-url is given: the first section in
-	# repos.conf (priority order, top wins), or None for the built-in AUR when there
-	# is no config. A disabled [AUR] is skipped so it can't become the default.
+def _resolve_repo_for_package(
+	package: 	str | None,
+	*,
+	alias: 		str | None,
+	repo_url: 	str | None,
+	branch: 	str | None,
+	subdir: 	str | None,
+) -> CloneSource:
+	# --repo NAME expands to an ordered mirror list; --repo-url is a single URL.
+	# (argparse keeps them mutually exclusive.) First URL is primary, rest fallbacks.
+	# Keyed on a package name so update/search can resolve per package in a loop.
+	if alias == "AUR":
+		# Reserved: the built-in AUR git backend (branch-per-package), not a URL alias.
+		# An explicit --repo AUR is a deliberate override -- it works regardless of the
+		# [AUR] toggle (which only governs the default chain / search / list).
+		return CloneSource(None, branch, subdir, [])
+	if alias:
+		urls = resolve_repo_alias(alias)
+	elif repo_url:
+		urls = [repo_url]
+	else:
+		return CloneSource(None, branch, subdir, [])
+
+	def _sub(value: str | None) -> str | None:
+		# Substitute `{pkg}`/`{pkgbase}` so one alias can template per package. In the URL
+		# path it selects a repo-per-package forge (e.g. the Arch GitLab); in the ref it
+		# selects a branch-per-package layout over ANY transport (e.g. `--rev {pkg}` on a
+		# bare SSH URL, where the forge `tree/{pkg}` shorthand isn't available). `{pkgbase}`
+		# resolves to the pkgbase first, so split packages (amd-ucode -> linux-firmware)
+		# hit the right repo/branch.
+		if not (value and package):
+			return value
+		if "{pkgbase}" in value:
+			value = value.replace("{pkgbase}", _resolve_pkgbase(package))
+		if "{pkg}" in value:
+			value = value.replace("{pkg}", package)
+		return value
+
+	def _resolve(raw: str) -> RepoRef:
+		clone_url, parsed_branch, parsed_subdir = parse_repo_url(_sub(raw) or raw)
+		# Explicit flags (templated too) win over whatever the URL encoded.
+		return RepoRef(
+			clone_url, _sub(branch) or parsed_branch, _sub(subdir) or parsed_subdir
+		)
+
+	primary_url, primary_branch, primary_subdir = _resolve(urls[0])
+	fallbacks = [_resolve(raw) for raw in urls[1:]]
+	return CloneSource(primary_url, primary_branch, primary_subdir, fallbacks)
+
+
+def _resolve_sources(
+	args: 		argparse.Namespace,
+	package: 	str | None = None,
+) -> list[CloneSource]:
+	# Ordered source chain for a package op with no explicit --repo: every section in
+	# repos.ini, top to bottom (conf order == precedence). The first source that can
+	# clone a PKGBUILD wins; later ones are fallbacks. An explicit --repo/--repo-url
+	# collapses to a single source. A section named "AUR" (or no conf at all) is the
+	# built-in AUR backend, encoded as a None repo_url. `package` resolves {pkg} /
+	# {pkgbase} templates per package (multi-package install/fetch resolves in a loop).
+	alias = getattr(args, "repo", None)
+	repo_url = getattr(args, "repo_url", None)
+	branch = getattr(args, "rev", None)
+	subdir = getattr(args, "subdir", None)
+	if alias or repo_url:
+		return [
+			_resolve_repo_for_package(
+				package, alias=alias, repo_url=repo_url, branch=branch, subdir=subdir
+			)
+		]
+	sources: list[CloneSource] = []
 	for name in load_repo_registry():
-		if name == "AUR" and not _aur_enabled():
-			continue
-		return name
-	return None
+		if name == "AUR":
+			# Reserved toggle: include the built-in AUR backend only when enabled.
+			if _aur_enabled():
+				sources.append(CloneSource(None, branch, subdir, []))
+		else:
+			sources.append(
+				_resolve_repo_for_package(
+					package, alias=name, repo_url=None, branch=branch, subdir=subdir
+				)
+			)
+	return sources or [CloneSource(None, branch, subdir, [])]
 
 
-def style(text: str, *codes: str) -> str:
-	if not USE_COLOR or not codes:
-		return text
-	return "".join(codes) + text + RESET
-
-
-def prompt_confirm(message: str) -> bool:
-	if not sys.stdin.isatty():
-		return False
-	try:
-		response = input(message)
-	except EOFError:
-		return False
-	return response.strip().lower() in {"y", "yes"}
-
-
-def is_debug_package(name: str) -> bool:
-	return name.endswith("-debug")
-
-
-def is_vcs_package(name: str) -> bool:
-	return any(name.endswith(suffix) for suffix in _VCS_SUFFIXES)
-
-
-def cache_get(key: str, ttl: int) -> str | None:
-	if CACHE_DIR is None:
+def _cache_get(key: str, ttl: int) -> str | None:
+	if CONFIG.cache_dir is None:
 		return None
-	path = CACHE_DIR / key
+	path = CONFIG.cache_dir / key
 	try:
 		if time.time() - path.stat().st_mtime > ttl:
 			path.unlink(missing_ok=True)
@@ -618,52 +878,54 @@ def cache_get(key: str, ttl: int) -> str | None:
 
 
 def _atomic_write(path: Path, payload: str) -> None:
-	try:
+	with contextlib.suppress(OSError):
 		path.parent.mkdir(parents=True, exist_ok=True)
 		# pid-unique tmp so concurrent processes never interleave writes
 		tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
 		tmp.write_text(payload)
 		tmp.replace(path)
-	except OSError:
-		pass
 
 
-def cache_put(key: str, payload: str) -> None:
-	if CACHE_DIR is None:
+def _cache_put(key: str, payload: str) -> None:
+	if CONFIG.cache_dir is None:
 		return
-	_atomic_write(CACHE_DIR / key, payload)
+	_atomic_write(CONFIG.cache_dir / key, payload)
 
 
 def _completion_cache_path() -> Path | None:
-	if CACHE_DIR is None:
+	if CONFIG.cache_dir is None:
 		return None
 	# Conventional yay-style location: dest_root/completion.cache,
 	# sibling of .searchcache rather than inside it.
-	return CACHE_DIR.parent / "completion.cache"
+	return CONFIG.cache_dir.parent / "completion.cache"
 
 
-def cached_json(key: str, ttl: int, fetch: Callable[[], object]) -> object:
-	payload = cache_get(key, ttl)
+def cached_json[T](key: str, ttl: int, fetch: Callable[[], T]) -> T | None:
+	# The payload is JSON we wrote from a fetch() of type T, so a hit decodes straight back
+	# to T (tuples round-trip to lists -- structurally identical for the row access callers
+	# do). It's our own keyed, TTL'd cache, so the decoded value is trusted as-is.
+	payload = _cache_get(key, ttl)
 	if payload is not None:
+		decoded: T | None
 		try:
-			value = json.loads(payload)
+			decoded = json.loads(payload)
 		except json.JSONDecodeError:
-			value = None
-		if value is not None:
+			decoded = None
+		if decoded is not None:
 			if DEBUG:
 				print(f"+ cache hit {key}", file=sys.stderr)
-			return value
+			return decoded
 	value = fetch()
 	if value is not None:
-		cache_put(key, json.dumps(value))
+		_cache_put(key, json.dumps(value))
 	return value
 
 
 def clear_search_cache() -> None:
 	removed = False
-	if CACHE_DIR is not None and CACHE_DIR.exists():
-		shutil.rmtree(CACHE_DIR)
-		print(f"Removed search cache {CACHE_DIR}")
+	if CONFIG.cache_dir is not None and CONFIG.cache_dir.exists():
+		shutil.rmtree(CONFIG.cache_dir)
+		print(f"Removed search cache {CONFIG.cache_dir}")
 		removed = True
 	completion = _completion_cache_path()
 	if completion is not None and completion.exists():
@@ -672,6 +934,56 @@ def clear_search_cache() -> None:
 		removed = True
 	if not removed:
 		print("No search cache to remove")
+
+
+def clean_clones(dest_root: Path) -> None:
+	# Remove every cloned package build tree under dest-root, leaving the caches alone
+	# (those are files, or the .searchcache dir handled by clear_search_cache). Scratch
+	# dirs (.searchrepo) are clones-adjacent and go too; all are re-created on demand.
+	if not dest_root.exists():
+		print("No clones to remove")
+		return
+	removed = 0
+	for child in dest_root.iterdir():
+		if child == CONFIG.cache_dir or not child.is_dir():
+			continue
+		shutil.rmtree(child, ignore_errors=True)
+		removed += 1
+	print(f"Removed {removed} clone(s) from {dest_root}" if removed else "No clones to remove")
+
+
+def _remove_clone(package: str, dest_root: Path) -> None:
+	# Drop one package's clone dir, leaving any install untouched. inspect/fetch create
+	# clones too, so one can exist for a package that was never installed.
+	package_dir = dest_root / package
+	if package_dir.exists():
+		print(f"Removing clone {package_dir}")
+		shutil.rmtree(package_dir)
+		print(f"Removed clone for {style(package, GREEN)}")
+	else:
+		print(f"No clone found at {package_dir}")
+
+
+@overload
+def run_command(
+	cmd: Sequence[str],
+	*,
+	cwd: Path | None = ...,
+	capture: Literal[False] = ...,
+	check: bool = ...,
+	env: dict[str, str] | None = ...,
+) -> subprocess.CompletedProcess[str]: ...
+
+
+@overload
+def run_command(
+	cmd: Sequence[str],
+	*,
+	cwd: Path | None = ...,
+	capture: Literal[True],
+	check: bool = ...,
+	env: dict[str, str] | None = ...,
+) -> str: ...
 
 
 def run_command(
@@ -695,9 +1007,9 @@ def run_command(
 			env=env,
 		)
 	except FileNotFoundError as exc:  # e.g. git not installed
-		raise AurGitError(f"Required command not found: {cmd[0]}") from exc
+		raise GrimoireErr(f"Required command not found: {cmd[0]}") from exc
 	except subprocess.CalledProcessError as exc:
-		raise AurGitError(
+		raise GrimoireErr(
 			f"Command failed with exit code {exc.returncode}: {' '.join(cmd)}\n{exc.stderr or ''}"
 		) from exc
 
@@ -712,9 +1024,9 @@ def _resolve_build_dir(clone_root: Path, subdir: str | None) -> Path:
 	root = clone_root.resolve()
 	target = (clone_root / subdir).resolve()
 	if target != root and root not in target.parents:
-		raise AurGitError(f"Subdirectory '{subdir}' escapes clone root {clone_root}")
+		raise GrimoireErr(f"Subdirectory '{subdir}' escapes clone root {clone_root}")
 	if not target.is_dir():
-		raise AurGitError(f"Subdirectory '{subdir}' not found in clone at {clone_root}")
+		raise GrimoireErr(f"Subdirectory '{subdir}' not found in clone at {clone_root}")
 	return target
 
 
@@ -741,9 +1053,9 @@ def _tree_has(package_dir: Path, ref: str, path: str) -> bool:
 			["git", "-C", str(package_dir), "ls-tree", "--name-only", ref, path],
 			capture=True,
 		)
-	except AurGitError:
+	except GrimoireErr:
 		return False
-	return bool(str(out).strip())
+	return bool(out.strip())
 
 
 def _build_subpath(
@@ -767,35 +1079,87 @@ def _subdir_hint(package_dir: Path, ref: str, package: str) -> str | None:
 			["git", "-C", str(package_dir), "ls-tree", "-d", "--name-only", ref],
 			capture=True,
 		)
-	except AurGitError:
+	except GrimoireErr:
 		return None
-	for line in str(out).splitlines():
+	for line in out.splitlines():
 		top = line.strip()
 		if top and _tree_has(package_dir, ref, f"{top}/{package}/PKGBUILD"):
 			return top
 	return None
 
 
+def _http_status(url: str) -> int | None:
+	# Status of a HEAD request, or None on a network-level failure (offline, DNS, TLS).
+	from urllib.request import Request, urlopen
+
+	request = Request(url, method="HEAD")  # noqa: S310 - forge URL from user's source
+	try:
+		with urlopen(request, timeout=10) as response:  # noqa: S310 - forge URL from source
+			status: int = response.status
+			return status
+	except urllib.error.HTTPError as exc:
+		return exc.code
+	except urllib.error.URLError:
+		return None
+
+
+def _remote_pkgbuild_present(
+	url: str, ref: str | None, subdir: str | None, package: str
+) -> bool | None:
+	# Decide WITHOUT cloning whether `url` carries `package`, by HTTP-probing the forge raw
+	# URL of each place its PKGBUILD could live (mirrors _build_subpath's layout + a root
+	# solo). True = found, False = every candidate is a confirmed 404, None = can't tell
+	# (no ref, a host we don't map, or any non-404 result) -> fall back to the git probe.
+	if not ref:
+		return None
+	rels = (
+		[f"{subdir}/{package}/PKGBUILD", f"{subdir}/PKGBUILD", "PKGBUILD"]
+		if subdir
+		else [f"{package}/PKGBUILD", "PKGBUILD"]
+	)
+	for rel in rels:
+		raw = _forge_raw_url(url, ref, rel)
+		if raw is None:
+			return None
+		status = _http_status(raw)
+		if status is None or (status != 404 and not 200 <= status < 300):
+			return None
+		if 200 <= status < 300:
+			return True
+	return False
+
+
 def _clone_with_fallback(
-	package_dir: Path,
-	candidates: Sequence[tuple[str, str | None, str | None]],
-	package: str,
+	package_dir: 	Path,
+	candidates: 	Sequence[RepoRef],
+	package: 	str,
 ) -> Path:
 	# Try each (url, branch, subdir) mirror in order until one clones; the winning
 	# mirror's own subdir resolves the build dir. Used only for a fresh clone.
-	# Clone treeless (--filter=tree:0) + no-checkout so only commits arrive up front;
-	# `git ls-tree` then lazily fetches just the target package's subtree. A monorepo that
-	# lacks the package costs only that probe -- no full clone, no checkout -- and the miss
-	# is detected provider-agnostically (any git transport, no forge knowledge). git
-	# transparently falls back to a full clone when the server can't filter; a solo repo
-	# (PKGBUILD at the root) checks out whole.
+	# On a known forge with a known ref, an HTTP HEAD on the candidate PKGBUILD URLs skips
+	# the clone outright when they all 404 (_remote_pkgbuild_present). Otherwise clone
+	# treeless (--filter=tree:0) + no-checkout so only commits arrive up front; `git
+	# ls-tree` then lazily fetches just the target package's subtree, so a monorepo miss
+	# costs only that probe -- detected over any git transport, no forge knowledge needed.
+	# git falls back to a full clone when the server can't filter; a solo repo checks whole.
 	errors: list[str] = []
 	for index, (url, branch, subdir) in enumerate(candidates):
+		if _remote_pkgbuild_present(url, branch, subdir, package) is False:
+			# A known forge confirmed (over HTTP) that every candidate PKGBUILD path is a
+			# 404: skip the clone entirely. The git tree probe below reaches the same
+			# verdict, but only after fetching the repo.
+			errors.append(f"{url}: no PKGBUILD for '{package}' (404)")
+			if index + 1 < len(candidates):
+				print(
+					style(f"mirror lacks '{package}' ({url}); trying next...", YELLOW),
+					file=sys.stderr,
+				)
+			continue
 		remote_url = _remote_for(url)
 		if package_dir.exists():
 			shutil.rmtree(package_dir)
 		clone_cmd = ["git", "clone", "--no-checkout", "--filter=tree:0"]
-		if SHALLOW_CLONE:
+		if CONFIG.use_shallow:
 			clone_cmd += ["--depth=1"]
 		clone_cmd += [remote_url, str(package_dir)]
 		try:
@@ -813,14 +1177,14 @@ def _clone_with_fallback(
 				msg = f"no PKGBUILD for '{package}'"
 				if hint and hint != subdir:
 					msg += f" (found under {hint}/ -- pass --subdir {hint})"
-				raise AurGitError(msg)
+				raise GrimoireErr(msg)
 			if want:
 				run_command(
 					["git", "-C", str(package_dir), "sparse-checkout", "set", want]
 				)
 			_reset_git_worktree(package_dir, (ref,))
 			return _resolve_package_dir(package_dir, subdir, package)
-		except AurGitError as exc:
+		except GrimoireErr as exc:
 			errors.append(f"{url}: {exc}")
 			if index + 1 < len(candidates):
 				print(
@@ -829,7 +1193,7 @@ def _clone_with_fallback(
 				)
 	if package_dir.exists():
 		shutil.rmtree(package_dir)
-	raise AurGitError("All mirrors failed:\n  " + "\n  ".join(errors))
+	raise GrimoireErr("All mirrors failed:\n  " + "\n  ".join(errors))
 
 
 def _normalize_git_url(url: str) -> str:
@@ -854,9 +1218,9 @@ def _clone_origin(package_dir: Path) -> str | None:
 			["git", "-C", str(package_dir), "remote", "get-url", "origin"],
 			capture=True,
 		)
-	except AurGitError:
+	except GrimoireErr:
 		return None
-	return str(out).strip() or None
+	return out.strip() or None
 
 
 def _is_aur_origin(origin: str) -> bool:
@@ -888,16 +1252,14 @@ def _init_submodules(clone_root: Path) -> None:
 
 
 def ensure_clone(
-	package: str,
-	dest_root: Path,
+	package: 	str,
+	dest_root: 	Path,
+	source: 	CloneSource | None = None,
 	*,
-	refresh: bool = False,
-	repo_url: str | None = None,
-	branch: str | None = None,
-	subdir: str | None = None,
-	repo_fallbacks: list[tuple[str, str | None, str | None]] | None = None,
-	submodules: bool = False,
+	refresh: 	bool = False,
+	submodules: 	bool = False,
 ) -> Path:
+	repo_url, branch, subdir, repo_fallbacks = source or CloneSource()
 	dest_root.mkdir(parents=True, exist_ok=True)
 	package_dir = dest_root / package
 
@@ -906,10 +1268,10 @@ def ensure_clone(
 		shutil.rmtree(package_dir)
 
 	if repo_url:
-		remote_url = _remote_for(repo_url)
-		clone_extra: list[str] = []
-		fetch_refspec: tuple[str, ...]
-		reset_targets: tuple[str, ...]
+		remote_url = 	_remote_for(repo_url)
+		clone_extra: 	list[str] = []
+		fetch_refspec: 	tuple[str, ...]
+		reset_targets: 	tuple[str, ...]
 		if branch:
 			# A bare commit SHA is rejected by `git clone --branch`, so clone the
 			# default head and check the ref out afterwards instead. Fetching the
@@ -921,11 +1283,13 @@ def ensure_clone(
 			fetch_refspec = ()
 			reset_targets = ("origin/HEAD",)
 	else:
-		# No repo_url -> the AUR git mirror, one branch per package.
-		remote_url = get_aur_remote()
-		clone_extra = ["--branch", package, "--single-branch"]
-		fetch_refspec = (package,)
-		reset_targets = (f"origin/{package}",)
+		# No repo_url -> the AUR git mirror, one branch per PKGBASE (split packages
+		# share a branch: fontobene-qt-qt6 lives on the fontobene-qt branch).
+		base = 		_aur_pkgbase(package)
+		remote_url = 	get_aur_remote()
+		clone_extra = 	["--branch", base, "--single-branch"]
+		fetch_refspec = (base,)
+		reset_targets = (f"origin/{base}",)
 
 	reuse_existing = package_dir.exists() and (package_dir / ".git").is_dir()
 	if reuse_existing:
@@ -957,16 +1321,14 @@ def ensure_clone(
 			run_command(fetch_cmd)
 			try:
 				_reset_git_worktree(package_dir, reset_targets)
-			except AurGitError:
+			except GrimoireErr:
 				# Corrupt worktree/index -> drop it and reclone from scratch.
 				shutil.rmtree(package_dir)
 				return ensure_clone(
 					package,
 					dest_root,
+					CloneSource(repo_url, branch, subdir),
 					refresh=False,
-					repo_url=repo_url,
-					branch=branch,
-					subdir=subdir,
 					submodules=submodules,
 				)
 		if submodules:
@@ -977,14 +1339,14 @@ def ensure_clone(
 		shutil.rmtree(package_dir)
 
 	if repo_url:
-		candidates = [(repo_url, branch, subdir), *(repo_fallbacks or [])]
+		candidates = [RepoRef(repo_url, branch, subdir), *(repo_fallbacks or [])]
 		build = _clone_with_fallback(package_dir, candidates, package)
 		if submodules:
 			_init_submodules(package_dir)
 		return build
 
 	clone_cmd = ["git", "clone", *clone_extra]
-	if SHALLOW_CLONE:
+	if CONFIG.use_shallow:
 		clone_cmd += ["--depth=1"]
 	clone_cmd += [remote_url, str(package_dir)]
 	print(style(f"==> cloning from {remote_url}", DIM))
@@ -995,13 +1357,115 @@ def ensure_clone(
 	return _resolve_package_dir(package_dir, subdir, package)
 
 
+def _clone_resolved(
+	package: 	str,
+	dest_root: 	Path,
+	*,
+	refresh: 	bool,
+	submodules: 	bool = False,
+	source: 	CloneSource | None = None,
+	sources: 	Sequence[CloneSource] | None = None,
+) -> Path:
+	# Clone from a resolved chain (first source with a PKGBUILD wins) or a single
+	# source; an absent single source is the bare AUR backend (CloneSource()).
+	if sources is not None:
+		return _clone_any_source(
+			package, dest_root, sources, refresh=refresh, submodules=submodules
+		)
+	return ensure_clone(
+		package, dest_root, source or CloneSource(), refresh=refresh, submodules=submodules
+	)
+
+
+def _reuse_existing_clone(
+	package: 	str,
+	dest_root: 	Path,
+	sources: 	Sequence[CloneSource],
+	*,
+	submodules: 	bool,
+) -> Path | None:
+	# The chain shares one cache dir, so re-walking it lets an earlier source's ensure_clone
+	# reclone -- and clobber -- the real owner each run. Find which source owns the existing
+	# clone and reuse it through ensure_clone (its own origin-match path does the resolve +
+	# submodules), skipping the walk. None -> no usable clone here, fall back to the walk.
+	package_dir = dest_root / package
+	if not (package_dir / ".git").is_dir():
+		return None
+	origin = _clone_origin(package_dir)
+	if origin is None:
+		return None
+	norm = _normalize_git_url(origin)
+	for src in sources:
+		if src.repo_url is None:
+			owns = _is_aur_origin(origin)
+		else:
+			owns = _normalize_git_url(src.repo_url) == norm
+		if not owns:
+			continue
+		pkg_dir = ensure_clone(package, dest_root, src, refresh=False, submodules=submodules)
+		return pkg_dir if (pkg_dir / "PKGBUILD").is_file() else None
+	return None
+
+
+def _clone_any_source(
+	package: 	str,
+	dest_root: 	Path,
+	sources: 	Sequence[CloneSource],
+	*,
+	refresh: 	bool,
+	submodules: 	bool = False,
+) -> Path:
+	if not refresh:
+		reused = _reuse_existing_clone(
+			package, dest_root, sources, submodules=submodules
+		)
+		if reused is not None:
+			return reused
+
+	# Walk the source chain in order; first that clones a dir holding a PKGBUILD wins.
+	# A source whose clone fails (404) or lacks the package (subdir-container miss) is
+	# skipped. If none yields a PKGBUILD but one cloned, return it so the caller raises
+	# its own precise error; if nothing cloned at all, report every source that failed.
+	errors: 	list[str] = []
+	cloned: 	Path | None = None
+	multiple = 	len(sources) > 1
+	for index, src in enumerate(sources):
+		label = src[0] or "AUR"
+		try:
+			pkg_dir = ensure_clone(
+				package, dest_root, src, refresh=refresh, submodules=submodules
+			)
+		except GrimoireErr as exc:
+			errors.append(f"{label}: {exc}")
+			if multiple and index + 1 < len(sources):
+				print(
+					style(f"source failed ({label}); trying next...", YELLOW),
+					file=sys.stderr,
+				)
+			continue
+		if (pkg_dir / "PKGBUILD").is_file():
+			return pkg_dir
+		cloned = pkg_dir
+		errors.append(f"{label}: no PKGBUILD for '{package}'")
+		if multiple and index + 1 < len(sources):
+			print(
+				style(f"source lacks '{package}' ({label}); trying next...", YELLOW),
+				file=sys.stderr,
+			)
+	if cloned is not None:
+		return cloned
+	raise GrimoireErr(
+		f"'{package}' not found in any configured source:\n  " + "\n  ".join(errors)
+	)
+
+
 def read_srcinfo(package_dir: Path) -> str:
 	srcinfo_path = package_dir / ".SRCINFO"
 	if srcinfo_path.exists():
 		return srcinfo_path.read_text()
 	# Fallback to generating on the fly
 	output = run_command(["makepkg", "--printsrcinfo"], cwd=package_dir, capture=True)
-	return str(output)
+	return output
 
 
 def _iter_srcinfo_kv(srcinfo_content: str) -> Iterator[tuple[str, str]]:
@@ -1036,13 +1500,13 @@ def _assemble_version(
 	return "".join(parts) or None
 
 
-def parse_dependencies(srcinfo_content: str) -> tuple[str, str | None, DependencySet]:
-	pkgbase = ""
-	pkgdesc = None
-	depends: set[str] = set()
-	makedepends: set[str] = set()
-	checkdepends: set[str] = set()
-	optdepends: set[str] = set()
+def parse_dependencies(srcinfo_content: str) -> tuple[str | None, DependencySet]:
+	pkgbase = 	""
+	pkgdesc = 	None
+	depends: 	set[str] = set()
+	makedepends: 	set[str] = set()
+	checkdepends: 	set[str] = set()
+	optdepends: 	set[str] = set()
 
 	for key, value in _iter_srcinfo_kv(srcinfo_content):
 		if key not in _SRCINFO_KEYS:
@@ -1064,12 +1528,8 @@ def parse_dependencies(srcinfo_content: str) -> tuple[str, str | None, Dependenc
 			checkdepends.update([_normalize_dep(value)])
 
 	if not pkgbase:
-		raise AurGitError("Failed to parse pkgbase from .SRCINFO")
-	return (
-		pkgbase,
-		pkgdesc,
-		DependencySet(depends, makedepends, checkdepends, optdepends),
-	)
+		raise GrimoireErr("Failed to parse pkgbase from .SRCINFO")
+	return pkgdesc, DependencySet(depends, makedepends, checkdepends, optdepends)
 
 
 def _normalize_dep(dep_entry: str) -> str:
@@ -1092,7 +1552,7 @@ def _pkgbase_guesses(dep: str) -> list[str]:
 	return guesses
 
 
-def _parse_srcinfo_metadata(srcinfo_content: str) -> tuple[str | None, str | None]:
+def parse_srcinfo_metadata(srcinfo_content: str) -> tuple[str | None, str | None]:
 	pkgver = pkgrel = epoch = description = None
 	for key, value in _iter_srcinfo_kv(srcinfo_content):
 		if key == "pkgver" and not pkgver:
@@ -1120,7 +1580,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 				],
 				capture=True,
 			)
-		except AurGitError:
+		except GrimoireErr:
 			continue
 		run_command(
 			[
@@ -1133,7 +1593,7 @@ def _reset_git_worktree(package_dir: Path, refs: Sequence[str]) -> None:
 			]
 		)
 		return
-	raise AurGitError(
+	raise GrimoireErr(
 		f"Could not reset {package_dir.name} to any of: {', '.join(refs)}"
 	)
 
@@ -1145,63 +1605,70 @@ def _ref_is_annotated_tag(package_dir: Path, ref: str) -> bool:
 		out = run_command(
 			["git", "-C", str(package_dir), "cat-file", "-t", ref], capture=True
 		)
-	except AurGitError:
+	except GrimoireErr:
 		return False
-	return str(out).strip() == "tag"
+	return out.strip() == "tag"
 
 
-def _verify_signature(package_dir: Path, package: str, ref: str | None = None) -> None:
+def _classify_verify_failure(output: str, min_trust: TrustLevel | None) -> str:
+	# Tell apart a present-but-unverifiable signature from a genuinely unsigned target,
+	# reading git's relayed gpg status. "No public key" means it IS signed (gpg saw the
+	# signature) but the key is missing, not no signature at all. The actionable hint goes
+	# on a second line so the message stays readable in a terminal.
+	if "No public key" in output:
+		key = re.search(r"key (?:ID )?([0-9A-Fa-f]{8,})", output)
+		reason = "is signed, but the signer's public key is not in your keyring."
+		if key:
+			return f"{reason}\nImport it with 'gpg --recv-keys {key.group(1)}'."
+		return reason
+	if "BAD signature" in output:
+		return "has a BAD signature (the target was altered after it was signed)."
+	if min_trust and "Good signature" in output:
+		return f"is signed with a valid key whose owner-trust is below '{min_trust}'."
+	if "Signature made" not in output and "gpg:" not in output:
+		return "is unsigned (no GPG signature found)."
+	return "has a signature that could not be verified."
+
+
+def _verify_signature(
+	package_dir: 	Path,
+	package: 	str,
+	ref: 		str | None = None,
+	min_trust: 	TrustLevel | None = None,
+) -> None:
 	# `--verify`: require a cryptographically valid GPG signature from a key in the caller's
 	# keyring. When the requested ref is an annotated tag, verify that tag (covers projects
-	# that sign releases, not every commit); otherwise verify the HEAD commit. Either way
+	# that sign releases, not every commit); otherwise verify the HEAD commit. By default
 	# this checks signature validity, NOT key trust -- a good signature from any held key
-	# passes (gpg only warns). Fails on an unsigned target, a missing public key, or a bad
-	# signature. git's own "Good signature"/error lines stream through.
+	# passes (gpg only warns). With min_trust set (--min-trust), gpg.minTrustLevel makes git
+	# also reject a valid signature whose owner-trust is below that level (the user must have
+	# established that trust first). Fails on an unsigned target, a missing public key, a bad
+	# signature, or insufficient trust. git's own "Good signature"/error lines stream through.
+	prefix = ["git"]
+	if min_trust:
+		prefix += ["-c", f"gpg.minTrustLevel={min_trust}"]
+	prefix += ["-C", str(package_dir)]
 	if ref and _ref_is_annotated_tag(package_dir, ref):
-		cmd = ["git", "-C", str(package_dir), "verify-tag", ref]
+		cmd = [*prefix, "verify-tag", ref]
 		target = f"tag {ref}"
 		print(style(f"==> git verify-tag {ref} ({package})", DIM))
 	else:
-		cmd = ["git", "-C", str(package_dir), "verify-commit", "HEAD"]
+		cmd = [*prefix, "verify-commit", "HEAD"]
 		target = "the HEAD commit"
 		print(style(f"==> git verify-commit HEAD ({package})", DIM))
-	try:
-		run_command(cmd)
-	except AurGitError as exc:
-		raise AurGitError(
-			f"signature verification failed for '{package}': {target} is unsigned, has a "
-			"bad signature, or the signer's key is not in your GPG keyring"
-		) from exc
-
-
-def is_regex(pattern: str) -> bool:
-	regex_chars = r".*+?[]{}()^$|\\"
-	return any(char in pattern for char in regex_chars)
-
-
-def compute_match_score(
-	name: str,
-	*,
-	regex: re.Pattern[str] | None,
-	needle: str | None,
-) -> int | None:
-	if regex is not None:
-		match = regex.search(name)
-		if not match:
-			return None
-		start = match.start()
-		span = match.end() - match.start()
-	else:
-		if needle is None:
-			raise ValueError("needle required when regex is None")
-		lowered = name.lower()
-		idx = lowered.find(needle)
-		if idx == -1:
-			return None
-		start = idx
-		span = len(needle)
-	# Lower score is better match
-	return start * 1000 + len(name) - span
+	# git relays gpg's status to stderr; capture it to classify the failure precisely,
+	# then stream it through so the user still sees gpg's own lines.
+	proc = subprocess.run(  # noqa: S603 - cmd is built internally, not from untrusted input
+		cmd, capture_output=True, text=True, check=False
+	)
+	gpg_output = (proc.stderr or "") + (proc.stdout or "")
+	if gpg_output.strip():
+		print(gpg_output.rstrip(), file=sys.stderr)
+	if proc.returncode != 0:
+		raise GrimoireErr(
+			f"signature verification failed for '{package}': "
+			f"{target} {_classify_verify_failure(gpg_output, min_trust)}"
+		)
 
 
 def _pacman_returns_zero(args: Sequence[str]) -> bool:
@@ -1214,44 +1681,33 @@ def _pacman_returns_zero(args: Sequence[str]) -> bool:
 			check=False,
 		)
 	except FileNotFoundError as exc:
-		raise AurGitError(
+		raise GrimoireErr(
 			"pacman command not found; this tool must run on Arch Linux"
 		) from exc
 	return proc.returncode == 0
 
 
-def invalidate_installed_cache() -> None:
-	global _INSTALLED_CACHE
-	_INSTALLED_CACHE = None
+def invalidate_inst_cache() -> None:
+	CONFIG.inst_cache = None
 
 
 def _list_local_db_packages() -> set[str] | None:
-	# Reading pacman's local db directory directly avoids a ~50ms subprocess.
-	# Entries are name-version-release dirs; ALPM_DB_VERSION has no dashes.
-	try:
-		entries = [entry.name for entry in (_pacman_db_path() / "local").iterdir()]
-	except OSError:
-		return None
-	packages: set[str] = set()
-	for entry in entries:
-		parts = entry.rsplit("-", 2)
-		if len(parts) == 3:
-			packages.add(parts[0])
-	return packages or None
+	# Installed package names straight from pacman's local db (None when it's unreadable
+	# or empty, so the caller falls back to `pacman -Qq`).
+	return {name for name, _ in _local_db_descs()} or None
 
 
 def installed_package_set() -> set[str]:
-	global _INSTALLED_CACHE
-	if _INSTALLED_CACHE is None:
-		_INSTALLED_CACHE = _list_local_db_packages()
-	if _INSTALLED_CACHE is None:
+	if CONFIG.inst_cache is None:
+		CONFIG.inst_cache = _list_local_db_packages()
+	if CONFIG.inst_cache is None:
 		# we can still search without pacman installed.
 		if shutil.which("pacman") is None:
-			_INSTALLED_CACHE = set()
+			CONFIG.inst_cache = set()
 		else:
 			output = run_command(["pacman", "-Qq"], capture=True)
-			_INSTALLED_CACHE = set(str(output).split())
-	return _INSTALLED_CACHE
+			CONFIG.inst_cache = set(output.split())
+	return CONFIG.inst_cache
 
 
 def is_installed(package: str) -> bool:
@@ -1295,7 +1751,7 @@ def _search_aur_candidates(dep: str, *, limit: int = 25) -> list[str]:
 	for pattern in patterns:
 		try:
 			output = run_command(_aur_mirror_lsremote_cmd(pattern), capture=True)
-		except AurGitError:
+		except GrimoireErr:
 			continue
 		for name in _lsremote_names(output):
 			if not name or name in seen:
@@ -1321,7 +1777,8 @@ def resolve_aur_dependency(dep: str) -> str | None:
 		candidates.append(name)
 
 	add_candidate(dep)
-	for suffix in (*_VCS_SUFFIXES, *_COMMON_AUR_SUFFIXES):
+	# VCS variants plus the -bin binary-repackage suffix.
+	for suffix in (*_VCS_SUFFIXES, "-bin"):
 		add_candidate(f"{dep}{suffix}")
 	for base_candidate in _pkgbase_guesses(dep):
 		add_candidate(base_candidate)
@@ -1363,9 +1820,9 @@ def resolve_official_dependency(dep: str) -> str | None:
 			],
 			capture=True,
 		)
-	except AurGitError:
+	except GrimoireErr:
 		return None
-	providers = [line.strip() for line in str(output).splitlines() if line.strip()]
+	providers = [line.strip() for line in output.splitlines() if line.strip()]
 	if not providers:
 		return None
 	return providers[0]
@@ -1374,21 +1831,24 @@ def resolve_official_dependency(dep: str) -> str | None:
 def exists_in_aur_mirror(package: str) -> bool:
 	if is_debug_package(package):
 		return True
+	# Branch-per-pkgbase: resolve a split pkgname to its base branch (DBs, then AUR RPC).
 	try:
-		output = run_command(_aur_mirror_lsremote_cmd(package), capture=True)
-	except AurGitError:
+		output = run_command(
+			_aur_mirror_lsremote_cmd(_aur_pkgbase(package)), capture=True
+		)
+	except GrimoireErr:
 		return False
-	return bool(str(output).strip())
+	return bool(output.strip())
 
 
 def list_foreign_packages() -> dict[str, str]:
 	try:
 		output = run_command(["pacman", "-Qm"], capture=True, check=False)
-	except AurGitError:
+	except GrimoireErr:
 		return {}
 
 	names: dict[str, str] = {}
-	for line in str(output).splitlines():
+	for line in output.splitlines():
 		if not line.strip():
 			continue
 		parts = line.split()
@@ -1399,16 +1859,16 @@ def list_foreign_packages() -> dict[str, str]:
 	return names
 
 
-def get_local_head(package_dir: Path) -> str | None:
+def _local_head(package_dir: Path) -> str | None:
 	if not (package_dir / ".git").is_dir():
 		return None
 	try:
 		output = run_command(
 			["git", "-C", str(package_dir), "rev-parse", "HEAD"], capture=True
 		)
-	except AurGitError:
+	except GrimoireErr:
 		return None
-	return str(output).strip() or None
+	return output.strip() or None
 
 
 def _git_remote_head(url: str, ref: str | None) -> str | None:
@@ -1416,15 +1876,18 @@ def _git_remote_head(url: str, ref: str | None) -> str | None:
 		output = run_command(
 			["git", "ls-remote", _remote_for(url), ref or "HEAD"], capture=True
 		)
-	except AurGitError:
+	except GrimoireErr:
 		return None
 	return _lsremote_first_sha(output)
 
 
-def get_remote_head(package: str) -> str | None:
+def _aur_remote_head(package: str) -> str | None:
+	# Branch-per-pkgbase: a split pkgname's head lives on its base branch.
 	try:
-		output = run_command(_aur_mirror_lsremote_cmd(package), capture=True)
-	except AurGitError:
+		output = run_command(
+			_aur_mirror_lsremote_cmd(_aur_pkgbase(package)), capture=True
+		)
+	except GrimoireErr:
 		return None
 	return _lsremote_first_sha(output)
 
@@ -1432,9 +1895,9 @@ def get_remote_head(package: str) -> str | None:
 def get_installed_version(package: str) -> str | None:
 	try:
 		output = run_command(["pacman", "-Qi", package], capture=True)
-	except AurGitError:
+	except GrimoireErr:
 		return None
-	for line in str(output).splitlines():
+	for line in output.splitlines():
 		if line.lower().startswith("version"):
 			_, value = line.split(":", 1)
 			return value.strip()
@@ -1462,20 +1925,20 @@ def list_repo_packages(name: str, dest_root: Path) -> None:
 	if name == "AUR":
 		if not _aur_enabled():
 			print(
-				"AUR is disabled. Set [AUR] = true in repos.conf to enable it.",
+				"AUR is disabled. Set [AUR] = true in repos.ini to enable it.",
 				file=sys.stderr,
 			)
 			return
 		meta = aur_packages()
 		if not meta:
-			raise AurGitError("Could not fetch the AUR package list")
+			raise GrimoireErr("Could not fetch the AUR package list")
 		rows: list[tuple[str, str | None]] = [(n, ver) for n, ver, _ in meta]
 	else:
 		url, branch, subdir, _ = _resolve_repo_for_package(
 			None, alias=name, repo_url=None, branch=None, subdir=None
 		)
 		if url is None:
-			raise AurGitError(f"Repo '{name}' has no listable URL")
+			raise GrimoireErr(f"Repo '{name}' has no listable URL")
 		results = search_packages_repo(
 			url,
 			branch,
@@ -1502,16 +1965,18 @@ def list_repo_packages(name: str, dest_root: Path) -> None:
 
 
 def fetch_git_file(package: str, path: str) -> str | None:
-	# Lazy import: pulls in http.client and is unused on a warm cache hit.
-	import urllib.request
+	# Lazy import: urlopen pulls in http.client and is unused on a warm cache hit.
+	# Import the name (not the package) so it doesn't shadow the top-level urllib.
+	from urllib.request import urlopen
 
-	safe_package = urllib.parse.quote(package)
+	# The mirror is branch-per-pkgbase; a split pkgname resolves to its base branch.
+	safe_package = urllib.parse.quote(_aur_pkgbase(package))
 	safe_path = path.lstrip("/")
 	url = f"{GITHUB_RAW_BASE}/{safe_package}/{safe_path}"
 	if DEBUG:
 		print(f"+ GET {url}", file=sys.stderr)
 	try:
-		with urllib.request.urlopen(url, timeout=10) as response:  # noqa: S310 - url built from hardcoded https GitHub base
+		with urlopen(url, timeout=10) as response:  # noqa: S310 - url built from hardcoded https GitHub base
 			if response.status != 200:
 				return None
 			data: bytes = response.read()
@@ -1527,8 +1992,8 @@ def git_srcinfo_metadata(package: str) -> tuple[str, str | None] | None:
 	srcinfo = fetch_git_file(package, ".SRCINFO")
 	if not srcinfo:
 		return None
-	version, description = _parse_srcinfo_metadata(srcinfo)
-	if not version:  # Changed: only check version since it's required
+	version, description = parse_srcinfo_metadata(srcinfo)
+	if not version:  # no version -> no usable metadata, treat as absent
 		return None
 	return version, description
 
@@ -1543,15 +2008,15 @@ def install_official_packages(packages: Iterable[str], *, noconfirm: bool) -> No
 	cmd.extend(pkgs)
 	print(f"Installing official packages: {' '.join(pkgs)}")
 	run_command(_elevate(cmd))
-	invalidate_installed_cache()
+	invalidate_inst_cache()
 
 
 def collect_missing_official_packages(
-	package: str,
-	dest_root: Path,
+	package: 	str,
+	dest_root: 	Path,
 	*,
-	refresh: bool,
-	visited: set[str] | None = None,
+	refresh: 	bool,
+	visited: 	set[str] | None = None,
 ) -> tuple[set[str], set[str]]:
 	visited = visited or set()
 	if package in visited:
@@ -1559,7 +2024,7 @@ def collect_missing_official_packages(
 	visited.add(package)
 
 	package_dir = ensure_clone(package, dest_root, refresh=refresh)
-	_, _, deps = parse_dependencies(read_srcinfo(package_dir))
+	_, deps = parse_dependencies(read_srcinfo(package_dir))
 
 	missing_official: set[str] = set()
 	unresolved: set[str] = set()
@@ -1593,24 +2058,28 @@ def collect_missing_official_packages(
 
 
 def build_and_install(
-	package_dir: Path, *, noconfirm: bool, refresh: bool = False
+	package_dir: 	Path,
+	*,
+	noconfirm: 	bool,
+	refresh: 	bool = False
 ) -> None:
 	pkgbuild_path = package_dir / "PKGBUILD"
 	if not pkgbuild_path.exists():
-		raise AurGitError(f"PKGBUILD missing at {pkgbuild_path}")
+		raise GrimoireErr(f"PKGBUILD missing at {pkgbuild_path}")
 	flags = "-sif" if refresh else "-si"
 	cmd = ["makepkg", flags, "--needed"]
 	if noconfirm:
 		cmd.append("--noconfirm")
 	print(f"Building {package_dir.name} with makepkg")
-	extra_env = _ssh_rewrite_git_env() if USE_SSH else {}
+	extra_env = _ssh_rewrite_git_env() if CONFIG.use_ssh else {}
 	run_command(cmd, cwd=package_dir, env={**os.environ, **extra_env})
 	print(f"Built package artifacts remain under {package_dir}")
-	invalidate_installed_cache()
+	invalidate_inst_cache()
 
 
 def _classify_build_deps(
-	deps: DependencySet, package: str
+	deps: 		DependencySet,
+	package: 	str
 ) -> tuple[set[str], set[str], set[str], dict[str, set[str]]]:
 	# Sort each build dep into already-satisfied (dropped), official, AUR (with the
 	# virtual-provider it satisfies), or unresolved.
@@ -1639,7 +2108,8 @@ def _classify_build_deps(
 
 
 def _confirm_aur_dependencies(
-	aur_dependencies: set[str], virtual_providers: dict[str, set[str]]
+	aur_dependencies: 	set[str],
+	virtual_providers: 	dict[str, set[str]]
 ) -> None:
 	# List the AUR deps about to be built and abort the install if the user declines.
 	print(style("The following AUR dependencies are required:", CYAN))
@@ -1652,30 +2122,24 @@ def _confirm_aur_dependencies(
 	if not prompt_confirm(
 		style("Proceed with building these dependencies? [y/N]: ", YELLOW)
 	):
-		raise AurGitError("Installation aborted by user")
+		raise GrimoireErr("Installation aborted by user")
 
 
 def install_package(
-	package: str,
-	dest_root: Path,
+	package: 		str,
+	dest_root: 		Path,
 	*,
-	refresh: bool,
-	noconfirm: bool,
-	visited: set[str] | None = None,
-	preinstalled_official: set[str] | None = None,
-	repo_url: str | None = None,
-	branch: str | None = None,
-	subdir: str | None = None,
-	repo_fallbacks: list[tuple[str, str | None, str | None]] | None = None,
-	sources: Sequence[
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		]
-	]
-	| None = None,
-	update_to: str | None = None,
-	verify: bool = False,
-	submodules: bool = False,
+	refresh: 		bool,
+	noconfirm: 		bool,
+	visited: 		set[str] | None = None,
+	preinstalled_official: 	set[str] | None = None,
+	source: 		CloneSource | None = None,
+	sources: 		Sequence[CloneSource] | None = None,
+	update_to: 		str | None = None,
+	verify: 		bool = False,
+	min_trust: 		TrustLevel | None = None,
+	submodules: 		bool = False,
+	local_dir: 		Path | None = None,
 ) -> None:
 	visited = visited or set()
 	if package in visited:
@@ -1699,26 +2163,23 @@ def install_package(
 	if preinstalled_official is None:
 		preinstalled_official = set()
 
-	# Clone from the source chain or the AUR mirror (repo_url None), then read deps
-	# from the cloned .SRCINFO.
-	if sources is not None:
-		package_dir = _clone_any_source(
-			package, dest_root, sources, refresh=refresh, submodules=submodules
-		)
+	# A pre-fetched (possibly hand-edited) local tree builds in place; otherwise clone
+	# from the source chain or AUR mirror. Either way deps come from its .SRCINFO.
+	if local_dir is not None:
+		package_dir = local_dir
 	else:
-		package_dir = ensure_clone(
+		package_dir = _clone_resolved(
 			package,
 			dest_root,
 			refresh=refresh,
-			repo_url=repo_url,
-			branch=branch,
-			subdir=subdir,
-			repo_fallbacks=repo_fallbacks,
 			submodules=submodules,
+			source=source,
+			sources=sources,
 		)
 	if verify:
-		_verify_signature(package_dir, package, branch)
-	_, pkgdesc, deps = parse_dependencies(read_srcinfo(package_dir))
+		branch = source.branch if source else None
+		_verify_signature(package_dir, package, branch, min_trust)
+	pkgdesc, deps = parse_dependencies(read_srcinfo(package_dir))
 	print(f"==> {package}: {pkgdesc}" if pkgdesc else f"==> {package}")
 
 	missing_official, aur_dependencies, unresolved, virtual_providers = (
@@ -1727,7 +2188,7 @@ def install_package(
 
 	if unresolved:
 		missing_list = ", ".join(sorted(unresolved))
-		raise AurGitError(f"Could not resolve providers for: {missing_list}")
+		raise GrimoireErr(f"Could not resolve providers for: {missing_list}")
 
 	if missing_official:
 		to_install = missing_official - preinstalled_official
@@ -1747,35 +2208,53 @@ def install_package(
 			visited=visited,
 			preinstalled_official=preinstalled_official,
 			verify=verify,
+			min_trust=min_trust,
 			submodules=submodules,
 		)
 
 	build_and_install(package_dir, noconfirm=noconfirm, refresh=refresh)
 
 
-def remove_package(
-	package: str,
-	dest_root: Path,
-	*,
-	noconfirm: bool,
-	remove_clone: bool,
-) -> None:
-	# Clone removal first: inspect/fetch also create clones, so one can
-	# exist for a package that was never installed.
-	if remove_clone:
-		package_dir = dest_root / package
-		if package_dir.exists():
-			print(f"Removing clone {package_dir}")
-			shutil.rmtree(package_dir)
-			print(f"Removed clone for {style(package, GREEN)}")
-		else:
-			print(f"No clone found at {package_dir}")
+def _find_pkgbuild_dir(clone_root: Path, package: str) -> Path | None:
+	# A fetched clone holds the PKGBUILD at its root (AUR / solo repo) or one container
+	# subdir down (VUR-style monorepo, e.g. pkgs/<pkg>/). The treeless clone materialises
+	# only the target package's subtree, so the on-disk match is unambiguous; prefer the
+	# dir named after the package if several exist (a full monorepo checkout).
+	if (clone_root / "PKGBUILD").is_file():
+		return clone_root
+	matches = [
+		p.parent
+		for p in clone_root.rglob("PKGBUILD")
+		if p.is_file() and ".git" not in p.parts
+	]
+	if not matches:
+		return None
+	return next((d for d in matches if d.name == package), matches[0])
 
+
+def build_package(package: str, dest_root: Path, *, noconfirm: bool) -> None:
+	# Build+install a previously fetched (and possibly hand-edited) local tree without
+	# touching the remote. Regenerate .SRCINFO from the on-disk PKGBUILD first so the
+	# normal dependency resolution sees local edits, then reuse the install path.
+	clone_root = dest_root / package
+	package_dir = _find_pkgbuild_dir(clone_root, package) if clone_root.is_dir() else None
+	if package_dir is None:
+		raise GrimoireErr(
+			f"No fetched PKGBUILD for '{package}' under {clone_root}; "
+			f"run 'grimoire fetch {package}' first"
+		)
+	srcinfo = run_command(["makepkg", "--printsrcinfo"], cwd=package_dir, capture=True)
+	(package_dir / ".SRCINFO").write_text(srcinfo)
+	install_package(
+		package, dest_root, refresh=False, noconfirm=noconfirm, local_dir=package_dir
+	)
+
+
+def remove_package(package: str, *, noconfirm: bool) -> None:
 	if not is_installed(package):
 		print(f"Package {style(package, BOLD)} is not installed")
 		return
 
-	# Remove with pacman -Rns
 	cmd: list[str] = ["pacman", "-Rns", package]
 	if noconfirm:
 		cmd.append("--noconfirm")
@@ -1783,9 +2262,9 @@ def remove_package(
 	print(f"Removing package {style(package, BOLD)}")
 	try:
 		run_command(_elevate(cmd))
-		invalidate_installed_cache()
+		invalidate_inst_cache()
 		print(f"Successfully removed {style(package, GREEN)}")
-	except AurGitError as exc:
+	except GrimoireErr as exc:
 		print(f"Failed to remove package: {exc}", file=sys.stderr)
 
 
@@ -1801,11 +2280,9 @@ def get_ignored_packages() -> set[str]:
 	for raw_line in content.splitlines():
 		line = raw_line.strip()
 
-		# Skip comments and empty lines
 		if not line or line.startswith("#"):
 			continue
 
-		# Look for IgnorePkg lines
 		# Format: IgnorePkg = pkg1 pkg2 pkg3
 		if line.startswith("IgnorePkg") and "=" in line:
 			_, packages = line.split("=", 1)
@@ -1816,96 +2293,79 @@ def get_ignored_packages() -> set[str]:
 
 
 def _resolve_update_spec(
-	package: str,
-	alias: str | None,
-	url: str | None,
-	branch: str | None,
-	subdir: str | None,
-) -> tuple[
-	str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-]:
+	package: 	str,
+	alias: 		str | None,
+	url: 		str | None,
+	branch: 	str | None,
+	subdir: 	str | None,
+) -> CloneSource:
 	# "AUR" section (or the no-conf default) is the built-in AUR backend: a None
 	# repo_url, never run through the alias/URL parser.
 	if alias == "AUR" or (alias is None and url is None):
-		return None, None, None, []
+		return CloneSource()
 	return _resolve_repo_for_package(
 		package, alias=alias, repo_url=url, branch=branch, subdir=subdir
 	)
 
 
-def _probe_aur_update(
-	package: str, dest_root: Path
-) -> tuple[str | None, str | None, str | None] | None:
+def _probe_aur_update(package: str, dest_root: Path) -> UpdateProbe | None:
 	# (remote_version, remote_head, local_head) from the AUR, or None if absent.
 	meta = git_srcinfo_metadata(package)
 	rv = meta[0] if meta else None
 	if rv and is_vcs_package(package):
 		rv = None
 	if rv is not None:
-		return rv, None, None
-	rh = get_remote_head(package)
+		return UpdateProbe(rv, None, None)
+	rh = _aur_remote_head(package)
 	if rh is None:
 		return None
-	return None, rh, get_local_head(dest_root / package)
+	return UpdateProbe(None, rh, _local_head(dest_root / package))
 
 
 def _probe_git_update(
-	package: str,
-	dest_root: Path,
-	source: tuple[
-		str, str | None, str | None, list[tuple[str, str | None, str | None]]
-	],
+	package: 	str,
+	dest_root: 	Path,
+	source: 	CloneSource,
 	*,
-	refresh: bool,
-) -> tuple[str | None, str | None, str | None] | None:
+	refresh: 	bool,
+) -> UpdateProbe | None:
 	# As _probe_aur_update, against a git source: VCS pkgs compare the remote head,
 	# versioned pkgs clone and read the .SRCINFO (no metadata API on a plain git host).
-	s_url, s_branch, s_subdir, s_fallbacks = source
+	s_url, s_branch, _, _ = source
+	if s_url is None:
+		return None
 	if is_vcs_package(package):
 		rh = _git_remote_head(s_url, s_branch)
 		if rh is None:
 			return None
-		return None, rh, get_local_head(dest_root / package)
+		return UpdateProbe(None, rh, _local_head(dest_root / package))
 	try:
-		pkg_dir = ensure_clone(
-			package,
-			dest_root,
-			refresh=refresh,
-			repo_url=s_url,
-			branch=s_branch,
-			subdir=s_subdir,
-			repo_fallbacks=s_fallbacks,
-		)
-	except AurGitError:
+		pkg_dir = ensure_clone(package, dest_root, source, refresh=refresh)
+	except GrimoireErr:
 		return None
 	if not (pkg_dir / "PKGBUILD").is_file():
 		return None
-	rv = _parse_srcinfo_metadata(read_srcinfo(pkg_dir))[0]
-	return (rv, None, None) if rv is not None else None
+	rv = parse_srcinfo_metadata(read_srcinfo(pkg_dir))[0]
+	return UpdateProbe(rv, None, None) if rv is not None else None
 
 
 def _find_update_source(
-	package: str,
-	update_specs: list[tuple[str | None, str | None]],
-	dest_root: Path,
+	package: 	str,
+	update_specs: 	list[UpdateSpec],
+	dest_root: 	Path,
 	*,
-	refresh: bool,
-	branch: str | None,
-	subdir: str | None,
-) -> tuple[
-	tuple[str | None, str | None, str | None, list[tuple[str, str | None, str | None]]],
-	tuple[str | None, str | None, str | None],
-]:
+	refresh: 	bool,
+	branch: 	str | None,
+	subdir: 	str | None,
+) -> tuple[CloneSource, UpdateProbe]:
 	# Walk the source chain (conf order == precedence); return (winning source, probe)
 	# for the first source that has the package, or raise LookupError if none does.
 	for alias, url in update_specs:
 		source = _resolve_update_spec(package, alias, url, branch, subdir)
-		s_url = source[0]
-		if s_url is None:
+		if source.repo_url is None:
 			probe = _probe_aur_update(package, dest_root)
 		else:
-			git_source = (s_url, source[1], source[2], source[3])
-			probe = _probe_git_update(package, dest_root, git_source, refresh=refresh)
+			probe = _probe_git_update(package, dest_root, source, refresh=refresh)
 		if probe is not None:
 			return source, probe
 	raise LookupError(package)
@@ -1921,8 +2381,8 @@ def _run_system_update(*, noconfirm: bool) -> bool:
 	print(style("Updating system packages first...", CYAN))
 	try:
 		run_command(_elevate(cmd))
-		invalidate_installed_cache()
-	except AurGitError as exc:
+		invalidate_inst_cache()
+	except GrimoireErr as exc:
 		print(f"System update failed: {exc}", file=sys.stderr)
 		if not noconfirm and not prompt_confirm(
 			style("Continue with AUR updates? [y/N]: ", YELLOW)
@@ -1938,8 +2398,8 @@ def _collect_update_candidates(
 	# (name, installed_version) for each package to check. None when there is nothing
 	# to do (no foreign packages), already reported.
 	if targets:
-		seen: set[str] = set()
-		out: list[tuple[str, str | None]] = []
+		seen: 	set[str] = set()
+		out: 	list[tuple[str, str | None]] = []
 		for pkg in targets:
 			if pkg not in seen:
 				seen.add(pkg)
@@ -1962,47 +2422,33 @@ def _update_target_label(candidate: UpdateCandidate) -> str:
 
 
 def _update_source_label(
-	repo: str | None,
-	repo_url: str | None,
-	update_specs: list[tuple[str | None, str | None]],
+	repo: 		str | None,
+	repo_url: 	str | None,
+	update_specs: 	list[UpdateSpec],
 ) -> str:
 	# What to call the source(s) in "not available via ..." notes.
 	if repo or repo_url:
 		return f"repo '{repo}'" if repo else "the custom repo"
-	if update_specs in ([(None, None)], [("AUR", None)]):
+	if update_specs in ([UpdateSpec(None, None)], [UpdateSpec("AUR", None)]):
 		return "the AUR mirror"
 	return "any configured source"
 
 
 def _plan_updates(
-	candidates: list[tuple[str, str | None]],
-	update_specs: list[tuple[str | None, str | None]],
-	dest_root: Path,
+	candidates: 	list[tuple[str, str | None]],
+	update_specs: 	list[UpdateSpec],
+	dest_root: 	Path,
 	*,
-	ignored: set[str],
-	skip_devel: bool,
-	refresh: bool,
-	branch: str | None,
-	subdir: str | None,
-) -> tuple[
-	list[UpdateCandidate],
-	dict[
-		str,
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		],
-	],
-	list[str],
-]:
+	ignored: 	set[str],
+	skip_devel: 	bool,
+	refresh: 	bool,
+	branch: 	str | None,
+	subdir: 	str | None,
+) -> tuple[list[UpdateCandidate], dict[str, CloneSource], list[str]]:
 	# Resolve each candidate against the source chain and keep the ones with a newer
 	# version/head. Returns (pending, winning-source-per-package, not-found).
 	pending: list[UpdateCandidate] = []
-	winning: dict[
-		str,
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		],
-	] = {}
+	winning: dict[str, CloneSource] = {}
 	missing: list[str] = []
 	for package, installed_version in candidates:
 		if is_debug_package(package):
@@ -2029,7 +2475,7 @@ def _plan_updates(
 			continue
 		if remote_head:
 			if local_head is None:
-				local_head = get_local_head(dest_root / package)
+				local_head = _local_head(dest_root / package)
 			if local_head and local_head == remote_head:
 				continue
 		pending.append(
@@ -2045,26 +2491,19 @@ def _plan_updates(
 
 
 def _rebuild_updates(
-	selected: list[UpdateCandidate],
-	winning_source: dict[
-		str,
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		],
-	],
-	dest_root: Path,
+	selected: 	list[UpdateCandidate],
+	winning_source: dict[str, CloneSource],
+	dest_root: 	Path,
 	*,
-	refresh: bool,
-	noconfirm: bool,
+	refresh: 	bool,
+	noconfirm: 	bool,
 ) -> None:
 	# Rebuild each selected package from the source it was found in, sharing dedup and
 	# official-dep state across the run.
-	shared_visited: set[str] = set()
-	shared_preinstalled_official: set[str] = set()
+	shared_visited: 		set[str] = set()
+	shared_preinstalled_official: 	set[str] = set()
 	for candidate in selected:
-		r_url, r_branch, r_subdir, r_fallbacks = winning_source.get(
-			candidate.name, (None, None, None, [])
-		)
+		source = winning_source.get(candidate.name, CloneSource())
 		try:
 			install_package(
 				candidate.name,
@@ -2073,13 +2512,10 @@ def _rebuild_updates(
 				noconfirm=noconfirm,
 				visited=shared_visited,
 				preinstalled_official=shared_preinstalled_official,
-				repo_url=r_url,
-				branch=r_branch,
-				subdir=r_subdir,
-				repo_fallbacks=r_fallbacks,
+				source=source,
 				update_to=_update_target_label(candidate),
 			)
-		except AurGitError as exc:
+		except GrimoireErr as exc:
 			print(f"error updating {candidate.name}: {exc}", file=sys.stderr)
 
 
@@ -2091,17 +2527,17 @@ def _print_missing_notes(missing: list[str], source_label: str) -> None:
 
 
 def update_packages(
-	dest_root: Path,
+	dest_root: 	Path,
 	*,
-	refresh: bool,
-	noconfirm: bool,
-	update_system: bool,
-	include_devel: bool,
-	targets: Sequence[str] | None = None,
-	repo: str | None = None,
-	repo_url: str | None = None,
-	branch: str | None = None,
-	subdir: str | None = None,
+	refresh: 	bool,
+	noconfirm: 	bool,
+	update_system: 	bool,
+	include_devel: 	bool,
+	targets: 	Sequence[str] | None = None,
+	repo: 		str | None = None,
+	repo_url: 	str | None = None,
+	branch: 	str | None = None,
+	subdir: 	str | None = None,
 ) -> None:
 	ignored = get_ignored_packages()
 
@@ -2114,14 +2550,16 @@ def update_packages(
 
 	# Version-check each package against an ordered source chain (conf order ==
 	# precedence): an explicit --repo/--repo-url is the only source, otherwise every
-	# repos.conf section top to bottom, with the AUR backend as the section named "AUR"
+	# repos.ini section top to bottom, with the AUR backend as the section named "AUR"
 	# (or the implicit source when there is no conf). The first source that has the
 	# package decides its update and is reused for the rebuild; packages no source
 	# carries fall to `missing`.
 	if repo or repo_url:
-		update_specs: list[tuple[str | None, str | None]] = [(repo, repo_url)]
+		update_specs: list[UpdateSpec] = [UpdateSpec(repo, repo_url)]
 	else:
-		update_specs = [(name, None) for name in load_repo_registry()] or [(None, None)]
+		update_specs = [
+			UpdateSpec(name, None) for name in load_repo_registry()
+		] or [UpdateSpec(None, None)]
 
 	pending_updates, winning_source, missing = _plan_updates(
 		candidates,
@@ -2166,9 +2604,9 @@ def update_packages(
 
 def search_packages(
 	*,
-	regex: re.Pattern[str] | None,
+	regex: 	re.Pattern[str] | None,
 	needle: str | None,
-	limit: int | None,
+	limit: 	int | None,
 ) -> list[SearchResult]:
 	return search_packages_git(regex=regex, needle=needle, limit=limit)
 
@@ -2176,26 +2614,25 @@ def search_packages(
 def _fetch_aur_meta() -> list[tuple[str, str | None, str | None]] | None:
 	# Bulk AUR metadata dump: name + version + description for every package, one gzip.
 	import gzip
-	import urllib.request
+	from urllib.request import urlopen
 
 	url = "https://aur.archlinux.org/packages-meta-v1.json.gz"
 	if DEBUG:
 		print(f"+ GET {url}", file=sys.stderr)
 	try:
-		with urllib.request.urlopen(url, timeout=30) as response:  # noqa: S310 - hardcoded https AUR endpoint
-			data = json.loads(gzip.decompress(response.read()).decode())
+		with urlopen(url, timeout=30) as response:  # noqa: S310 - hardcoded https AUR endpoint
+			raw = json.loads(gzip.decompress(response.read()).decode())
 	except (OSError, ValueError) as exc:
 		if DEBUG:
 			print(f"+ packages-meta failed: {exc}", file=sys.stderr)
 		return None
+	# raw is the packages-meta array (list of {Name, Version, Description}); iterate the
+	# decoded value directly -- json.loads is typed Any, so entry.get stays usable without
+	# narrowing it to list[Unknown]. A row is kept only when its Name is a string.
 	rows = [
-		(
-			entry["Name"],
-			_str_or_none(entry.get("Version")),
-			_str_or_none(entry.get("Description")),
-		)
-		for entry in (data if isinstance(data, list) else [])
-		if isinstance(entry, dict) and isinstance(entry.get("Name"), str)
+		(name, _str_or_none(entry.get("Version")), _str_or_none(entry.get("Description")))
+		for entry in raw
+		if isinstance((name := entry.get("Name")), str)
 	]
 	return rows or None
 
@@ -2211,7 +2648,7 @@ def _fetch_aur_packages() -> list[tuple[str, str | None, str | None]] | None:
 	rows = _fetch_aur_meta()
 	if rows:
 		return rows
-	names = _fetch_names_git()
+	names = _fetch_names_git() or []
 	if not names:
 		return None
 	print(
@@ -2233,23 +2670,50 @@ def _fetch_aur_packages_with_completion() -> (
 
 
 def aur_packages() -> list[tuple[str, str | None, str | None]]:
-	# (name, version, description) for every AUR package. None on a failed fetch so a
-	# transient hiccup is never cached for an hour; cache hits come back as JSON lists.
-	rows = cached_json("aurmeta.json", CACHE_TTL, _fetch_aur_packages_with_completion)
-	out: list[tuple[str, str | None, str | None]] = []
-	for row in rows if isinstance(rows, list) else []:
-		if isinstance(row, list | tuple) and row and isinstance(row[0], str):
-			ver = _str_or_none(row[1]) if len(row) > 1 else None
-			desc = _str_or_none(row[2]) if len(row) > 2 else None
-			out.append((row[0], ver, desc))
-	return out
+	# (name, version, description) for every AUR package; [] on a failed fetch. Backed by
+	# the search cache (aurmeta.json), so a warm call just returns the decoded list -- the
+	# fetch callback fixes the row shape, no per-call re-validation.
+	rows = cached_json(
+		"aurmeta.json", CONFIG.cache_ttl, _fetch_aur_packages_with_completion
+	)
+	return rows or []
+
+
+def is_regex(pattern: str) -> bool:
+	regex_chars = r".*+?[]{}()^$|\\"
+	return any(char in pattern for char in regex_chars)
+
+
+def compute_match_score(
+	name: 	str,
+	*,
+	regex: 	re.Pattern[str] | None,
+	needle: str | None,
+) -> int | None:
+	if regex is not None:
+		match = regex.search(name)
+		if not match:
+			return None
+		start = match.start()
+		span = match.end() - match.start()
+	else:
+		if needle is None:
+			raise ValueError("needle required when regex is None")
+		lowered = name.lower()
+		idx = lowered.find(needle)
+		if idx == -1:
+			return None
+		start = idx
+		span = len(needle)
+	# Lower score is better match
+	return start * 1000 + len(name) - span
 
 
 def search_packages_git(
 	*,
-	regex: re.Pattern[str] | None,
+	regex: 	re.Pattern[str] | None,
 	needle: str | None,
-	limit: int | None,
+	limit: 	int | None,
 ) -> list[SearchResult]:
 	# Score every AUR package by name; version/description come straight from the bulk
 	# metadata dump, so there is no per-package fetch.
@@ -2278,7 +2742,10 @@ def search_packages_git(
 
 
 def _repo_package_names(
-	repo_url: str, branch: str | None, subdir: str | None, clone_dir: Path
+	repo_url: 	str,
+	branch: 	str | None,
+	subdir: 	str | None,
+	clone_dir: 	Path
 ) -> list[tuple[str, Path | None]]:
 	# Enumerate a custom repo's packages -> (name, srcinfo_dir). Layouts:
 	#   subdir-container : one dir per package under <subdir> (glob <subdir>/*/PKGBUILD).
@@ -2297,7 +2764,7 @@ def _repo_package_names(
 	run_command(clone_cmd)
 	base = clone_dir / subdir if subdir else clone_dir
 	if subdir and not base.is_dir():
-		raise AurGitError(f"Subdirectory '{subdir}' not found in {repo_url}")
+		raise GrimoireErr(f"Subdirectory '{subdir}' not found in {repo_url}")
 	names: list[tuple[str, Path | None]] = sorted(
 		(p.parent.name, p.parent) for p in base.glob("*/PKGBUILD")
 	)
@@ -2309,7 +2776,10 @@ def _repo_package_names(
 
 
 def _enumerate_repo(
-	repo_url: str, branch: str | None, subdir: str | None, dest_root: Path
+	repo_url: 	str,
+	branch: 	str | None,
+	subdir: 	str | None,
+	dest_root: 	Path
 ) -> list[tuple[str, str | None, str | None]]:
 	# Clone (subdir layout) or ls-remote (branch layout) a custom repo and return
 	# (name, version, description) per package. Wrapped in cached_json by the caller,
@@ -2320,27 +2790,27 @@ def _enumerate_repo(
 		shutil.rmtree(clone_dir)
 	out: list[tuple[str, str | None, str | None]] = []
 	for name, srcinfo_dir in _repo_package_names(repo_url, branch, subdir, clone_dir):
-		version: str | None = None
-		description: str | None = None
+		version: 	str | None = None
+		description: 	str | None = None
 		if srcinfo_dir is not None:
 			srcinfo_path = srcinfo_dir / ".SRCINFO"
 			if srcinfo_path.exists():
-				version, description = _parse_srcinfo_metadata(srcinfo_path.read_text())
+				version, description = parse_srcinfo_metadata(srcinfo_path.read_text())
 		out.append((name, version, description))
 	return out
 
 
 def search_packages_repo(
-	repo_url: str,
-	branch: str | None,
-	subdir: str | None,
+	repo_url: 	str,
+	branch: 	str | None,
+	subdir: 	str | None,
 	*,
-	regex: re.Pattern[str] | None,
-	needle: str | None,
-	limit: int | None,
-	source: str,
-	dest_root: Path,
-	alias: str | None = None,
+	regex: 		re.Pattern[str] | None,
+	needle: 	str | None,
+	limit: 		int | None,
+	source: 	str,
+	dest_root: 	Path,
+	alias: 		str | None = None,
 ) -> list[SearchResult]:
 	if limit is None:
 		limit = 50
@@ -2353,15 +2823,15 @@ def search_packages_repo(
 	if from_db:
 		# A template has no per-alias listing; fall back to the pacman sync DBs (the
 		# Arch GitLab case). Genuinely indexless aliases still error.
-		candidates = list(_sync_db_packages())
+		candidates = _sync_db_packages_cached()
 		if not candidates:
-			raise AurGitError(
+			raise GrimoireErr(
 				f"alias is templated ({repo_url}) and no pacman sync DB is available "
 				"to enumerate it. Search needs an index (a subdir, branches, or sync DB)."
 			)
 	else:
 		# Enumerate the repo (clone/ls-remote) but cache the result per source, so a
-		# repeat search doesn't re-clone. --refresh expires it (CACHE_TTL=0).
+		# repeat search doesn't re-clone. --refresh expires it (cache_ttl=0).
 		ckey = (
 			"repolist/"
 			+ hashlib.sha256(f"{repo_url}\n{branch}\n{subdir}".encode()).hexdigest()[
@@ -2371,12 +2841,11 @@ def search_packages_repo(
 		)
 		listed = cached_json(
 			ckey,
-			CACHE_TTL,
+			CONFIG.cache_ttl,
 			lambda: _enumerate_repo(repo_url, branch, subdir, dest_root),
 		)
-		for entry in listed if isinstance(listed, list) else []:
-			if isinstance(entry, (list, tuple)) and len(entry) == 3:
-				candidates.append((entry[0], entry[1], entry[2], source))
+		for name, version, description in listed or []:
+			candidates.append((name, version, description, source))
 
 	results: list[SearchResult] = []
 	for name, version, description, item_source in candidates:
@@ -2413,7 +2882,7 @@ def format_search_result(index: int, result: SearchResult) -> list[str]:
 		main_parts.append(style(result.version, GREEN))
 	if result.installed:
 		main_parts.append(style("[installed]", GREEN))
-	protocol = "ssh" if USE_SSH else "https"
+	protocol = "ssh" if CONFIG.use_ssh else "https"
 	if result.from_db:
 		# Listed from a local pacman sync DB, not fetched over a protocol.
 		meta_bits: list[str] = [f"db {result.source}"]
@@ -2426,7 +2895,6 @@ def format_search_result(index: int, result: SearchResult) -> list[str]:
 		line += f" {style('[' + ', '.join(meta_bits) + ']', DIM)}"
 	lines = [line]
 	if result.description:
-		# Limit description to 120 characters
 		desc = result.description
 		if len(desc) > 120:
 			desc = desc[:117] + "..."
@@ -2452,26 +2920,6 @@ def print_search_results(results: Sequence[SearchResult]) -> None:
 		display_index = total - pos
 		for line in format_search_result(display_index, result):
 			print(line)
-
-
-def format_update_candidate(index: int, candidate: UpdateCandidate) -> list[str]:
-	index_label = style(f"{index:>2})", CYAN)
-	name_part = style(candidate.name, BOLD)
-	current_version = candidate.installed_version or "?"
-	if candidate.target_version:
-		target_label = candidate.target_version
-	elif candidate.remote_head:
-		target_label = f"{candidate.remote_head[:7]}"
-	else:
-		target_label = "unknown"
-	change = f"{current_version} -> {target_label}"
-	meta_bits: list[str] = []
-	if candidate.remote_head and not candidate.target_version:
-		meta_bits.append("git commit")
-	line = f"{index_label} {name_part} {style(change, GREEN)}"
-	if meta_bits:
-		line += f" {style('[' + ', '.join(meta_bits) + ']', DIM)}"
-	return [line]
 
 
 def interactive_select_updates(
@@ -2582,9 +3030,11 @@ def _srcinfo_values(srcinfo_content: str, key: str) -> list[str]:
 
 
 def srcinfo_info_fields(
-	package: str, srcinfo_content: str, repo: str = "aur"
+	package: 		str,
+	srcinfo_content: 	str,
+	repo: 			str = "aur"
 ) -> list[tuple[str, str]]:
-	_, pkgdesc, deps = parse_dependencies(srcinfo_content)
+	pkgdesc, deps = parse_dependencies(srcinfo_content)
 
 	def first(key: str) -> str | None:
 		values = _srcinfo_values(srcinfo_content, key)
@@ -2617,9 +3067,9 @@ def print_info_fields(fields: list[tuple[str, str]]) -> None:
 
 
 def _print_info_summary(
-	package: str,
-	description: str | None,
-	deps: DependencySet,
+	package: 	str,
+	description: 	str | None,
+	deps: 		DependencySet,
 ) -> None:
 	print(f"Package: {package}")
 	if description:
@@ -2639,39 +3089,22 @@ def _print_info_summary(
 
 
 def inspect_package(
-	package: str,
-	dest_root: Path,
+	package: 	str,
+	dest_root: 	Path,
 	*,
-	refresh: bool,
-	target: str,
-	repo_url: str | None = None,
-	branch: str | None = None,
-	subdir: str | None = None,
-	repo_fallbacks: list[tuple[str, str | None, str | None]] | None = None,
-	sources: Sequence[
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		]
-	]
-	| None = None,
-	plain: bool = False,
+	refresh: 	bool,
+	target: 	InspectTarget,
+	source: 	CloneSource | None = None,
+	sources: 	Sequence[CloneSource] | None = None,
+	plain: 		bool = False,
 ) -> None:
-	if sources is not None:
-		package_dir = _clone_any_source(package, dest_root, sources, refresh=refresh)
-	else:
-		package_dir = ensure_clone(
-			package,
-			dest_root,
-			refresh=refresh,
-			repo_url=repo_url,
-			branch=branch,
-			subdir=subdir,
-			repo_fallbacks=repo_fallbacks,
-		)
+	package_dir = _clone_resolved(
+		package, dest_root, refresh=refresh, source=source, sources=sources
+	)
 	if target == "PKGBUILD":
 		pkgbuild_path = package_dir / "PKGBUILD"
 		if not pkgbuild_path.exists():
-			raise AurGitError(f"PKGBUILD not found at {pkgbuild_path}")
+			raise GrimoireErr(f"PKGBUILD not found at {pkgbuild_path}")
 		print(pkgbuild_path.read_text())
 		return
 	if target == "SRCINFO":
@@ -2684,56 +3117,138 @@ def inspect_package(
 			srcinfo_info_fields(package, srcinfo, _origin_label(package_dir))
 		)
 		return
-	_, pkgdesc, deps = parse_dependencies(srcinfo)
+	pkgdesc, deps = parse_dependencies(srcinfo)
 	_print_info_summary(package, pkgdesc, deps)
 
 
 def fetch_package(
-	package: str,
-	dest_root: Path,
+	package: 	str,
+	dest_root: 	Path,
 	*,
-	refresh: bool,
-	repo_url: str | None = None,
-	branch: str | None = None,
-	subdir: str | None = None,
-	repo_fallbacks: list[tuple[str, str | None, str | None]] | None = None,
-	sources: Sequence[
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		]
-	]
-	| None = None,
-	verify: bool = False,
-	submodules: bool = False,
+	refresh: 	bool,
+	source: 	CloneSource | None = None,
+	sources: 	Sequence[CloneSource] | None = None,
+	verify: 	bool = False,
+	min_trust: 	TrustLevel | None = None,
+	submodules: 	bool = False,
 ) -> Path:
-	if sources is not None:
-		package_dir = _clone_any_source(
-			package, dest_root, sources, refresh=refresh, submodules=submodules
-		)
-	else:
-		package_dir = ensure_clone(
-			package,
-			dest_root,
-			refresh=refresh,
-			repo_url=repo_url,
-			branch=branch,
-			subdir=subdir,
-			repo_fallbacks=repo_fallbacks,
-			submodules=submodules,
-		)
+	package_dir = _clone_resolved(
+		package,
+		dest_root,
+		refresh=refresh,
+		submodules=submodules,
+		source=source,
+		sources=sources,
+	)
 	if verify:
-		_verify_signature(package_dir, package, branch)
+		branch = source.branch if source else None
+		_verify_signature(package_dir, package, branch, min_trust)
 	print(f"Package fetched to {package_dir}")
 	return package_dir
 
 
-def _capitalize_help_action(parser: argparse.ArgumentParser) -> None:
-	for action in parser._actions:
-		if isinstance(action, argparse._HelpAction):
-			action.help = "Show this help message and exit"
+def _search_all_sources(
+	alias: 		str | None,
+	repo_url: 	str | None,
+	*,
+	regex: 		re.Pattern[str] | None,
+	needle: 	str | None,
+	limit: 		int | None,
+	branch: 	str | None,
+	subdir: 	str | None,
+	dest_root: 	Path,
+) -> list[SearchResult]:
+	# Sources to search. An explicit --repo/--repo-url scopes to one; otherwise
+	# search every section in repos.ini (merged, like `pacman -Ss`) so an
+	# enabled alias shows up without --repo. (alias, url): alias "AUR" or
+	# (None, None) means the AUR backend. Mirrors update's _plan_updates fan-out.
+	if alias or repo_url:
+		sources: list[UpdateSpec] = [UpdateSpec(alias, repo_url)]
+	else:
+		sources = [
+			UpdateSpec(name, None)
+			for name in load_repo_registry()
+			if name != "AUR" or _aur_enabled()
+		] or [UpdateSpec(None, None)]
+
+	results: list[SearchResult] = []
+	for src_alias, src_url in sources:
+		if src_url is None and (src_alias is None or src_alias == "AUR"):
+			results += search_packages(regex=regex, needle=needle, limit=limit)
+			continue
+		r_url, r_branch, r_subdir, _ = _resolve_repo_for_package(
+			None, alias=src_alias, repo_url=src_url, branch=branch, subdir=subdir
+		)
+		if r_url is None:
+			continue
+		try:
+			results += search_packages_repo(
+				r_url,
+				r_branch,
+				r_subdir,
+				regex=regex,
+				needle=needle,
+				limit=limit,
+				source=src_alias or r_url,
+				dest_root=dest_root,
+				alias=src_alias,
+			)
+		except GrimoireErr as exc:
+			# A source that can't enumerate (e.g. templated with no index) is
+			# skipped in an aggregated search instead of failing the whole run.
+			print(f"warning: {src_alias}: {exc}", file=sys.stderr)
+	return results
 
 
-def build_parser() -> argparse.ArgumentParser:
+def _install_search_picks(
+	selected: 	list[SearchResult],
+	dest_root: 	Path,
+	*,
+	explicit_url: 	str | None,
+	branch: 	str | None,
+	subdir: 	str | None,
+	refresh: 	bool,
+	noconfirm: 	bool,
+) -> int:
+	# Build each pick from the source it was found in (repo_alias/--repo-url), else
+	# the AUR backend; share dedup/official-dep state across picks (cf. _rebuild_updates).
+	print(style("Installing selected packages:", CYAN))
+	for pkg in selected:
+		label = style(pkg.name, BOLD)
+		if pkg.version:
+			label = f"{label} {style(pkg.version, GREEN)}"
+		print(f"  {label}")
+
+	exit_code = 0
+	shared_visited: 		set[str] = set()
+	shared_preinstalled_official: 	set[str] = set()
+	for pkg in selected:
+		psrc = CloneSource()
+		if pkg.repo_alias:
+			psrc = _resolve_repo_for_package(
+				pkg.name, alias=pkg.repo_alias, repo_url=None, branch=branch, subdir=subdir
+			)
+		elif explicit_url:
+			psrc = _resolve_repo_for_package(
+				pkg.name, alias=None, repo_url=explicit_url, branch=branch, subdir=subdir
+			)
+		try:
+			install_package(
+				pkg.name,
+				dest_root,
+				refresh=refresh,
+				noconfirm=noconfirm,
+				visited=shared_visited,
+				preinstalled_official=shared_preinstalled_official,
+				source=psrc,
+			)
+		except GrimoireErr as exc:
+			exit_code = 1
+			print(f"error installing {pkg.name}: {exc}", file=sys.stderr)
+	return exit_code
+
+
+def build_parser() -> tuple[argparse.ArgumentParser, frozenset[str]]:
 	parser = argparse.ArgumentParser(
 		description="Build Arch packages from any git source (official Arch packages by default; AUR opt-in)"
 	)
@@ -2772,13 +3287,13 @@ def build_parser() -> argparse.ArgumentParser:
 	subparsers = parser.add_subparsers(dest="command")
 
 	fetch_parser = subparsers.add_parser(
-		"fetch", help="Clone the package branch locally"
+		"fetch", help="Clone a package locally"
 	)
 	fetch_parser.add_argument(
 		"packages",
 		nargs="+",
 		metavar="package",
-		help="Package name(s) / branch to clone",
+		help="Package name(s) to clone",
 	)
 	fetch_src = fetch_parser.add_mutually_exclusive_group()
 	fetch_src.add_argument("--repo-url", help="Clone from custom Git URL")
@@ -2798,6 +3313,11 @@ def build_parser() -> argparse.ArgumentParser:
 		"--verify",
 		action="store_true",
 		help="Require a valid GPG signature: verify-tag if HEAD is a tag, else verify-commit (no trust check)",
+	)
+	fetch_parser.add_argument(
+		"--min-trust",
+		choices=("marginal", "fully", "ultimate"),
+		help="Implies --verify and also require the signer's key to be trusted to this level (you must set ownertrust first)",
 	)
 	fetch_parser.add_argument(
 		"--submod",
@@ -2834,6 +3354,11 @@ def build_parser() -> argparse.ArgumentParser:
 		help="Require a valid GPG signature: verify-tag if HEAD is a tag, else verify-commit (no trust check)",
 	)
 	install_parser.add_argument(
+		"--min-trust",
+		choices=("marginal", "fully", "ultimate"),
+		help="Implies --verify and also require the signer's key to be trusted to this level (you must set ownertrust first)",
+	)
+	install_parser.add_argument(
 		"--submod",
 		action="store_true",
 		help="Init the repo's git submodules after checkout (git submodule update --init --recursive)",
@@ -2846,20 +3371,36 @@ def build_parser() -> argparse.ArgumentParser:
 	remove_parser.add_argument(
 		"--noconfirm", action="store_true", help="Pass --noconfirm to pacman"
 	)
-	remove_parser.add_argument(
-		"--clone",
-		action="store_true",
-		help="Also remove the package's clone from dest-root",
+
+	clean_parser = subparsers.add_parser(
+		"clean", help="Clear cached data from dest-root (search cache by default)"
 	)
-	remove_parser.add_argument(
-		"--cache",
+	clean_parser.add_argument(
+		"packages",
+		nargs="*",
+		metavar="package",
+		help="Remove only these packages' clones (leaves the install in place)",
+	)
+	clean_parser.add_argument(
+		"--clones",
 		action="store_true",
-		help="Remove the search result cache (.searchcache) from dest-root",
+		help="Remove every cloned package build tree from dest-root",
+	)
+
+	build_cmd = subparsers.add_parser(
+		"build",
+		help="Build+install a fetched (and possibly hand-edited) package, no re-clone",
+	)
+	build_cmd.add_argument(
+		"packages", nargs="+", metavar="package", help="Fetched package name(s) to build"
+	)
+	build_cmd.add_argument(
+		"--noconfirm", action="store_true", help="Pass --noconfirm to pacman/makepkg"
 	)
 
 	update_parser = subparsers.add_parser(
 		"update",
-		help="Upgrade installed foreign packages by rebuilding them from the mirror",
+		help="Upgrade installed foreign packages by rebuilding them",
 	)
 	update_parser.add_argument(
 		"packages",
@@ -2976,7 +3517,7 @@ def build_parser() -> argparse.ArgumentParser:
 	)
 
 	repo_parser = subparsers.add_parser(
-		"repo", help="Manage repo URL aliases in repos.conf"
+		"repo", help="Manage repo URL aliases in repos.ini"
 	)
 	repo_group = repo_parser.add_mutually_exclusive_group()
 	repo_group.add_argument(
@@ -2996,194 +3537,15 @@ def build_parser() -> argparse.ArgumentParser:
 		help="List registered aliases and their mirror URLs",
 	)
 
-	_capitalize_help_action(parser)
-	for subparser in subparsers.choices.values():
-		_capitalize_help_action(subparser)
-
-	return parser
-
-
-def _resolve_repo_for_package(
-	package: str | None,
-	*,
-	alias: str | None,
-	repo_url: str | None,
-	branch: str | None,
-	subdir: str | None,
-) -> tuple[
-	str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-]:
-	# --repo NAME expands to an ordered mirror list; --repo-url is a single URL.
-	# (argparse keeps them mutually exclusive.) First URL is primary, rest fallbacks.
-	# Keyed on a package name so update/search can resolve per package in a loop.
-	if alias == "AUR":
-		# Reserved: the built-in AUR git backend (branch-per-package), not a URL alias.
-		# An explicit --repo AUR is a deliberate override -- it works regardless of the
-		# [AUR] toggle (which only governs the default chain / search / list).
-		return None, branch, subdir, []
-	if alias:
-		urls = resolve_repo_alias(alias)
-	elif repo_url:
-		urls = [repo_url]
-	else:
-		return None, branch, subdir, []
-
-	def _sub(value: str | None) -> str | None:
-		# Substitute `{pkg}`/`{pkgbase}` so one alias can template per package. In the URL
-		# path it selects a repo-per-package forge (e.g. the Arch GitLab); in the ref it
-		# selects a branch-per-package layout over ANY transport (e.g. `--rev {pkg}` on a
-		# bare SSH URL, where the forge `tree/{pkg}` shorthand isn't available). `{pkgbase}`
-		# resolves to the pkgbase first, so split packages (amd-ucode -> linux-firmware)
-		# hit the right repo/branch.
-		if not (value and package):
-			return value
-		if "{pkgbase}" in value:
-			value = value.replace("{pkgbase}", _resolve_pkgbase(package))
-		if "{pkg}" in value:
-			value = value.replace("{pkg}", package)
-		return value
-
-	def _resolve(raw: str) -> tuple[str, str | None, str | None]:
-		clone_url, parsed_branch, parsed_subdir = parse_repo_url(_sub(raw) or raw)
-		# Explicit flags (templated too) win over whatever the URL encoded.
-		return clone_url, _sub(branch) or parsed_branch, _sub(subdir) or parsed_subdir
-
-	primary_url, primary_branch, primary_subdir = _resolve(urls[0])
-	fallbacks = [_resolve(raw) for raw in urls[1:]]
-	return primary_url, primary_branch, primary_subdir, fallbacks
-
-
-def _resolve_repo_target(
-	args: argparse.Namespace,
-) -> tuple[
-	str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-]:
-	alias = getattr(args, "repo", None)
-	repo_url = getattr(args, "repo_url", None)
-	# No explicit source -> trust the conf: use its top section as the default.
-	# "AUR" (or no conf) means the built-in AUR backend (alias stays None).
-	if not alias and not repo_url:
-		default = _default_repo()
-		if default is not None and default != "AUR":
-			alias = default
-	return _resolve_repo_for_package(
-		getattr(args, "package", None),
-		alias=alias,
-		repo_url=repo_url,
-		branch=getattr(args, "rev", None),
-		subdir=getattr(args, "subdir", None),
-	)
-
-
-def _resolve_sources(
-	args: argparse.Namespace,
-	package: str | None = None,
-) -> list[
-	tuple[str | None, str | None, str | None, list[tuple[str, str | None, str | None]]]
-]:
-	# Ordered source chain for a package op with no explicit --repo: every section in
-	# repos.conf, top to bottom (conf order == precedence). The first source that can
-	# clone a PKGBUILD wins; later ones are fallbacks. An explicit --repo/--repo-url
-	# collapses to a single source. A section named "AUR" (or no conf at all) is the
-	# built-in AUR backend, encoded as a None repo_url. `package` resolves {pkg} /
-	# {pkgbase} templates per package (multi-package install/fetch resolves in a loop).
-	alias = getattr(args, "repo", None)
-	repo_url = getattr(args, "repo_url", None)
-	branch = getattr(args, "rev", None)
-	subdir = getattr(args, "subdir", None)
-	if alias or repo_url:
-		return [
-			_resolve_repo_for_package(
-				package, alias=alias, repo_url=repo_url, branch=branch, subdir=subdir
-			)
-		]
-	sources: list[
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		]
-	] = []
-	for name in load_repo_registry():
-		if name == "AUR":
-			# Reserved toggle: include the built-in AUR backend only when enabled.
-			if _aur_enabled():
-				sources.append((None, branch, subdir, []))
-		else:
-			sources.append(
-				_resolve_repo_for_package(
-					package, alias=name, repo_url=None, branch=branch, subdir=subdir
-				)
-			)
-	return sources or [(None, branch, subdir, [])]
-
-
-def _clone_any_source(
-	package: str,
-	dest_root: Path,
-	sources: Sequence[
-		tuple[
-			str | None, str | None, str | None, list[tuple[str, str | None, str | None]]
-		]
-	],
-	*,
-	refresh: bool,
-	submodules: bool = False,
-) -> Path:
-	# Walk the source chain in order; first that clones a dir holding a PKGBUILD wins.
-	# A source whose clone fails (404) or lacks the package (subdir-container miss) is
-	# skipped. If none yields a PKGBUILD but one cloned, return it so the caller raises
-	# its own precise error; if nothing cloned at all, report every source that failed.
-	errors: list[str] = []
-	cloned: Path | None = None
-	multiple = len(sources) > 1
-	for index, (repo_url, branch, subdir, fallbacks) in enumerate(sources):
-		label = repo_url or "AUR"
-		try:
-			pkg_dir = ensure_clone(
-				package,
-				dest_root,
-				refresh=refresh,
-				repo_url=repo_url,
-				branch=branch,
-				subdir=subdir,
-				repo_fallbacks=fallbacks,
-				submodules=submodules,
-			)
-		except AurGitError as exc:
-			errors.append(f"{label}: {exc}")
-			if multiple and index + 1 < len(sources):
-				print(
-					style(f"source failed ({label}); trying next...", YELLOW),
-					file=sys.stderr,
-				)
-			continue
-		if (pkg_dir / "PKGBUILD").is_file():
-			return pkg_dir
-		cloned = pkg_dir
-		errors.append(f"{label}: no PKGBUILD for '{package}'")
-		if multiple and index + 1 < len(sources):
-			print(
-				style(f"source lacks '{package}' ({label}); trying next...", YELLOW),
-				file=sys.stderr,
-			)
-	if cloned is not None:
-		return cloned
-	raise AurGitError(
-		f"'{package}' not found in any configured source:\n  " + "\n  ".join(errors)
-	)
+	# Single source of truth for the command list (main's implicit-search hoist needs it).
+	return parser, frozenset(subparsers.choices)
 
 
 def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse command dispatch
+	# The single command-dispatch hub: intentionally large (cf. the C901 exemption above).
+	# pylint: disable=too-many-branches,too-many-statements,too-many-locals,too-many-return-statements
 	argv_list = list(argv if argv is not None else sys.argv[1:])
-	commands = {
-		"fetch",
-		"install",
-		"remove",
-		"update",
-		"search",
-		"inspect",
-		"list",
-		"repo",
-	}
+	parser, commands = build_parser()
 	# Hoist global flags so they can appear after the subcommand too
 	# (e.g. `grimoire update --refresh` instead of only `grimoire --refresh update`).
 	if argv_list:
@@ -3215,21 +3577,19 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 		elif reordered:
 			argv_list = reordered + remaining
 
-	parser = build_parser()
 	args = parser.parse_args(argv_list)
 
 	dest_root = Path(args.dest_root).expanduser().resolve()
 	refresh: bool = bool(args.refresh)
 
-	global USE_COLOR, USE_SSH, SHALLOW_CLONE, CACHE_DIR, CACHE_TTL
-	CACHE_DIR = dest_root / ".searchcache"
+	CONFIG.cache_dir = dest_root / ".searchcache"
 	if refresh:
 		# --refresh means "give me fresh data": expire every read,
 		# keep writing so the cache ends up repopulated.
-		CACHE_TTL = 0
-	USE_COLOR = not getattr(args, "no_color", False) and sys.stdout.isatty()
-	USE_SSH = bool(getattr(args, "use_ssh", False))
-	SHALLOW_CLONE = bool(getattr(args, "shallow", False))
+		CONFIG.cache_ttl = 0
+	CONFIG.use_color = not getattr(args, "no_color", False) and sys.stdout.isatty()
+	CONFIG.use_ssh = bool(getattr(args, "use_ssh", False))
+	CONFIG.use_shallow = bool(getattr(args, "shallow", False))
 	# Never block on an interactive git auth prompt (e.g. a 404 clone of a templated
 	# URL); fail fast instead. Configured credential helpers still work.
 	os.environ.setdefault("GIT_TERMINAL_PROMPT", "0")
@@ -3250,7 +3610,7 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 		parser.print_help()
 		return 0
 
-	# Seed a default repos.conf ([ARCH] + AUR toggle) on first use, so every command sees
+	# Seed a default repos.ini ([ARCH] + AUR toggle) on first use, so every command sees
 	# the official default base. Idempotent: no-ops once the conf exists. Runs after the
 	# no-command/help return so a bare `grimoire` doesn't create a conf.
 	_ensure_repos_conf()
@@ -3273,33 +3633,22 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 		if args.command == "fetch":
 			for package in args.packages:
 				pkg_sources = _resolve_sources(args, package)
-				if len(pkg_sources) == 1:
-					repo_url, branch, subdir, repo_fallbacks = pkg_sources[0]
-					fetch_package(
-						package,
-						dest_root,
-						refresh=refresh,
-						repo_url=repo_url,
-						branch=branch,
-						subdir=subdir,
-						repo_fallbacks=repo_fallbacks,
-						verify=args.verify,
-						submodules=args.submod,
-					)
-				else:
-					fetch_package(
-						package,
-						dest_root,
-						refresh=refresh,
-						sources=pkg_sources,
-						verify=args.verify,
-						submodules=args.submod,
-					)
+				single = pkg_sources[0] if len(pkg_sources) == 1 else None
+				fetch_package(
+					package,
+					dest_root,
+					refresh=refresh,
+					source=single,
+					sources=None if single else pkg_sources,
+					verify=args.verify or bool(args.min_trust),
+					min_trust=args.min_trust,
+					submodules=args.submod,
+				)
 		elif args.command == "install":
 			# Share the dedup/official-dep state across every requested package so a
 			# common dependency is built once for the whole run.
-			install_visited: set[str] = set()
-			install_preinstalled: set[str] = set()
+			install_visited: 	set[str] = set()
+			install_preinstalled: 	set[str] = set()
 			for package in args.packages:
 				pkg_sources = _resolve_sources(args, package)
 				if len(pkg_sources) > 1:
@@ -3311,12 +3660,13 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 						visited=install_visited,
 						preinstalled_official=install_preinstalled,
 						sources=pkg_sources,
-						verify=args.verify,
+						verify=args.verify or bool(args.min_trust),
+						min_trust=args.min_trust,
 						submodules=args.submod,
 					)
 					continue
-				repo_url, branch, subdir, repo_fallbacks = pkg_sources[0]
-				if not repo_url:
+				src = pkg_sources[0]
+				if not src.repo_url:
 					missing_official, unresolved = collect_missing_official_packages(
 						package,
 						dest_root,
@@ -3324,7 +3674,7 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 					)
 					if unresolved:
 						missing_list = ", ".join(sorted(unresolved))
-						raise AurGitError(
+						raise GrimoireErr(
 							f"Could not resolve providers for: {missing_list}"
 						)
 					if missing_official:
@@ -3340,30 +3690,31 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 					noconfirm=args.noconfirm,
 					visited=install_visited,
 					preinstalled_official=install_preinstalled,
-					repo_url=repo_url,
-					branch=branch,
-					subdir=subdir,
-					repo_fallbacks=repo_fallbacks,
-					verify=args.verify,
+					source=src,
+					verify=args.verify or bool(args.min_trust),
+					min_trust=args.min_trust,
 					submodules=args.submod,
 				)
 		elif args.command == "remove":
-			if args.cache:
-				clear_search_cache()
+			if not args.packages:
+				print("error: nothing to remove (specify a package)", file=sys.stderr)
+				return 2
+			for package in args.packages:
+				remove_package(package, noconfirm=args.noconfirm)
+		elif args.command == "clean":
+			if args.packages and args.clones:
+				print("error: pass packages or --clones, not both", file=sys.stderr)
+				return 2
 			if args.packages:
 				for package in args.packages:
-					remove_package(
-						package,
-						dest_root,
-						noconfirm=args.noconfirm,
-						remove_clone=args.clone,
-					)
-			elif not args.cache:
-				print(
-					"error: nothing to remove (specify a package or --cache)",
-					file=sys.stderr,
-				)
-				return 2
+					_remove_clone(package, dest_root)
+			elif args.clones:
+				clean_clones(dest_root)
+			else:
+				clear_search_cache()
+		elif args.command == "build":
+			for package in args.packages:
+				build_package(package, dest_root, noconfirm=args.noconfirm)
 		elif args.command == "update":
 			update_packages(
 				dest_root,
@@ -3378,13 +3729,13 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 				subdir=getattr(args, "subdir", None),
 			)
 		elif args.command == "search":
-			explicit_alias = getattr(args, "repo", None)
-			explicit_url = getattr(args, "repo_url", None)
-			branch_arg = getattr(args, "rev", None)
-			subdir_arg = getattr(args, "subdir", None)
-			regex_obj: re.Pattern | None = None
-			needle: str | None = None
-			use_regex = is_regex(args.pattern)
+			explicit_alias = 	getattr(args, "repo", None)
+			explicit_url = 		getattr(args, "repo_url", None)
+			branch_arg = 		getattr(args, "rev", None)
+			subdir_arg = 		getattr(args, "subdir", None)
+			regex_obj: 		re.Pattern[str] | None = None
+			needle: 		str | None = None
+			use_regex = 		is_regex(args.pattern)
 			if use_regex:
 				try:
 					regex_obj = re.compile(args.pattern)
@@ -3394,54 +3745,16 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 			else:
 				needle = args.pattern.lower()
 
-			# Sources to search. An explicit --repo/--repo-url scopes to one; otherwise
-			# search every section in repos.conf (merged, like `pacman -Ss`) so an
-			# enabled alias shows up without --repo. (alias, url): alias "AUR" or
-			# (None, None) means the AUR backend.
-			if explicit_alias or explicit_url:
-				sources: list[tuple[str | None, str | None]] = [
-					(explicit_alias, explicit_url)
-				]
-			else:
-				sources = [
-					(name, None)
-					for name in load_repo_registry()
-					if name != "AUR" or _aur_enabled()
-				] or [(None, None)]
-
-			results: list[SearchResult] = []
-			for src_alias, src_url in sources:
-				if src_url is None and (src_alias is None or src_alias == "AUR"):
-					results += search_packages(
-						regex=regex_obj, needle=needle, limit=args.limit
-					)
-					continue
-				r_url, r_branch, r_subdir, _ = _resolve_repo_for_package(
-					None,
-					alias=src_alias,
-					repo_url=src_url,
-					branch=branch_arg,
-					subdir=subdir_arg,
-				)
-				if r_url is None:
-					continue
-				try:
-					results += search_packages_repo(
-						r_url,
-						r_branch,
-						r_subdir,
-						regex=regex_obj,
-						needle=needle,
-						limit=args.limit,
-						source=src_alias or r_url,
-						dest_root=dest_root,
-						alias=src_alias,
-					)
-				except AurGitError as exc:
-					# A source that can't enumerate (e.g. templated with no index) is
-					# skipped in an aggregated search instead of failing the whole run.
-					print(f"warning: {src_alias}: {exc}", file=sys.stderr)
-
+			results = _search_all_sources(
+				explicit_alias,
+				explicit_url,
+				regex=regex_obj,
+				needle=needle,
+				limit=args.limit,
+				branch=branch_arg,
+				subdir=subdir_arg,
+				dest_root=dest_root,
+			)
 			if not results:
 				print("No matches found", file=sys.stderr)
 				return 1
@@ -3468,85 +3781,33 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 				print(style("No packages selected.", DIM))
 				return 0
 
-			print(style("Installing selected packages:", CYAN))
-			for pkg in selected:
-				label = style(pkg.name, BOLD)
-				if pkg.version:
-					label = f"{label} {style(pkg.version, GREEN)}"
-				print(f"  {label}")
-
-			exit_code = 0
-			shared_visited: set[str] = set()
-			shared_preinstalled_official: set[str] = set()
-			for pkg in selected:
-				# Otherwise build each pick from the source it was found in.
-				p_url: str | None = None
-				p_branch: str | None = None
-				p_subdir: str | None = None
-				p_fallbacks: list[tuple[str, str | None, str | None]] = []
-				if pkg.repo_alias:
-					p_url, p_branch, p_subdir, p_fallbacks = _resolve_repo_for_package(
-						pkg.name,
-						alias=pkg.repo_alias,
-						repo_url=None,
-						branch=branch_arg,
-						subdir=subdir_arg,
-					)
-				elif explicit_url:
-					p_url, p_branch, p_subdir, p_fallbacks = _resolve_repo_for_package(
-						pkg.name,
-						alias=None,
-						repo_url=explicit_url,
-						branch=branch_arg,
-						subdir=subdir_arg,
-					)
-				try:
-					install_package(
-						pkg.name,
-						dest_root,
-						refresh=refresh,
-						noconfirm=args.noconfirm,
-						visited=shared_visited,
-						preinstalled_official=shared_preinstalled_official,
-						repo_url=p_url,
-						branch=p_branch,
-						subdir=p_subdir,
-						repo_fallbacks=p_fallbacks,
-					)
-				except AurGitError as exc:
-					exit_code = 1
-					print(f"error installing {pkg.name}: {exc}", file=sys.stderr)
-			return exit_code
+			return _install_search_picks(
+				selected,
+				dest_root,
+				explicit_url=explicit_url,
+				branch=branch_arg,
+				subdir=subdir_arg,
+				refresh=refresh,
+				noconfirm=args.noconfirm,
+			)
 		elif args.command == "inspect":
-			target = (
+			target: InspectTarget = (
 				"PKGBUILD"
 				if args.target == "PKGBUILD"
 				else ("SRCINFO" if args.target == "SRCINFO" else "info")
 			)
 			for package in args.packages:
 				pkg_sources = _resolve_sources(args, package)
-				if len(pkg_sources) == 1:
-					repo_url, branch, subdir, repo_fallbacks = pkg_sources[0]
-					inspect_package(
-						package,
-						dest_root,
-						refresh=refresh,
-						target=target,
-						repo_url=repo_url,
-						branch=branch,
-						subdir=subdir,
-						repo_fallbacks=repo_fallbacks,
-						plain=args.plain,
-					)
-				else:
-					inspect_package(
-						package,
-						dest_root,
-						refresh=refresh,
-						target=target,
-						sources=pkg_sources,
-						plain=args.plain,
-					)
+				single = pkg_sources[0] if len(pkg_sources) == 1 else None
+				inspect_package(
+					package,
+					dest_root,
+					refresh=refresh,
+					target=target,
+					source=single,
+					sources=None if single else pkg_sources,
+					plain=args.plain,
+				)
 		elif args.command == "list":
 			if args.repo:
 				list_repo_packages(args.repo, dest_root)
@@ -3573,10 +3834,10 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 						continue
 					print(f"[{name}]")
 					for url in urls:
-						print(f"  {url}")
+						print(f"{url}")
 		else:
 			parser.error("Unknown command")
-	except AurGitError as exc:
+	except GrimoireErr as exc:
 		print(f"error: {exc}", file=sys.stderr)
 		if DEBUG:
 			import traceback
@@ -3593,3 +3854,177 @@ if __name__ == "__main__":
 	except KeyboardInterrupt:
 		print("\n" + style("Interrupted by user", YELLOW), file=sys.stderr)
 		sys.exit(130)
+
+#h8d13washere
+# class _RuntimeConfig  :93
+# class DependencySet  :109
+#     def all_build_deps(self)  :116
+# class SearchResult  :121
+# class UpdateCandidate  :138
+# class RepoRef  :146
+# class UpdateProbe  :154
+# class UpdateSpec  :162
+# class CloneSource  :169
+# class GrimoireErr  :179
+# def style(text)  :246
+# def prompt_confirm(message)  :252
+# def is_debug_package(name)  :262
+# def is_vcs_package(name)  :266
+# def get_aur_remote()  :271
+# def _aur_mirror_lsremote_cmd()  :276
+# def _lsremote_first_sha(output)  :280
+# def _lsremote_names(output)  :288
+# def _xdg_config_home()  :299
+# def _makepkg_conf_paths()  :303
+# def _pacman_db_path()  :311
+# def _iter_db_descs(db, name_prefix)  :323
+# def _iter_sync_db_desc(name_prefix)  :346
+# def _local_db_descs(name_prefix)  :363
+# def _local_db_pkgbase(package)  :383
+# def _db_pkgbase(package)  :398
+# def _aur_rpc_pkgbase(package)  :408
+# def _resolve_pkgbase(package)  :431
+# def _aur_pkgbase(package)  :438
+# def _sync_db_packages()  :446
+# def _sync_db_signature()  :460
+# def _sync_db_packages_cached()  :478
+# def _read_pacman_auth()  :489
+# def _get_elev()  :503
+# def _elevate(cmd)  :513
+# def _maybe_ssh_rewrite(url)  :522
+# def _remote_for(url)  :537
+# def _ssh_rewrite_git_env()  :543
+# def _ensure_scheme(url)  :559
+# def _split_forge_path(parts, markers, ref_offset, gate)  :574
+# def parse_repo_url(url)  :597
+#     def _rebuild(repo_parts, ref, sub)  :607
+# def _forge_raw_url(clone_url, ref, path)  :641
+# def _repo_registry_path()  :666
+# def _ensure_repos_conf()  :670
+# def load_repo_registry()  :682
+# def _repos_section_end(lines, header_idx)  :704
+# def add_repo_alias(name, url)  :716
+# def remove_repo_alias(name)  :746
+# def resolve_repo_alias(name)  :762
+# def _aur_enabled()  :771
+# def _resolve_repo_for_package(package, alias, repo_url, branch, subdir)  :782
+#     def _sub(value)  :805
+#     def _resolve(raw)  :820
+# def _resolve_sources(args, package)  :832
+# def _cache_get(key, ttl)  :867
+# def _atomic_write(path, payload)  :880
+# def _cache_put(key, payload)  :889
+# def _completion_cache_path()  :895
+# def cached_json(key, ttl, fetch)  :903
+# def clear_search_cache()  :924
+# def clean_clones(dest_root)  :939
+# def _remove_clone(package, dest_root)  :955
+# def run_command(cmd, cwd, capture, check, env)  :968
+# def run_command(cmd, cwd, capture, check, env)  :979
+# def run_command(cmd, cwd, capture, check, env)  :989
+# def _resolve_build_dir(clone_root, subdir)  :1021
+# def _resolve_package_dir(clone_root, subdir, package)  :1033
+# def _tree_has(package_dir, ref, path)  :1047
+# def _build_subpath(package_dir, ref, subdir, package)  :1061
+# def _subdir_hint(package_dir, ref, package)  :1072
+# def _http_status(url)  :1091
+# def _remote_pkgbuild_present(url, ref, subdir, package)  :1106
+# def _clone_with_fallback(package_dir, candidates, package)  :1132
+# def _normalize_git_url(url)  :1199
+# def _clone_origin(package_dir)  :1215
+# def _is_aur_origin(origin)  :1226
+# def _origin_label(package_dir)  :1232
+# def _init_submodules(clone_root)  :1241
+# def ensure_clone(package, dest_root, source, refresh, submodules)  :1254
+# def _clone_resolved(package, dest_root, refresh, submodules, source, sources)  :1360
+# def _reuse_existing_clone(package, dest_root, sources, submodules)  :1380
+# def _clone_any_source(package, dest_root, sources, refresh, submodules)  :1410
+# def read_srcinfo(package_dir)  :1462
+# def _iter_srcinfo_kv(srcinfo_content)  :1471
+# def _str_or_none(value)  :1482
+# def _assemble_version(pkgver, pkgrel, epoch)  :1486
+# def parse_dependencies(srcinfo_content)  :1503
+# def _normalize_dep(dep_entry)  :1535
+# def _pkgbase_guesses(dep)  :1544
+# def parse_srcinfo_metadata(srcinfo_content)  :1555
+# def _reset_git_worktree(package_dir, refs)  :1569
+# def _ref_is_annotated_tag(package_dir, ref)  :1601
+# def _classify_verify_failure(output, min_trust)  :1613
+# def _verify_signature(package_dir, package, ref, min_trust)  :1633
+# def _pacman_returns_zero(args)  :1674
+# def invalidate_inst_cache()  :1690
+# def _list_local_db_packages()  :1694
+# def installed_package_set()  :1700
+# def is_installed(package)  :1713
+# def exists_in_sync_repo(package)  :1718
+# def is_dependency_satisfied(dep)  :1722
+# def package_provides(package)  :1727
+# def _search_aur_candidates(dep, limit)  :1740
+# def resolve_aur_dependency(dep)  :1767
+#     def add_candidate(name)  :1773
+# def resolve_official_dependency(dep)  :1809
+# def exists_in_aur_mirror(package)  :1831
+# def list_foreign_packages()  :1844
+# def _local_head(package_dir)  :1862
+# def _git_remote_head(url, ref)  :1874
+# def _aur_remote_head(package)  :1884
+# def get_installed_version(package)  :1895
+# def list_installed_packages()  :1907
+# def list_repo_packages(name, dest_root)  :1921
+# def fetch_git_file(package, path)  :1967
+# def git_srcinfo_metadata(package)  :1991
+# def install_official_packages(packages, noconfirm)  :2001
+# def collect_missing_official_packages(package, dest_root, refresh, visited)  :2014
+# def build_and_install(package_dir, noconfirm, refresh)  :2060
+# def _classify_build_deps(deps, package)  :2080
+# def _confirm_aur_dependencies(aur_dependencies, virtual_providers)  :2110
+# def install_package(package, dest_root, refresh, noconfirm, visited, preinstalled_official, source, sources, update_to, verify, min_trust, submodules, local_dir)  :2128
+# def _find_pkgbuild_dir(clone_root, package)  :2218
+# def build_package(package, dest_root, noconfirm)  :2235
+# def remove_package(package, noconfirm)  :2253
+# def get_ignored_packages()  :2271
+# def _resolve_update_spec(package, alias, url, branch, subdir)  :2295
+# def _probe_aur_update(package, dest_root)  :2311
+# def _probe_git_update(package, dest_root, source, refresh)  :2325
+# def _find_update_source(package, update_specs, dest_root, refresh, branch, subdir)  :2352
+# def _run_system_update(noconfirm)  :2374
+# def _collect_update_candidates(targets)  :2395
+# def _update_target_label(candidate)  :2415
+# def _update_source_label(repo, repo_url, update_specs)  :2424
+# def _plan_updates(candidates, update_specs, dest_root, ignored, skip_devel, refresh, branch, subdir)  :2437
+# def _rebuild_updates(selected, winning_source, dest_root, refresh, noconfirm)  :2493
+# def _print_missing_notes(missing, source_label)  :2522
+# def update_packages(dest_root, refresh, noconfirm, update_system, include_devel, targets, repo, repo_url, branch, subdir)  :2529
+# def search_packages(regex, needle, limit)  :2605
+# def _fetch_aur_meta()  :2614
+# def _fetch_names_git()  :2640
+# def _fetch_aur_packages()  :2645
+# def _fetch_aur_packages_with_completion()  :2660
+# def aur_packages()  :2672
+# def is_regex(pattern)  :2682
+# def compute_match_score(name, regex, needle)  :2687
+# def search_packages_git(regex, needle, limit)  :2712
+# def _repo_package_names(repo_url, branch, subdir, clone_dir)  :2744
+# def _enumerate_repo(repo_url, branch, subdir, dest_root)  :2778
+# def search_packages_repo(repo_url, branch, subdir, regex, needle, limit, source, dest_root, alias)  :2803
+# def order_search_results(results)  :2873
+# def format_search_result(index, result)  :2878
+# def format_search_result_plain(result)  :2905
+# def print_search_results(results)  :2917
+# def interactive_select_updates(candidates)  :2925
+# def parse_selection(selection, max_index)  :2961
+# def interactive_select_results(results)  :2997
+# def _join_values(values, sort)  :3023
+# def _srcinfo_values(srcinfo_content, key)  :3028
+# def srcinfo_info_fields(package, srcinfo_content, repo)  :3032
+#     def first(key)  :3039
+#     def join(values)  :3043
+# def print_info_fields(fields)  :3063
+# def _print_info_summary(package, description, deps)  :3069
+# def inspect_package(package, dest_root, refresh, target, source, sources, plain)  :3091
+# def fetch_package(package, dest_root, refresh, source, sources, verify, min_trust, submodules)  :3124
+# def _search_all_sources(alias, repo_url, regex, needle, limit, branch, subdir, dest_root)  :3150
+# def _install_search_picks(selected, dest_root, explicit_url, branch, subdir, refresh, noconfirm)  :3203
+# def build_parser()  :3251
+# def main(argv)  :3544
+#############
