@@ -1,0 +1,42 @@
+# shell.nix
+# Usage: nix-shell -p git
+# clone then cd
+# nix-shell distros/NIX
+
+{ pkgs ? import <nixpkgs> {} }:
+
+pkgs.mkShell {
+  buildInputs = with pkgs; [
+    # Core
+    pacman
+    arch-install-scripts
+    git
+
+    # Python + parted
+    (python3.withPackages (ps: [ ps.pyparted ]))
+
+    # Filesystem tools
+    dosfstools
+    e2fsprogs
+    btrfs-progs
+    xfsprogs
+    f2fs-tools
+    cryptsetup
+    lvm2
+
+    # Utils
+    coreutils
+    util-linux
+    pciutils
+    kbd
+    parted
+    libxcrypt
+    tzdata
+  ];
+
+  # libxcrypt is dlopen'd by crypt.py via ctypes; buildInputs only wires
+  # link-time, so expose it on the runtime linker path for the .so lookup.
+  shellHook = ''
+    export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libxcrypt ]}:$LD_LIBRARY_PATH
+  '';
+}

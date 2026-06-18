@@ -1,9 +1,24 @@
 import ctypes
+from ctypes.util import find_library
 from pathlib import Path
 
 from archinstoo.lib.output import debug
 
-libcrypt = ctypes.CDLL('libcrypt.so')
+
+def _load_libcrypt() -> ctypes.CDLL:
+	# Resolve via the linker (find_library / soname) rather than a fixed path,
+	# so any host that exposes libcrypt on the dynamic-linker path just works:
+	# find_library adapts to the distro specific soname
+	for name in (find_library('crypt'), 'libcrypt.so', 'libcrypt.so.1', 'libcrypt.so.2'):
+		if name:
+			try:
+				return ctypes.CDLL(name)
+			except OSError:
+				continue
+	raise OSError('libxcrypt not found on the dynamic-linker path')
+
+
+libcrypt = _load_libcrypt()
 
 libcrypt.crypt.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 libcrypt.crypt.restype = ctypes.c_char_p
