@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 
@@ -146,8 +147,9 @@ def list_timezones() -> list[str]:
 
 def _scan_timezones() -> list[str]:
 	# zone1970.tab / zone.tab list the canonical zone names in their last
-	# tab-separated column (lines starting with # are comments).
-	root = Path('/usr/share/zoneinfo')
+	# tab-separated column (lines starting with # are comments). Honor glibc's
+	# TZDIR so non-FHS hosts (NixOS) can point at the tzdata store path.
+	root = Path(os.environ.get('TZDIR') or '/usr/share/zoneinfo')
 	for tab in ('zone1970.tab', 'zone.tab'):
 		tabfile = root / tab
 		if not tabfile.is_file():

@@ -763,8 +763,10 @@ class Installer:
 		if not len(zone):
 			return True  # Redundant
 
-		if (Path('/usr') / 'share' / 'zoneinfo' / zone).exists():
-			(Path(self.target) / 'etc' / 'localtime').unlink(missing_ok=True)
+		# Validate against the target's tzdata, not the host's: the symlink
+		# resolves inside the chroot, and a host may lack FHS zoneinfo (NixOS).
+		if (self.target / 'usr/share/zoneinfo' / zone).exists():
+			(self.target / 'etc' / 'localtime').unlink(missing_ok=True)
 			self.arch_chroot(['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime'])
 			return True
 

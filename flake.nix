@@ -48,6 +48,7 @@
 				# the .so lookup.
 				shellHook = ''
 					export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libxcrypt ]}:$LD_LIBRARY_PATH
+					export TZDIR=${pkgs.tzdata}/share/zoneinfo
 				'';
 			};
 		}
