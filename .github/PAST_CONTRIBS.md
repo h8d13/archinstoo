@@ -1,5 +1,10 @@
 # Historical changes to upstream Archinstall
 
+## Fork's origin
+
+Divergence [point](https://github.com/archlinux/archinstall/pull/3997)
+> At this point I wanted to add a lot of menu entries and remove some of the hardcoded defaults.
+
 ## Upstreamed
 
 Upstreamed fixes:
@@ -51,17 +56,13 @@ Which is normal but useless compute. So I added `--needed` and logs properly sho
 
 ### More features, more problems
 
-Now I have more that got pulled in, like the snapper -> grub integration fix (#3930):
+Now I have more that got pulled in:
 
-https://github.com/archlinux/archinstall/commit/375d64a6001086dd0aeb22140e1e022247c33059
+[3930](https://github.com/archlinux/archinstall/commit/375d64a6001086dd0aeb22140e1e022247c33059) # snapper -> grub integration fix
 
-Vconsole.conf KEYMAP= FONT= mkinitcpio v40 error (#3928):
+[3928](https://github.com/archlinux/archinstall/commit/6b50815eb67c4c5fef9fa08c916be7884687427c) # Vconsole.conf KEYMAP= FONT= mkinitcpio v40 error
 
-https://github.com/archlinux/archinstall/commit/6b50815eb67c4c5fef9fa08c916be7884687427c
-
-Add host-to-target (H2T) installation mode detection (#3978):
-
-https://github.com/archlinux/archinstall/commit/6b23eff4226a7574e2d763aa3b49fdfb4153b75d
+[3978](https://github.com/archlinux/archinstall/commit/6b23eff4226a7574e2d763aa3b49fdfb4153b75d) # Add host-to-target (H2T) installation mode detection
 
 - Add `running_from_host()` function to detect if running from installed system vs ISO
 - Function checks for `/run/archiso` existence (ISO mode) vs host mode
@@ -72,35 +73,25 @@ https://github.com/archlinux/archinstall/commit/6b23eff4226a7574e2d763aa3b49fdfb
 
 This enables archinstall to be run from an existing Arch installation to perform host-to-target installs on other disks/partitions.
 
-Do not install base-devel by default (#4022):
-
-https://github.com/h8d13/archinstall-patch/commit/9e7a5f693108aad80a731bb719454547b97e50c9
+[4022](https://github.com/h8d13/archinstall-patch/commit/9e7a5f693108aad80a731bb719454547b97e50c9) # Do not install base-devel by default
 
 A funny one I'm also very proud of: `base-devel` is more of a dev tool than a user's tool.
 Building systems should explicitly state it as a dependency and not assume it's installed by default.
 The first line of AUR helpers is often `sudo pacman -S git base-devel` anyway.
 
-Adds a timer to post install screen (#4028):
-
-https://github.com/h8d13/archinstall-patch/commit/e5ccdb0c1c4495e63a7e1b5fe4b99c4a95c05cf8
+[4028](https://github.com/h8d13/archinstall-patch/commit/e5ccdb0c1c4495e63a7e1b5fe4b99c4a95c05cf8) # Adds a timer to post install screen
 
 Because testing should be quick.
 
-Fix LVM creation/info (#4024):
-
-https://github.com/h8d13/archinstall-patch/commit/5fcea379b9cd1f65343056dcfd70a441dc0ab744
+[4024](https://github.com/h8d13/archinstall-patch/commit/5fcea379b9cd1f65343056dcfd70a441dc0ab744) # Fix LVM creation/info
 
 Hotfix for LVMs to not hang on `Setting up LVM config...`, which I had experienced myself.
 
-Change LVM /root def to adapt dynamically (#4005):
-
-https://github.com/h8d13/archinstall-patch/commit/1227babd8cf67750926df4bb75a8106a114a4693
+[4005](https://github.com/h8d13/archinstall-patch/commit/1227babd8cf67750926df4bb75a8106a114a4693) # Change LVM /root def to adapt dynamically
 
 Another hotfix where it was `20GiB` hardcoded.
 
-Cache property of graphics_devices (#4007):
-
-https://github.com/h8d13/archinstall-patch/commit/17dc00185724d07a92abb19904c773ea95ea38c8
+[4007](https://github.com/h8d13/archinstall-patch/commit/17dc00185724d07a92abb19904c773ea95ea38c8) # Cache property of graphics_devices
 
 You can see all work upstream [here](https://github.com/archlinux/archinstall/commits/master/?author=h8d13), and on gitlab where the more "serious" reports go.
 
