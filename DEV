@@ -8,12 +8,16 @@ go_to() {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
 }
 
-pre_build() {
-	rm -f ./*-any.pkg.tar.zst
-}
-
 clean() {
-	rm -rf pkg src dist ./*.pkg.tar.zst.sig build ./*.egg-info ../*.egg-info ./*-git
+	git clean -Xnd
+
+	read -rp "Proceed? [y/N] " reply
+	[[ "${reply}" == [yY] ]] || {
+		echo "aborted"
+		exit 0
+	}
+
+	git clean -Xfd
 } # make sure no old sigs or build artifacts
 
 sign() {
@@ -35,13 +39,11 @@ case "$1" in
 	;;
 -c | --clean)
 	go_to
-	clean && pre_build
+	clean
 	;;
 -b | --build)
 	go_to
-	pre_build
 	makepkg -Cf
-	clean
 	;;
 -s | --sign)
 	go_to

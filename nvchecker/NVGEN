@@ -9,13 +9,13 @@ Tracks (into nvchecker.toml) the Arch packages archinstoo touches:
 Subcommands:
     ./NVGEN gen            write nvchecker.toml in place (default; --stdout to pipe)
     ./NVGEN check          gen + nvchecker + nvcmp, print what's new
-                           (--sync runs `sudo pacman -Sy` first for fresh data)
+                           (exits if the sync DB is stale; pass --force to skip)
     ./NVGEN take --all     promote new_ver.json into old_ver.json (ack everything)
-    ./NVGEN take PKG...     ack only the named packages
+    ./NVGEN take PKG...    ack only the named packages
 
 How nvchecker works: pacman entries read the LOCAL sync db, so results are only
-as fresh as the last `pacman -Sy` (use `check --sync`). Paths in [__config__]
-resolve relative to the toml, not cwd. No keyfile needed (pacman is local).
+as fresh as the last `pacman -Sy`. `check` guards on this via checkupdates and
+exits asking you to refresh rather than running sudo itself. 
 """
 
 import argparse
@@ -25,7 +25,11 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 from pathlib import Path
+
+# desc field block: `%KEY%` then its (possibly multi-line) value until a blank line
+_DESC_FIELD_RE = re.compile(r'%([A-Z0-9]+)%\n((?:.+\n)*)')
 
 NVDIR = Path(__file__).parent
 ROOT = NVDIR.parent  # nvchecker/ -> repo root
@@ -43,13 +47,22 @@ def _require(binary: str) -> None:
 	if not shutil.which(binary):
 		sys.exit(f'error: {binary} not found; install with `pacman -S nvchecker`')
 
+
 def _needs_update() -> bool:
-	try:
-		log('Checking sync mirrors up to date...')
-		subprocess.run('checkupdates', check=True)
+	# True if the local sync DB is behind the mirrors, in which case nvchecker would
+	# compare against stale "latest" versions. checkupdates (pacman-contrib) refreshes
+	# a temp DB copy WITHOUT root: exit 0 = updates pending, 2 = up to date, anything
+	# else = couldn't tell (don't block). we report rather than run `pacman -Sy`.
+	if not shutil.which('checkupdates'):
+		log('checkupdates not found (pacman-contrib); skipping freshness guard')
+		return False
+	proc = subprocess.run(['checkupdates'], capture_output=True, text=True)
+	if proc.returncode == 0:
+		pending = len([ln for ln in proc.stdout.splitlines() if ln.strip()])
+		log(f'{pending} pending update(s): local sync DB is behind the mirrors.')
 		return True
-	except CalledProcessError as e: 
-		
+	return False
+
 
 def load_schema() -> dict:
 	# strip // comments, then parse as json
@@ -77,34 +90,53 @@ def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 	return cleaned
 
 
-def expand_group(name: str) -> list[str]:
-	# resolve a package group to its members via pacman
-	log(f'  expanding group: {name}')
+def _pacman_db_path() -> Path:
+	# honour a custom DBPath in pacman.conf, else the default
 	try:
-		result = subprocess.run(
-			['pacman', '-Sqg', name],
-			capture_output=True,
-			text=True,
-			check=True,
-		)
-		pkgs = result.stdout.strip().split('\n') if result.stdout.strip() else []
-		log(f'    -> {len(pkgs)} packages')
-		return pkgs
-	except subprocess.CalledProcessError:
-		log('    -> failed')
-		return []
+		for line in Path('/etc/pacman.conf').read_text().splitlines():
+			if m := re.match(r'\s*DBPath\s*=\s*(\S+)', line):
+				return Path(m.group(1))
+	except OSError:
+		pass
+	return Path('/var/lib/pacman')
 
 
-def extract_schema_packages(schema: dict) -> set[str]:
+def sync_db_groups() -> dict[str, set[str]]:
+	# group -> member packages, read straight from the pacman sync DB desc files
+	# (the same on-disk source grimoire uses). avoids a `pacman -Sg` subprocess and,
+	# more importantly, a hardcoded group list that silently rots (cf. cutefish).
+	# each desc carries %NAME% and an optional multi-line %GROUPS%.
+	groups: dict[str, set[str]] = {}
+	sync = _pacman_db_path() / 'sync'
+	try:
+		dbs = sorted(sync.glob('*.db'))
+	except OSError:
+		return groups
+
+	for db in dbs:
+		try:
+			with tarfile.open(db, 'r:*') as tar:
+				for member in tar:
+					if not member.name.endswith('/desc'):
+						continue
+					if (handle := tar.extractfile(member)) is None:
+						continue
+					fields = dict(_DESC_FIELD_RE.findall(handle.read().decode()))
+					name = fields.get('NAME', '').strip()
+					if not name:
+						continue
+					for grp in fields.get('GROUPS', '').split():
+						groups.setdefault(grp, set()).add(name)
+		except (OSError, tarfile.TarError):
+			continue
+	return groups
+
+
+def extract_schema_packages(schema: dict, groups: dict[str, set[str]]) -> set[str]:
 	# collect package names (list strings only; dict keys are category labels).
-	# meta-packages that are really groups get expanded to their members.
+	# schema meta-packages that are really pacman groups (gnome, xfce4, ...) expand
+	# to their members so each member gets version-tracked individually.
 	pkgs: set[str] = set()
-
-	groups = {
-		'gnome', 'xfce4', 'xfce4-goodies', 'mate', 'mate-extra',
-		'lxqt', 'deepin', 'budgie', 'cosmic',
-	}
-	expanded: set[str] = set()
 
 	def walk(obj):
 		if isinstance(obj, list):
@@ -112,9 +144,7 @@ def extract_schema_packages(schema: dict) -> set[str]:
 				if isinstance(item, str):
 					name = item.lower()
 					if name in groups:
-						if name not in expanded:
-							expanded.add(name)
-							pkgs.update(expand_group(name))
+						pkgs.update(groups[name])
 					else:
 						pkgs.add(name)
 				else:
@@ -142,15 +172,18 @@ def generate_toml() -> str:
 	optdepends = set(parse_pkgbuild_array(PKGBUILD_DEV, 'optdepends'))
 	optdepends.update(parse_pkgbuild_array(PKGBUILD_REL, 'optdepends'))
 
+	log('Reading package groups from sync DB...')
+	groups = sync_db_groups()
+
 	log('Extracting packages from schema...')
-	schema_pkgs = extract_schema_packages(schema)
+	schema_pkgs = extract_schema_packages(schema, groups)
 
 	lines = [
 		'# nvchecker.toml - Auto-generated by NVGEN',
 		'# Tracks all packages used by archinstoo',
 		'#',
 		'# Regenerate: ./NVGEN gen',
-		'# Check:      ./NVGEN check [--sync]',
+		'# Check:      ./NVGEN check',
 		'# Acknowledge: ./NVGEN take --all',
 		'',
 		'[__config__]',
@@ -201,11 +234,11 @@ def cmd_gen(args: argparse.Namespace) -> int:
 def cmd_check(args: argparse.Namespace) -> int:
 	_require('nvchecker')
 	_require('nvcmp')
-	write_toml()
 
-	if args.sync:
-		log('syncing pacman db (sudo pacman -Sy)...')
-		subprocess.run(['sudo', 'pacman', '-Sy'], check=True)
+	if not args.force and _needs_update():
+		sys.exit('error: refresh first with `sudo pacman -Sy` (or -Syu), then re-run `./NVGEN check` (or pass --force)')
+
+	write_toml()
 
 	# fetch quietly (errors still surface); nvcmp is the human-readable report
 	nv = ['nvchecker', '-c', str(TOML), '-l', 'warning']
@@ -246,7 +279,7 @@ def main() -> int:
 	p_gen.set_defaults(func=cmd_gen)
 
 	p_check = sub.add_parser('check', help='regen, run nvchecker, show nvcmp diff')
-	p_check.add_argument('--sync', action='store_true', help='run `sudo pacman -Sy` first for fresh data')
+	p_check.add_argument('--force', action='store_true', help='run even if the sync DB looks stale')
 	p_check.add_argument('--failures', action='store_true', help='exit 3 if any entry fails to fetch')
 	p_check.add_argument('-t', '--tries', type=int, help='retry N times on network errors')
 	p_check.add_argument('-e', '--entry', help='only check the named entry (debugging)')
