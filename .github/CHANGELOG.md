@@ -3,6 +3,12 @@
 Historical changes/commits before I went rogue:
 [upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.13-0
+
+  - Add bootstrap path to support insalling from Debian FORKY OR SID
+  - Remove locales as it's not maintainable solo/had already drifted
+  - Rework nvchecker and tests to alwasy match jsonc schema
+
 ## 0.1.12-0
 
 	- Add `cage` + `regreet` greeter option (greetd-based graphical login)
