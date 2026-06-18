@@ -15,7 +15,6 @@
 #   ./TVM keep   | k - reuse disk, boot ISO
 #   ./TVM boot   | b - boot from installed disk (no ISO)
 #   ./TVM clean  | c - remove disk and NVRAM (ISOs untouched)
-#   ./TVM ro     | r - launches archinstoo in read-only local
 #   ./TVM help   | h - show this help
 # Env overrides:
 #   DEV_ISO            explicit ISO path (skips discovery)
@@ -105,12 +104,6 @@ require_iso() {
 case "$ARG" in
 -h | --help | help)
 	sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
-	exit 0
-	;;
-ro | r)
-	mount -o ro /dev/vdb1 /mnt
-	cp -a /mnt /root/archinstoo
-	cd archinstoo && python -B -m archinstoo --debug --advanced
 	exit 0
 	;;
 clean | c)
