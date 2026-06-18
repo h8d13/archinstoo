@@ -7,7 +7,6 @@ from typing import Self
 from .exceptions import SysCallError
 from .general import SysCommand
 from .output import debug
-from .translationhandler import tr
 
 
 class CpuVendor(Enum):
@@ -98,7 +97,7 @@ class GfxDriver(Enum):
 
 	def packages_text(self, kernels: list[str] | None = None) -> str:
 		pkg_names = [p.value for p in self.gfx_packages(kernels)]
-		text = tr('Installed packages') + ':\n'
+		text = 'Installed packages' + ':\n'
 
 		for p in sorted(pkg_names):
 			text += f'\t- {p}\n'

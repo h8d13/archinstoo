@@ -72,7 +72,6 @@ from .lib import Pacman, output
 from .lib.checkpoints import _run_script, clean_cache
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
-from .lib.translationhandler import Language, tr, translation_handler
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info, reload_python
 from .lib.utils.net import ping
@@ -198,7 +197,7 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 	args = handler.args
 
 	if not is_root():
-		print(tr('archinstoo {script} requires root privileges to run. See --help for more.').format(script=script))
+		print(f'archinstoo {script} requires root privileges to run. See --help for more.')
 		return 1
 
 	# fixes #4149 by passing args properly to subscripts
@@ -305,7 +304,6 @@ def run_as_a_module() -> int:
 
 __all__ = [
 	'FormattedOutput',
-	'Language',
 	'Pacman',
 	'SysInfo',
 	'Tui',
@@ -313,6 +311,5 @@ __all__ = [
 	'error',
 	'info',
 	'log',
-	'translation_handler',
 	'warn',
 ]

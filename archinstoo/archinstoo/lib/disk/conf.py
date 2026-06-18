@@ -8,7 +8,6 @@ from archinstoo.lib.models.device import (
 	LvmConfiguration,
 	LvmLayoutType,
 )
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_dir
@@ -74,7 +73,7 @@ def select_disk_config(
 		group,
 		allow_skip=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Disk configuration type')),
+		frame=FrameProperties.min('Disk configuration type'),
 		allow_reset=True,
 	).run()
 
@@ -90,7 +89,7 @@ def select_disk_config(
 				output = 'You will use whatever drive-setup is mounted at the specified directory\n'
 				output += "WARNING: Archinstoo won't check the suitability of this setup\n"
 
-				path = prompt_dir(tr('Root mount directory'), output, allow_skip=True)
+				path = prompt_dir('Root mount directory', output, allow_skip=True)
 
 				if path is None:
 					return None
@@ -140,7 +139,7 @@ def select_lvm_config(
 		group,
 		allow_reset=True,
 		allow_skip=True,
-		frame=FrameProperties.min(tr('LVM configuration type')),
+		frame=FrameProperties.min('LVM configuration type'),
 		alignment=Alignment.CENTER,
 	).run()
 

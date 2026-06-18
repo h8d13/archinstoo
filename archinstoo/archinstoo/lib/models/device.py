@@ -19,7 +19,6 @@ from parted import Disk, Geometry, Partition
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug
-from archinstoo.lib.translationhandler import tr
 
 ENC_IDENTIFIER = 'ainst'
 DEFAULT_ITER_TIME = 10000
@@ -45,11 +44,11 @@ class DiskLayoutType(Enum):
 	def display_msg(self) -> str:
 		match self:
 			case DiskLayoutType.Default:
-				return tr('Use a best-effort default partition layout')
+				return 'Use a best-effort default partition layout'
 			case DiskLayoutType.Manual:
-				return tr('Manual Partitioning')
+				return 'Manual Partitioning'
 			case DiskLayoutType.Pre_mount:
-				return tr('Pre-mounted configuration')
+				return 'Pre-mounted configuration'
 
 
 class _DiskLayoutConfigurationSerialization(TypedDict):
@@ -523,7 +522,7 @@ class _PartitionInfo:
 		part_info = {
 			'Name': self.name,
 			'Type': self.type.value,
-			'Filesystem': self.fs_type.value if self.fs_type else tr('Unknown'),
+			'Filesystem': self.fs_type.value if self.fs_type else 'Unknown',
 			'Path': str(self.path),
 			'Start': self.start.format_size(Unit.sectors, self.sector_size, include_unit=False),
 			'End': end.format_size(Unit.sectors, self.sector_size, include_unit=False),
@@ -1060,7 +1059,7 @@ class LvmLayoutType(Enum):
 	def display_msg(self) -> str:
 		match self:
 			case LvmLayoutType.Default:
-				return tr('Default layout')
+				return 'Default layout'
 			# case LvmLayoutType.Manual:
 			# 	return str(_('Manual configuration'))
 
@@ -1409,10 +1408,10 @@ class EncryptionType(StrEnum):
 	@classmethod
 	def _encryption_type_mapper(cls) -> dict[str, Self]:
 		return {
-			tr('No Encryption'): cls.NO_ENCRYPTION,
-			tr('LUKS'): cls.LUKS,
-			tr('LVM on LUKS'): cls.LVM_ON_LUKS,
-			tr('LUKS on LVM'): cls.LUKS_ON_LVM,
+			'No Encryption': cls.NO_ENCRYPTION,
+			'LUKS': cls.LUKS,
+			'LVM on LUKS': cls.LVM_ON_LUKS,
+			'LUKS on LVM': cls.LUKS_ON_LVM,
 		}
 
 	def type_to_text(self) -> str:

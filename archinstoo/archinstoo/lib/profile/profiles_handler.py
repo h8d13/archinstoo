@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, NotRequired, TypedDict
 from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
@@ -268,7 +267,7 @@ class ProfileHandler:
 			self.remove_custom_profiles(profiles)
 			self.add_custom_profiles(profiles)
 		except ValueError:
-			err = tr('Unable to fetch profile from specified url: {}').format(url)
+			err = f'Unable to fetch profile from specified url: {url}'
 			error(err)
 
 	def _load_profile_class(self, module: ModuleType) -> list[Profile]:
@@ -299,7 +298,7 @@ class ProfileHandler:
 		duplicates = [x for x in counter.items() if x[1] != 1]
 
 		if len(duplicates) > 0:
-			err = tr('Profiles must have unique name, but profile definitions with duplicate name found: {}').format(duplicates[0][0])
+			err = f'Profiles must have unique name, but profile definitions with duplicate name found: {duplicates[0][0]}'
 			error(err)
 			raise SystemExit(1)
 

@@ -3,7 +3,6 @@ from typing import override
 
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -44,14 +43,14 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 		return [
 			MenuItem(
-				text=tr('Bootloader'),
+				text='Bootloader',
 				action=self._select_bootloader,
 				value=self._bootloader_conf.bootloader,
 				preview_action=self._prev_bootloader,
 				key='bootloader',
 			),
 			MenuItem(
-				text=tr('Unified kernel images'),
+				text='Unified kernel images',
 				action=self._select_uki,
 				value=self._bootloader_conf.uki,
 				preview_action=self._prev_uki,
@@ -59,7 +58,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				enabled=uki_enabled,
 			),
 			MenuItem(
-				text=tr('Removable location'),
+				text='Removable location',
 				action=self._select_removable,
 				value=self._bootloader_conf.removable,
 				preview_action=self._prev_removable,
@@ -67,7 +66,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				enabled=removable_enabled,
 			),
 			MenuItem(
-				text=tr('Quiet boot'),
+				text='Quiet boot',
 				action=self._select_quiet,
 				value=self._bootloader_conf.quiet,
 				preview_action=self._prev_quiet,
@@ -77,23 +76,23 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _prev_bootloader(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{tr("Bootloader")}: {item.value.display_name()}'
+			return f'{"Bootloader"}: {item.value.display_name()}'
 		return None
 
 	def _prev_uki(self, item: MenuItem) -> str | None:
-		uki_text = f'{tr("Unified kernel images")}'
+		uki_text = f'{"Unified kernel images"}'
 		if item.value:
-			return f'{uki_text}: {tr("Enabled")}'
-		return f'{uki_text}: {tr("Disabled")}'
+			return f'{uki_text}: {"Enabled"}'
+		return f'{uki_text}: {"Disabled"}'
 
 	def _prev_removable(self, item: MenuItem) -> str | None:
 		if item.value:
-			return tr('Will install to /EFI/BOOT/ (removable location, safe default)')
-		return tr('Will install to custom location with NVRAM entry')
+			return 'Will install to /EFI/BOOT/ (removable location, safe default)'
+		return 'Will install to custom location with NVRAM entry'
 
 	def _prev_quiet(self, item: MenuItem) -> str | None:
-		state = tr('Enabled') if item.value else tr('Disabled')
-		return '{}: {}'.format(tr('Quiet boot'), state)
+		state = 'Enabled' if item.value else 'Disabled'
+		return '{}: {}'.format('Quiet boot', state)
 
 	@override
 	def run(
@@ -128,7 +127,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return bootloader
 
 	def _select_quiet(self, preset: bool) -> bool:
-		prompt = tr('Add "quiet" to the kernel command line for a quieter boot?') + '\n'
+		prompt = 'Add "quiet" to the kernel command line for a quieter boot?' + '\n'
 
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(preset)
@@ -151,7 +150,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				raise ValueError('Unhandled result type')
 
 	def _select_uki(self, preset: bool) -> bool:
-		prompt = tr('Would you like to use unified kernel images?') + '\n'
+		prompt = 'Would you like to use unified kernel images?' + '\n'
 
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(preset)
@@ -175,32 +174,32 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _select_removable(self, preset: bool) -> bool:
 		prompt = (
-			tr('Would you like to install the bootloader to the default removable media search location?')
-			+ '\n\n'
-			+ tr('This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is useful for:')
-			+ '\n\n  • '
-			+ tr('Firmware that does not properly support NVRAM boot entries like most MSI motherboards,')
-			+ '\n    '
-			+ tr('most Apple Macs, many laptops...')
-			+ '\n  • '
-			+ tr('USB drives or other portable external media.')
-			+ '\n  • '
-			+ tr('Systems where you want the disk to be bootable on any computer.')
-			+ '\n\n'
-			+ tr(
-				textwrap.dedent(
-					"""\
-					If you do not know what this means, LEAVE THIS OPTION ENABLED, as it is the safe default.
+			(
+				'Would you like to install the bootloader to the default removable media search location?'
+				'\n\n'
+				'This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is useful for:'
+				'\n\n  • '
+				'Firmware that does not properly support NVRAM boot entries like most MSI motherboards,'
+				'\n    '
+				'most Apple Macs, many laptops...'
+				'\n  • '
+				'USB drives or other portable external media.'
+				'\n  • '
+				'Systems where you want the disk to be bootable on any computer.'
+				'\n\n'
+			)
+			+ textwrap.dedent(
+				"""\
+			If you do not know what this means, LEAVE THIS OPTION ENABLED, as it is the safe default.
 
-					It is suggested to disable this if none of the above apply, as it makes installing multiple
-					EFI bootloaders on the same disk easier, and it will not overwrite whatever bootloader
-					was previously installed at the default removable media search location, if any.
+			It is suggested to disable this if none of the above apply, as it makes installing multiple
+			EFI bootloaders on the same disk easier, and it will not overwrite whatever bootloader
+			was previously installed at the default removable media search location, if any.
 
-					It may also make the installation more resilient in case of dual-booting with Windows,
-					as Windows is known to sometimes erase or replace the bootloader installed at the removable
-					location.
-					"""
-				)
+			It may also make the installation more resilient in case of dual-booting with Windows,
+			as Windows is known to sometimes erase or replace the bootloader installed at the removable
+			location.
+			"""
 			)
 			+ '\n'
 		)
@@ -232,14 +231,14 @@ def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = F
 
 	if not uefi:
 		options += [Bootloader.Grub, Bootloader.Limine]
-		header = tr('UEFI is not detected and some options are disabled')
+		header = 'UEFI is not detected and some options are disabled'
 	else:
 		options += list(Bootloader)
 
 	default: Bootloader | None = None if skip_boot else Bootloader.Grub
 
 	items = [MenuItem(o.display_name(), value=o) for o in options]
-	items.append(MenuItem(text=tr('None'), value=None))
+	items.append(MenuItem(text='None', value=None))
 	group = MenuItemGroup(items)
 	group.set_default_by_value(default)
 	group.set_focus_by_value(preset)
@@ -248,7 +247,7 @@ def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = F
 		group,
 		header=header,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Bootloader')),
+		frame=FrameProperties.min('Bootloader'),
 		allow_skip=True,
 	).run()
 

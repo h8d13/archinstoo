@@ -15,7 +15,6 @@ from archinstoo.lib.models.device import (
 	PartitionModification,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -54,14 +53,14 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Encryption type'),
+				text='Encryption type',
 				action=lambda x: select_encryption_type(self._device_modifications, self._lvm_config, x),
 				value=self._enc_config.encryption_type,
 				preview_action=self._preview,
 				key='encryption_type',
 			),
 			MenuItem(
-				text=tr('Encryption password'),
+				text='Encryption password',
 				action=lambda x: select_encrypted_password(),
 				value=self._enc_config.encryption_password,
 				dependencies=[self._check_dep_enc_type],
@@ -69,7 +68,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='encryption_password',
 			),
 			MenuItem(
-				text=tr('Key derivation function'),
+				text='Key derivation function',
 				action=select_pbkdf,
 				value=self._enc_config.pbkdf,
 				dependencies=[self._check_dep_enc_type],
@@ -77,7 +76,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='pbkdf',
 			),
 			MenuItem(
-				text=tr('Iteration time'),
+				text='Iteration time',
 				action=select_iteration_time,
 				value=self._enc_config.iter_time,
 				dependencies=[self._check_dep_enc_type],
@@ -85,7 +84,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='iter_time',
 			),
 			MenuItem(
-				text=tr('Partitions'),
+				text='Partitions',
 				action=lambda x: select_partitions_to_encrypt(self._device_modifications, x),
 				value=self._enc_config.partitions,
 				dependencies=[self._check_dep_partitions],
@@ -93,7 +92,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='partitions',
 			),
 			MenuItem(
-				text=tr('LVM volumes'),
+				text='LVM volumes',
 				action=self._select_lvm_vols,
 				value=self._enc_config.lvm_volumes,
 				dependencies=[self._check_dep_lvm_vols],
@@ -101,7 +100,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='lvm_volumes',
 			),
 			MenuItem(
-				text=tr('Auto unlock root'),
+				text='Auto unlock root',
 				action=self._select_auto_unlock_root,
 				value=self._enc_config.auto_unlock_root,
 				dependencies=[self._check_dep_auto_unlock],
@@ -109,7 +108,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='auto_unlock_root',
 			),
 			MenuItem(
-				text=tr('TPM2 auto unlock'),
+				text='TPM2 auto unlock',
 				action=self._select_tpm2_unlock,
 				value=self._enc_config.tpm2_unlock,
 				dependencies=[self._check_dep_tpm2],
@@ -117,7 +116,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='tpm2_unlock',
 			),
 			MenuItem(
-				text=tr('TPM2 PCRs'),
+				text='TPM2 PCRs',
 				action=self._select_tpm2_pcrs,
 				value=self._enc_config.tpm2_pcrs,
 				dependencies=[self._check_dep_tpm2_pcrs],
@@ -132,8 +131,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return []
 
 	def _select_auto_unlock_root(self, preset: bool) -> bool:
-		prompt = tr('Embed a keyfile in initramfs so root is auto-unlocked ?') + '\n'
-		prompt += tr('This avoids entering encryption password twice on boot.') + '\n'
+		prompt = 'Embed a keyfile in initramfs so root is auto-unlocked ?' + '\n'
+		prompt += 'This avoids entering encryption password twice on boot.' + '\n'
 
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(preset)
@@ -200,7 +199,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			alignment=Alignment.CENTER,
 			multi=True,
 			allow_skip=True,
-			frame=FrameProperties.min(tr('TPM2 PCRs')),
+			frame=FrameProperties.min('TPM2 PCRs'),
 		).run()
 
 		match result.type_:
@@ -213,9 +212,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				return preset
 
 	def _select_tpm2_unlock(self, preset: bool) -> bool:
-		prompt = tr('Bind a TPM2 keyslot to the LUKS device(s) so the disk auto-unlocks at boot ?') + '\n'
-		prompt += tr('PCR selection picked separately. Defaults to 0+7.') + '\n'
-		prompt += tr('Passphrase keyslot stays as fallback.') + '\n'
+		prompt = 'Bind a TPM2 keyslot to the LUKS device(s) so the disk auto-unlocks at boot ?' + '\n'
+		prompt += 'PCR selection picked separately. Defaults to 0+7.' + '\n'
+		prompt += 'Passphrase keyslot stays as fallback.' + '\n'
 
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(preset)
@@ -313,13 +312,13 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def _prev_type(self) -> str | None:
 		if enc_type := self._item_group.find_by_key('encryption_type').value:
 			enc_text = enc_type.type_to_text()
-			return f'{tr("Encryption type")}: {enc_text}'
+			return f'{"Encryption type"}: {enc_text}'
 
 		return None
 
 	def _prev_password(self) -> str | None:
 		if enc_pwd := self._item_group.find_by_key('encryption_password').value:
-			return f'{tr("Encryption password")}: {enc_pwd.hidden()}'
+			return f'{"Encryption password"}: {enc_pwd.hidden()}'
 
 		return None
 
@@ -327,7 +326,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		partitions: list[PartitionModification] | None = self._item_group.find_by_key('partitions').value
 
 		if partitions:
-			output = tr('Partitions to be encrypted') + '\n'
+			output = 'Partitions to be encrypted' + '\n'
 			output += FormattedOutput.as_table(partitions)
 			return output.rstrip()
 
@@ -337,7 +336,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		volumes: list[PartitionModification] | None = self._item_group.find_by_key('lvm_volumes').value
 
 		if volumes:
-			output = tr('LVM volumes to be encrypted') + '\n'
+			output = 'LVM volumes to be encrypted' + '\n'
 			output += FormattedOutput.as_table(volumes)
 			return output.rstrip()
 
@@ -348,7 +347,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if pbkdf and enc_type != EncryptionType.NO_ENCRYPTION:
-			return f'{tr("Key derivation function")}: {pbkdf.display_name()}'
+			return f'{"Key derivation function"}: {pbkdf.display_name()}'
 
 		return None
 
@@ -357,7 +356,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if iter_time and enc_type != EncryptionType.NO_ENCRYPTION:
-			return f'{tr("Iteration time")}: {iter_time}ms'
+			return f'{"Iteration time"}: {iter_time}ms'
 
 		return None
 
@@ -366,8 +365,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if enc_type and enc_type != EncryptionType.NO_ENCRYPTION:
-			status = tr('Enabled') if auto_unlock else tr('Disabled')
-			return f'{tr("Auto unlock root")}: {status}'
+			status = 'Enabled' if auto_unlock else 'Disabled'
+			return f'{"Auto unlock root"}: {status}'
 
 		return None
 
@@ -379,14 +378,14 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			return None
 
 		tpm2 = self._item_group.find_by_key('tpm2_unlock').value
-		status = tr('Enabled') if tpm2 else tr('Disabled')
-		return f'{tr("TPM2 auto unlock")}: {status}'
+		status = 'Enabled' if tpm2 else 'Disabled'
+		return f'{"TPM2 auto unlock"}: {status}'
 
 	def _prev_tpm2_pcrs(self) -> str | None:
 		if not self._item_group.find_by_key('tpm2_unlock').value:
 			return None
 		pcrs = self._item_group.find_by_key('tpm2_pcrs').value or '0+7'
-		return f'{tr("TPM2 PCRs")}: {pcrs}'
+		return f'{"TPM2 PCRs"}: {pcrs}'
 
 
 def select_encryption_type(
@@ -412,7 +411,7 @@ def select_encryption_type(
 		allow_skip=True,
 		allow_reset=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Encryption type')),
+		frame=FrameProperties.min('Encryption type'),
 	).run()
 
 	match result.type_:
@@ -425,9 +424,9 @@ def select_encryption_type(
 
 
 def select_encrypted_password() -> Password | None:
-	header = tr('Enter disk encryption password (leave blank for no encryption)') + '\n'
+	header = 'Enter disk encryption password (leave blank for no encryption)' + '\n'
 	return get_password(
-		text=tr('Disk encryption password'),
+		text='Disk encryption password',
 		header=header,
 		allow_skip=True,
 	)
@@ -508,7 +507,7 @@ def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
 		allow_skip=True,
 		allow_reset=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Key derivation function')),
+		frame=FrameProperties.min('Key derivation function'),
 	).run()
 
 	match result.type_:
@@ -521,9 +520,9 @@ def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
 
 
 def select_iteration_time(preset: int | None = None) -> int | None:
-	header = tr('Enter iteration time for LUKS encryption (in milliseconds)') + '\n'
-	header += tr('Higher values increase security but slow down boot time') + '\n'
-	header += tr('Default: {}ms, Recommended range: 1000-60000').format(DEFAULT_ITER_TIME) + '\n'
+	header = 'Enter iteration time for LUKS encryption (in milliseconds)' + '\n'
+	header += 'Higher values increase security but slow down boot time' + '\n'
+	header += f'Default: {DEFAULT_ITER_TIME}ms, Recommended range: 1000-60000' + '\n'
 
 	def validate_iter_time(value: str | None) -> str | None:
 		if not value:
@@ -532,15 +531,15 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 		try:
 			iter_time = int(value)
 			if iter_time < 100:
-				return tr('Iteration time must be at least 100ms')
+				return 'Iteration time must be at least 100ms'
 			if iter_time > 120000:
-				return tr('Iteration time must be at most 120000ms')
+				return 'Iteration time must be at most 120000ms'
 			return None
 		except ValueError:
-			return tr('Please enter a valid number')
+			return 'Please enter a valid number'
 
 	result = EditMenu(
-		tr('Iteration time'),
+		'Iteration time',
 		header=header,
 		alignment=Alignment.CENTER,
 		allow_skip=True,

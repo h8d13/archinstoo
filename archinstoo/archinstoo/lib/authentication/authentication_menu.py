@@ -4,7 +4,6 @@ from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -38,19 +37,19 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Root password'),
+				text='Root password',
 				action=select_root_password,
 				preview_action=self._prev_root_pwd,
 				key='root_enc_password',
 			),
 			MenuItem(
-				text=tr('User account'),
+				text='User account',
 				action=self._create_user_account,
 				preview_action=self._prev_users,
 				key='users',
 			),
 			MenuItem(
-				text=tr('Privilege escalation'),
+				text='Privilege escalation',
 				action=select_privilege_escalation,
 				value=self._auth_config.privilege_escalation,
 				preview_action=self._prev_priv_esc,
@@ -58,7 +57,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 				key='privilege_escalation',
 			),
 			MenuItem(
-				text=tr('Lock root account'),
+				text='Lock root account',
 				action=select_lock_root_account,
 				value=self._auth_config.lock_root_account,
 				preview_action=self._prev_lock_root,
@@ -81,7 +80,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 	def _prev_root_pwd(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			password: Password = item.value
-			return f'{tr("Root password")}: {password.hidden()}'
+			return f'{"Root password"}: {password.hidden()}'
 		return None
 
 	def has_elevated_users(self) -> bool:
@@ -92,29 +91,29 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 	def _prev_priv_esc(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			priv_esc: PrivilegeEscalation = item.value
-			return f'{tr("Privilege escalation")}: {priv_esc.value}'
+			return f'{"Privilege escalation"}: {priv_esc.value}'
 		return None
 
 	def _prev_lock_root(self, item: MenuItem) -> str | None:
 		if item.value is True:
-			return tr('Root account will be locked after installation')
+			return 'Root account will be locked after installation'
 		return None
 
 
 def select_root_password(preset: str | None = None) -> Password | None:
-	return get_password(text=tr('Root password'), allow_skip=True)
+	return get_password(text='Root password', allow_skip=True)
 
 
 def select_privilege_escalation(preset: PrivilegeEscalation | None) -> PrivilegeEscalation | None:
 	items = [MenuItem(method.value, value=method) for method in PrivilegeEscalation]
-	items.append(MenuItem(text=tr('None'), value=None))
+	items.append(MenuItem(text='None', value=None))
 	group = MenuItemGroup(items)
 	group.set_selected_by_value(preset)
 
 	result = SelectMenu[PrivilegeEscalation | None](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Privilege escalation')),
+		frame=FrameProperties.min('Privilege escalation'),
 		allow_skip=True,
 	).run()
 
@@ -131,7 +130,7 @@ def select_lock_root_account(preset: bool) -> bool:
 	group = MenuItemGroup.yes_no()
 	group.focus_item = MenuItem.yes() if preset else MenuItem.no()
 
-	header = tr('Lock root account? Can be undone using passwd -u root later.\n') + tr('Sudo users can still edit /etc/shadow or use sudo directly.\n')
+	header = 'Lock root account? Can be undone using passwd -u root later.\n' + 'Sudo users can still edit /etc/shadow or use sudo directly.\n'
 
 	result = SelectMenu[bool](
 		group,

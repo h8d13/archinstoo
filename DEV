@@ -9,16 +9,20 @@ go_to() {
 }
 
 clean() {
-	git clean -Xnd
-
+	local pending
+	pending=$(git clean -Xnd)
+	[[ -n "${pending}" ]] || {
+		echo "nothing to clean"
+		return 0
+	}
+	echo "${pending}"
 	read -rp "Proceed? [y/N] " reply
 	[[ "${reply}" == [yY] ]] || {
 		echo "aborted"
-		exit 0
+		return 0
 	}
-
 	git clean -Xfd
-} # make sure no old sigs or build artifacts
+}
 
 sign() {
 	gpg --detach-sign $PKG_GLOB

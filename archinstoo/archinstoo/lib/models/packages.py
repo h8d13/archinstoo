@@ -3,8 +3,6 @@ from enum import Enum
 from functools import cached_property
 from typing import Self, TypedDict, override
 
-from archinstoo.lib.translationhandler import tr
-
 
 class PackageSearchResultSerialization(TypedDict):
 	pkgname: str
@@ -210,6 +208,6 @@ class PackageGroup:
 		return pkg_groups
 
 	def info(self) -> str:
-		output = tr('Package group:') + '\n  - '
+		output = 'Package group:' + '\n  - '
 		output += '\n  - '.join(self.packages)
 		return output

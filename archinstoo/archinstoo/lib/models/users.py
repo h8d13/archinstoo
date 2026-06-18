@@ -3,7 +3,6 @@ from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
 from archinstoo.lib.crypt import crypt_yescrypt
-from archinstoo.lib.translationhandler import tr
 
 
 class Shell(StrEnum):
@@ -42,11 +41,11 @@ class PasswordStrength(Enum):
 	def value(self) -> str:  # pylint: disable=invalid-overridden-method
 		match self:
 			case PasswordStrength.WEAK:
-				return tr('weak')
+				return 'weak'
 			case PasswordStrength.MODERATE:
-				return tr('moderate')
+				return 'moderate'
 			case PasswordStrength.STRONG:
-				return tr('strong')
+				return 'strong'
 
 	@classmethod
 	def strength(cls, password: str) -> Self:

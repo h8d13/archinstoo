@@ -33,7 +33,6 @@ from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.users import Password, Shell, User
 from archinstoo.lib.profile.base import GreeterType
-from archinstoo.lib.translationhandler import translation_handler
 
 if TYPE_CHECKING:
 	import pytest
@@ -162,7 +161,6 @@ def test_config_file_parsing(
 			sys_enc='UTF-8',
 			console_font='ter-v16b',
 		),
-		archinstoo_language=translation_handler.get_language_by_abbr('en'),
 		disk_config=DiskLayoutConfiguration(
 			config_type=DiskLayoutType.Default,
 			device_modifications=[],

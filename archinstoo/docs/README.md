@@ -127,7 +127,6 @@
 │   │   │   ├── driver_select
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
-│   │   ├── translationhandler
 │   │   ├── tui/
 │   │   │   ├── content_editor
 │   │   │   ├── curses_menu

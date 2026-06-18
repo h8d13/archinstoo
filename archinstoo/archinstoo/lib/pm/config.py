@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, assert_never
 from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pathnames import PACMAN_CONF
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.utils.env import Os
@@ -38,7 +37,7 @@ def guard_host_conf() -> None:
 def set_parallel_downloads(preset: int | None = None) -> int | None:
 	max_recommended = 10
 
-	header = tr('Enter the number of parallel downloads (1-{})').format(max_recommended)
+	header = f'Enter the number of parallel downloads (1-{max_recommended})'
 
 	def validator(s: str | None) -> str | None:
 		if s is not None:
@@ -47,10 +46,10 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 				if 1 <= value <= max_recommended:
 					return None
 
-		return tr('Value must be between 1 and {}').format(max_recommended)
+		return f'Value must be between 1 and {max_recommended}'
 
 	result = EditMenu(
-		tr('Number downloads'),
+		'Number downloads',
 		header=header,
 		allow_skip=True,
 		allow_reset=True,

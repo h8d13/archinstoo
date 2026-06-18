@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Any, Self
 
 from archinstoo.lib.output import warn
-from archinstoo.lib.translationhandler import tr
 
 
 class Bootloader(Enum):
@@ -80,17 +79,17 @@ class BootloaderConfiguration:
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	def preview(self, uefi: bool) -> str:
-		text = f'{tr("Bootloader")}: {self.bootloader.display_name() if self.bootloader else tr("None")}'
+		text = f'{"Bootloader"}: {self.bootloader.display_name() if self.bootloader else "None"}'
 		text += '\n'
 		if self.bootloader is None:
 			return text
 		if uefi:
-			uki_string = tr('Enabled') if self.uki else tr('Disabled')
+			uki_string = 'Enabled' if self.uki else 'Disabled'
 			text += f'UKI: {uki_string}'
 			text += '\n'
 		if uefi and self.bootloader.has_removable_support():
-			removable_string = tr('Enabled') if self.removable else tr('Disabled')
-			text += f'{tr("Removable")}: {removable_string}'
+			removable_string = 'Enabled' if self.removable else 'Disabled'
+			text += f'{"Removable"}: {removable_string}'
 			text += '\n'
-		text += '{}: {}\n'.format(tr('Quiet boot'), tr('Enabled') if self.quiet else tr('Disabled'))
+		text += '{}: {}\n'.format('Quiet boot', 'Enabled' if self.quiet else 'Disabled')
 		return text

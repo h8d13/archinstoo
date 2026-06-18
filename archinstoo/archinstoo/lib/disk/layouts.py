@@ -22,7 +22,6 @@ from archinstoo.lib.models.device import (
 	SubvolumeModification,
 	Unit,
 )
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.types import Alignment, Orientation
@@ -131,7 +130,7 @@ def suggest_single_disk_layout(
 	min_size_to_allow_home_part = Size(64, Unit.GiB, sector_size)
 
 	if filesystem_type == FilesystemType.BTRFS:
-		prompt = tr('Would you like to use BTRFS subvolumes with a default structure?') + '\n'
+		prompt = 'Would you like to use BTRFS subvolumes with a default structure?' + '\n'
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(MenuItem.yes().value)
 		result = SelectMenu[bool](
@@ -170,7 +169,7 @@ def suggest_single_disk_layout(
 	elif separate_home:
 		using_home_partition = True
 	else:
-		prompt = tr('Would you like to create a separate partition for /home?') + '\n'
+		prompt = 'Would you like to create a separate partition for /home?' + '\n'
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(MenuItem.yes().value)
 		result = SelectMenu(
@@ -249,7 +248,7 @@ def suggest_lvm_layout(
 		filesystem_type = select_main_filesystem_format(advanced=advanced)
 
 	if filesystem_type == FilesystemType.BTRFS:
-		prompt = tr('Would you like to use BTRFS subvolumes with a default structure?') + '\n'
+		prompt = 'Would you like to use BTRFS subvolumes with a default structure?' + '\n'
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(MenuItem.yes().value)
 

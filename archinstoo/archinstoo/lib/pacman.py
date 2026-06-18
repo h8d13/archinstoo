@@ -7,7 +7,6 @@ from .exceptions import RequirementError
 from .general import SysCommand
 from .output import error, info, logger, warn
 from .pathnames import PACMAN_CONF
-from .translationhandler import tr
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -43,14 +42,14 @@ class Pacman:
 		pacman_db_lock = Path('/var/lib/pacman/db.lck')
 
 		if pacman_db_lock.exists():
-			warn(tr('Pacman is already running, waiting maximum 10 minutes for it to terminate.'))
+			warn('Pacman is already running, waiting maximum 10 minutes for it to terminate.')
 
 		started = time.monotonic()
 		while pacman_db_lock.exists():
 			time.sleep(0.25)
 
 			if time.monotonic() - started > (60 * 10):
-				error(tr('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstoo.'))
+				error('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstoo.')
 				raise SystemExit(1)
 
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)

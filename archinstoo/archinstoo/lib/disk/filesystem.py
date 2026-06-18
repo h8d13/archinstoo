@@ -18,7 +18,6 @@ from archinstoo.lib.models.device import (
 	Unit,
 )
 from archinstoo.lib.output import debug, info
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
 from archinstoo.lib.tui.prompts import confirm_abort
 
@@ -360,7 +359,7 @@ class FilesystemHandler:
 	def _final_warning(self) -> bool:
 		# Issue a final warning before we continue with something un-revertable.
 		# We count down from 5 to 0.
-		out = tr('Starting device modifications in ')
+		out = 'Starting device modifications in '
 		Tui.print(out, row=0, endl='', clear_screen=True)
 
 		try:

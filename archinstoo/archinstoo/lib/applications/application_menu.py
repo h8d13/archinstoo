@@ -26,7 +26,6 @@ from archinstoo.lib.models.application import (
 	Security,
 	SecurityConfiguration,
 )
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -63,57 +62,57 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		items = [
 			MenuItem(
-				text=tr('Bluetooth'),
+				text='Bluetooth',
 				action=select_bluetooth,
 				value=self._app_config.bluetooth_config,
 				preview_action=self._prev_bluetooth,
 				key='bluetooth_config',
 			),
 			MenuItem(
-				text=tr('Audio'),
+				text='Audio',
 				action=select_audio,
 				preview_action=self._prev_audio,
 				key='audio_config',
 			),
 			MenuItem(
-				text=tr('Print service'),
+				text='Print service',
 				action=select_print_service,
 				preview_action=self._prev_print_service,
 				key='print_service_config',
 			),
 			MenuItem(
-				text=tr('Power management'),
+				text='Power management',
 				action=select_power_management,
 				preview_action=self._prev_power_management,
 				enabled=SysInfo.has_battery(),
 				key='power_management_config',
 			),
 			MenuItem(
-				text=tr('Firewall'),
+				text='Firewall',
 				action=select_firewall,
 				preview_action=self._prev_firewall,
 				key='firewall_config',
 			),
 			MenuItem(
-				text=tr('Management'),
+				text='Management',
 				action=select_management,
 				preview_action=self._prev_management,
 				key='management_config',
 			),
 			MenuItem(
-				text=tr('Monitor'),
+				text='Monitor',
 				action=select_monitor,
 				preview_action=self._prev_monitor,
 				key='monitor_config',
 			),
 			MenuItem(
-				text=tr('Editor'),
+				text='Editor',
 				action=select_editor,
 				preview_action=self._prev_editor,
 				key='editor_config',
 			),
 			MenuItem(
-				text=tr('Security'),
+				text='Security',
 				action=select_security,
 				preview_action=self._prev_security,
 				key='security_config',
@@ -124,7 +123,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if self._advanced:
 			items.append(
 				MenuItem(
-					text=tr('Development'),
+					text='Development',
 					action=select_development,
 					preview_action=self._prev_development,
 					key='development_config',
@@ -136,63 +135,63 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 	def _prev_power_management(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: PowerManagementConfiguration = item.value
-			return f'{tr("Power management")}: {config.power_management.value}'
+			return f'{"Power management"}: {config.power_management.value}'
 		return None
 
 	def _prev_bluetooth(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			bluetooth_config: BluetoothConfiguration = item.value
 
-			output = f'{tr("Bluetooth")}: '
-			output += tr('Enabled') if bluetooth_config.enabled else tr('Disabled')
+			output = f'{"Bluetooth"}: '
+			output += 'Enabled' if bluetooth_config.enabled else 'Disabled'
 			return output
 		return None
 
 	def _prev_audio(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: AudioConfiguration = item.value
-			return f'{tr("Audio")}: {config.audio.value}'
+			return f'{"Audio"}: {config.audio.value}'
 		return None
 
 	def _prev_print_service(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			print_service_config: PrintServiceConfiguration = item.value
 
-			output = f'{tr("Print service")}: '
-			output += tr('Enabled') if print_service_config.enabled else tr('Disabled')
+			output = f'{"Print service"}: '
+			output += 'Enabled' if print_service_config.enabled else 'Disabled'
 			return output
 		return None
 
 	def _prev_firewall(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: FirewallConfiguration = item.value
-			return f'{tr("Firewall")}: {config.firewall.value}'
+			return f'{"Firewall"}: {config.firewall.value}'
 		return None
 
 	def _prev_management(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: ManagementConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
-			return f'{tr("Management")}: {tools}'
+			return f'{"Management"}: {tools}'
 		return None
 
 	def _prev_monitor(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: MonitorConfiguration = item.value
-			return f'{tr("Monitor")}: {config.monitor.value}'
+			return f'{"Monitor"}: {config.monitor.value}'
 		return None
 
 	def _prev_editor(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: EditorConfiguration = item.value
-			return f'{tr("Editor")}: {config.editor.value}'
+			return f'{"Editor"}: {config.editor.value}'
 		return None
 
 	def _prev_security(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: SecurityConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
-			return f'{tr("Security")}: {tools}'
+			return f'{"Security"}: {tools}'
 		return None
 
 	def _prev_development(self, item: MenuItem) -> str | None:
@@ -204,11 +203,11 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 
 		if config.language_config and config.language_config.tools:
 			tools = ', '.join([t.value for t in config.language_config.tools])
-			lines.append(f'{tr("Languages")}: {tools}')
+			lines.append(f'{"Languages"}: {tools}')
 
 		if config.devtool_config and config.devtool_config.tools:
 			tools = ', '.join([t.value for t in config.devtool_config.tools])
-			lines.append(f'{tr("Build & Debug")}: {tools}')
+			lines.append(f'{"Build & Debug"}: {tools}')
 
 		return '\n'.join(lines) if lines else None
 
@@ -240,13 +239,13 @@ class DevelopmentMenu(AbstractSubMenu[DevelopmentConfiguration]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Languages'),
+				text='Languages',
 				action=select_languages,
 				preview_action=self._prev_languages,
 				key='language_config',
 			),
 			MenuItem(
-				text=tr('Build & Debug'),
+				text='Build & Debug',
 				action=select_devtools,
 				preview_action=self._prev_devtools,
 				key='devtool_config',
@@ -257,14 +256,14 @@ class DevelopmentMenu(AbstractSubMenu[DevelopmentConfiguration]):
 		if item.value is not None:
 			config: LanguageConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
-			return f'{tr("Languages")}: {tools}'
+			return f'{"Languages"}: {tools}'
 		return None
 
 	def _prev_devtools(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: DevToolConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
-			return f'{tr("Build & Debug")}: {tools}'
+			return f'{"Build & Debug"}: {tools}'
 		return None
 
 
@@ -279,7 +278,7 @@ def select_power_management(preset: PowerManagementConfiguration | None = None) 
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Power management')),
+		frame=FrameProperties.min('Power management'),
 	).run()
 
 	match result.type_:
@@ -298,7 +297,7 @@ def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfigur
 	if preset is not None:
 		group.set_selected_by_value(preset.enabled)
 
-	header = tr('Would you like to configure Bluetooth?') + '\n'
+	header = 'Would you like to configure Bluetooth?' + '\n'
 
 	result = SelectMenu[bool](
 		group,
@@ -326,7 +325,7 @@ def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServi
 	if preset is not None:
 		group.set_selected_by_value(preset.enabled)
 
-	header = tr('Would you like to configure the print service?') + '\n'
+	header = 'Would you like to configure the print service?' + '\n'
 
 	result = SelectMenu[bool](
 		group,
@@ -349,7 +348,7 @@ def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServi
 
 def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration | None:
 	items = [MenuItem(a.value, value=a) for a in Audio]
-	items.append(MenuItem(text=tr('None'), value=None))
+	items.append(MenuItem(text='None', value=None))
 	group = MenuItemGroup(items)
 
 	if preset:
@@ -359,7 +358,7 @@ def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration
 		group,
 		allow_skip=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Audio')),
+		frame=FrameProperties.min('Audio'),
 	).run()
 
 	match result.type_:
@@ -383,7 +382,7 @@ def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConf
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Firewall')),
+		frame=FrameProperties.min('Firewall'),
 	).run()
 
 	match result.type_:
@@ -400,7 +399,7 @@ def select_management(preset: ManagementConfiguration | None = None) -> Manageme
 	items = [MenuItem(m.value, value=m) for m in options]
 	group = MenuItemGroup(items)
 
-	header = tr('Would you like to install management tools?') + '\n'
+	header = 'Would you like to install management tools?' + '\n'
 
 	if preset:
 		group.set_selected_by_value(preset.tools)
@@ -411,7 +410,7 @@ def select_management(preset: ManagementConfiguration | None = None) -> Manageme
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Management')),
+		frame=FrameProperties.min('Management'),
 		multi=True,
 	).run()
 
@@ -435,7 +434,7 @@ def select_monitor(preset: MonitorConfiguration | None = None) -> MonitorConfigu
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Monitor')),
+		frame=FrameProperties.min('Monitor'),
 	).run()
 
 	match result.type_:
@@ -453,7 +452,7 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 	if preset:
 		group.set_focus_by_value(preset.editor)
 
-	header = tr('Set an editor globally through /etc/environment?') + '\n'
+	header = 'Set an editor globally through /etc/environment?' + '\n'
 
 	result = SelectMenu[Editor](
 		group,
@@ -461,7 +460,7 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Editor')),
+		frame=FrameProperties.min('Editor'),
 	).run()
 
 	match result.type_:
@@ -477,7 +476,7 @@ def select_security(preset: SecurityConfiguration | None = None) -> SecurityConf
 	items = [MenuItem(s.value, value=s) for s in Security]
 	group = MenuItemGroup(items)
 
-	header = tr('Would you like to install security tools?') + '\n'
+	header = 'Would you like to install security tools?' + '\n'
 
 	if preset:
 		group.set_selected_by_value(preset.tools)
@@ -488,7 +487,7 @@ def select_security(preset: SecurityConfiguration | None = None) -> SecurityConf
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Security')),
+		frame=FrameProperties.min('Security'),
 		multi=True,
 	).run()
 
@@ -512,7 +511,7 @@ def select_languages(preset: LanguageConfiguration | None = None) -> LanguageCon
 	items = [MenuItem(lang.value, value=lang) for lang in Language]
 	group = MenuItemGroup(items)
 
-	header = tr('Would you like to install language toolchains?') + '\n'
+	header = 'Would you like to install language toolchains?' + '\n'
 
 	if preset:
 		group.set_selected_by_value(preset.tools)
@@ -523,7 +522,7 @@ def select_languages(preset: LanguageConfiguration | None = None) -> LanguageCon
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Languages')),
+		frame=FrameProperties.min('Languages'),
 		multi=True,
 	).run()
 
@@ -540,7 +539,7 @@ def select_devtools(preset: DevToolConfiguration | None = None) -> DevToolConfig
 	items = [MenuItem(tool.value, value=tool) for tool in DevTool]
 	group = MenuItemGroup(items)
 
-	header = tr('Would you like to install build & debug tools?') + '\n'
+	header = 'Would you like to install build & debug tools?' + '\n'
 
 	if preset:
 		group.set_selected_by_value(preset.tools)
@@ -551,7 +550,7 @@ def select_devtools(preset: DevToolConfiguration | None = None) -> DevToolConfig
 		allow_skip=True,
 		alignment=Alignment.CENTER,
 		allow_reset=True,
-		frame=FrameProperties.min(tr('Build & Debug')),
+		frame=FrameProperties.min('Build & Debug'),
 		multi=True,
 	).run()
 

@@ -21,7 +21,6 @@ from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import FormattedOutput, debug
 from archinstoo.lib.pathnames import MIRRORLIST
 from archinstoo.lib.pm.config import set_parallel_downloads
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -35,9 +34,9 @@ if TYPE_CHECKING:
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 	def __init__(self, custom_repositories: list[CustomRepository]):
 		self._actions = [
-			tr('Add a custom repository'),
-			tr('Change custom repository'),
-			tr('Delete custom repository'),
+			'Add a custom repository',
+			'Change custom repository',
+			'Delete custom repository',
 		]
 
 		super().__init__(
@@ -73,7 +72,7 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 
 	def _add_custom_repository(self, preset: CustomRepository | None = None) -> CustomRepository | None:
 		edit_result = EditMenu(
-			tr('Repository name'),
+			'Repository name',
 			alignment=Alignment.CENTER,
 			allow_skip=True,
 			default_text=preset.name if preset else None,
@@ -87,10 +86,10 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 			case _:
 				raise ValueError('Unhandled return type')
 
-		header = f'{tr("Name")}: {name}'
+		header = f'{"Name"}: {name}'
 
 		edit_result = EditMenu(
-			tr('Url'),
+			'Url',
 			header=header,
 			alignment=Alignment.CENTER,
 			allow_skip=True,
@@ -105,8 +104,8 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 			case _:
 				raise ValueError('Unhandled return type')
 
-		header += f'\n{tr("Url")}: {url}\n'
-		prompt = f'{header}\n' + tr('Select signature check')
+		header += f'\n{"Url"}: {url}\n'
+		prompt = f'{header}\n' + 'Select signature check'
 
 		sign_chk_items = [MenuItem(s.value, value=s.value) for s in SignCheck]
 		group = MenuItemGroup(sign_chk_items, sort_items=False)
@@ -127,8 +126,8 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 			case _:
 				raise ValueError('Unhandled return type')
 
-		header += f'{tr("Signature check")}: {sign_check.value}\n'
-		prompt = f'{header}\n' + tr('Select signature option')
+		header += f'{"Signature check"}: {sign_check.value}\n'
+		prompt = f'{header}\n' + 'Select signature option'
 
 		sign_opt_items = [MenuItem(s.value, value=s.value) for s in SignOption]
 		group = MenuItemGroup(sign_opt_items, sort_items=False)
@@ -155,9 +154,9 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 class CustomMirrorServersList(ListManager[CustomServer]):
 	def __init__(self, custom_servers: list[CustomServer]):
 		self._actions = [
-			tr('Add a custom server'),
-			tr('Change custom server'),
-			tr('Delete custom server'),
+			'Add a custom server',
+			'Change custom server',
+			'Delete custom server',
 		]
 
 		super().__init__(
@@ -193,7 +192,7 @@ class CustomMirrorServersList(ListManager[CustomServer]):
 
 	def _add_custom_server(self, preset: CustomServer | None = None) -> CustomServer | None:
 		edit_result = EditMenu(
-			tr('Server url'),
+			'Server url',
 			alignment=Alignment.CENTER,
 			allow_skip=True,
 			default_text=preset.url if preset else None,
@@ -236,42 +235,42 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Select regions'),
+				text='Select regions',
 				action=partial(select_mirror_regions, mirror_list_handler=self._mirror_handler),
 				value=self._mirror_config.mirror_regions,
 				preview_action=self._prev_regions,
 				key='mirror_regions',
 			),
 			MenuItem(
-				text=tr('Optional repositories'),
+				text='Optional repositories',
 				action=select_optional_repositories,
 				value=[],
 				preview_action=self._prev_additional_repos,
 				key='optional_repositories',
 			),
 			MenuItem(
-				text=tr('Add custom repository'),
+				text='Add custom repository',
 				action=select_custom_mirror,
 				value=self._mirror_config.custom_repositories,
 				preview_action=self._prev_custom_mirror,
 				key='custom_repositories',
 			),
 			MenuItem(
-				text=tr('Add custom servers'),
+				text='Add custom servers',
 				action=add_custom_mirror_servers,
 				value=self._mirror_config.custom_servers,
 				preview_action=self._prev_custom_servers,
 				key='custom_servers',
 			),
 			MenuItem(
-				text=tr('Pacman misc options'),
+				text='Pacman misc options',
 				action=select_pacman_options,
 				value=self._mirror_config.pacman_options,
 				preview_action=self._prev_pacman_options,
 				key='pacman_options',
 			),
 			MenuItem(
-				text=tr('Parallel Downloads'),
+				text='Parallel Downloads',
 				action=set_parallel_downloads,
 				value=self._mirror_config.parallel_downloads,
 				preview_action=self._prev_parallel_downloads,
@@ -298,7 +297,7 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 		if item.value:
 			repositories: list[Repository] = item.value
 			repos = ', '.join([repo.value for repo in repositories])
-			return f'{tr("Additional repositories")}: {repos}'
+			return f'{"Additional repositories"}: {repos}'
 		return None
 
 	def _prev_custom_mirror(self, item: MenuItem) -> str | None:
@@ -342,7 +341,7 @@ def select_mirror_regions(
 	handler = mirror_list_handler or MirrorListHandler()
 
 	if not handler.is_loaded():
-		Tui.print(tr('Loading mirror regions...'), clear_screen=True)
+		Tui.print('Loading mirror regions...', clear_screen=True)
 
 	handler.load_mirrors()
 	available_regions = handler.get_mirror_regions()
@@ -360,7 +359,7 @@ def select_mirror_regions(
 	result = SelectMenu[MirrorRegion](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Mirror regions')),
+		frame=FrameProperties.min('Mirror regions'),
 		allow_reset=True,
 		allow_skip=True,
 		multi=True,
@@ -425,7 +424,7 @@ def select_pacman_options(preset: list[str]) -> list[str]:
 	result = SelectMenu[str](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Pacman options')),
+		frame=FrameProperties.min('Pacman options'),
 		allow_reset=True,
 		allow_skip=True,
 		multi=True,

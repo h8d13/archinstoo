@@ -3,7 +3,6 @@ from typing import override
 
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.users import Shell, SupplementaryGroup, User
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -15,13 +14,13 @@ from .password_prompt import get_password
 class UserList(ListManager[User]):
 	def __init__(self, prompt: str, lusers: list[User]):
 		self._actions = [
-			tr('Add a user'),
-			tr('Manage stash URLs'),
-			tr('Change password'),
-			tr('Change shell'),
-			tr('Manage groups'),
-			tr('Promote/Demote user'),
-			tr('Delete User'),
+			'Add a user',
+			'Manage stash URLs',
+			'Change password',
+			'Change shell',
+			'Manage groups',
+			'Promote/Demote user',
+			'Delete User',
 		]
 
 		super().__init__(
@@ -49,8 +48,8 @@ class UserList(ListManager[User]):
 			user = next(filter(lambda x: x == entry, data))
 			user.stash_urls = self._manage_stash_urls(user)
 		elif action == self._actions[2] and entry:  # change password
-			header = f'{tr("User")}: {entry.username}\n'
-			new_password = get_password(tr('Password'), header=header)
+			header = f'{"User"}: {entry.username}\n'
+			new_password = get_password('Password', header=header)
 
 			if new_password:
 				user = next(filter(lambda x: x == entry, data))
@@ -72,7 +71,7 @@ class UserList(ListManager[User]):
 	def _check_for_correct_username(self, username: str | None) -> str | None:
 		if username is not None and re.match(r'^[a-z_][a-z0-9_-]*\$?$', username) and len(username) <= 32:
 			return None
-		return tr('The username you entered is invalid')
+		return 'The username you entered is invalid'
 
 	def _validate_stash_url(self, url: str | None) -> str | None:
 		if not url:
@@ -80,18 +79,18 @@ class UserList(ListManager[User]):
 		# Strip optional #branch suffix, validate git URL
 		if re.match(r'^(https?://|git@|git://)', url.partition('#')[0]):
 			return None
-		return tr('Invalid git URL')
+		return 'Invalid git URL'
 
 	def _manage_stash_urls(self, user: User) -> list[str]:
 		urls = list(user.stash_urls)
 
 		items = [MenuItem(url, url) for url in urls]
-		items.append(MenuItem(tr('Add new stash URL'), '__add__'))
+		items.append(MenuItem('Add new stash URL', '__add__'))
 
 		if urls:
-			header = f'{tr("User")}: {user.username}\n{tr("Select URL to remove, or add new")}\n'
+			header = f'{"User"}: {user.username}\n{"Select URL to remove, or add new"}\n'
 		else:
-			header = f'{tr("User")}: {user.username}\n{tr("No stash URLs configured")}\n'
+			header = f'{"User"}: {user.username}\n{"No stash URLs configured"}\n'
 
 		group = MenuItemGroup(items)
 		result = SelectMenu[str](group, header=header, allow_skip=True, alignment=Alignment.CENTER).run()
@@ -112,9 +111,9 @@ class UserList(ListManager[User]):
 		return urls
 
 	def _get_stash_url(self) -> str | None:
-		header = f'{tr("Format")}: https://provider.com/user/repo#branch\n{tr("Branch is optional")}\n'
+		header = f'{"Format"}: https://provider.com/user/repo#branch\n{"Branch is optional"}\n'
 		result = EditMenu(
-			tr('Stash URL'),
+			'Stash URL',
 			header=header,
 			allow_skip=True,
 			validator=self._validate_stash_url,
@@ -130,7 +129,7 @@ class UserList(ListManager[User]):
 
 	def _add_user(self) -> User | None:
 		editResult = EditMenu(
-			tr('Username'),
+			'Username',
 			allow_skip=True,
 			validator=self._check_for_correct_username,
 		).input()
@@ -146,15 +145,15 @@ class UserList(ListManager[User]):
 		if not username:
 			return None
 
-		header = f'{tr("Username")}: {username}\n'
+		header = f'{"Username"}: {username}\n'
 
-		password = get_password(tr('Password'), header=header, allow_skip=True)
+		password = get_password('Password', header=header, allow_skip=True)
 
 		if not password:
 			return None
 
-		header += f'{tr("Password")}: {password.hidden()}\n\n'
-		header += str(tr('Should "{}" be a superuser?\n')).format(username)
+		header += f'{"Password"}: {password.hidden()}\n\n'
+		header += f'Should "{username}" be a superuser?\n'
 
 		group = MenuItemGroup.yes_no()
 		group.focus_item = MenuItem.yes()
@@ -190,7 +189,7 @@ def _select_shell(preset: Shell = Shell.BASH, elev: bool = False) -> Shell:
 		group,
 		allow_skip=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Shell')),
+		frame=FrameProperties.min('Shell'),
 	).run()
 
 	match result.type_:
@@ -212,7 +211,7 @@ def _select_groups(preset: list[str] | None = None) -> list[str]:
 		group,
 		allow_skip=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Groups')),
+		frame=FrameProperties.min('Groups'),
 		multi=True,
 	).run()
 

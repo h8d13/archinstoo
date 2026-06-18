@@ -1,7 +1,6 @@
 from typing import override
 
 from archinstoo.lib.profile.base import DisplayServer, Profile, ProfileType
-from archinstoo.lib.translationhandler import tr
 
 
 class XorgProfile(Profile):
@@ -17,7 +16,7 @@ class XorgProfile(Profile):
 
 	@override
 	def preview_text(self) -> str:
-		text = tr('Type: {} (Xorg)').format(self.profile_type.value)
+		text = f'Type: {self.profile_type.value} (Xorg)'
 		if packages := self.packages_text():
 			text += f'\n{packages}'
 

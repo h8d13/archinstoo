@@ -9,8 +9,6 @@ from curses.ascii import isprint
 from curses.textpad import Textbox
 from typing import TYPE_CHECKING, ClassVar, Literal, Self, override
 
-from archinstoo.lib.translationhandler import tr
-
 from .help import Help
 from .menu_item import MenuItem, MenuItemGroup, MenuItemsState
 from .result import Result, ResultType
@@ -64,7 +62,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			height,
 			x_start,
 			int((max_height / 2) - height / 2),
-			frame=FrameProperties.min(tr('Archinstoo help')),
+			frame=FrameProperties.min('Archinstoo help'),
 		)
 
 	def _confirm_interrupt(self, warning: str) -> bool:
@@ -87,7 +85,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			return False
 
 	def help_text(self) -> str:
-		return tr('Ctrl+C to clear, TAB to select multiple, ESC to go back, Ctrl+Q to quit, Ctrl+H for full help')
+		return 'Ctrl+C to clear, TAB to select multiple, ESC to go back, Ctrl+Q to quit, Ctrl+H for full help'
 
 	def _show_help(self) -> None:
 		help_text = Help.get_help_text()
@@ -485,7 +483,7 @@ class EditMenu(AbstractCurses[str]):
 		self._hide_input = hide_input
 
 		if self._interrupt_warning is None:
-			self._interrupt_warning = tr('Are you sure you want to reset this setting?') + '\n'
+			self._interrupt_warning = 'Are you sure you want to reset this setting?' + '\n'
 
 		title = f'* {title}' if not self._allow_skip else title
 		self._frame = FrameProperties(title, FrameStyle.MAX)
@@ -496,7 +494,7 @@ class EditMenu(AbstractCurses[str]):
 		self._info_vp: Viewport | None = None
 
 		self._set_default_info = True
-		self._only_ascii_text = ViewportEntry(tr('Only ASCII characters are supported'), 0, 0, STYLE.NORMAL)
+		self._only_ascii_text = ViewportEntry('Only ASCII characters are supported', 0, 0, STYLE.NORMAL)
 
 		self._init_viewports()
 
@@ -746,7 +744,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 			self._header_entries = self.get_header_entries(header)
 
 		if self._interrupt_warning is None:
-			self._interrupt_warning = tr('Are you sure you want to reset this setting?') + '\n'
+			self._interrupt_warning = 'Are you sure you want to reset this setting?' + '\n'
 
 		if self._orientation == Orientation.HORIZONTAL:
 			self._horizontal_cols = columns

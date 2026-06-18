@@ -17,7 +17,7 @@ def show_menu(config: ArchConfig) -> None:
 		global_menu.disable_all()
 		global_menu.run(additional_title=' - Format mode')
 
-		global_menu.set_enabled('archinstoo_language', True)
+		global_menu.set_enabled('theme', True)
 		global_menu.set_enabled('disk_config', True)
 		global_menu.set_enabled('__config__', True)
 

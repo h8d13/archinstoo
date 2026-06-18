@@ -19,7 +19,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu.run(additional_title='- Pkgs mode')
 
 		# Only enable profile, applications, and packages
-		global_menu.set_enabled('archinstoo_language', True)
+		global_menu.set_enabled('theme', True)
 		global_menu.set_enabled('profile_config', True)
 		global_menu.set_enabled('app_config', True)
 		global_menu.set_enabled('packages', True)

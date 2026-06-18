@@ -22,7 +22,6 @@ from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.output import error, logger, warn
-from archinstoo.lib.translationhandler import Language, translation_handler
 
 
 def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) -> None:
@@ -58,7 +57,6 @@ class ArchConfig:
 	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
 	script: str = 'guided'
 	locale_config: LocaleConfiguration | None = None
-	archinstoo_language: Language = field(default_factory=lambda: translation_handler.get_language_by_abbr('en'))
 	disk_config: DiskLayoutConfiguration | None = None
 	profile_config: ProfileConfiguration | None = None
 	pacman_config: PacmanConfiguration | None = None
@@ -84,7 +82,6 @@ class ArchConfig:
 		config: dict[str, Any] = {
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
-			'archinstoo_language': self.archinstoo_language.json(),
 			'locale_config': self.locale_config.json() if self.locale_config else None,
 			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
@@ -147,9 +144,6 @@ class ArchConfig:
 		)
 
 		# Special cases that don't fit the pattern
-		if lang := args_config.get('archinstoo_language'):
-			arch_config.archinstoo_language = translation_handler.get_language_by_name(lang)
-
 		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config)
 
 		if bootloader := args_config.get('bootloader_config'):

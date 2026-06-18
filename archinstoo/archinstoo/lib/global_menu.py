@@ -36,7 +36,6 @@ from .network.network_menu import select_network
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
-from .translationhandler import Language, tr, translation_handler
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
@@ -79,21 +78,21 @@ class GlobalMenu(AbstractMenu[None]):
 	def _get_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Archinstoo settings'),
-				action=self._select_archinstoo_settings,
-				preview_action=self._prev_archinstoo_settings,
-				key='archinstoo_language',  # syncs language to config, theme is session-only
+				text='Theme',
+				action=self._select_theme,
+				preview_action=self._prev_theme,
+				key='theme',  # session-only TUI theme, not persisted
 			),
 			MenuItem.separator(),  # critical - assumed empty and mandatory
 			MenuItem(
-				text=tr('Bootloader'),
+				text='Bootloader',
 				value=BootloaderConfiguration.get_default(self._uefi, self._skip_boot),
 				action=self._select_bootloader_config,
 				preview_action=self._prev_bootloader_config,
 				key='bootloader_config',
 			),
 			MenuItem(
-				text=tr('Disk config'),
+				text='Disk config',
 				action=self._select_disk_config,
 				preview_action=self._prev_disk_config,
 				mandatory=True,
@@ -101,7 +100,7 @@ class GlobalMenu(AbstractMenu[None]):
 				value_validator=self._validate_disk_config,
 			),
 			MenuItem(
-				text=tr('Authentication'),
+				text='Authentication',
 				action=self._select_authentication,
 				preview_action=self._prev_authentication,
 				key='auth_config',
@@ -109,13 +108,13 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem.separator(),  # resumed choices - from cfg json file
 			MenuItem(
-				text=tr('Locales'),
+				text='Locales',
 				action=self._locale_selection,
 				preview_action=self._prev_locale,
 				key='locale_config',
 			),
 			MenuItem(
-				text=tr('Pacman config'),
+				text='Pacman config',
 				action=self._pacman_configuration,
 				preview_action=self._prev_pacman_config,
 				key='pacman_config',
@@ -124,14 +123,14 @@ class GlobalMenu(AbstractMenu[None]):
 				),
 			),
 			MenuItem(
-				text=tr('Swap'),
+				text='Swap',
 				value=ZramConfiguration(enabled=True),
 				action=select_swap,
 				preview_action=self._prev_swap,
 				key='swap',
 			),
 			MenuItem(
-				text=tr('Kernels'),
+				text='Kernels',
 				value=[DEFAULT_KERNEL.value],
 				action=self._select_kernel,
 				preview_action=self._prev_kernel,
@@ -139,42 +138,42 @@ class GlobalMenu(AbstractMenu[None]):
 				key='kernels',
 			),
 			MenuItem(
-				text=tr('Firmware'),
+				text='Firmware',
 				value=FirmwareConfiguration(),
 				action=select_firmware,
 				preview_action=self._prev_firmware,
 				key='firmware',
 			),
 			MenuItem(
-				text=tr('Profile'),
+				text='Profile',
 				value=ProfileConfiguration(profiles=[self._default_profile()]),
 				action=self._select_profile,
 				preview_action=self._prev_profile,
 				key='profile_config',
 			),
 			MenuItem(
-				text=tr('Hostname'),
+				text='Hostname',
 				value='archlinux',
 				action=select_hostname,
 				preview_action=self._prev_hostname,
 				key='hostname',
 			),
 			MenuItem(
-				text=tr('Applications'),
+				text='Applications',
 				action=self._select_applications,
 				value=[],
 				preview_action=self._prev_applications,
 				key='app_config',
 			),
 			MenuItem(
-				text=tr('Network config'),
+				text='Network config',
 				action=select_network,
 				value={},
 				preview_action=self._prev_network_config,
 				key='network_config',
 			),
 			MenuItem(
-				text=tr('Timezone'),
+				text='Timezone',
 				action=select_timezone,
 				value=None,
 				preview_action=self._prev_tz,
@@ -182,21 +181,21 @@ class GlobalMenu(AbstractMenu[None]):
 				key='timezone',
 			),
 			MenuItem(
-				text=tr('Automatic time sync'),
+				text='Automatic time sync',
 				action=select_ntp,
 				value=True,
 				preview_action=self._prev_ntp,
 				key='ntp',
 			),
 			MenuItem(
-				text=tr('Additional packages'),
+				text='Additional packages',
 				action=self._select_additional_packages,
 				value=[],
 				preview_action=self._prev_additional_pkgs,
 				key='packages',
 			),
 			MenuItem(
-				text=tr('AUR packages'),
+				text='AUR packages',
 				action=select_aur_packages,
 				value=[],
 				preview_action=self._prev_aur_packages,
@@ -204,14 +203,14 @@ class GlobalMenu(AbstractMenu[None]):
 				key='aur_packages',
 			),
 			MenuItem(
-				text=tr('Sysctl'),
+				text='Sysctl',
 				action=self._edit_sysctl,
 				value=[],
 				preview_action=self._prev_sysctl,
 				key='sysctl',
 			),
 			MenuItem(
-				text=tr('Custom commands'),
+				text='Custom commands',
 				action=self._edit_custom_commands,
 				value=[],
 				preview_action=self._prev_custom_commands,
@@ -219,12 +218,12 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem.separator(),
 			MenuItem(
-				text=tr('Install'),
+				text='Install',
 				preview_action=self._prev_install_invalid_config,
 				key=f'{CONFIG_KEY}_install',
 			),
 			MenuItem(
-				text=tr('Abort'),
+				text='Abort',
 				action=self._handle_abort,
 				key=f'{CONFIG_KEY}_abort',
 			),
@@ -247,18 +246,18 @@ class GlobalMenu(AbstractMenu[None]):
 
 		if not self._skip_auth and (auth_config is None or auth_config.root_enc_password is None) and not self._has_elevated_users():
 			missing.add(
-				tr('Either root-password or at least 1 user with elevated privileges must be specified'),
+				'Either root-password or at least 1 user with elevated privileges must be specified',
 			)
 
 		if profile_config and profile_config.greeter == GreeterType.Sddm and not (auth_config and auth_config.users):
-			missing.add(tr('SDDM requires at least one regular user to log in'))
+			missing.add('SDDM requires at least one regular user to log in')
 
 		aur_packages_item = self._item_group.find_by_key('aur_packages')
 		if aur_packages_item.has_value() and aur_packages_item.value:
 			from archinstoo.lib.models.authentication import PrivilegeEscalation
 
 			if not auth_config or auth_config.privilege_escalation == PrivilegeEscalation.Run0:
-				missing.add(tr('AUR packages require Sudo or Doas privilege escalation (Run0 requires booted environment)'))
+				missing.add('AUR packages require Sudo or Doas privilege escalation (Run0 requires booted environment)')
 
 		for item in self._item_group.items:
 			if item.mandatory:
@@ -274,47 +273,12 @@ class GlobalMenu(AbstractMenu[None]):
 		# Checks the validity of the current configuration.
 		return not (self._missing_configs() or self._validate_bootloader())
 
-	def _select_archinstoo_settings(self, preset: Language) -> Language:
-		# Open settings submenu for language and theme selection.
-		items = [
-			MenuItem(text=tr('Language'), key='lang'),
-			MenuItem(text=tr('Theme'), key='theme'),
-		]
-
-		result = SelectMenu[None](
-			MenuItemGroup(items, sort_items=False),
-			header=tr('Archinstoo Settings'),
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		if result.type_ == ResultType.Selection:
-			match result.item().key:
-				case 'lang':
-					preset = self._select_archinstoo_language(preset)
-				case 'theme':
-					self._select_theme()
-				case _:
-					pass
-
-		return preset
-
-	def _select_archinstoo_language(self, preset: Language) -> Language:
-		from .interactions.general_conf import select_archinstoo_language
-
-		language = select_archinstoo_language(translation_handler.translated_languages, preset)
-		translation_handler.activate(language)
-
-		self._update_lang_text()
-
-		return language
-
-	def _select_theme(self) -> None:
+	def _select_theme(self, preset: object | None = None) -> object | None:
 		# Select a theme for the TUI (session-only, not persisted).
 		# Select mode (dark/light)
 		mode_items = [
-			MenuItem(text=tr('Dark'), value='dark'),
-			MenuItem(text=tr('Light'), value='light'),
+			MenuItem(text='Dark', value='dark'),
+			MenuItem(text='Light', value='light'),
 		]
 
 		mode_group = MenuItemGroup(mode_items, sort_items=False)
@@ -322,7 +286,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		mode_result = SelectMenu[str](
 			mode_group,
-			header=tr('Select mode'),
+			header='Select mode',
 			alignment=Alignment.CENTER,
 			allow_skip=True,
 		).run()
@@ -332,12 +296,12 @@ class GlobalMenu(AbstractMenu[None]):
 
 		# Select accent color
 		accent_items = [
-			MenuItem(text=tr('Cyan'), value='cyan'),
-			MenuItem(text=tr('Green'), value='green'),
-			MenuItem(text=tr('Red'), value='red'),
-			MenuItem(text=tr('Orange'), value='orange'),
-			MenuItem(text=tr('Blue'), value='blue'),
-			MenuItem(text=tr('Magenta'), value='magenta'),
+			MenuItem(text='Cyan', value='cyan'),
+			MenuItem(text='Green', value='green'),
+			MenuItem(text='Red', value='red'),
+			MenuItem(text='Orange', value='orange'),
+			MenuItem(text='Blue', value='blue'),
+			MenuItem(text='Magenta', value='magenta'),
 		]
 
 		accent_group = MenuItemGroup(accent_items, sort_items=False)
@@ -345,7 +309,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		accent_result = SelectMenu[str](
 			accent_group,
-			header=tr('Select accent color'),
+			header='Select accent color',
 			alignment=Alignment.CENTER,
 			allow_skip=True,
 		).run()
@@ -359,30 +323,16 @@ class GlobalMenu(AbstractMenu[None]):
 			t.screen.clear()
 			t.screen.refresh()
 
-	def _prev_archinstoo_settings(self, item: MenuItem) -> str | None:
-		output = ''
+		return preset
 
-		if lang := item.value:
-			output += f'{tr("Language")}: {lang.display_name}\n'
-
-		output += f'{tr("Theme")}: {Tui._mode.capitalize()} / {Tui._accent.capitalize()}'
-
-		return output
+	def _prev_theme(self, item: MenuItem) -> str | None:
+		return f'Theme: {Tui._mode.capitalize()} / {Tui._accent.capitalize()}'
 
 	def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
 		return ApplicationMenu(preset, advanced=self._advanced).run()
 
 	def _select_authentication(self, preset: AuthenticationConfiguration | None) -> AuthenticationConfiguration | None:
 		return AuthenticationMenu(preset).run()
-
-	def _update_lang_text(self) -> None:
-		# The options for the global menu are generated with a static text;
-		# each entry of the menu needs to be updated with the new translation
-		new_options = self._get_menu_options()
-
-		for o in new_options:
-			if o.key is not None:
-				self._item_group.find_by_key(o.key).text = o.text
 
 	def _locale_selection(self, preset: LocaleConfiguration) -> LocaleConfiguration:
 		return LocaleMenu(preset).run()
@@ -399,14 +349,14 @@ class GlobalMenu(AbstractMenu[None]):
 			if network_config.type == NicType.MANUAL:
 				output = FormattedOutput.as_table(network_config.nics)
 			else:
-				output = f'{tr("Network configuration")}:\n{network_config.type.display_msg()}'
+				output = f'{"Network configuration"}:\n{network_config.type.display_msg()}'
 
 			return output
 		return None
 
 	def _prev_additional_pkgs(self, item: MenuItem) -> str | None:
 		if item.value:
-			title = tr('Additionals')
+			title = 'Additionals'
 			divider = '-' * len(title)
 			packages = '\n'.join(sorted(item.value))
 			return f'{title}\n{divider}\n{packages}'
@@ -414,7 +364,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_aur_packages(self, item: MenuItem) -> str | None:
 		if item.value:
-			title = tr('AUR packages')
+			title = 'AUR packages'
 			divider = '-' * len(title)
 			packages = '\n'.join(sorted(item.value))
 			return f'{title}\n{divider}\n{packages}'
@@ -426,12 +376,12 @@ class GlobalMenu(AbstractMenu[None]):
 			output = ''
 
 			if auth_config.root_enc_password:
-				output += f'{tr("Root password")}: {auth_config.root_enc_password.hidden()}\n'
+				output += f'{"Root password"}: {auth_config.root_enc_password.hidden()}\n'
 
 			if auth_config.users:
 				output += FormattedOutput.as_table(auth_config.users) + '\n'
-				priv_esc = auth_config.privilege_escalation.value if auth_config.privilege_escalation else tr('None')
-				output += f'{tr("Privilege esc")}: {priv_esc}\n'
+				priv_esc = auth_config.privilege_escalation.value if auth_config.privilege_escalation else 'None'
+				output += f'{"Privilege esc"}: {priv_esc}\n'
 
 			return output
 
@@ -453,48 +403,48 @@ class GlobalMenu(AbstractMenu[None]):
 			output = ''
 
 			if app_config.bluetooth_config:
-				output += f'{tr("Bluetooth")}: '
-				output += tr('Enabled') if app_config.bluetooth_config.enabled else tr('Disabled')
+				output += f'{"Bluetooth"}: '
+				output += 'Enabled' if app_config.bluetooth_config.enabled else 'Disabled'
 				output += '\n'
 
 			if app_config.audio_config:
 				audio_config = app_config.audio_config
-				output += f'{tr("Audio")}: {audio_config.audio.value}'
+				output += f'{"Audio"}: {audio_config.audio.value}'
 				output += '\n'
 
 			if app_config.print_service_config:
-				output += f'{tr("Print service")}: '
-				output += tr('Enabled') if app_config.print_service_config.enabled else tr('Disabled')
+				output += f'{"Print service"}: '
+				output += 'Enabled' if app_config.print_service_config.enabled else 'Disabled'
 				output += '\n'
 
 			if app_config.power_management_config:
 				power_management_config = app_config.power_management_config
-				output += f'{tr("Power management")}: {power_management_config.power_management.value}'
+				output += f'{"Power management"}: {power_management_config.power_management.value}'
 				output += '\n'
 
 			if app_config.firewall_config:
 				firewall_config = app_config.firewall_config
-				output += f'{tr("Firewall")}: {firewall_config.firewall.value}'
+				output += f'{"Firewall"}: {firewall_config.firewall.value}'
 				output += '\n'
 
 			if app_config.management_config and app_config.management_config.tools:
 				tools = ', '.join([t.value for t in app_config.management_config.tools])
-				output += f'{tr("Management")}: {tools}'
+				output += f'{"Management"}: {tools}'
 				output += '\n'
 
 			if app_config.monitor_config:
 				monitor_config = app_config.monitor_config
-				output += f'{tr("Monitor")}: {monitor_config.monitor.value}'
+				output += f'{"Monitor"}: {monitor_config.monitor.value}'
 				output += '\n'
 
 			if app_config.editor_config:
 				editor_config = app_config.editor_config
-				output += f'{tr("Editor")}: {editor_config.editor.value}'
+				output += f'{"Editor"}: {editor_config.editor.value}'
 				output += '\n'
 
 			if app_config.security_config and app_config.security_config.tools:
 				tools = ', '.join([t.value for t in app_config.security_config.tools])
-				output += f'{tr("Security")}: {tools}'
+				output += f'{"Security"}: {tools}'
 				output += '\n'
 
 			if app_config.development_config:
@@ -502,12 +452,12 @@ class GlobalMenu(AbstractMenu[None]):
 
 				if dev_config.language_config and dev_config.language_config.tools:
 					tools = ', '.join([t.value for t in dev_config.language_config.tools])
-					output += f'{tr("Languages")}: {tools}'
+					output += f'{"Languages"}: {tools}'
 					output += '\n'
 
 				if dev_config.devtool_config and dev_config.devtool_config.tools:
 					tools = ', '.join([t.value for t in dev_config.devtool_config.tools])
-					output += f'{tr("Build & Debug")}: {tools}'
+					output += f'{"Build & Debug"}: {tools}'
 					output += '\n'
 
 			return output
@@ -516,20 +466,20 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_tz(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{tr("Timezone")}: {item.value}'
+			return f'{"Timezone"}: {item.value}'
 		return None
 
 	def _prev_ntp(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			output = f'{tr("NTP")}: '
-			output += tr('Enabled') if item.value else tr('Disabled')
+			output = f'{"NTP"}: '
+			output += 'Enabled' if item.value else 'Disabled'
 			return output
 		return None
 
 	def _edit_custom_commands(self, preset: list[str]) -> list[str]:
 		try:
 			current_script = '\n'.join(preset) if preset else ''
-			result = edit_content(preset=current_script, title=tr('Custom Commands'))
+			result = edit_content(preset=current_script, title='Custom Commands')
 			if result is not None:
 				# Split by newlines and filter empty lines
 				return [line for line in result.split('\n') if line.strip()]
@@ -540,7 +490,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_custom_commands(self, item: MenuItem) -> str | None:
 		commands: list[str] = item.value or []
 		if commands:
-			output = f'{tr("Commands")}: {len(commands)}\n'
+			output = f'{"Commands"}: {len(commands)}\n'
 			for i, cmd in enumerate(commands[:5]):
 				display = cmd[:50] + '...' if len(cmd) > 50 else cmd
 				output += f'  {i + 1}. {display}\n'
@@ -553,13 +503,13 @@ class GlobalMenu(AbstractMenu[None]):
 		try:
 			if not preset:
 				items = [
-					MenuItem(text=tr('Start empty'), value='empty'),
-					MenuItem(text=tr('Load optimized defaults'), value='optimized'),
+					MenuItem(text='Start empty', value='empty'),
+					MenuItem(text='Load optimized defaults', value='optimized'),
 				]
 
 				result = SelectMenu[str](
 					MenuItemGroup(items, sort_items=False),
-					header=tr('Sysctl'),
+					header='Sysctl',
 					alignment=Alignment.CENTER,
 					allow_skip=True,
 				).run()
@@ -568,7 +518,7 @@ class GlobalMenu(AbstractMenu[None]):
 					preset = self._sysctl_optimized_defaults()
 
 			current_text = '\n'.join(preset) if preset else ''
-			edited = edit_content(preset=current_text, title=tr('Sysctl'), mode='kvp')
+			edited = edit_content(preset=current_text, title='Sysctl', mode='kvp')
 			if edited is not None:
 				lines = edited.split('\n')
 				# Strip trailing blank lines only
@@ -582,7 +532,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_sysctl(self, item: MenuItem) -> str | None:
 		entries: list[str] = item.value or []
 		if entries:
-			output = f'{tr("Entries")}: {len(entries)}\n'
+			output = f'{"Entries"}: {len(entries)}\n'
 			for line in entries[:5]:
 				display = line[:60] + '...' if len(line) > 60 else line
 				output += f'  {display}\n'
@@ -671,21 +621,21 @@ class GlobalMenu(AbstractMenu[None]):
 		disk_layout_conf: DiskLayoutConfiguration | None = item.value
 
 		if disk_layout_conf:
-			output = tr('Configuration type: {}').format(disk_layout_conf.config_type.display_msg()) + '\n'
+			output = f'Configuration type: {disk_layout_conf.config_type.display_msg()}' + '\n'
 
 			if disk_layout_conf.config_type == DiskLayoutType.Pre_mount:
-				output += tr('Mountpoint') + ': ' + str(disk_layout_conf.mountpoint)
+				output += 'Mountpoint' + ': ' + str(disk_layout_conf.mountpoint)
 
 			if disk_layout_conf.lvm_config:
-				output += '{}: {}'.format(tr('LVM configuration type'), disk_layout_conf.lvm_config.config_type.display_msg()) + '\n'
+				output += '{}: {}'.format('LVM configuration type', disk_layout_conf.lvm_config.config_type.display_msg()) + '\n'
 
 			if disk_layout_conf.disk_encryption:
-				output += tr('Disk encryption') + ': ' + disk_layout_conf.disk_encryption.encryption_type.type_to_text() + '\n'
+				output += 'Disk encryption' + ': ' + disk_layout_conf.disk_encryption.encryption_type.type_to_text() + '\n'
 
 			if disk_layout_conf.btrfs_options:
 				btrfs_options = disk_layout_conf.btrfs_options
 				if btrfs_options.snapshot_config:
-					output += tr('Btrfs snapshot type: {}').format(btrfs_options.snapshot_config.snapshot_type.display_name()) + '\n'
+					output += f'Btrfs snapshot type: {btrfs_options.snapshot_config.snapshot_type.display_name()}' + '\n'
 
 			return output
 
@@ -693,18 +643,18 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_swap(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			output = f'{tr("Swap on zram")}: '
-			output += tr('Enabled') if item.value.enabled else tr('Disabled')
+			output = f'{"Swap on zram"}: '
+			output += 'Enabled' if item.value.enabled else 'Disabled'
 			if item.value.enabled:
-				output += f'\n{tr("Compression algorithm")}: {item.value.algorithm.value}'
+				output += f'\n{"Compression algorithm"}: {item.value.algorithm.value}'
 				if item.value.recomp_algorithm:
-					output += f'\n{tr("Recompression algorithm")}: {item.value.recomp_algorithm.value}'
+					output += f'\n{"Recompression algorithm"}: {item.value.recomp_algorithm.value}'
 			return output
 		return None
 
 	def _prev_hostname(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			return f'{tr("Hostname")}: {item.value}'
+			return f'{"Hostname"}: {item.value}'
 		return None
 
 	def _select_kernel(self, preset: list[str]) -> list[str]:
@@ -713,9 +663,9 @@ class GlobalMenu(AbstractMenu[None]):
 
 		# Ask about kernel headers
 		current_headers = self._arch_config.kernel_headers
-		header_text = tr('Install kernel headers?') + '\n\n'
-		header_text += tr('Useful for building out-of-tree drivers or DKMS modules,') + '\n'
-		header_text += tr('especially for non-standard kernel variants.') + '\n'
+		header_text = 'Install kernel headers?' + '\n\n'
+		header_text += 'Useful for building out-of-tree drivers or DKMS modules,' + '\n'
+		header_text += 'especially for non-standard kernel variants.' + '\n'
 
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(current_headers)
@@ -742,9 +692,9 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_kernel(self, item: MenuItem) -> str | None:
 		if item.value:
 			kernel = ', '.join(item.value)
-			output = f'{tr("Kernels")}: {kernel}\n'
-			status = tr('Enabled') if self._arch_config.kernel_headers else tr('Disabled')
-			output += f'{tr("Headers")}: {status}'
+			output = f'{"Kernels"}: {kernel}\n'
+			status = 'Enabled' if self._arch_config.kernel_headers else 'Disabled'
+			output += f'{"Headers"}: {status}'
 			return output
 		return None
 
@@ -752,7 +702,7 @@ class GlobalMenu(AbstractMenu[None]):
 		config: FirmwareConfiguration | None = item.value
 		if not config:
 			return None
-		output = f'{tr("Firmware")}: {config.firmware_type.value}'
+		output = f'{"Firmware"}: {config.firmware_type.value}'
 		if config.firmware_type == FirmwareType.VENDOR and config.vendors:
 			output += '\n' + ', '.join(v.value for v in config.vendors)
 		return output
@@ -849,12 +799,12 @@ class GlobalMenu(AbstractMenu[None]):
 		text = ''
 
 		if missing := self._missing_configs():
-			text += tr('Missing configurations:\n')
+			text += 'Missing configurations:\n'
 			for m in missing:
 				text += f'- {m}\n'
 
 		if errors := self._validate_bootloader():
-			text += tr('Bad configurations:\n')
+			text += 'Bad configurations:\n'
 			for e in errors:
 				text += f'- {e}\n'
 
@@ -864,7 +814,7 @@ class GlobalMenu(AbstractMenu[None]):
 		profile_config: ProfileConfiguration | None = item.value
 
 		if profile_config and profile_config.profiles:
-			output = tr('Profiles') + ': '
+			output = 'Profiles' + ': '
 			profile_names = [p.name for p in profile_config.profiles]
 			output += ', '.join(profile_names) + '\n'
 
@@ -874,10 +824,10 @@ class GlobalMenu(AbstractMenu[None]):
 					output += f'  {profile.name}: ' + ', '.join(sub_names) + '\n'
 
 			if profile_config.gfx_driver:
-				output += tr('Graphics driver') + ': ' + profile_config.gfx_driver.display_name() + '\n'
+				output += 'Graphics driver' + ': ' + profile_config.gfx_driver.display_name() + '\n'
 
 			if profile_config.greeter:
-				output += tr('Greeter') + ': ' + profile_config.greeter.value + '\n'
+				output += 'Greeter' + ': ' + profile_config.greeter.value + '\n'
 
 			return output
 
@@ -961,25 +911,25 @@ class GlobalMenu(AbstractMenu[None]):
 
 		output = ''
 		if config.mirror_regions:
-			title = tr('Selected mirror regions')
+			title = 'Selected mirror regions'
 			divider = '-' * len(title)
 			regions = config.region_names
 			output += f'{title}\n{divider}\n{regions}\n\n'
 
 		if config.custom_servers:
-			title = tr('Custom servers')
+			title = 'Custom servers'
 			divider = '-' * len(title)
 			servers = config.custom_server_urls
 			output += f'{title}\n{divider}\n{servers}\n\n'
 
 		if config.optional_repositories:
-			title = tr('Optional repositories')
+			title = 'Optional repositories'
 			divider = '-' * len(title)
 			repos = ', '.join([r.value for r in config.optional_repositories])
 			output += f'{title}\n{divider}\n{repos}\n\n'
 
 		if config.custom_repositories:
-			title = tr('Custom repositories')
+			title = 'Custom repositories'
 			table = FormattedOutput.as_table(config.custom_repositories)
 			output += f'{title}:\n\n{table}'
 
@@ -993,17 +943,17 @@ class GlobalMenu(AbstractMenu[None]):
 		app_config = self._item_group.find_by_key('app_config').value
 
 		if disk_config is not None or profile_config is not None or app_config:
-			items.append(MenuItem(text=tr('save selections abort'), value='save_abort'))
+			items.append(MenuItem(text='save selections abort', value='save_abort'))
 
-		items.append(MenuItem(text=tr('exit delete selection'), value='abort_only'))
-		items.append(MenuItem(text=tr('cancel abort'), value='cancel'))
+		items.append(MenuItem(text='exit delete selection', value='abort_only'))
+		items.append(MenuItem(text='cancel abort', value='cancel'))
 
 		group = MenuItemGroup(items)
 		group.focus_item = group.items[0]  # Focus on first option
 
 		result = SelectMenu[str](
 			group,
-			header=tr('Abort the installation? \n'),
+			header='Abort the installation? \n',
 			alignment=Alignment.CENTER,
 			allow_skip=False,
 		).run()

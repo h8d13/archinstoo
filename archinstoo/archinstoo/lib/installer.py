@@ -30,7 +30,6 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.pm import installed_package
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
 
 from .disk.luks import Luks2, unlock_luks2_dev
@@ -154,13 +153,13 @@ class Installer:
 		try:
 			if exc_type is not None:
 				error(str(exc_value))
-				Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
-				Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
+				Tui.print(str(f'[!] A log file has been created here: {logger.path}'))
+				Tui.print(f'Please submit this issue (and file) to {self._bug_report_url}/issues')
 
 				# Return None to propagate the exception
 				return None
 
-			info(tr('Syncing the system...'))
+			info('Syncing the system...')
 			os.sync()
 
 			if not (missing_steps := self.post_install_check()):
@@ -227,22 +226,22 @@ class Installer:
 		# https://github.com/archlinux/archinstall/issues/3688
 		# be more descriptive about status in code + what user sees
 		if not self._args.skip_ntp:
-			info(tr('Waiting for NTP time synchronization...'))
+			info('Waiting for NTP time synchronization...')
 
 			started_wait = time.monotonic()
 			notified = False
 			while True:
 				if not notified and time.monotonic() - started_wait > 5:
 					notified = True
-					warn(tr('NTP sync taking longer than expected, still waiting...'))
+					warn('NTP sync taking longer than expected, still waiting...')
 
 				time_val = SysCommand('timedatectl show --property=NTPSynchronized --value').decode()
 				if time_val and time_val.strip() == 'yes':
-					info(tr('NTP time synchronization completed'))
+					info('NTP time synchronization completed')
 					break
 				time.sleep(1)
 		else:
-			info(tr('Skipping NTP time sync (may cause issues if system time is incorrect)'))
+			info('Skipping NTP time sync (may cause issues if system time is incorrect)')
 
 		if not self._args.offline and SysInfo.arch() == 'x86_64':
 			info('Waiting for reflector mirror selection...')
@@ -265,7 +264,7 @@ class Installer:
 			info('Skipping reflector (offline mode or non-x86_64 architecture)')
 
 		if not self._args.skip_wkd:
-			info(tr('Waiting for Arch Linux keyring sync...'))
+			info('Waiting for Arch Linux keyring sync...')
 			# Wait for the timer to kick in
 			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:
 				time.sleep(1)
@@ -277,9 +276,9 @@ class Installer:
 				keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
 
 			if keyring_state == 'failed':
-				warn(tr('Arch Linux keyring sync failed'))
+				warn('Arch Linux keyring sync failed')
 			else:
-				info(tr('Arch Linux keyring sync completed'))
+				info('Arch Linux keyring sync completed')
 
 	def sanity_check(self) -> None:
 		self._verify_service_stop()

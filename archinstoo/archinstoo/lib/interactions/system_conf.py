@@ -3,7 +3,6 @@ from typing import assert_never
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.application import DEFAULT_KERNEL, Kernel, ZramAlgorithm, ZramConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -26,7 +25,7 @@ def select_kernel(preset: list[str] = []) -> list[str]:
 		allow_skip=True,
 		allow_reset=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Kernel')),
+		frame=FrameProperties.min('Kernel'),
 		multi=True,
 	).run()
 
@@ -40,7 +39,7 @@ def select_kernel(preset: list[str] = []) -> list[str]:
 
 
 def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> ZramConfiguration:
-	prompt = tr('Would you like to use swap on zram?') + '\n'
+	prompt = 'Would you like to use swap on zram?' + '\n'
 
 	group = MenuItemGroup.yes_no()
 	group.set_default_by_value(True)
@@ -70,7 +69,7 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 
 			algo_result = SelectMenu[ZramAlgorithm](
 				algo_group,
-				header=tr('Select zram compression algorithm:') + '\n',
+				header='Select zram compression algorithm:' + '\n',
 				alignment=Alignment.CENTER,
 				allow_skip=True,
 			).run()
@@ -96,9 +95,9 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 
 
 def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> FirmwareConfiguration:
-	header = tr('Full installs the linux-firmware meta package.') + '\n'
-	header += tr('Minimal skips firmware entirely (safe for most VMs using virtio).') + '\n'
-	header += tr('Vendor lets you pick only the firmware subpackages you need.') + '\n'
+	header = 'Full installs the linux-firmware meta package.' + '\n'
+	header += 'Minimal skips firmware entirely (safe for most VMs using virtio).' + '\n'
+	header += 'Vendor lets you pick only the firmware subpackages you need.' + '\n'
 
 	type_items = [MenuItem(t.value, value=t) for t in FirmwareType]
 	type_group = MenuItemGroup(type_items, sort_items=False)
@@ -110,7 +109,7 @@ def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> 
 		header=header,
 		allow_skip=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Firmware')),
+		frame=FrameProperties.min('Firmware'),
 	).run()
 
 	match result.type_:
@@ -135,10 +134,10 @@ def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> 
 
 	vendor_result = SelectMenu[FirmwareVendor](
 		vendor_group,
-		header=tr('Select firmware subpackages:') + '\n',
+		header='Select firmware subpackages:' + '\n',
 		allow_skip=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Firmware vendors')),
+		frame=FrameProperties.min('Firmware vendors'),
 		multi=True,
 	).run()
 
@@ -156,7 +155,7 @@ def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> 
 
 
 def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | None:
-	prompt = tr('Select idle recompression algorithm (skip for none):') + '\n'
+	prompt = 'Select idle recompression algorithm (skip for none):' + '\n'
 
 	# Exclude Default since recompression needs a specific algorithm
 	recomp_items = [MenuItem(algo.value, value=algo) for algo in ZramAlgorithm if algo != ZramAlgorithm.Default]

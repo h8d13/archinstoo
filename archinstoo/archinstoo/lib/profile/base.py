@@ -1,8 +1,6 @@
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Self
 
-from archinstoo.lib.translationhandler import tr
-
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.users import User
@@ -155,7 +153,7 @@ class Profile:
 				if sub_profile.packages:
 					packages.update(sub_profile.packages)
 
-		text = tr('Installed packages') + ':\n'
+		text = 'Installed packages' + ':\n'
 
 		for pkg in sorted(packages):
 			text += f'\t- {pkg}\n'

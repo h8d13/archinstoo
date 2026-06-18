@@ -4,7 +4,6 @@ from typing import assert_never, override
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.network.interfaces import list_interfaces
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -14,9 +13,9 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 class ManualNetworkConfig(ListManager[Nic]):
 	def __init__(self, prompt: str, preset: list[Nic]):
 		self._actions = [
-			tr('Add interface'),
-			tr('Edit interface'),
-			tr('Delete interface'),
+			'Add interface',
+			'Edit interface',
+			'Delete interface',
 		]
 
 		super().__init__(
@@ -64,7 +63,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 		result = SelectMenu[str](
 			group,
 			alignment=Alignment.CENTER,
-			frame=FrameProperties.min(tr('Interfaces')),
+			frame=FrameProperties.min('Interfaces'),
 			allow_skip=True,
 		).run()
 
@@ -85,7 +84,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 		preset: str | None = None,
 	) -> str | None:
 		def validator(ip: str | None) -> str | None:
-			failure = tr('You need to enter a valid IP in IP-config mode')
+			failure = 'You need to enter a valid IP in IP-config mode'
 
 			if not ip:
 				return failure
@@ -120,7 +119,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 		modes = ['DHCP (auto detect)', 'IP (static)']
 		default_mode = 'DHCP (auto detect)'
 
-		header = tr('Select which mode to configure for "{}"').format(iface_name) + '\n'
+		header = f'Select which mode to configure for "{iface_name}"' + '\n'
 		items = [MenuItem(m, value=m) for m in modes]
 		group = MenuItemGroup(items, sort_items=True)
 		group.set_default_by_value(default_mode)
@@ -130,7 +129,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 			header=header,
 			allow_skip=False,
 			alignment=Alignment.CENTER,
-			frame=FrameProperties.min(tr('Modes')),
+			frame=FrameProperties.min('Modes'),
 		).run()
 
 		match result.type_:
@@ -144,17 +143,17 @@ class ManualNetworkConfig(ListManager[Nic]):
 				assert_never(result.type_)
 
 		if mode == 'IP (static)':
-			header = tr('Enter the IP and subnet for {} (example: 192.168.0.5/24): ').format(iface_name) + '\n'
-			ip = self._get_ip_address(tr('IP address'), header, False, False)
+			header = f'Enter the IP and subnet for {iface_name} (example: 192.168.0.5/24): ' + '\n'
+			ip = self._get_ip_address('IP address', header, False, False)
 
-			header = tr('Enter your gateway (router) IP address (leave blank for none)') + '\n'
-			gateway = self._get_ip_address(tr('Gateway address'), header, True, False)
+			header = 'Enter your gateway (router) IP address (leave blank for none)' + '\n'
+			gateway = self._get_ip_address('Gateway address', header, True, False)
 
 			display_dns = ' '.join(edit_nic.dns) if edit_nic.dns else None
 
-			header = tr('Enter your DNS servers with space separated (leave blank for none)') + '\n'
+			header = 'Enter your DNS servers with space separated (leave blank for none)' + '\n'
 			dns_servers = self._get_ip_address(
-				tr('DNS servers'),
+				'DNS servers',
 				header,
 				True,
 				True,
@@ -173,7 +172,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:
 	# Configure the network on the newly installed system
 	items = [MenuItem(n.display_msg(), value=n) for n in NicType]
-	items.append(MenuItem(text=tr('None'), value=None))
+	items.append(MenuItem(text='None', value=None))
 	group = MenuItemGroup(items, sort_items=True)
 
 	if preset:
@@ -182,7 +181,7 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 	result = SelectMenu[NicType](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Network configuration')),
+		frame=FrameProperties.min('Network configuration'),
 		allow_reset=True,
 		allow_skip=True,
 	).run()
@@ -209,7 +208,7 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 					return NetworkConfiguration(NicType.IWD)
 				case NicType.MANUAL:
 					preset_nics = preset.nics if preset else []
-					nics = ManualNetworkConfig(tr('Configure interfaces'), preset_nics).run()
+					nics = ManualNetworkConfig('Configure interfaces', preset_nics).run()
 
 					if nics:
 						return NetworkConfiguration(NicType.MANUAL, nics)

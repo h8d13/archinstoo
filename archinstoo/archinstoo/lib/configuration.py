@@ -2,7 +2,6 @@ import json
 import stat
 from typing import TYPE_CHECKING, Any
 
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
@@ -39,8 +38,8 @@ class ConfigurationHandler:
 		debug(self.user_config_to_json())
 
 	def confirm_config(self) -> bool:
-		header = f'{tr("The specified configuration will be applied")}. '
-		header += tr('Would you like to continue?') + '\n'
+		header = f'{"The specified configuration will be applied"}. '
+		header += 'Would you like to continue?' + '\n'
 
 		with Tui():
 			group = MenuItemGroup.yes_no()
@@ -56,7 +55,7 @@ class ConfigurationHandler:
 				allow_skip=False,
 				preview_size='auto',
 				preview_style=PreviewStyle.BOTTOM,
-				preview_frame=FrameProperties.max(tr('Configuration')),
+				preview_frame=FrameProperties.max('Configuration'),
 			).run()
 
 			return result.item() == MenuItem.yes()
@@ -125,7 +124,7 @@ class ConfigurationHandler:
 
 			result = SelectMenu[str](
 				group,
-				header=tr('Saved configuration found:') + '\n',
+				header='Saved configuration found:' + '\n',
 				alignment=Alignment.CENTER,
 				allow_skip=False,
 			).run()

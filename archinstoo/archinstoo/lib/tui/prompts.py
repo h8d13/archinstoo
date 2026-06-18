@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from archinstoo.lib.translationhandler import tr
-
 from .curses_menu import EditMenu, SelectMenu
 from .menu_item import MenuItem, MenuItemGroup
 from .result import ResultType
@@ -9,7 +7,7 @@ from .types import Alignment, Orientation
 
 
 def confirm_abort() -> None:
-	prompt = tr('Do you really want to abort?') + '\n'
+	prompt = 'Do you really want to abort?' + '\n'
 	group = MenuItemGroup.yes_no()
 
 	result = SelectMenu[bool](
@@ -43,7 +41,7 @@ def prompt_dir(
 			else:
 				return None
 
-		return tr('Not a valid directory')
+		return 'Not a valid directory'
 
 	validate_func = validate_path if validate else None
 
