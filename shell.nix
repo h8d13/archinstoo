@@ -1,7 +1,7 @@
 # shell.nix
 # Usage: nix-shell -p git
-# clone <url> then cd
-# sudo nix-shell distros/NIX --run ./RUN
+# clone <url> cd
+# sudo nix-shell --run ./RUN
 
 { pkgs ? import <nixpkgs> {} }:
 
