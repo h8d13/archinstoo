@@ -29,7 +29,6 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
-from archinstoo.lib.pm import installed_package
 from archinstoo.lib.tui.curses_menu import Tui
 
 from .disk.luks import Luks2, unlock_luks2_dev
@@ -44,6 +43,7 @@ from .models.users import User
 from .output import debug, error, info, log, logger, warn
 from .pm import Pacman
 from .pm.config import PacmanConfig
+from .utils.env import Os
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -833,10 +833,21 @@ class Installer:
 			except SysCallError as err:
 				raise ServiceException(f'Unable to disable service {service}: {err}')
 
+	@property
+	def _arch_chroot_prefix(self) -> list[str]:
+		# `arch-chroot -S` runs the chroot through systemd-run, which a foreign
+		# host (Debian, ...) has no running systemd to provide; drop -S there so
+		# it falls back to plain chroot(8).
+		prefix = ['arch-chroot']
+		if not (Os.running_from_host() and not Os.running_from_arch()):
+			prefix.append('-S')
+		prefix.append(str(self.target))
+		return prefix
+
 	def run_command(self, cmd: str, peek_output: bool = False) -> SysCommand:
 		if self.target == Path('/'):
 			return SysCommand(cmd, peek_output=peek_output)
-		return SysCommand(f'arch-chroot -S {self.target} {cmd}', peek_output=peek_output)
+		return SysCommand(f'{" ".join(self._arch_chroot_prefix)} {cmd}', peek_output=peek_output)
 
 	def arch_chroot(
 		self,
@@ -848,7 +859,7 @@ class Installer:
 		if isinstance(cmd, list):
 			if run_as:
 				cmd = ['su', '-', run_as, '-c', shlex.join(cmd)]
-			argv = cmd if self.target == Path('/') else ['arch-chroot', '-S', str(self.target), *cmd]
+			argv = cmd if self.target == Path('/') else [*self._arch_chroot_prefix, *cmd]
 			return run(argv)
 
 		if run_as:
@@ -1109,9 +1120,7 @@ class Installer:
 					continue
 
 				command = [
-					'arch-chroot',
-					'-S',
-					str(self.target),
+					*self._arch_chroot_prefix,
 					'snapper',
 					'--no-dbus',
 					'-c',
@@ -1385,37 +1394,25 @@ class Installer:
 		if not efi_partition.mountpoint:
 			raise ValueError('EFI system partition is not mounted')
 
-		# TODO: Ideally we would want to check if another config
-		# points towards the same disk and/or partition.
-		# And in which case we should do some clean up.
 		bootctl_options = []
 
 		if boot_partition != efi_partition:
 			bootctl_options.append(f'--esp-path={efi_partition.mountpoint}')
 			bootctl_options.append(f'--boot-path={boot_partition.mountpoint}')
 
-		# TODO: This is a temporary workaround to deal with https://github.com/archlinux/archinstall/pull/3396#issuecomment-2996862019
-		# the systemd_version check can be removed once `--variables=BOOL` is merged into systemd.
-		# keep the version as a str as it can be something like 257.8-2
-		if (systemd_pkg := installed_package('systemd')) is not None:
-			systemd_version = systemd_pkg.version
-		else:
-			systemd_version = '257'  # This works as a safety workaround for this hot-fix
+		# bootctl since v257 detects arch-chroot as a container and silently
+		# skips writing EFI boot variables; --variables=BOOL (systemd >=258)
+		# forces the choice. We always pacstrap a current Arch target, so the
+		# flag is always present. https://github.com/systemd/systemd/pull/37144
+		def _bootctl_install(variables: str) -> None:
+			argv = ' '.join(('bootctl', variables, *bootctl_options, 'install'))
+			self.arch_chroot(argv)
 
 		try:
-			# Force EFI variables since bootctl detects arch-chroot
-			# as a container environment since v257 and skips them silently.
-			# https://github.com/systemd/systemd/issues/36174
-			if systemd_version >= '258':
-				self.arch_chroot(f'bootctl --variables=yes {" ".join(bootctl_options)} install')
-			else:
-				self.arch_chroot(f'bootctl {" ".join(bootctl_options)} install')
+			_bootctl_install('--variables=yes')
 		except SysCallError:
-			if systemd_version >= '258':
-				# Fallback, try creating the boot loader without touching the EFI variables
-				self.arch_chroot(f'bootctl --variables=no {" ".join(bootctl_options)} install')
-			else:
-				self.arch_chroot(f'bootctl --no-variables {" ".join(bootctl_options)} install')
+			# retry leaving the EFI variables untouched (e.g. vars not writable)
+			_bootctl_install('--variables=no')
 
 		# Loader configuration is stored in ESP/loader:
 		# https://man.archlinux.org/man/loader.conf.5
@@ -1478,9 +1475,7 @@ class Installer:
 		boot_dir = Path('/boot')
 
 		command = [
-			'arch-chroot',
-			'-S',
-			str(self.target),
+			*self._arch_chroot_prefix,
 			'grub-install',
 			'--debug',
 		]
@@ -2176,7 +2171,7 @@ class Installer:
 			return False
 
 		input_data = f'{user.username}:{enc_password}'.encode()
-		cmd = ['arch-chroot', '-S', str(self.target), 'chpasswd', '--encrypted']
+		cmd = [*self._arch_chroot_prefix, 'chpasswd', '--encrypted']
 
 		try:
 			run(cmd, input_data=input_data)
@@ -2361,7 +2356,7 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 			user_script.write(command)
 
 		try:
-			SysCommand(f'arch-chroot -S {installation.target} bash {script_path}')
+			SysCommand(f'{" ".join(installation._arch_chroot_prefix)} bash {script_path}')
 		except SysCallError as e:
 			warn(f'Custom command "{command}" failed: {e}')
 		finally:
