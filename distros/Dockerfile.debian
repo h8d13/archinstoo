@@ -1,0 +1,10 @@
+FROM debian:forky-slim
+
+COPY DEB .
+RUN sh DEB
+
+COPY . .
+
+# RUN_VENV builds a 3.14 venv and pip-compiles pyparted (no apt pyparted for 3.14)
+ENTRYPOINT ["./RUN_VENV"]
+CMD ["--help"]

@@ -37,6 +37,11 @@ class Os:
 		return ''
 
 	@staticmethod
+	def running_from_arch() -> bool:
+		# distinguishes an Arch host/ISO from a foreign host (Debian, Alpine, ...)
+		return Os.running_from_who() == 'arch'
+
+	@staticmethod
 	def locate_binary(name: str) -> str:
 		if path := which(name):
 			return path
