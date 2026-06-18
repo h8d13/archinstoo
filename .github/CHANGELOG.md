@@ -5,10 +5,10 @@ Historical changes/commits before I went rogue:
 
 ## 0.1.13-0
 
-  - Add bootstrap path to support insalling from Debian FORKY OR SID
-    - Seperate `distros/` with deps and a dockerfile for reprod
-  - Remove locales as it's not maintainable solo/had already drifted
-  - Rework nvchecker and tests to alwasy match jsonc schema
+	- Add bootstrap path to support installing from Debian FORKY OR SID
+		- Separate `distros/` with deps and a dockerfile for reprod
+	- Remove locales as it's not maintainable solo/had already drifted
+	- Rework nvchecker and tests to always match jsonc schema
 
 ## 0.1.12-0
 
