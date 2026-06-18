@@ -7,6 +7,8 @@ on:
     paths:
       - '**.md'
       - mkdocs.yaml
+      - overrides/**
+      - .github/stylesheets/**
       - .github/docs-requirements.txt
       - .github/workflows/docs.yaml
   workflow_dispatch:
