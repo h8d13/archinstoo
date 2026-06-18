@@ -12,7 +12,11 @@
 #   - subset:  schema keys subseteq enum values (some options need no package,
 #              e.g. bash/ext4 are handled by base and deliberately omitted)
 #   - content: package lists match, where the code exposes them statically
-#              (profiles, gfx drivers, and the à-la-carte enum categories)
+#              (profiles, gfx drivers, greeters, and the enum categories)
+
+import ast
+import inspect
+import textwrap
 
 import pytest
 
@@ -57,7 +61,6 @@ _EXACT_SECTIONS = {
 	'devtools': DevTool,
 	'management': Management,
 	'gfx_drivers': GfxDriver,
-	'greeters': GreeterType,
 	'bootloaders': Bootloader,
 	'privilege_escalation': PrivilegeEscalation,
 	'snapshots': SnapshotType,
@@ -113,6 +116,32 @@ def test_gfx_driver_packages_match() -> None:
 		code_pkgs = sorted(p.value for p in driver.gfx_packages(None))
 		schema_pkgs = sorted(SCHEMA['gfx_drivers'][driver.value])
 		assert schema_pkgs == code_pkgs, f'gfx driver {driver.value!r} packages drifted: schema={schema_pkgs} code={code_pkgs}'
+
+
+def _greeter_packages() -> dict[str, list[str]]:
+	# install_greeter() picks packages with a match over GreeterType; each arm
+	# assigns a literal `packages = [...]`. Parse those arms statically instead
+	# of running install_greeter (which needs a live Installer).
+	src = textwrap.dedent(inspect.getsource(ProfileHandler.install_greeter))
+	match = next(n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.Match))
+
+	out: dict[str, list[str]] = {}
+	for case in match.cases:
+		member = getattr(GreeterType, case.pattern.value.attr).value
+		for stmt in case.body:
+			if isinstance(stmt, ast.Assign) and any(getattr(t, 'id', None) == 'packages' for t in stmt.targets):
+				out[member] = sorted(ast.literal_eval(stmt.value))
+	return out
+
+
+def test_greeter_packages_match() -> None:
+	code = _greeter_packages()
+	schema = {k: sorted(v) for k, v in SCHEMA['greeters'].items()}
+	assert schema == code, (
+		f'greeter packages drifted: schema-only={sorted(set(schema) - set(code))} '
+		f'code-only={sorted(set(code) - set(schema))} '
+		f'mismatched={ {k: (schema[k], code[k]) for k in schema.keys() & code.keys() if schema[k] != code[k]} }'
+	)
 
 
 @pytest.mark.parametrize('enum', _ONE_TO_ONE_SECTIONS, ids=lambda e: e.__name__)
