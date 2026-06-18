@@ -1,6 +1,6 @@
 FROM debian:forky-slim
 
-COPY DEB .
+COPY distros/DEB .
 RUN sh DEB
 
 COPY . .
