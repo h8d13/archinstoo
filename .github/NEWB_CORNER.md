@@ -33,12 +33,14 @@ ARROW keys lets you move around.
 
 When setting up a user you can also clone dotfiles directly and will be in `/home/user/.stash`
 
-## Beginners
+## Desktop vs Window Manager
 
-If you are new to archlinux full desktops are simpler to handle (`KDE Plasma`, `GNOME`, `Cinnamon`, `Cosmic` and the likes)
+If you are brand new to archlinux full desktops are simpler to handle (`KDE Plasma`, `GNOME`, `Cinnamon`, `Cosmic` and the likes)
 Since a lot can be handled through GUI and not config files.
 
+> [!NOTE]
 > You may want to install one of these first instead of a WindowManager where more **manual work** is expected.
+> If you do want a WM, we recommend using your **own config files** instead of the "dotfile" culture, you'll learn more and have a system tailored to you.
 
 ## Languages compat
 
