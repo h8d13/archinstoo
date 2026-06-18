@@ -1,0 +1,9 @@
+/* Lay the two header repo links (GitHub + GitLab mirror) side by side
+   instead of stacking them vertically. */
+.md-header__source {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  max-width: none;
+  width: auto;
+}
