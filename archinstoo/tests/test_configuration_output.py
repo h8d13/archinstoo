@@ -13,7 +13,7 @@ def test_user_config_roundtrip(
 	monkeypatch: pytest.MonkeyPatch,
 	config_fixture: Path,
 ) -> None:
-	monkeypatch.setattr('sys.argv', ['archinstall', '--config', str(config_fixture)])
+	monkeypatch.setattr('sys.argv', ['archinstoo', '--config', str(config_fixture)])
 
 	handler = ArchConfigHandler()
 	arch_config = handler.config
