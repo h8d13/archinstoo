@@ -11,6 +11,7 @@ site_dir: site
 exclude_docs: |
   workflows/
   ISSUE_TEMPLATE/
+  overrides/
   CODEOWNERS
   docs-requirements.txt
 
@@ -29,7 +30,7 @@ plugins:
 
 theme:
   name: material
-  custom_dir: overrides
+  custom_dir: .github/overrides
   palette:
     - scheme: default
       toggle:
