@@ -1,8 +1,10 @@
 import os
 import shutil
+import urllib.error
+import urllib.request
 from pathlib import Path
 
-from archinstoo.lib.exceptions import ServiceException, SysCallError
+from archinstoo.lib.exceptions import RequirementError, ServiceException, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import error
 from archinstoo.lib.utils.env import Os
@@ -16,7 +18,9 @@ def list_keyboard_languages() -> list[str]:
 		).decode()
 		if out.strip():
 			return out.splitlines()
-	except SysCallError:
+	except SysCallError, RequirementError:
+		# SysCallError: localectl present but failed. RequirementError: no
+		# localectl at all (non-systemd host). Either way scan kbd data.
 		pass
 
 	# localectl reads compiled-in FHS keymap dirs that don't exist on e.g.
@@ -36,9 +40,43 @@ def _scan_keymaps() -> list[str]:
 	return sorted(names)
 
 
+# glibc lists every locale it can generate here; fetched only on non-glibc hosts
+_GLIBC_SUPPORTED_URL = 'https://raw.githubusercontent.com/bminor/glibc/master/localedata/SUPPORTED'
+
+# last-resort set if disk and network both fail, so the menu is never empty
+_MIN_LOCALES = ['C.UTF-8 UTF-8', 'en_US.UTF-8 UTF-8']
+
+
+def _fetch_glibc_supported() -> list[str]:
+	# upstream lists each locale as "<locale>/<charset> \"; convert to the
+	# space-separated "<locale> <charset>" form the menu expects
+	try:
+		with urllib.request.urlopen(_GLIBC_SUPPORTED_URL, timeout=15) as resp:  # noqa: S310 - https literal
+			text = resp.read().decode('utf-8')
+	except urllib.error.URLError, TimeoutError, OSError:
+		return []
+
+	locales = []
+	for raw in text.splitlines():
+		line = raw.strip().rstrip('\\').strip()
+		if not line or line.startswith(('#', 'SUPPORTED-LOCALES')) or '/' not in line:
+			continue
+		locale, charset = line.rsplit('/', 1)
+		locales.append(f'{locale} {charset}')
+
+	return locales
+
+
 def list_locales() -> list[str]:
-	with Path('/usr/share/i18n/SUPPORTED').open() as file:
-		return [line.rstrip() for line in file if line != 'C.UTF-8 UTF-8\n']
+	# glibc hosts enumerate from i18n/SUPPORTED
+	supported = Path('/usr/share/i18n/SUPPORTED')
+	if supported.is_file():
+		with supported.open() as file:
+			return [line.rstrip() for line in file if line != 'C.UTF-8 UTF-8\n']
+
+	# non-glibc host (musl/alpine): no SUPPORTED on disk, pull the canonical
+	# list glibc ships upstream so the target (Arch/glibc) choices are accurate
+	return _fetch_glibc_supported() or _MIN_LOCALES
 
 
 def verify_keyboard_layout(layout: str) -> bool:
@@ -46,14 +84,19 @@ def verify_keyboard_layout(layout: str) -> bool:
 
 
 def list_x11_keyboard_languages() -> list[str]:
-	return (
-		SysCommand(
-			'localectl --no-pager list-x11-keymap-layouts',
-			environment_vars={'SYSTEMD_COLORS': '0'},
+	try:
+		return (
+			SysCommand(
+				'localectl --no-pager list-x11-keymap-layouts',
+				environment_vars={'SYSTEMD_COLORS': '0'},
+			)
+			.decode()
+			.splitlines()
 		)
-		.decode()
-		.splitlines()
-	)
+	except SysCallError, RequirementError:
+		# no localectl (non-systemd host) or it failed; the x11 layout list is
+		# only used to validate an optional choice, so degrade to empty
+		return []
 
 
 def verify_x11_keyboard_layout(layout: str) -> bool:
@@ -136,7 +179,9 @@ def list_timezones() -> list[str]:
 		).decode()
 		if out.strip():
 			return out.splitlines()
-	except SysCallError:
+	except SysCallError, RequirementError:
+		# RequirementError: no timedatectl (non-systemd host). SysCallError:
+		# present but failed. Read the tz db off disk in both cases.
 		pass
 
 	# timedatectl talks to systemd-timedated over dbus; on a host with no

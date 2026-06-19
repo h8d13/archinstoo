@@ -787,6 +787,16 @@ class Installer:
 		# fstrim is owned by util-linux, a dependency of both base and systemd.
 		self.enable_service('fstrim.timer')
 
+	def _systemctl_target(self, action: str, service: str) -> None:
+		# host systemctl drives the target offline via --root=. A non-systemd
+		# host (alpine, ...) has no systemctl binary, so run the target's own
+		# systemctl inside the chroot instead. enable/disable only write unit
+		# symlinks, so they work without a running pid1 in the chroot.
+		if shutil.which('systemctl'):
+			SysCommand(f'systemctl --root={self.target} {action} {service}')
+		else:
+			self.arch_chroot(f'systemctl {action} {service}')
+
 	def enable_service(self, services: str | list[str]) -> None:
 		if isinstance(services, str):
 			services = [services]
@@ -795,7 +805,7 @@ class Installer:
 			info(f'Enabling service {service}')
 
 			try:
-				SysCommand(f'systemctl --root={self.target} enable {service}')
+				self._systemctl_target('enable', service)
 			except SysCallError as err:
 				raise ServiceException(f'Unable to start service {service}: {err}')
 
@@ -844,7 +854,7 @@ class Installer:
 			info(f'Disabling service {service}')
 
 			try:
-				SysCommand(f'systemctl --root={self.target} disable {service}')
+				self._systemctl_target('disable', service)
 			except SysCallError as err:
 				raise ServiceException(f'Unable to disable service {service}: {err}')
 
@@ -2296,6 +2306,10 @@ EndSection
 
 
 def accessibility_tools_in_use() -> bool:
+	# espeakup is a live-ISO accessibility unit; a non-systemd host has neither
+	# the binary nor the unit, so report not-in-use instead of crashing
+	if not shutil.which('systemctl'):
+		return False
 	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0  # noqa: S607 - systemctl on live ISO
 
 
