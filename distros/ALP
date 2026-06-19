@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# goal was to document building archinstoo from a non systemd host
+# this involved quite a bit of bootstrapping, from a fresh alpine ISO
+# step i followed exactly
+# ip link set eth0 up
+# udhcpc -i eth0
+# echo "nameserver 8.8.8.8" > /etc/resolv.conf                                                                                                                   
+# echo "nameserver 1.1.1.1" >> /etc/resolv.conf 
+
+# apk add git
+# git clone <url>
+# cd archinstoo
+# ./ALP
+
+# shellcheck disable=SC2046
+
+echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
+echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+
+apk update
+
+apk add --no-cache $(awk '{print $1}' << 'EOF'
+    ca-certificates         # for https handshakes
+    zstd                    # keyring
+    eudev                   # device/udev
+    py3-pip                 # pip no pyparted
+    python3-dev             # python headers
+    parted-dev              # libparted headers
+    musl-dev                # libc headers
+    gcc                     # c compiler
+    pacman                  # arch package manager
+    arch-install-scripts    # pacstrap, genfstab, etc
+    coreutils               # gnu core utils
+    util-linux              # lsblk, blkid, etc
+    pciutils                # lspci
+    tzdata                  # timezone data
+    dosfstools              # mkfs.fat
+    device-mapper           # dm-* devices
+    e2fsprogs               # mkfs.ext4
+    cryptsetup              # luks
+    lvm2                    # always checked
+    btrfs-progs             # optionals FS supports
+    f2fs-tools              # ...
+    xfsprogs                # ...
+EOF
+)
+
+pip install --break-system-packages pyparted
