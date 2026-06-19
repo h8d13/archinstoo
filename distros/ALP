@@ -17,6 +17,7 @@
 
 echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
 echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories  # py3-pyparted lives here
 
 apk update
 
@@ -24,11 +25,10 @@ apk add --no-cache $(awk '{print $1}' << 'EOF'
     ca-certificates         # for https handshakes
     zstd                    # keyring
     eudev                   # device/udev
-    py3-pip                 # pip no pyparted
-    python3-dev             # python headers
-    parted-dev              # libparted headers
-    musl-dev                # libc headers
-    gcc                     # c compiler
+    python3                 # interpreter (3.14)
+    python3-zstd            # _zstd ext (compression.zstd), split out on alpine
+    py3-pyparted            # prebuilt parted bindings (edge/testing), no toolchain
+    parted                  # partition cli + libparted runtime
     pacman                  # arch package manager
     coreutils               # gnu core utils
     util-linux              # lsblk, blkid, etc
@@ -48,5 +48,3 @@ EOF
 # arch-install-scripts and alpine-conf both provide cmd:genfstab
 apk del --no-cache alpine-base alpine-conf
 apk add --no-cache arch-install-scripts
-
-python3 -m pip install --break-system-packages pyparted
