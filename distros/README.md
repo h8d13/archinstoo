@@ -9,7 +9,7 @@ And can be found bellow:
 |------|------------------------|----------|--------|--------|
 | Debian | V | V | [DEB](./DEB) | X |
 | Nix | V | V | [NIX](./flake.nix) | X |
-| Alpine | V | V | [NIX](./APL) | V |
+| Alpine | V | V | [ALP](./ALP) | V |
 
 ---
 
