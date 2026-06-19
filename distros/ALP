@@ -30,7 +30,6 @@ apk add --no-cache $(awk '{print $1}' << 'EOF'
     musl-dev                # libc headers
     gcc                     # c compiler
     pacman                  # arch package manager
-    arch-install-scripts    # pacstrap, genfstab, etc
     coreutils               # gnu core utils
     util-linux              # lsblk, blkid, etc
     pciutils                # lspci
@@ -46,4 +45,8 @@ apk add --no-cache $(awk '{print $1}' << 'EOF'
 EOF
 )
 
-pip install --break-system-packages pyparted
+# arch-install-scripts and alpine-conf both provide cmd:genfstab
+apk del --no-cache alpine-base alpine-conf
+apk add --no-cache arch-install-scripts
+
+python3 -m pip install --break-system-packages pyparted
