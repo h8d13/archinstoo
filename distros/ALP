@@ -23,6 +23,10 @@ apk update
 
 apk add --no-cache $(
 	awk '{print $1}' <<'EOF'
+    apk-tools               # pin: keep apk after dropping alpine-base meta
+    busybox                 # pin: sh + core utils survive meta drop
+    alpine-baselayout       # pin: /etc skeleton (passwd, group) survive meta drop
+    musl-utils              # pin: ldd/getconf survive meta drop
     ca-certificates         # for https handshakes
     zstd                    # keyring
     eudev                   # device/udev

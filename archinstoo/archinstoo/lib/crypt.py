@@ -16,7 +16,21 @@ def _load_libcrypt() -> ctypes.CDLL:
 				return ctypes.CDLL(name)
 			except OSError:
 				continue
-	raise OSError('libxcrypt not found on the dynamic-linker path')
+
+	# musl (Alpine) folds crypt() into libc with no standalone libcrypt soname,
+	# and without a toolchain find_library('crypt') returns None. CDLL(None) opens
+	# the running process image, which has libc loaded and exposes crypt directly.
+	try:
+		lib = ctypes.CDLL(None)
+	except OSError:
+		lib = None
+
+	# hasattr forces symbol resolution and swallows the AttributeError musl
+	# raises when crypt is absent, so it doubles as the existence probe
+	if lib is not None and hasattr(lib, 'crypt'):
+		return lib
+
+	raise OSError('libcrypt/libc crypt not found on the dynamic-linker path')
 
 
 libcrypt = _load_libcrypt()
