@@ -35,8 +35,6 @@ apk add --no-cache $(
     py3-pyparted@testing    # prebuilt parted bindings (edge/testing), no toolchain
     parted                  # partition cli + libparted runtime
     pacman                  # arch package manager
-    gnupg                   # full gpg engine for pacman-key (gpg/agent/dirmngr)
-    gnupg-gpgconf           # gpgconf: pacman-key drives the agent lifecycle
     coreutils               # gnu core utils
     util-linux              # lsblk, blkid, etc
     pciutils                # lspci
