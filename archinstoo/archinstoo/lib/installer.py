@@ -909,6 +909,18 @@ class Installer:
 		# https://wiki.archlinux.org/title/Systemd-resolved#DNS
 		resolv = self.target / 'etc/resolv.conf'
 		resolv.unlink(missing_ok=True)
+
+		# the stub only resolves once systemd-resolved runs on the target. From a
+		# foreign (non-systemd) host that flow isn't guaranteed, so copy the
+		# host's working resolv.conf content instead of a dangling symlink.
+		if Os.running_from_host() and not Os.running_from_arch():
+			host_resolv = Path('/etc/resolv.conf')
+			if host_resolv.is_file():  # follows symlink, False if dangling
+				resolv.write_text(host_resolv.read_text())
+			else:
+				debug('No host /etc/resolv.conf to copy, leaving target unset')
+			return
+
 		resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
 
 	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
@@ -2278,6 +2290,10 @@ EndSection
 		return True
 
 	def _service_started(self, service_name: str) -> str | None:
+		if not shutil.which('systemctl'):
+			# non-systemd host has no unit to have started
+			return None
+
 		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
 			service_name += '.service'  # Just to be safe
 
@@ -2296,6 +2312,10 @@ EndSection
 		return last_execution_time
 
 	def _service_state(self, service_name: str) -> str:
+		if not shutil.which('systemctl'):
+			# non-systemd host: nothing to poll, report inert so waits exit
+			return 'dead'
+
 		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
 			service_name += '.service'  # Just to be safe
 

@@ -3,14 +3,13 @@ import re
 import shutil
 import tarfile
 import tempfile
-import urllib.request
 from compression.zstd import ZstdFile
 from pathlib import Path
 
 from archinstoo.lib.output import info
 from archinstoo.lib.pacman import Pacman
 from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF
-from archinstoo.lib.utils.net import fetch_data_from_url
+from archinstoo.lib.utils.net import download_file_from_url, fetch_data_from_url
 
 # Sources we pull from when the host isn't Arch and ships pacman but no config.
 # (_PACMAN_CONF_URL is the same upstream default lib.pacman.reset_conf resets to.)
@@ -86,8 +85,7 @@ def keyring_init() -> None:
 	with tempfile.TemporaryDirectory() as tmp:
 		root = Path(tmp)
 		pkg = root / 'keyring.pkg.tar.zst'
-		with urllib.request.urlopen(url, timeout=30) as resp, pkg.open('wb') as out:  # noqa: S310 - geo mirror, https only
-			shutil.copyfileobj(resp, out)
+		download_file_from_url(url, pkg)
 
 		info('Extracting keyring...')
 		with ZstdFile(pkg) as raw, tarfile.open(fileobj=raw, mode='r|') as t:

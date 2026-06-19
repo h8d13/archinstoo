@@ -1,13 +1,12 @@
 import os
 import shutil
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 from archinstoo.lib.exceptions import RequirementError, ServiceException, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import error
 from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.net import fetch_data_from_url
 
 
 def list_keyboard_languages() -> list[str]:
@@ -51,9 +50,8 @@ def _fetch_glibc_supported() -> list[str]:
 	# upstream lists each locale as "<locale>/<charset> \"; convert to the
 	# space-separated "<locale> <charset>" form the menu expects
 	try:
-		with urllib.request.urlopen(_GLIBC_SUPPORTED_URL, timeout=15) as resp:  # noqa: S310 - https literal
-			text = resp.read().decode('utf-8')
-	except urllib.error.URLError, TimeoutError, OSError:
+		text = fetch_data_from_url(_GLIBC_SUPPORTED_URL)
+	except ValueError:
 		return []
 
 	locales = []
