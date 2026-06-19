@@ -1,4 +1,5 @@
 import ctypes
+import secrets
 from ctypes.util import find_library
 from pathlib import Path
 
@@ -23,8 +24,18 @@ libcrypt = _load_libcrypt()
 libcrypt.crypt.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 libcrypt.crypt.restype = ctypes.c_char_p
 
-libcrypt.crypt_gensalt.argtypes = [ctypes.c_char_p, ctypes.c_ulong, ctypes.c_char_p, ctypes.c_int]
-libcrypt.crypt_gensalt.restype = ctypes.c_char_p
+# crypt_gensalt is a libxcrypt symbol. glibc hosts have it; musl (Alpine) folds
+# crypt() into libc but ships no gensalt, so accessing it raises. Detect once and
+# fall back to a hand-built SHA-512 setting below when it is missing.
+try:
+	libcrypt.crypt_gensalt.argtypes = [ctypes.c_char_p, ctypes.c_ulong, ctypes.c_char_p, ctypes.c_int]
+	libcrypt.crypt_gensalt.restype = ctypes.c_char_p
+	HAVE_GENSALT = True
+except AttributeError:
+	HAVE_GENSALT = False
+
+# crypt(3) salt alphabet, used only for the musl SHA-512 fallback
+_CRYPT_B64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
 LOGIN_DEFS = Path('/etc/login.defs')
 
@@ -72,7 +83,15 @@ def crypt_yescrypt(plaintext: str) -> str:
 	debug(f'Creating yescrypt hash with rounds {rounds}')
 
 	enc_plaintext = plaintext.encode('utf-8')
-	salt = crypt_gen_salt('$y$', rounds)
+
+	if HAVE_GENSALT:
+		salt = crypt_gen_salt('$y$', rounds)
+	else:
+		# musl libc: no yescrypt and no crypt_gensalt. Fall back to SHA-512
+		# crypt ($6$), which musl supports and the target Arch accepts.
+		rand = ''.join(secrets.choice(_CRYPT_B64) for _ in range(16))
+		salt = f'$6${rand}'.encode()
+		debug('crypt_gensalt unavailable (musl), using SHA-512 crypt')
 
 	crypt_hash: bytes | None = libcrypt.crypt(enc_plaintext, salt)
 
