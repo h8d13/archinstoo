@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2154
 cd archinstoo || exit 1
-(python -B -m archinstoo "$@") && cd ..
+(python3 -B -m archinstoo "$@") && cd ..
