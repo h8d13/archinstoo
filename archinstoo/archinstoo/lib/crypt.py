@@ -55,6 +55,11 @@ LOGIN_DEFS = Path('/etc/login.defs')
 
 
 def _search_login_defs(key: str) -> str | None:
+	# host may not ship /etc/login.defs (alpine without shadow); fall back to
+	# the caller's default cost factor instead of crashing
+	if not LOGIN_DEFS.is_file():
+		return None
+
 	defs = LOGIN_DEFS.read_text()
 	for line in defs.split('\n'):
 		line = line.strip()
