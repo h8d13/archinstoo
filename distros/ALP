@@ -10,7 +10,8 @@
 # apk add git
 # git clone <url>
 # cd archinstoo
-# ./ALP
+# ./distros/ALP
+# ./RUN
 
 # shellcheck disable=SC2046
 
@@ -36,7 +37,6 @@ apk add --no-cache $(
     pacman                  # arch package manager
     gnupg                   # full gpg engine for pacman-key (gpg/agent/dirmngr)
     gnupg-gpgconf           # gpgconf: pacman-key drives the agent lifecycle
-    gnupg-keyboxd           # gnupg 2.4 keybox daemon, else cold-start races
     coreutils               # gnu core utils
     util-linux              # lsblk, blkid, etc
     pciutils                # lspci
@@ -48,9 +48,12 @@ apk add --no-cache $(
     lvm2                    # always checked
     btrfs-progs             # optionals FS supports
     f2fs-tools              # ...
-    xfsprogs                # ...
+    xfsprogs                # ... bcachefs, zfs :DDDDD
 EOF
 )
+
+# TODO: some reason one of the gnupg .install scriptlets gets stuck
+# ctrl+c + retry then skips it, idk
 
 # arch-install-scripts and alpine-conf both provide cmd:genfstab
 apk del --no-cache alpine-base alpine-conf
