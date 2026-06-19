@@ -58,7 +58,7 @@ def teardown_layout(
 ) -> None:
 	# Order: swapoff, unmount, deactivate VGs, close LUKS. Inner mappers close before the
 	# outer ones that hold them.
-	info('Tearing down target mounts and mappings')
+	info('Tearing down target mounts and mappings...')
 
 	swapoff_layout(disk_config)
 
