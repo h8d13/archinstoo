@@ -654,7 +654,7 @@ class Installer:
 		#
 		# :on_target: Whether to set the mirrors on the target system or the live system.
 		# :param on_target: bool
-		info('Setting mirrors on ' + ('target' if on_target else 'live system'))
+		info('Setting mirrors on ' + ('target' if on_target else 'live system' + '...'))
 
 		if on_target:
 			mirrorlist_path = self.target / MIRRORLIST.relative_to_root()

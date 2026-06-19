@@ -5,8 +5,7 @@
 # step i followed exactly
 # ip link set eth0 up
 # udhcpc -i eth0
-# echo "nameserver 8.8.8.8" > /etc/resolv.conf
-# echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+# echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >/etc/apk/repositories
 
 # apk add git
 # git clone <url>
@@ -15,7 +14,6 @@
 
 # shellcheck disable=SC2046
 
-echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >/etc/apk/repositories
 echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >>/etc/apk/repositories
 echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" >>/etc/apk/repositories
 
@@ -24,6 +22,7 @@ apk update
 apk add --no-cache $(
 	awk '{print $1}' <<'EOF'
     apk-tools               # pin: keep apk after dropping alpine-base meta
+    alpine-keys             # pin: repo signing keys, else fetches go UNTRUSTED
     busybox                 # pin: sh + core utils survive meta drop
     alpine-baselayout       # pin: /etc skeleton (passwd, group) survive meta drop
     musl-utils              # pin: ldd/getconf survive meta drop
@@ -35,6 +34,9 @@ apk add --no-cache $(
     py3-pyparted@testing    # prebuilt parted bindings (edge/testing), no toolchain
     parted                  # partition cli + libparted runtime
     pacman                  # arch package manager
+    gnupg                   # full gpg engine for pacman-key (gpg/agent/dirmngr)
+    gnupg-gpgconf           # gpgconf: pacman-key drives the agent lifecycle
+    gnupg-keyboxd           # gnupg 2.4 keybox daemon, else cold-start races
     coreutils               # gnu core utils
     util-linux              # lsblk, blkid, etc
     pciutils                # lspci
