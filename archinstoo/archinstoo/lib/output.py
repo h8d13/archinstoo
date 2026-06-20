@@ -124,24 +124,6 @@ class FormattedOutput:
 		return output
 
 
-class Journald:
-	@staticmethod
-	def log(message: str, level: int = logging.DEBUG) -> None:
-		try:
-			import systemd.journal  # type: ignore[import-not-found]
-		except ModuleNotFoundError:
-			return
-
-		log_adapter = logging.getLogger('archinstoo')
-		log_fmt = logging.Formatter('[%(levelname)s]: %(message)s')
-		log_ch = systemd.journal.JournalHandler()
-		log_ch.setFormatter(log_fmt)
-		log_adapter.addHandler(log_ch)
-		log_adapter.setLevel(logging.DEBUG)
-
-		log_adapter.log(level, message)
-
-
 def restore_perms(path: Path, recursive: bool = False) -> None:
 	# no-ops if ISO or run as root directly
 	from .utils.env import Os
@@ -354,8 +336,6 @@ def log(
 	# Insert default colors and override with **kwargs
 	if _supports_color():
 		text = _stylize_output(text, fg, bg, reset, font)
-
-	Journald.log(text, level=level)
 
 	if level != logging.DEBUG:
 		from archinstoo.lib.tui.curses_menu import Tui

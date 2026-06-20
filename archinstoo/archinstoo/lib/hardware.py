@@ -4,10 +4,9 @@ from functools import cached_property
 from pathlib import Path
 from typing import Self
 
-from .exceptions import SysCallError
+from .exceptions import RequirementError, SysCallError
 from .general import SysCommand
 from .output import debug
-from .translationhandler import tr
 
 
 class CpuVendor(Enum):
@@ -98,7 +97,7 @@ class GfxDriver(Enum):
 
 	def packages_text(self, kernels: list[str] | None = None) -> str:
 		pkg_names = [p.value for p in self.gfx_packages(kernels)]
-		text = tr('Installed packages') + ':\n'
+		text = 'Installed packages' + ':\n'
 
 		for p in sorted(pkg_names):
 			text += f'\t- {p}\n'
@@ -402,7 +401,33 @@ class SysInfo:
 			result = SysCommand('systemd-detect-virt')
 			return b'none' not in b''.join(result).lower()
 		except SysCallError:
+			# present but reported an error, treat as bare metal
+			return False
+		except RequirementError:
+			# non-systemd host (e.g. alpine): binary absent, fall back to DMI
 			pass
+
+		# xen exposes its type here, and the DMI vendor names the hypervisor for
+		# kvm/qemu/vmware/virtualbox/hyper-v on anything with a sysfs
+		if Path('/sys/hypervisor/type').exists():
+			return True
+
+		vendor = Path('/sys/class/dmi/id/sys_vendor')
+		if vendor.exists():
+			known = (
+				'qemu',
+				'kvm',
+				'vmware',
+				'virtualbox',
+				'innotek',
+				'microsoft corporation',
+				'xen',
+				'bochs',
+				'parallels',
+				'bhyve',
+			)
+			text = vendor.read_text().strip().lower()
+			return any(v in text for v in known)
 
 		return False
 

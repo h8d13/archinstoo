@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.hardware import GfxDriver, SysInfo
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -35,7 +34,7 @@ def select_driver(
 		return driver.packages_text(k)
 
 	items = [MenuItem(o.display_name(), value=o, preview_action=preview_driver) for o in options]
-	items.append(MenuItem(text=tr('None'), value=None))
+	items.append(MenuItem(text='None', value=None))
 	group = MenuItemGroup(items, sort_items=True)
 	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
 		default_driver = GfxDriver.MesaOpenSource
@@ -50,13 +49,13 @@ def select_driver(
 
 	header = ''
 	if SysInfo.is_vm():
-		header += tr('VM detected: use VM (software rendering) or VM (virtio-gpu) options.\n')
+		header += 'VM detected: use VM (software rendering) or VM (virtio-gpu) options.\n'
 	if SysInfo.has_amd_graphics():
-		header += tr('AMD detected: use All open-source, AMD / ATI, or Mesa (open-source) options.\n')
+		header += 'AMD detected: use All open-source, AMD / ATI, or Mesa (open-source) options.\n'
 	if SysInfo.has_intel_graphics():
-		header += tr('Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n')
+		header += 'Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n'
 	if SysInfo.has_nvidia_graphics():
-		header += tr('Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n')
+		header += 'Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n'
 
 	result = SelectMenu[GfxDriver](
 		group,
@@ -65,7 +64,7 @@ def select_driver(
 		allow_reset=True,
 		preview_size='auto',
 		preview_style=PreviewStyle.BOTTOM,
-		preview_frame=FrameProperties(tr('Info'), h_frame_style=FrameStyle.MIN),
+		preview_frame=FrameProperties('Info', h_frame_style=FrameStyle.MIN),
 	).run()
 
 	match result.type_:

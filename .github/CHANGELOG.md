@@ -1,26 +1,19 @@
 # Changelog
 
-Historical changes/commits before I went rogue: 
+Historical changes/commits before I went rogue:
 [upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
-Upstreamed fixes:
+## 0.1.13-0
 
-- Missing deps in linux-variant-headers
-
-Reported [here](https://github.com/archlinux/archinstall/issues/4360)
-
-Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188)
-
-Pending upstream fixes:
-
-- Modify existing `base-devel` pkg for `doas` or alternatives (`sudo` optional)
-
-Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-devel/-/work_items/7)
+	- Add bootstrap path to support installing from Debian FORKY OR SID
+		- Separate `distros/` with deps and a dockerfile for reprod
+	- Remove locales as it's not maintainable solo/had already drifted
+	- Rework nvchecker and tests to always match jsonc schema
 
 ## 0.1.12-0
 
 	- Add `cage` + `regreet` greeter option (greetd-based graphical login)
-		- Seatd-compatible Wayland login 
+		- Seatd-compatible Wayland login
 		- `greeter` user joins the `seat` group only when seatd is
 		  installed, so non-seatd installs don't break
 	- Seat access: drop the greeter gate, still default to `ly` under seatd
@@ -88,10 +81,10 @@ Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-d
           the menu directly, this will allow for better checks/tests)
     - Hardware detection allow for vendor specific list in `Firmware`
         - Updated `count.py` to work with new firmware choice logic
-    - Fix doas path resolution on grimaur installs
+    - Fix doas path resolution on grimoire installs
         - Configure `/etc/makepkg.conf` directly
         - Validate AUR selection requires elevation
-        - Update grimaur to new version -> respects makepkg properly now + other
+        - Update grimoire to new version -> respects makepkg properly now + other
           various changes
     - Convert docstrings to plain `#` comments
     - Logging fixes: Escaping using existing helpers
@@ -170,8 +163,6 @@ Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-d
     - `desktops/hyprland.py`: drop `polkit` (pulled in transitively); revert
       niri profile change
     - Drop `cutefish` desktop profile (#4514, upstream-archived project)
-    - Locale fixes (#4500): missing `tr()` ids in encryption/profile menus,
-      `.pot` regen
     - `network/`: small helper for nic stub creation path
     - `sysctl`: drop redundant duplicate lines
     - Dev: `TVM` script (renamed from `VM`) for boot-time VM smoke-test (credits
@@ -366,7 +357,7 @@ Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-d
     - AUR: fix install order to run after DE/WM profile
         - Prevents AUR packages that depend on a desktop environment from
           failing
-    - grimAUR improvements
+    - grimoire improvements
         - Prefer `run0` over `sudo` in GUI mode
         - Add `--depth=1` to all git clone commands
 
@@ -480,7 +471,7 @@ Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-d
         - Refactor UEFI references across bootloader menu and models (cf)
     - Error handling
         - Refactor error reporting for bad configs in global menu
-        - Rename error variables in `grimaur.py` for consistency
+        - Rename error variables in `grimoire.py` for consistency
     - Resume and config fixes
         - Fix resume behavior for multiple settings
         - Fix profile names for `httpd` and `sshd` servers
@@ -543,10 +534,10 @@ Down from original list (the rest is all in logic or choices):
         - `Mesa (open-source)` auto-detects vulkan-intel or vulkan-radeon based
           on hardware
         - Plan future implementation for other drivers
-        - Virtual: `vulkan-driver` 
+        - Virtual: `vulkan-driver`
         ALREADY COVERED: `nvidia-utils, vulkan-intel, vulkan-radeon, vulkan-swrast`
         `vulkan-virtio, vulkan-nouveau`
-        MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno` 
+        MISSING: `vulkan-gfxstream, vulkan-dzn, vulkan-asahi, vulkan-freedreno`
         `vulkan-broadcom, vulkan-panfrost, vulkan-powervr`
         - Fix gfx driver installation OoO: now installs BEFORE profiles to
           satisfy vulkan-driver dependency.
@@ -599,7 +590,7 @@ Down from original list (the rest is all in logic or choices):
     - Test updates
         - Add security_config to test fixtures
         - Update test assertions for new Security model
-    - Work on grimaur linting
+    - Work on grimoire linting
 
 ## 0.1.01-0
 
@@ -616,7 +607,7 @@ Down from original list (the rest is all in logic or choices):
         - Skips `arch-chroot` wrapper when target is `/`
         - Disables disk, bootloader, kernel menu items
     - AUR support
-        - Full AUR builder (`grimaur.py`) with temporary non-root user
+        - Full AUR builder (`grimoire.py`) with temporary non-root user
         - AUR packages menu item (gated behind `--advanced`)
         - Fix `/tmp` writability inside chroot for `makepkg`
         - Out-of-tree DKMS module builds
@@ -723,7 +714,7 @@ Down from original list (the rest is all in logic or choices):
 ## 0.0.01-8
     - Start building `env` utils for support to build on alpine
     - Rework `--script list` to show what needs root or not
-    - Add actual custom examples #71 
+    - Add actual custom examples #71
     - Add `count` script that let's you map out how many pkgs would be installed
       by a profile
     - Add schema.jsonc with all the possible packages installed

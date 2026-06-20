@@ -29,8 +29,6 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
-from archinstoo.lib.pm import installed_package
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import Tui
 
 from .disk.luks import Luks2, unlock_luks2_dev
@@ -45,6 +43,7 @@ from .models.users import User
 from .output import debug, error, info, log, logger, warn
 from .pm import Pacman
 from .pm.config import PacmanConfig
+from .utils.env import Os
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -152,15 +151,21 @@ class Installer:
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
 		try:
+			if exc_type is KeyboardInterrupt:
+				# User abort, not a crash: no bug-report prompt. finally still
+				# tears down mounts; propagate for the top level to exit clean.
+				warn('Installation interrupted by user, tearing down target...')
+				return None
+
 			if exc_type is not None:
 				error(str(exc_value))
-				Tui.print(str(tr('[!] A log file has been created here: {}').format(logger.path)))
-				Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
+				Tui.print(str(f'[!] A log file has been created here: {logger.path}'))
+				Tui.print(f'Please submit this issue (and file) to {self._bug_report_url}/issues')
 
 				# Return None to propagate the exception
 				return None
 
-			info(tr('Syncing the system...'))
+			info('Syncing the system...')
 			os.sync()
 
 			if not (missing_steps := self.post_install_check()):
@@ -226,23 +231,30 @@ class Installer:
 		# architecture and parse results for prints
 		# https://github.com/archlinux/archinstall/issues/3688
 		# be more descriptive about status in code + what user sees
+		if Os.running_from_host() and not Os.running_from_arch():
+			# NTP/reflector/keyring-wkd-sync are live-ISO startup units; a
+			# foreign host has none of them, so the waits would block forever
+			# (the wkd-sync timer never appears -> _service_started stays None).
+			debug('Running from foreign host, skipping ISO service-stop checks')
+			return
+
 		if not self._args.skip_ntp:
-			info(tr('Waiting for NTP time synchronization...'))
+			info('Waiting for NTP time synchronization...')
 
 			started_wait = time.monotonic()
 			notified = False
 			while True:
 				if not notified and time.monotonic() - started_wait > 5:
 					notified = True
-					warn(tr('NTP sync taking longer than expected, still waiting...'))
+					warn('NTP sync taking longer than expected, still waiting...')
 
 				time_val = SysCommand('timedatectl show --property=NTPSynchronized --value').decode()
 				if time_val and time_val.strip() == 'yes':
-					info(tr('NTP time synchronization completed'))
+					info('NTP time synchronization completed')
 					break
 				time.sleep(1)
 		else:
-			info(tr('Skipping NTP time sync (may cause issues if system time is incorrect)'))
+			info('Skipping NTP time sync (may cause issues if system time is incorrect)')
 
 		if not self._args.offline and SysInfo.arch() == 'x86_64':
 			info('Waiting for reflector mirror selection...')
@@ -265,7 +277,7 @@ class Installer:
 			info('Skipping reflector (offline mode or non-x86_64 architecture)')
 
 		if not self._args.skip_wkd:
-			info(tr('Waiting for Arch Linux keyring sync...'))
+			info('Waiting for Arch Linux keyring sync...')
 			# Wait for the timer to kick in
 			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:
 				time.sleep(1)
@@ -277,9 +289,9 @@ class Installer:
 				keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
 
 			if keyring_state == 'failed':
-				warn(tr('Arch Linux keyring sync failed'))
+				warn('Arch Linux keyring sync failed')
 			else:
-				info(tr('Arch Linux keyring sync completed'))
+				info('Arch Linux keyring sync completed')
 
 	def sanity_check(self) -> None:
 		self._verify_service_stop()
@@ -642,7 +654,7 @@ class Installer:
 		#
 		# :on_target: Whether to set the mirrors on the target system or the live system.
 		# :param on_target: bool
-		info('Setting mirrors on ' + ('target' if on_target else 'live system'))
+		info('Setting mirrors on ' + ('target' if on_target else 'live system' + '...'))
 
 		if on_target:
 			mirrorlist_path = self.target / MIRRORLIST.relative_to_root()
@@ -751,8 +763,10 @@ class Installer:
 		if not len(zone):
 			return True  # Redundant
 
-		if (Path('/usr') / 'share' / 'zoneinfo' / zone).exists():
-			(Path(self.target) / 'etc' / 'localtime').unlink(missing_ok=True)
+		# Validate against the target's tzdata, not the host's: the symlink
+		# resolves inside the chroot, and a host may lack FHS zoneinfo (NixOS).
+		if (self.target / 'usr/share/zoneinfo' / zone).exists():
+			(self.target / 'etc' / 'localtime').unlink(missing_ok=True)
 			self.arch_chroot(['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime'])
 			return True
 
@@ -773,6 +787,16 @@ class Installer:
 		# fstrim is owned by util-linux, a dependency of both base and systemd.
 		self.enable_service('fstrim.timer')
 
+	def _systemctl_target(self, action: str, service: str) -> None:
+		# host systemctl drives the target offline via --root=. A non-systemd
+		# host (alpine, ...) has no systemctl binary, so run the target's own
+		# systemctl inside the chroot instead. enable/disable only write unit
+		# symlinks, so they work without a running pid1 in the chroot.
+		if shutil.which('systemctl'):
+			SysCommand(f'systemctl --root={self.target} {action} {service}')
+		else:
+			self.arch_chroot(f'systemctl {action} {service}')
+
 	def enable_service(self, services: str | list[str]) -> None:
 		if isinstance(services, str):
 			services = [services]
@@ -781,7 +805,7 @@ class Installer:
 			info(f'Enabling service {service}')
 
 			try:
-				SysCommand(f'systemctl --root={self.target} enable {service}')
+				self._systemctl_target('enable', service)
 			except SysCallError as err:
 				raise ServiceException(f'Unable to start service {service}: {err}')
 
@@ -830,14 +854,25 @@ class Installer:
 			info(f'Disabling service {service}')
 
 			try:
-				SysCommand(f'systemctl --root={self.target} disable {service}')
+				self._systemctl_target('disable', service)
 			except SysCallError as err:
 				raise ServiceException(f'Unable to disable service {service}: {err}')
+
+	@property
+	def _arch_chroot_prefix(self) -> list[str]:
+		# `arch-chroot -S` runs the chroot through systemd-run, which a foreign
+		# host (Debian, ...) has no running systemd to provide; drop -S there so
+		# it falls back to plain chroot(8).
+		prefix = ['arch-chroot']
+		if not (Os.running_from_host() and not Os.running_from_arch()):
+			prefix.append('-S')
+		prefix.append(str(self.target))
+		return prefix
 
 	def run_command(self, cmd: str, peek_output: bool = False) -> SysCommand:
 		if self.target == Path('/'):
 			return SysCommand(cmd, peek_output=peek_output)
-		return SysCommand(f'arch-chroot -S {self.target} {cmd}', peek_output=peek_output)
+		return SysCommand(f'{" ".join(self._arch_chroot_prefix)} {cmd}', peek_output=peek_output)
 
 	def arch_chroot(
 		self,
@@ -849,7 +884,7 @@ class Installer:
 		if isinstance(cmd, list):
 			if run_as:
 				cmd = ['su', '-', run_as, '-c', shlex.join(cmd)]
-			argv = cmd if self.target == Path('/') else ['arch-chroot', '-S', str(self.target), *cmd]
+			argv = cmd if self.target == Path('/') else [*self._arch_chroot_prefix, *cmd]
 			return run(argv)
 
 		if run_as:
@@ -874,6 +909,18 @@ class Installer:
 		# https://wiki.archlinux.org/title/Systemd-resolved#DNS
 		resolv = self.target / 'etc/resolv.conf'
 		resolv.unlink(missing_ok=True)
+
+		# the stub only resolves once systemd-resolved runs on the target. From a
+		# foreign (non-systemd) host that flow isn't guaranteed, so copy the
+		# host's working resolv.conf content instead of a dangling symlink.
+		if Os.running_from_host() and not Os.running_from_arch():
+			host_resolv = Path('/etc/resolv.conf')
+			if host_resolv.is_file():  # follows symlink, False if dangling
+				resolv.write_text(host_resolv.read_text())
+			else:
+				debug('No host /etc/resolv.conf to copy, leaving target unset')
+			return
+
 		resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
 
 	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
@@ -1110,9 +1157,7 @@ class Installer:
 					continue
 
 				command = [
-					'arch-chroot',
-					'-S',
-					str(self.target),
+					*self._arch_chroot_prefix,
 					'snapper',
 					'--no-dbus',
 					'-c',
@@ -1386,37 +1431,25 @@ class Installer:
 		if not efi_partition.mountpoint:
 			raise ValueError('EFI system partition is not mounted')
 
-		# TODO: Ideally we would want to check if another config
-		# points towards the same disk and/or partition.
-		# And in which case we should do some clean up.
 		bootctl_options = []
 
 		if boot_partition != efi_partition:
 			bootctl_options.append(f'--esp-path={efi_partition.mountpoint}')
 			bootctl_options.append(f'--boot-path={boot_partition.mountpoint}')
 
-		# TODO: This is a temporary workaround to deal with https://github.com/archlinux/archinstall/pull/3396#issuecomment-2996862019
-		# the systemd_version check can be removed once `--variables=BOOL` is merged into systemd.
-		# keep the version as a str as it can be something like 257.8-2
-		if (systemd_pkg := installed_package('systemd')) is not None:
-			systemd_version = systemd_pkg.version
-		else:
-			systemd_version = '257'  # This works as a safety workaround for this hot-fix
+		# bootctl since v257 detects arch-chroot as a container and silently
+		# skips writing EFI boot variables; --variables=BOOL (systemd >=258)
+		# forces the choice. We always pacstrap a current Arch target, so the
+		# flag is always present. https://github.com/systemd/systemd/pull/37144
+		def _bootctl_install(variables: str) -> None:
+			argv = ' '.join(('bootctl', variables, *bootctl_options, 'install'))
+			self.arch_chroot(argv)
 
 		try:
-			# Force EFI variables since bootctl detects arch-chroot
-			# as a container environment since v257 and skips them silently.
-			# https://github.com/systemd/systemd/issues/36174
-			if systemd_version >= '258':
-				self.arch_chroot(f'bootctl --variables=yes {" ".join(bootctl_options)} install')
-			else:
-				self.arch_chroot(f'bootctl {" ".join(bootctl_options)} install')
+			_bootctl_install('--variables=yes')
 		except SysCallError:
-			if systemd_version >= '258':
-				# Fallback, try creating the boot loader without touching the EFI variables
-				self.arch_chroot(f'bootctl --variables=no {" ".join(bootctl_options)} install')
-			else:
-				self.arch_chroot(f'bootctl --no-variables {" ".join(bootctl_options)} install')
+			# retry leaving the EFI variables untouched (e.g. vars not writable)
+			_bootctl_install('--variables=no')
 
 		# Loader configuration is stored in ESP/loader:
 		# https://man.archlinux.org/man/loader.conf.5
@@ -1479,9 +1512,7 @@ class Installer:
 		boot_dir = Path('/boot')
 
 		command = [
-			'arch-chroot',
-			'-S',
-			str(self.target),
+			*self._arch_chroot_prefix,
 			'grub-install',
 			'--debug',
 		]
@@ -1968,9 +1999,13 @@ class Installer:
 		if not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
 
-	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False) -> None:
+	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False, quiet: bool = False) -> None:
 		# Run before bootloader install so kernel cmdline reflects rd.luks.options=tpm2-device=auto
+		# but is extensively gated and a no-op if not present/selected
 		self.enroll_tpm2()
+
+		if quiet and 'quiet' not in self._kernel_params:
+			self._kernel_params.append('quiet')
 
 		efi_partition = self._get_efi_partition()
 		boot_partition = self._get_boot_partition()
@@ -2173,7 +2208,7 @@ class Installer:
 			return False
 
 		input_data = f'{user.username}:{enc_password}'.encode()
-		cmd = ['arch-chroot', '-S', str(self.target), 'chpasswd', '--encrypted']
+		cmd = [*self._arch_chroot_prefix, 'chpasswd', '--encrypted']
 
 		try:
 			run(cmd, input_data=input_data)
@@ -2255,6 +2290,10 @@ EndSection
 		return True
 
 	def _service_started(self, service_name: str) -> str | None:
+		if not shutil.which('systemctl'):
+			# non-systemd host has no unit to have started
+			return None
+
 		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
 			service_name += '.service'  # Just to be safe
 
@@ -2273,6 +2312,10 @@ EndSection
 		return last_execution_time
 
 	def _service_state(self, service_name: str) -> str:
+		if not shutil.which('systemctl'):
+			# non-systemd host: nothing to poll, report inert so waits exit
+			return 'dead'
+
 		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
 			service_name += '.service'  # Just to be safe
 
@@ -2283,6 +2326,10 @@ EndSection
 
 
 def accessibility_tools_in_use() -> bool:
+	# espeakup is a live-ISO accessibility unit; a non-systemd host has neither
+	# the binary nor the unit, so report not-in-use instead of crashing
+	if not shutil.which('systemctl'):
+		return False
 	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0  # noqa: S607 - systemctl on live ISO
 
 
@@ -2299,10 +2346,10 @@ def run_aur_installation(packages: list[str], installation: Installer, auth_conf
 
 	installation.add_additional_packages(['base-devel', 'git'])
 
-	grimaur_src = Path(__file__).parent / 'grimaur.py'
-	grimaur_dest = installation.target / 'usr/local/bin/grimaur'
-	grimaur_src.copy(grimaur_dest, preserve_metadata=True)
-	grimaur_dest.chmod(0o755)
+	grimoire_src = Path(__file__).parent / 'grimoire.py'
+	grimoire_dest = installation.target / 'usr/local/bin/grimoire'
+	grimoire_src.copy(grimoire_dest, preserve_metadata=True)
+	grimoire_dest.chmod(0o755)
 
 	priv_esc = auth_config.privilege_escalation
 	aur_rule = None
@@ -2327,7 +2374,7 @@ def run_aur_installation(packages: list[str], installation: Installer, auth_conf
 			info(f'Installing AUR package: {pkg}')
 			try:
 				installation.arch_chroot(
-					f'grimaur --no-color install {shlex.quote(pkg)} --noconfirm',
+					f'grimoire --no-color install --repo AUR {shlex.quote(pkg)} --noconfirm',
 					run_as=build_user.username,
 					peek_output=True,
 				)
@@ -2358,7 +2405,7 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 			user_script.write(command)
 
 		try:
-			SysCommand(f'arch-chroot -S {installation.target} bash {script_path}')
+			SysCommand(f'{" ".join(installation._arch_chroot_prefix)} bash {script_path}')
 		except SysCallError as e:
 			warn(f'Custom command "{command}" failed: {e}')
 		finally:

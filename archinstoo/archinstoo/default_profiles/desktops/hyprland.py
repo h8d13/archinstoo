@@ -3,7 +3,6 @@ from typing import override
 from archinstoo.default_profiles.desktops import SeatAccess
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -42,8 +41,8 @@ class HyprlandProfile(WaylandProfile):
 
 	def _select_seat_access(self) -> None:
 		# need to activate seat service and add to seat group
-		header = tr('Hyprland needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)')
-		header += '\n' + tr('Choose an option to give Hyprland access to your hardware') + '\n'
+		header = 'Hyprland needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
+		header += '\n' + 'Choose an option to give Hyprland access to your hardware' + '\n'
 
 		items = [MenuItem(s.value, value=s) for s in SeatAccess]
 		group = MenuItemGroup(items, sort_items=True)
@@ -55,7 +54,7 @@ class HyprlandProfile(WaylandProfile):
 			group,
 			header=header,
 			allow_skip=False,
-			frame=FrameProperties.min(tr('Seat access')),
+			frame=FrameProperties.min('Seat access'),
 			alignment=Alignment.CENTER,
 		).run()
 

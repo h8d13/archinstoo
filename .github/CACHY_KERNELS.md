@@ -6,7 +6,7 @@ Install normally, then swap kernels after first boot. Keeps stock kernel as fall
 
 1. Boot the installed system
 2. Add CachyOS repos: `git clone` [`Cachyos-repos`](https://github.com/h8d13/cachyos-repos) then run `sudo ./cachyos-repo --install`
-3. `pacman -Sy linux-cachyos` (and any additional drivers you might need from their repos)
+3. `pacman -Syy linux-cachyos` (and any additional drivers you might need from their repos)
 4. Regen bootloader: `grub-mkconfig -o /boot/grub/grub.cfg` (or equivalent depending on bootloader and paths)
 5. Reboot, pick the new kernel entry in the menu.
 
@@ -14,7 +14,9 @@ Optionally after checking all works fine, remove the original kernel/headers and
 
 ## Why fork their repo-add
 
-Simply because we want an arch base, where Cachy doesn't take priority. Details are available in the repo itself.
+Simply because we want an arch base, where Cachy doesn't take priority.
+Details are available in the [repo](https://github.com/h8d13/cachyos-repos) itself.
+
 - Do not replace pacman
 - Do not insert cachyos repos before regular ones
 

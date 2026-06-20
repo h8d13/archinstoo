@@ -7,7 +7,6 @@ from archinstoo.lib.models.device import (
 	_DeviceInfo,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -77,7 +76,7 @@ def select_partition_table() -> PartitionTable:
 	result = SelectMenu[PartitionTable](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Partition table')),
+		frame=FrameProperties.min('Partition table'),
 		allow_skip=False,
 	).run()
 
@@ -120,9 +119,9 @@ def select_main_filesystem_format(advanced: bool = False, allow_lvm: bool = Fals
 
 
 def select_mount_options() -> list[str]:
-	prompt = tr('Would you like to use compression or disable CoW?') + '\n'
-	compression = tr('Use compression')
-	disable_cow = tr('Disable Copy-on-Write')
+	prompt = 'Would you like to use compression or disable CoW?' + '\n'
+	compression = 'Use compression'
+	disable_cow = 'Disable Copy-on-Write'
 
 	# noatime is always included for btrfs to avoid unnecessary metadata
 	# writes due to atime updates interacting poorly with CoW and snapshots

@@ -1,5 +1,6 @@
 import random
 import select
+import shutil
 import signal
 import socket
 import ssl
@@ -14,6 +15,7 @@ from archinstoo.lib.exceptions import DownloadTimeout
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+	from pathlib import Path
 	from types import FrameType, TracebackType
 
 
@@ -127,3 +129,22 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 		raise ValueError(f'Unable to fetch data from url: {url}\n{e}')
 	except Exception as e:
 		raise ValueError(f'Unexpected error when parsing response: {e}')
+
+
+def download_file_from_url(url: str, dest: Path, timeout: int = 30) -> None:
+	# binary sibling of fetch_data_from_url: streams the response to disk instead
+	# of decoding to text, for package/archive downloads
+	from urllib.parse import urlparse
+
+	if urlparse(url).scheme not in ('http', 'https'):
+		raise ValueError(f'Refusing to fetch non-http(s) url: {url}')
+
+	ssl_context = ssl.create_default_context()
+	ssl_context.check_hostname = False
+	ssl_context.verify_mode = ssl.CERT_NONE
+
+	try:
+		with urlopen(url, context=ssl_context, timeout=timeout) as resp, dest.open('wb') as out:  # noqa: S310 - scheme restricted above
+			shutil.copyfileobj(resp, out)
+	except URLError as e:
+		raise ValueError(f'Unable to download from url: {url}\n{e}')

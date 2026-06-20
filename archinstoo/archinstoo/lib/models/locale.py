@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Any, Self
 
 from archinstoo.lib.localization.utils import get_kb_layout
-from archinstoo.lib.translationhandler import tr
 
 
 @dataclass
@@ -28,10 +27,10 @@ class LocaleConfiguration:
 		}
 
 	def preview(self) -> str:
-		output = '{}: {}\n'.format(tr('Keyboard layout'), self.kb_layout)
-		output += '{}: {}\n'.format(tr('Locale language'), self.sys_lang)
-		output += '{}: {}\n'.format(tr('Locale encoding'), self.sys_enc)
-		output += '{}: {}'.format(tr('Console font'), self.console_font)
+		output = '{}: {}\n'.format('Keyboard layout', self.kb_layout)
+		output += '{}: {}\n'.format('Locale language', self.sys_lang)
+		output += '{}: {}\n'.format('Locale encoding', self.sys_enc)
+		output += '{}: {}'.format('Console font', self.console_font)
 		return output
 
 	def _load_config(self, args: dict[str, str]) -> None:

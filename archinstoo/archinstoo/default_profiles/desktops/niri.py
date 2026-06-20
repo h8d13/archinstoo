@@ -3,7 +3,6 @@ from typing import override
 from archinstoo.default_profiles.desktops import SeatAccess
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import ProfileType
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -43,8 +42,8 @@ class NiriProfile(WaylandProfile):
 		return [pref] if isinstance(pref, str) else []
 
 	def _select_seat_access(self) -> None:
-		header = tr('Niri needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)')
-		header += '\n' + tr('Choose an option to give Niri access to your hardware') + '\n'
+		header = 'Niri needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
+		header += '\n' + 'Choose an option to give Niri access to your hardware' + '\n'
 
 		items = [MenuItem(s.value, value=s) for s in SeatAccess]
 		group = MenuItemGroup(items, sort_items=True)
@@ -56,7 +55,7 @@ class NiriProfile(WaylandProfile):
 			group,
 			header=header,
 			allow_skip=False,
-			frame=FrameProperties.min(tr('Seat access')),
+			frame=FrameProperties.min('Seat access'),
 			alignment=Alignment.CENTER,
 		).run()
 

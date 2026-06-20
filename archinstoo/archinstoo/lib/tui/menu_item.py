@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.utils.unicode import unicode_ljust
 
 if TYPE_CHECKING:
@@ -36,14 +35,14 @@ class MenuItem:
 	@classmethod
 	def yes(cls, action: Callable[[Any], Any] | None = None) -> Self:
 		if cls._yes is None:
-			cls._yes = cls(tr('Yes'), value=True, key='yes', action=action)
+			cls._yes = cls('Yes', value=True, key='yes', action=action)
 
 		return cls._yes
 
 	@classmethod
 	def no(cls, action: Callable[[Any], Any] | None = None) -> Self:
 		if cls._no is None:
-			cls._no = cls(tr('No'), value=False, key='no', action=action)
+			cls._no = cls('No', value=False, key='no', action=action)
 
 		return cls._no
 
@@ -228,7 +227,7 @@ class MenuItemGroup:
 
 	def _default_suffix(self, item: MenuItem) -> str:
 		if self.default_item == item:
-			return tr(' (default)')
+			return ' (default)'
 		return ''
 
 	@cached_property

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Any, Self
 
 from archinstoo.lib.output import error
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -40,7 +39,7 @@ class AbstractMenu[ValueT]:
 		# TODO: skip processing when it comes from a planified exit
 		if exc_type is not None:
 			error(str(exc_value))
-			Tui.print(tr('Please submit this issue (and file) to {}/issues').format(self._bug_report_url))
+			Tui.print(f'Please submit this issue (and file) to {self._bug_report_url}/issues')
 
 			# Return None to propagate the exception
 			return
@@ -137,7 +136,7 @@ class AbstractSubMenu[ValueT](AbstractMenu[ValueT]):
 		auto_cursor: bool = True,
 		allow_reset: bool = False,
 	):
-		back_text = f'{Chars.Right_arrow} ' + tr('Back')
+		back_text = f'{Chars.Right_arrow} ' + 'Back'
 		item_group.add_item(MenuItem(text=back_text))
 
 		super().__init__(

@@ -2,10 +2,10 @@
 
 ## Helping us help you
 
-Log files are available in `./archinstoo/logs/*` relative to where you ran. 
+Log files are available in `./archinstoo/logs/*` relative to where you ran.
 
 These contain 4 files: `cmd_history.txt`, `cmd_output.txt` and `install.log` (+ your `user_configuration.json`)
-Depending on the issue all 4 can be useful. 
+Depending on the issue all 4 can be useful.
 
 If you do not want to open a public issue feel free to contact directly: hadean-eon-dev@proton.me
 
@@ -16,14 +16,14 @@ If you do not want to open a public issue feel free to contact directly: hadean-
 Arch's [ISO](https://archlinux.org/download/) is built 1st of each month.
 > Using the **latest version** is often safer bet.
 
-Check: 
+Check:
 ```shell
 . ./PKGBUILD && pacman -Qu "${depends[@]}"
 # or the same with "${optdepends[@]}"
 ```
 Update:
 ```shell
-. ./PKGBUILD && pacman -Sy --needed "${depends[@]}" 
+. ./PKGBUILD && pacman -Sy --needed "${depends[@]}"
 # or the same with "${optdepends[@]}"
 ```
 
@@ -31,13 +31,13 @@ For the lazy ones: `./DEV -h2t` or with optionals `./DEV -h2t -o`
 
 > [!IMPORTANT]
 > Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues/or partial updates,
-and needs to be rebuilt with more space for certain breaking updates. 
+and needs to be rebuilt with more space for certain breaking updates.
 
 Usually build a `1GB` ISO to test dev builds (vs the original `256M`). And can be released more frequently.
 
 You can also do this by running `mount -o remount,size=1G /run/archiso/cowspace` on the ISO directly.
 
-> See [`ISOs`](./BUILD_ISOS.md) to create custom ones directly. 
+> See [`ISOs`](./BUILD_ISOS.md) to create custom ones directly.
 
 ### **Issues with signatures/keyring**
 

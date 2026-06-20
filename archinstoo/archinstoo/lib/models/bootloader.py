@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Any, Self
 
 from archinstoo.lib.output import warn
-from archinstoo.lib.translationhandler import tr
 
 
 class Bootloader(Enum):
@@ -53,9 +52,15 @@ class BootloaderConfiguration:
 	bootloader: Bootloader | None
 	uki: bool = False
 	removable: bool = True
+	quiet: bool = False
 
 	def json(self) -> dict[str, Any]:
-		return {'bootloader': self.bootloader.json() if self.bootloader else None, 'uki': self.uki, 'removable': self.removable}
+		return {
+			'bootloader': self.bootloader.json() if self.bootloader else None,
+			'uki': self.uki,
+			'removable': self.removable,
+			'quiet': self.quiet,
+		}
 
 	@classmethod
 	def parse_arg(cls, config: dict[str, Any]) -> Self:
@@ -63,7 +68,8 @@ class BootloaderConfiguration:
 		bootloader = Bootloader.from_arg(raw) if raw else None
 		uki = config.get('uki', False)
 		removable = config.get('removable', True)
-		return cls(bootloader=bootloader, uki=uki, removable=removable)
+		quiet = config.get('quiet', False)
+		return cls(bootloader=bootloader, uki=uki, removable=removable, quiet=quiet)
 
 	@classmethod
 	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
@@ -73,16 +79,17 @@ class BootloaderConfiguration:
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	def preview(self, uefi: bool) -> str:
-		text = f'{tr("Bootloader")}: {self.bootloader.display_name() if self.bootloader else tr("None")}'
+		text = f'{"Bootloader"}: {self.bootloader.display_name() if self.bootloader else "None"}'
 		text += '\n'
 		if self.bootloader is None:
 			return text
 		if uefi:
-			uki_string = tr('Enabled') if self.uki else tr('Disabled')
+			uki_string = 'Enabled' if self.uki else 'Disabled'
 			text += f'UKI: {uki_string}'
 			text += '\n'
 		if uefi and self.bootloader.has_removable_support():
-			removable_string = tr('Enabled') if self.removable else tr('Disabled')
-			text += f'{tr("Removable")}: {removable_string}'
+			removable_string = 'Enabled' if self.removable else 'Disabled'
+			text += f'{"Removable"}: {removable_string}'
 			text += '\n'
+		text += '{}: {}\n'.format('Quiet boot', 'Enabled' if self.quiet else 'Disabled')
 		return text

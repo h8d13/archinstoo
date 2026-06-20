@@ -3,12 +3,11 @@ import curses
 import signal
 import subprocess
 import sys
+import termios
 from abc import ABCMeta, abstractmethod
 from curses.ascii import isprint
 from curses.textpad import Textbox
 from typing import TYPE_CHECKING, ClassVar, Literal, Self, override
-
-from archinstoo.lib.translationhandler import tr
 
 from .help import Help
 from .menu_item import MenuItem, MenuItemGroup, MenuItemsState
@@ -63,7 +62,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			height,
 			x_start,
 			int((max_height / 2) - height / 2),
-			frame=FrameProperties.min(tr('Archinstoo help')),
+			frame=FrameProperties.min('Archinstoo help'),
 		)
 
 	def _confirm_interrupt(self, warning: str) -> bool:
@@ -86,7 +85,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 			return False
 
 	def help_text(self) -> str:
-		return tr('Ctrl+C to clear, TAB to select multiple, ESC to go back, Ctrl+H for full help')
+		return 'Ctrl+C to clear, TAB to select multiple, ESC to go back, Ctrl+Q to quit, Ctrl+H for full help'
 
 	def _show_help(self) -> None:
 		help_text = Help.get_help_text()
@@ -484,7 +483,7 @@ class EditMenu(AbstractCurses[str]):
 		self._hide_input = hide_input
 
 		if self._interrupt_warning is None:
-			self._interrupt_warning = tr('Are you sure you want to reset this setting?') + '\n'
+			self._interrupt_warning = 'Are you sure you want to reset this setting?' + '\n'
 
 		title = f'* {title}' if not self._allow_skip else title
 		self._frame = FrameProperties(title, FrameStyle.MAX)
@@ -495,7 +494,7 @@ class EditMenu(AbstractCurses[str]):
 		self._info_vp: Viewport | None = None
 
 		self._set_default_info = True
-		self._only_ascii_text = ViewportEntry(tr('Only ASCII characters are supported'), 0, 0, STYLE.NORMAL)
+		self._only_ascii_text = ViewportEntry('Only ASCII characters are supported', 0, 0, STYLE.NORMAL)
 
 		self._init_viewports()
 
@@ -646,6 +645,12 @@ class EditMenu(AbstractCurses[str]):
 				return 7
 			return 0
 
+		# Ctrl-Q: abort menu; on cancel the textbox terminates and kickoff redraws with input preserved
+		if key == 17:
+			self._clear_all()
+			Tui.trigger_abort()
+			return 7
+
 		# Enter: accept
 		if key == 10:
 			self._last_state = Result(ResultType.Selection, None)
@@ -739,7 +744,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 			self._header_entries = self.get_header_entries(header)
 
 		if self._interrupt_warning is None:
-			self._interrupt_warning = tr('Are you sure you want to reset this setting?') + '\n'
+			self._interrupt_warning = 'Are you sure you want to reset this setting?' + '\n'
 
 		if self._orientation == Orientation.HORIZONTAL:
 			self._horizontal_cols = columns
@@ -1213,6 +1218,10 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._clear_all()
 				self._show_help()
 				return None
+			case MenuKeys.QUIT:
+				# show the abort menu (save / abort / cancel) from anywhere; cancel just returns here
+				Tui.trigger_abort()
+				return None
 			case MenuKeys.ACCEPT:
 				if self._multi:
 					if self._item_group.is_mandatory_fulfilled():
@@ -1312,6 +1321,25 @@ class Tui:
 	_t: ClassVar[Self | None] = None
 	_mode: ClassVar[str] = 'dark'
 	_accent: ClassVar[str] = 'blue'
+	# global Ctrl+Q handler; the top menu registers its abort flow (save / abort / cancel)
+	_abort_handler: ClassVar[Callable[[], None] | None] = None
+	_abort_active: ClassVar[bool] = False
+
+	@classmethod
+	def set_abort_handler(cls, handler: Callable[[], None] | None) -> None:
+		cls._abort_handler = handler
+
+	@classmethod
+	def trigger_abort(cls) -> None:
+		# guard reentrancy: the abort menu is itself a SelectMenu, so Ctrl+Q inside it would stack another
+		if cls._abort_active:
+			return
+		if cls._abort_handler is not None:
+			cls._abort_active = True
+			try:
+				cls._abort_handler()
+			finally:
+				cls._abort_active = False
 
 	def __enter__(self) -> None:
 		if Tui._t is None:
@@ -1344,6 +1372,14 @@ class Tui:
 		curses.cbreak()
 		curses.curs_set(0)
 		curses.set_escdelay(25)
+
+		# disable XON/XOFF flow control so Ctrl+Q (and Ctrl+S) reach getch() instead of the tty;
+		# curses.endwin() restores the original termios on teardown
+		with contextlib.suppress(Exception):
+			fd = sys.stdin.fileno()
+			attrs = termios.tcgetattr(fd)
+			attrs[0] &= ~(termios.IXON | termios.IXOFF)
+			termios.tcsetattr(fd, termios.TCSANOW, attrs)
 
 		self._screen.keypad(True)
 		self._screen.scrollok(True)

@@ -121,7 +121,12 @@ def perform_installation(
 			application_handler.install_applications(installation, app_config, users)
 
 		if config.bootloader_config and config.bootloader_config.bootloader is not None:
-			installation.add_bootloader(config.bootloader_config.bootloader, config.bootloader_config.uki, config.bootloader_config.removable)
+			installation.add_bootloader(
+				config.bootloader_config.bootloader,
+				config.bootloader_config.uki,
+				config.bootloader_config.removable,
+				config.bootloader_config.quiet,
+			)
 
 		if disk_config.has_default_btrfs_vols():
 			btrfs_options = disk_config.btrfs_options

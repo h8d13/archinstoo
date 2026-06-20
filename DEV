@@ -1,16 +1,77 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2154,SC2086
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PKG_GLOB="archinstoo-*.pkg.tar.zst"
 
 go_to() {
 	cd "$SCRIPT_DIR/archinstoo" || exit 1
 }
 
+clean() {
+	local pending
+	pending=$(git clean -Xnd)
+	[[ -n "${pending}" ]] || {
+		echo "nothing to clean"
+		return 0
+	}
+	echo "${pending}"
+	read -rp "Proceed? [y/N] " reply
+	[[ "${reply}" == [yY] ]] || {
+		echo "aborted"
+		return 0
+	}
+	git clean -Xfd
+}
+
+sign() {
+	gpg --detach-sign $PKG_GLOB
+}
+verif() {
+	gpg --verify $PKG_GLOB.sig
+}
+
 case "$1" in
--b | --branch)
-	git checkout "$2"
-	./RUN "$@" --advanced --debug
+-t | --tree)
+	go_to
+	{
+		echo '# Project Tree'
+		echo '```'
+		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
+		echo '```'
+	} >docs/README.md
+	;;
+-c | --clean)
+	go_to
+	clean
+	;;
+-b | --build)
+	go_to
+	makepkg -Cf
+	;;
+-s | --sign)
+	go_to
+	sign
+	;;
+-sv | --verify-sig)
+	go_to
+	verif
+	;;
+-i | --install)
+	go_to
+	pacman -U --overwrite '*' $PKG_GLOB
+	;;
+-ul | --up-logs)
+	go_to
+	curl --data-binary @./logs/install.log https://paste.rs
+	;;
+-gl | --grep-logs)
+	go_to
+	grep -i "$2" ./logs/install.log
+	;;
+-gc | --grep-code)
+	go_to
+	git grep -ni "$2"
 	;;
 -tc | --test-config)
 	./RUN --advanced --config examples/config-sample-full.json
@@ -27,27 +88,6 @@ case "$1" in
 	else
 		pacman -Sy --needed "${depends[@]}"
 	fi
-	;;
--ul | --up-logs)
-	go_to
-	curl --data-binary @./logs/install.log https://paste.rs
-	;;
--gl | --grep-logs)
-	go_to
-	grep -i "$2" ./logs/install.log
-	;;
--gc | --grep-code)
-	go_to
-	git grep -ni "$2"
-	;;
--t | --tree)
-	go_to
-	{
-		echo '# Project Tree'
-		echo '```'
-		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
-		echo '```'
-	} >docs/README.md
 	;;
 *)
 	# Pass through to archinstoo

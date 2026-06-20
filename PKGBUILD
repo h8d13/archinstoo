@@ -8,7 +8,7 @@
 # Contributor: Hadean Eon <hadean-eon-dev@proton.me>
 
 pkgname=archinstoo
-pkgver=0.1.12
+pkgver=0.1.13
 pkgrel=0
 pkgdesc="Archinstall revamped"
 arch=(any)
@@ -24,7 +24,7 @@ depends=(
 	'util-linux'           #For partition utilities
 	'pciutils'             #For PCI device detection
 	'kbd'                  #For keyboard layout configuration
-	'libxcrypt'
+	'libxcrypt'            #For password hashing
 	'pacman'
 	'git'
 )
@@ -39,10 +39,6 @@ makedepends=(
 	'python-wheel'
 	# Note dev tools are usually handled through precommit
 )
-# 'nvchecker'
-# 'archiso' #Dev ISO more cow_space
-# 'tree' #For project tree output
-# 'pacman-contrib' #For dependency trees (count script and isomod)
 
 # marked as optional because they depend
 # on choices made during installation
@@ -59,8 +55,14 @@ optdepends=(
 	'xfsprogs'       #For XFS filesystem support
 	'cryptsetup'     #For LUKS encryption support
 	'lvm2'           #For LVM FS layout support
-	'python-systemd' #System journal logging
+	'pacman-contrib' #For count size and other utilities
+	'tree'           #For docs project tree output
+	'nvchecker'      #For bumping versions auto
+	'archiso'        #For creating your own ISOs
+	'qemu-base'      #For testing all of the above
 )
+# qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
+
 provides=(archinstoo)
 replaces=(archinstoo)
 source=()

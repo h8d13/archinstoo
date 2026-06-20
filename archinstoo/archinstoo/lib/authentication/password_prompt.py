@@ -1,5 +1,4 @@
 from archinstoo.lib.models.users import Password, PasswordStrength
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.types import Alignment
 
@@ -38,15 +37,15 @@ def get_password(
 		if skip_confirmation:
 			return password
 
-		strength_line = f'{tr("Password strength")}: {strength.value}'
+		strength_line = f'{"Password strength"}: {strength.value}'
 
 		if header is not None:
-			confirmation_header = f'{header}{tr("Password")}: {password.hidden()}\n{strength_line}\n'
+			confirmation_header = f'{header}{"Password"}: {password.hidden()}\n{strength_line}\n'
 		else:
-			confirmation_header = f'{tr("Password")}: {password.hidden()}\n{strength_line}\n'
+			confirmation_header = f'{"Password"}: {password.hidden()}\n{strength_line}\n'
 
 		result = EditMenu(
-			tr('Confirm password'),
+			'Confirm password',
 			header=confirmation_header,
 			alignment=Alignment.CENTER,
 			allow_skip=False,
@@ -56,4 +55,4 @@ def get_password(
 		if password._plaintext == result.text():
 			return password
 
-		failure = tr('The confirmation password did not match, please try again')
+		failure = 'The confirmation password did not match, please try again'

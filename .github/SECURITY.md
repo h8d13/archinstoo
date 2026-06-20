@@ -1,5 +1,20 @@
 # Security
 
+## Policy
+
+### Supported Versions
+
+Only the latest `master` is supported. Older tags receive no patches.
+
+### Reporting a Vulnerability
+Please do not open a public issue. hadean-eon-dev@proton.me
+
+Or use GitHub's private vulnerability [reporting](https://github.com/h8d13/archinstoo/security/advisories/new).
+
+> Expect an initial response **within 24 hours.**
+
+---
+
 ## User config
 
 The real key to security is YOU being mindful.
@@ -15,7 +30,7 @@ Some options are also given in the menu directly but **are always optional**.
     - SSH/Server hardening
 
 3. Additionals
-    - apparmor 
+    - apparmor
     - firejail
     - fail2ban
     - bubblewrap
@@ -49,7 +64,7 @@ Usernames are more flexible:
 
     Root: Strong separate password, different from user accounts
 
-Root account can **optionally be locked** in the TUI. 
+Root account can **optionally be locked** in the TUI.
 
 ---
 
@@ -60,24 +75,11 @@ In the menu you can simply create the user without elevated privileges and optio
 
 ### Laptop Encryption
 
-Highly recommended in case of theft. 
+Highly recommended in case of theft.
 
 ### U2F
 
 Whilst U2F keys were removed from the automated script (in favor of priv-esc choices), you can still set them up with `systemd-cryptenroll` and `pam.d` for passwordless auth/2FA/etc.
 
-
 ---
 
-## Policy
-
-### Supported Versions
-
-Only the latest `master` is supported. Older tags receive no patches.
-
-### Reporting a Vulnerability
-Please do not open a public issue. hadean-eon-dev@proton.me
-
-Or use GitHub's private vulnerability [reporting](https://github.com/h8d13/archinstoo/security/advisories/new).
-
-> Expect an initial response **within 24 hours.**

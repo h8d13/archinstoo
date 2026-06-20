@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile, ProfileType
-from archinstoo.lib.translationhandler import tr
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -41,7 +40,7 @@ class WaylandProfile(Profile):
 
 	@override
 	def preview_text(self) -> str:
-		text = tr('Type: {} (Wayland)').format(self.profile_type.value)
+		text = f'Type: {self.profile_type.value} (Wayland)'
 		if packages := self.packages_text():
 			text += f'\n{packages}'
 

@@ -4,7 +4,6 @@ from enum import Enum
 from archinstoo.lib.localization.utils import list_timezones
 from archinstoo.lib.models.packages import AvailablePackage, PackageGroup, Repository
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
-from archinstoo.lib.translationhandler import Language, tr
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -12,20 +11,17 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, Pr
 
 
 class PostInstallationAction(Enum):
-	EXIT = tr('exit archinstoo')
-	REBOOT = tr('reboot system')
-	POWEROFF = tr('poweroff system')
-	CHROOT = tr('chroot into install')
+	EXIT = 'exit archinstoo'
+	REBOOT = 'reboot system'
+	POWEROFF = 'poweroff system'
+	CHROOT = 'chroot into install'
 
 
 def select_ntp(preset: bool = True) -> bool:
-	header = tr('Would you like to use automatic time synchronization (NTP) with the default time servers?\n') + '\n'
+	header = 'Would you like to use automatic time synchronization (NTP) with the default time servers?\n\n'
 	header += (
-		tr(
-			'Hardware time and other post-configuration steps might be required in order for NTP to work.\n'
-			'For more information, please check the Arch wiki',
-		)
-		+ '\n'
+		'Hardware time and other post-configuration steps might be required in order for NTP to work.\n'
+		'For more information, please check the Arch wiki\n'
 	)
 
 	preset_val = MenuItem.yes() if preset else MenuItem.no()
@@ -52,7 +48,7 @@ def select_ntp(preset: bool = True) -> bool:
 
 def select_hostname(preset: str | None = None) -> str | None:
 	result = EditMenu(
-		tr('Hostname'),
+		'Hostname',
 		alignment=Alignment.CENTER,
 		allow_skip=True,
 		default_text=preset,
@@ -83,7 +79,7 @@ def select_timezone(preset: str | None = None) -> str | None:
 		group,
 		allow_reset=True,
 		allow_skip=True,
-		frame=FrameProperties.min(tr('Timezone')),
+		frame=FrameProperties.min('Timezone'),
 		alignment=Alignment.CENTER,
 	).run()
 
@@ -96,37 +92,6 @@ def select_timezone(preset: str | None = None) -> str | None:
 			return result.get_value()
 
 
-def select_archinstoo_language(languages: list[Language], preset: Language) -> Language:
-	# these are the displayed language names which can either be
-	# the english name of a language or, if present, the
-	# name of the language in its own language
-
-	items = [MenuItem(lang.display_name, lang) for lang in languages]
-	group = MenuItemGroup(items, sort_items=True)
-	group.set_focus_by_value(preset)
-
-	title = 'NOTE: If a language can not displayed properly, a proper font must be set manually in the console.\n'
-	title += 'All available fonts can be found in "/usr/share/kbd/consolefonts"\n'
-	title += 'e.g. setfont LatGrkCyr-8x16 (to display latin/greek/cyrillic characters)\n'
-
-	result = SelectMenu[Language](
-		group,
-		header=title,
-		allow_skip=True,
-		allow_reset=False,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(header=tr('Select language')),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return result.get_value()
-		case ResultType.Reset:
-			raise ValueError('Language selection not handled')
-
-
 def select_additional_packages(
 	preset: list[str] = [],
 	repositories: set[Repository] = set(),
@@ -137,18 +102,18 @@ def select_additional_packages(
 	repos_text = ', '.join(r.value for r in repositories)
 	if custom_repos:
 		repos_text += ', ' + ', '.join(custom_repos)
-	output = tr('Repositories: {}').format(repos_text) + '\n'
+	output = f'Repositories: {repos_text}' + '\n'
 
-	output += tr('Loading packages...')
+	output += 'Loading packages...'
 	Tui.print(output, clear_screen=True)
 
 	packages = list_available_packages(tuple(repositories), tuple(custom_repos))
 	package_groups = PackageGroup.from_available_packages(packages)
 
 	# Additional packages (with some light weight error handling for invalid package names)
-	header = tr('Only packages such as base, linux, some firmware, efibootmgr and optional profile packages are installed.') + '\n'
-	header += tr('Note: base-devel is no longer installed by default. Add it here if you need build tools + devtools for tooling..') + '\n'
-	header += tr('Select any packages from the below list that should be installed additionally') + '\n'  # noqa: S608 - menu prompt, not SQL
+	header = 'Only packages such as base, linux, some firmware, efibootmgr and optional profile packages are installed.' + '\n'
+	header += 'Note: base-devel is no longer installed by default. Add it here if you need build tools + devtools for tooling..' + '\n'
+	header += 'Select any packages from the below list that should be installed additionally' + '\n'  # noqa: S608 - menu prompt, not SQL
 
 	# there are over 15k packages so this needs to be quick
 	preset_packages: list[AvailablePackage | PackageGroup] = []
@@ -242,10 +207,10 @@ def select_additional_packages(
 
 
 def select_aur_packages(preset: list[str] = []) -> list[str]:
-	from archinstoo.lib.grimaur import aur_rpc_info, exists_in_aur_mirror
+	from archinstoo.lib.grimoire import exists_in_aur_mirror
 
-	base_header = tr('Enter AUR package names separated by commas') + '\n'
-	base_header += tr('base-devel, git and kernel-headers will be installed automatically') + '\n'
+	base_header = 'Enter AUR package names separated by commas' + '\n'
+	base_header += 'base-devel, git and kernel-headers will be installed automatically' + '\n'
 
 	error_msg = ''
 	current_text = ', '.join(preset) if preset else ''
@@ -256,7 +221,7 @@ def select_aur_packages(preset: list[str] = []) -> list[str]:
 			header += '\n' + error_msg
 
 		result = EditMenu(
-			tr('AUR packages'),
+			'AUR packages',
 			header=header,
 			alignment=Alignment.CENTER,
 			allow_skip=True,
@@ -278,14 +243,14 @@ def select_aur_packages(preset: list[str] = []) -> list[str]:
 				if not names:
 					return []
 
-				Tui.print(tr('Validating AUR packages...'), clear_screen=True)
-				invalid = [n for n in names if not aur_rpc_info(n) and not exists_in_aur_mirror(n)]
+				Tui.print('Validating AUR packages...', clear_screen=True)
+				invalid = [n for n in names if not exists_in_aur_mirror(n)]
 
 				if not invalid:
 					return names
 
 				current_text = ', '.join(n for n in names if n not in invalid)
-				error_msg = tr('Not found in AUR') + ': ' + ', '.join(invalid) + '\n'
+				error_msg = 'Not found in AUR' + ': ' + ', '.join(invalid) + '\n'
 
 
 def select_post_installation(elapsed_time: float | None = None) -> PostInstallationAction:
@@ -294,8 +259,8 @@ def select_post_installation(elapsed_time: float | None = None) -> PostInstallat
 		minutes = int(elapsed_time // 60)
 		seconds = int(elapsed_time % 60)
 		header += f' in {minutes}m{seconds}s' + '\n'
-	header += tr('What would you like to do next?') + '\n'
-	header += tr('\nAfter reboot, remove the installation medium') + '\n'
+	header += 'What would you like to do next?' + '\n'
+	header += '\nAfter reboot, remove the installation medium' + '\n'
 
 	items = [MenuItem(action.value, value=action) for action in PostInstallationAction]
 	group = MenuItemGroup(items)

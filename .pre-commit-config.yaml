@@ -1,4 +1,6 @@
 default_stages: ['pre-commit']
+# nvchecker/ is a dev tool, not part of the shipped package
+exclude: ^nvchecker/
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
@@ -11,7 +13,7 @@ repos:
     - id: shfmt
       args: ["-i", "0", "-w"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.16
+    rev: v0.15.18
     hooks:
         # fix unused imports and sort them
       - id: ruff
@@ -46,7 +48,7 @@ repos:
       exclude: ^archinstoo/tests/
       fail_fast: true
   - repo: https://github.com/pycqa/pylint
-    rev: v4.0.5
+    rev: v4.0.6
     hooks:
     - id: pylint
       args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "archinstoo")']

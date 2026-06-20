@@ -16,7 +16,6 @@ from archinstoo.lib.models.device import (
 	SnapshotType,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -76,7 +75,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Partitioning'),
+				text='Partitioning',
 				action=self._select_disk_layout_config,
 				value=self._disk_menu_config.disk_config,
 				preview_action=self._prev_disk_layouts,
@@ -91,7 +90,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 				key='lvm_config',
 			),
 			MenuItem(
-				text=tr('Disk encryption'),
+				text='Disk encryption',
 				action=self._select_disk_encryption,
 				preview_action=self._prev_disk_encryption,
 				dependencies=['disk_config'],
@@ -200,7 +199,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 			group,
 			allow_reset=True,
 			allow_skip=True,
-			frame=FrameProperties.min(tr('Snapshot type')),
+			frame=FrameProperties.min('Snapshot type'),
 			alignment=Alignment.CENTER,
 		).run()
 
@@ -219,14 +218,14 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		disk_layout_conf = item.get_value()
 
 		if disk_layout_conf.config_type == DiskLayoutType.Pre_mount:
-			msg = tr('Configuration type: {}').format(disk_layout_conf.config_type.display_msg()) + '\n'
-			msg += tr('Mountpoint') + ': ' + str(disk_layout_conf.mountpoint)
+			msg = f'Configuration type: {disk_layout_conf.config_type.display_msg()}' + '\n'
+			msg += 'Mountpoint' + ': ' + str(disk_layout_conf.mountpoint)
 			return msg
 
 		device_mods = [d for d in disk_layout_conf.device_modifications if d.partitions]
 
 		if device_mods:
-			output_partition = '{}: {}\n'.format(tr('Configuration'), disk_layout_conf.config_type.display_msg())
+			output_partition = '{}: {}\n'.format('Configuration', disk_layout_conf.config_type.display_msg())
 			output_btrfs = ''
 
 			for mod in device_mods:
@@ -234,7 +233,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 				partition_table = FormattedOutput.as_table(mod.partitions)
 
 				output_partition += f'{mod.device_path}: {mod.device.device_info.model}\n'
-				output_partition += '{}: {}\n'.format(tr('Wipe'), mod.wipe)
+				output_partition += '{}: {}\n'.format('Wipe', mod.wipe)
 				output_partition += partition_table + '\n'
 
 				# create btrfs table
@@ -253,16 +252,16 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 
 		lvm_config: LvmConfiguration = item.value
 
-		output = '{}: {}\n'.format(tr('Configuration'), lvm_config.config_type.display_msg())
+		output = '{}: {}\n'.format('Configuration', lvm_config.config_type.display_msg())
 
 		for vol_gp in lvm_config.vol_groups:
 			pv_table = FormattedOutput.as_table(vol_gp.pvs)
-			output += '{}:\n{}'.format(tr('Physical volumes'), pv_table)
+			output += '{}:\n{}'.format('Physical volumes', pv_table)
 
 			output += f'\nVolume Group: {vol_gp.name}'
 
 			lvm_volumes = FormattedOutput.as_table(vol_gp.volumes)
-			output += '\n\n{}:\n{}'.format(tr('Volumes'), lvm_volumes)
+			output += '\n\n{}:\n{}'.format('Volumes', lvm_volumes)
 
 			return output
 
@@ -273,24 +272,24 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 			return None
 
 		snapshot_config: SnapshotConfig = item.value
-		return tr('Snapshot type: {}').format(snapshot_config.snapshot_type.display_name())
+		return f'Snapshot type: {snapshot_config.snapshot_type.display_name()}'
 
 	def _prev_disk_encryption(self, item: MenuItem) -> str | None:
 		disk_config: DiskLayoutConfiguration | None = self._item_group.find_by_key('disk_config').value
 		enc_config: DiskEncryption | None = item.value
 
 		if disk_config and not DiskEncryption.validate_enc(disk_config.device_modifications, disk_config.lvm_config):
-			return tr('LVM disk encryption with more than 2 partitions is currently not supported')
+			return 'LVM disk encryption with more than 2 partitions is currently not supported'
 
 		if enc_config:
 			enc_type = enc_config.encryption_type
-			output = tr('Encryption type') + f': {enc_type.type_to_text()}\n'
+			output = 'Encryption type' + f': {enc_type.type_to_text()}\n'
 
 			if enc_config.encryption_password:
-				output += tr('Password') + f': {enc_config.encryption_password.hidden()}\n'
+				output += 'Password' + f': {enc_config.encryption_password.hidden()}\n'
 
 			if enc_type != EncryptionType.NO_ENCRYPTION:
-				output += tr('Iteration time') + f': {enc_config.iter_time or DEFAULT_ITER_TIME}ms\n'
+				output += 'Iteration time' + f': {enc_config.iter_time or DEFAULT_ITER_TIME}ms\n'
 
 			if enc_config.partitions:
 				output += f'Partitions: {len(enc_config.partitions)} selected\n'

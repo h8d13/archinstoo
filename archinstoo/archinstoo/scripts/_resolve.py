@@ -9,10 +9,19 @@ import re
 from pathlib import Path
 from typing import Any
 
+from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.utils.env import Os
 
-Os.locate_binary('pactree')
+
+def _requirements(*binaries: str) -> bool:
+	try:
+		for name in binaries:
+			Os.locate_binary(name)
+		return True
+	except RequirementError:
+		return False
+
 
 _schema_path = Path(__file__).parent.parent / 'schema.jsonc'
 
@@ -238,6 +247,9 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 	# wpa_supplicant → pcsclite → polkit gets shown as just libpolkit-gobject-1.so).
 	#
 	# If `target` is given, also return explicit packages whose closure contains it.
+	if not _requirements('pactree'):
+		raise RequirementError('pactree not found; install pacman-contrib')
+
 	resolved: set[str] = set()
 	roots_for_target: list[str] = []
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2154
 # sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 # (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set DISPLAY_BACKEND to match)
@@ -16,7 +16,6 @@
 #   ./TVM boot   | b - boot from installed disk (no ISO)
 #   ./TVM clean  | c - remove disk and NVRAM (ISOs untouched)
 #   ./TVM help   | h - show this help
-#
 # Env overrides:
 #   DEV_ISO            explicit ISO path (skips discovery)
 #   RAM, CPUS          VM resources (default 4G, 4)
@@ -24,6 +23,9 @@
 #   DISPLAY_BACKEND    qemu -display value (default 'gtk,zoom-to-fit=off')
 #   VGA                qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
 #   AUDIO_BACKEND      qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
+#   SHARE_DIR          host dir exposed read-only as a virtual disk via vvfat
+#                      (default: ./archinstoo; set SHARE_DIR=none to disable).
+#                      In the guest: mount -o ro /dev/vdb /mnt && cp -a /mnt /root/repo
 
 set -euo pipefail
 
@@ -39,6 +41,7 @@ CPUS="${CPUS:-4}"
 DISPLAY_BACKEND="${DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
 VGA="${VGA:-std}"
 AUDIO_BACKEND="${AUDIO_BACKEND:-pipewire}"
+SHARE_DIR="${SHARE_DIR:-$PROJECT_DIR/archinstoo}"
 ARG="${1:-default}"
 
 OVMF_CODE=""
@@ -162,6 +165,13 @@ QEMU_ARGS=(
 if [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"
 	QEMU_ARGS+=(-cdrom "$ISO")
+fi
+
+# vvfat: expose a host dir as a read-only FAT disk (no network, no 9p).
+# Guest sees it as the next virtio disk (e.g. /dev/vdb); mount and copy out.
+if [ -n "$SHARE_DIR" ] && [ "$SHARE_DIR" != "none" ]; then
+	[ -d "$SHARE_DIR" ] || err "SHARE_DIR=$SHARE_DIR not a directory (set SHARE_DIR=none to disable)"
+	QEMU_ARGS+=(-drive "file=fat:ro:$SHARE_DIR,format=raw,if=virtio,readonly=on")
 fi
 
 trap 'stty sane' EXIT

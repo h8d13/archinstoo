@@ -2,7 +2,6 @@ import copy
 from typing import cast  # noqa: TID251 - generic menu value type
 
 from archinstoo.lib.menu.menu_helper import MenuHelper
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -40,10 +39,10 @@ class ListManager[ValueT]:
 		self._allow_reset = allow_reset
 
 		self._separator = ''
-		self._confirm_action = tr('Confirm and exit')
-		self._cancel_action = tr('Cancel')
+		self._confirm_action = 'Confirm and exit'
+		self._cancel_action = 'Cancel'
 		self._reset_action = '_reset_'
-		self._back_action = tr('Back')
+		self._back_action = 'Back'
 
 		self._terminate_actions = [self._confirm_action, self._cancel_action]
 		self._base_actions = base_actions

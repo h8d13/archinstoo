@@ -2,8 +2,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import NotRequired, Self, TypedDict
 
-from archinstoo.lib.translationhandler import tr
-
 
 class NicType(Enum):
 	ISO = 'iso'
@@ -15,15 +13,15 @@ class NicType(Enum):
 	def display_msg(self) -> str:
 		match self:
 			case NicType.ISO:
-				return tr('Copy ISO network configuration to installation')
+				return 'Copy ISO network configuration to installation'
 			case NicType.NM:
-				return tr('Use Network Manager (default backend)')
+				return 'Use Network Manager (default backend)'
 			case NicType.NM_IWD:
-				return tr('Use Network Manager (iwd backend)')
+				return 'Use Network Manager (iwd backend)'
 			case NicType.IWD:
-				return tr('Use iwd standalone (no Network Manager)')
+				return 'Use iwd standalone (no Network Manager)'
 			case NicType.MANUAL:
-				return tr('Manual configuration')
+				return 'Manual configuration'
 
 
 class _NicSerialization(TypedDict):

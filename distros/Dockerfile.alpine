@@ -1,0 +1,9 @@
+FROM alpine:latest
+
+COPY distros/ALP .
+RUN sh ALP
+
+COPY . .
+
+ENTRYPOINT ["./RUN"]
+CMD ["--help"]

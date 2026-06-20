@@ -48,9 +48,10 @@
 │   │   │   └── cat/
 │   │   │       ├── audio
 │   │   │       ├── bluetooth
-│   │   │       ├── development
+│   │   │       ├── devtools
 │   │   │       ├── editor
 │   │   │       ├── firewall
+│   │   │       ├── languages
 │   │   │       ├── management
 │   │   │       ├── monitor
 │   │   │       ├── power_management
@@ -84,7 +85,7 @@
 │   │   ├── exceptions
 │   │   ├── general
 │   │   ├── global_menu
-│   │   ├── grimaur*
+│   │   ├── grimoire*
 │   │   ├── hardware
 │   │   ├── installer
 │   │   ├── interactions/
@@ -119,6 +120,7 @@
 │   │   ├── pacman
 │   │   ├── pathnames
 │   │   ├── pm/
+│   │   │   ├── bootstrap
 │   │   │   ├── config
 │   │   │   ├── mirrors
 │   │   │   └── packages
@@ -127,7 +129,6 @@
 │   │   │   ├── driver_select
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
-│   │   ├── translationhandler
 │   │   ├── tui/
 │   │   │   ├── content_editor
 │   │   │   ├── curses_menu
@@ -157,7 +158,8 @@
 ├── examples/
 │   ├── config-custom.json
 │   ├── config-sample-full.json
-│   └── custom
+│   ├── custom
+│   └── vm_configuration.json
 ├── PKGBUILD
 ├── pyproject.toml
 └── tests/
@@ -166,7 +168,8 @@
     │   └── test_config.json
     ├── test_args
     ├── test_configuration_output
-    └── test_mirrors
+    ├── test_mirrors
+    └── test_schema_drift
 
-24 directories, 143 files
+24 directories, 146 files
 ```

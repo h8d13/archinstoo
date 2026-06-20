@@ -7,7 +7,6 @@ from .exceptions import RequirementError
 from .general import SysCommand
 from .output import error, info, logger, warn
 from .pathnames import PACMAN_CONF
-from .translationhandler import tr
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -43,14 +42,14 @@ class Pacman:
 		pacman_db_lock = Path('/var/lib/pacman/db.lck')
 
 		if pacman_db_lock.exists():
-			warn(tr('Pacman is already running, waiting maximum 10 minutes for it to terminate.'))
+			warn('Pacman is already running, waiting maximum 10 minutes for it to terminate.')
 
 		started = time.monotonic()
 		while pacman_db_lock.exists():
 			time.sleep(0.25)
 
 			if time.monotonic() - started > (60 * 10):
-				error(tr('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstoo.'))
+				error('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstoo.')
 				raise SystemExit(1)
 
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)
@@ -131,7 +130,11 @@ class Pacman:
 			cmd = f'pacman -S {" ".join(packages)} --noconfirm --needed'
 			bail = f'Package installation failed. See {logger.path} or above message for error details'
 		else:
-			cmd = f'pacstrap -C {PACMAN_CONF} -K {self.target} {" ".join(packages)} --noconfirm --needed'
+			# no -K: that builds an empty target keyring and re-signs every arch
+			# key from scratch (slow, entropy-bound, storms gpg on fresh hosts).
+			# keyring_init() already populated the host keyring, so let pacstrap
+			# copy it into the target (its default when -K/-G are absent).
+			cmd = f'pacstrap -C {PACMAN_CONF} {self.target} {" ".join(packages)} --noconfirm --needed'
 			bail = f'Pacstrap failed. See {logger.path} or above message for error details'
 
 		self.ask(

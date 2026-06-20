@@ -3,7 +3,6 @@ from typing import override
 from archinstoo.lib.localization.utils import list_console_fonts, list_keyboard_languages, list_locales, set_kb_layout
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.locale import LocaleConfiguration
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -28,28 +27,28 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Keyboard layout'),
+				text='Keyboard layout',
 				action=self._select_kb_layout,
 				value=self._locale_conf.kb_layout,
 				preview_action=self._prev_locale,
 				key='kb_layout',
 			),
 			MenuItem(
-				text=tr('Locale language'),
+				text='Locale language',
 				action=select_locale_lang,
 				value=self._locale_conf.sys_lang,
 				preview_action=self._prev_locale,
 				key='sys_lang',
 			),
 			MenuItem(
-				text=tr('Locale encoding'),
+				text='Locale encoding',
 				action=select_locale_enc,
 				value=self._locale_conf.sys_enc,
 				preview_action=self._prev_locale,
 				key='sys_enc',
 			),
 			MenuItem(
-				text=tr('Console font'),
+				text='Console font',
 				action=select_console_font,
 				value=self._locale_conf.console_font,
 				preview_action=self._prev_locale,
@@ -96,7 +95,7 @@ def select_locale_lang(preset: str | None = None) -> str | None:
 	result = SelectMenu[str](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Locale language')),
+		frame=FrameProperties.min('Locale language'),
 		allow_skip=True,
 	).run()
 
@@ -120,7 +119,7 @@ def select_locale_enc(preset: str | None = None) -> str | None:
 	result = SelectMenu[str](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Locale encoding')),
+		frame=FrameProperties.min('Locale encoding'),
 		allow_skip=True,
 	).run()
 
@@ -143,7 +142,7 @@ def select_console_font(preset: str | None = None) -> str | None:
 	result = SelectMenu[str](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Console font')),
+		frame=FrameProperties.min('Console font'),
 		allow_skip=True,
 	).run()
 
@@ -172,7 +171,7 @@ def select_kb_layout(preset: str | None = None) -> str | None:
 	result = SelectMenu[str](
 		group,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Keyboard layout')),
+		frame=FrameProperties.min('Keyboard layout'),
 		allow_skip=True,
 	).run()
 

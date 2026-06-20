@@ -8,7 +8,6 @@ from archinstoo.lib.menu.abstract_menu import CONFIG_KEY, AbstractSubMenu
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.profile.driver_select import select_driver
-from archinstoo.lib.translationhandler import tr
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -40,14 +39,14 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 	def _define_menu_options(self) -> list[MenuItem]:
 		return [
 			MenuItem(
-				text=tr('Type'),
+				text='Type',
 				action=self._select_profiles,
 				value=self._profile_config.profiles,
 				preview_action=self._preview_profiles,
 				key='profiles',
 			),
 			MenuItem(
-				text=tr('Customize packages'),
+				text='Customize packages',
 				action=self._customize_packages,
 				value=None,
 				preview_action=self._prev_customize_packages,
@@ -56,7 +55,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 				key=f'{CONFIG_KEY}_customize_packages',
 			),
 			MenuItem(
-				text=tr('Graphics driver'),
+				text='Graphics driver',
 				action=self.select_gfx_driver,
 				value=self._profile_config.gfx_driver if self._profile_config.profiles else None,
 				preview_action=self._prev_gfx,
@@ -65,7 +64,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 				key='gfx_driver',
 			),
 			MenuItem(
-				text=tr('Greeter'),
+				text='Greeter',
 				action=self.select_greeter,
 				value=self._profile_config.greeter if self._profile_config.profiles and self._profile_config.is_greeter_supported() else None,
 				enabled=bool(self._profile_config.profiles and self._profile_config.is_greeter_supported()),
@@ -134,7 +133,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 
 			result = SelectMenu[str](
 				group,
-				header=tr('Toggle packages to install') + '\n',
+				header='Toggle packages to install' + '\n',
 				allow_skip=True,
 				alignment=Alignment.CENTER,
 				frame=FrameProperties.min(profile.name),
@@ -166,19 +165,19 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			{pkg for pr in profiles for p in [pr, *(pr.current_selection or [])] for pkg in (p.custom_settings.get('excluded_packages') or [])}
 		)
 		if not excluded:
-			return tr('No packages excluded')
-		return tr('Excluded packages') + ':\n' + '\n'.join(f'\t- {pkg}' for pkg in excluded)
+			return 'No packages excluded'
+		return 'Excluded packages' + ':\n' + '\n'.join(f'\t- {pkg}' for pkg in excluded)
 
 	def _prev_gfx(self, item: MenuItem) -> str | None:
 		if item.value:
 			driver = item.get_value().value
 			packages = item.get_value().packages_text(self._kernels)
-			return f'{tr("Graphics driver")}: {driver}\n{packages}'
+			return f'{"Graphics driver"}: {driver}\n{packages}'
 		return None
 
 	def _prev_greeter(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{tr("Greeter")}: {item.value.value}'
+			return f'{"Greeter"}: {item.value.value}'
 		return None
 
 	def _preview_profiles(self, item: MenuItem) -> str | None:
@@ -186,7 +185,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		text = ''
 
 		if profiles:
-			text += tr('Selected profiles: ')
+			text += 'Selected profiles: '
 			text += ', '.join([p.name for p in profiles]) + '\n'
 
 			for profile in profiles:
@@ -204,7 +203,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 						all_packages.update(sub.packages)
 
 			if all_packages:
-				text += tr('Installed packages') + ':\n'
+				text += 'Installed packages' + ':\n'
 				for pkg in sorted(all_packages):
 					text += f'\t- {pkg}\n'
 
@@ -220,7 +219,7 @@ def select_greeter(
 ) -> GreeterType | None:
 	if not profile or profile.is_greeter_supported():
 		items = [MenuItem(g.value, value=g) for g in GreeterType]
-		items.append(MenuItem(text=tr('None'), value=None))
+		items.append(MenuItem(text='None', value=None))
 		group = MenuItemGroup(items, sort_items=True)
 
 		default: GreeterType | None = None
@@ -235,7 +234,7 @@ def select_greeter(
 		result = SelectMenu[GreeterType](
 			group,
 			allow_skip=True,
-			frame=FrameProperties.min(tr('Greeter')),
+			frame=FrameProperties.min('Greeter'),
 			alignment=Alignment.CENTER,
 		).run()
 
@@ -262,7 +261,7 @@ def select_profiles(
 	top_level_profiles = handler.get_top_level_profiles()
 
 	if header is None:
-		header = tr('Select one or more profiles (Desktop + Server supported)') + '\n'
+		header = 'Select one or more profiles (Desktop + Server supported)' + '\n'
 
 	items = [MenuItem(p.name, value=p) for p in top_level_profiles]
 	group = MenuItemGroup(items, sort_items=True)
@@ -278,7 +277,7 @@ def select_profiles(
 		allow_skip=True,
 		multi=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(tr('Profiles')),
+		frame=FrameProperties.min('Profiles'),
 	).run()
 
 	match result.type_:

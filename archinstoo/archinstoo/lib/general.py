@@ -220,20 +220,45 @@ class SysCommandWorker:
 					self.peak(output)
 					self._trace_log += output
 				except OSError:
+					# pty closed: command done and no process holds the slave
 					self.ended = True
 					break
 
-			if self.ended or (not got_output and not _pid_exists(self.pid)):
-				self.ended = True
+			if self.ended:
+				self._reap()
+			elif not got_output and self.pid is not None:
+				# pty can stay open on a leaked daemon (gnupg post_install spawns
+				# dirmngr); reap the child by pid so a held slave can't hang us
 				try:
-					wait_status = os.waitpid(self.pid, 0)[1]
-					self.exit_code = os.waitstatus_to_exitcode(wait_status)
+					reaped, wait_status = os.waitpid(self.pid, os.WNOHANG)
 				except ChildProcessError:
-					try:
-						wait_status = os.waitpid(self.child_fd, 0)[1]
-						self.exit_code = os.waitstatus_to_exitcode(wait_status)
-					except ChildProcessError:
-						self.exit_code = 1
+					self.ended = True
+					self.exit_code = 1
+					return
+
+				if reaped:
+					self.ended = True
+					self.exit_code = os.waitstatus_to_exitcode(wait_status)
+
+	def _reap(self) -> None:
+		# prefer the pid; fall back to the pty fd if it was already reaped
+		if self.pid is not None:
+			try:
+				wait_status = os.waitpid(self.pid, 0)[1]
+				self.exit_code = os.waitstatus_to_exitcode(wait_status)
+				return
+			except ChildProcessError:
+				pass
+
+		if self.child_fd is not None:
+			try:
+				wait_status = os.waitpid(self.child_fd, 0)[1]
+				self.exit_code = os.waitstatus_to_exitcode(wait_status)
+				return
+			except ChildProcessError:
+				pass
+
+		self.exit_code = 1
 
 	def execute(self) -> bool:
 		import pty
@@ -453,13 +478,3 @@ def run(
 		capture_output=True,
 		check=True,
 	)
-
-
-def _pid_exists(pid: int) -> bool:
-	try:
-		os.kill(pid, 0)
-	except ProcessLookupError:
-		return False
-	except PermissionError:
-		return True
-	return True

@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# goal was to document building archinstoo from a non systemd host
+# this involved quite a bit of bootstrapping, from a fresh alpine ISO
+# step i followed exactly
+# ip link set eth0 up
+# udhcpc -i eth0
+# echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >/etc/apk/repositories
+
+# apk add git
+# git clone <url>
+# cd archinstoo
+# ./distros/ALP
+# ./RUN
+
+# shellcheck disable=SC2046
+
+echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >>/etc/apk/repositories
+echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" >>/etc/apk/repositories
+
+apk update
+
+apk add --no-cache $(
+	awk '{print $1}' <<'EOF'
+    apk-tools               # pin: keep apk after dropping alpine-base meta
+    alpine-keys             # pin: repo signing keys, else fetches go UNTRUSTED
+    busybox                 # pin: sh + core utils survive meta drop
+    alpine-baselayout       # pin: /etc skeleton (passwd, group) survive meta drop
+    musl-utils              # pin: ldd/getconf survive meta drop
+    ca-certificates         # for https handshakes
+    zstd                    # keyring
+    eudev                   # device/udev
+    python3                 # interpreter (3.14)
+    python3-zstd            # _zstd ext (compression.zstd), split out on alpine
+    py3-pyparted@testing    # prebuilt parted bindings (edge/testing), no toolchain
+    parted                  # partition cli + libparted runtime
+    pacman                  # arch package manager
+    coreutils               # gnu core utils
+    util-linux              # lsblk, blkid, etc
+    pciutils                # lspci
+    tzdata                  # timezone data
+    dosfstools              # mkfs.fat
+    device-mapper           # dm-* devices
+    e2fsprogs               # mkfs.ext4
+    cryptsetup              # luks
+    lvm2                    # always checked
+    btrfs-progs             # optionals FS supports
+    f2fs-tools              # ...
+    xfsprogs                # ... bcachefs, zfs :DDDDD
+EOF
+)
+
+# TODO: some reason one of the gnupg .install scriptlets gets stuck
+# ctrl+c + retry then skips it, idk
+
+# arch-install-scripts and alpine-conf both provide cmd:genfstab
+apk del --no-cache alpine-base alpine-conf
+apk add --no-cache arch-install-scripts

@@ -2,11 +2,11 @@
 
 <img width="1920" height="1080" alt="Group 1" src="https://github.com/user-attachments/assets/7f54d725-d10d-4447-983c-a01d44b9f915" />
 
-## What is `archinstoo`:
+## What is `archinstoo`
 
-A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org). 
+A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org).
 
-> MORE choices, LESS packages in end-product, LESS complex flags, and MORE hot-fixes. 
+> MORE choices, LESS packages in end-product, LESS complex flags, and MORE hot-fixes.
 
 *Aims to make the code base more readable, maintainable and modifiable by anyone*.
 
@@ -113,11 +113,15 @@ See [Multi-Boot](https://github.com/h8d13/archinstoo/blob/master/.github/MULTI_B
 
 See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
 
-See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_ISOS.md) to create your own install mediums.
-
 See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
 
 See [Out-of-Tree](https://github.com/h8d13/archinstoo/blob/master/.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
+
+### More advanced
+
+See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_ISOS.md) to create your own install mediums.
+
+See [Distros](https://github.com/h8d13/archinstoo/tree/master/distros) for installing from different distros.
 
 See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
 
@@ -135,9 +139,9 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 
 Accurate reports/PRs will be addressed in a timely manner: [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
 
-**Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing). 
+**Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing).
 
-See [Philosophy](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md) 
+See [Philosophy](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md)
 
 See [Troubleshooting](https://github.com/h8d13/archinstoo/blob/master/.github/TROUBLESHOOT.md)
 
@@ -154,3 +158,13 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
 
 See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not on GitHub.
+
+---
+
+<div align="center" markdown>
+
+Made with ♡
+
+[Star this repo](https://github.com/h8d13/archinstoo) · [Bugs/Features](https://github.com/h8d13/archinstoo/issues/new) · [Discussions](https://github.com/h8d13/archinstoo/discussions)
+
+</div>

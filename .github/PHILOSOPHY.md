@@ -1,6 +1,6 @@
 # Just a tab of "Why"
 
-Why would someone want to code 12h a day something like this..? 
+Why would someone want to code 12h a day something like this..?
 
 ¯\_(ツ)_/¯
 
@@ -55,7 +55,7 @@ Historically this list from `default_profiles/desktop.py`
 			'xdg-utils',
 		]
 ```
-(Which I have already been tearing apart) 
+(Which I have already been tearing apart)
 Used to hardcode stuff like `htop vim wpa_supplicant ...`
 
 My goal is this, to keep reducing hard-coded "standard" to choices/logic options.
@@ -90,7 +90,7 @@ Without losing any functionality.
 
 Working in a volunteer-driven project with limited feedback loops often means long-standing issues survive simply because they are hard to address incrementally. Archinstoo exists as a space where problems can be solved directly, not worked around.
 
-The first major refactor removed too much. This iteration is more deliberate, unapologetic about removing code that exists only to preserve behavior rather than correctness. But still removed considerable parts, often in favor of something else. 
+The first major refactor removed too much. This iteration is more deliberate, unapologetic about removing code that exists only to preserve behavior rather than correctness. But still removed considerable parts, often in favor of something else.
 
 ### Code Quality
 
@@ -113,7 +113,7 @@ Development branches are intentionally experimental, sometimes exploring ideas t
 In a fast-moving, deeply technical codebase, correctness and architecture must come first. And experimental features are fun to test:
 Bcachefs support when it was dropped by Mr. Torvalds, CachyOS kernel support, etc.
 
-To conclude this I also think some priorities should be met, as working on visual changes should not be a priority to a codebase that moves fast, and has stuff that backlogs quite quickly. 
+To conclude this I also think some priorities should be met, as working on visual changes should not be a priority to a codebase that moves fast, and has stuff that backlogs quite quickly.
 
 The future of such to me IS simplifying/automating, and providing more tools, never settling for less.
 
@@ -127,9 +127,9 @@ The moment it became possible to directly fix issues instead of negotiating arou
 
 I don't really think a fork is ever considered something welcome, or truly maintainable, but again it's the only way I can think of to have a "safe space" both for my fixes or testing other's patches. Anyways this allows me to test a bit faster and modify more behaviors to shorten testing.
 
-Archinstoo exists because fixing archinstall’s problems required more than incremental patches. Over time, architectural debt, backwards-compat constraints, and installer-first assumptions made certain classes of bugs, UX issues, and misconfigurations effectively unfixable without breaking existing behavior. 
+Archinstoo exists because fixing archinstall’s problems required more than incremental patches. Over time, architectural debt, backwards-compat constraints, and installer-first assumptions made certain classes of bugs, UX issues, and misconfigurations effectively unfixable without breaking existing behavior.
 
-This project started after contributing upstream and realizing that correctness, clarity, and explicit system modeling could not meaningfully coexist with those constraints (+ UI choices I disagree with, same for creds file). 
+This project started after contributing upstream and realizing that correctness, clarity, and explicit system modeling could not meaningfully coexist with those constraints (+ UI choices I disagree with, same for creds file).
 
 The goal of archinstoo is to be explicit instead of permissive, minimal instead of defensive (and bloated!), and intentional instead of heuristic-driven. Nothing is installed “just in case,” configuration is derived from actual capabilities, and users are expected to mean the choices they make. This trades broad approachability for predictable, debuggable systems and that trade-off is intentional.
 
@@ -140,7 +140,7 @@ The main controversy in the arch world is the following:
     - Users should always install manually once
 
 This makes it easier for them to troubleshoot if they ever do run into an issue, and even contribute to installer related issues.
-Bonus points for weird hardware that needed specific filesystems/bootloader, etc. 
+Bonus points for weird hardware that needed specific filesystems/bootloader, etc.
 
     - But maintaining an install is just as valuable
 
@@ -164,5 +164,6 @@ My goal with this project was the following
 - Speed up testing/dev
 - Enable more hardware (Out-of-tree DKMS, ARM, ?)
 - Improve dark documentation areas around the installer
+- Make the installer work from any linux (which I've attempted already in a project named `partstoob`)
 
-Cheers for even reading any of this.
+Cheers for even reading any of this, if you are looking to read more I wrote [this](https://github.com/h8d13/archinstoo/blob/master/.github/PAST_CONTRIBS.md). At the end of 2025.

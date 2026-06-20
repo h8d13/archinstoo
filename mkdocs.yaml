@@ -11,11 +11,16 @@ site_dir: site
 exclude_docs: |
   workflows/
   ISSUE_TEMPLATE/
+  overrides/
   CODEOWNERS
   docs-requirements.txt
 
 extra:
   generator: false
+  social:
+    - icon: fontawesome/brands/gitlab
+      link: https://gitlab.archlinux.org/h8d13/archinstoo/
+      name: GitLab mirror
 
 # search is implicit by default, but listing plugins disables it - so re-add it.
 # callouts converts GitHub/Obsidian '> [!TIP]' alerts to Material admonitions.
@@ -25,6 +30,7 @@ plugins:
 
 theme:
   name: material
+  custom_dir: .github/overrides
   palette:
     - scheme: default
       toggle:
@@ -41,6 +47,7 @@ theme:
     - content.code.copy
 
 markdown_extensions:
+  - md_in_html
   - admonition
   - footnotes
   - toc:
@@ -51,8 +58,9 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started:
-      - Configuration schema: SCHEMA.md
       - Newcomers: NEWB_CORNER.md
+      - JSON file: CONFIG.md
+      - Config schema: SCHEMA.md
   - Cases:
       - Headless install: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
@@ -66,5 +74,6 @@ nav:
       - Contributing: CONTRIBUTING.md
       - Security: SECURITY.md
       - Philosophy: PHILOSOPHY.md
+      - Past work: PAST_CONTRIBS.md
       - Troubleshooting: TROUBLESHOOT.md
   - What's new: CHANGELOG.md
