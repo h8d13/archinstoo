@@ -6,7 +6,7 @@ from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_ar
 from archinstoo.lib.authentication.shell import ShellApp
 from archinstoo.lib.configuration import ConfigurationHandler
 from archinstoo.lib.global_menu import GlobalMenu
-from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_aur_installation, run_custom_user_commands
+from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
@@ -31,6 +31,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		if not args.advanced:
 			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
+			global_menu.set_enabled('compile_packages', False)
 
 		global_menu.run(additional_title='- Live mode')
 
@@ -119,11 +120,15 @@ def perform_installation(
 
 		# Additional packages
 		if config.packages and config.packages[0] != '':
-			installation.add_additional_packages(config.packages)
+			# Advanced knob: compile from official Arch source instead of pacstrap binaries
+			if args.advanced and config.compile_packages and config.auth_config:
+				run_grimoire_installation(config.packages, installation, config.auth_config, repo=None)
+			else:
+				installation.add_additional_packages(config.packages)
 
 		# AUR packages
 		if config.aur_packages and config.auth_config:
-			run_aur_installation(config.aur_packages, installation, config.auth_config)
+			run_grimoire_installation(config.aur_packages, installation, config.auth_config)
 
 		# NTP
 		if config.ntp:

@@ -2333,15 +2333,24 @@ def accessibility_tools_in_use() -> bool:
 	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0  # noqa: S607 - systemctl on live ISO
 
 
-def run_aur_installation(packages: list[str], installation: Installer, auth_config: AuthenticationConfiguration | None = None) -> None:
+def run_grimoire_installation(
+	packages: list[str],
+	installation: Installer,
+	auth_config: AuthenticationConfiguration | None = None,
+	repo: str | None = 'AUR',
+) -> None:
+	# repo='AUR' builds from the AUR; repo=None uses grimoire's default chain
+	# (official Arch GitLab source), i.e. compile-from-source over pacstrap binaries.
+	source = repo or 'official'
+
 	if not auth_config:
-		warn('No auth config provided, skipping AUR packages')
+		warn(f'No auth config provided, skipping {source} packages')
 		return
 
 	build_user = next((u for u in auth_config.users if u.elev), None)
 
 	if not build_user:
-		warn('No elevated user found, skipping AUR packages')
+		warn(f'No elevated user found, skipping {source} packages')
 		return
 
 	installation.add_additional_packages(['base-devel', 'git'])
@@ -2370,16 +2379,17 @@ def run_aur_installation(packages: list[str], installation: Installer, auth_conf
 			aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
 			aur_rule.chmod(0o440)
 
+		repo_flag = f'--repo {repo} ' if repo else ''
 		for pkg in packages:
-			info(f'Installing AUR package: {pkg}')
+			info(f'Installing {source} package: {pkg}')
 			try:
 				installation.arch_chroot(
-					f'grimoire --no-color install --repo AUR {shlex.quote(pkg)} --noconfirm',
+					f'grimoire --no-color install {repo_flag}{shlex.quote(pkg)} --noconfirm',
 					run_as=build_user.username,
 					peek_output=True,
 				)
 			except SysCallError as e:
-				warn(f'AUR package "{pkg}" failed: {e}')
+				warn(f'{source} package "{pkg}" failed: {e}')
 	finally:
 		if priv_esc == PrivilegeEscalation.Doas and aur_rule is not None and aur_rule.exists():
 			debug(f'Removing temporary doas rule for {build_user.username}')

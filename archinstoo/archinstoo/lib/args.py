@@ -72,6 +72,9 @@ class ArchConfig:
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
+	# Advanced: build `packages` from official Arch source via grimoire (makepkg)
+	# instead of pacstrap binaries. Needs an elevated user for the build sandbox.
+	compile_packages: bool = False
 	timezone: str | None = None
 	services: list[str | UserService] = field(default_factory=list)
 	sysctl: list[str] = field(default_factory=list)
@@ -99,6 +102,7 @@ class ArchConfig:
 			'ntp': self.ntp,
 			'packages': self.packages,
 			'aur_packages': self.aur_packages,
+			'compile_packages': self.compile_packages,
 			'services': [s.json() if isinstance(s, UserService) else s for s in self.services],
 			'sysctl': self.sysctl,
 			'custom_commands': self.custom_commands,
@@ -153,6 +157,7 @@ class ArchConfig:
 			arch_config.swap = ZramConfiguration.parse_arg(swap)
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
+		arch_config.compile_packages = args_config.get('compile_packages', False)
 		if firmware := args_config.get('firmware'):
 			arch_config.firmware = FirmwareConfiguration.parse_arg(firmware)
 		arch_config.ntp = args_config.get('ntp', True)

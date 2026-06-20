@@ -11,7 +11,7 @@ from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
-from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_aur_installation, run_custom_user_commands
+from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstoo.lib.models.device import (
 	DiskLayoutType,
@@ -35,6 +35,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		if not args.advanced:
 			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
+			global_menu.set_enabled('compile_packages', False)
 
 		global_menu.run(additional_title='- Guided mode')
 
@@ -164,7 +165,11 @@ def perform_installation(
 				profile.provision(installation, users)
 
 		if config.packages and config.packages[0] != '':
-			installation.add_additional_packages(config.packages)
+			# Advanced knob: compile from official Arch source instead of pacstrap binaries
+			if args.advanced and config.compile_packages and config.auth_config:
+				run_grimoire_installation(config.packages, installation, config.auth_config, repo=None)
+			else:
+				installation.add_additional_packages(config.packages)
 
 		if config.ntp:
 			installation.activate_time_synchronization()
@@ -181,7 +186,7 @@ def perform_installation(
 
 		# We run the next defs last because they might depend on anything above
 		if config.aur_packages and config.auth_config:
-			run_aur_installation(config.aur_packages, installation, config.auth_config)
+			run_grimoire_installation(config.aur_packages, installation, config.auth_config)
 
 		# If the user provided a list of services to be enabled
 		# This might include system wide services or user specific
