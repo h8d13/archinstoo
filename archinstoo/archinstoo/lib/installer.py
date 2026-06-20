@@ -1547,7 +1547,7 @@ class Installer:
 			command.extend(add_options)
 
 			try:
-				SysCommand(command, peek_output=True)
+				SysCommand(command, peek_output=True, silent=True)
 			except SysCallError as err:
 				raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}')
 		else:
@@ -1562,7 +1562,7 @@ class Installer:
 			]
 
 			try:
-				SysCommand(command + add_options, peek_output=True)
+				SysCommand(command + add_options, peek_output=True, silent=True)
 			except SysCallError as err:
 				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
 

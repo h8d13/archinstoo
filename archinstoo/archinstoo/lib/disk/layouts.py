@@ -102,19 +102,24 @@ def process_root_partition_size(total_size: Size, sector_size: SectorSize) -> Si
 	return Size(value=length, unit=Unit.GiB, sector_size=sector_size)
 
 
-def get_default_btrfs_subvols() -> list[SubvolumeModification]:
+def get_default_btrfs_subvols(home_volume: bool = True) -> list[SubvolumeModification]:
 	# https://btrfs.wiki.kernel.org/index.php/FAQ
 	# https://unix.stackexchange.com/questions/246976/btrfs-subvolume-uuid-clash
 	# https://github.com/classy-giraffe/easy-arch/blob/main/easy-arch.sh
-	return [
+	subvols = [
 		SubvolumeModification(Path('@'), Path('/')),
 		SubvolumeModification(Path('@home'), Path('/home')),
 		SubvolumeModification(Path('@log'), Path('/var/log')),
 		SubvolumeModification(Path('@pkg'), Path('/var/cache/pacman/pkg')),
 	]
 
+	if not home_volume:
+		subvols = [s for s in subvols if s.mountpoint != Path('/home')]
 
-def suggest_single_disk_layout(
+	return subvols
+
+
+def suggest_disk_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
 	separate_home: bool | None = None,
@@ -122,7 +127,7 @@ def suggest_single_disk_layout(
 	advanced: bool = False,
 ) -> DeviceModification:
 	if not filesystem_type:
-		filesystem_type = select_main_filesystem_format(advanced=advanced)
+		filesystem_type = select_main_filesystem_format(advanced=advanced, allow_lvm=True)
 
 	sector_size = device.device_info.sector_size
 	total_size = device.device_info.total_size
@@ -164,7 +169,7 @@ def suggest_single_disk_layout(
 	for part in boot_partitions:
 		device_modification.add_partition(part)
 
-	if separate_home is False or using_subvolumes or total_size < min_size_to_allow_home_part:
+	if separate_home is False or using_subvolumes or filesystem_type == FilesystemType.LVM or total_size < min_size_to_allow_home_part:
 		using_home_partition = False
 	elif separate_home:
 		using_home_partition = True
@@ -195,7 +200,7 @@ def suggest_single_disk_layout(
 		type=PartitionType.PRIMARY,
 		start=root_start,
 		length=root_length,
-		mountpoint=Path('/') if not using_subvolumes else None,
+		mountpoint=None if using_subvolumes or filesystem_type == FilesystemType.LVM else Path('/'),
 		fs_type=filesystem_type,
 		mount_options=mount_options,
 	)
@@ -235,13 +240,15 @@ def suggest_lvm_layout(
 	filesystem_type: FilesystemType | None = None,
 	vg_grp_name: str = 'ArchinstooVg',
 	advanced: bool = False,
+	home_volume: bool = True,
 ) -> LvmConfiguration:
-	if disk_config.config_type != DiskLayoutType.Default:
-		raise ValueError('LVM suggested volumes are only available for default partitioning')
+	if disk_config.config_type not in (DiskLayoutType.Default, DiskLayoutType.Manual):
+		raise ValueError('LVM suggested volumes are only available for default or manual partitioning')
+
+	root_only = not home_volume  # user intent, captured before the subvolume path flips home_volume
 
 	using_subvolumes = False
 	btrfs_subvols = []
-	home_volume = True
 	mount_options = []
 
 	if not filesystem_type:
@@ -266,11 +273,12 @@ def suggest_lvm_layout(
 		mount_options = select_mount_options()
 
 	if using_subvolumes:
-		btrfs_subvols = get_default_btrfs_subvols()
+		btrfs_subvols = get_default_btrfs_subvols(home_volume=home_volume)
 		home_volume = False
 
 	boot_part: PartitionModification | None = None
 	other_part: list[PartitionModification] = []
+	lvm_marked: list[PartitionModification] = []
 
 	efi_part: PartitionModification | None = None
 
@@ -280,8 +288,15 @@ def suggest_lvm_layout(
 				boot_part = part
 			elif part.is_efi():
 				efi_part = part
+			elif part.fs_type == FilesystemType.LVM:
+				lvm_marked.append(part)
 			else:
 				other_part.append(part)
+
+	# explicit PVs (partitions marked as LVM) win; otherwise fall back to every
+	# remaining partition so the default-layout flow keeps working unchanged
+	if lvm_marked:
+		other_part = lvm_marked
 
 	if not boot_part:
 		boot_part = efi_part
@@ -293,8 +308,14 @@ def suggest_lvm_layout(
 		[p.length for p in other_part],
 		Size(0, Unit.B, SectorSize.default()),
 	)
-	root_vol_size = process_root_partition_size(total_vol_available, SectorSize.default())
-	home_vol_size = total_vol_available - root_vol_size
+	if home_volume:
+		# separate /home LV: cap root, give the remainder to /home
+		root_vol_size = process_root_partition_size(total_vol_available, SectorSize.default())
+		home_vol_size = total_vol_available - root_vol_size
+	else:
+		# no separate /home LV (root-only, or btrfs subvolumes carry /home): root spans the whole VG
+		root_vol_size = total_vol_available
+		home_vol_size = Size(0, Unit.B, SectorSize.default())
 
 	lvm_vol_group = LvmVolumeGroup(vg_grp_name, pvs=other_part)
 
@@ -321,7 +342,8 @@ def suggest_lvm_layout(
 
 		lvm_vol_group.volumes.append(home_vol)
 
-	return LvmConfiguration(LvmLayoutType.Default, [lvm_vol_group])
+	layout_type = LvmLayoutType.NoHome if root_only else LvmLayoutType.Default
+	return LvmConfiguration(layout_type, [lvm_vol_group])
 
 
 def get_default_partition_layout(
@@ -330,7 +352,7 @@ def get_default_partition_layout(
 	bootloader: Bootloader | None = None,
 	advanced: bool = False,
 ) -> DeviceModification:
-	return suggest_single_disk_layout(
+	return suggest_disk_layout(
 		device,
 		filesystem_type=filesystem_type,
 		bootloader=bootloader,

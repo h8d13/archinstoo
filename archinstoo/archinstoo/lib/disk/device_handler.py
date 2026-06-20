@@ -478,6 +478,9 @@ class DeviceHandler:
 		# ext4 in its place as that will result in a type of native Linux file system
 		if part_mod.fs_type == FilesystemType.BCACHEFS:
 			fs_value: str | None = FilesystemType.EXT4.parted_value
+		elif part_mod.fs_type == FilesystemType.LVM:
+			# LVM PV: create a raw partition, no parted filesystem signature; pvcreate handles it
+			fs_value = None
 		else:
 			fs_value = part_mod.fs_type.parted_value if part_mod.fs_type else None
 		filesystem = FileSystem(type=fs_value, geometry=geometry) if fs_value else None
