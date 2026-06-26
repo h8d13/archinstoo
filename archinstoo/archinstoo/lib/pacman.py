@@ -1,4 +1,7 @@
 import contextlib
+import os
+import signal
+import threading
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -10,6 +13,45 @@ from .pathnames import PACMAN_CONF
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+
+
+def _target_gpg_daemons(target: Path) -> list[int]:
+	# gnupg's post_install runs `dirmngr </dev/null`, which can leave a dirmngr/
+	# gpg-agent daemon holding libalpm's scriptlet pipe open; pacstrap then blocks
+	# at the gnupg step waiting for an EOF that never comes (FS#42798). The legit
+	# package-verify agent runs host-rooted (/), so only the chrooted scriptlet
+	# daemon resolves /proc/<pid>/root to the target. Match exactly those.
+	root = os.path.realpath(target)
+	pids: list[int] = []
+	for entry in Path('/proc').iterdir():
+		if not entry.name.isdigit():
+			continue
+		try:
+			comm = (entry / 'comm').read_text().strip()
+			if comm not in ('dirmngr', 'gpg-agent'):
+				continue
+			if os.path.realpath(entry / 'root') == root:
+				pids.append(int(entry.name))
+		except OSError:
+			continue  # pid vanished or unreadable mid-scan
+	return pids
+
+
+def _scriptlet_watchdog(target: Path, stop: threading.Event) -> None:
+	# Reap leaked gnupg scriptlet daemons (see _target_gpg_daemons) once they
+	# outlive a grace window, so a held pipe can't wedge pacstrap. On hosts that
+	# don't hang the daemon exits in <1s and we never fire: a no-op there.
+	grace = 8.0
+	seen: dict[int, float] = {}
+	while not stop.wait(2.0):
+		pids = _target_gpg_daemons(target)
+		now = time.monotonic()
+		for pid in pids:
+			if now - seen.setdefault(pid, now) > grace:
+				warn(f'Reaping stuck gnupg scriptlet daemon (pid {pid}) in target...')
+				with contextlib.suppress(ProcessLookupError):
+					os.kill(pid, signal.SIGTERM)
+		seen = {p: t for p, t in seen.items() if p in pids}
 
 
 # Helpers for exceptions
@@ -137,10 +179,23 @@ class Pacman:
 			cmd = f'pacstrap -C {PACMAN_CONF} {self.target} {" ".join(packages)} --noconfirm --needed'
 			bail = f'Pacstrap failed. See {logger.path} or above message for error details'
 
-		self.ask(
-			'Could not strap in packages',
-			bail,
-			SysCommand,
-			cmd,
-			peek_output=True,
-		)
+		# Only chrooted installs run package scriptlets; live mode (target '/')
+		# shares the host gpg, where a root match would catch the wrong daemon.
+		stop = watchdog = None
+		if self.target != Path('/'):
+			stop = threading.Event()
+			watchdog = threading.Thread(target=_scriptlet_watchdog, args=(self.target, stop), daemon=True)
+			watchdog.start()
+
+		try:
+			self.ask(
+				'Could not strap in packages',
+				bail,
+				SysCommand,
+				cmd,
+				peek_output=True,
+			)
+		finally:
+			if stop is not None and watchdog is not None:
+				stop.set()
+				watchdog.join(timeout=2)
