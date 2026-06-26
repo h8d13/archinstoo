@@ -50,13 +50,8 @@ apk add --no-cache $(
 EOF
 )
 
-# gnupg's post_install runs `dirmngr </dev/null`; if /dev/null is not a real
-# character device the scriptlet hangs instead of getting EOF and exiting
-# (FS#42798, FS#47371). A bare/nested host can ship a /dev without it, so
-# guarantee a working devtmpfs before any install inherits this /dev.
-if [ ! -c /dev/null ]; then
-	mount -t devtmpfs dev /dev || mknod -m 666 /dev/null c 1 3
-fi
+# TODO: some reason one of the gnupg .install scriptlets gets stuck
+# ctrl+c + retry then skips it, idk
 
 # arch-install-scripts and alpine-conf both provide cmd:genfstab
 apk del --no-cache alpine-base alpine-conf
