@@ -139,7 +139,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='tpm2_pcrs',
 			),
 			MenuItem(
-				text=tr('FIDO2 auto unlock'),
+				text='FIDO2 auto unlock',
 				action=self._select_fido2_device,
 				value=self._enc_config.fido2_device,
 				dependencies=[self._check_dep_fido2],
@@ -238,8 +238,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				return preset
 
 	def _select_fido2_device(self, preset: Fido2Device | None) -> Fido2Device | None:
-		header = tr('Select a FIDO2 token to enroll as a LUKS keyslot') + '\n'
-		header += tr('Passphrase keyslot stays as fallback.') + '\n'
+		header = 'Select a FIDO2 token to enroll as a LUKS keyslot' + '\n'
+		header += 'Passphrase keyslot stays as fallback.' + '\n'
 
 		devices = Fido2.get_cryptenroll_devices(reload=True)
 
@@ -470,7 +470,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		if not device:
 			return None
 
-		return f'{tr("FIDO2 token")}: {device.path} ({device.manufacturer} {device.product})'
+		return f'FIDO2 token: {device.path} ({device.manufacturer} {device.product})'
 
 
 def select_encryption_type(
