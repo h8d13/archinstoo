@@ -44,10 +44,6 @@ Since a lot can be handled through GUI and not config files.
 
 ## Languages compat
 
-On the ISO, you can `loadkeys <somekblayout>`, you can also check available ones:
-
-`localectl list-keymaps`
-
 You can add Google fonts for extended language support and setup multiple keyboards once you have a basic system working.
 ```shell
 noto-fonts-cjk         # Chinese, Japanese, Korean
