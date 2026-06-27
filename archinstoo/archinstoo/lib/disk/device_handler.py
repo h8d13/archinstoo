@@ -304,7 +304,15 @@ class DeviceHandler:
 			password=enc_password,
 		)
 
-		key_file = luks_handler.encrypt(iter_time=iter_time, pbkdf_memory=pbkdf_memory, pbkdf=pbkdf, cipher=cipher)
+		# Adiantum needs key-size 256; AES-XTS needs 512. Default to 512.
+		key_size = cipher.key_size if cipher else 512
+		key_file = luks_handler.encrypt(
+			iter_time=iter_time,
+			pbkdf_memory=pbkdf_memory,
+			pbkdf=pbkdf,
+			cipher=cipher,
+			key_size=key_size,
+		)
 
 		self.udev_sync()
 

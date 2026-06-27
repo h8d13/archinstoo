@@ -38,10 +38,19 @@ class LuksPbkdf(Enum):
 
 class EncryptionCipher(Enum):
 	# None passed to cryptsetup means its built-in default (aes-xts-plain64).
-	# Adiantum/chacha20 are for CPUs without AES acceleration.
+	# Adiantum is for CPUs without AES acceleration. It is a composite mode:
+	# spec must name both the stream cipher and block cipher
+	# (xchacha12,aes) or the kernel rejects it as unsupported.
 	AES_XTS_PLAIN64 = 'aes-xts-plain64'
-	AES_ADIANTUM_PLAIN64 = 'aes-adiantum-plain64'
-	CHACHA20_RANDOM_PLAIN64 = 'chacha20-random-plain64'
+	AES_ADIANTUM_PLAIN64 = 'xchacha12,aes-adiantum-plain64'
+
+	@property
+	def key_size(self) -> int:
+		# XTS uses two keys, so 512 bits => AES-256. Adiantum uses a
+		# single 256-bit key; passing 512 makes cryptsetup fail.
+		if self is EncryptionCipher.AES_XTS_PLAIN64:
+			return 512
+		return 256
 
 
 class DiskLayoutType(Enum):
