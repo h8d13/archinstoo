@@ -639,6 +639,66 @@ class Installer:
 			if key_in_target.exists():
 				key_in_target.unlink()
 
+	def enroll_fido2(self) -> None:
+		# Add a FIDO2 keyslot to every encrypted device using systemd-cryptenroll.
+		# Existing passphrase keyslot remains as fallback.
+		if not (token := self._disk_encryption.fido2_device):
+			return
+		if self._disk_encryption.encryption_type == EncryptionType.NO_ENCRYPTION:
+			return
+		if not (password := self._disk_encryption.encryption_password):
+			warn('FIDO2 enrollment skipped: no encryption password available')
+			return
+
+		devices: list[Path] = []
+		if self._disk_encryption.encryption_type in (EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS):
+			devices.extend(p.safe_dev_path for p in self._disk_encryption.partitions)
+		elif self._disk_encryption.encryption_type == EncryptionType.LUKS_ON_LVM:
+			devices.extend(v.safe_dev_path for v in self._disk_encryption.lvm_volumes)
+
+		if not devices:
+			return
+
+		# Stash the existing passphrase as a transient unlock keyfile under the standard
+		# LUKS keyfile dir (same convention as _create_root_keyfile).
+		key_in_target = self.target / 'etc/cryptsetup-keys.d/.fido2-bootstrap.key'
+		key_in_target.parent.mkdir(parents=True, exist_ok=True)
+
+		try:
+			key_in_target.write_bytes(password.plaintext.encode())
+			key_in_target.chmod(0o400)
+
+			# inherited by cryptenroll below: keep PIN/touch prompts plain text
+			os.environ['SYSTEMD_EMOJI'] = '0'
+
+			info(f'FIDO2 token: {token.path} ({token.manufacturer} {token.product})')
+			# Touch/PIN prompts are easy to miss in the install output;
+			# block until the user is watching before systemd-cryptenroll starts.
+			input('Are you ready to enroll your token? Press Enter to continue...')
+
+			for dev in devices:
+				info(f'Enrolling FIDO2 keyslot for {dev}')
+				info('Touch the token when it blinks; a PIN prompt may appear first')
+				try:
+					# stdio stays inherited: the PIN/touch prompts are interactive
+					subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
+						[  # noqa: S607 - systemd-cryptenroll from $PATH on the live ISO
+							'systemd-cryptenroll',
+							f'--unlock-key-file={key_in_target}',
+							f'--fido2-device={token.path}',
+							str(dev),
+						],
+						check=True,
+					)
+				except CalledProcessError as e:
+					# stdio is inherited, cryptenroll's own error is already on screen
+					warn(f'FIDO2 enrollment failed for {dev} (exit {e.returncode})')
+				except FileNotFoundError as e:
+					warn(f'FIDO2 enrollment failed for {dev}: {e}')
+		finally:
+			if key_in_target.exists():
+				key_in_target.unlink()
+
 	def post_install_check(self, *args: str, **kwargs: str) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
 
@@ -1067,6 +1127,11 @@ class Installer:
 					if part in self._disk_encryption.partitions:
 						self._prepare_encrypt()
 
+		if self._disk_encryption.fido2_device:
+			# sd-encrypt only bundles the fido2 dlopen libs if libfido2 is
+			# present when the initramfs is built
+			self._base_packages.append('libfido2')
+
 		if ucode := self._get_microcode():
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)
 			self._base_packages.append(ucode.stem)
@@ -1366,8 +1431,19 @@ class Installer:
 		if self._zram_enabled:
 			kernel_parameters.append('zswap.enabled=0')
 
-		if self._disk_encryption.tpm2_unlock and self._disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
-			kernel_parameters.append('rd.luks.options=tpm2-device=auto')
+		if self._disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
+			# All options must be joined into a single rd.luks.options=: systemd's
+			# cryptsetup-generator does not merge repeated non-UUID occurrences, the
+			# last one wins, so separate tpm2/fido2 params would silently drop one.
+			luks_options = []
+			if self._disk_encryption.tpm2_unlock:
+				luks_options.append('tpm2-device=auto')
+			if self._disk_encryption.fido2_device:
+				# auto, not the enrolled hidraw path: hidraw numbering is not stable across boots.
+				# password-echo=no per upstream archlinux/archinstall#1196
+				luks_options.append('fido2-device=auto,password-echo=no')
+			if luks_options:
+				kernel_parameters.append('rd.luks.options=' + ','.join(luks_options))
 
 		if id_root:
 			for sub_vol in root.btrfs_subvols:
@@ -2000,9 +2076,10 @@ class Installer:
 			error('Error generating initramfs (continuing anyway)')
 
 	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False, quiet: bool = False) -> None:
-		# Run before bootloader install so kernel cmdline reflects rd.luks.options=tpm2-device=auto
-		# but is extensively gated and a no-op if not present/selected
+		# Run before bootloader install so kernel cmdline reflects rd.luks.options
+		# (tpm2-device/fido2-device) but is extensively gated and a no-op if not present/selected
 		self.enroll_tpm2()
+		self.enroll_fido2()
 
 		if quiet and 'quiet' not in self._kernel_params:
 			self._kernel_params.append('quiet')

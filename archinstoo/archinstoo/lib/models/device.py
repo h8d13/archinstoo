@@ -1434,6 +1434,13 @@ class EncryptionType(StrEnum):
 
 
 @dataclass
+class Fido2Device:
+	path: Path
+	manufacturer: str
+	product: str
+
+
+@dataclass
 class DiskEncryption:
 	encryption_type: EncryptionType = EncryptionType.NO_ENCRYPTION
 	encryption_password: Password | None = None
@@ -1445,6 +1452,7 @@ class DiskEncryption:
 	auto_unlock_root: bool = False
 	tpm2_unlock: bool = False
 	tpm2_pcrs: str = '0+7'
+	fido2_device: Fido2Device | None = None
 
 	def __post_init__(self) -> None:
 		if self.encryption_type in [EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS] and not self.partitions:
