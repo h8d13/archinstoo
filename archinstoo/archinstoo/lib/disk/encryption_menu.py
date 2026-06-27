@@ -8,6 +8,7 @@ from archinstoo.lib.models.device import (
 	DEFAULT_ITER_TIME,
 	DeviceModification,
 	DiskEncryption,
+	EncryptionCipher,
 	EncryptionType,
 	LuksPbkdf,
 	LvmConfiguration,
@@ -82,6 +83,14 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				dependencies=[self._check_dep_enc_type],
 				preview_action=self._preview,
 				key='iter_time',
+			),
+			MenuItem(
+				text='Encryption cipher',
+				action=select_cipher,
+				value=self._enc_config.cipher,
+				dependencies=[self._check_dep_enc_type],
+				preview_action=self._preview,
+				key='cipher',
 			),
 			MenuItem(
 				text='Partitions',
@@ -244,6 +253,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_password: Password | None = self._item_group.find_by_key('encryption_password').value
 		pbkdf: LuksPbkdf | None = self._item_group.find_by_key('pbkdf').value
 		iter_time: int | None = self._item_group.find_by_key('iter_time').value
+		cipher: EncryptionCipher | None = self._item_group.find_by_key('cipher').value
 		enc_partitions = self._item_group.find_by_key('partitions').value
 		enc_lvm_vols = self._item_group.find_by_key('lvm_volumes').value
 		auto_unlock_root: bool = self._item_group.find_by_key('auto_unlock_root').value or False
@@ -267,6 +277,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				lvm_volumes=enc_lvm_vols,
 				iter_time=iter_time or DEFAULT_ITER_TIME,
 				pbkdf=pbkdf or LuksPbkdf.Argon2id,
+				cipher=cipher,
 				auto_unlock_root=auto_unlock_root,
 				tpm2_unlock=tpm2_unlock,
 				tpm2_pcrs=tpm2_pcrs,
@@ -288,6 +299,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if (iter_time := self._prev_iter_time()) is not None:
 			output += f'\n{iter_time}'
+
+		if (cipher := self._prev_cipher()) is not None:
+			output += f'\n{cipher}'
 
 		if (partitions := self._prev_partitions()) is not None:
 			output += f'\n\n{partitions}'
@@ -357,6 +371,15 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if iter_time and enc_type != EncryptionType.NO_ENCRYPTION:
 			return f'{"Iteration time"}: {iter_time}ms'
+
+		return None
+
+	def _prev_cipher(self) -> str | None:
+		cipher = self._item_group.find_by_key('cipher').value
+		enc_type = self._item_group.find_by_key('encryption_type').value
+
+		if cipher and enc_type != EncryptionType.NO_ENCRYPTION:
+			return f'{"Encryption cipher"}: {cipher.value}'
 
 		return None
 
@@ -500,7 +523,7 @@ def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
 	options = [LuksPbkdf.Argon2id, LuksPbkdf.Pbkdf2]
 	items = [MenuItem(o.display_name(), value=o) for o in options]
 	group = MenuItemGroup(items)
-	group.set_focus_by_value(preset.display_name())
+	group.set_focus_by_value(preset)
 
 	result = SelectMenu[LuksPbkdf](
 		group,
@@ -508,6 +531,30 @@ def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
 		allow_reset=True,
 		alignment=Alignment.CENTER,
 		frame=FrameProperties.min('Key derivation function'),
+	).run()
+
+	match result.type_:
+		case ResultType.Reset:
+			return None
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return result.get_value()
+
+
+def select_cipher(preset: EncryptionCipher | None = None) -> EncryptionCipher | None:
+	# Skip keeps preset (incl. None = cryptsetup default), Reset clears to default.
+	items = [MenuItem(c.value, value=c) for c in EncryptionCipher]
+	group = MenuItemGroup(items)
+	if preset:
+		group.set_focus_by_value(preset)
+
+	result = SelectMenu[EncryptionCipher](
+		group,
+		allow_skip=True,
+		allow_reset=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min('Encryption cipher'),
 	).run()
 
 	match result.type_:

@@ -36,6 +36,14 @@ class LuksPbkdf(Enum):
 				return 'PBKDF2'
 
 
+class EncryptionCipher(Enum):
+	# None passed to cryptsetup means its built-in default (aes-xts-plain64).
+	# Adiantum/chacha20 are for CPUs without AES acceleration.
+	AES_XTS_PLAIN64 = 'aes-xts-plain64'
+	AES_ADIANTUM_PLAIN64 = 'aes-adiantum-plain64'
+	CHACHA20_RANDOM_PLAIN64 = 'chacha20-random-plain64'
+
+
 class DiskLayoutType(Enum):
 	Default = 'default-layout'
 	Manual = 'manual-partitioning'
@@ -1433,6 +1441,7 @@ class DiskEncryption:
 	lvm_volumes: list[LvmVolume] = field(default_factory=list)
 	iter_time: int = DEFAULT_ITER_TIME
 	pbkdf: LuksPbkdf = LuksPbkdf.Argon2id
+	cipher: EncryptionCipher | None = None
 	auto_unlock_root: bool = False
 	tpm2_unlock: bool = False
 	tpm2_pcrs: str = '0+7'

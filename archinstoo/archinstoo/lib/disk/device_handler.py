@@ -13,6 +13,7 @@ from archinstoo.lib.models.device import (
 	BtrfsMountOption,
 	DeviceModification,
 	DiskEncryption,
+	EncryptionCipher,
 	FilesystemType,
 	LsblkInfo,
 	LuksPbkdf,
@@ -295,6 +296,7 @@ class DeviceHandler:
 		iter_time: int = DEFAULT_ITER_TIME,
 		pbkdf_memory: int | None = None,
 		pbkdf: LuksPbkdf = LuksPbkdf.Argon2id,
+		cipher: EncryptionCipher | None = None,
 	) -> Luks2:
 		luks_handler = Luks2(
 			dev_path,
@@ -302,7 +304,7 @@ class DeviceHandler:
 			password=enc_password,
 		)
 
-		key_file = luks_handler.encrypt(iter_time=iter_time, pbkdf_memory=pbkdf_memory, pbkdf=pbkdf)
+		key_file = luks_handler.encrypt(iter_time=iter_time, pbkdf_memory=pbkdf_memory, pbkdf=pbkdf, cipher=cipher)
 
 		self.udev_sync()
 
@@ -335,7 +337,12 @@ class DeviceHandler:
 			password=enc_conf.encryption_password,
 		)
 
-		key_file = luks_handler.encrypt(iter_time=iter_time or enc_conf.iter_time, pbkdf_memory=pbkdf_memory, pbkdf=enc_conf.pbkdf)
+		key_file = luks_handler.encrypt(
+			iter_time=iter_time or enc_conf.iter_time,
+			pbkdf_memory=pbkdf_memory,
+			pbkdf=enc_conf.pbkdf,
+			cipher=enc_conf.cipher,
+		)
 
 		self.udev_sync()
 
