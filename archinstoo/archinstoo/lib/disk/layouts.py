@@ -176,7 +176,7 @@ def suggest_disk_layout(
 	else:
 		prompt = 'Would you like to create a separate partition for /home?' + '\n'
 		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(MenuItem.yes().value)
+		group.set_focus_by_value(MenuItem.no().value)
 		result = SelectMenu(
 			group,
 			header=prompt,

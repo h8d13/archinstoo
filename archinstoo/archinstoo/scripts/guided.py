@@ -127,6 +127,7 @@ def perform_installation(
 				config.bootloader_config.uki,
 				config.bootloader_config.removable,
 				config.bootloader_config.quiet,
+				config.bootloader_config.splash,
 			)
 
 		if disk_config.has_default_btrfs_vols():

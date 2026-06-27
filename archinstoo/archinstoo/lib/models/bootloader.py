@@ -53,6 +53,8 @@ class BootloaderConfiguration:
 	uki: bool = False
 	removable: bool = True
 	quiet: bool = False
+	# embeds the Arch splash bmp into the UKI; only meaningful with uki=True
+	splash: bool = False
 
 	def json(self) -> dict[str, Any]:
 		return {
@@ -60,6 +62,7 @@ class BootloaderConfiguration:
 			'uki': self.uki,
 			'removable': self.removable,
 			'quiet': self.quiet,
+			'splash': self.splash,
 		}
 
 	@classmethod
@@ -69,7 +72,8 @@ class BootloaderConfiguration:
 		uki = config.get('uki', False)
 		removable = config.get('removable', True)
 		quiet = config.get('quiet', False)
-		return cls(bootloader=bootloader, uki=uki, removable=removable, quiet=quiet)
+		splash = config.get('splash', False)
+		return cls(bootloader=bootloader, uki=uki, removable=removable, quiet=quiet, splash=splash)
 
 	@classmethod
 	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
@@ -87,6 +91,10 @@ class BootloaderConfiguration:
 			uki_string = 'Enabled' if self.uki else 'Disabled'
 			text += f'UKI: {uki_string}'
 			text += '\n'
+			if self.uki:
+				splash_string = 'Enabled' if self.splash else 'Disabled'
+				text += f'Boot splash: {splash_string}'
+				text += '\n'
 		if uefi and self.bootloader.has_removable_support():
 			removable_string = 'Enabled' if self.removable else 'Disabled'
 			text += f'{"Removable"}: {removable_string}'

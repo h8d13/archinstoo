@@ -1569,7 +1569,7 @@ class Installer:
 		root: PartitionModification | LvmVolume,
 		efi_partition: PartitionModification | None,
 		uki_enabled: bool = False,
-		bootloader_removable: bool = False,
+		removable: bool = False,
 	) -> None:
 		debug('Installing grub bootloader')
 
@@ -1617,7 +1617,7 @@ class Installer:
 				'--bootloader-id=GRUB',
 			]
 
-			if bootloader_removable:
+			if removable:
 				add_options.append('--removable')
 
 			command.extend(add_options)
@@ -1699,7 +1699,7 @@ class Installer:
 		efi_partition: PartitionModification | None,
 		root: PartitionModification | LvmVolume,
 		uki_enabled: bool = False,
-		bootloader_removable: bool = False,
+		removable: bool = False,
 	) -> None:
 		debug('Installing Limine bootloader')
 
@@ -1726,7 +1726,7 @@ class Installer:
 			try:
 				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'
 				efi_dir_path_target = efi_partition.mountpoint / 'EFI'
-				subdir = 'BOOT' if bootloader_removable else 'arch-limine'
+				subdir = 'BOOT' if removable else 'arch-limine'
 				efi_dir_path = efi_dir_path / subdir
 				efi_dir_path_target = efi_dir_path_target / subdir
 				config_path = efi_dir_path / 'limine.conf'
@@ -1743,7 +1743,7 @@ class Installer:
 				f'&& /usr/bin/cp /usr/share/limine/BOOTX64.EFI {efi_dir_path_target}/'
 			)
 
-			if not bootloader_removable:
+			if not removable:
 				# Create EFI boot menu entry for Limine.
 				try:
 					# see https://wiki.archlinux.org/title/Arch_boot_process
@@ -2007,6 +2007,7 @@ class Installer:
 		root: PartitionModification | LvmVolume,
 		efi_partition: PartitionModification | None,
 		keep_standalone_initramfs: bool = False,
+		splash: bool = False,
 	) -> None:
 		if not efi_partition or not efi_partition.mountpoint:
 			raise ValueError(f'Could not detect ESP at mountpoint {self.target}')
@@ -2058,7 +2059,12 @@ class Installer:
 					else:
 						config[index] = m.group(1)
 				elif line.startswith('#default_options='):
-					config[index] = line.removeprefix('#').rstrip('\n').rstrip('"') + f' --osrelease /etc/os-release.d/{kernel}"\n'
+					# rebuild deterministically: the mkinitcpio template ships
+					# default_options with --splash, which we drop unless asked.
+					opts = f'--osrelease /etc/os-release.d/{kernel}'
+					if splash:
+						opts += ' --splash /usr/share/systemd/bootctl/splash-arch.bmp'
+					config[index] = f'default_options="{opts}"\n'
 				elif keep_standalone_initramfs and (pm := presets_re.match(line)):
 					tokens = [t.strip().strip('\'"') for t in pm.group(2).split(',') if t.strip()]
 					if 'default' not in tokens:
@@ -2075,7 +2081,7 @@ class Installer:
 		if not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
 
-	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, bootloader_removable: bool = False, quiet: bool = False) -> None:
+	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, removable: bool = False, quiet: bool = False, splash: bool = False) -> None:
 		# Run before bootloader install so kernel cmdline reflects rd.luks.options
 		# (tpm2-device/fido2-device) but is extensively gated and a no-op if not present/selected
 		self.enroll_tpm2()
@@ -2100,28 +2106,28 @@ class Installer:
 		info(f'Adding bootloader {bootloader.display_name()} to {boot_partition.dev_path}', step=True)
 
 		# validate removable bootloader option
-		if bootloader_removable:
+		if removable:
 			if not SysInfo.has_uefi():
 				warn('Removable install requested but system is not UEFI; disabling.')
-				bootloader_removable = False
+				removable = False
 			elif not bootloader.has_removable_support():
 				warn(f'Bootloader {bootloader.display_name()} lacks removable support; disabling.')
-				bootloader_removable = False
+				removable = False
 
 		if uki_enabled:
 			# grub-btrfs cannot consume a UKI for snapshot entries; keep standalone initramfs alongside.
 			keep_standalone = bootloader == Bootloader.Grub and self._btrfs_snapshot_type() is not None
-			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone)
+			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone, splash=splash)
 
 		match bootloader:
 			case Bootloader.Systemd:
 				self._add_systemd_bootloader(boot_partition, root, efi_partition, uki_enabled)
 			case Bootloader.Grub:
-				self._add_grub_bootloader(boot_partition, root, efi_partition, uki_enabled, bootloader_removable)
+				self._add_grub_bootloader(boot_partition, root, efi_partition, uki_enabled, removable)
 			case Bootloader.Efistub:
 				self._add_efistub_bootloader(boot_partition, root, uki_enabled)
 			case Bootloader.Limine:
-				self._add_limine_bootloader(boot_partition, efi_partition, root, uki_enabled, bootloader_removable)
+				self._add_limine_bootloader(boot_partition, efi_partition, root, uki_enabled, removable)
 			case Bootloader.Refind:
 				self._add_refind_bootloader(boot_partition, efi_partition, root, uki_enabled)
 

@@ -58,6 +58,15 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				enabled=uki_enabled,
 			),
 			MenuItem(
+				text='Boot splash',
+				action=self._select_splash,
+				value=self._bootloader_conf.splash,
+				preview_action=self._prev_splash,
+				key='splash',
+				# only relevant when a UKI is actually being built
+				enabled=uki_enabled and self._bootloader_conf.uki,
+			),
+			MenuItem(
 				text='Removable location',
 				action=self._select_removable,
 				value=self._bootloader_conf.removable,
@@ -93,6 +102,10 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 	def _prev_quiet(self, item: MenuItem) -> str | None:
 		state = 'Enabled' if item.value else 'Disabled'
 		return '{}: {}'.format('Quiet boot', state)
+
+	def _prev_splash(self, item: MenuItem) -> str | None:
+		state = 'Enabled' if item.value else 'Disabled'
+		return 'Embeds the Arch logo splash into the UKI\n' + '{}: {}'.format('Boot splash', state)
 
 	@override
 	def run(
@@ -149,8 +162,8 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			case ResultType.Reset:
 				raise ValueError('Unhandled result type')
 
-	def _select_uki(self, preset: bool) -> bool:
-		prompt = 'Would you like to use unified kernel images?' + '\n'
+	def _select_splash(self, preset: bool) -> bool:
+		prompt = 'Embed the Arch logo splash image into the unified kernel image?' + '\n'
 
 		group = MenuItemGroup.yes_no()
 		group.set_focus_by_value(preset)
@@ -171,6 +184,41 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				return result.item() == MenuItem.yes()
 			case ResultType.Reset:
 				raise ValueError('Unhandled result type')
+
+	def _select_uki(self, preset: bool) -> bool:
+		prompt = 'Would you like to use unified kernel images?' + '\n'
+
+		group = MenuItemGroup.yes_no()
+		group.set_focus_by_value(preset)
+
+		result = SelectMenu[bool](
+			group,
+			header=prompt,
+			columns=2,
+			orientation=Orientation.HORIZONTAL,
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
+
+		uki = preset
+		match result.type_:
+			case ResultType.Skip:
+				pass
+			case ResultType.Selection:
+				uki = result.item() == MenuItem.yes()
+			case ResultType.Reset:
+				raise ValueError('Unhandled result type')
+
+		# splash only applies to UKI: gate it on the current uki choice
+		splash_item = self._menu_item_group.find_by_key('splash')
+		if uki:
+			splash_item.enabled = True
+		else:
+			splash_item.enabled = False
+			splash_item.value = False
+			self._bootloader_conf.splash = False
+
+		return uki
 
 	def _select_removable(self, preset: bool) -> bool:
 		prompt = (
