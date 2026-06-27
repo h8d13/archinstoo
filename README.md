@@ -18,9 +18,11 @@ A fork of `archinstall` an operating system installer for [archlinux](https://ar
 
 ### 0. Keymap
 
-On the ISO, you can `loadkeys <somekblayout>`, you can also check available ones:
+On the ISO, you can `loadkeys <somekblayout>`
 
-`localectl list-keymaps` otherwise defaults to US.
+You can also check available ones:
+
+`localectl list-keymaps` otherwise defaults to `us`.
 
 ### **1. Get internet access**
 > [!NOTE]

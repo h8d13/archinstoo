@@ -2131,6 +2131,22 @@ class Installer:
 			case Bootloader.Refind:
 				self._add_refind_bootloader(boot_partition, efi_partition, root, uki_enabled)
 
+		# Seed /loader/random-seed in the chroot so the very first boot isn't
+		# entropy-starved. Consumed by systemd-boot, or for a UKI by the embedded
+		# systemd-stub regardless of which bootloader chainloads it. The EFI system
+		# token can't be written here (no NVRAM in the chroot);
+		# systemd-boot-random-seed.service sets it on the first real boot.
+		if efi_partition is not None and (uki_enabled or bootloader == Bootloader.Systemd):
+			seed_cmd = ['bootctl', '--graceful']
+			if boot_partition != efi_partition:
+				seed_cmd.append(f'--esp-path={efi_partition.mountpoint}')
+			seed_cmd.append('random-seed')
+			try:
+				self.arch_chroot(seed_cmd)
+			except SysCallError as err:
+				# non-fatal: stub falls back to firmware RNG, service reseeds on boot
+				warn(f'Could not seed bootloader random seed: {err}')
+
 	def add_additional_packages(self, packages: str | list[str]) -> None:
 		return self.pacman.strap(packages)
 
