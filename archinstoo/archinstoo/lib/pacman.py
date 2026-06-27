@@ -10,6 +10,7 @@ from .exceptions import RequirementError
 from .general import SysCommand
 from .output import error, info, logger, warn
 from .pathnames import PACMAN_CONF
+from .utils.env import Os
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -181,8 +182,10 @@ class Pacman:
 
 		# Only chrooted installs run package scriptlets; live mode (target '/')
 		# shares the host gpg, where a root match would catch the wrong daemon.
+		# The gnupg hang (FS#42798) only bites on foreign hosts; an Arch host/ISO
+		# exits the daemon cleanly, so skip the /proc scan there entirely.
 		stop = watchdog = None
-		if self.target != Path('/'):
+		if self.target != Path('/') and not Os.running_from_arch():
 			stop = threading.Event()
 			watchdog = threading.Thread(target=_scriptlet_watchdog, args=(self.target, stop), daemon=True)
 			watchdog.start()
