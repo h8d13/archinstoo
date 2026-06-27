@@ -51,7 +51,8 @@ EOF
 )
 
 # TODO: some reason one of the gnupg .install scriptlets gets stuck
-# ctrl+c + retry then skips it, idk
+# added PID reaping to get around the issue and reported to:
+# https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/-/work_items/13
 
 # arch-install-scripts and alpine-conf both provide cmd:genfstab
 apk del --no-cache alpine-base alpine-conf
