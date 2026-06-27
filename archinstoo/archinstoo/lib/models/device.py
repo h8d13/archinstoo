@@ -42,7 +42,9 @@ class EncryptionCipher(Enum):
 	# spec must name both the stream cipher and block cipher
 	# (xchacha12,aes) or the kernel rejects it as unsupported.
 	AES_XTS_PLAIN64 = 'aes-xts-plain64'
-	AES_ADIANTUM_PLAIN64 = 'xchacha12,aes-adiantum-plain64'
+	# xchacha12 = faster (Android default), xchacha20 = wider margin.
+	ADIANTUM_XCHACHA12_PLAIN64 = 'xchacha12,aes-adiantum-plain64'
+	ADIANTUM_XCHACHA20_PLAIN64 = 'xchacha20,aes-adiantum-plain64'
 
 	@property
 	def key_size(self) -> int:
