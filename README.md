@@ -157,14 +157,14 @@ The idea being to promote **option 2** to use archinstoo latest non-dev. Always,
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
 
-See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not on GitHub.
-
 ---
 
 <div align="center" markdown>
 
 Made with ♡
 
-[Star this repo](https://github.com/h8d13/archinstoo) · [Bugs/Features](https://github.com/h8d13/archinstoo/issues/new) · [Discussions](https://github.com/h8d13/archinstoo/discussions)
+[Documentation](https://h8d13.github.io/archinstoo/) · [Star this repo](https://github.com/h8d13/archinstoo) · [Bugs/Features](https://github.com/h8d13/archinstoo/issues/new) · [Discussions](https://github.com/h8d13/archinstoo/discussions)
 
 </div>
+
+See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not on GitHub.
