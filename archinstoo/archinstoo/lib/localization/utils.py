@@ -113,39 +113,88 @@ def verify_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_keyboard_languages())
 
 
+def _localectl_keymap(subcmd: str) -> list[str]:
+	# raises SysCallError/RequirementError when localectl is absent or fails
+	return (
+		SysCommand(
+			f'localectl --no-pager {subcmd}',
+			environment_vars={'SYSTEMD_COLORS': '0'},
+		)
+		.decode()
+		.splitlines()
+	)
+
+
+def _fetch_x11_registry() -> ET.Element | None:
+	# upstream xkeyboard-config rules registry; used when localectl is missing
+	# (non-systemd hosts: alpine, foreign hosts, ...)
+	try:
+		text = fetch_data_from_url(_X11_BASE_XML_URL)
+	except ValueError:
+		return None
+	try:
+		return ET.fromstring(text)  # noqa: S314 - trusted xkeyboard-config source over https
+	except ET.ParseError:
+		return None
+
+
+def _fetch_x11_names(xpath: str) -> list[str]:
+	root = _fetch_x11_registry()
+	if root is None:
+		return []
+	return [name.text for name in root.findall(xpath) if name.text]
+
+
 def list_x11_keyboard_languages() -> list[str]:
 	try:
-		out = (
-			SysCommand(
-				'localectl --no-pager list-x11-keymap-layouts',
-				environment_vars={'SYSTEMD_COLORS': '0'},
-			)
-			.decode()
-			.splitlines()
-		)
-		if out:
+		if out := _localectl_keymap('list-x11-keymap-layouts'):
 			return out
 	except SysCallError, RequirementError:
 		# no localectl (non-systemd host) or it failed; fetch from upstream
 		pass
+	return _fetch_x11_names('./layoutList/layout/configItem/name')
 
-	return _fetch_x11_layouts()
 
-
-def _fetch_x11_layouts() -> list[str]:
-	# layout codes are <layoutList>/<layout>/<configItem>/<name>; variant names
-	# live under variantList and are intentionally excluded by this path
+def list_x11_keyboard_models() -> list[str]:
 	try:
-		text = fetch_data_from_url(_X11_BASE_XML_URL)
-	except ValueError:
-		return []
+		if out := _localectl_keymap('list-x11-keymap-models'):
+			return out
+	except SysCallError, RequirementError:
+		pass
+	return _fetch_x11_names('./modelList/model/configItem/name')
 
+
+def list_x11_keyboard_options() -> list[str]:
 	try:
-		root = ET.fromstring(text)  # noqa: S314 - trusted xkeyboard-config source over https
-	except ET.ParseError:
-		return []
+		if out := _localectl_keymap('list-x11-keymap-options'):
+			return out
+	except SysCallError, RequirementError:
+		pass
+	return _fetch_x11_names('./optionList/group/option/configItem/name')
 
-	return [name.text for name in root.findall('./layoutList/layout/configItem/name') if name.text]
+
+def list_x11_keyboard_variants(layout: str) -> list[str]:
+	# variants are layout-scoped (e.g. 'be' -> nodeadkeys, oss, ...)
+	if not layout.strip():
+		return []
+	try:
+		if out := _localectl_keymap(f'list-x11-keymap-variants {layout}'):
+			return out
+	except SysCallError, RequirementError:
+		pass
+	return _fetch_x11_variants(layout)
+
+
+def _fetch_x11_variants(layout: str) -> list[str]:
+	# variant names live under the matching layout's variantList in the registry
+	root = _fetch_x11_registry()
+	if root is None:
+		return []
+	for lay in root.findall('./layoutList/layout'):
+		name_el = lay.find('./configItem/name')
+		if name_el is not None and name_el.text == layout:
+			return [n.text for n in lay.findall('./variantList/variant/configItem/name') if n.text]
+	return []
 
 
 def verify_x11_keyboard_layout(layout: str) -> bool:

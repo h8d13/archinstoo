@@ -20,7 +20,6 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, error, info
-from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 
@@ -155,9 +154,9 @@ def perform_installation(
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
 
-			# Set X11 keyboard config if any profile uses X11
-			if profile_config.profiles and DisplayServer.X11 in profile_config.display_servers() and locale_config:
-				installation.set_x11_keyboard(locale_config.kb_layout)
+			# Set graphical keyboard config (Xorg + Wayland) for any graphical profile
+			if profile_config.profiles and profile_config.display_servers() and locale_config:
+				installation.set_keyboard(locale_config)
 
 		if (profile_config := config.profile_config) and profile_config.profiles:
 			users = config.auth_config.users if config.auth_config else []

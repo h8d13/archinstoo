@@ -2349,43 +2349,56 @@ class Installer:
 		vconsole_path.write_text(vconsole_content)
 		info(f'Wrote to {vconsole_path} using {kb_vconsole} and {font_vconsole}')
 
-	def set_x11_keyboard(self, vconsole_layout: str) -> bool:
-		# Write X11 keyboard config directly for Xorg profiles.
-		if not vconsole_layout.strip():
-			debug('X11 keyboard layout not specified, skipping')
+	def set_keyboard(self, locale_config: LocaleConfiguration) -> bool:
+		# Graphical (X11/Wayland) keyboard config, separate from the console
+		# keymap in vconsole.conf. Writes the Xorg InputClass (00-keyboard.conf)
+		# and the libxkbcommon env Wayland compositors read (XKB_DEFAULT_*).
+		# No-op unless a layout is set, leaving graphical sessions at the
+		# libxkbcommon 'us' default. Selections come pre-validated from the menu.
+		layout = locale_config.xkb_layout
+		if not layout.strip():
+			debug('No graphical (XKB) keyboard layout set, skipping')
 			return False
 
-		# Normalize vconsole layout to X11 format by stripping common suffixes
-		layout = vconsole_layout
-		for suffix in ('-latin1', '-latin2', '-latin9', '-nodeadkeys', '-mac'):
-			layout = layout.removesuffix(suffix)
-		# Handle compound suffixes like de-latin1-nodeadkeys
-		for suffix in ('-latin1', '-latin2', '-latin9'):
-			layout = layout.removesuffix(suffix)
+		model = locale_config.xkb_model
+		variant = locale_config.xkb_variant
+		options = locale_config.xkb_options
 
-		# Verify layout exists in target (where X11 is installed)
-		try:
-			layouts = self.run_command('localectl --no-pager list-x11-keymap-layouts').decode().splitlines()
-			if not any(layout.lower() == x11_layout.lower() for x11_layout in layouts):
-				debug(f'No matching X11 layout for vconsole "{vconsole_layout}", skipping')
-				return False
-		except Exception as e:
-			debug(f'Could not verify X11 layout: {e}, proceeding anyway')
-			# Proceed anyway if verification fails
+		# Xorg: only emit the Options that are set (layout always, rest optional)
+		xorg_opts = [('XkbLayout', layout)]
+		if model:
+			xorg_opts.append(('XkbModel', model))
+		if variant:
+			xorg_opts.append(('XkbVariant', variant))
+		if options:
+			xorg_opts.append(('XkbOptions', options))
+
+		opt_lines = '\n'.join(f'    Option "{k}" "{v}"' for k, v in xorg_opts)
+		content = f'Section "InputClass"\n    Identifier "system-keyboard"\n    MatchIsKeyboard "on"\n{opt_lines}\nEndSection\n'
 
 		xorg_conf_dir = self.target / 'etc/X11/xorg.conf.d'
 		xorg_conf_dir.mkdir(parents=True, exist_ok=True)
-
-		content = f'''\
-Section "InputClass"
-    Identifier "system-keyboard"
-    MatchIsKeyboard "on"
-    Option "XkbLayout" "{layout}"
-EndSection
-'''
-
 		(xorg_conf_dir / '00-keyboard.conf').write_text(content)
-		info(f'Wrote X11 keyboard config with layout: {layout}')
+		info(f'Wrote X11 keyboard config: layout={layout} variant={variant or "-"}')
+
+		# Wayland: pam_env exports /etc/environment into the session.
+		# libxkbcommon ignores vconsole.conf and 00-keyboard.conf. Append-guarded
+		# per-key so we don't clobber existing entries.
+		env_vars = {'XKB_DEFAULT_LAYOUT': layout}
+		if model:
+			env_vars['XKB_DEFAULT_MODEL'] = model
+		if variant:
+			env_vars['XKB_DEFAULT_VARIANT'] = variant
+		if options:
+			env_vars['XKB_DEFAULT_OPTIONS'] = options
+
+		env_path = self.target / 'etc/environment'
+		existing = env_path.read_text() if env_path.exists() else ''
+		additions = ''.join(f'{k}={v}\n' for k, v in env_vars.items() if f'{k}=' not in existing)
+		if additions:
+			env_path.write_text(existing + additions)
+			info(f'Wrote Wayland keyboard env to {env_path}')
+
 		return True
 
 	def _service_started(self, service_name: str) -> str | None:
