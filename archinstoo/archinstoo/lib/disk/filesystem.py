@@ -298,6 +298,7 @@ class FilesystemHandler:
 					lock_after_create,
 					iter_time=enc_config.iter_time,
 					pbkdf=enc_config.pbkdf,
+					cipher=enc_config.cipher,
 				)
 
 				enc_vols[vol] = luks_handler
@@ -338,6 +339,7 @@ class FilesystemHandler:
 						iter_time=iter_time,
 						pbkdf_memory=pbkdf_memory,
 						pbkdf=enc_config.pbkdf,
+						cipher=enc_config.cipher,
 					)
 
 					enc_mods[part_mod] = luks_handler

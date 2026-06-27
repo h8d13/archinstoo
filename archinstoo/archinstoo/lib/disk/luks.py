@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.disk.utils import get_lsblk_info, umount
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.general import SysCommand, SysCommandWorker, run
-from archinstoo.lib.models.device import DEFAULT_ITER_TIME, LuksPbkdf
+from archinstoo.lib.models.device import DEFAULT_ITER_TIME, EncryptionCipher, LuksPbkdf
 from archinstoo.lib.output import debug, info
 
 if TYPE_CHECKING:
@@ -85,6 +85,7 @@ class Luks2:
 		key_file: Path | None = None,
 		pbkdf_memory: int | None = None,
 		pbkdf: LuksPbkdf = LuksPbkdf.Argon2id,
+		cipher: EncryptionCipher | None = None,
 	) -> Path | None:
 		debug(f'Luks2 encrypting: {self.luks_dev_path}')
 
@@ -92,6 +93,9 @@ class Luks2:
 
 		# pbkdf-memory is only relevant for argon2id
 		pbkdf_memory_arg = ['--pbkdf-memory', str(pbkdf_memory)] if pbkdf_memory and pbkdf == LuksPbkdf.Argon2id else []
+
+		# no --cipher => cryptsetup default (aes-xts-plain64)
+		cipher_arg = ['--cipher', cipher.value] if cipher else []
 
 		cmd = [
 			'cryptsetup',
@@ -108,6 +112,7 @@ class Luks2:
 			'--iter-time',
 			str(iter_time),
 			*pbkdf_memory_arg,
+			*cipher_arg,
 			*key_file_arg,
 			'--use-urandom',
 			'luksFormat',
