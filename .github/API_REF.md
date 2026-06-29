@@ -1,25 +1,28 @@
 # API Reference
 
-How to extend, run, or edit the installer.
-Default flow:
+How to extend, run, or edit the installer. Default flow:
 [guided.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/scripts/guided.py).
 
 ## Run a script standalone
 
 `python -m archinstoo --script <name>` (or installed `archinstoo --script
-<name>`). Dispatch:
-[__init__.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/__init__.py)
+<name>`).
+
+Dispatch:
+[`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/__init__.py)
 `run_as_a_module()` -> `main()` ->
-[_run_script](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/checkpoints.py),
-which just `import`s `archinstoo.scripts.<name>`. Each script
+[`_run_script`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/checkpoints.py),
+which just `import`s `archinstoo.scripts.<name>`.
+
+Each script
 ([scripts/](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/scripts))
 **runs on import** (calls its entry fn at file bottom, e.g. `guided()`), so
-importing == running. Default script `guided`.
+importing == running.
 
-- `--dry-run`: build + save config, then `SystemExit(0)` (no disk writes).
+- `--dry-run`: build + save config, then `SystemExit(0)`.
 - `--config <file>`: load saved selections, skip resume prompt.
 - Rootless (no root needed): `{'list', 'size', 'mirror', 'count'}` in
-  [__init__.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/__init__.py).
+  [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/__init__.py).
 - New script = new file in `scripts/` that defines + calls an entry fn.
   Reuse `get_arch_config_handler()` from
   [args.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/args.py)
@@ -87,9 +90,10 @@ decoupled parts.
    ShellApp style) or build a handler once in the entry fn and thread it
    through the signature (the `ProfileHandler`/`ApplicationHandler` style).
 
-Order is load-bearing: place the hook relative to the steps it depends on
+Order of Operations: place the hook relative to the steps it depends on
 (after users, before bootloader, ...). The `Installer` context isn't open
 yet in the entry fn, so the hook must live inside `perform_installation`.
+All steps that rely on a previous step must be thought of that way for exec flow...
 
 ## Configure it: menu + config field
 
