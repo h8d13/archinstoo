@@ -64,11 +64,16 @@ set `ProfileType` (`ServerType` / `DesktopEnv` / `WindowMgr`). Contract
 (all optional except a type):
 - `packages` / `services` (`@property`) -> installed + enabled by the parent
   collector ([server.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/default_profiles/server.py)).
-- `install(install_session)` extra steps (e.g.
+- `install(install_session)`: extra install-time steps (e.g.
   [sshd.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/default_profiles/servers/sshd.py)
   opens the firewall).
-- `post_install(install_session)`, `provision(install_session, users)`,
-  `do_on_select()`, `default_greeter_type`, `display_servers()`.
+- `post_install(install_session)`: system-level finalize after packages
+  land, no user context (e.g. mariadb runs `mariadb-install-db`).
+- `provision(install_session, users)`: per-user wiring that needs the user
+  list (e.g. docker/seatd add each user to a group via `usermod -aG`).
+- `do_on_select()`: menu-time hook run when the profile is picked.
+- `default_greeter_type` / `display_servers()`: graphical metadata (greeter
+  default, Xorg/Wayland advertised).
 
 ## Add a new install step (outside cat/ and profiles)
 
