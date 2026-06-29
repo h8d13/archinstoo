@@ -115,6 +115,16 @@ with no consuming step is a dead option; conversely a step can derive from
 existing config and skip the menu entirely (shell is a field on each
 `User`, set in the auth menu, never a top-level item).
 
+The `_select_x` handler builds a `SelectMenu`
+([curses_menu.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/tui/curses_menu.py))
+over a `MenuItemGroup` of `MenuItem`s
+([menu_item.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/tui/menu_item.py)).
+- single-select: returns `result.get_value()`, e.g.
+  [`select_kb_layout`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/menu/locale_menu.py).
+- multi-select: pass `multi=True`, collect `result.get_values()` (often
+  joined), e.g.
+  [`select_xkb_options`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/menu/locale_menu.py).
+
 ## Edit an existing install step
 
 Built-in steps are methods on `Installer`
