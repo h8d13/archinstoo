@@ -147,8 +147,10 @@ def perform_installation(
 
 		# Post-install profile hooks
 		if (profile_config := config.profile_config) and profile_config.profiles:
+			users = config.auth_config.users if config.auth_config else []
 			for profile in profile_config.profiles:
 				profile.post_install(installation)
+				profile.provision(installation, users)
 
 		# Services
 		if services := config.services:
