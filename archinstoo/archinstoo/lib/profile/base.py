@@ -124,11 +124,9 @@ class Profile:
 		return self.profile_type == ProfileType.Desktop
 
 	def display_servers(self) -> set[DisplayServer]:
-		#
 		# Returns the set of display servers required by this profile.
 		# Aggregates requirements from sub-profiles if present.
 		# Profiles inherit from XorgProfile or WaylandProfile to specify their display server.
-		#
 		if self.current_selection:
 			servers: set[DisplayServer] = set()
 			for sub_profile in self.current_selection:
@@ -137,9 +135,7 @@ class Profile:
 		return set()
 
 	def preview_text(self) -> str:
-		#
 		# Override this method to provide a preview text for the profile
-		#
 		return self.packages_text()
 
 	def packages_text(self, include_sub_packages: bool = False) -> str:
