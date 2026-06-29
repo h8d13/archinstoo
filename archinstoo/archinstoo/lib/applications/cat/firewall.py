@@ -62,12 +62,13 @@ class FirewallApp:
 		# makes the ssh to the machione accesible on first boot.
 		debug('Opening ssh ports in firewall')
 
-		cmds = {
-			Firewall.UFW: ['ufw', 'allow', 'ssh'],
-			Firewall.FWD: ['firewall-offline-cmd', '--add-service=ssh'],
-		}
-
 		try:
-			install_session.arch_chroot(cmds[firewall])
+			match firewall:
+				case Firewall.UFW:
+					install_session.arch_chroot(['ufw', 'allow', 'ssh'])
+				case Firewall.FWD:
+					install_session.arch_chroot(
+						['firewall-offline-cmd', '--add-service=ssh'],
+					)
 		except SysCallError as err:
 			warn(f'Failed to open ssh in firewall: {err}')
