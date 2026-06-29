@@ -62,6 +62,7 @@ Subclass `Profile`
 ([profile/base.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/profile/base.py)),
 set `ProfileType` (`ServerType` / `DesktopEnv` / `WindowMgr`). Contract
 (all optional except a type):
+
 - `packages` / `services` (`@property`) -> installed + enabled by the parent
   collector ([server.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/default_profiles/server.py)).
 - `install(install_session)`: extra install-time steps (e.g.
