@@ -119,6 +119,7 @@ The `_select_x` handler builds a `SelectMenu`
 ([curses_menu.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/tui/curses_menu.py))
 over a `MenuItemGroup` of `MenuItem`s
 ([menu_item.py](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/tui/menu_item.py)).
+
 - single-select: returns `result.get_value()`, e.g.
   [`select_kb_layout`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/menu/locale_menu.py).
 - multi-select: pass `multi=True`, collect `result.get_values()` (often
@@ -132,6 +133,7 @@ Built-in steps are methods on `Installer`
 called in order from `perform_installation`. Edit the method, not the
 caller, unless reordering. Primitives reused inside any step / app /
 profile:
+
 - `add_additional_packages(pkgs)`, `enable_service(name|list)`.
 - `arch_chroot(cmd, run_as=None)`: run argv list in the target.
 - `self.target` (`Path` of the new root), `self.handler.config` (full
