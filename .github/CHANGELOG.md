@@ -24,7 +24,8 @@ Historical changes/commits before I went rogue:
 		  crypt sha512, missing deps, reap pid helper
 	- Splash defaults to off; separate `/home` also defaults to off
 	- Fix sshd profile selection (#4616)
-	- Port upstream #3845: optional `home_volume` for btrfs subvols
+	- Port upstream #3845: `Root only` LVM layout (no separate `/home`,
+	  whole VG to root)
 	- Remove fragile `systemd` version comparisons
 	- `ooo`: handle Ctrl+C cleanly mid-install
 	- `uki`: random seed warning fix
