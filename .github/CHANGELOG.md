@@ -30,8 +30,7 @@ Historical changes/commits before I went rogue:
 	- `ooo`: handle Ctrl+C cleanly mid-install
 	- `uki`: random seed warning fix
 	- Suppress noisy GRUB output, kept in `cmd_output.txt`
-	- LVM: relax pv check, open its menu directly (first-class refactor
-	  attempted then reverted)
+	- LVM: relax pv check (experimental)
 	- CI: tag naming change, release archive carries short SHA
 
 ## 0.1.13-0
