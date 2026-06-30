@@ -3,6 +3,36 @@
 Historical changes/commits before I went rogue:
 [upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.13-1
+
+	- Add LUKS2 cipher selection (`EncryptionCipher` enum threaded to
+	  `--cipher`; `None` = `aes-xts-plain64` default)
+		- Adiantum/chacha20 for CPUs without AES acceleration
+		- LUKS size passthrough on parent menu
+	- Add FIDO2 token LUKS auto-unlock (HSM)
+		- Detect via `systemd-cryptenroll --fido2-device=list`; token
+		  picker in encryption menu, passphrase keyslot as fallback
+		- Strap `libfido2` before initramfs; combined `rd.luks.options=`
+		  (tpm2/fido2), fido2 gets `password-echo=no`
+		- Menu hidden when no token, gated behind a ready prompt
+		- `SYSTEMD_EMOJI=0` so cryptenroll PIN/touch prompts stay plain
+	- Extend locale for Wayland: ENV vars + keyboard models, variants,
+	  options; fallback to fetch from official tree
+	- Distros: bootstrap on non-Arch hosts
+		- Add `NIX` (flake) + Alpine scripts; `distros/`
+		- Skip services/foreign-host checks off Arch; fallbacks for tz,
+		  crypt sha512, missing deps, reap pid helper
+	- Splash defaults to off; separate `/home` also defaults to off
+	- Fix sshd profile selection (#4616)
+	- Port upstream #3845: optional `home_volume` for btrfs subvols
+	- Remove fragile `systemd` version comparisons
+	- `ooo`: handle Ctrl+C cleanly mid-install
+	- `uki`: random seed warning fix
+	- Suppress noisy GRUB output, kept in `cmd_output.txt`
+	- LVM: relax pv check, open its menu directly (first-class refactor
+	  attempted then reverted)
+	- CI: tag naming change, release archive carries short SHA
+
 ## 0.1.13-0
 
 	- Add bootstrap path to support installing from Debian FORKY OR SID
