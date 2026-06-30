@@ -23,7 +23,7 @@ jobs:
           echo "SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
 
       - name: Create release archive
-        run: tar --exclude='.git' -czf /tmp/archinstoo-${{ env.VER }}.tar.gz -C "$GITHUB_WORKSPACE" .
+        run: tar --exclude='.git' -czf /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz -C "$GITHUB_WORKSPACE" .
 
       - name: Delete existing latest tag
         run: |
@@ -36,8 +36,8 @@ jobs:
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3
         with:
           tag_name: latest
-          name: ${{ env.VER }}-${{ env.SHA }}
+          name: ${{ env.VER }}
           make_latest: true
-          files: /tmp/archinstoo-${{ env.VER }}.tar.gz
+          files: /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz
           body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
 
