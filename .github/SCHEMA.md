@@ -26,10 +26,11 @@ These are also self-explained. And critical. Can select several kernels.
 - `Network`
 
 Options here are also important: Both `NetworkManager`:
-	- Default backend `wpa_supplicant` (Others)
-	- IWD backend `iwd` managed by NM (Usually for Intel hardware)
-	- Copy from ISO (Use current config) minimal `systemd` network features
-	- IWD standalone
+
+- Default backend `wpa_supplicant` (Others)
+- IWD backend `iwd` managed by NM (Usually for Intel hardware)
+- Copy from ISO (Use current config) minimal `systemd` network features
+- IWD standalone
 
 Usually I pick Copy to ISO from VMs or a desktop (cabled) and other two options for laptops this allows for proper integration to `DE`or`WM`.
 
