@@ -3,6 +3,7 @@
 # goal was to document building archinstoo from a non systemd host
 # this involved quite a bit of bootstrapping, from a fresh alpine ISO
 # step i followed exactly
+# ip link set lo up
 # ip link set eth0 up
 # udhcpc -i eth0
 # echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" >/etc/apk/repositories
