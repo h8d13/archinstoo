@@ -74,6 +74,7 @@
 │   │   │   ├── device_handler
 │   │   │   ├── disk_menu
 │   │   │   ├── encryption_menu
+│   │   │   ├── fido
 │   │   │   ├── filesystem
 │   │   │   ├── layouts
 │   │   │   ├── luks
@@ -171,5 +172,5 @@
     ├── test_mirrors
     └── test_schema_drift
 
-24 directories, 146 files
+24 directories, 147 files
 ```
