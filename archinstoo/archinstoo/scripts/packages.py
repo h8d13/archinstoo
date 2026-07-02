@@ -95,7 +95,7 @@ def packages() -> None:
 
 	if cached := ConfigurationHandler.prompt_resume():
 		try:
-			handler.config = ArchConfig.from_config(cached, args)
+			handler.config = ArchConfig.from_config(cached)
 			info('Saved selections loaded successfully')
 		except Exception as e:
 			debug(f'Failed to load saved selections: {e}')

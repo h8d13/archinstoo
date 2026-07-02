@@ -111,7 +111,7 @@ class ArchConfig:
 		return config
 
 	@classmethod
-	def from_config(cls, args_config: dict[str, Any], args: Arguments) -> Self:
+	def from_config(cls, args_config: dict[str, Any]) -> Self:
 		arch_config = cls()
 
 		_set_direct(
@@ -174,7 +174,7 @@ class ArchConfigHandler:
 		config = self._parse_config()
 
 		try:
-			self._config = ArchConfig.from_config(config, args)
+			self._config = ArchConfig.from_config(config)
 		except ValueError as err:
 			warn(str(err))
 			sys.exit(1)
@@ -271,7 +271,7 @@ class ArchConfigHandler:
 			'--offline',
 			action='store_true',
 			default=False,
-			help='Disabled online upstream services such as package search and key-ring auto update.',
+			help='Skip online preparation steps: db refresh, bootstrap, reflector and key-ring auto update.',
 		)
 		parser.add_argument(
 			'--advanced',

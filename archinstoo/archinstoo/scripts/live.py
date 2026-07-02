@@ -171,8 +171,7 @@ def live() -> None:
 	args = handler.args
 	config = handler.config
 
-	# Override defaults for live mode
-	args.skip_boot = True
+	# Override defaults for live mode (show_menu hardcodes skip_boot)
 	config.kernels = []
 
 	profile_handler = ProfileHandler()
@@ -181,7 +180,7 @@ def live() -> None:
 
 	if cached := ConfigurationHandler.prompt_resume():
 		try:
-			handler.config = ArchConfig.from_config(cached, args)
+			handler.config = ArchConfig.from_config(cached)
 			handler.config.kernels = []
 			info('Saved selections loaded successfully')
 		except Exception as e:

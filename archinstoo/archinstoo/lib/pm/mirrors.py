@@ -473,18 +473,14 @@ class MirrorListHandler:
 
 		return available_mirrors
 
-	def load_mirrors(self, offline: bool = False) -> None:
+	def load_mirrors(self) -> None:
 		if _MirrorCache.data:
 			return
 
-		if offline:
-			_MirrorCache.is_remote = False
+		_MirrorCache.is_remote = self.load_remote_mirrors()
+		debug(f'load mirrors: {_MirrorCache.is_remote}')
+		if not _MirrorCache.is_remote:
 			self.load_local_mirrors()
-		else:
-			_MirrorCache.is_remote = self.load_remote_mirrors()
-			debug(f'load mirrors: {_MirrorCache.is_remote}')
-			if not _MirrorCache.is_remote:
-				self.load_local_mirrors()
 
 	_ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
 
