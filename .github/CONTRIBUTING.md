@@ -42,38 +42,27 @@ Many thanks to **@ShreshthTiwari, @dzamlo, @eososlinux** and some/many reddit/di
 Time spent testing or drawing up reports/digging info.
 This in its core, takes just as much time as coding since often you need to test many scenarios.
 
-Therefore, guidelines and style changes to the code might come into effect as well as guidelines surrounding bug reporting and discussions.
-These are mostly there to try to help us figure out the actual issues and correct this in code in a perennial way.
+Therefore, guidelines and style changes to the code might come into effect as well as rules surrounding bug reporting, discussions and PRs.
+These are mostly there to try to help us figure out the actual issues and correct/improve this in code/docs, in a perennial way.
 
 ## Fork & Branches
 
 For each patch create a branch specifically targeted to fix something, `master` should stay clean and accept these patches if tested/reproduced.
 It also means it should be the stable branch and single source of truth.
 
-For your submitted patches you'll likely need to accommodate yourself with branches easily:
+For your submitted patches you'll likely need to accommodate yourself with `git` branches:
 ```shell
 # fork first
 git checkout <existing>
 git checkout -b <new>
 git add <file(s)>
 git commit
-# describe what this commit fixes, ideally one fix per commit
+# describe what this commit fixes, ideally one fix/feat per commit
 git push
 ```
 Then open the PR with explanations too, link to resources/issues. If your commits are well scoped/documented you can skip most theatrics.
 
-## Discussions
-
-Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/h8d13/archinstoo/issues).
-
-## Coding convention
-
-All rules/exclusions can be consulted in the master `pyproject.toml` file
-
-Most of these style guidelines have been put into place after the fact *(in an attempt to clean up the code)*.<br>
-There might therefore be older code which does not follow the coding convention and the code is subject to change.
-
-## Git hooks
+## Pre-commit hooks
 
 `archinstoo` ships pre-commit hooks that make it easier to run checks such as `mypy`, `ruff check`, and `flake8` locally.
 The checks are listed in `.pre-commit-config.yaml` and can be installed via
@@ -89,6 +78,15 @@ Can be consulted within [PCH](https://github.com/h8d13/archinstoo/blob/master/.p
 
 Pre-commit requires: `pkgconf` and `gcc` as well as `parted` on the host.
 
+## Coding convention
+
+All rules/exclusions can be consulted in the master `pyproject.toml` file
+
+Most of these style guidelines have been put into place after the fact *(in an attempt to clean up the code)*.<br>
+There might therefore be older code which does not follow the coding convention and the code is subject to change.
+
+A lot of these are also checked in CI.
+
 ## Submitting Changes
 
 Archinstoo uses GitHub's pull-request workflow and all contributions in terms of code should be done through pull requests.
@@ -103,6 +101,10 @@ For example, you can point to a code sample that is outdated in terms of Arch Li
 
 It is also helpful to add links to online documentation or to the implementation of the code you are changing.
 Any related digging/testing is actually just as useful as the code itself.
+
+## Discussions
+
+Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/h8d13/archinstoo/issues).
 
 Original Creator:
 * Anton Hvornum ([@Torxed](https://github.com/Torxed))
