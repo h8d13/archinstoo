@@ -4,7 +4,7 @@
 
 ## What is `archinstoo`
 
-A fork of `archinstall` an operating system installer for [archlinux](https://archlinux.org).
+An operating system installer for [archlinux](https://archlinux.org).
 
 > MORE choices, LESS packages in end-product, LESS complex flags, and MORE hot-fixes.
 
