@@ -105,7 +105,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _prev_splash(self, item: MenuItem) -> str | None:
 		state = 'Enabled' if item.value else 'Disabled'
-		return 'Embeds the Arch logo splash into the UKI\n' + '{}: {}'.format('Boot splash', state)
+		return '{}: {}'.format('Boot splash', state)
 
 	@override
 	def run(
