@@ -8,8 +8,11 @@ Best places are probably `args.py` and `scripts/` themselves. Then `installer.py
 
 ### Code standards
 
-Small patches are preferred, and need to be tested from scratch (ISO env + Host-2-Target)
+Small patches are preferred, and need to be tested (ISO env + Host-2-Target).
+
 Usually the first steps involve finding bugs or having a good idea!
+
+Larger patches are okay too but need more thorough testing.
 
 ### Structure
 
