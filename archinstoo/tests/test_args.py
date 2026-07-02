@@ -1,3 +1,5 @@
+import dataclasses
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -99,6 +101,30 @@ def test_correct_parsing_args(
 		offline=True,
 		advanced=True,
 	)
+
+
+def test_flags_match_arguments_dataclass(monkeypatch: pytest.MonkeyPatch) -> None:
+	# Every parser flag lands in an Arguments field and vice versa,
+	# so a flag can't be added or removed on one side only.
+	monkeypatch.setattr('sys.argv', ['archinstoo'])
+	handler = ArchConfigHandler()
+	dests = {action.dest for action in handler._parser._actions}
+	fields = {field.name for field in dataclasses.fields(Arguments)}
+	assert dests == fields
+
+
+def test_flags_match_man_page(monkeypatch: pytest.MonkeyPatch) -> None:
+	# Man page documents exactly the parser's flag set (docs drift guard).
+	monkeypatch.setattr('sys.argv', ['archinstoo'])
+	handler = ArchConfigHandler()
+	flags = {opt for action in handler._parser._actions for opt in action.option_strings}
+
+	man_path = Path(__file__).parent.parent / 'docs' / 'archinstoo.1'
+	man = man_path.read_text().replace('\\-', '-')
+	documented = set(re.findall(r'--[a-z][a-z-]*', man))
+	documented.discard('--help')  # handled in __init__, parser has add_help=False
+
+	assert documented == flags
 
 
 def test_config_file_parsing(
