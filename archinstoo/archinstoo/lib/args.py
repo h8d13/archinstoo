@@ -271,7 +271,7 @@ class ArchConfigHandler:
 			'--offline',
 			action='store_true',
 			default=False,
-			help='Skip online preparation steps: db refresh, bootstrap, reflector and key-ring auto update.',
+			help='Skip db refresh, bootstrap, reflector and keyring update.',
 		)
 		parser.add_argument(
 			'--advanced',
