@@ -1,11 +1,11 @@
 # shellcheck disable=SC2148,SC2206,SC2034,SC2154
 # Local build/dev
+# Maintainer: Hadean Eon <hadean-eon-dev@proton.me>
 # Maintainer: David Runge <dvzrv@archlinux.org>
 # Maintainer: Giancarlo Razzolini <grazzolini@archlinux.org>
 # Maintainer: Anton Hvornum <torxed@archlinux.org>
 # Contributor: Anton Hvornum <anton@hvornum.se>
 # Contributor: Demostanis Worlds <demostanis@protonmail.com>
-# Contributor: Hadean Eon <hadean-eon-dev@proton.me>
 
 pkgname=archinstoo
 pkgver=0.1.13
@@ -29,15 +29,14 @@ depends=(
 	'git'
 )
 # base-devel tools are assumed for dev
-# QEMU is also useful to test faster
-# but testing on actual hardware wins
+# note: dev tools are usually handled through pre-commit
+# pkgconf gcc parted are needed for for PCH.
 makedepends=(
 	'python-build'
 	'python-installer'
 	'python-pylint'
 	'python-setuptools'
 	'python-wheel'
-	# Note dev tools are usually handled through precommit
 )
 
 # marked as optional because they depend
