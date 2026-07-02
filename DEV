@@ -74,7 +74,7 @@ case "$1" in
 	git grep -ni "$2"
 	;;
 -tc | --test-config)
-	./RUN --advanced --config examples/config-sample-full.json
+	./RUN --advanced --config examples/config_sample_full.json
 	;;
 -vc | --vm-config)
 	./RUN --advanced --config examples/vm_configuration.json

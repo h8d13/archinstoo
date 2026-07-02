@@ -9,7 +9,7 @@ Using `pacman-contrib` we can explore full dep trees. This simulates the install
 You can simply exit the menu and select `Save selections`, you'll then find your config in the `logs/` directory.
 
 ```shell
-./RUN --script count examples/config-sample-full.json --why polkit
+./RUN --script count examples/config_sample_full.json --why polkit
 
 {'bluez', 'intel-media-driver', 'libpulse', 'inotify-tools', 'mesa', 'cups', 'pipewire-pulse', 'micro', 'opendoas', 'base', 'vulkan-intel', 'timeshift', 'pipewire-alsa', 'pacman-contrib', 'gst-plugin-pipewire', 'wireplumber', 'pipewire', 'grub', 'system-config-printer', 'iwd', 'fail2ban', 'zram-generator', 'linux-zen', 'bottom', 'btrfs-progs', 'gdm', 'libva-intel-driver', 'pipewire-jack', 'networkmanager', 'ufw', 'git', 'linux-firmware', 'man-db', 'efibootmgr', 'syncthing', 'chromium', 'grub-btrfs', 'cups-pk-helper', 'bluez-utils'}
 

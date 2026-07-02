@@ -6,7 +6,7 @@ from archinstoo.default_profiles.desktop import DesktopProfile
 
 # this can extend an existing one or be full standalone
 
-# see /examples/config-custom.json
+# see /examples/config_custom.json
 
 # in this example we extend xfce
 # for fully standalone you can just specify everything in this file and remove

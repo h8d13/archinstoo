@@ -157,8 +157,8 @@
 │       ├── _resolve
 │       └── size
 ├── examples/
-│   ├── config-custom.json
-│   ├── config-sample-full.json
+│   ├── config_custom.json
+│   ├── config_sample_full.json
 │   ├── custom
 │   └── vm_configuration.json
 ├── PKGBUILD
