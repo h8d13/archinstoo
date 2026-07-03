@@ -21,7 +21,6 @@ from archinstoo.lib.models.device import (
 	DiskLayoutConfiguration,
 	EncryptionType,
 	FilesystemType,
-	LuksPbkdf,
 	LvmVolume,
 	PartitionModification,
 	SnapshotType,
@@ -531,13 +530,18 @@ class Installer:
 			if gen_enc_file and not part_mod.is_root():
 				debug(f'Creating key-file: {part_mod.dev_path}')
 				if root_is_encrypted:
-					# GRUB has limited memory for argon2id decryption;
+					# GRUB has limited memory for argon2 decryption;
 					# constrain the keyfile slot too so GRUB can handle it
 					is_boot = part_mod.is_boot()
-					uses_argon2 = self._disk_encryption.pbkdf == LuksPbkdf.Argon2id
+					uses_argon2 = self._disk_encryption.pbkdf.is_argon2
 					pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
-					iter_time = 200 if is_boot else None
-					luks_handler.create_keyfile(self.target, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
+					iter_time = 200 if is_boot else self._disk_encryption.iter_time
+					luks_handler.create_keyfile(
+						self.target,
+						pbkdf_memory=pbkdf_memory,
+						iter_time=iter_time,
+						pbkdf=self._disk_encryption.pbkdf,
+					)
 				else:
 					# Root is unencrypted don't write a keyfile to plaintext disk;
 					# use a crypttab entry so systemd prompts for a passphrase instead.
@@ -561,7 +565,11 @@ class Installer:
 			if gen_enc_file and not vol.is_root():
 				debug(f'Creating key-file: {vol.dev_path}')
 				if root_is_encrypted:
-					luks_handler.create_keyfile(self.target)
+					luks_handler.create_keyfile(
+						self.target,
+						iter_time=self._disk_encryption.iter_time,
+						pbkdf=self._disk_encryption.pbkdf,
+					)
 				else:
 					luks_handler.create_crypttab_entry(self.target)
 
@@ -580,7 +588,12 @@ class Installer:
 		keyfile.write_bytes(os.urandom(2048))
 		keyfile.chmod(0o000)
 
-		luks_handler.add_key(keyfile)
+		# initramfs unlocks this slot on the host CPU, user's iter_time applies
+		luks_handler.add_key(
+			keyfile,
+			iter_time=self._disk_encryption.iter_time,
+			pbkdf=self._disk_encryption.pbkdf,
+		)
 
 		if kf_path not in self._files:
 			self._files.append(kf_path)

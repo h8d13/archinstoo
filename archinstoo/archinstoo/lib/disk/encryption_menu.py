@@ -638,8 +638,10 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 
 		try:
 			iter_time = int(value)
-			if iter_time < 100:
-				return 'Iteration time must be at least 100ms'
+			# 200ms floor matches the /boot clamp so the GRUB slot is never
+			# asked to go below what user picked
+			if iter_time < 200:
+				return 'Iteration time must be at least 200ms'
 			if iter_time > 120000:
 				return 'Iteration time must be at most 120000ms'
 			return None

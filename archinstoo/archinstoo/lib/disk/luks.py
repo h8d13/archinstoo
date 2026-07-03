@@ -216,6 +216,7 @@ class Luks2:
 		override: bool = False,
 		pbkdf_memory: int | None = None,
 		iter_time: int | None = None,
+		pbkdf: LuksPbkdf | None = None,
 	) -> None:
 		#
 		# Routine to create keyfiles, so it can be moved elsewhere
@@ -242,15 +243,24 @@ class Luks2:
 
 		key_file.chmod(0o400)
 
-		self.add_key(key_file, pbkdf_memory=pbkdf_memory, iter_time=iter_time)
+		self.add_key(key_file, pbkdf_memory=pbkdf_memory, iter_time=iter_time, pbkdf=pbkdf)
 		self._crypttab(crypttab_path, kf_path, options=['luks', 'key-slot=1'])
 
-	def add_key(self, key_file: Path, pbkdf_memory: int | None = None, iter_time: int | None = None) -> None:
+	def add_key(
+		self,
+		key_file: Path,
+		pbkdf_memory: int | None = None,
+		iter_time: int | None = None,
+		pbkdf: LuksPbkdf | None = None,
+	) -> None:
 		debug(f'Adding additional key-file {key_file}')
 
+		# luksAddKey defaults new slots to argon2id regardless of the
+		# container's format-time pbkdf; pass it or the menu choice is lost
+		pbkdf_arg = f' --pbkdf {pbkdf.value}' if pbkdf else ''
 		pbkdf_memory_arg = f' --pbkdf-memory {pbkdf_memory}' if pbkdf_memory else ''
 		iter_time_arg = f' --iter-time {iter_time}' if iter_time else ''
-		command = f'cryptsetup -q -v{pbkdf_memory_arg}{iter_time_arg} luksAddKey {self.luks_dev_path} {key_file}'
+		command = f'cryptsetup -q -v{pbkdf_arg}{pbkdf_memory_arg}{iter_time_arg} luksAddKey {self.luks_dev_path} {key_file}'
 		worker = SysCommandWorker(command)
 		pw_injected = False
 
