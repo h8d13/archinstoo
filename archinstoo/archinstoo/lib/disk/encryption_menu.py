@@ -636,7 +636,6 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 	header = 'Enter iteration time for LUKS encryption (in milliseconds)' + '\n'
 	header += 'Higher values increase security but slow down boot time' + '\n'
 	header += f'Default: {DEFAULT_ITER_TIME}ms, Recommended range: 1000-60000' + '\n'
-	header += f'An encrypted /boot always uses {BOOT_ITER_TIME}ms so GRUB can unlock it' + '\n'
 
 	def validate_iter_time(value: str | None) -> str | None:
 		if not value:
