@@ -3,6 +3,20 @@
 Historical changes/commits before I went rogue:
 [upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.13-2
+
+	- More LUKS2 ciphers: `serpent-xts`, `aes-hctr2`, `camellia-xts`
+		- Kernel-validated specs; `--key-size` derived from cipher at
+		  the cryptsetup boundary (XTS 512, single-key 256)
+	- Add `argon2i` KDF; `--pbkdf-memory` + GRUB `/boot` constraints now
+	  cover both argon2 variants (were argon2id-only)
+	- FIDO2: `token-timeout=5`, absent token falls back to passphrase in
+	  ~5s instead of the 30s crypttab default
+	- Distros: fix Alpine bootstrap hang
+	- Tests: drift guard keeps `Arguments` in sync with manpage
+	- Chores: newer python features, stale cfg/docs cleanup, `_` file
+	  naming, docs refreshes
+
 ## 0.1.13-1
 
 	- Add LUKS2 cipher selection (`EncryptionCipher` enum threaded to
