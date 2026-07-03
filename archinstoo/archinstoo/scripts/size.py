@@ -53,6 +53,7 @@ def size() -> None:
 	parser = argparse.ArgumentParser(
 		prog='python -m archinstoo --script size',
 		description='Estimate the installed size of the target system from a saved config',
+		suggest_on_error=True,
 	)
 	parser.add_argument('config', type=str, help='Path to user_configuration.json')
 	parser.add_argument('--top', type=int, default=10, help='Show the N largest packages (0 to hide)')

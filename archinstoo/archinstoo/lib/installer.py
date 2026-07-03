@@ -208,7 +208,7 @@ class Installer:
 			for src, dst_name in artifacts:
 				if src.exists():
 					dst = dest_dir / dst_name
-					shutil.copy2(src, dst)
+					src.copy(dst, preserve_metadata=True)
 					dst.chmod(0o640)
 		except Exception as e:
 			warn(f'Failed to sync install artifacts to target: {e}')

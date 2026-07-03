@@ -202,7 +202,8 @@ class ArchConfigHandler:
 
 	def clean_up(self) -> None:
 		for item in logger.directory.iterdir():
-			if item.is_dir():
+			# .info reuses the file type gleaned from iterdir()'s scandir, no extra stat
+			if item.info.is_dir():
 				shutil.rmtree(item)
 			else:
 				item.unlink()

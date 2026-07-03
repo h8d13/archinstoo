@@ -1,6 +1,5 @@
 import json
 import re
-import shutil
 import tarfile
 import tempfile
 from compression.zstd import ZstdFile
@@ -93,7 +92,7 @@ def keyring_init() -> None:
 
 		_KEYRING_DIR.mkdir(parents=True, exist_ok=True)
 		for key in (root / 'usr/share/pacman/keyrings').iterdir():
-			shutil.copy2(key, _KEYRING_DIR / key.name)
+			key.copy_into(_KEYRING_DIR, preserve_metadata=True)
 
 	info('Initialising pacman-key...')
 	Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
