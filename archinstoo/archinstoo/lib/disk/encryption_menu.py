@@ -6,6 +6,7 @@ from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.device import (
+	BOOT_ITER_TIME,
 	DEFAULT_ITER_TIME,
 	DeviceModification,
 	DiskEncryption,
@@ -421,7 +422,11 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if iter_time and enc_type != EncryptionType.NO_ENCRYPTION:
-			return f'{"Iteration time"}: {iter_time}ms'
+			output = f'{"Iteration time"}: {iter_time}ms'
+			partitions = self._item_group.find_by_key('partitions').value
+			if partitions and any(p.is_boot() for p in partitions):
+				output += f' (/boot: {BOOT_ITER_TIME}ms for GRUB)'
+			return output
 
 		return None
 
@@ -631,6 +636,7 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 	header = 'Enter iteration time for LUKS encryption (in milliseconds)' + '\n'
 	header += 'Higher values increase security but slow down boot time' + '\n'
 	header += f'Default: {DEFAULT_ITER_TIME}ms, Recommended range: 1000-60000' + '\n'
+	header += f'An encrypted /boot always uses {BOOT_ITER_TIME}ms so GRUB can unlock it' + '\n'
 
 	def validate_iter_time(value: str | None) -> str | None:
 		if not value:
@@ -638,10 +644,10 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 
 		try:
 			iter_time = int(value)
-			# 200ms floor matches the /boot clamp so the GRUB slot is never
+			# floor matches the /boot clamp so the GRUB slot is never
 			# asked to go below what user picked
-			if iter_time < 200:
-				return 'Iteration time must be at least 200ms'
+			if iter_time < BOOT_ITER_TIME:
+				return f'Iteration time must be at least {BOOT_ITER_TIME}ms'
 			if iter_time > 120000:
 				return 'Iteration time must be at most 120000ms'
 			return None

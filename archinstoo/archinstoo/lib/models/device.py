@@ -22,6 +22,10 @@ from archinstoo.lib.output import debug
 
 ENC_IDENTIFIER = 'ainst'
 DEFAULT_ITER_TIME = 10000
+# encrypted /boot overrides: GRUB unlocks it with unaccelerated crypto and
+# a small heap, so slots get clamped regardless of the user's iter_time
+BOOT_ITER_TIME = 200
+BOOT_PBKDF_MEMORY = 32 * 1024
 
 
 class LuksPbkdf(Enum):

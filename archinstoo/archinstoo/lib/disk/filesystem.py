@@ -3,6 +3,8 @@ import time
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.models.device import (
+	BOOT_ITER_TIME,
+	BOOT_PBKDF_MEMORY,
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	DiskLayoutType,
@@ -102,12 +104,12 @@ class FilesystemHandler:
 		for part_mod in create_or_modify_parts:
 			# partition will be encrypted
 			if self._enc_config is not None and part_mod in self._enc_config.partitions:
-				# GRUB has limited memory for argon2id decryption;
+				# GRUB has limited memory for argon2 decryption;
 				# use reduced pbkdf memory and iter time so GRUB can decrypt /boot
 				is_boot = part_mod.is_boot()
 				uses_argon2 = self._enc_config.pbkdf.is_argon2
-				pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
-				iter_time = 200 if is_boot else None
+				pbkdf_memory = BOOT_PBKDF_MEMORY if is_boot and uses_argon2 else None
+				iter_time = BOOT_ITER_TIME if is_boot else None
 
 				self._device_handler.format_encrypted(
 					part_mod.safe_dev_path,
@@ -323,12 +325,12 @@ class FilesystemHandler:
 
 			for part_mod in filtered_part:
 				if part_mod in enc_config.partitions:
-					# GRUB has limited memory for argon2id decryption;
+					# GRUB has limited memory for argon2 decryption;
 					# use reduced pbkdf memory and iter time for /boot so GRUB can decrypt it
 					is_boot = part_mod.is_boot()
 					uses_argon2 = enc_config.pbkdf.is_argon2
-					pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
-					iter_time = 200 if is_boot else enc_config.iter_time
+					pbkdf_memory = BOOT_PBKDF_MEMORY if is_boot and uses_argon2 else None
+					iter_time = BOOT_ITER_TIME if is_boot else enc_config.iter_time
 
 					luks_handler = self._device_handler.encrypt(
 						part_mod.safe_dev_path,

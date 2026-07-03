@@ -17,6 +17,8 @@ from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mo
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
+	BOOT_ITER_TIME,
+	BOOT_PBKDF_MEMORY,
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	EncryptionType,
@@ -534,8 +536,8 @@ class Installer:
 					# constrain the keyfile slot too so GRUB can handle it
 					is_boot = part_mod.is_boot()
 					uses_argon2 = self._disk_encryption.pbkdf.is_argon2
-					pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
-					iter_time = 200 if is_boot else self._disk_encryption.iter_time
+					pbkdf_memory = BOOT_PBKDF_MEMORY if is_boot and uses_argon2 else None
+					iter_time = BOOT_ITER_TIME if is_boot else self._disk_encryption.iter_time
 					luks_handler.create_keyfile(
 						self.target,
 						pbkdf_memory=pbkdf_memory,

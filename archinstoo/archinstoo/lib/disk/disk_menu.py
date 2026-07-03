@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, override
 from archinstoo.lib.disk.encryption_menu import DiskEncryptionMenu
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.device import (
+	BOOT_ITER_TIME,
 	DEFAULT_ITER_TIME,
 	BtrfsOptions,
 	DiskEncryption,
@@ -289,7 +290,10 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 				output += 'Password' + f': {enc_config.encryption_password.hidden()}\n'
 
 			if enc_type != EncryptionType.NO_ENCRYPTION:
-				output += 'Iteration time' + f': {enc_config.iter_time or DEFAULT_ITER_TIME}ms\n'
+				output += 'Iteration time' + f': {enc_config.iter_time or DEFAULT_ITER_TIME}ms'
+				if any(p.is_boot() for p in enc_config.partitions):
+					output += f' (/boot: {BOOT_ITER_TIME}ms for GRUB)'
+				output += '\n'
 
 			if enc_config.partitions:
 				output += f'Partitions: {len(enc_config.partitions)} selected\n'
