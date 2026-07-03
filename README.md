@@ -74,6 +74,8 @@ python -m archinstoo [args] # try -h or --help
 
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
+See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md) if you're just starting out with Arch.
+
 > [!TIP]
 > **Alternatively:** There are wrappers/helpers (which perform similar step to 4) from the **repo root**:
 
@@ -112,8 +114,6 @@ Core changes you can perform in `installer.py` and related defs (here search/fin
 A `man` page is also available `man -l docs/archinstoo.1`
 
 ### Use cases
-
-See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md) if you're just starting out with Arch.
 
 See [Headless](https://github.com/h8d13/archinstoo/blob/master/.github/HEADLESS.md) for example server install to play minecraft/run tailscale nodes.
 
