@@ -26,37 +26,48 @@ DEFAULT_ITER_TIME = 10000
 
 class LuksPbkdf(Enum):
 	Argon2id = 'argon2id'
+	# data-independent variant: side-channel hardened, weaker offline
+	Argon2i = 'argon2i'
 	Pbkdf2 = 'pbkdf2'
 
 	def display_name(self) -> str:
 		match self:
 			case LuksPbkdf.Argon2id:
 				return 'Argon2id (Recommended)'
+			case LuksPbkdf.Argon2i:
+				return 'Argon2i'
 			case LuksPbkdf.Pbkdf2:
 				return 'PBKDF2'
+
+	@property
+	def is_argon2(self) -> bool:
+		# both argon2 variants take --pbkdf-memory and need the
+		# reduced-memory treatment for GRUB-decrypted /boot
+		return self.value.startswith('argon2')
 
 
 class EncryptionCipher(Enum):
 	# None passed to cryptsetup means its built-in default (aes-xts-plain64).
-	# Adiantum is for CPUs without AES acceleration. It is a composite mode:
-	# spec must name both the stream cipher and block cipher
-	# (xchacha12,aes) or the kernel rejects it as unsupported.
 	AES_XTS_PLAIN64 = 'aes-xts-plain64'
+	# For CPUs without AES acceleration. Composite spec: kernel rejects
+	# it unless both stream and block cipher are named (xchacha12,aes).
 	# xchacha12 = faster (Android default), xchacha20 = wider margin.
 	ADIANTUM_XCHACHA12_PLAIN64 = 'xchacha12,aes-adiantum-plain64'
 	ADIANTUM_XCHACHA20_PLAIN64 = 'xchacha20,aes-adiantum-plain64'
 	# AES finalist, conservative margin (32 rounds), bitslices well
 	# on AVX2 despite no dedicated hw acceleration.
 	SERPENT_XTS_PLAIN64 = 'serpent-xts-plain64'
-	# Wide-block AES mode (AES-NI accelerated), single 256-bit key.
+	# Wide-block AES mode, AES-NI accelerated.
 	AES_HCTR2_PLAIN64 = 'aes-hctr2-plain64'
-	# Non-NIST standard (ISO/NESSIE/CRYPTREC), AVX2 accelerated.
+	# Not a NIST pick; standardized via ISO/IEC, NESSIE, CRYPTREC.
+	# AVX2 accelerated.
 	CAMELLIA_XTS_PLAIN64 = 'camellia-xts-plain64'
 
 	@property
 	def key_size(self) -> int:
-		# XTS uses two keys, so 512 bits => 256-bit cipher. Adiantum
-		# and HCTR2 use a single 256-bit key; 512 makes cryptsetup fail.
+		# XTS splits the key blob in half (data + tweak), so 512 =>
+		# 256-bit cipher. Adiantum and HCTR2 take a single unsplit
+		# 256-bit key; passing 512 makes cryptsetup fail.
 		if '-xts-' in self.value:
 			return 512
 		return 256

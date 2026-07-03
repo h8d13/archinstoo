@@ -582,8 +582,7 @@ def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
 	if not preset:
 		preset = LuksPbkdf.Argon2id
 
-	options = [LuksPbkdf.Argon2id, LuksPbkdf.Pbkdf2]
-	items = [MenuItem(o.display_name(), value=o) for o in options]
+	items = [MenuItem(o.display_name(), value=o) for o in LuksPbkdf]
 	group = MenuItemGroup(items)
 	group.set_focus_by_value(preset)
 

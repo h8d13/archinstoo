@@ -79,7 +79,6 @@ class Luks2:
 
 	def encrypt(
 		self,
-		key_size: int = 512,
 		hash_type: str = 'sha512',
 		iter_time: int = DEFAULT_ITER_TIME,
 		key_file: Path | None = None,
@@ -91,10 +90,11 @@ class Luks2:
 
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
 
-		# pbkdf-memory is only relevant for argon2id
-		pbkdf_memory_arg = ['--pbkdf-memory', str(pbkdf_memory)] if pbkdf_memory and pbkdf == LuksPbkdf.Argon2id else []
+		# pbkdf-memory is only relevant for the argon2 variants
+		pbkdf_memory_arg = ['--pbkdf-memory', str(pbkdf_memory)] if pbkdf_memory and pbkdf.is_argon2 else []
 
-		# no --cipher => cryptsetup default (aes-xts-plain64)
+		# no --cipher => cryptsetup default (aes-xts-plain64), which takes 512
+		key_size = cipher.key_size if cipher else 512
 		cipher_arg = ['--cipher', cipher.value] if cipher else []
 
 		cmd = [

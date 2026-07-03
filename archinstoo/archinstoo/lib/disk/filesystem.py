@@ -8,7 +8,6 @@ from archinstoo.lib.models.device import (
 	DiskLayoutType,
 	EncryptionType,
 	FilesystemType,
-	LuksPbkdf,
 	LvmConfiguration,
 	LvmVolume,
 	LvmVolumeGroup,
@@ -106,7 +105,7 @@ class FilesystemHandler:
 				# GRUB has limited memory for argon2id decryption;
 				# use reduced pbkdf memory and iter time so GRUB can decrypt /boot
 				is_boot = part_mod.is_boot()
-				uses_argon2 = self._enc_config.pbkdf == LuksPbkdf.Argon2id
+				uses_argon2 = self._enc_config.pbkdf.is_argon2
 				pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
 				iter_time = 200 if is_boot else None
 
@@ -327,7 +326,7 @@ class FilesystemHandler:
 					# GRUB has limited memory for argon2id decryption;
 					# use reduced pbkdf memory and iter time for /boot so GRUB can decrypt it
 					is_boot = part_mod.is_boot()
-					uses_argon2 = enc_config.pbkdf == LuksPbkdf.Argon2id
+					uses_argon2 = enc_config.pbkdf.is_argon2
 					pbkdf_memory = 32 * 1024 if is_boot and uses_argon2 else None
 					iter_time = 200 if is_boot else enc_config.iter_time
 
