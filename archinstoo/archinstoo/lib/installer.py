@@ -1441,7 +1441,9 @@ class Installer:
 			if self._disk_encryption.fido2_device:
 				# auto, not the enrolled hidraw path: hidraw numbering is not stable across boots.
 				# password-echo=no per upstream archlinux/archinstall#1196
-				luks_options.append('fido2-device=auto,password-echo=no')
+				# token-timeout: absent token otherwise holds the PIN/token prompt
+				# for the 30s default before falling back to the passphrase query
+				luks_options.append('fido2-device=auto,token-timeout=5,password-echo=no')
 			if luks_options:
 				kernel_parameters.append('rd.luks.options=' + ','.join(luks_options))
 
