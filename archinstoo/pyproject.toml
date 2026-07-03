@@ -27,7 +27,6 @@ Home = "https://archlinux.org"
 Source = "https://github.com/h8d13/archinstoo"
 
 [project.optional-dependencies]
-log = ["systemd_python==235"]
 dev = [
     "mypy==2.1.0",
     "pre-commit==4.6.0",
@@ -89,6 +88,7 @@ disallow_any_unimported = false
 
 [[tool.mypy.overrides]]
 module = "archinstoo.lib.grimoire"
+# tracked in its own repo
 ignore_errors = true
 
 [[tool.mypy.overrides]]
