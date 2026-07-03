@@ -20,7 +20,7 @@ import textwrap
 
 import pytest
 
-from archinstoo.lib.hardware import GfxDriver
+from archinstoo.lib.hardware import GfxDriver, _sys_info
 from archinstoo.lib.models.application import (
 	Audio,
 	DevTool,
@@ -109,9 +109,12 @@ def test_profiles_match() -> None:
 		assert schema_profiles[name] == code_pkgs, f'profile {name!r} packages drifted: schema={schema_profiles[name]} code={code_pkgs}'
 
 
-def test_gfx_driver_packages_match() -> None:
+def test_gfx_driver_packages_match(monkeypatch: pytest.MonkeyPatch) -> None:
 	# base package set only; gfx_packages() adds kernel/GPU-conditional extras
-	# at runtime (dkms, vulkan-intel/radeon) which the static schema can't model
+	# at runtime (dkms, vulkan-intel/radeon) which the static schema can't model.
+	# MesaOpenSource probes the host GPU via lspci; pin detection to empty so
+	# the base set comes back on any machine running the tests
+	monkeypatch.setattr(_sys_info, 'graphics_devices', {})
 	for driver in GfxDriver:
 		code_pkgs = sorted(p.value for p in driver.gfx_packages(None))
 		schema_pkgs = sorted(SCHEMA['gfx_drivers'][driver.value])
