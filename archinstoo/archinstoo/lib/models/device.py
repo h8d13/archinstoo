@@ -45,12 +45,19 @@ class EncryptionCipher(Enum):
 	# xchacha12 = faster (Android default), xchacha20 = wider margin.
 	ADIANTUM_XCHACHA12_PLAIN64 = 'xchacha12,aes-adiantum-plain64'
 	ADIANTUM_XCHACHA20_PLAIN64 = 'xchacha20,aes-adiantum-plain64'
+	# AES finalist, conservative margin (32 rounds), bitslices well
+	# on AVX2 despite no dedicated hw acceleration.
+	SERPENT_XTS_PLAIN64 = 'serpent-xts-plain64'
+	# Wide-block AES mode (AES-NI accelerated), single 256-bit key.
+	AES_HCTR2_PLAIN64 = 'aes-hctr2-plain64'
+	# Non-NIST standard (ISO/NESSIE/CRYPTREC), AVX2 accelerated.
+	CAMELLIA_XTS_PLAIN64 = 'camellia-xts-plain64'
 
 	@property
 	def key_size(self) -> int:
-		# XTS uses two keys, so 512 bits => AES-256. Adiantum uses a
-		# single 256-bit key; passing 512 makes cryptsetup fail.
-		if self is EncryptionCipher.AES_XTS_PLAIN64:
+		# XTS uses two keys, so 512 bits => 256-bit cipher. Adiantum
+		# and HCTR2 use a single 256-bit key; 512 makes cryptsetup fail.
+		if '-xts-' in self.value:
 			return 512
 		return 256
 
