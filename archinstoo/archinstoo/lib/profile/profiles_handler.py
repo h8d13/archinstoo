@@ -140,7 +140,17 @@ class ProfileHandler:
 	def get_desktop_profiles(self) -> list[Profile]:
 		return [p for p in self.profiles if p.is_desktop_type_profile()]
 
-	def install_greeter(self, install_session: Installer, greeter: GreeterType) -> None:
+	@staticmethod
+	def _dms_compositor(profiles: list[Profile]) -> str:
+		# the dms profile stores its compositor choice; default matches DmsProfile
+		for profile in profiles:
+			for p in (profile, *profile.current_selection):
+				comp = p.custom_settings.get('dms_compositor')
+				if isinstance(comp, str):
+					return comp
+		return 'niri'
+
+	def install_greeter(self, install_session: Installer, greeter: GreeterType, profiles: list[Profile] | None = None) -> None:
 		packages = []
 		service = None
 		service_disable = None
@@ -213,18 +223,20 @@ class ProfileHandler:
 				""")
 			)
 
-		# dms-greeter runs inside quickshell, launched by greetd (installed by dms-shell-niri)
+		# dms-greeter runs inside quickshell, launched by greetd (installed by dms-shell-<compositor>)
 		if greeter == GreeterType.GreetdDms:
+			compositor = self._dms_compositor(profiles or [])
+			dms_greeter = '/usr/share/quickshell/dms/Modules/Greetd/assets/dms-greeter'
 			path = install_session.target.joinpath('etc/greetd/config.toml')
 			path.parent.mkdir(parents=True, exist_ok=True)
 			path.write_text(
-				dedent("""\
+				dedent(f"""\
 					[terminal]
 					vt = 1
 
 					[default_session]
 					user = "greeter"
-					command = "/usr/share/quickshell/dms/Modules/Greetd/assets/dms-greeter --command niri -p /usr/share/quickshell/dms"
+					command = "{dms_greeter} --command {compositor} -p /usr/share/quickshell/dms"
 				""")
 			)
 
@@ -278,7 +290,7 @@ class ProfileHandler:
 
 		# Install greeter if any profile supports it
 		if profile_config.greeter and profile_config.is_greeter_supported():
-			self.install_greeter(install_session, profile_config.greeter)
+			self.install_greeter(install_session, profile_config.greeter, profile_config.profiles)
 
 	def _import_profile_from_url(self, url: str) -> None:
 		#

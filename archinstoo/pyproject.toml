@@ -46,6 +46,7 @@ include-package-data = true
     "**/*.py",
     "**/*.json",
     "**/*.kdl",
+    "**/*.conf",
 ]
 
 [tool.setuptools.package-dir]
