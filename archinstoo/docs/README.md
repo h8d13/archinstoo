@@ -11,6 +11,27 @@
 │   │   │   ├── cinnamon
 │   │   │   ├── cosmic
 │   │   │   ├── deepin
+│   │   │   ├── dms_assets/
+│   │   │   │   ├── hyprland/
+│   │   │   │   │   ├── dms/
+│   │   │   │   │   │   ├── binds.lua
+│   │   │   │   │   │   ├── binds-user.lua
+│   │   │   │   │   │   ├── colors.lua
+│   │   │   │   │   │   ├── cursor.lua
+│   │   │   │   │   │   ├── layout.lua
+│   │   │   │   │   │   ├── outputs.lua
+│   │   │   │   │   │   └── windowrules.lua
+│   │   │   │   │   └── hyprland.lua
+│   │   │   │   └── niri/
+│   │   │   │       ├── dms/
+│   │   │   │       │   ├── alttab.kdl
+│   │   │   │       │   ├── binds.kdl
+│   │   │   │       │   ├── colors.kdl
+│   │   │   │       │   ├── cursor.kdl
+│   │   │   │       │   ├── layout.kdl
+│   │   │   │       │   └── outputs.kdl
+│   │   │   │       └── niri.kdl
+│   │   │   ├── dms
 │   │   │   ├── enlightenment
 │   │   │   ├── gnome
 │   │   │   ├── hyprland
@@ -172,5 +193,5 @@
     ├── test_mirrors
     └── test_schema_drift
 
-24 directories, 147 files
+29 directories, 163 files
 ```
