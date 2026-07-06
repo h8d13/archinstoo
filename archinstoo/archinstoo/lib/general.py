@@ -35,13 +35,18 @@ def clear_vt100_escape_codes(data: bytes) -> bytes:
 def jsonify(obj: object, safe: bool = True) -> Any:  # noqa: ANN401 - dynamic JSON serializer
 	# Converts objects into json.dumps() compatible nested dictionaries.
 	# Setting safe to True skips dictionary keys starting with a bang (!)
+	# Unset values (None / '') are omitted: loaders presence-check keys and
+	# fall back to defaults, and _cleanup_config strips None on load anyway.
 
 	compatible_types = str, int, float, bool
 	if isinstance(obj, dict):
 		return {
 			key: jsonify(value, safe)
 			for key, value in obj.items()
-			if isinstance(key, compatible_types) and not (isinstance(key, str) and key.startswith('!') and safe)
+			if isinstance(key, compatible_types)
+			and not (isinstance(key, str) and key.startswith('!') and safe)
+			and value is not None
+			and value != ''
 		}
 	if isinstance(obj, Enum):
 		return obj.value

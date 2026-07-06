@@ -26,7 +26,7 @@ class NiriDmsProfile(WaylandProfile):
 			ProfileType.WindowMgr,
 		)
 
-		self.custom_settings = {'seat_access': 'seatd'}
+		self.custom_settings = {'seat_access': None}
 
 	@property
 	@override
