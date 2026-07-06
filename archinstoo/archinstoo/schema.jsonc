@@ -72,6 +72,7 @@
 		"sway": ["sway", "swaybg", "swaylock", "swayidle", "waybar", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "foot", "xorg-xwayland"],
 		"river": ["foot", "xdg-desktop-portal-wlr", "river"],
 		"niri": ["niri", "alacritty", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"],
+		"dms": ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "matugen", "cava", "kimageformats", "inter-font", "ttf-jetbrains-mono-nerd", "alacritty"],
 		"labwc": ["alacritty", "labwc"],
 
 		// -- Xorg WMs --
@@ -109,6 +110,7 @@
 		"gdm": ["gdm"],
 		"ly": ["ly"],
 		"greetd": ["greetd"],
+		"dms-greeter": ["greetd"],
 		"regreet": ["greetd", "greetd-regreet", "cage"],
 		"cosmic-greeter": ["cosmic-greeter"]
 	},

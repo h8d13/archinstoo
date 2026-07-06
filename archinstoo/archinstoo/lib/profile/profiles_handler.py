@@ -140,7 +140,20 @@ class ProfileHandler:
 	def get_desktop_profiles(self) -> list[Profile]:
 		return [p for p in self.profiles if p.is_desktop_type_profile()]
 
-	def install_greeter(self, install_session: Installer, greeter: GreeterType) -> None:
+	@staticmethod
+	def _dms_compositor(profiles: list[Profile]) -> str:
+		# the dms profile stores its compositor selection; the greeter runs on
+		# exactly one, prefer niri (dms's primary target) when several chosen
+		for profile in profiles:
+			for p in (profile, *profile.current_selection):
+				comp = p.custom_settings.get('dms_compositor')
+				if isinstance(comp, str):
+					return comp
+				if isinstance(comp, list) and comp:
+					return 'niri' if 'niri' in comp else comp[0]
+		return 'niri'
+
+	def install_greeter(self, install_session: Installer, greeter: GreeterType, profiles: list[Profile] | None = None) -> None:
 		packages = []
 		service = None
 		service_disable = None
@@ -176,6 +189,10 @@ class ProfileHandler:
 			case GreeterType.CosmicSession:
 				packages = ['cosmic-greeter']
 				service = ['cosmic-greeter']
+			case GreeterType.GreetdDms:
+				packages = ['greetd']
+				service = ['greetd']
+				service_disable = ['getty@tty1']
 
 		if packages:
 			install_session.add_additional_packages(packages)
@@ -209,10 +226,37 @@ class ProfileHandler:
 				""")
 			)
 
-			# under seatd the greeter joins seat, else its cage compositor can't open DRM.
-			# group exists only when seatd was installed; skip otherwise so usermod can't abort.
-			if 'seat:' in install_session.target.joinpath('etc/group').read_text():
-				install_session.arch_chroot(['usermod', '-a', '-G', 'seat', 'greeter'])
+		# dms-greeter runs inside quickshell, launched by greetd (installed by dms-shell-<compositor>)
+		if greeter == GreeterType.GreetdDms:
+			compositor = self._dms_compositor(profiles or [])
+			dms_greeter = '/usr/share/quickshell/dms/Modules/Greetd/assets/dms-greeter'
+			path = install_session.target.joinpath('etc/greetd/config.toml')
+			path.parent.mkdir(parents=True, exist_ok=True)
+			path.write_text(
+				dedent(f"""\
+					[terminal]
+					vt = 1
+
+					[default_session]
+					user = "greeter"
+					command = "{dms_greeter} --command {compositor} -p /usr/share/quickshell/dms"
+				""")
+			)
+
+			tmpfiles = install_session.target.joinpath('etc/tmpfiles.d/dms-greeter.conf')
+			tmpfiles.parent.mkdir(parents=True, exist_ok=True)
+			tmpfiles.write_text(
+				dedent("""\
+					#  Path                    Mode User    Group   Age Argument
+					d /var/cache/dms-greeter   0750 greeter greeter -
+					d /var/lib/greeter         0755 greeter greeter -
+				""")
+			)
+
+		# under seatd the greeter joins seat, else its compositor (cage/niri) can't open DRM.
+		# group exists only when seatd was installed; skip otherwise so usermod can't abort.
+		if greeter in (GreeterType.Regreet, GreeterType.GreetdDms) and 'seat:' in install_session.target.joinpath('etc/group').read_text():
+			install_session.arch_chroot(['usermod', '-a', '-G', 'seat', 'greeter'])
 
 	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
@@ -249,7 +293,7 @@ class ProfileHandler:
 
 		# Install greeter if any profile supports it
 		if profile_config.greeter and profile_config.is_greeter_supported():
-			self.install_greeter(install_session, profile_config.greeter)
+			self.install_greeter(install_session, profile_config.greeter, profile_config.profiles)
 
 	def _import_profile_from_url(self, url: str) -> None:
 		#

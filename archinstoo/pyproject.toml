@@ -45,6 +45,8 @@ include-package-data = true
 "archinstoo" = [
     "**/*.py",
     "**/*.json",
+    "**/*.kdl",
+    "**/*.lua",
 ]
 
 [tool.setuptools.package-dir]

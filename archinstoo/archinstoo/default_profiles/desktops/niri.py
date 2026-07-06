@@ -16,11 +16,16 @@ class NiriProfile(WaylandProfile):
 			ProfileType.WindowMgr,
 		)
 
-		self.custom_settings = {'seat_access': 'seatd'}
+		self.custom_settings = {'seat_access': None}
 
 	@property
 	@override
 	def packages(self) -> list[str]:
+		additional: list[str] = []
+		seat = self.custom_settings.get('seat_access')
+		if isinstance(seat, str):
+			additional = [seat]
+
 		return [
 			'niri',
 			'alacritty',
@@ -33,7 +38,7 @@ class NiriProfile(WaylandProfile):
 			'swaylock',
 			'xdg-desktop-portal-gnome',
 			'xdg-desktop-portal-gtk',
-		]
+		] + additional
 
 	@property
 	@override
