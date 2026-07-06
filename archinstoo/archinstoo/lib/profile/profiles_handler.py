@@ -213,11 +213,6 @@ class ProfileHandler:
 				""")
 			)
 
-			# under seatd the greeter joins seat, else its cage compositor can't open DRM.
-			# group exists only when seatd was installed; skip otherwise so usermod can't abort.
-			if 'seat:' in install_session.target.joinpath('etc/group').read_text():
-				install_session.arch_chroot(['usermod', '-a', '-G', 'seat', 'greeter'])
-
 		# dms-greeter runs inside quickshell, launched by greetd (installed by dms-shell-niri)
 		if greeter == GreeterType.GreetdDms:
 			path = install_session.target.joinpath('etc/greetd/config.toml')
@@ -242,6 +237,11 @@ class ProfileHandler:
 					d /var/lib/greeter         0755 greeter greeter -
 				""")
 			)
+
+		# under seatd the greeter joins seat, else its compositor (cage/niri) can't open DRM.
+		# group exists only when seatd was installed; skip otherwise so usermod can't abort.
+		if greeter in (GreeterType.Regreet, GreeterType.GreetdDms) and 'seat:' in install_session.target.joinpath('etc/group').read_text():
+			install_session.arch_chroot(['usermod', '-a', '-G', 'seat', 'greeter'])
 
 	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
