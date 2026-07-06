@@ -21,7 +21,8 @@ _ASSETS_DIR = Path(__file__).parent / 'dms_assets'
 # dms-shell-<compositor> pulls dms-shell (quickshell, dgop, greeter assets)
 _COMPOSITOR_PACKAGES = {
 	'niri': ['niri', 'dms-shell-niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
-	'hyprland': ['hyprland', 'dms-shell-hyprland', 'xdg-desktop-portal-hyprland'],
+	# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
+	'hyprland': ['hyprland', 'dms-shell-hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
 }
 
 
@@ -57,6 +58,9 @@ class DmsProfile(WaylandProfile):
 			'matugen',
 			'cava',
 			'kimageformats',
+			# dms bundles its shell fonts privately; give apps the same faces
+			'inter-font',
+			'ttf-firacode-nerd',
 			_TERMINAL,
 		] + additional
 
@@ -105,12 +109,18 @@ class DmsProfile(WaylandProfile):
 		(niri_unit_dropin / 'dms.conf').write_text('[Unit]\nWants=dms.service\n')
 
 	def _provision_hyprland(self, home: Path) -> None:
-		# no systemd session on hyprland; the config starts dms via exec-once
-		conf = (_ASSETS_DIR / 'hyprland/hyprland.conf').read_text().replace('{{TERMINAL_COMMAND}}', _TERMINAL)
-
+		# hyprland 0.55+ lua configs, mirroring the dms deployer's non-systemd
+		# layout: dms starts via "dms run" on hyprland.start
 		hypr_dir = home / '.config/hypr'
-		hypr_dir.mkdir(parents=True, exist_ok=True)
-		(hypr_dir / 'hyprland.conf').write_text(conf)
+		dms_dir = hypr_dir / 'dms'
+		dms_dir.mkdir(parents=True, exist_ok=True)
+
+		for src, dest in (('hyprland.lua', hypr_dir), ('dms/binds.lua', dms_dir)):
+			conf = (_ASSETS_DIR / 'hyprland' / src).read_text().replace('{{TERMINAL_COMMAND}}', _TERMINAL)
+			(dest / Path(src).name).write_text(conf)
+
+		for name in ('binds-user.lua', 'colors.lua', 'cursor.lua', 'layout.lua', 'outputs.lua', 'windowrules.lua'):
+			shutil.copy(_ASSETS_DIR / 'hyprland/dms' / name, dms_dir / name)
 
 	def _select_compositors(self) -> None:
 		header = 'DankMaterialShell runs on top of a Wayland compositor' + '\n'
