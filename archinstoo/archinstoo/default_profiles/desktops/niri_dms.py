@@ -2,8 +2,13 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
+from archinstoo.default_profiles.desktops import SeatAccess
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
+from archinstoo.lib.tui.curses_menu import SelectMenu
+from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.result import ResultType
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -21,20 +26,32 @@ class NiriDmsProfile(WaylandProfile):
 			ProfileType.WindowMgr,
 		)
 
+		self.custom_settings = {'seat_access': 'seatd'}
+
 	@property
 	@override
 	def packages(self) -> list[str]:
+		additional: list[str] = []
+		seat = self.custom_settings.get('seat_access')
+		if isinstance(seat, str):
+			additional = [seat]
+
 		return [
 			'niri',
 			'dms-shell-niri',
-			'polkit',
 			'xdg-desktop-portal-gnome',
 			'xorg-xwayland',
 			'matugen',
 			'cava',
 			'kimageformats',
 			_TERMINAL,
-		]
+		] + additional
+
+	@property
+	@override
+	def services(self) -> list[str]:
+		pref = self.custom_settings.get('seat_access')
+		return [pref] if isinstance(pref, str) else []
 
 	@property
 	@override
@@ -64,3 +81,28 @@ class NiriDmsProfile(WaylandProfile):
 			(niri_unit_dropin / 'dms.conf').write_text('[Unit]\nWants=dms.service\n')
 
 			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
+
+	def _select_seat_access(self) -> None:
+		header = 'Niri needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
+		header += '\n' + 'Choose an option to give Niri access to your hardware' + '\n'
+
+		items = [MenuItem(s.value, value=s) for s in SeatAccess]
+		group = MenuItemGroup(items, sort_items=True)
+
+		default = self.custom_settings.get('seat_access', None)
+		group.set_default_by_value(default)
+
+		result = SelectMenu[SeatAccess](
+			group,
+			header=header,
+			allow_skip=False,
+			frame=FrameProperties.min('Seat access'),
+			alignment=Alignment.CENTER,
+		).run()
+
+		if result.type_ == ResultType.Selection:
+			self.custom_settings['seat_access'] = result.get_value().value
+
+	@override
+	def do_on_select(self) -> None:
+		self._select_seat_access()
