@@ -72,6 +72,7 @@ nav:
       - Dependency chains: DEP_CHAINS.md
   - Project:
       - Contributing: CONTRIBUTING.md
+      - Project structure: STRUCTURE.md
       - API Reference: API_REF.md
       - Security: SECURITY.md
       - Philosophy: PHILOSOPHY.md
