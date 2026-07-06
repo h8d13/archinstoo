@@ -11,6 +11,7 @@ class PrintServiceApp:
 	def packages(self) -> list[str]:
 		return ['cups', 'system-config-printer', 'cups-pk-helper', 'ghostscript']
 		# PostScript interp https://github.com/archlinux/archinstall/issues/4595
+
 	@property
 	def services(self) -> list[str]:
 		return [
