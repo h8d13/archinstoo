@@ -109,6 +109,17 @@ def test_profiles_match() -> None:
 		assert schema_profiles[name] == code_pkgs, f'profile {name!r} packages drifted: schema={schema_profiles[name]} code={code_pkgs}'
 
 
+def test_dms_compositors_match() -> None:
+	# the dms "profiles" entry bakes in the niri default; _resolve.py swaps
+	# per-compositor sets via schema['dms_compositors'] when the saved config
+	# carries a dms_compositor selection
+	from archinstoo.default_profiles.desktops.dms import _COMPOSITOR_PACKAGES
+
+	code = {k: sorted(v) for k, v in _COMPOSITOR_PACKAGES.items()}
+	schema = {k: sorted(v) for k, v in SCHEMA['dms_compositors'].items()}
+	assert schema == code, f'dms compositor packages drifted: schema={schema} code={code}'
+
+
 def test_gfx_driver_packages_match(monkeypatch: pytest.MonkeyPatch) -> None:
 	# base package set only; gfx_packages() adds kernel/GPU-conditional extras
 	# at runtime (dkms, vulkan-intel/radeon) which the static schema can't model.

@@ -97,6 +97,14 @@
 		"tailscale": ["tailscale"]
 	},
 
+	// per-compositor package sets for the dms profile; its "profiles" entry
+	// above bakes in the niri default, dms_compositor custom_settings swaps it
+	"dms_compositors": {
+		"niri": ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland"],
+		"hyprland": ["hyprland", "dms-shell-hyprland", "xdg-desktop-portal-hyprland", "uwsm"]
+	},
+	// we could add sway, labwc or any they support here
+
 	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
 	"xorg_profiles": ["xfce4", "cinnamon", "mate", "budgie", "lxqt", "deepin", "i3-wm", "bspwm", "awesome", "enlightenment", "qtile", "xmonad"],
 

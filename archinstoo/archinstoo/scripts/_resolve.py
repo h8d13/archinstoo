@@ -60,6 +60,22 @@ def _development_packages(dev: dict[str, Any]) -> set[str]:
 	return pkgs
 
 
+def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
+	prof_pkgs = set(SCHEMA['profiles'][name])
+
+	# dms_compositor swaps the default (niri) compositor set
+	if name == 'dms':
+		comps = settings.get('dms_compositor') or ['niri']
+		if isinstance(comps, str):
+			comps = [comps]
+		dms_compositors = SCHEMA['dms_compositors']
+		prof_pkgs.difference_update(dms_compositors['niri'])
+		for comp in comps:
+			prof_pkgs.update(dms_compositors.get(comp, []))
+
+	return prof_pkgs
+
+
 def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
@@ -109,9 +125,9 @@ def collect(config: dict[str, Any]) -> set[str]:
 			excluded = set(settings.get('excluded_packages') or [])
 
 			if name in profiles:
-				pkgs.update(p for p in profiles[name] if p not in excluded)
+				pkgs.update(p for p in _profile_packages(name, settings) if p not in excluded)
 
-			# seat_access for sway/river/niri/labwc
+			# seat_access for sway/river/niri/labwc/dms
 			if (seat := settings.get('seat_access')) and seat not in excluded:
 				pkgs.add(seat)
 
