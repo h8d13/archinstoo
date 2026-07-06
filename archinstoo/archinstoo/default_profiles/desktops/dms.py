@@ -58,9 +58,9 @@ class DmsProfile(WaylandProfile):
 			'matugen',
 			'cava',
 			'kimageformats',
-			# dms bundles its shell fonts privately; give apps the same faces
+			# dms bundles its shell fonts privately; jetbrains option is 200mb instead of heavy full nerd fonts
 			'inter-font',
-			'ttf-firacode-nerd',
+			'ttf-jetbrains-mono-nerd',
 			_TERMINAL,
 		] + additional
 
