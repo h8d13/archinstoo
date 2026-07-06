@@ -142,12 +142,15 @@ class ProfileHandler:
 
 	@staticmethod
 	def _dms_compositor(profiles: list[Profile]) -> str:
-		# the dms profile stores its compositor choice; default matches DmsProfile
+		# the dms profile stores its compositor selection; the greeter runs on
+		# exactly one, prefer niri (dms's primary target) when several chosen
 		for profile in profiles:
 			for p in (profile, *profile.current_selection):
 				comp = p.custom_settings.get('dms_compositor')
 				if isinstance(comp, str):
 					return comp
+				if isinstance(comp, list) and comp:
+					return 'niri' if 'niri' in comp else comp[0]
 		return 'niri'
 
 	def install_greeter(self, install_session: Installer, greeter: GreeterType, profiles: list[Profile] | None = None) -> None:

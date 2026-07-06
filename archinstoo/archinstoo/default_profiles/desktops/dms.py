@@ -32,13 +32,15 @@ class DmsProfile(WaylandProfile):
 			ProfileType.WindowMgr,
 		)
 
-		# dms_compositor also decides the greetd session (dms-greeter --command)
-		self.custom_settings = {'dms_compositor': 'niri', 'seat_access': None}
+		# dms_compositor also decides the greeter compositor (dms-greeter --command)
+		self.custom_settings = {'dms_compositor': ['niri'], 'seat_access': None}
 
 	@property
-	def compositor(self) -> str:
+	def compositors(self) -> list[str]:
 		comp = self.custom_settings.get('dms_compositor')
-		return comp if isinstance(comp, str) else 'niri'
+		if isinstance(comp, str):  # tolerate single value in hand-written configs
+			return [comp]
+		return comp if isinstance(comp, list) and comp else ['niri']
 
 	@property
 	@override
@@ -48,8 +50,10 @@ class DmsProfile(WaylandProfile):
 		if isinstance(seat, str):
 			additional = [seat]
 
+		compositor_pkgs = [p for comp in self.compositors for p in _COMPOSITOR_PACKAGES[comp]]
+
 		return [
-			*_COMPOSITOR_PACKAGES[self.compositor],
+			*compositor_pkgs,
 			'matugen',
 			'cava',
 			'kimageformats',
@@ -75,10 +79,11 @@ class DmsProfile(WaylandProfile):
 		for user in users:
 			home = install_session.target / 'home' / user.username
 
-			if self.compositor == 'niri':
-				self._provision_niri(home)
-			else:
-				self._provision_hyprland(home)
+			for comp in self.compositors:
+				if comp == 'niri':
+					self._provision_niri(home)
+				else:
+					self._provision_hyprland(home)
 
 			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
 
@@ -107,24 +112,26 @@ class DmsProfile(WaylandProfile):
 		hypr_dir.mkdir(parents=True, exist_ok=True)
 		(hypr_dir / 'hyprland.conf').write_text(conf)
 
-	def _select_compositor(self) -> None:
+	def _select_compositors(self) -> None:
 		header = 'DankMaterialShell runs on top of a Wayland compositor' + '\n'
-		header += 'Choose which one to install' + '\n'
+		header += 'Choose one or more to install' + '\n'
 
 		items = [MenuItem(c, value=c) for c in _COMPOSITOR_PACKAGES]
 		group = MenuItemGroup(items, sort_items=True)
-		group.set_default_by_value(self.custom_settings.get('dms_compositor'))
+		group.set_selected_by_value(self.compositors)
 
 		result = SelectMenu[str](
 			group,
+			multi=True,
 			header=header,
 			allow_skip=False,
 			frame=FrameProperties.min('Compositor'),
 			alignment=Alignment.CENTER,
 		).run()
 
-		if result.type_ == ResultType.Selection:
-			self.custom_settings['dms_compositor'] = result.get_value()
+		# empty multi-selection keeps the previous choice
+		if result.type_ == ResultType.Selection and (values := result.get_values()):
+			self.custom_settings['dms_compositor'] = values
 
 	def _select_seat_access(self) -> None:
 		header = 'DMS needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
@@ -149,5 +156,5 @@ class DmsProfile(WaylandProfile):
 
 	@override
 	def do_on_select(self) -> None:
-		self._select_compositor()
+		self._select_compositors()
 		self._select_seat_access()

@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 class PrintServiceApp:
 	@property
 	def packages(self) -> list[str]:
-		return ['cups', 'system-config-printer', 'cups-pk-helper']
-
+		return ['cups', 'system-config-printer', 'cups-pk-helper', 'ghostscript']
+		# PostScript interp https://github.com/archlinux/archinstall/issues/4595
 	@property
 	def services(self) -> list[str]:
 		return [
