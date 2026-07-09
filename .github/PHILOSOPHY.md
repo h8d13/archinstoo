@@ -35,11 +35,12 @@ The idea was that with less complexity, we can build more stable experience and 
 This is a powerful idea because it would allow for standards to **compete in better environment**.
 
 Providing choice should always be a priority, this makes for why, arch is arch.
-Archinstoo in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
+And `archinstoo` in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
 
 This is also to illustrate that for example a feature that only 1% of users actually use, should not be given priorities over modular architecture.
 
-A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
+A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities.
+Regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
 
 Some better examples:
 
