@@ -31,7 +31,7 @@ Someone's dead-end, or disagreement, or random forum post might actually be exac
 
 ## Rebuilding more with less
 
-The idea was that with less complexity, we can build more stable experience and more possible paths.
+Idea was that with less complexity, we can build more stable experience and possible paths.
 
 This is a powerful idea because it would allow for standards to **compete in better environment**.
 
