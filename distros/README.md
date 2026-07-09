@@ -16,4 +16,8 @@ Can be found bellow:
 
 ---
 
-Missing X? > Fetch from Y or fallback to Z.
+Missing X? > Fetch from Y or fallback to Z (usually trying to keep in line with upstream sources).
+
+> "If it works on Alpine, it works anywhere."
+> And this is true especially because of their [package-splits](https://wiki.alpinelinux.org/wiki/Creating_an_Alpine_package#subpackages)
+> No `systemd`, no `glibc`
