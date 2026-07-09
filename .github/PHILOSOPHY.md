@@ -23,6 +23,9 @@ And the "manual" enjoyer, might even enjoy reading through some of the source: s
 > “Every good work of software starts by scratching a developer’s personal itch.”
 > ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
 
+I would like to extend this quote by saying that: any private tinkering, digging and understanding something are what even enable "real work", every repassage provides deeper meaning.
+And better implementations. This draft state is the work, before anyone is watching. Someone's dead-end, or disagreement, or random forum post might actually be what another person needs.
+
 ## Rebuilding more with less
 
 The idea was that with less complexity, we can build more stable experience and more possible paths.
