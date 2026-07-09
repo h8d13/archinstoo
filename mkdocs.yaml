@@ -66,14 +66,14 @@ nav:
       - Multi-boot: MULTI_BOOT.md
       - nVIDIA: NVIDIA.md
       - CachyOS kernels: CACHY_KERNELS.md
-      - ARM (Arch ALARM): ARM_SUPPORT.md
-      - Build your own ISOs: BUILD_ISOS.md
       - AUR / out-of-tree: OUT_OF_TREE.md
-      - Other Linux hosts: DISTROS.md
       - Dependency chains: DEP_CHAINS.md
+      - ARM / Arch-alarm: ARM_SUPPORT.md
   - Project:
       - Contributing: CONTRIBUTING.md
       - Strucs: STRUCTURE.md
+      - Build ISOs: BUILD_ISOS.md
+      - Other Linux: DISTROS.md
       - API Reference: API_REF.md
       - Security: SECURITY.md
       - Philosophy: PHILOSOPHY.md
