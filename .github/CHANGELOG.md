@@ -3,8 +3,9 @@
 Historical changes/commits before I went rogue:
 [upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
-> Program will still in `0.*` because of the nature of it. This means that its always labeled as "Alpha" and recommend latest.
-> Simply because of the true evolving nature of Arch-based systems.
+> Program will remain in `0.*` because of the nature of this software.
+> This means that its always labeled as "Alpha" and recommend latest.
+> Simply because of the true evolving state of Arch-based systems.
 
 ## 0.1.13-3
 
