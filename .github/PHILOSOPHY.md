@@ -153,6 +153,7 @@ This project started after contributing upstream and realizing that correctness,
 
 The goal of `archinstoo` is to be explicit instead of permissive, minimal instead of defensive (and bloated!), and intentional instead of heuristic-driven.
 Nothing is installed “just in case,” configuration is derived from actual capabilities, and users are expected to mean the choices they make.
+
 This trades broad approachability for predictable, debuggable systems and that trade-off is intentional.
 
 ### Arch
