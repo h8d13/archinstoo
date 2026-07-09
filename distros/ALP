@@ -51,8 +51,7 @@ apk add --no-cache $(
 EOF
 )
 
-# TODO: some reason one of the gnupg .install scriptlets gets stuck
-# added PID reaping to get around the issue and reported to:
+# Fixed upstream:
 # https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/-/work_items/13
 
 # arch-install-scripts and alpine-conf both provide cmd:genfstab
