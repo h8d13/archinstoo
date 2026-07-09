@@ -14,17 +14,19 @@ When asked in 2005 whether he planned to automate more of the installation proce
 
 He also said: *"Arch assumes you know what you're doing... it tends to stay out of your way."*
 
-Archinstoo carries this forward. The installer exists to give you an OS, not to make decisions for you.
-One installer whose entire advancement is the number of decisions it hands back to you.
+Installer `archinstoo` carries this forward. It exists to give you an OS, not to make decisions for you.
+The entire advancement is the number of decisions it **hands back to you**.
 
-There is a true power in reproducible/modular automation as such, which surfaces problems in core logic or order of operations.
-And the "manual" enjoyer, might even enjoy reading through some of the source: since they will find direct references to both the holy Wiki and issues from other users.
+There is a true power in reproducible/modular automation as such, which surfaces problems in core logic or order of operations or even actual upstream fixes.
+And the "manual" enjoyer, might even take taste to reading through some of the source: since they will find direct references to both the holy Wiki and reports from other users.
 
 > “Every good work of software starts by scratching a developer’s personal itch.”
 > ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
 
-I would like to extend this quote by saying that: any private tinkering, digging and understanding something are what even enable "real work", every repassage provides deeper meaning.
-And better implementations. This draft state is the work, before anyone is watching. Someone's dead-end, or disagreement, or random forum post might actually be what another person needs.
+I would like to extend this quote by saying that: any private tinkering, digging and understanding something is what even enables "real work". Every repassage provides deeper meaning.
+And better implementations. This "draft state" is the work, before anyone is watching or stakes to exist.
+
+Someone's dead-end, or disagreement, or random forum post might actually be exactly what another person needs.
 
 ## Rebuilding more with less
 
