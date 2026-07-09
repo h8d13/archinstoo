@@ -10,9 +10,9 @@ Can be found bellow:
 
 | Host | `arch-install-scripts` | `pacman` | Script | Tested |
 |------|------------------------|----------|--------|--------|
-| Debian | V | V | [DEB](./DEB) | X |
-| Nix | V | V | [NIX](./flake.nix) | X |
-| Alpine | V | V | [ALP](./ALP) | V |
+| Debian | V | V | [DEB](https://github.com/h8d13/archinstoo/tree/main/distros/DEB) | X |
+| Nix | V | V | [NIX](https://github.com/h8d13/archinstoo/blob/main/distros/flake.nix) | X |
+| Alpine | V | V | [ALP](https://github.com/h8d13/archinstoo/tree/main/distros/ALP) | V |
 
 ---
 

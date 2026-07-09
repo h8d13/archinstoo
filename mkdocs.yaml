@@ -1,7 +1,7 @@
 site_name: archinstoo
 site_description: A fork of archinstall
 site_url: https://h8d13.github.io/archinstoo/
-copyright: archinstoo docs
+copyright: archinstoo docs © 2026 - h8d13
 repo_url: https://github.com/h8d13/archinstoo
 repo_name: h8d13/archinstoo
 
@@ -69,6 +69,7 @@ nav:
       - ARM (Arch ALARM): ARM_SUPPORT.md
       - Build your own ISOs: BUILD_ISOS.md
       - AUR / out-of-tree: OUT_OF_TREE.md
+      - Other Linux hosts: DISTROS.md
       - Dependency chains: DEP_CHAINS.md
   - Project:
       - Contributing: CONTRIBUTING.md
