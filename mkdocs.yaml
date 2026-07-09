@@ -62,21 +62,21 @@ nav:
       - JSON file: CONFIG.md
       - Config schema: SCHEMA.md
   - Cases:
-      - Headless install: HEADLESS.md
+      - Headless / servers: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
-      - nVIDIA: NVIDIA.md
+      - nVIDIA new / old: NVIDIA.md
       - CachyOS kernels: CACHY_KERNELS.md
       - AUR / out-of-tree: OUT_OF_TREE.md
       - Dependency chains: DEP_CHAINS.md
       - ARM / Arch-alarm: ARM_SUPPORT.md
   - Project:
       - Contributing: CONTRIBUTING.md
-      - Strucs: STRUCTURE.md
-      - Build ISOs: BUILD_ISOS.md
-      - Other Linux: DISTROS.md
       - API Reference: API_REF.md
+      - Build ISOs: BUILD_ISOS.md
+      - Strucs: STRUCTURE.md
       - Security: SECURITY.md
       - Philosophy: PHILOSOPHY.md
       - Past work: PAST_CONTRIBS.md
       - Troubleshooting: TROUBLESHOOT.md
+      - Other Linux: DISTROS.md
   - What's new: CHANGELOG.md
