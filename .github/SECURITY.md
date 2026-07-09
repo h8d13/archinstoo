@@ -21,22 +21,24 @@ The real key to security is YOU being mindful.
 
 Some options are also given in the menu directly but **are always optional**.
 
-1. Limit AUR usage to "known"
+1. Limit AUR usage to "known", review `PKGBUILD` AND post install scriplets.
 2. Common security practices
-    - Firewall
-    - VPN
-    - Adblocking
-    - Sysctl conf
-    - SSH/Server hardening
+    - Firewalls
+    - VPNs
+    - Adblocks
+    - `sysctl` confs
+    - SSH/Server hardenings
 
-3. Additionals
-    - apparmor
-    - firejail
-    - fail2ban
-    - bubblewrap
-    - flatseal
-    - auditd / aide /tripwire
-    - ...
+3. Additionals examples:
+    - `apparmor`
+    - `firejail`
+    - `fail2ban`
+    - `bubblewrap`
+    - `flatseal`
+    - `auditd`
+    - `aide`
+    - `tripwire`
+    - your security stacks...
 
 ---
 
@@ -79,7 +81,8 @@ Highly recommended in case of theft.
 
 ### U2F
 
-Whilst U2F keys were removed from the automated script (in favor of priv-esc choices), you can still set them up with `systemd-cryptenroll` and `pam.d` for passwordless auth/2FA/etc.
+You can enroll `pam.d` for passwordless auth/2FA/etc. Using keys such as:  YubiKey, Titan, SoloKey, Nitrokey
+And use them for encryption too.
 
 ---
 
