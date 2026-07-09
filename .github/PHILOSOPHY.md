@@ -113,6 +113,7 @@ Linters and other tools to improve code programmatically.
 ### Separation and pace
 
 This separation allows faster development cycles, cleaner testing, and clearer boundaries between development and general usage: `archinstoo` also serves as:
+
 - its own installation medium builder
 - testing suite
 - surrounding tools
