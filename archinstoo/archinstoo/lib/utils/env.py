@@ -27,14 +27,12 @@ class Os:
 
 	@staticmethod
 	def running_from_who() -> str:
-		# checks distro name
-		os_release = Path('/etc/os-release')
-		if os_release.exists():
-			with os_release.open() as f:
-				for line in f:
-					if line.startswith('ID='):
-						return line.strip().split('=')[1]
-		return ''
+		# distro ID from os-release; stdlib parse handles quoting and the
+		# /usr/lib/os-release fallback (no systemd needed, plain file read)
+		try:
+			return platform.freedesktop_os_release().get('ID', '')
+		except OSError:
+			return ''
 
 	@staticmethod
 	def running_from_arch() -> bool:
