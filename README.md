@@ -157,7 +157,9 @@ See [Troubleshooting](https://github.com/h8d13/archinstoo/blob/master/.github/TR
 
 ## Building sources
 
-The idea being to promote **option 2** to use archinstoo latest non-dev. Always, since fixes are often time critical.
+The idea being to promote **option 2** to use archinstoo latest non-dev.
+
+Always, since fixes are often time critical.
 
 1. For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
 
