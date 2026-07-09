@@ -71,7 +71,7 @@ probe_ovmf() {
 			return 0
 		fi
 	done
-	err "OVMF firmware not found. Install 'edk2-ovmf' (Arch), 'ovmf' (Debian/Ubuntu), or 'edk2-ovmf' (Fedora)."
+	err "OVMF firmware not found. Install 'edk2-ovmf' or similar on your distro."
 }
 
 check_host_deps() {
