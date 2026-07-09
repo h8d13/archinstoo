@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2154
 # sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
-#
 # (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set DISPLAY_BACKEND to match)
 # (audio backend is a separate pkg: qemu-audio-pipewire (default), qemu-audio-pa, qemu-audio-alsa; set AUDIO_BACKEND to match)
+#
 # Dev test VM for archinstoo. Boots an ISO (built by isos/ISOMOD) under QEMU.
 # ISO building is intentionally NOT done here, use isos/ISOMOD for that.
 # Credits to @Softer, modified for archinstoo.
+#
 # Host artifacts (created in repo root, git-ignored):
 #   .dev-disk.qcow2     VM disk image (qemu-img)
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
