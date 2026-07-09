@@ -129,7 +129,7 @@ This freedom enables rapid iteration and early testing of new technologies witho
 In a fast-moving, deeply technical codebase, correctness and architecture must come first. And experimental features are fun to test:
 Bcachefs support when it was dropped by Mr. Torvalds, CachyOS kernel support, etc.
 
-The future of such to me IS simplifying/automating, and providing more tools, never settling for less.
+Future to me IS simplifying/automating, and providing more tools, never settling for less.
 
 ### Buried treasures
 
