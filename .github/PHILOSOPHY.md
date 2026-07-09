@@ -155,14 +155,4 @@ This is the last and key point, other distros might be easier/better fit for you
 
 Rolling distros enable installers to become tools/artifacts rather than just projects. This means it doesn't have to be more features and more users, but simply adapting to its time, maintaining worthy code, choices, occasionally helping out ecosystem and issue trackers. This is possible structurally because of the team at Arch Linux and using directly the tools they make available.
 
-### Personal Goals
-
-Online most people know me as Hade:
-
-My goal with this project was the following
-- Speed up testing/dev
-- Enable more hardware (Out-of-tree DKMS, ARM, ?)
-- Improve dark documentation areas around the installer
-- Make the installer work from any linux (which I've attempted already in a project named `partstoob`)
-
 Cheers for even reading any of this, if you are looking to read more I wrote [this](https://github.com/h8d13/archinstoo/blob/master/.github/PAST_CONTRIBS.md). At the end of 2025.
