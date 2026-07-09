@@ -115,6 +115,19 @@ Any related digging/testing is actually just as useful as the code itself.
 
 Currently, questions, bugs and suggestions should be reported through [GitHub issue tracker](https://github.com/h8d13/archinstoo/issues).
 
+### Testing
+
+Early tests for repro I mostly use [TVM](https://github.com/h8d13/archinstoo/blob/master/TVM)
+```shell
+./TVM clean
+./TVM #install
+./TVM boot #check stuff
+```
+
+Similarly tested on actual hardware, once VM testing passes.
+
+---
+
 Original Creator:
 * Anton Hvornum ([@Torxed](https://github.com/Torxed))
 
