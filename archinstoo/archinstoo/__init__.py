@@ -160,7 +160,7 @@ def _prepare() -> int:
 		try:
 			# a foreign host ships pacman but none of its config/keyring; build
 			# it first (conf before keyring: pacman-key reads pacman.conf).
-			foreign_host = Os.running_from_host() and not Os.running_from_arch()
+			foreign_host = Os.running_from_foreign()
 			if foreign_host:
 				pacman_conf()
 				keyring_init()

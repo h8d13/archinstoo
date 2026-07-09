@@ -42,6 +42,11 @@ class Os:
 		return Os.running_from_who() == 'arch'
 
 	@staticmethod
+	def running_from_foreign() -> bool:
+		# installed non-Arch host (not the ISO, not an Arch install)
+		return Os.running_from_host() and not Os.running_from_arch()
+
+	@staticmethod
 	def locate_binary(name: str) -> str:
 		if path := which(name):
 			return path

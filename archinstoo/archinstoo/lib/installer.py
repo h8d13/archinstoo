@@ -232,7 +232,7 @@ class Installer:
 		# architecture and parse results for prints
 		# https://github.com/archlinux/archinstall/issues/3688
 		# be more descriptive about status in code + what user sees
-		if Os.running_from_host() and not Os.running_from_arch():
+		if Os.running_from_foreign():
 			# NTP/reflector/keyring-wkd-sync are live-ISO startup units; a
 			# foreign host has none of them, so the waits would block forever
 			# (the wkd-sync timer never appears -> _service_started stays None).
@@ -939,7 +939,7 @@ class Installer:
 		# host (Debian, ...) has no running systemd to provide; drop -S there so
 		# it falls back to plain chroot(8).
 		prefix = ['arch-chroot']
-		if not (Os.running_from_host() and not Os.running_from_arch()):
+		if not Os.running_from_foreign():
 			prefix.append('-S')
 		prefix.append(str(self.target))
 		return prefix
@@ -988,7 +988,7 @@ class Installer:
 		# the stub only resolves once systemd-resolved runs on the target. From a
 		# foreign (non-systemd) host that flow isn't guaranteed, so copy the
 		# host's working resolv.conf content instead of a dangling symlink.
-		if Os.running_from_host() and not Os.running_from_arch():
+		if Os.running_from_foreign():
 			host_resolv = Path('/etc/resolv.conf')
 			if host_resolv.is_file():  # follows symlink, False if dangling
 				resolv.write_text(host_resolv.read_text())
