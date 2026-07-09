@@ -7,7 +7,7 @@ Divergence [point](https://github.com/archlinux/archinstall/pull/3997)
 
 ## Upstreamed
 
-Upstreamed fixes:
+Issues tracker:
 
 - Missing deps in linux-variant-headers
 
@@ -15,13 +15,19 @@ Reported [here](https://github.com/archlinux/archinstall/issues/4360)
 
 Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188)
 
+- Gnupg hang on `dirmngr` call
+
+Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/-/work_items/13)
+
+Fixed a week later [here](https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/-/commit/c1bee871ca9b1d6899da9279287b92654b698f30)
+
 Pending upstream fixes:
 
 - Modify existing `base-devel` pkg for `doas` or alternatives (`sudo` optional)
 
 Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-devel/-/work_items/7)
 
-## Solutions
+## Past solutions
 
 Sending my patches upstream finally meant the months of testing something privately made sense to other people publicly.
 
