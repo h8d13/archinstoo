@@ -22,10 +22,6 @@
         <div class="md-header__topic">
           <span class="md-ellipsis">
             {{ config.site_name }}
-            {#- version comes from PKGBUILD via DOCS_VERSION in the docs workflow -#}
-            {%- if config.extra.version_tag %}
-            <small style="opacity: .7">{{ config.extra.version_tag }}</small>
-            {%- endif %}
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
