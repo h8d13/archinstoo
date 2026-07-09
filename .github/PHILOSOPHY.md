@@ -15,7 +15,7 @@ When asked in 2005 whether he planned to automate more of the installation proce
 He also said: *"Arch assumes you know what you're doing... it tends to stay out of your way."*
 
 Archinstoo carries this forward. The installer exists to give you an OS, not to make decisions for you.
-One installer whose entire advancement is the number of decisions it hands back to you
+One installer whose entire advancement is the number of decisions it hands back to you.
 
 There is a true power in reproducible/modular automation as such, which surfaces problems in core logic or order of operations.
 And the "manual" enjoyer, might even enjoy reading through some of the source: since they will find direct references to both the holy Wiki and issues from other users.
