@@ -60,7 +60,8 @@ git commit
 # describe what this commit fixes, ideally one fix/feat per commit
 git push
 ```
-Then open the PR with explanations too, link to resources/issues. If your commits are well scoped/documented you can skip most theatrics.
+Then open the PR with explanations too, link to resources/issues.
+If your commits are well scoped/documented you can skip most theatrics.
 
 ## Pre-commit hooks
 
@@ -93,7 +94,9 @@ Archinstoo uses GitHub's pull-request workflow and all contributions in terms of
 Direct pushes to master are permitted to code-owners.
 
 Anyone interested in archinstoo may review your code. One of the core developers will merge your pull request when they
-think it is ready. For every pull request, we aim to promptly either merge it or say why it is not yet ready; or edit it and merge directly.
+think it is ready.
+
+For every pull request, we aim to promptly either merge it or say why it is not yet ready; or edit it and merge directly.
 
 To get your pull request merged sooner, you should explain why you are making the change (and small patches).
 
@@ -101,6 +104,12 @@ For example, you can point to a code sample that is outdated in terms of Arch Li
 
 It is also helpful to add links to online documentation or to the implementation of the code you are changing.
 Any related digging/testing is actually just as useful as the code itself.
+
+## AI usage
+
+1. Docs, testing and code should originate from your arguments/command lines usages/etc
+2. Low-effort and large changes without proper scoping will be closed without explaining
+3. Disclose usage in the PR details and for what it was used (debugging, writing code, ...)
 
 ## Discussions
 

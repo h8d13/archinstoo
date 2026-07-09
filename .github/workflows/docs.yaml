@@ -3,10 +3,11 @@ name: Docs
 on:
   push:
     branches: [master]
-    # Only rebuild when docs content or docs config changes.
+    # Only rebuild when docs content, docs config, or the version changes.
     paths:
       - '**.md'
       - mkdocs.yaml
+      - PKGBUILD
       - .github/overrides/**
       - .github/docs-requirements.txt
       - .github/workflows/docs.yaml
@@ -33,6 +34,12 @@ jobs:
           cache: pip
           cache-dependency-path: .github/docs-requirements.txt
       - run: pip install -r .github/docs-requirements.txt
+      # same version recipe as release.yaml; shown in the site header
+      - name: Set docs version from PKGBUILD
+        run: |
+          PKGVER=$(grep -E '^pkgver=' PKGBUILD | cut -d= -f2)
+          PKGREL=$(grep -E '^pkgrel=' PKGBUILD | cut -d= -f2)
+          echo "DOCS_VERSION=v${PKGVER}-${PKGREL}" >> "$GITHUB_ENV"
       - run: mkdocs build
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
