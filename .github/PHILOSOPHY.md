@@ -24,8 +24,9 @@ And the "manual" enjoyer, might even take taste to reading through some of the s
 > ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
 
 I would like to extend this quote by saying that: any private tinkering, digging and understanding something is what even enables "real work". Every repassage provides deeper meaning.
-And better implementations. This "draft state" is the work, before anyone is watching or stakes to exist.
+And better implementations.
 
+This "draft state" is the work, before anyone is watching or stakes to exist.
 Someone's dead-end, or disagreement, or random forum post might actually be exactly what another person needs.
 
 ## Rebuilding more with less
