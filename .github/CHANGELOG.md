@@ -3,6 +3,26 @@
 Historical changes/commits before I went rogue:
 [upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
 
+## 0.1.13-3
+
+	- Add `dms` profile (DankMaterialShell): port upstream niri profile
+	  (#4554), generalized behind a compositor multi-select
+		- Compositors: `niri` (kdl assets) + `hyprland` (DMS-managed
+		  `.lua` configs); packages swap per selection in `_resolve`
+		- Seat access picker (seatd) like other wlr compositors
+		- `dms` schema type + drift test coverage
+		- `ttf-jetbrains-mono-nerd` over full nerd fonts
+	- Greeter joins `seat` group for dms greeter too (was regreet-only,
+	  its compositor couldn't open DRM under seatd)
+	- `niri`: `seat_access` no longer hardcoded to seatd; chosen
+	  provider appended to packages
+	- LUKS: keyfile slots follow menu pbkdf and `iter_time` choices
+	  (`luksAddKey` defaults new slots to argon2id otherwise)
+		- 200ms iteration floor matches the GRUB `/boot` clamp; better
+		  helptext when `/boot` is encrypted
+	- Config save omits unset values (`None`/empty string)
+	- Continue `distros/` documentation and upstream fix
+
 ## 0.1.13-2
 
 	- More LUKS2 ciphers: `serpent-xts`, `aes-hctr2`, `camellia-xts`
