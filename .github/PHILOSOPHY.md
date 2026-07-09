@@ -15,7 +15,7 @@ When asked in 2005 whether he planned to automate more of the installation proce
 He also said: *"Arch assumes you know what you're doing... it tends to stay out of your way."*
 
 Archinstoo carries this forward. The installer exists to give you an OS, not to make decisions for you.
-But it also exists to give you other tools/scripts you might need.
+One installer whose entire advancement is the number of decisions it hands back to you
 
 There is a true power in reproducible/modular automation as such, which surfaces problems in core logic or order of operations.
 And the "manual" enjoyer, might even enjoy reading through some of the source: since they will find direct references to both the holy Wiki and issues from other users.
@@ -27,13 +27,12 @@ And the "manual" enjoyer, might even enjoy reading through some of the source: s
 
 The idea was that with less complexity, we can build more stable experience and more possible paths.
 
-This is a powerful idea because it would allow for standards to compete in better environment.
+This is a powerful idea because it would allow for standards to **compete in better environment**.
 
 Providing choice should always be a priority, this makes for why, arch is arch.
-
 Archinstoo in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
 
-This is also to illustrate that for example a feature that only 1% of users actually use should not be given priorities over modular architecture.
+This is also to illustrate that for example a feature that only 1% of users actually use, should not be given priorities over modular architecture.
 
 A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
 
