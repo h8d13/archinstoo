@@ -29,6 +29,7 @@ archinstall/
 **/*-git
 /test*.py
 CLAUDE.md
+.codegraph/
 test_*/
 .idea*
 .idea/**
