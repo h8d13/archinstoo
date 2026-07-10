@@ -7,11 +7,16 @@
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
+from archinstoo.lib.models.network import NicType
 from archinstoo.lib.utils.env import Os
+
+if TYPE_CHECKING:
+	from archinstoo.lib.profile.base import Profile
+	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
 
 
 def _requirements(*binaries: str) -> bool:
@@ -76,6 +81,18 @@ def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	return prof_pkgs
 
 
+def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
+	# custom 'path' profiles are code, not schema entries; load them the same
+	# way the installer does so their packages and desktop-typing count too
+	entries = [tp for tp in top_profiles if tp.get('path')]
+	if not entries:
+		return []
+	from archinstoo.lib.profile.profiles_handler import ProfileHandler
+
+	handler = ProfileHandler()
+	return [profile for tp in entries if (profile := handler.parse_profile_config(tp))]
+
+
 def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
@@ -131,6 +148,16 @@ def collect(config: dict[str, Any]) -> set[str]:
 			if (seat := settings.get('seat_access')) and seat not in excluded:
 				pkgs.add(seat)
 
+	# custom path profiles: own packages plus selections, exclusions applied,
+	# mirroring Profile.install() (self + current_selection effective_packages)
+	custom_profiles = _path_profiles(top_profiles)
+	for profile in custom_profiles:
+		pkgs.update(profile.effective_packages())
+		for sub in profile.current_selection:
+			pkgs.update(sub.effective_packages())
+
+	has_desktop = 'desktop' in mains or any(p.is_desktop_profile() for p in custom_profiles)
+
 	main = next(iter(mains), '')
 
 	# greeter
@@ -157,7 +184,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	net_type = net.get('type', '')
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
-		if 'desktop' in mains and net_type in ('nm', 'nm_iwd'):
+		if has_desktop and net_type in (NicType.NM.value, NicType.NM_IWD.value):
 			pkgs.update(SCHEMA['network']['nm-desktop-extra'])
 
 	# privilege escalation

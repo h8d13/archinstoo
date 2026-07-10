@@ -16,7 +16,7 @@ for name in rootless:
 	print(f'    {name}')
 
 for name in root:
-	if name in DEFAULT:
+	if name == DEFAULT:
 		print(f'    {name:<{width}}  [*] < DEFAULT')
 	else:
 		print(f'    {name:<{width}}  [*]')

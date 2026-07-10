@@ -39,15 +39,17 @@
         "linux"
     ],
     "profile_config": {
-        "profile": {
-            "path": "./examples/custom.py",
-            "details": [
-                "xfce4"
-            ],
-            "custom_settings": {
-                "xfce4": {}
+        "profiles": [
+            {
+                "path": "./examples/custom.py",
+                "details": [
+                    "xfce4"
+                ],
+                "custom_settings": {
+                    "xfce4": {}
+                }
             }
-        },
+        ],
         "gfx_driver": "all-open-source",
         "greeter": "cosmic-greeter"
     },

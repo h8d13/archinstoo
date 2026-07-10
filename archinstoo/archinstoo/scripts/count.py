@@ -38,12 +38,15 @@ def count() -> None:
 	print(f'\nTotal packages (with deps): {len(resolved)}')
 
 	if args.why:
-		if not roots:
-			print(f"\n'{args.why}' is not pulled in by this config.")
-		else:
+		# roots never include the target itself (resolve_deps skips self)
+		if args.why in explicit:
+			print(f"\n'{args.why}' is explicitly selected by this config.")
+		if roots:
 			print(f"\n'{args.why}' is pulled in by {len(roots)} explicit package(s):")
 			for root in sorted(roots):
 				print(f'  {root}')
+		elif args.why not in explicit:
+			print(f"\n'{args.why}' is not pulled in by this config.")
 
 
 count()
