@@ -25,17 +25,27 @@ This involves using `qemu-user-static qemu-user-static-binfmt` from an x86 Arch 
 
 ## Usage
 
+List available boards, then build onto a target device:
+
 ```shell
 ./architecture/ARM list
-sudo FETCH=1 ./architecture/ARM rpi5 /dev/sdX
+sudo ./architecture/ARM rpi5 /dev/sdX
 ```
 
-Or download the tarball yourself and drop it next to the script
-(or pass a path as third arg):
+The script needs the board's tarball and finds it one of three ways:
 
-```shell
-curl -LO http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz
-```
+1. Already downloaded, sitting next to the script or in cwd:
+   ```shell
+   curl -LO http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz
+   ```
+2. Anywhere else, passed as explicit path:
+   ```shell
+   sudo ./architecture/ARM rpi5 /dev/sdX ~/Downloads/ArchLinuxARM-rpi-aarch64-latest.tar.gz
+   ```
+3. Not downloaded at all, let the script fetch it:
+   ```shell
+   sudo FETCH=1 ./architecture/ARM rpi5 /dev/sdX
+   ```
 
 The core does everything generic: msdos label, fat32 boot + ext4 root,
 tarball extract with dirty-page progress, keyring init, locale, fstab
