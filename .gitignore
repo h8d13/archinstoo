@@ -20,6 +20,7 @@ archinstall/
 **/**archinstall-v*/
 **/**.pkg.*.xz
 **/**archinstall-*.tar.gz
+architecture/*.tar.gz
 **/**.zst
 **/**.network
 **/**.target

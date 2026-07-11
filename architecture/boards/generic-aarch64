@@ -1,0 +1,6 @@
+# shellcheck shell=bash disable=SC2034  # vars consumed by ../ARM
+# Generic AArch64 (multi-platform tarball, mainline kernel + U-Boot).
+# Boots as shipped on boards with working upstream U-Boot support.
+
+ARCHIVE="ArchLinuxARM-aarch64-latest.tar.gz"
+TARBALL_URL="http://os.archlinuxarm.org/os/${ARCHIVE}"

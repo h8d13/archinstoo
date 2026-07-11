@@ -1,0 +1,199 @@
+#!/bin/bash
+# Stage 1 builder for Arch Linux ARM devices.
+#
+# Generic core: partition, format, extract tarball, base setup
+# (keyring, locale, fstab, wired DHCP, getty, sshd). Board specifics
+# (kernel/bootloader swap, cmdline, firmware config) live in boards/.
+#
+# From an x86 Arch host this needs:
+#   sudo pacman -S qemu-user-static qemu-user-static-binfmt
+# (runs the ARM chroot emulated; not needed from an ARM host)
+#
+# Usage:
+#   ./architecture/ARM list
+#   sudo ./architecture/ARM <board> <block-device> [tarball]
+#
+# Tarballs: https://archlinuxarm.org/about/downloads
+# Drop next to this script (or pass a path as third arg).
+# FETCH=1 downloads the board default if missing.
+#
+# Env overrides:
+#   BOOT_END   boot partition end (default 513MiB, bump if space allows)
+#   MNT        mount point (default /mnt)
+#   FETCH=1    curl the board tarball when not found
+#
+# Default credentials after boot: root:root, alarm:alarm
+# Post-boot setup (users, wifi, desktop): ./RUN --script live
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BOARDS_DIR="$SCRIPT_DIR/boards"
+MNT="${MNT:-/mnt}"
+BOOT_END="${BOOT_END:-513MiB}"
+
+usage() {
+	echo "Usage: sudo $0 <board> <block-device> [tarball]"
+	echo "Boards:"
+	for b in "$BOARDS_DIR"/*; do
+		[ -f "$b" ] && echo "  $(basename "$b")"
+	done
+}
+
+case "${1:-list}" in
+	list|help|-h|--help) usage; exit 0 ;;
+esac
+
+BOARD="$1"
+DEVICE="$2"
+[ -f "$BOARDS_DIR/$BOARD" ] || { echo "Unknown board: $BOARD"; usage; exit 1; }
+[ "$EUID" -eq 0 ] || { echo "Run as root"; exit 1; }
+[ -b "$DEVICE" ] || { echo "Not a block device: $DEVICE"; exit 1; }
+
+# Board must set ARCHIVE (+ optionally TARBALL_URL, BOARD_CHROOT,
+# board_partition, board_finish). See boards/rpi5 and README.md.
+# shellcheck disable=SC1090
+. "$BOARDS_DIR/$BOARD"
+[ -n "$ARCHIVE" ] || { echo "Board $BOARD sets no ARCHIVE"; exit 1; }
+
+# Partition name separator: mmcblk0 -> mmcblk0p1, sdb -> sdb1
+case "$DEVICE" in
+	*[0-9]) SEP="p" ;;
+	*) SEP="" ;;
+esac
+BOOT_PART="${DEVICE}${SEP}1"
+ROOT_PART="${DEVICE}${SEP}2"
+
+# Resolve tarball: explicit path > next to script > cwd > FETCH=1
+if [ -n "$3" ]; then
+	ARCHIVE_PATH="$3"
+elif [ -f "$SCRIPT_DIR/$ARCHIVE" ]; then
+	ARCHIVE_PATH="$SCRIPT_DIR/$ARCHIVE"
+else
+	ARCHIVE_PATH="./$ARCHIVE"
+fi
+if [ ! -f "$ARCHIVE_PATH" ]; then
+	if [ "$FETCH" = "1" ] && [ -n "$TARBALL_URL" ]; then
+		echo "Fetching $TARBALL_URL"
+		curl -L -o "$SCRIPT_DIR/$ARCHIVE" "$TARBALL_URL"
+		ARCHIVE_PATH="$SCRIPT_DIR/$ARCHIVE"
+	else
+		echo "Tarball not found: $ARCHIVE_PATH"
+		[ -n "$TARBALL_URL" ] && echo "FETCH=1 to download, or: curl -LO $TARBALL_URL"
+		exit 1
+	fi
+fi
+
+# Wrong device = wiped drive. Show it, make the wipe explicit.
+lsblk -o NAME,SIZE,MODEL,MOUNTPOINTS "$DEVICE"
+read -rp "This WIPES $DEVICE entirely. Type YES to continue: " ANS
+[ "$ANS" = "YES" ] || { echo "Aborted."; exit 1; }
+
+# Watch a background pid while showing page-cache pressure: big writes
+# to slow media otherwise look hung. Third arg forces periodic sync so
+# dirty pages flush during extraction instead of piling up.
+wait_dirty() {
+	local pid="$1" label="$2" dosync="${3:-}" dirty
+	while kill -0 "$pid" 2>/dev/null; do
+		dirty=$(awk '/Dirty:/{print $2}' /proc/meminfo)
+		printf "\r%s Dirty: %'d kB   " "$label" "$dirty"
+		[ -n "$dosync" ] && sync &
+		sleep 1
+	done
+	wait "$pid"
+	printf '\r%s done.                        \n' "$label"
+}
+
+partition_default() {
+	parted -s -a optimal "$DEVICE" mklabel msdos
+	parted -s -a optimal "$DEVICE" mkpart primary fat32 1MiB "$BOOT_END"
+	parted -s -a optimal "$DEVICE" mkpart primary ext4 "$BOOT_END" 100%
+	parted -s "$DEVICE" set 1 boot on
+	mkfs.vfat -F 32 "$BOOT_PART"
+	mkfs.ext4 -F "$ROOT_PART"
+}
+
+if declare -f board_partition >/dev/null; then
+	board_partition
+else
+	partition_default
+fi
+
+mount "$ROOT_PART" "$MNT"
+mkdir -p "$MNT/boot"
+mount "$BOOT_PART" "$MNT/boot"
+
+bsdtar -xpf "$ARCHIVE_PATH" -C "$MNT" &
+wait_dirty $! "Extracting..." sync
+
+# vconsole.conf must exist before any kernel install (mkinitcpio needs it)
+echo "KEYMAP=us" > "$MNT/etc/vconsole.conf"
+echo "en_US.UTF-8 UTF-8" > "$MNT/etc/locale.gen"
+echo "LANG=en_US.UTF-8" > "$MNT/etc/locale.conf"
+
+# DisableSandbox: pacman's landlock sandbox breaks under qemu-user
+echo "Setting up chroot (keyring, openssh, board packages)..."
+arch-chroot "$MNT" /bin/bash -e -c "
+	sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
+	pacman-key --init
+	pacman-key --populate archlinuxarm
+	pacman -Sy --noconfirm openssh
+	${BOARD_CHROOT:-}
+	locale-gen
+"
+
+# Stock fstab references mmcblk0p1 which is wrong off USB/NVMe
+BOOT_PARTUUID=$(blkid -s PARTUUID -o value "$BOOT_PART")
+ROOT_PARTUUID=$(blkid -s PARTUUID -o value "$ROOT_PART")
+cat > "$MNT/etc/fstab" << EOF
+# <file system>             <dir>   <type>  <options>       <dump>  <pass>
+PARTUUID=${ROOT_PARTUUID}   /       ext4    defaults        0       1
+PARTUUID=${BOOT_PARTUUID}   /boot   vfat    defaults        0       2
+EOF
+
+# Board hook: cmdline, firmware config, leftover bootloader files
+if declare -f board_finish >/dev/null; then
+	board_finish
+fi
+
+echo "Boot partition kernel files:"
+KERNELS=$(find "$MNT/boot" -maxdepth 1 \
+	\( -name "Image*" -o -name "kernel*" -o -name "initramfs*" \) \
+	-exec ls -lh {} +)
+if [ -n "$KERNELS" ]; then
+	echo "$KERNELS"
+else
+	echo "WARNING: No kernel found on boot partition!"
+fi
+
+# Wired DHCP only. Wi-Fi goes through ./RUN --script live after boot.
+mkdir -p "$MNT/etc/systemd/network"
+cat > "$MNT/etc/systemd/network/20-wired.network" << 'EOF'
+[Match]
+Name=en*
+
+[Network]
+DHCP=yes
+EOF
+
+# Enable base services by hand (no systemctl inside emulated chroot)
+ln -sf /usr/lib/systemd/system/multi-user.target \
+	"$MNT/etc/systemd/system/default.target"
+mkdir -p "$MNT/etc/systemd/system/getty.target.wants"
+ln -sf /usr/lib/systemd/system/getty@.service \
+	"$MNT/etc/systemd/system/getty.target.wants/getty@tty1.service"
+# sshd won't start without host keys, generate them now
+ssh-keygen -A -f "$MNT"
+mkdir -p "$MNT/etc/systemd/system/multi-user.target.wants"
+for svc in sshd systemd-networkd systemd-resolved; do
+	ln -sf "/usr/lib/systemd/system/${svc}.service" \
+		"$MNT/etc/systemd/system/multi-user.target.wants/${svc}.service"
+done
+
+echo ""
+echo "Final sync... (can take a while on slow USB)"
+sync &
+wait_dirty $! "Flushing..."
+echo "Unmounting..."
+umount "$MNT/boot" "$MNT"
+echo "Done. Boot the device, then: passwd && passwd alarm (or add a user)"
