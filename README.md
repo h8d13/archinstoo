@@ -119,8 +119,6 @@ See [Headless](https://github.com/h8d13/archinstoo/blob/master/.github/HEADLESS.
 
 See [Multi-Boot](https://github.com/h8d13/archinstoo/blob/master/.github/MULTI_BOOT.md) for example to boot multiple OSes.
 
-See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
-
 See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
 
 See [Out-of-Tree](https://github.com/h8d13/archinstoo/blob/master/.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
@@ -131,9 +129,9 @@ See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_I
 
 See [Distros](https://github.com/h8d13/archinstoo/tree/master/distros) for installing from different distros.
 
-See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/.github/ARM_SUPPORT.md) for example install on Raspi 5-b.
+See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/architecture/README.md) for example install on Raspi 5-b.
 
-See all other docs: [.github](https://github.com/h8d13/archinstoo/tree/master/.github) and [ArchWiki](https://wiki.archlinux.org/title/Main_page)
+See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
 
 ### Testing
 
@@ -165,7 +163,7 @@ Always, since fixes are often time critical.
 
 2. For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
 
-See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors.
+See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [ArchWiki](https://wiki.archlinux.org/title/Main_page)
 
 See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not on GitHub.
 
