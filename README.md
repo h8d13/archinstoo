@@ -142,10 +142,10 @@ See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/bl
 The process would be the same with `git clone -b <branch> <url>` to test a specific fix. Usually reproduced then tested on **actual/appropriate hardware.**
 
 > Any help in this regard is deeply appreciated, as testing/digging takes just as long as writing code. Accurate reports/PRs will be addressed in a timely manner:
-> [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
+> [PRs](https://github.com/h8d13/archinstoo/pulls), [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
 
 **Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing).
-[More explenation](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md)
+[More...](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md)
 
 ---
 
