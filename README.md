@@ -119,9 +119,9 @@ See [Headless](https://github.com/h8d13/archinstoo/blob/master/.github/HEADLESS.
 
 See [Multi-Boot](https://github.com/h8d13/archinstoo/blob/master/.github/MULTI_BOOT.md) for example to boot multiple OSes.
 
-See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
-
 See [Out-of-Tree](https://github.com/h8d13/archinstoo/blob/master/.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
+
+See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
 
 ### More advanced
 
@@ -131,7 +131,7 @@ See [Distros](https://github.com/h8d13/archinstoo/tree/master/distros) for insta
 
 See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/architecture/README.md) for example install on Raspi 5-b.
 
-See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
+See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
 
 ### Testing
 
