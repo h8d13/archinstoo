@@ -218,9 +218,7 @@ class Luks2:
 		iter_time: int | None = None,
 		pbkdf: LuksPbkdf | None = None,
 	) -> None:
-		#
 		# Routine to create keyfiles, so it can be moved elsewhere
-		#
 		if self.mapper_name is None:
 			raise ValueError('Mapper name must be provided')
 

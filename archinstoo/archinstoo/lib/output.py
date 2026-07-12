@@ -184,7 +184,6 @@ log_level = logging.INFO
 
 
 def _supports_color() -> bool:
-	#
 	# Found first reference here:
 	# https://stackoverflow.com/questions/7445658/how-to-detect-if-the-console-does-support-ansi-escape-codes-in-python
 	# And re-used this:
@@ -192,7 +191,6 @@ def _supports_color() -> bool:
 	#
 	# Return True if the running system's terminal supports color,
 	# and False otherwise.
-	#
 	from .utils.env import Os
 
 	supported_platform = sys.platform != 'win32' or Os.has_env('ANSICON')
@@ -218,14 +216,12 @@ def _stylize_output(
 	reset: bool,
 	font: list[Font] = [],
 ) -> str:
-	#
 	# Heavily influenced by:
 	# https://github.com/django/django/blob/ae8338daf34fd746771e0678081999b656177bae/django/utils/termcolors.py#L13
 	# Color options here:
 	# https://askubuntu.com/questions/528928/how-to-do-underline-bold-italic-strikethrough-color-background-and-size-i
 	#
 	# Adds styling to a text given a set of color arguments.
-	#
 	colors = {
 		'black': '0',
 		'red': '1',

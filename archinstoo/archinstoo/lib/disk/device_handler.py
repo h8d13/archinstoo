@@ -733,20 +733,16 @@ class DeviceHandler:
 			return False
 
 	def _wipe(self, dev_path: Path) -> None:
-		#
 		# Wipe a device (partition or otherwise) of meta-data, be it file system, LVM, etc.
 		# @param dev_path:	Device path of the partition to be wiped.
 		# @type dev_path:		str
-		#
 		with dev_path.open('wb') as p:
 			p.write(bytearray(1024))
 
 	def wipe_dev(self, block_device: BDevice) -> None:
-		#
 		# Wipe the block device of meta-data, be it file system, LVM, etc.
 		# This is not intended to be secure, but rather to ensure that
 		# auto-discovery tools don't recognize anything here.
-		#
 		info(f'Wiping partitions and metadata: {block_device.device_info.path}')
 
 		# Wipe filesystem signatures first to prevent auto-discovery tools

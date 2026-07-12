@@ -205,9 +205,7 @@ class _SysInfo:
 
 	@cached_property
 	def cpu_info(self) -> dict[str, str]:
-		#
 		# Returns system cpu information
-		#
 		cpu_info_path = Path('/proc/cpuinfo')
 		cpu: dict[str, str] = {}
 

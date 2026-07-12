@@ -137,21 +137,15 @@ class ListManager[ValueT]:
 			self._data = self.handle_action(value, entry, self._data)
 
 	def selected_action_display(self, selection: ValueT) -> str:
-		#
 		# this will return the value to be displayed in the
 		# "Select an action for '{}'" string
-		#
 		raise NotImplementedError('Please implement me in the child class')
 
 	def handle_action(self, action: str, entry: ValueT | None, data: list[ValueT]) -> list[ValueT]:
-		#
 		# this function is called when a base action or
 		# a specific action for an entry is triggered
-		#
 		raise NotImplementedError('Please implement me in the child class')
 
 	def filter_options(self, selection: ValueT, options: list[str]) -> list[str]:
-		#
 		# filter which actions to show for a specific selection
-		#
 		return options

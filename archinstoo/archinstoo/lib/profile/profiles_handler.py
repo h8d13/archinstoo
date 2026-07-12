@@ -51,9 +51,7 @@ class ProfileHandler:
 		return data
 
 	def parse_profile_config(self, profile_config: ProfileSerialization) -> Profile | None:
-		#
 		# Deserialize JSON configuration for profile
-		#
 		profile: Profile | None = None
 
 		# the order of these is important, we want to
@@ -106,9 +104,7 @@ class ProfileHandler:
 
 	@property
 	def profiles(self) -> list[Profile]:
-		#
 		# List of all available default_profiles
-		#
 		self._profiles = self._profiles or self._find_available_profiles()
 		return self._profiles
 
@@ -296,9 +292,7 @@ class ProfileHandler:
 			self.install_greeter(install_session, profile_config.greeter, profile_config.profiles)
 
 	def _import_profile_from_url(self, url: str) -> None:
-		#
 		# Import default_profiles from a url path
-		#
 		try:
 			data = fetch_data_from_url(url)
 			b_data = bytes(data, 'utf-8')
@@ -315,9 +309,7 @@ class ProfileHandler:
 			error(err)
 
 	def _load_profile_class(self, module: ModuleType) -> list[Profile]:
-		#
 		# Load all default_profiles defined in a module
-		#
 		profiles = []
 		for v in module.__dict__.values():
 			if isinstance(v, type) and v.__module__ == module.__name__:
@@ -334,10 +326,8 @@ class ProfileHandler:
 		return profiles
 
 	def _verify_unique_profile_names(self, profiles: list[Profile]) -> None:
-		#
 		# All profile names have to be unique, this function will verify
 		# that the provided list contains only default_profiles with unique names
-		#
 		counter = Counter([p.name for p in profiles])
 		duplicates = [x for x in counter.items() if x[1] != 1]
 
@@ -347,10 +337,8 @@ class ProfileHandler:
 			raise SystemExit(1)
 
 	def _is_legacy(self, file: Path) -> bool:
-		#
 		# Check if the provided profile file contains a
 		# legacy profile definition
-		#
 		with file.open() as fp:
 			for line in fp:
 				if '__packages__' in line:
@@ -358,9 +346,7 @@ class ProfileHandler:
 		return False
 
 	def _process_profile_file(self, file: Path) -> list[Profile]:
-		#
 		# Process a file for profile definitions
-		#
 		if self._is_legacy(file):
 			info(f'Cannot import {file} because it is no longer supported, please use the new profile format')
 			return []
@@ -383,9 +369,7 @@ class ProfileHandler:
 		return []
 
 	def _find_available_profiles(self) -> list[Profile]:
-		#
 		# Search the profile path for profile definitions
-		#
 		profiles_path = Path(__file__).parents[2] / 'default_profiles'
 		profiles = []
 		for file in profiles_path.glob('**/*.py'):
@@ -399,10 +383,8 @@ class ProfileHandler:
 		return profiles
 
 	def reset_top_level_profiles(self, exclude: list[Profile] = []) -> None:
-		#
 		# Reset all top level profile configurations, this is usually necessary
 		# when a new top level profile is selected
-		#
 		excluded_profiles = [p.name for p in exclude]
 		for profile in self.get_top_level_profiles():
 			if profile.name not in excluded_profiles:
