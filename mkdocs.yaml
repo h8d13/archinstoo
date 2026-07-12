@@ -4,6 +4,8 @@ site_url: https://h8d13.github.io/archinstoo/
 copyright: archinstoo docs © 2026 - h8d13
 repo_url: https://github.com/h8d13/archinstoo
 repo_name: h8d13/archinstoo
+# per-page link to same file on GitHub (blob = read view, not editor)
+edit_uri: blob/master/.github/
 
 # Docs live alongside GitHub metadata in .github/; keep non-doc files out of the build.
 docs_dir: .github
@@ -45,6 +47,9 @@ theme:
     - navigation.top
     - navigation.indexes
     - content.code.copy
+    - content.action.edit
+  icon:
+    edit: fontawesome/brands/github
 
 markdown_extensions:
   - md_in_html
