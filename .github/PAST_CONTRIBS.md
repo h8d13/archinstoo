@@ -112,7 +112,7 @@ Here is what I've learned by building in the open.
 
 So how do we bridge this gap?
 
-1. **Devtools**
+###  **Devtools**
 
 In this category I see two main things:
 
@@ -121,14 +121,14 @@ Backwards-compat claims and style nits that make the code a magical piece instea
 
 Two: amazing tools that are under-exploited should be made clearer to likely future contributors, especially local hooks such as shellcheck, ruff, etc.
 
-2. **Systematic testing**
+### **Systematic testing**
 
 When a patch is released, or when edge occurrences need to be covered, testing has to be done in real-world conditions and from scratch.
 This, plus logs/notes/screenshots and multiple scenarios, can often take more time than finding the fix in the first place.
 
 It doesn't even account for two more factors: one, you need to understand and dig into the docs of the underlying issue(s) or related; two, you might need to test related changes several times over a matrix.
 
-3. **Open**
+### **Open**
 
 From a philosophical standpoint this means _anyone_ can get involved, but moreover means they should be given the necessary information to do so.
 
@@ -172,7 +172,7 @@ I even made it so the target would have `git` pre-installed with the repo alread
 Current best time is **1m54s**, achieved when I moved all the pkgs with hooks in the installer to the first base-strap.
 Which you shouldn't do, for obvious reasons.
 
-### Weird structure of an OS installer
+## Weird structure of an OS installer
 
 The archinstall project is especially relevant to me because it covers thousands of use-cases in a TUI that could run on a potato or the latest most expensive hardware.
 
