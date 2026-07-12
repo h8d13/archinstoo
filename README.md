@@ -145,10 +145,7 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 > [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
 
 **Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing).
-
-See [Philosophy](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md)
-
-See [Troubleshooting](https://github.com/h8d13/archinstoo/blob/master/.github/TROUBLESHOOT.md)
+[More explenation](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md)
 
 ---
 
