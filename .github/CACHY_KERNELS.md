@@ -10,7 +10,7 @@ Install normally, then swap kernels after first boot. Keeps stock kernel as fall
 4. Regen bootloader: `grub-mkconfig -o /boot/grub/grub.cfg` (or equivalent depending on bootloader and paths)
 5. Reboot, pick the new kernel entry in the menu.
 
-Optionally after checking all works fine, remove the original kernel/headers and repos (`--remove`).
+Optionally after checking all works fine, remove the repos (`--remove`).
 
 ## Why fork their repo-add
 
