@@ -6,6 +6,9 @@ repo_url: https://github.com/h8d13/archinstoo
 repo_name: h8d13/archinstoo
 # per-page link to same file on GitHub (blob = read view, not editor)
 edit_uri: blob/master/.github/
+# symlinked docs resolve to their real target, see .github/hooks.py
+hooks:
+  - .github/hooks.py
 
 # Docs live alongside GitHub metadata in .github/; keep non-doc files out of the build.
 docs_dir: .github
@@ -16,6 +19,7 @@ exclude_docs: |
   overrides/
   CODEOWNERS
   docs-requirements.txt
+  hooks.py
 
 extra:
   generator: false
