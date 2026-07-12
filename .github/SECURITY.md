@@ -13,6 +13,9 @@ Or use GitHub's private vulnerability [reporting](https://github.com/h8d13/archi
 
 > Expect an initial response **within 24 hours.**
 
+> [!NOTE]
+> You can also report to the source project directly, if it's not `archinstoo` scoped.
+
 ---
 
 ## User config
