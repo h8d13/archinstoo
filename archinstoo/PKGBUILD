@@ -53,6 +53,7 @@ pkgver() {
 build() {
 	cd "$pkgname/archinstoo" || exit
 
+	printf "__version__ = '%s'\n" "$pkgver" > archinstoo/_version.py
 	python -m build --wheel --no-isolation
 }
 

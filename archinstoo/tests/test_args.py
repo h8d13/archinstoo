@@ -1,3 +1,4 @@
+import argparse
 import dataclasses
 import re
 from pathlib import Path
@@ -106,9 +107,10 @@ def test_correct_parsing_args(
 def test_flags_match_arguments_dataclass(monkeypatch: pytest.MonkeyPatch) -> None:
 	# Every parser flag lands in an Arguments field and vice versa,
 	# so a flag can't be added or removed on one side only.
+	# SUPPRESS-default actions (--version) never reach the namespace.
 	monkeypatch.setattr('sys.argv', ['archinstoo'])
 	handler = ArchConfigHandler()
-	dests = {action.dest for action in handler._parser._actions}
+	dests = {action.dest for action in handler._parser._actions if action.default is not argparse.SUPPRESS}
 	fields = {field.name for field in dataclasses.fields(Arguments)}
 	assert dests == fields
 

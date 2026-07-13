@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Self
 from urllib.request import Request, urlopen
 
+from archinstoo._version import __version__
 from archinstoo.lib.models.application import DEFAULT_KERNEL, ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
@@ -285,6 +286,12 @@ class ArchConfigHandler:
 			action='store_true',
 			default=False,
 			help='Clean up the log directory on exit',
+		)
+		parser.add_argument(
+			'--version',
+			action='version',
+			version=f'archinstoo {__version__}',
+			help='Show version and exit',
 		)
 
 		return parser

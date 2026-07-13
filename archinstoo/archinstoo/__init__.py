@@ -68,6 +68,7 @@ import textwrap
 import traceback
 from typing import TYPE_CHECKING
 
+from ._version import __version__
 from .lib import Pacman, output
 from .lib.checkpoints import _run_script, clean_cache
 from .lib.hardware import SysInfo
@@ -249,6 +250,11 @@ def _script_from_argv() -> str | None:
 
 
 def run_as_a_module() -> int:
+	# short-circuit for version before any preparation
+	if '--version' in sys.argv:
+		print(f'archinstoo {__version__}')
+		return 0
+
 	# short-circuit for global help (no --script) before any preparation
 	if ('-h' in sys.argv or '--help' in sys.argv) and '--script' not in sys.argv:
 		from .lib.args import get_arch_config_handler
