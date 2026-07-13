@@ -22,6 +22,7 @@ Official repository dependencies are installed with pacman when they are missing
                 grimoire 0.1.3
 
 It was fully reworked following AUR malware SCA (13/06/26) to support any source...
+Generally it follows a structure: Constants/Configs > Helpers > Logic > Exec flow.
 
 ASCII: Donovan Baker
 ## /* SPDX-FileCopyrightText: 2026
@@ -37,6 +38,7 @@ import argparse
 import contextlib
 import hashlib
 import heapq
+import io
 import json
 import os
 import re
@@ -97,6 +99,7 @@ class _RuntimeConfig:
 	use_color: 	bool = False
 	use_ssh: 	bool = False
 	use_shallow: 	bool = False
+	native_conf: 	Path | None = None
 	cache_dir: 	Path | None = None
 	cache_ttl: 	int = 3600
 	inst_cache: 	set[str] | None = None
@@ -208,6 +211,7 @@ _GLOBAL_FLAG_OPTIONS: Final = {
 	"--no-color",
 	"--use-ssh",
 	"--shallow",
+	"--native",
 	"--version",
 	"-v",
 }
@@ -226,17 +230,21 @@ SSH_REWRITE_HOSTS: Final = {
 	"aur.archlinux.org": "aur",
 }
 
-_DEFAULT_CONF: Final = """\
+# Host of the official Arch packaging repos ([ARCH] default below); clones from
+# here get their keys/pgp/ source keys auto-imported before building.
+OFFICIAL_GIT_HOST: Final = "gitlab.archlinux.org"
+
+_DEFAULT_CONF: Final = f"""\
 # Example grimoire config. Manage with `grimoire repo`.
 # Top takes precedence. Spaces do not matter.
-# Template support: {pkg} = package name, {pkgbase} = its pkgbase
+# Template support: {{pkg}} = package name, {{pkgbase}} = its pkgbase
 # (Ie: amd-ucode -> linux-firmware)
 
 # Insert a custom repo here. Examples can be found in the repo.
 
 # Default: Arch's official packages.
 [ARCH]
-https://gitlab.archlinux.org/archlinux/packaging/packages/{pkgbase}.git
+https://{OFFICIAL_GIT_HOST}/archlinux/packaging/packages/{{pkgbase}}.git
 
 # Off by default (AUR is opt-in).
 [AUR]
@@ -248,11 +256,87 @@ _PACMAN_DBPATH_RE: 	Final = re.compile(r"^\s*DBPath\s*=\s*(\S+)")
 _DEP_SPLIT_RE: 		Final = re.compile(r"[<>~=]+")
 _DESC_FIELD_RE: 	Final = re.compile(r"%(\w+)%\n([^\n]*)")
 
+REGEX_CHARS = r".*+?[]{}()^$|\\"
+
 # Third-party repos (cachyos, ...) have no recipe, exclude from the templated search.
 _OFFICIAL_REPO_RE: Final = re.compile(
 	r"^(core|extra|multilib)(-testing|-staging)?$|^(gnome|kde)-unstable$"
 )
 _HOSTISH_RE: Final = re.compile(r"[a-z0-9-]+(\.[a-z0-9-]+)+$", re.IGNORECASE)
+
+
+def _xdg_config_home() -> Path:
+	return Path(os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config"))
+
+# respect makepkg auth config
+def _makepkg_conf_paths() -> tuple[Path, ...]:
+	return (
+		_xdg_config_home() / "pacman/makepkg.conf",
+		Path.home() / ".makepkg.conf",
+		Path("/etc/makepkg.conf"),
+	)
+
+
+# all builds assume a valid user + elevation tool
+def _pacman_db_path() -> Path:
+	try:
+		content = Path("/etc/pacman.conf").read_text()
+	except OSError:
+		return Path("/var/lib/pacman")
+	for line in content.splitlines():
+		match = _PACMAN_DBPATH_RE.match(line)
+		if match:
+			return Path(match.group(1))
+	return Path("/var/lib/pacman")
+
+
+def _read_pacman_auth() -> str | None:
+	for path in _makepkg_conf_paths():
+		try:
+			content = path.read_text()
+		except OSError:
+			continue
+		for line in content.splitlines():
+			match = _PACMAN_AUTH_RE.match(line)
+			if match:
+				return match.group(1)
+	return None
+
+
+@cache
+def _get_elev() -> str:
+	preferred = _read_pacman_auth()
+	if preferred and shutil.which(preferred):
+		return preferred
+	for tool in _ELEV_TOOLS:
+		if shutil.which(tool):
+			return tool
+	raise GrimoireErr("No privilege elevation tool found.")
+
+
+def _elevate(cmd: list[str]) -> list[str]:
+	if os.geteuid() == 0:
+		return cmd
+	tool = _get_elev()
+	if tool == "su":
+		return ["su", "-c", shlex.join(cmd), "root"]
+	return [tool, *cmd]
+
+
+def _repo_registry_path() -> Path:
+	return _xdg_config_home() / __appname__ / _CONF_NAME
+
+
+def _ensure_repos_conf() -> None:
+	# Seed a default repos.ini the first time a source is needed, so the default is
+	# the official Arch repos (build from source) rather than the AUR. Best-effort:
+	# if the write fails, resolution falls back to the built-in AUR.
+	path = _repo_registry_path()
+	if path.exists():
+		return
+	with contextlib.suppress(OSError):
+		path.parent.mkdir(parents=True, exist_ok=True)
+		path.write_text(_DEFAULT_CONF)
 
 
 def style(text: str, *codes: str) -> str:
@@ -273,6 +357,10 @@ def prompt_confirm(message: str) -> bool:
 
 def is_debug_package(name: str) -> bool:
 	return name.endswith("-debug")
+
+
+def is_regex(pattern: str) -> bool:
+	return any(char in pattern for char in REGEX_CHARS)
 
 
 def is_vcs_package(name: str) -> bool:
@@ -306,30 +394,6 @@ def _lsremote_names(output: str) -> list[str]:
 		if len(parts) == 2:
 			names.append(parts[1].split("/")[-1])
 	return names
-
-
-def _xdg_config_home() -> Path:
-	return Path(os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config"))
-
-
-def _makepkg_conf_paths() -> tuple[Path, ...]:
-	return (
-		_xdg_config_home() / "pacman/makepkg.conf",
-		Path.home() / ".makepkg.conf",
-		Path("/etc/makepkg.conf"),
-	)
-
-
-def _pacman_db_path() -> Path:
-	try:
-		content = Path("/etc/pacman.conf").read_text()
-	except OSError:
-		return Path("/var/lib/pacman")
-	for line in content.splitlines():
-		match = _PACMAN_DBPATH_RE.match(line)
-		if match:
-			return Path(match.group(1))
-	return Path("/var/lib/pacman")
 
 
 def _iter_db_descs(db: Path, name_prefix: str | None) -> Iterator[dict[str, str]]:
@@ -498,39 +562,6 @@ def _sync_db_packages_cached() -> list[tuple[str, str | None, str | None, str]]:
 	return cached_json(key, CONFIG.cache_ttl, lambda: list(_sync_db_packages())) or []
 
 
-def _read_pacman_auth() -> str | None:
-	for path in _makepkg_conf_paths():
-		try:
-			content = path.read_text()
-		except OSError:
-			continue
-		for line in content.splitlines():
-			match = _PACMAN_AUTH_RE.match(line)
-			if match:
-				return match.group(1)
-	return None
-
-
-@cache
-def _get_elev() -> str:
-	preferred = _read_pacman_auth()
-	if preferred and shutil.which(preferred):
-		return preferred
-	for tool in _ELEV_TOOLS:
-		if shutil.which(tool):
-			return tool
-	raise GrimoireErr("No privilege elevation tool found.")
-
-
-def _elevate(cmd: list[str]) -> list[str]:
-	if os.geteuid() == 0:
-		return cmd
-	tool = _get_elev()
-	if tool == "su":
-		return ["su", "-c", shlex.join(cmd), "root"]
-	return [tool, *cmd]
-
-
 def _maybe_ssh_rewrite(url: str) -> str:
 	parsed = urllib.parse.urlparse(url)
 	if parsed.scheme not in ("http", "https") or not parsed.netloc:
@@ -673,22 +704,6 @@ def _forge_raw_url(clone_url: str, ref: str, path: str) -> str | None:
 		# canonical /raw/{branch,tag,commit}/ form, so this too stays ref-type-agnostic.
 		return f"https://{host}/{repo}/raw/{ref}/{path}"
 	return None
-
-
-def _repo_registry_path() -> Path:
-	return _xdg_config_home() / __appname__ / _CONF_NAME
-
-
-def _ensure_repos_conf() -> None:
-	# Seed a default repos.ini the first time a source is needed, so the default is
-	# the official Arch repos (build from source) rather than the AUR. Best-effort:
-	# if the write fails, resolution falls back to the built-in AUR.
-	path = _repo_registry_path()
-	if path.exists():
-		return
-	with contextlib.suppress(OSError):
-		path.parent.mkdir(parents=True, exist_ok=True)
-		path.write_text(_DEFAULT_CONF)
 
 
 def load_repo_registry() -> dict[str, list[str]]:
@@ -851,10 +866,10 @@ def _resolve_sources(
 	# collapses to a single source. A section named "AUR" (or no conf at all) is the
 	# built-in AUR backend, encoded as a None repo_url. `package` resolves {pkg} /
 	# {pkgbase} templates per package (multi-package install/fetch resolves in a loop).
-	alias = getattr(args, "repo", None)
-	repo_url = getattr(args, "repo_url", None)
-	branch = getattr(args, "rev", None)
-	subdir = getattr(args, "subdir", None)
+	alias =         getattr(args, "repo", None)
+	repo_url =      getattr(args, "repo_url", None)
+	branch =        getattr(args, "rev", None)
+	subdir =        getattr(args, "subdir", None)
 	if alias or repo_url:
 		return [
 			_resolve_repo_for_package(
@@ -948,6 +963,17 @@ def clear_search_cache() -> None:
 		print("No search cache to remove")
 
 
+def _remove_clone(package: str, dest_root: Path) -> None:
+	# Drop one package's clone dir, leaving any install untouched. inspect/fetch create
+	# clones too, so one can exist for a package that was never installed.
+	package_dir = dest_root / package
+	if package_dir.exists():
+		print(f"Removing clone {package_dir}")
+		shutil.rmtree(package_dir)
+		print(f"Removed clone for {style(package, GREEN)}")
+	else:
+		print(f"No clone found at {package_dir}")
+
 def clean_clones(dest_root: Path) -> None:
 	# Remove every cloned package build tree under dest-root, leaving the caches alone
 	# (those are files, or the .searchcache dir handled by clear_search_cache). Scratch
@@ -964,18 +990,6 @@ def clean_clones(dest_root: Path) -> None:
 	print(f"Removed {removed} clone(s) from {dest_root}" if removed else "No clones to remove")
 
 
-def _remove_clone(package: str, dest_root: Path) -> None:
-	# Drop one package's clone dir, leaving any install untouched. inspect/fetch create
-	# clones too, so one can exist for a package that was never installed.
-	package_dir = dest_root / package
-	if package_dir.exists():
-		print(f"Removing clone {package_dir}")
-		shutil.rmtree(package_dir)
-		print(f"Removed clone for {style(package, GREEN)}")
-	else:
-		print(f"No clone found at {package_dir}")
-
-
 @overload
 def run_command(
 	cmd: Sequence[str],
@@ -989,22 +1003,22 @@ def run_command(
 
 @overload
 def run_command(
-	cmd: Sequence[str],
+	cmd:            Sequence[str],
 	*,
-	cwd: Path | None = ...,
-	capture: Literal[True],
-	check: bool = ...,
-	env: dict[str, str] | None = ...,
+	cwd:            Path | None = ...,
+	capture:        Literal[True],
+	check:          bool = ...,
+	env:            dict[str, str] | None = ...,
 ) -> str: ...
 
 
 def run_command(
-	cmd: Sequence[str],
+	cmd:            Sequence[str],
 	*,
-	cwd: Path | None = None,
-	capture: bool = False,
-	check: bool = True,
-	env: dict[str, str] | None = None,
+	cwd:            Path | None = None,
+	capture:        bool = False,
+	check:          bool = True,
+	env:            dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str] | str:
 	if DEBUG:
 		cwd_hint = f" (cwd={cwd})" if cwd else ""
@@ -1071,7 +1085,10 @@ def _tree_has(package_dir: Path, ref: str, path: str) -> bool:
 
 
 def _build_subpath(
-	package_dir: Path, ref: str, subdir: str | None, package: str
+	package_dir:    Path,
+	ref:            str,
+	subdir:         str | None,
+	package:        str
 ) -> str | None:
 	# The subtree holding the PKGBUILD, for a sparse checkout: <subdir>/<pkg>, <subdir>,
 	# or <pkg> (flat). None means the PKGBUILD is at the build root (solo) -> whole tree.
@@ -1491,12 +1508,10 @@ def _iter_srcinfo_kv(srcinfo_content: str) -> Iterator[tuple[str, str]]:
 		yield key, value
 
 
-def _str_or_none(value: object) -> str | None:
-	return value if isinstance(value, str) else None
-
-
 def _assemble_version(
-	pkgver: str | None, pkgrel: str | None, epoch: str | None
+	pkgver: str | None,
+	pkgrel: str | None,
+	epoch:  str | None
 ) -> str | None:
 	# Compose epoch:pkgver-pkgrel, suppressing an absent/zero epoch. None when nothing
 	# version-like is present.
@@ -1977,8 +1992,6 @@ def list_repo_packages(name: str, dest_root: Path) -> None:
 
 
 def fetch_git_file(package: str, path: str) -> str | None:
-	# Lazy import: urlopen pulls in http.client and is unused on a warm cache hit.
-	# Import the name (not the package) so it doesn't shadow the top-level urllib.
 	from urllib.request import urlopen
 
 	# The mirror is branch-per-pkgbase; a split pkgname resolves to its base branch.
@@ -2069,6 +2082,125 @@ def collect_missing_official_packages(
 	return missing_official, unresolved
 
 
+def _import_source_keys(package_dir: Path) -> None:
+	# Official Arch packaging clones ship the upstream source-signing keys as
+	# keys/pgp/<fingerprint>.asc next to the PKGBUILD (same files `pkgctl build`
+	# imports). Import them into the builder's gpg keyring so makepkg's validpgpkeys
+	# check passes without a keyserver round-trip. Scoped to OFFICIAL_GIT_HOST
+	# origins; AUR/custom clones keep the manual `gpg --recv-keys` flow.
+	origin = _clone_origin(package_dir)
+	if origin is None or OFFICIAL_GIT_HOST not in origin:
+		return
+	keys = sorted((package_dir / "keys" / "pgp").glob("*.asc"))
+	if not keys:
+		print(style("==> no source keys in clone (keys/pgp), skipping import", DIM))
+		return
+	print(style(f"==> importing {len(keys)} PGP key(s) from keys/pgp", DIM))
+	# check=False: gpg already prints per-key errors; a bad key then fails in
+	# makepkg's own signature check with the precise fingerprint.
+	run_command(["gpg", "--import", *map(str, keys)], check=False)
+
+
+# --native builds route compiler flags through a generated makepkg.conf overlay.
+# Env-var injection can't work: makepkg's load_makepkg_config only preserves an
+# allowlist (PKGDEST..CARCH), then the conf files assign CFLAGS unconditionally.
+# The overlay replays makepkg's own config chain (which makepkg skips itself for
+# any non-/etc --config file), then appends the native flags. Literal
+# -march=native, not the expanded form: gcc and clang PKGBUILDs both accept it.
+_NATIVE_MAKEPKG_CONF: Final = """\
+# generated by grimoire --native (regenerated every run; do not edit)
+if [[ -r /etc/makepkg.conf ]]; then
+	source /etc/makepkg.conf
+fi
+for _c in /etc/makepkg.conf.d/*.conf; do
+	if [[ -r $_c ]]; then
+		source "$_c"
+	fi
+done
+unset _c
+if [[ -r "${XDG_CONFIG_HOME:-$HOME/.config}/pacman/makepkg.conf" ]]; then
+	source "${XDG_CONFIG_HOME:-$HOME/.config}/pacman/makepkg.conf"
+elif [[ -r "$HOME/.makepkg.conf" ]]; then
+	source "$HOME/.makepkg.conf"
+fi
+CFLAGS+=" -march=native -mtune=native"
+CXXFLAGS+=" -march=native -mtune=native"
+RUSTFLAGS+=" -C target-cpu=native"
+"""
+
+
+def _write_native_conf(dest_root: Path) -> Path:
+	# Plain file in dest_root: clean --clones only removes dirs, and makepkg
+	# only globs drop-ins from "<conf>.d/", which never exists for this name.
+	dest_root.mkdir(parents=True, exist_ok=True)
+	path = dest_root / "native.makepkg.conf"
+	path.write_text(_NATIVE_MAKEPKG_CONF)
+	return path
+
+
+def _parse_cc1_flags(gcc_trace: str) -> str | None:
+	# `gcc -### -E -` prints its subcommands; the cc1 line carries -march=native
+	# resolved to explicit -m<feature>/--param flags. Everything up to the bare
+	# `-` (the stdin arg) is driver noise, and gcc >= 11 appends a `-dumpbase -`
+	# pair that isn't a codegen flag.
+	for line in gcc_trace.splitlines():
+		if "cc1" not in line:
+			continue
+		flags = re.sub(r"^.* - ", "", line.replace('"', "")).strip()
+		return flags.removesuffix("-dumpbase -").strip() or None
+	return None
+
+
+def _parse_rust_features(cfg: str) -> str | None:
+	# Reorganize `rustc --print cfg` target_feature lines into the comma+plus
+	# form -C target-feature expects. crt-static is a linking mode rustc lists
+	# as a feature on some targets, never a CPU capability: drop it.
+	feats = re.findall(r'^target_feature="([^"]+)"$', cfg, flags=re.MULTILINE)
+	feats = [f for f in feats if f != "crt-static"]
+	if not feats:
+		return None
+	return "-Ctarget-feature=" + ",".join(f"+{f}" for f in feats)
+
+
+def _expanded_native(
+	cmd: 	list[str],
+	parse: 	Callable[[str], str | None],
+) -> str | None:
+	try:
+		# gcc traces to stderr, rustc prints cfg to stdout: feed the parser both.
+		proc = subprocess.run(  # noqa: S603 - fixed compiler argv, not user input
+			cmd, text=True, capture_output=True, check=False
+		)
+	except FileNotFoundError:
+		return None
+	return parse(proc.stdout + proc.stderr)
+
+
+def print_native_flags() -> int:
+	# Expanded, machine-pinned equivalents of -march=native / -Ctarget-cpu=native
+	# as eval-able assignments (store on a build server, pin a container build).
+	# --native builds keep the literal flags instead: the expansion is tied to
+	# this compiler version, and gcc's --param spellings break clang.
+	cflags = _expanded_native(
+		["gcc", "-###", "-E", "-", "-march=native", "-mtune=native"],
+		_parse_cc1_flags,
+	)
+	rustflags = _expanded_native(
+		["rustc", "-C", "target-cpu=native", "--print", "cfg"],
+		_parse_rust_features,
+	)
+	if cflags:
+		print(f'CFLAGS="{cflags}"')
+		print(f'CXXFLAGS="{cflags}"')
+	else:
+		print("gcc missing or no cc1 line: skipping CFLAGS", file=sys.stderr)
+	if rustflags:
+		print(f'RUSTFLAGS="{rustflags}"')
+	else:
+		print("rustc missing or no features: skipping RUSTFLAGS", file=sys.stderr)
+	return 0 if cflags or rustflags else 1
+
+
 def build_and_install(
 	package_dir: 	Path,
 	*,
@@ -2080,6 +2212,9 @@ def build_and_install(
 		raise GrimoireErr(f"PKGBUILD missing at {pkgbuild_path}")
 	flags = "-sif" if refresh else "-si"
 	cmd = ["makepkg", flags, "--needed"]
+	if CONFIG.native_conf:
+		cmd += ["--config", str(CONFIG.native_conf)]
+		print(style(f"==> native CPU flags via {CONFIG.native_conf}", DIM))
 	if noconfirm:
 		cmd.append("--noconfirm")
 	print(f"Building {package_dir.name} with makepkg")
@@ -2274,6 +2409,7 @@ def install_package(
 			package_dir, package, update.prev_head if update else None
 		)
 
+	_import_source_keys(package_dir)
 	build_and_install(package_dir, noconfirm=noconfirm, refresh=refresh)
 
 
@@ -2679,6 +2815,10 @@ def search_packages(
 	return search_packages_git(regex=regex, needle=needle, limit=limit)
 
 
+def _str_or_none(value: object) -> str | None:
+	return value if isinstance(value, str) else None
+
+
 def _fetch_aur_meta() -> list[tuple[str, str | None, str | None]] | None:
 	# Bulk AUR metadata dump: name + version + description for every package, one gzip.
 	import gzip
@@ -2745,11 +2885,6 @@ def aur_packages() -> list[tuple[str, str | None, str | None]]:
 		"aurmeta.json", CONFIG.cache_ttl, _fetch_aur_packages_with_completion
 	)
 	return rows or []
-
-
-def is_regex(pattern: str) -> bool:
-	regex_chars = r".*+?[]{}()^$|\\"
-	return any(char in pattern for char in regex_chars)
 
 
 def compute_match_score(
@@ -3352,6 +3487,12 @@ def build_parser() -> tuple[argparse.ArgumentParser, frozenset[str]]:
 		action="store_true",
 		help="Use shallow clones (--depth=1); default is full history",
 	)
+	parser.add_argument(
+		"--native",
+		action="store_true",
+		help="Build with native CPU optimization (-march=native, and "
+		"-C target-cpu=native for Rust) via a generated makepkg.conf overlay",
+	)
 	subparsers = parser.add_subparsers(dest="command")
 
 	fetch_parser = subparsers.add_parser(
@@ -3605,13 +3746,25 @@ def build_parser() -> tuple[argparse.ArgumentParser, frozenset[str]]:
 		help="List registered aliases and their mirror URLs",
 	)
 
+	subparsers.add_parser(
+		"nativeflags",
+		help="Print this machine's expanded native compiler flags "
+		"(gcc cc1 + rustc target-features) for storing on a build server",
+	)
+
 	# Single source of truth for the command list (main's implicit-search hoist needs it).
 	return parser, frozenset(subparsers.choices)
 
 
 def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse command dispatch
-	# The single command-dispatch hub: intentionally large (cf. the C901 exemption above).
+	# The single command-dispatch hub: intentionally large (exemption above/bellow).
 	# pylint: disable=too-many-branches,too-many-statements,too-many-locals,too-many-return-statements
+	# Piped stdout is block-buffered, so our narration would flush at exit, AFTER
+	# the child processes' (git/makepkg/pacman) direct fd writes, and read out of
+	# order in CI/tee logs. Line-buffer to keep it interleaved with the work.
+	# isinstance: sys.stdout is typed TextIO, which has no .reconfigure.
+	if isinstance(sys.stdout, io.TextIOWrapper) and not sys.stdout.isatty():
+		sys.stdout.reconfigure(line_buffering=True)
 	argv_list = list(argv if argv is not None else sys.argv[1:])
 	parser, commands = build_parser()
 	# Hoist global flags so they can appear after the subcommand too
@@ -3658,6 +3811,8 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 	CONFIG.use_color = not getattr(args, "no_color", False) and sys.stdout.isatty()
 	CONFIG.use_ssh = bool(getattr(args, "use_ssh", False))
 	CONFIG.use_shallow = bool(getattr(args, "shallow", False))
+	if getattr(args, "native", False):
+		CONFIG.native_conf = _write_native_conf(dest_root)
 	# Never block on an interactive git auth prompt (e.g. a 404 clone of a templated
 	# URL); fail fast instead. Configured credential helpers still work.
 	os.environ.setdefault("GIT_TERMINAL_PROMPT", "0")
@@ -3679,11 +3834,10 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 		return 0
 
 	# Seed a default repos.ini ([ARCH] + AUR toggle) on first use, so every command sees
-	# the official default base. Idempotent: no-ops once the conf exists. Runs after the
-	# no-command/help return so a bare `grimoire` doesn't create a conf.
+	# the official default base. Idempotent: no-ops once the conf exists.
 	_ensure_repos_conf()
 
-	# fallback when /tmp is not writable, use our default + .tmp.
+	# fallback when /tmp is not writable, use our default + .tmp
 	current_tmp = os.environ.get("TMPDIR") or "/tmp"  # noqa: S108 - standard TMPDIR default, writability checked below
 	if not os.access(current_tmp, os.W_OK):
 		fallback_tmp = dest_root / ".tmp"
@@ -3783,6 +3937,8 @@ def main(argv: Sequence[str] | None = None) -> int:  # noqa: C901  argparse comm
 		elif args.command == "build":
 			for package in args.packages:
 				build_package(package, dest_root, noconfirm=args.noconfirm)
+		elif args.command == "nativeflags":
+			return print_native_flags()
 		elif args.command == "update":
 			update_packages(
 				dest_root,
@@ -3924,178 +4080,184 @@ if __name__ == "__main__":
 		sys.exit(130)
 
 #h8d13washere
-# class _RuntimeConfig  :93
-# class DependencySet  :109
-#     def all_build_deps(self)  :116
-# class SearchResult  :121
-# class UpdateCandidate  :138
-# class UpdateContext  :150
-# class RepoRef  :158
-# class UpdateProbe  :166
-# class UpdateSpec  :174
-# class CloneSource  :181
-# class GrimoireErr  :191
-# def style(text)  :258
-# def prompt_confirm(message)  :264
-# def is_debug_package(name)  :274
-# def is_vcs_package(name)  :278
-# def get_aur_remote()  :283
-# def _aur_mirror_lsremote_cmd()  :288
-# def _lsremote_first_sha(output)  :292
-# def _lsremote_names(output)  :300
-# def _xdg_config_home()  :311
-# def _makepkg_conf_paths()  :315
-# def _pacman_db_path()  :323
-# def _iter_db_descs(db, name_prefix)  :335
-# def _iter_sync_db_desc(name_prefix)  :358
-# def _local_db_descs(name_prefix)  :375
-# def _local_db_pkgbase(package)  :395
-# def _db_pkgbase(package)  :410
-# def _aur_rpc_pkgbase(package)  :420
-# def _resolve_pkgbase(package)  :443
-# def _aur_pkgbase(package)  :450
-# def _sync_db_packages()  :458
-# def _sync_db_signature()  :472
-# def _sync_db_packages_cached()  :490
-# def _read_pacman_auth()  :501
-# def _get_elev()  :515
-# def _elevate(cmd)  :525
-# def _maybe_ssh_rewrite(url)  :534
-# def _remote_for(url)  :549
-# def _ssh_rewrite_git_env()  :555
-# def _ensure_scheme(url)  :571
-# def _split_forge_path(parts, markers, ref_offset, gate)  :586
-# def parse_repo_url(url)  :609
-#     def _rebuild(repo_parts, ref, sub)  :619
-# def _forge_raw_url(clone_url, ref, path)  :653
-# def _repo_registry_path()  :678
-# def _ensure_repos_conf()  :682
-# def load_repo_registry()  :694
-# def _repos_section_end(lines, header_idx)  :716
-# def add_repo_alias(name, url)  :728
-# def remove_repo_alias(name)  :758
-# def resolve_repo_alias(name)  :774
-# def _aur_enabled()  :783
-# def _resolve_repo_for_package(package, alias, repo_url, branch, subdir)  :794
-#     def _sub(value)  :817
-#     def _resolve(raw)  :832
-# def _resolve_sources(args, package)  :844
-# def _cache_get(key, ttl)  :879
-# def _atomic_write(path, payload)  :892
-# def _cache_put(key, payload)  :901
-# def _completion_cache_path()  :907
-# def cached_json(key, ttl, fetch)  :915
-# def clear_search_cache()  :936
-# def clean_clones(dest_root)  :951
-# def _remove_clone(package, dest_root)  :967
-# def run_command(cmd, cwd, capture, check, env)  :980
-# def run_command(cmd, cwd, capture, check, env)  :991
-# def run_command(cmd, cwd, capture, check, env)  :1001
-# def _resolve_build_dir(clone_root, subdir)  :1033
-# def _resolve_package_dir(clone_root, subdir, package)  :1045
-# def _tree_has(package_dir, ref, path)  :1059
-# def _build_subpath(package_dir, ref, subdir, package)  :1073
-# def _subdir_hint(package_dir, ref, package)  :1084
-# def _http_status(url)  :1103
-# def _remote_pkgbuild_present(url, ref, subdir, package)  :1118
-# def _clone_with_fallback(package_dir, candidates, package)  :1144
-# def _normalize_git_url(url)  :1211
-# def _clone_origin(package_dir)  :1227
-# def _is_aur_origin(origin)  :1238
-# def _origin_label(package_dir)  :1244
-# def _init_submodules(clone_root)  :1253
-# def ensure_clone(package, dest_root, source, refresh, submodules)  :1266
-# def _clone_resolved(package, dest_root, refresh, submodules, source, sources)  :1372
-# def _reuse_existing_clone(package, dest_root, sources, submodules)  :1392
-# def _clone_any_source(package, dest_root, sources, refresh, submodules)  :1422
-# def read_srcinfo(package_dir)  :1474
-# def _iter_srcinfo_kv(srcinfo_content)  :1483
-# def _str_or_none(value)  :1494
-# def _assemble_version(pkgver, pkgrel, epoch)  :1498
-# def parse_dependencies(srcinfo_content)  :1515
-# def _normalize_dep(dep_entry)  :1547
-# def _pkgbase_guesses(dep)  :1556
-# def parse_srcinfo_metadata(srcinfo_content)  :1567
-# def _reset_git_worktree(package_dir, refs)  :1581
-# def _ref_is_annotated_tag(package_dir, ref)  :1613
-# def _classify_verify_failure(output, min_trust)  :1625
-# def _verify_signature(package_dir, package, ref, min_trust)  :1645
-# def _pacman_returns_zero(args)  :1686
-# def invalidate_inst_cache()  :1702
-# def _list_local_db_packages()  :1706
-# def installed_package_set()  :1712
-# def is_installed(package)  :1725
-# def exists_in_sync_repo(package)  :1730
-# def is_dependency_satisfied(dep)  :1734
-# def package_provides(package)  :1739
-# def _search_aur_candidates(dep, limit)  :1752
-# def resolve_aur_dependency(dep)  :1779
-#     def add_candidate(name)  :1785
-# def resolve_official_dependency(dep)  :1821
-# def exists_in_aur_mirror(package)  :1843
-# def list_foreign_packages()  :1856
-# def _local_head(package_dir)  :1874
-# def _git_remote_head(url, ref)  :1886
-# def _aur_remote_head(package)  :1896
-# def get_installed_version(package)  :1907
-# def list_installed_packages()  :1919
-# def list_repo_packages(name, dest_root)  :1933
-# def fetch_git_file(package, path)  :1979
-# def git_srcinfo_metadata(package)  :2003
-# def install_official_packages(packages, noconfirm)  :2013
-# def collect_missing_official_packages(package, dest_root, refresh, visited)  :2026
-# def build_and_install(package_dir, noconfirm, refresh)  :2072
-# def _classify_build_deps(deps, package)  :2092
-# def _confirm_aur_dependencies(aur_dependencies, virtual_providers)  :2122
-# def _page_file(path)  :2140
-# def _review_pkgbuild(package_dir, package, diff_base)  :2152
-# def install_package(package, dest_root, refresh, noconfirm, visited, preinstalled_official, source, sources, update, verify, min_trust, submodules, local_dir)  :2183
-# def _find_pkgbuild_dir(clone_root, package)  :2280
-# def build_package(package, dest_root, noconfirm)  :2297
-# def remove_package(package, noconfirm)  :2315
-# def get_ignored_packages()  :2333
-# def _resolve_update_spec(package, alias, url, branch, subdir)  :2357
-# def _probe_aur_update(package, dest_root)  :2373
-# def _probe_git_update(package, dest_root, source, refresh)  :2387
-# def _find_update_source(package, update_specs, dest_root, refresh, branch, subdir)  :2414
-# def _run_system_update(noconfirm)  :2436
-# def _collect_update_candidates(targets)  :2457
-# def _update_target_label(candidate)  :2477
-# def _update_source_label(repo, repo_url, update_specs)  :2486
-# def _plan_updates(candidates, update_specs, dest_root, ignored, skip_devel, refresh, branch, subdir)  :2499
-# def _rebuild_updates(selected, winning_source, dest_root, refresh, noconfirm)  :2559
-# def _print_missing_notes(missing, source_label)  :2590
-# def update_packages(dest_root, refresh, noconfirm, update_system, include_devel, targets, repo, repo_url, branch, subdir)  :2597
-# def search_packages(regex, needle, limit)  :2673
-# def _fetch_aur_meta()  :2682
-# def _fetch_names_git()  :2708
-# def _fetch_aur_packages()  :2713
-# def _fetch_aur_packages_with_completion()  :2728
-# def aur_packages()  :2740
-# def is_regex(pattern)  :2750
-# def compute_match_score(name, regex, needle)  :2755
-# def search_packages_git(regex, needle, limit)  :2780
-# def _repo_package_names(repo_url, branch, subdir, clone_dir)  :2812
-# def _enumerate_repo(repo_url, branch, subdir, dest_root)  :2846
-# def search_packages_repo(repo_url, branch, subdir, regex, needle, limit, source, dest_root, alias)  :2871
-# def order_search_results(results)  :2941
-# def format_search_result(index, result)  :2946
-# def format_search_result_plain(result)  :2973
-# def print_search_results(results)  :2985
-# def interactive_select_updates(candidates)  :2993
-# def parse_selection(selection, max_index)  :3029
-# def interactive_select_results(results)  :3065
-# def _join_values(values, sort)  :3091
-# def _srcinfo_values(srcinfo_content, key)  :3096
-# def srcinfo_info_fields(package, srcinfo_content, repo)  :3100
-#     def first(key)  :3107
-#     def join(values)  :3111
-# def print_info_fields(fields)  :3131
-# def _print_info_summary(package, description, deps)  :3137
-# def inspect_package(package, dest_root, refresh, target, source, sources, plain)  :3159
-# def fetch_package(package, dest_root, refresh, source, sources, verify, min_trust, submodules)  :3192
-# def _search_all_sources(alias, repo_url, regex, needle, limit, branch, subdir, dest_root)  :3218
-# def _install_search_picks(selected, dest_root, explicit_url, branch, subdir, refresh, noconfirm)  :3271
-# def build_parser()  :3319
-# def main(argv)  :3612
+# class _RuntimeConfig  :95
+# class DependencySet  :112
+#     def all_build_deps(self)  :119
+# class SearchResult  :124
+# class UpdateCandidate  :141
+# class UpdateContext  :153
+# class RepoRef  :161
+# class UpdateProbe  :169
+# class UpdateSpec  :177
+# class CloneSource  :184
+# class GrimoireErr  :194
+# def _xdg_config_home()  :268
+# def _makepkg_conf_paths()  :272
+# def _pacman_db_path()  :281
+# def _read_pacman_auth()  :293
+# def _get_elev()  :307
+# def _elevate(cmd)  :317
+# def _repo_registry_path()  :326
+# def _ensure_repos_conf()  :330
+# def style(text)  :342
+# def prompt_confirm(message)  :348
+# def is_debug_package(name)  :358
+# def is_regex(pattern)  :362
+# def is_vcs_package(name)  :366
+# def get_aur_remote()  :371
+# def _aur_mirror_lsremote_cmd()  :376
+# def _lsremote_first_sha(output)  :380
+# def _lsremote_names(output)  :388
+# def _iter_db_descs(db, name_prefix)  :399
+# def _iter_sync_db_desc(name_prefix)  :422
+# def _local_db_descs(name_prefix)  :439
+# def _local_db_pkgbase(package)  :459
+# def _db_pkgbase(package)  :474
+# def _aur_rpc_pkgbase(package)  :484
+# def _resolve_pkgbase(package)  :507
+# def _aur_pkgbase(package)  :514
+# def _sync_db_packages()  :522
+# def _sync_db_signature()  :536
+# def _sync_db_packages_cached()  :554
+# def _maybe_ssh_rewrite(url)  :565
+# def _remote_for(url)  :580
+# def _ssh_rewrite_git_env()  :586
+# def _ensure_scheme(url)  :602
+# def _split_forge_path(parts, markers, ref_offset, gate)  :617
+# def parse_repo_url(url)  :640
+#     def _rebuild(repo_parts, ref, sub)  :650
+# def _forge_raw_url(clone_url, ref, path)  :684
+# def load_repo_registry()  :709
+# def _repos_section_end(lines, header_idx)  :731
+# def add_repo_alias(name, url)  :743
+# def remove_repo_alias(name)  :773
+# def resolve_repo_alias(name)  :789
+# def _aur_enabled()  :798
+# def _resolve_repo_for_package(package, alias, repo_url, branch, subdir)  :809
+#     def _sub(value)  :832
+#     def _resolve(raw)  :847
+# def _resolve_sources(args, package)  :859
+# def _cache_get(key, ttl)  :894
+# def _atomic_write(path, payload)  :907
+# def _cache_put(key, payload)  :916
+# def _completion_cache_path()  :922
+# def cached_json(key, ttl, fetch)  :930
+# def clear_search_cache()  :951
+# def _remove_clone(package, dest_root)  :966
+# def clean_clones(dest_root)  :977
+# def run_command(cmd, cwd, capture, check, env)  :994
+# def run_command(cmd, cwd, capture, check, env)  :1005
+# def run_command(cmd, cwd, capture, check, env)  :1015
+# def _resolve_build_dir(clone_root, subdir)  :1047
+# def _resolve_package_dir(clone_root, subdir, package)  :1059
+# def _tree_has(package_dir, ref, path)  :1073
+# def _build_subpath(package_dir, ref, subdir, package)  :1087
+# def _subdir_hint(package_dir, ref, package)  :1101
+# def _http_status(url)  :1120
+# def _remote_pkgbuild_present(url, ref, subdir, package)  :1135
+# def _clone_with_fallback(package_dir, candidates, package)  :1161
+# def _normalize_git_url(url)  :1228
+# def _clone_origin(package_dir)  :1244
+# def _is_aur_origin(origin)  :1255
+# def _origin_label(package_dir)  :1261
+# def _init_submodules(clone_root)  :1270
+# def ensure_clone(package, dest_root, source, refresh, submodules)  :1283
+# def _clone_resolved(package, dest_root, refresh, submodules, source, sources)  :1389
+# def _reuse_existing_clone(package, dest_root, sources, submodules)  :1409
+# def _clone_any_source(package, dest_root, sources, refresh, submodules)  :1439
+# def read_srcinfo(package_dir)  :1491
+# def _iter_srcinfo_kv(srcinfo_content)  :1500
+# def _assemble_version(pkgver, pkgrel, epoch)  :1511
+# def parse_dependencies(srcinfo_content)  :1530
+# def _normalize_dep(dep_entry)  :1562
+# def _pkgbase_guesses(dep)  :1571
+# def parse_srcinfo_metadata(srcinfo_content)  :1582
+# def _reset_git_worktree(package_dir, refs)  :1596
+# def _ref_is_annotated_tag(package_dir, ref)  :1628
+# def _classify_verify_failure(output, min_trust)  :1640
+# def _verify_signature(package_dir, package, ref, min_trust)  :1660
+# def _pacman_returns_zero(args)  :1701
+# def invalidate_inst_cache()  :1717
+# def _list_local_db_packages()  :1721
+# def installed_package_set()  :1727
+# def is_installed(package)  :1740
+# def exists_in_sync_repo(package)  :1745
+# def is_dependency_satisfied(dep)  :1749
+# def package_provides(package)  :1754
+# def _search_aur_candidates(dep, limit)  :1767
+# def resolve_aur_dependency(dep)  :1794
+#     def add_candidate(name)  :1800
+# def resolve_official_dependency(dep)  :1836
+# def exists_in_aur_mirror(package)  :1858
+# def list_foreign_packages()  :1871
+# def _local_head(package_dir)  :1889
+# def _git_remote_head(url, ref)  :1901
+# def _aur_remote_head(package)  :1911
+# def get_installed_version(package)  :1922
+# def list_installed_packages()  :1934
+# def list_repo_packages(name, dest_root)  :1948
+# def fetch_git_file(package, path)  :1994
+# def git_srcinfo_metadata(package)  :2016
+# def install_official_packages(packages, noconfirm)  :2026
+# def collect_missing_official_packages(package, dest_root, refresh, visited)  :2039
+# def _import_source_keys(package_dir)  :2085
+# def _write_native_conf(dest_root)  :2132
+# def _parse_cc1_flags(gcc_trace)  :2141
+# def _parse_rust_features(cfg)  :2154
+# def _expanded_native(cmd, parse)  :2165
+# def print_native_flags()  :2179
+# def build_and_install(package_dir, noconfirm, refresh)  :2204
+# def _classify_build_deps(deps, package)  :2227
+# def _confirm_aur_dependencies(aur_dependencies, virtual_providers)  :2257
+# def _page_file(path)  :2275
+# def _review_pkgbuild(package_dir, package, diff_base)  :2287
+# def install_package(package, dest_root, refresh, noconfirm, visited, preinstalled_official, source, sources, update, verify, min_trust, submodules, local_dir)  :2318
+# def _find_pkgbuild_dir(clone_root, package)  :2416
+# def build_package(package, dest_root, noconfirm)  :2433
+# def remove_package(package, noconfirm)  :2451
+# def get_ignored_packages()  :2469
+# def _resolve_update_spec(package, alias, url, branch, subdir)  :2493
+# def _probe_aur_update(package, dest_root)  :2509
+# def _probe_git_update(package, dest_root, source, refresh)  :2523
+# def _find_update_source(package, update_specs, dest_root, refresh, branch, subdir)  :2550
+# def _run_system_update(noconfirm)  :2572
+# def _collect_update_candidates(targets)  :2593
+# def _update_target_label(candidate)  :2613
+# def _update_source_label(repo, repo_url, update_specs)  :2622
+# def _plan_updates(candidates, update_specs, dest_root, ignored, skip_devel, refresh, branch, subdir)  :2635
+# def _rebuild_updates(selected, winning_source, dest_root, refresh, noconfirm)  :2695
+# def _print_missing_notes(missing, source_label)  :2726
+# def update_packages(dest_root, refresh, noconfirm, update_system, include_devel, targets, repo, repo_url, branch, subdir)  :2733
+# def search_packages(regex, needle, limit)  :2809
+# def _str_or_none(value)  :2818
+# def _fetch_aur_meta()  :2822
+# def _fetch_names_git()  :2848
+# def _fetch_aur_packages()  :2853
+# def _fetch_aur_packages_with_completion()  :2868
+# def aur_packages()  :2880
+# def compute_match_score(name, regex, needle)  :2890
+# def search_packages_git(regex, needle, limit)  :2915
+# def _repo_package_names(repo_url, branch, subdir, clone_dir)  :2947
+# def _enumerate_repo(repo_url, branch, subdir, dest_root)  :2981
+# def search_packages_repo(repo_url, branch, subdir, regex, needle, limit, source, dest_root, alias)  :3006
+# def order_search_results(results)  :3076
+# def format_search_result(index, result)  :3081
+# def format_search_result_plain(result)  :3108
+# def print_search_results(results)  :3120
+# def interactive_select_updates(candidates)  :3128
+# def parse_selection(selection, max_index)  :3164
+# def interactive_select_results(results)  :3200
+# def _join_values(values, sort)  :3226
+# def _srcinfo_values(srcinfo_content, key)  :3231
+# def srcinfo_info_fields(package, srcinfo_content, repo)  :3235
+#     def first(key)  :3242
+#     def join(values)  :3246
+# def print_info_fields(fields)  :3266
+# def _print_info_summary(package, description, deps)  :3272
+# def inspect_package(package, dest_root, refresh, target, source, sources, plain)  :3294
+# def fetch_package(package, dest_root, refresh, source, sources, verify, min_trust, submodules)  :3327
+# def _search_all_sources(alias, repo_url, regex, needle, limit, branch, subdir, dest_root)  :3353
+# def _install_search_picks(selected, dest_root, explicit_url, branch, subdir, refresh, noconfirm)  :3406
+# def build_parser()  :3454
+# def main(argv)  :3759
 #############
