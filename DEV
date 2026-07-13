@@ -24,13 +24,6 @@ clean() {
 	git clean -Xfd
 }
 
-sign() {
-	gpg --detach-sign $PKG_GLOB
-}
-verif() {
-	gpg --verify $PKG_GLOB.sig
-}
-
 case "$1" in
 -t | --tree)
 	go_to
@@ -42,24 +35,7 @@ case "$1" in
 	} >docs/README.md
 	;;
 -c | --clean)
-	go_to
 	clean
-	;;
--b | --build)
-	go_to
-	makepkg -Cf
-	;;
--s | --sign)
-	go_to
-	sign
-	;;
--sv | --verify-sig)
-	go_to
-	verif
-	;;
--i | --install)
-	go_to
-	pacman -U --overwrite '*' $PKG_GLOB
 	;;
 -ul | --up-logs)
 	go_to
@@ -90,7 +66,7 @@ case "$1" in
 	fi
 	;;
 *)
-	# Pass through to archinstoo
+	# otherwise, through to archinstoo
 	./RUN "$@" --advanced --debug
 	;;
 esac
