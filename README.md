@@ -151,13 +151,11 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 
 ## Building sources
 
-The idea being to promote **option 2** to use archinstoo latest non-dev.
+>![NOTE]
+> For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
+> For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
 
-Always, since fixes are often time critical.
-
-1. For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
-
-2. For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
+But we recommend using it from latest git `master` instead. Since fixes are often time critical and the "moving target" nature of arch systems.
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [arch-wiki](https://wiki.archlinux.org/title/Main_page).
 
