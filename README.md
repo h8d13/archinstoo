@@ -151,7 +151,7 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 
 ## Building sources
 
->![NOTE]
+>[!NOTE]
 > For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
 > For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
 
