@@ -9,7 +9,7 @@
 
 pkgname=archinstoo
 pkgver=0.1.13
-pkgrel=3
+pkgrel=4
 pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"
@@ -71,6 +71,7 @@ b2sums=()
 build() {
 	cd "$srcdir/../archinstoo" || exit
 
+	sed -i "s/^__version__ = f'[^ ]*/__version__ = f'$pkgver-$pkgrel/" archinstoo/_version.py
 	rm -rf dist/ && rm -rf ./*.egg
 	python -m build --wheel --no-isolation
 }
