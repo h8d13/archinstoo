@@ -159,9 +159,9 @@ Always, since fixes are often time critical.
 
 2. For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
 
-See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [ArchWiki](https://wiki.archlinux.org/title/Main_page)
+See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [Arch-wiki](https://wiki.archlinux.org/title/Main_page)
 
-See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not on GitHub.
+See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not hosted on GitHub.
 
 ---
 
