@@ -135,7 +135,7 @@ See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACH
 
 ### Testing
 
-**Host-to-target:** testing (without ISOs) Here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD)
+**Host-to-target:** testing (without ISOs) here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD).
 
 See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/blob/master/.github/CHANGELOG.md)
 
@@ -159,7 +159,7 @@ Always, since fixes are often time critical.
 
 2. For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
 
-See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [Arch-wiki](https://wiki.archlinux.org/title/Main_page)
+See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [arch-wiki](https://wiki.archlinux.org/title/Main_page).
 
 See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not hosted on GitHub.
 
