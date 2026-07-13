@@ -165,18 +165,19 @@
 │   │       └── unicode
 │   ├── __main__
 │   ├── schema.jsonc
-│   └── scripts/
-│       ├── count
-│       ├── format
-│       ├── guided
-│       ├── list
-│       ├── live
-│       ├── minimal
-│       ├── mirror
-│       ├── packages
-│       ├── rescue
-│       ├── _resolve
-│       └── size
+│   ├── scripts/
+│   │   ├── count
+│   │   ├── format
+│   │   ├── guided
+│   │   ├── list
+│   │   ├── live
+│   │   ├── minimal
+│   │   ├── mirror
+│   │   ├── packages
+│   │   ├── rescue
+│   │   ├── _resolve
+│   │   └── size
+│   └── _version
 ├── examples/
 │   ├── config_custom.json
 │   ├── config_sample_full.json
@@ -193,5 +194,5 @@
     ├── test_mirrors
     └── test_schema_drift
 
-29 directories, 163 files
+29 directories, 164 files
 ```
