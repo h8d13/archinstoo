@@ -24,6 +24,10 @@
 #   DISK_SIZE          new disk size (default 30G)
 #   DISPLAY_BACKEND    qemu -display value (default 'gtk,zoom-to-fit=off')
 #   VGA                qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
+#   GL                 'on' swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
+#                      Overrides VGA. niri/DMS have no software fallback, black-screen
+#                      without this. Needs the full module chain (vga-gl alone won't load):
+#                      qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
 #   AUDIO_BACKEND      qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
 #   SHARE_DIR          host dir exposed read-only as a virtual disk via vvfat
 #                      (default: ./archinstoo; set SHARE_DIR=none to disable).
@@ -42,6 +46,7 @@ RAM="${RAM:-4G}"
 CPUS="${CPUS:-4}"
 DISPLAY_BACKEND="${DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
 VGA="${VGA:-std}"
+GL="${GL:-off}"
 AUDIO_BACKEND="${AUDIO_BACKEND:-pipewire}"
 SHARE_DIR="${SHARE_DIR:-$PROJECT_DIR/archinstoo}"
 ARG="${1:-default}"
@@ -143,6 +148,17 @@ esac
 
 [ -f "$OVMF_VARS" ] || cp "$OVMF_VARS_ORIG" "$OVMF_VARS"
 
+# virgl needs both ends: GL-capable device AND gl=on on the display.
+# -device help skips unloaded modules; probe with device-specific help instead.
+if [ "$GL" = "on" ]; then
+	if qemu-system-x86_64 -device virtio-vga-gl,help 2>&1 | grep -q "not found"; then
+		err "virtio-vga-gl not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} and qemu-ui-opengl)"
+	fi
+	VIDEO_ARGS=(-device virtio-vga-gl -display "$DISPLAY_BACKEND,gl=on")
+else
+	VIDEO_ARGS=(-vga "$VGA" -display "$DISPLAY_BACKEND")
+fi
+
 # shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
 QEMU_ARGS=(
 	-machine q35
@@ -153,8 +169,7 @@ QEMU_ARGS=(
 	-drive "file=$DISK,format=qcow2,if=virtio"
 	-device virtio-net-pci,netdev=net0
 	-netdev user,id=net0
-	-vga "$VGA"
-	-display "$DISPLAY_BACKEND"
+	"${VIDEO_ARGS[@]}"
 	-audiodev "$AUDIO_BACKEND,id=snd0"
 	-device ich9-intel-hda
 	-device hda-duplex,audiodev=snd0
