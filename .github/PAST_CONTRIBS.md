@@ -21,6 +21,12 @@ Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/
 
 Fixed a week later [here](https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/-/commit/c1bee871ca9b1d6899da9279287b92654b698f30)
 
+- Duplicated `.mo` files wasting 10 mb
+
+Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/coreutils/-/work_items/10)
+
+Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/coreutils/-/commit/f33db1312f616064d4730f92e793d6a761a69e5a)
+
 Pending upstream fixes:
 
 - Modify existing `base-devel` pkg for `doas` or alternatives (`sudo` optional)
