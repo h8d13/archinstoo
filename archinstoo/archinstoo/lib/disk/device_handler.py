@@ -3,9 +3,29 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from parted import Device, Disk, DiskException, FileSystem, Geometry, IOException, Partition, PartitionException, freshDisk, getAllDevices, getDevice, newDisk
+# optional: scripts that never touch disk state (live) import this module
+# through installer; only actually constructing a DeviceHandler needs pyparted
+try:
+	from parted import (
+		Device,
+		Disk,
+		DiskException,
+		FileSystem,
+		Geometry,
+		IOException,
+		Partition,
+		PartitionException,
+		freshDisk,
+		getAllDevices,
+		getDevice,
+		newDisk,
+	)
 
-from archinstoo.lib.exceptions import DiskError, SysCallError, UnknownFilesystemFormat
+	_HAS_PARTED = True
+except ModuleNotFoundError:
+	_HAS_PARTED = False
+
+from archinstoo.lib.exceptions import DiskError, RequirementError, SysCallError, UnknownFilesystemFormat
 from archinstoo.lib.general import SysCommand, SysCommandWorker
 from archinstoo.lib.models.device import (
 	DEFAULT_ITER_TIME,
@@ -52,6 +72,8 @@ class DeviceHandler:
 	_TMP_BTRFS_MOUNT = Path('/mnt/arch_btrfs')
 
 	def __init__(self) -> None:
+		if not _HAS_PARTED:
+			raise RequirementError('python-pyparted is required for disk operations')
 		self._devices: dict[Path, BDevice] = {}
 		self._partition_table = PartitionTable.default()
 		self.load_devices()

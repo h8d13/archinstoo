@@ -9,16 +9,26 @@ from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 if TYPE_CHECKING:
 	import builtins
 
+	from parted import Disk, Geometry, Partition
+
 	from archinstoo.lib.disk.device_handler import DeviceHandler
 	from archinstoo.lib.models.users import Password
 
 from uuid import UUID
 
-import parted
-from parted import Disk, Geometry, Partition
-
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug
+
+# libparted PED_PARTITION_* values, re-exported verbatim by pyparted.
+# Inlined (stable C ABI) so models never need pyparted at import time:
+# scripts that don't touch disk state (live) run without it installed.
+_PED_PARTITION_NORMAL = 0
+_PED_PARTITION_BOOT = 1
+_PED_PARTITION_SWAP = 3
+_PED_PARTITION_BIOS_GRUB = 12
+_PED_PARTITION_ESP = 18
+_PED_PARTITION_BLS_BOOT = 20
+_PED_PARTITION_LINUX_HOME = 21
 
 ENC_IDENTIFIER = 'ainst'
 DEFAULT_ITER_TIME = 10000
@@ -647,6 +657,8 @@ class _DeviceInfo:
 
 	@classmethod
 	def from_disk(cls, disk: Disk) -> Self:
+		import parted
+
 		device = disk.device
 		if device.type == 18:
 			device_type = 'loop'
@@ -777,18 +789,16 @@ class PartitionType(StrEnum):
 
 	@classmethod
 	def get_type_from_code(cls, code: int) -> Self:
-		if code == parted.PARTITION_NORMAL:
+		if code == _PED_PARTITION_NORMAL:
 			return cls.PRIMARY
 		debug(f'Partition code not supported: {code}')
 		return cls._UNKNOWN
 
 	def get_partition_code(self) -> int | None:
 		if self == PartitionType.PRIMARY:
-			normal: int = parted.PARTITION_NORMAL
-			return normal
+			return _PED_PARTITION_NORMAL
 		if self == PartitionType.BOOT:
-			boot: int = parted.PARTITION_BOOT
-			return boot
+			return _PED_PARTITION_BOOT
 		return None
 
 
@@ -799,12 +809,12 @@ class PartitionFlagDataMixin:
 
 
 class PartitionFlag(PartitionFlagDataMixin, Enum):
-	BOOT = parted.PARTITION_BOOT
-	XBOOTLDR = parted.PARTITION_BLS_BOOT, 'bls_boot'
-	ESP = parted.PARTITION_ESP
-	BIOS_GRUB = parted.PARTITION_BIOS_GRUB, 'bios_grub'
-	LINUX_HOME = parted.PARTITION_LINUX_HOME, 'linux-home'
-	SWAP = parted.PARTITION_SWAP
+	BOOT = _PED_PARTITION_BOOT
+	XBOOTLDR = _PED_PARTITION_BLS_BOOT, 'bls_boot'
+	ESP = _PED_PARTITION_ESP
+	BIOS_GRUB = _PED_PARTITION_BIOS_GRUB, 'bios_grub'
+	LINUX_HOME = _PED_PARTITION_LINUX_HOME, 'linux-home'
+	SWAP = _PED_PARTITION_SWAP
 
 	@property
 	def description(self) -> str:

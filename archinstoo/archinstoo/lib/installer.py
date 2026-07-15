@@ -85,7 +85,9 @@ class Installer:
 		from .args import Arguments
 
 		self._handler = handler
-		self._device_handler = device_handler or DeviceHandler()
+		# lazy: constructing DeviceHandler scans disks and needs pyparted,
+		# neither wanted for no-disk-ops runs (live)
+		self._device_handler = device_handler
 		self._args = handler.args if handler else Arguments()
 		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/h8d13/archinstoo/issues'
 
@@ -141,6 +143,12 @@ class Installer:
 	@property
 	def handler(self) -> ArchConfigHandler | None:
 		return self._handler
+
+	@property
+	def device_handler(self) -> DeviceHandler:
+		if self._device_handler is None:
+			self._device_handler = DeviceHandler()
+		return self._device_handler
 
 	def set_helper_flag(self, key: str, value: str | bool | None) -> None:
 		self._helper_flags[key] = value
@@ -221,7 +229,7 @@ class Installer:
 			self.target,
 			self._disk_config,
 			self._disk_encryption,
-			self._device_handler,
+			self.device_handler,
 		)
 		self._layout_teardown_required = False
 
@@ -1795,7 +1803,7 @@ class Installer:
 
 			parent_dev_path = get_parent_device_path(boot_partition.safe_dev_path)
 
-			if unique_path := self._device_handler.get_unique_path_for_device(parent_dev_path):
+			if unique_path := self.device_handler.get_unique_path_for_device(parent_dev_path):
 				parent_dev_path = unique_path
 
 			try:
