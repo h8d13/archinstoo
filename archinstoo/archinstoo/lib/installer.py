@@ -15,6 +15,7 @@ from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon
 from archinstoo.lib.linux_path import LPath
+from archinstoo.lib.localization.utils import utf8_locale_name
 from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
 	BOOT_ITER_TIME,
@@ -820,9 +821,13 @@ class Installer:
 		for index, line in enumerate(locale_gen_lines):
 			if entry_re.match(line):
 				uncommented_line = line.removeprefix('#')
+				entry_name = uncommented_line.split()[0]
+				lang_value = utf8_locale_name(entry_name, encoding)
+				if lang_value != entry_name:
+					# regenerate under the suffixed name so LANG resolves
+					uncommented_line = uncommented_line.replace(entry_name, lang_value, 1)
 				locale_gen_lines[index] = uncommented_line
 				locale_gen.write_text(''.join(locale_gen_lines))
-				lang_value = uncommented_line.split()[0]
 				break
 
 		if lang_value is None:
