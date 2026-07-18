@@ -1010,14 +1010,20 @@ class Installer:
 		resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
 
 	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
+		# Live mode targets the running system: configs already in place,
+		# copying a path onto itself raises OSError (Errno 22). Skip the
+		# copies, keep service enablement.
+		on_host = self.target == Path('/')
+
 		# Copy (if any) iwd password and config files
 		iwd_dir = LPath('/var/lib/iwd')
 		if psk_files := list(iwd_dir.glob('*.psk')):
-			iwd_target = self.target / iwd_dir.relative_to_root()
-			iwd_target.mkdir(parents=True, exist_ok=True)
+			if not on_host:
+				iwd_target = self.target / iwd_dir.relative_to_root()
+				iwd_target.mkdir(parents=True, exist_ok=True)
 
-			for psk in psk_files:
-				psk.copy(iwd_target / psk.name, preserve_metadata=True)
+				for psk in psk_files:
+					psk.copy(iwd_target / psk.name, preserve_metadata=True)
 
 			if enable_services:
 				# If we haven't installed the base yet (function called pre-maturely)
@@ -1042,11 +1048,12 @@ class Installer:
 		# Copy (if any) systemd-networkd config files
 		network_dir = LPath('/etc/systemd/network')
 		if netconfigurations := list(network_dir.glob('*')):
-			network_target = self.target / network_dir.relative_to_root()
-			network_target.mkdir(parents=True, exist_ok=True)
+			if not on_host:
+				network_target = self.target / network_dir.relative_to_root()
+				network_target.mkdir(parents=True, exist_ok=True)
 
-			for netconf_file in netconfigurations:
-				netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
+				for netconf_file in netconfigurations:
+					netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
 
 			if enable_services:
 				# If we haven't installed the base yet (function called pre-maturely)
