@@ -109,21 +109,6 @@ def list_locales() -> list[str]:
 	return _fetch_glibc_supported() or _MIN_LOCALES
 
 
-def utf8_locale_name(entry_name: str, encoding: str) -> str:
-	# SUPPORTED lists UTF-8-only locales bare ("en_IL UTF-8"): no ".UTF-8"
-	# in the first column because no other charset variant exists. Written
-	# bare to locale.conf, tools sniffing LANG for "UTF-8" (tmux et al.)
-	# drop to legacy charsets. Return the canonical suffixed name; localedef
-	# registers the locale under whatever name locale.gen carries, so the
-	# caller must rewrite the locale.gen entry to match.
-	if encoding != 'UTF-8' or '.' in entry_name:
-		return entry_name
-	if '@' in entry_name:
-		lang, modifier = entry_name.split('@', 1)
-		return f'{lang}.UTF-8@{modifier}'
-	return f'{entry_name}.UTF-8'
-
-
 def verify_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_keyboard_languages())
 
