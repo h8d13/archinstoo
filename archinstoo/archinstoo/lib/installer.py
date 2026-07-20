@@ -1,4 +1,5 @@
 import os
+import platform
 import re
 import shlex
 import shutil
@@ -1636,9 +1637,13 @@ class Installer:
 				boot_dir_arg.append(f'--boot-directory={boot_partition.mountpoint}')
 				boot_dir = boot_partition.mountpoint
 
-			grub_target = 'x86_64-efi' if SysInfo._bitness() == 64 else 'i386-efi'
-			# https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface
-			# mixed mode boot handling same as limine handling 32bit UEFI on 64-bit CPUs
+			if platform.machine() == 'aarch64':
+				# grub names its EFI target arm64, not aarch64
+				grub_target = 'arm64-efi'
+			else:
+				grub_target = 'x86_64-efi' if SysInfo._bitness() == 64 else 'i386-efi'
+				# https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface
+				# mixed mode boot handling same as limine handling 32bit UEFI on 64-bit CPUs
 
 			add_options = [
 				f'--target={grub_target}',
@@ -1753,6 +1758,13 @@ class Installer:
 
 			parent_dev_path = get_parent_device_path(efi_partition.safe_dev_path)
 
+			# limine ships arch-specific default EFI binaries; 64-bit one last
+			efi_binaries: tuple[str, ...]
+			if platform.machine() == 'aarch64':
+				efi_binaries = ('BOOTAA64.EFI',)
+			else:
+				efi_binaries = ('BOOTIA32.EFI', 'BOOTX64.EFI')
+
 			try:
 				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'
 				efi_dir_path_target = efi_partition.mountpoint / 'EFI'
@@ -1763,14 +1775,14 @@ class Installer:
 
 				efi_dir_path.mkdir(parents=True, exist_ok=True)
 
-				for file in ('BOOTIA32.EFI', 'BOOTX64.EFI'):
+				for file in efi_binaries:
 					(limine_path / file).copy_into(efi_dir_path)
 			except Exception as err:
 				raise DiskError(f'Failed to install Limine in {self.target}{efi_partition.mountpoint}: {err}')
 
-			hook_command = (
-				f'/usr/bin/cp /usr/share/limine/BOOTIA32.EFI {efi_dir_path_target}/ '
-				f'&& /usr/bin/cp /usr/share/limine/BOOTX64.EFI {efi_dir_path_target}/'
+			hook_command = ' && '.join(
+				f'/usr/bin/cp /usr/share/limine/{file} {efi_dir_path_target}/'
+				for file in efi_binaries
 			)
 
 			if not removable:
@@ -1783,7 +1795,7 @@ class Installer:
 					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}')
 
 				if efi_bitness == 64:
-					loader_path = '\\EFI\\arch-limine\\BOOTX64.EFI'
+					loader_path = f'\\EFI\\arch-limine\\{efi_binaries[-1]}'
 				elif efi_bitness == 32:
 					loader_path = '\\EFI\\arch-limine\\BOOTIA32.EFI'
 				else:
