@@ -167,6 +167,10 @@ def perform_installation(
 
 		# No genfstab we're on a running system
 
+		# target is /, so this lands in /etc/archinstoo.d directly; without it
+		# the __exit__ success message would claim artifacts that don't exist
+		installation.sync_artifacts_to_target()
+
 		elapsed_time = time.monotonic() - start_time
 		info(f'Live configuration completed in {elapsed_time:.1f}s')
 
