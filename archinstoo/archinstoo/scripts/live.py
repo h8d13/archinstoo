@@ -90,6 +90,10 @@ def perform_installation(
 		if config.sysctl:
 			installation.setup_sysctl(config.sysctl)
 
+		# Firmware selection rides on _base_packages which live mode never installs
+		if firmware_packages := config.firmware.packages():
+			installation.add_additional_packages(firmware_packages)
+
 		# Network
 		if network_config := config.network_config:
 			network_handler.install_network_config(
