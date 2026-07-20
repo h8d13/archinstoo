@@ -2,7 +2,7 @@
 # Tracks all packages used by archinstoo
 #
 # Regenerate: ./NVGEN gen
-# Check:      ./NVGEN check [--sync]
+# Check:      ./NVGEN check
 # Acknowledge: ./NVGEN take --all
 
 [__config__]
@@ -195,6 +195,9 @@ source = "pacman"
 [caja-xattr-tags]
 source = "pacman"
 
+[cava]
+source = "pacman"
+
 [cinnamon]
 source = "pacman"
 
@@ -232,6 +235,9 @@ source = "pacman"
 source = "pacman"
 
 [cosmic-launcher]
+source = "pacman"
+
+[cosmic-monitor]
 source = "pacman"
 
 [cosmic-notifications]
@@ -409,6 +415,12 @@ source = "pacman"
 source = "pacman"
 
 [dmenu]
+source = "pacman"
+
+[dms-shell-hyprland]
+source = "pacman"
+
+[dms-shell-niri]
 source = "pacman"
 
 [docker]
@@ -666,6 +678,12 @@ source = "pacman"
 [hyprland]
 source = "pacman"
 
+[hyprlauncher]
+source = "pacman"
+
+[hyprpolkitagent]
+source = "pacman"
+
 [i3-wm]
 source = "pacman"
 
@@ -684,6 +702,9 @@ source = "pacman"
 [intel-media-driver]
 source = "pacman"
 
+[inter-font]
+source = "pacman"
+
 [iwd]
 source = "pacman"
 
@@ -694,6 +715,9 @@ source = "pacman"
 source = "pacman"
 
 [kate]
+source = "pacman"
+
+[kimageformats]
 source = "pacman"
 
 [kitty]
@@ -903,6 +927,9 @@ source = "pacman"
 [materia-gtk-theme]
 source = "pacman"
 
+[matugen]
+source = "pacman"
+
 [mesa]
 source = "pacman"
 
@@ -1056,6 +1083,9 @@ source = "pacman"
 [river]
 source = "pacman"
 
+[rtkit]
+source = "pacman"
+
 [rustup]
 source = "pacman"
 
@@ -1155,6 +1185,9 @@ source = "pacman"
 [treeland]
 source = "pacman"
 
+[ttf-jetbrains-mono-nerd]
+source = "pacman"
+
 [ttf-liberation]
 source = "pacman"
 
@@ -1206,10 +1239,10 @@ source = "pacman"
 [wireplumber]
 source = "pacman"
 
-[wmenu]
+[wl-clipboard]
 source = "pacman"
 
-[wofi]
+[wmenu]
 source = "pacman"
 
 [wpa_supplicant]
