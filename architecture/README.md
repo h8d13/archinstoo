@@ -1,4 +1,4 @@
-# Arch Linx on `arm64`
+# Arch Linux on `arm64`
 
 Stage 1 builders for non-x86 targets. Currently ARM (Arch Linux ARM).
 
