@@ -1780,10 +1780,7 @@ class Installer:
 			except Exception as err:
 				raise DiskError(f'Failed to install Limine in {self.target}{efi_partition.mountpoint}: {err}')
 
-			hook_command = ' && '.join(
-				f'/usr/bin/cp /usr/share/limine/{file} {efi_dir_path_target}/'
-				for file in efi_binaries
-			)
+			hook_command = ' && '.join(f'/usr/bin/cp /usr/share/limine/{file} {efi_dir_path_target}/' for file in efi_binaries)
 
 			if not removable:
 				# Create EFI boot menu entry for Limine.
