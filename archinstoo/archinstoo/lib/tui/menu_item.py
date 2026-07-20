@@ -330,7 +330,14 @@ class MenuItemGroup:
 		start_item: MenuItem,
 		direction: int,
 	) -> MenuItem | None:
-		start_index = self.items.index(start_item)
+		try:
+			start_index = items.index(start_item)
+		except ValueError:
+			# focus can go stale: filtering rebuilds the items view and
+			# focus_first() keeps the old focus when nothing is selectable
+			candidates = items if direction == 1 else list(reversed(items))
+			return next((item for item in candidates if self._is_selectable(item)), None)
+
 		n = len(items)
 
 		current_index = start_index

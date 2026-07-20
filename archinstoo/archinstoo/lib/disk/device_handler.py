@@ -482,12 +482,14 @@ class DeviceHandler:
 		# already exists then we have to delete it first
 		if requires_delete and part_mod.status in [ModificationStatus.MODIFY, ModificationStatus.DELETE]:
 			info(f'Delete existing partition: {part_mod.safe_dev_path}')
-			part_info = self.find_partition(part_mod.safe_dev_path)
+			# resolve on the disk being committed: cached partition objects can
+			# belong to another Disk instance and parted refuses cross-disk deletes
+			partition = disk.getPartitionByPath(str(part_mod.safe_dev_path))
 
-			if not part_info:
+			if not partition:
 				raise DiskError(f'No partition for dev path found: {part_mod.safe_dev_path}')
 
-			disk.deletePartition(part_info.partition)
+			disk.deletePartition(partition)
 
 		if part_mod.status == ModificationStatus.DELETE:
 			return
