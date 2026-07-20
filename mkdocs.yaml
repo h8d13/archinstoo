@@ -77,7 +77,7 @@ nav:
       - CachyOS kernels: CACHY_KERNELS.md
       - AUR / out-of-tree: OUT_OF_TREE.md
       - Dependency chains: DEP_CHAINS.md
-      - ARM / Arch-alarm: ARM_SUPPORT.md
+      - ARM64 / SBCs: ARM_SUPPORT.md
   - Project:
       - Contributing: CONTRIBUTING.md
       - API Reference: API_REF.md
