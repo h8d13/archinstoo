@@ -25,12 +25,14 @@ class HyprlandProfile(WaylandProfile):
 			'dunst',
 			'kitty',
 			'uwsm',
-			'wofi',
+			'hyprlauncher',
 			'xdg-desktop-portal-hyprland',
 			'qt5-wayland',
 			'qt6-wayland',
+			'hyprpolkitagent',
 			'grim',
 			'slurp',
+			'wl-clipboard',
 		]
 
 	@property
