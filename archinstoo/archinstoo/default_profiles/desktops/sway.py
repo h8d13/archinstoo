@@ -31,7 +31,6 @@ class SwayProfile(WaylandProfile):
 			'swaybg',
 			'swaylock',
 			'swayidle',
-			'waybar',
 			'wmenu',
 			'brightnessctl',
 			'grim',
