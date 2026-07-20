@@ -3,7 +3,8 @@
 Stage 1 builders for non-x86 targets. Currently ARM (Arch Linux ARM).
 
 > [!NOTE]
-> UEFI spec'd boards can install using `guided` mode. For non-standard SBCs;
+> UEFI spec'd boards can install using `guided` mode. But need to point servers to ARM.
+https://archlinuxarm.org/about/mirrors For non-standard SBCs;
 > Keep reading bellow.
 
 ```
