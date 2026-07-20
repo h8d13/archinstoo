@@ -26,6 +26,8 @@ class AudioApp:
 			'gst-plugin-pipewire',
 			'libpulse',
 			'wireplumber',
+			# realtime scheduling; only ever as optional (and in pulse-audio) but we pin it here.
+			'rtkit',
 		]
 
 	def _enable_pipewire(
