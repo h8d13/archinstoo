@@ -101,7 +101,7 @@ disk_depends = (
 	'dosfstools',  		# FAT EFI filesystem support
 	'e2fsprogs',  		# ext4 filesystem support
 	'f2fs-tools',  		# f2fs filesystem support
-	'ntfs-3g',  		# NTFS filesystem support
+	'ntfsprogs',  		# NTFS filesystem support
 	'xfsprogs',  		# XFS filesystem support
 	'cryptsetup',  		# LUKS encryption support
 	'lvm2',  		# LVM layout support
