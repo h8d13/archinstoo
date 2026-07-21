@@ -81,7 +81,8 @@ from .lib.utils.net import ping
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
 
-# fmt: off  -- comment columns are read as a table, ruff would collapse them
+# comment columns are read as a table, ruff would collapse them
+# fmt: off
 base_depends = (
 	'systemd',  	# For systemd-based operations
 	'coreutils',  	# Basic utilities
