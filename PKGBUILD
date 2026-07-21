@@ -50,7 +50,7 @@ optdepends=(
 	'dosfstools'     #For FAT/EFI filesystem support
 	'e2fsprogs'      #For ext4 filesystem support
 	'f2fs-tools'     #For f2fs filesystem support
-	'ntfsprogs'        #For NTFS filesystem support
+	'ntfsprogs'   	 #For NTFS filesystem support
 	'xfsprogs'       #For XFS filesystem support
 	'cryptsetup'     #For LUKS encryption support
 	'lvm2'           #For LVM FS layout support
