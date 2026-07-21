@@ -204,14 +204,6 @@ class GlobalMenu(AbstractMenu[None]):
 				key='aur_packages',
 			),
 			MenuItem(
-				text='Compile packages from source',
-				action=self._select_compile_packages,
-				value=False,
-				preview_action=self._prev_compile_packages,
-				dependencies=[self._has_elevated_users],
-				key='compile_packages',
-			),
-			MenuItem(
 				text='Sysctl',
 				action=self._edit_sysctl,
 				value=[],
@@ -706,34 +698,6 @@ class GlobalMenu(AbstractMenu[None]):
 			output += f'{"Headers"}: {status}'
 			return output
 		return None
-
-	def _select_compile_packages(self, preset: bool) -> bool:
-		header_text = 'Compile additional packages from source?' + '\n\n'
-		header_text += 'Builds your selected packages from official Arch source with' + '\n'
-		header_text += 'grimoire (makepkg) instead of fetching pacstrap binaries.' + '\n'
-		header_text += 'Much slower; needs an elevated user for the build sandbox.' + '\n'
-
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
-
-		result = SelectMenu[bool](
-			group,
-			header=header_text,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Selection:
-				return result.item() == MenuItem.yes()
-			case _:
-				return preset
-
-	def _prev_compile_packages(self, item: MenuItem) -> str | None:
-		status = 'Enabled' if item.value else 'Disabled'
-		return f'Compile from source: {status}'
 
 	def _prev_firmware(self, item: MenuItem) -> str | None:
 		config: FirmwareConfiguration | None = item.value

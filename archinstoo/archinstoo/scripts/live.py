@@ -31,7 +31,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		if not args.advanced:
 			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
-			global_menu.set_enabled('compile_packages', False)
 
 		global_menu.run(additional_title='- Live mode')
 
@@ -124,11 +123,7 @@ def perform_installation(
 
 		# Additional packages
 		if config.packages and config.packages[0] != '':
-			# Advanced knob: compile from official Arch source instead of pacstrap binaries
-			if args.advanced and config.compile_packages and config.auth_config:
-				run_grimoire_installation(config.packages, installation, config.auth_config, repo=None)
-			else:
-				installation.add_additional_packages(config.packages)
+			installation.add_additional_packages(config.packages)
 
 		# AUR packages
 		if config.aur_packages and config.auth_config:
