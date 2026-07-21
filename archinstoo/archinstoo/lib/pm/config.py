@@ -23,10 +23,11 @@ def _restore_host_conf() -> None:
 
 
 def guard_host_conf() -> None:
-	# Call once at startup. On host: heal a backup left by a crashed run (live conf was
-	# modified but never reverted), then snapshot the clean conf and restore it on exit.
-	# No-op on the ISO where /etc/pacman.conf is discarded on reboot.
-	if not Os.running_from_host():
+	# Call once at startup. On an Arch host: heal a backup left by a crashed run (live conf
+	# was modified but never reverted), then snapshot the clean conf and restore it on exit.
+	# No-op on the ISO where /etc/pacman.conf is discarded on reboot, and on a foreign host
+	# where pm/bootstrap.py writes the conf on purpose (before this runs) to get repos at all.
+	if not (Os.running_from_host() and Os.running_from_arch()):
 		return
 
 	_restore_host_conf()

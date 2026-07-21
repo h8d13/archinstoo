@@ -81,6 +81,7 @@ from .lib.utils.net import ping
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
 
+# fmt: off  -- comment columns are read as a table, ruff would collapse them
 base_depends = (
 	'systemd',  	# For systemd-based operations
 	'coreutils',  	# Basic utilities
@@ -104,6 +105,7 @@ disk_depends = (
 	'cryptsetup',  		# LUKS encryption support
 	'lvm2',  		# LVM layout support
 )  # together they mirror the inner PKGBUILD -python is reloaded last
+# fmt: on
 # deps are only checked on arch hosts/arch-ISOs
 # live configures the running system: no disk, no chroot, so it takes base only
 
