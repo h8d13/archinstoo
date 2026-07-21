@@ -2,7 +2,7 @@ from pathlib import Path
 
 from archinstoo import debug, error
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
-from archinstoo.lib.configuration import ConfigurationHandler
+from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
@@ -70,15 +70,15 @@ def format_disk() -> None:
 	while True:
 		show_menu(config)
 
-		config_handler = ConfigurationHandler(config)
-		config_handler.write_debug()
-		config_handler.save()
+		store = ConfigStore(config)
+		store.write_debug()
+		store.save()
 
 		if args.dry_run:
 			raise SystemExit(0)
 
 		with Tui():
-			if config_handler.confirm_config():
+			if store.confirm_config():
 				break
 			debug('Installation aborted')
 

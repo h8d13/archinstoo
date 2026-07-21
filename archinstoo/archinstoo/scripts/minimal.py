@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.default_profiles.minimal import MinimalProfile
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
-from archinstoo.lib.configuration import ConfigurationHandler
+from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.disk.filesystem import FilesystemHandler
@@ -88,15 +88,15 @@ def _minimal() -> None:
 		return None
 
 	config.disk_config = disk_config
-	config_handler = ConfigurationHandler(config)
-	config_handler.write_debug()
-	config_handler.save()
+	store = ConfigStore(config)
+	store.write_debug()
+	store.save()
 
 	if args.dry_run:
 		raise SystemExit(0)
 
 	with Tui():
-		if not config_handler.confirm_config():
+		if not store.confirm_config():
 			debug('Installation aborted')
 			return _minimal()
 

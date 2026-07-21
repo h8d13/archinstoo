@@ -3,7 +3,17 @@ import os
 from pathlib import Path
 from shutil import rmtree
 
-from archinstoo.lib.output import error, info
+from archinstoo.lib.output import error, info, logger
+
+
+def clean_logs() -> None:
+	# --clean: wipe the log directory, sibling of clean_cache below
+	for item in logger.directory.iterdir():
+		# .info reuses the file type gleaned from iterdir()'s scandir, no extra stat
+		if item.info.is_dir():
+			rmtree(item)
+		else:
+			item.unlink()
 
 
 def _run_script(script: str) -> None:

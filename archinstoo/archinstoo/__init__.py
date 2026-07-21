@@ -70,7 +70,7 @@ from typing import TYPE_CHECKING
 
 from ._version import __version__
 from .lib import Pacman, output
-from .lib.checkpoints import _run_script, clean_cache
+from .lib.checkpoints import _run_script, clean_cache, clean_logs
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.bootstrap import keyring_init, pacman_conf
@@ -124,7 +124,6 @@ disk_depends=(
 
 
 ROOTLESS_SCRIPTS = {'list', 'size', 'mirror', 'count'}
-DEFAULT = 'guided'
 
 
 def _log_env_info() -> None:
@@ -355,7 +354,7 @@ def run_as_a_module() -> int:
 	finally:
 		if handler.args.clean:
 			# note this deletes all logs too
-			handler.clean_up()
+			clean_logs()
 		# note this removes any __pycache__ if possible
 		clean_cache('.')
 

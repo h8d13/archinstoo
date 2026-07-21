@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 	from .args import ArchConfig
 
 
-class ConfigurationHandler:
+class ConfigStore:
 	_USER_CONFIG_FILENAME = 'user_configuration.json'
 
 	def __init__(self, config: ArchConfig):

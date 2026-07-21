@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from archinstoo import DEFAULT, ROOTLESS_SCRIPTS
+from archinstoo import ROOTLESS_SCRIPTS
+from archinstoo.lib.args import DEFAULT_SCRIPT
 
 scripts = [p.stem for p in Path(__file__).parent.glob('*.py') if not p.stem.startswith('_') and p.stem != 'list']
 
@@ -16,7 +17,7 @@ for name in rootless:
 	print(f'    {name}')
 
 for name in root:
-	if name == DEFAULT:
+	if name == DEFAULT_SCRIPT:
 		print(f'    {name:<{width}}  [*] < DEFAULT')
 	else:
 		print(f'    {name:<{width}}  [*]')

@@ -39,7 +39,7 @@ from pathlib import Path
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments
 from archinstoo.lib.authentication.shell import ShellApp
-from archinstoo.lib.configuration import ConfigurationHandler
+from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType

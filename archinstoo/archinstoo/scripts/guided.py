@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
-from archinstoo.lib.configuration import ConfigurationHandler
+from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
@@ -232,7 +232,7 @@ def guided() -> None:
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	if not args.config and (cached := ConfigurationHandler.prompt_resume()):
+	if not args.config and (cached := ConfigStore.prompt_resume()):
 		try:
 			handler.config = ArchConfig.from_config(cached)
 			info('Saved selections loaded successfully')
@@ -244,16 +244,16 @@ def guided() -> None:
 
 		config = handler.config
 
-		config_handler = ConfigurationHandler(config)
-		config_handler.write_debug()
-		config_handler.save()
+		store = ConfigStore(config)
+		store.write_debug()
+		store.save()
 
 		if args.dry_run:
 			raise SystemExit(0)
 			# just save config => no error
 
 		with Tui():
-			if config_handler.confirm_config():
+			if store.confirm_config():
 				break
 			debug('Installation aborted')
 

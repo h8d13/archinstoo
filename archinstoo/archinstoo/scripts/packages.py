@@ -3,7 +3,7 @@ from pathlib import Path
 
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, Arguments, get_arch_config_handler
-from archinstoo.lib.configuration import ConfigurationHandler
+from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
@@ -92,7 +92,7 @@ def packages() -> None:
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
 
-	if cached := ConfigurationHandler.prompt_resume():
+	if cached := ConfigStore.prompt_resume():
 		try:
 			handler.config = ArchConfig.from_config(cached)
 			info('Saved selections loaded successfully')
@@ -104,15 +104,15 @@ def packages() -> None:
 
 		config = handler.config
 
-		config_handler = ConfigurationHandler(config)
-		config_handler.write_debug()
-		config_handler.save()
+		store = ConfigStore(config)
+		store.write_debug()
+		store.save()
 
 		if args.dry_run:
 			raise SystemExit(0)
 
 		with Tui():
-			if config_handler.confirm_config():
+			if store.confirm_config():
 				break
 			debug('Configuration aborted')
 

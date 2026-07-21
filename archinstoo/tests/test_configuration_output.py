@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.args import ArchConfigHandler
-from archinstoo.lib.configuration import ConfigurationHandler
+from archinstoo.lib.configuration import ConfigStore
 
 if TYPE_CHECKING:
 	import pytest
@@ -18,12 +18,12 @@ def test_user_config_roundtrip(
 	handler = ArchConfigHandler()
 	arch_config = handler.config
 
-	config_output = ConfigurationHandler(arch_config)
+	store = ConfigStore(arch_config)
 
-	test_out_file = Path('/tmp/') / ConfigurationHandler._USER_CONFIG_FILENAME
-	monkeypatch.setattr(ConfigurationHandler, '_saved_config_path', classmethod(lambda cls: test_out_file))
+	test_out_file = Path('/tmp/') / ConfigStore._USER_CONFIG_FILENAME
+	monkeypatch.setattr(ConfigStore, '_saved_config_path', classmethod(lambda cls: test_out_file))
 
-	config_output.save()
+	store.save()
 
 	result = json.loads(test_out_file.read_text())
 	expected = json.loads(config_fixture.read_text())

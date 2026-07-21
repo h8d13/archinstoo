@@ -4,7 +4,7 @@ from pathlib import Path
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
-from archinstoo.lib.configuration import ConfigurationHandler
+from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
@@ -187,7 +187,7 @@ def live() -> None:
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	if cached := ConfigurationHandler.prompt_resume():
+	if cached := ConfigStore.prompt_resume():
 		try:
 			handler.config = ArchConfig.from_config(cached)
 			handler.config.kernels = []
@@ -200,15 +200,15 @@ def live() -> None:
 
 		config = handler.config
 
-		config_handler = ConfigurationHandler(config)
-		config_handler.write_debug()
-		config_handler.save()
+		store = ConfigStore(config)
+		store.write_debug()
+		store.save()
 
 		if args.dry_run:
 			raise SystemExit(0)
 
 		with Tui():
-			if config_handler.confirm_config():
+			if store.confirm_config():
 				break
 			debug('Configuration aborted')
 

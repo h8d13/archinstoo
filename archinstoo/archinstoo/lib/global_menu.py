@@ -15,7 +15,7 @@ from archinstoo.lib.tui.types import Alignment, Orientation
 from .applications.application_menu import ApplicationMenu
 from .authentication.authentication_menu import AuthenticationMenu
 from .bootloader.bootloader_menu import BootloaderMenu
-from .configuration import ConfigurationHandler
+from .configuration import ConfigStore
 from .hardware import SysInfo
 from .interactions.general_conf import (
 	select_additional_packages,
@@ -1001,11 +1001,11 @@ class GlobalMenu(AbstractMenu[None]):
 			if choice == 'save_abort':
 				# Sync current selections to config before saving
 				self.sync_all_to_config()
-				config_output = ConfigurationHandler(self._arch_config)
-				config_output.save()
+				store = ConfigStore(self._arch_config)
+				store.save()
 				raise SystemExit(0)  # User-initiated abort is not an error
 			if choice == 'abort_only':
-				ConfigurationHandler.delete_saved_config()
+				ConfigStore.delete_saved_config()
 				raise SystemExit(0)  # User-initiated abort is not an error
 			# If 'cancel', just return to menu
 

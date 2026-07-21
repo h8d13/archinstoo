@@ -303,8 +303,8 @@ def select_luks_partitions(partitions: list[LsblkInfo]) -> list[LsblkInfo]:
 
 def rescue() -> None:
 	# Main rescue mode entry point.
-	config_handler = get_arch_config_handler()
-	args = config_handler.args
+	handler = get_arch_config_handler()
+	args = handler.args
 
 	info('This utility will help you mount and chroot into an existing installation.')
 
@@ -312,7 +312,7 @@ def rescue() -> None:
 	unlocked_luks: list[Luks2] = []
 
 	# Initialize device handler
-	handler = DeviceHandler()
+	device_handler = DeviceHandler()
 
 	# Activate LVM volume groups first
 	info('Activating LVM volume groups...')
@@ -378,7 +378,7 @@ def rescue() -> None:
 	mount_point.mkdir(parents=True, exist_ok=True)
 
 	# Mount the root partition
-	if not mount_partition(selected_partition, mount_point, handler):
+	if not mount_partition(selected_partition, mount_point, device_handler):
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
 			with contextlib.suppress(DiskError, SysCallError):
@@ -398,7 +398,7 @@ def rescue() -> None:
 	info('Linux root filesystem verified!')
 
 	# Mount additional filesystems from fstab
-	mount_additional_filesystems(mount_point, handler)
+	mount_additional_filesystems(mount_point, device_handler)
 
 	# Display information
 	info(f'Installation mounted at: {mount_point}')

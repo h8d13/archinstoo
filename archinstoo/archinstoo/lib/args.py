@@ -1,6 +1,5 @@
 import argparse
 import json
-import shutil
 import sys
 import urllib.error
 import urllib.parse
@@ -22,7 +21,9 @@ from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.service import UserService
-from archinstoo.lib.output import error, logger, warn
+from archinstoo.lib.output import error, warn
+
+DEFAULT_SCRIPT = 'guided'
 
 
 def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) -> None:
@@ -56,7 +57,7 @@ class Arguments:
 @dataclass
 class ArchConfig:
 	bug_report_url: str = 'https://github.com/h8d13/archinstoo'
-	script: str = 'guided'
+	script: str = DEFAULT_SCRIPT  # label only, see ArchConfigHandler.get_script
 	locale_config: LocaleConfiguration | None = None
 	disk_config: DiskLayoutConfiguration | None = None
 	profile_config: ProfileConfiguration | None = None
@@ -193,7 +194,10 @@ class ArchConfigHandler:
 		return self._args
 
 	def get_script(self) -> str:
-		return self.args.script or self.config.script
+		# --script alone decides what runs. ArchConfig.script is a label written
+		# into the saved JSON so resume knows what produced it, and --config-url
+		# fetches that JSON remotely: a config must not pick the code path.
+		return self.args.script or DEFAULT_SCRIPT
 
 	def pass_args_to_subscript(self) -> None:
 		sys.argv = [sys.argv[0]] + self._remaining
@@ -201,20 +205,12 @@ class ArchConfigHandler:
 	def print_help(self) -> None:
 		self._parser.print_help()
 
-	def clean_up(self) -> None:
-		for item in logger.directory.iterdir():
-			# .info reuses the file type gleaned from iterdir()'s scandir, no extra stat
-			if item.info.is_dir():
-				shutil.rmtree(item)
-			else:
-				item.unlink()
-
 	def _define_arguments(self) -> ArgumentParser:
 		parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False)
 		parser.add_argument(
 			'--script',
 			nargs='?',
-			default='guided',
+			default=DEFAULT_SCRIPT,
 			help='Script to run for installation',
 			type=str,
 		)
