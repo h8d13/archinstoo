@@ -84,7 +84,7 @@ if TYPE_CHECKING:
 # comment columns are read as a table, ruff would collapse them
 # fmt: off
 base_depends = (
-	'systemd',  	# For systemd-based operations
+	#'systemd',  	# For systemd-based operations - Fallbacks in place
 	'coreutils',  	# Basic utilities
 	'util-linux',  	# For partition utilities
 	'pciutils',  	# For PCI device detection
