@@ -284,7 +284,7 @@ class Installer:
 		else:
 			info('Skipping reflector (offline mode or non-x86_64 architecture)')
 
-		if not self._args.skip_wkd:
+		if not self._args.skip_wkd and SysInfo.arch() == 'x86_64':
 			info('Waiting for Arch Linux keyring sync...')
 			# Wait for the timer to kick in
 			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:
@@ -300,6 +300,8 @@ class Installer:
 				warn('Arch Linux keyring sync failed')
 			else:
 				info('Arch Linux keyring sync completed')
+		else:
+			info('Skipping keyring sync (--skip-wkd or non-x86_64 architecture)')
 
 	def sanity_check(self) -> None:
 		self._verify_service_stop()
