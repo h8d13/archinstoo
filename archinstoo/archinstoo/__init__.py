@@ -71,6 +71,7 @@ from typing import TYPE_CHECKING
 from ._version import __version__
 from .lib import Pacman, output
 from .lib.checkpoints import _run_script, clean_cache, clean_logs
+from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.bootstrap import keyring_init, pacman_conf
@@ -142,6 +143,20 @@ def _log_env_info() -> None:
 	info(f'Logger path: {logger.path}')
 
 
+def _missing_deps(depends: tuple[str, ...]) -> list[str]:
+	# -T prints only what is unsatisfied and honours `provides`, so a package
+	# the ISO already covers under another name is left alone. --needed skips
+	# reinstalls but not upgrades, and upgrading an ISO package into a newer
+	# split breaks the ISO's own tools (ntfs-3g -> ntfsprogs, testdisk).
+	try:
+		Pacman.run(f'-T {" ".join(depends)}')
+	except SysCallError as err:
+		out = err.worker_log.decode('utf-8', errors='ignore')
+		return [line.strip() for line in out.splitlines() if line.strip() in depends]
+
+	return []
+
+
 def _arch_bootstrap(live: bool) -> int:
 	if Os.get_env('ARCHINSTOO_DEPS_FETCHED'):
 		info('Already bootstrapped...')
@@ -149,9 +164,18 @@ def _arch_bootstrap(live: bool) -> int:
 	try:
 		debug('Fetching deps...')
 		depends = base_depends if live else base_depends + disk_depends
-		Pacman.run(f'-S --needed --noconfirm {" ".join(depends)}', peek_output=True)
+		missing = _missing_deps(depends)
 		# mark in current env as bootstraped
 		# avoid infinite reloads
+		if not missing:
+			# nothing installed, so nothing new to import: the ISO ships these
+			info('Deps already satisfied...')
+			Os.set_env('ARCHINSTOO_DEPS_FETCHED', '1')
+			return 0
+
+		info(f'Fetching {len(missing)} missing dep(s): {" ".join(missing)}')
+		Pacman.run(f'-S --needed --noconfirm {" ".join(missing)}', peek_output=True)
+
 		if live:
 			# no python lib in base, so nothing to re-exec for, and -S python
 			# alone on a running system is a partial upgrade
