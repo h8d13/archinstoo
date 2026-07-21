@@ -7,6 +7,77 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.13-6
+
+	- Bootstrap `aarch64` from a non-Arch host: off `x86_64` every source
+	  follows [archlinuxarm.org](https://archlinuxarm.org)
+		- `pacman.conf` + mirrorlist from ALARM packaging: `[alarm]`/`[aur]`
+		  repos, `$arch/$repo` layout, `SigLevel` already set
+		- `archlinuxarm-keyring` + `pacman-key --populate archlinuxarm`;
+		  the no-op guard checks `<keyring>.gpg`, so an `archlinux.gpg`
+		  shipped by the host no longer short-circuits it
+		- Accept `.pkg.tar.xz` (ALARM) next to `.zst` (Arch)
+	- `ID=archarm` counts as an Arch host: it was classed foreign, which
+	  skipped the python deps, forced plain `chroot(8)` over
+	  `arch-chroot -S`, and copied resolv.conf instead of the stub symlink
+	- Skip the keyring WKD sync wait off `x86_64`, same guard as reflector
+	  (unit ships with `archlinux-keyring`, the wait is unbounded)
+	- GRUB/Limine EFI on `aarch64`: `arm64-efi` target, `BOOTAA64.EFI`
+	- Split bootstrap deps `base_depends` / `disk_depends`
+		- `live` takes base only: no disk, no chroot, and `pyparted` stays
+		  out to match the import guard
+		- `live` skips the `-S python` refresh + re-exec (nothing to reload,
+		  and it partial-upgrades a running system)
+	- `--script` alone decides the code path; `ArchConfig.script` is a
+	  label saved into the JSON (`--config-url` must not pick what runs)
+	- Rename `ConfigurationHandler` -> `ConfigStore`: parse side binds
+	  `handler`, persist side binds `store` (`rescue` was shadowing its
+	  own `DeviceHandler`); `clean_up()` -> `clean_logs()` next to
+	  `clean_cache()` in `checkpoints.py`
+	- `guard_host_conf()` requires an Arch host: on a foreign one the
+	  snapshot ran after `pm/bootstrap.py` had written the conf, so the
+	  atexit restore put the modified file back
+	- Live mode: install selected firmware, sync artifacts to
+	  `/etc/archinstoo.d`, skip the iwd/networkd copies when target is `/`
+	  (copying a path onto itself raised `OSError` 22)
+	- Fix TUI focus crash; disk delete + resume parse, both with tests
+	- Locale fixes (#4640), then re-pooled against 3 upstream PRs
+	- Schema: drop waybar, sync hyprland/pipewire lists, add `rtkit`,
+	  align Hyprland with the welcome-screen set, trim sway selection
+	- Chores: renovate (ruff 0.15.22, mkdocs-material, setup-python v7,
+	  checkout v7.0.1), `nvchecker` entries, `fmt: off` fence so ruff
+	  stops collapsing the dep tables
+
+## 0.1.13-5
+
+	- `live` mode no longer needs `pyparted` at all
+		- `models/device.py` inlines the `PED_PARTITION_*` constants,
+		  `disk/device_handler.py` treats the import as optional
+		- Two guards: constants match real pyparted values, and the live
+		  module chain imports with parted blocked
+	- `live` skips auth by default, `packages` mode fix
+	- `grimoire` sync (AUR builder)
+	- `_version.py` stamping fixes for CI
+	- DMS: hyprland `.lua` asset fix, VM testing helper in `TVM`
+	- Docs restructure, renovate (mypy 2.3.0, gh-release digest)
+
+## 0.1.13-4
+
+	- Separate `architecture/` folder for non-x86 targets, moved out of
+	  `ARM_SUPPORT.md`
+		- Generic `ARM` stage 1: partition, extract, keyring, locale,
+		  fstab by PARTUUID, wired DHCP, getty/sshd/networkd enabled
+		- Per-board profiles: `rpi5` (foundation kernel + firmware swap),
+		  `generic-aarch64` (boots as shipped)
+	- Distro ID via `platform.freedesktop_os_release()`; collapse the
+	  redundant PEP 758 `except` in `hardware.py` to `OSError`
+	- `count`: add applet when desktop is `nm_*`
+	- Version stamping across PKGBUILD / `_version.py` / manpage, with an
+	  args test
+	- Docs: view-on-GitHub links in mkdocs
+	- Style: drop dead paths in disk, luks, hardware, installer,
+	  `list_manager`, output, `profiles_handler`
+
 ## 0.1.13-3
 
 	- Add `dms` profile (DankMaterialShell): port upstream niri profile
