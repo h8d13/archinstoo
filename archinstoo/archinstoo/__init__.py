@@ -81,29 +81,29 @@ from .lib.utils.net import ping
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
 
-base_depends=(
-	'systemd',              #For systemd-based operations
-	'coreutils',            #Basic utilities
-	'util-linux',           #For partition utilities
-	'pciutils',             #For PCI device detection
-	'kbd',                  #For keyboard layout configuration
+base_depends = (
+	'systemd',  	# For systemd-based operations
+	'coreutils',  	# Basic utilities
+	'util-linux',  	# For partition utilities
+	'pciutils',  	# For PCI device detection
+	'kbd',  	# For keyboard layout configuration
 	'libxcrypt',
 	'pacman',
-	'git',                  #cloning stashes
+	'git',  	# Cloning stashes
 )
 
-disk_depends=(
+disk_depends = (
 	'python-pyparted',
-	'arch-install-scripts', #For pacstrap, genfstab, chroot
-	'btrfs-progs', #btrfs filesystem support
-	'dosfstools',  #FAT EFI filesystem support
-	'e2fsprogs',   #ext4 filesystem support
-	'f2fs-tools',  #f2fs filesystem support
-	'ntfs-3g',     #NTFS filesystem support
-	'xfsprogs',    #XFS filesystem support
-	'cryptsetup',  #LUKS encryption support
-	'lvm2'         #LVM layout support
-) # together they mirror the inner PKGBUILD -python is reloaded last
+	'arch-install-scripts', # For pacstrap, genfstab, chroot
+	'btrfs-progs', 		# btrfs filesystem support
+	'dosfstools',  		# FAT EFI filesystem support
+	'e2fsprogs',  		# ext4 filesystem support
+	'f2fs-tools',  		# f2fs filesystem support
+	'ntfs-3g',  		# NTFS filesystem support
+	'xfsprogs',  		# XFS filesystem support
+	'cryptsetup',  		# LUKS encryption support
+	'lvm2',  		# LVM layout support
+)  # together they mirror the inner PKGBUILD -python is reloaded last
 # deps are only checked on arch hosts/arch-ISOs
 # live configures the running system: no disk, no chroot, so it takes base only
 
