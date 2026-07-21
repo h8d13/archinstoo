@@ -83,6 +83,14 @@ def test_live_chain_imports_without_parted() -> None:
 	_run_isolated(_BLOCK_PARTED + _LIVE_CHAIN)
 
 
+def test_live_bootstrap_skips_disk_deps() -> None:
+	# the import guard above is pointless if bootstrap installs parted anyway
+	from archinstoo import base_depends, disk_depends
+
+	assert 'python-pyparted' in disk_depends
+	assert not set(base_depends) & set(disk_depends)
+
+
 def test_device_handler_requires_parted() -> None:
 	_run_isolated(_BLOCK_PARTED + _HANDLER_GUARD)
 

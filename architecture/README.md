@@ -4,7 +4,10 @@ Stage 1 builders for non-x86 targets. Currently ARM (Arch Linux ARM).
 
 > [!NOTE]
 > UEFI spec'd boards can install using `guided` mode. But need to point servers to ARM.
-https://archlinuxarm.org/about/mirrors For non-standard SBCs;
+https://archlinuxarm.org/about/mirrors. You will either need to bootstrap from a tarball or find an ISO that can run `archinstoo`
+C.f Alpine; https://github.com/h8d13/archinstoo/tree/master/distros
+
+> For non-standard SBCs;
 > Keep reading bellow.
 
 ```
