@@ -29,9 +29,6 @@
 #                      without this. Needs the full module chain (vga-gl alone won't load):
 #                      qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
 #   AUDIO_BACKEND      qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
-#   SHARE_DIR          host dir exposed read-only as a virtual disk via vvfat
-#                      (default: ./archinstoo; set SHARE_DIR=none to disable).
-#                      In the guest: mount -o ro /dev/vdb /mnt && cp -a /mnt /root/repo
 
 set -euo pipefail
 
@@ -48,7 +45,6 @@ DISPLAY_BACKEND="${DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
 VGA="${VGA:-std}"
 GL="${GL:-off}"
 AUDIO_BACKEND="${AUDIO_BACKEND:-pipewire}"
-SHARE_DIR="${SHARE_DIR:-$PROJECT_DIR/archinstoo}"
 ARG="${1:-default}"
 
 OVMF_CODE=""
@@ -182,13 +178,6 @@ QEMU_ARGS=(
 if [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"
 	QEMU_ARGS+=(-cdrom "$ISO")
-fi
-
-# vvfat: expose a host dir as a read-only FAT disk (no network, no 9p).
-# Guest sees it as the next virtio disk (e.g. /dev/vdb); mount and copy out.
-if [ -n "$SHARE_DIR" ] && [ "$SHARE_DIR" != "none" ]; then
-	[ -d "$SHARE_DIR" ] || err "SHARE_DIR=$SHARE_DIR not a directory (set SHARE_DIR=none to disable)"
-	QEMU_ARGS+=(-drive "file=fat:ro:$SHARE_DIR,format=raw,if=virtio,readonly=on")
 fi
 
 trap 'stty sane' EXIT
