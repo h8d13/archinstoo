@@ -14,6 +14,8 @@ Can be found bellow:
 | Nix | V | V | [NIX](https://github.com/h8d13/archinstoo/blob/master/distros/flake.nix) | X |
 | Alpine | V | V | [ALP](https://github.com/h8d13/archinstoo/tree/master/distros/ALP) | V |
 
+For alpine ISOs: https://alpinelinux.org/downloads/ (See "Standard" ~400mb)
+
 ---
 
 Missing X? > Fetch from Y or fallback to Z (usually trying to keep in line with upstream sources).
