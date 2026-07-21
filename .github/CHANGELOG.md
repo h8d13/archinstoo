@@ -7,6 +7,9 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.13-7
+	- Init on arch ISO must skip updates
+
 ## 0.1.13-6
 
 	- Bootstrap `aarch64` from a non-Arch host: off `x86_64` every source
