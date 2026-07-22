@@ -295,10 +295,9 @@ class ProfileHandler:
 		# Import default_profiles from a url path
 		try:
 			data = fetch_data_from_url(url)
-			b_data = bytes(data, 'utf-8')
 
 			with NamedTemporaryFile(delete=False, suffix='.py') as fp:
-				fp.write(b_data)
+				fp.write(data.encode())
 				filepath = Path(fp.name)
 
 			profiles = self._process_profile_file(filepath)

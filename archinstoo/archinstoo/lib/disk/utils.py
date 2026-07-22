@@ -2,9 +2,10 @@ import contextlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from subprocess import CalledProcessError
 
 from archinstoo.lib.exceptions import DiskError, SysCallError
-from archinstoo.lib.general import SysCommand
+from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.models.device import LsblkInfo
 from archinstoo.lib.output import debug, info, warn
 
@@ -40,19 +41,18 @@ def _fetch_lsblk_info(
 		cmd.append(str(dev_path))
 
 	try:
-		worker = SysCommand(cmd)
-	except SysCallError as err:
+		result = run(cmd)
+	except CalledProcessError as err:
 		# Get the output minus the message/info from lsblk if it returns a non-zero exit code.
-		if err.worker_log:
-			debug(f'Error calling lsblk: {err.worker_log.decode()}')
+		if stdout := err.stdout:
+			debug(f'Error calling lsblk: {stdout.decode().rstrip()}')
 
 		if dev_path:
 			raise DiskError(f'Failed to read disk "{dev_path}" with lsblk')
 
 		raise err
 
-	output = worker.output(remove_cr=False)
-	return LsblkOutput.from_json(output.decode())
+	return LsblkOutput.from_json(result.stdout.decode())
 
 
 def get_lsblk_info(
