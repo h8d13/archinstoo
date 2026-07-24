@@ -105,8 +105,8 @@ def _latest_keyring_url(mirror: str, pkg_name: str) -> str:
 	pkgs: list[str] = re.findall(rf'href="({re.escape(pkg_name)}-[^"]+\.pkg\.tar\.(?:zst|xz))"', page)
 	if not pkgs:
 		raise RuntimeError(f'{pkg_name} package not found on {mirror}')
-	# Lexical sort tracks the version-date suffix, so last == newest.
-	return mirror + sorted(pkgs)[-1]
+	# Lexical order tracks the version-date suffix, so max == newest.
+	return mirror + max(pkgs)
 
 
 def keyring_init() -> None:
