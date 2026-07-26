@@ -2552,18 +2552,16 @@ def run_grimoire_installation(
 
 def run_custom_user_commands(commands: list[str], installation: Installer) -> None:
 	for index, command in enumerate(commands):
-		script_path = f'/var/tmp/user-command.{index}.sh'  # noqa: S108 - path inside install target, not host /tmp
-		chroot_path = f'{installation.target}/{script_path}'
+		script_path = LPath(f'/var/tmp/user-command.{index}.sh')  # noqa: S108 - path inside install target, not host /tmp
+		chroot_path = installation.target / script_path.relative_to_root()
 
 		# Do not throw error instead warn
 		info(f'Executing custom command "{command}" ...')
-		chroot_path_p = Path(chroot_path)
-		with chroot_path_p.open('w') as user_script:
-			user_script.write(command)
+		chroot_path.write_text(command)
 
 		try:
 			SysCommand(f'{" ".join(installation._arch_chroot_prefix)} bash {script_path}')
 		except SysCallError as e:
 			warn(f'Custom command "{command}" failed: {e}')
 		finally:
-			chroot_path_p.unlink()
+			chroot_path.unlink()

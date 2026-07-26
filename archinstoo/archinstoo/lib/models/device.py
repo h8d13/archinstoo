@@ -835,7 +835,16 @@ class PartitionFlag(PartitionFlagDataMixin, Enum):
 class PartitionGUID(Enum):
 	# A list of Partition type GUIDs (lsblk -o+PARTTYPE) can be found here: https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs
 
+	LINUX_ROOT_AARCH64 = 'B921B045-1DF0-41C3-AF44-4C6F280D3FAE'
 	LINUX_ROOT_X86_64 = '4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709'
+
+	@classmethod
+	def linux_root(cls) -> Self:
+		# discoverable partitions spec keys root by arch: the wrong GUID
+		# leaves systemd-gpt-auto-generator unable to find /
+		if SysInfo.arch() == 'aarch64':
+			return cls.LINUX_ROOT_AARCH64
+		return cls.LINUX_ROOT_X86_64
 
 	@property
 	def bytes(self) -> builtins.bytes:
