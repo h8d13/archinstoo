@@ -542,7 +542,7 @@ class DeviceHandler:
 
 		if disk.type == PartitionTable.GPT.value:
 			if part_mod.is_root():
-				partition.type_uuid = PartitionGUID.LINUX_ROOT_X86_64.bytes
+				partition.type_uuid = PartitionGUID.linux_root().bytes
 			elif PartitionFlag.LINUX_HOME not in part_mod.flags and part_mod.is_home():
 				partition.setFlag(PartitionFlag.LINUX_HOME.flag_id)
 
