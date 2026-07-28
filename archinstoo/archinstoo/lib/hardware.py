@@ -42,6 +42,7 @@ class GfxPackage(Enum):
 	Mesa = 'mesa'  # provides libva-mesa-driver since 24.2.7
 	NvidiaOpen = 'nvidia-open'
 	NvidiaOpenDkms = 'nvidia-open-dkms'
+	VplGpuRt = 'vpl-gpu-rt'  # QSV runtime for Gen12+/Arc; inert on older gens
 	VulkanIntel = 'vulkan-intel'
 	VulkanRadeon = 'vulkan-radeon'
 	VulkanNouveau = 'vulkan-nouveau'
@@ -118,6 +119,7 @@ class GfxDriver(Enum):
 					GfxPackage.Xf86VideoNouveau,
 					GfxPackage.LibvaIntelDriver,
 					GfxPackage.IntelMediaDriver,
+					GfxPackage.VplGpuRt,
 					GfxPackage.VulkanRadeon,
 					GfxPackage.VulkanIntel,
 					GfxPackage.VulkanNouveau,
@@ -134,6 +136,7 @@ class GfxDriver(Enum):
 					GfxPackage.Mesa,
 					GfxPackage.LibvaIntelDriver,
 					GfxPackage.IntelMediaDriver,
+					GfxPackage.VplGpuRt,
 					GfxPackage.VulkanIntel,
 				]
 			case GfxDriver.NvidiaOpenKernel:

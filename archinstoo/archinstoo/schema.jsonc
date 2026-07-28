@@ -45,9 +45,9 @@
 	// because they might depend on virtual vulkan-something
 	// libva-mesa-driver now provided by mesa since 24.2.7
 	"gfx_drivers": {
-		"all-open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-intel-driver", "intel-media-driver", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
+		"all-open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-intel-driver", "intel-media-driver", "vpl-gpu-rt", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"],
 		"amd-open-source": ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "vulkan-radeon"],
-		"intel-open-source": ["mesa", "libva-intel-driver", "intel-media-driver", "vulkan-intel"],
+		"intel-open-source": ["mesa", "libva-intel-driver", "intel-media-driver", "vpl-gpu-rt", "vulkan-intel"],
 		"nvidia-open-kernel": ["nvidia-open", "libva-nvidia-driver"],
 		"nvidia-open-nouveau": ["mesa", "xf86-video-nouveau", "vulkan-nouveau"],
 		"mesa-open-source": ["mesa"],
