@@ -17,13 +17,13 @@ from archinstoo.lib.tui import Tui
 
 def show_menu(config: ArchConfig, args: Arguments) -> None:
 	with Tui():
-		# skip_auth: running system likely has auth set up already, keep it optional
-		global_menu = GlobalMenu(config, skip_boot=True, skip_auth=True, advanced=args.advanced)
+		# auth is not skipped: live mode still creates users, sets root password
+		# and configures privilege escalation on the running system
+		global_menu = GlobalMenu(config, skip_boot=True, advanced=args.advanced)
 
 		# Disable items irrelevant for live mode
 		# We assume user built stage 1 but might still want to configure some stuff
 		global_menu.set_enabled('bootloader_config', False)
-		global_menu.set_enabled('kernels', False)
 		global_menu.set_enabled('disk_config', False)
 		global_menu.set_mandatory('disk_config', False)
 		global_menu.set_mandatory('timezone', False)
@@ -60,7 +60,7 @@ def perform_installation(
 	with Installer(
 		Path('/'),
 		disk_config,
-		kernels=[],
+		kernels=config.kernels,
 		handler=handler,
 	) as installation:
 		# Mark base and bootloader as done we're on a running system
@@ -89,7 +89,15 @@ def perform_installation(
 		if config.sysctl:
 			installation.setup_sysctl(config.sysctl)
 
-		# Firmware selection rides on _base_packages which live mode never installs
+		# Kernels and firmware ride on _base_packages which live mode never
+		# installs, so pull them in as regular packages instead
+		if config.kernels:
+			installation.add_additional_packages(config.kernels)
+
+			if config.kernel_headers:
+				headers = [f'{kernel}-headers' for kernel in config.kernels]
+				installation.add_additional_packages(headers)
+
 		if firmware_packages := config.firmware.packages():
 			installation.add_additional_packages(firmware_packages)
 
@@ -175,9 +183,6 @@ def live() -> None:
 	args = handler.args
 	config = handler.config
 
-	# Override defaults for live mode (show_menu hardcodes skip_boot)
-	config.kernels = []
-
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
@@ -185,7 +190,6 @@ def live() -> None:
 	if cached := ConfigStore.prompt_resume():
 		try:
 			handler.config = ArchConfig.from_config(cached)
-			handler.config.kernels = []
 			info('Saved selections loaded successfully')
 		except Exception as e:
 			debug(f'Failed to load saved selections: {e}')
