@@ -3,6 +3,7 @@ from typing import override
 from archinstoo.lib.localization.utils import (
 	list_console_fonts,
 	list_keyboard_languages,
+	list_locale_encodings,
 	list_locales,
 	list_x11_keyboard_languages,
 	list_x11_keyboard_models,
@@ -74,14 +75,14 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 			),
 			MenuItem(
 				text='Locale language',
-				action=select_locale_lang,
+				action=self._select_locale_lang,
 				value=self._locale_conf.sys_lang,
 				preview_action=self._prev_locale,
 				key='sys_lang',
 			),
 			MenuItem(
 				text='Locale encoding',
-				action=select_locale_enc,
+				action=self._select_locale_enc,
 				value=self._locale_conf.sys_enc,
 				preview_action=self._prev_locale,
 				key='sys_enc',
@@ -159,6 +160,27 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		layout = self._menu_item_group.find_by_key('xkb_layout').value
 		return select_xkb_variant(layout, preset)
 
+	def _select_locale_lang(self, preset: str | None) -> str | None:
+		lang = select_locale_lang(preset)
+
+		# a language carries its own set of encodings, so a stale one (the
+		# UTF-8 default against an ISO-8859-15-only language like de_DE@euro)
+		# would name a locale.gen entry that does not exist. Fall to the
+		# language's own first choice instead of failing at install time.
+		if lang and lang != preset:
+			encodings = list_locale_encodings(lang)
+			enc_item = self._menu_item_group.find_by_key('sys_enc')
+			if encodings and enc_item.value not in encodings:
+				enc_item.value = encodings[0]
+				self._locale_conf.sys_enc = encodings[0]
+
+		return lang
+
+	def _select_locale_enc(self, preset: str | None) -> str | None:
+		# encodings are scoped to the chosen language
+		lang = self._menu_item_group.find_by_key('sys_lang').value
+		return select_locale_enc(lang, preset)
+
 
 def select_locale_lang(preset: str | None = None) -> str | None:
 	locales = list_locales()
@@ -184,12 +206,13 @@ def select_locale_lang(preset: str | None = None) -> str | None:
 			raise ValueError('Unhandled return type')
 
 
-def select_locale_enc(preset: str | None = None) -> str | None:
-	locales = list_locales()
-	locale_enc = {locale.split()[1] for locale in locales}
+def select_locale_enc(sys_lang: str | None = None, preset: str | None = None) -> str | None:
+	# only the encodings the language actually has a locale for; unset language
+	# (config file without sys_lang) falls back to every encoding listed
+	locale_enc = list_locale_encodings(sys_lang) if sys_lang else sorted({locale.split()[1] for locale in list_locales()})
 
 	items = [MenuItem(le, value=le) for le in locale_enc]
-	group = MenuItemGroup(items, sort_items=True)
+	group = MenuItemGroup(items, sort_items=False)
 	group.set_focus_by_value(preset)
 
 	result = SelectMenu[str](

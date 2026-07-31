@@ -37,6 +37,7 @@ from .disk.luks import Luks2, unlock_luks2_dev
 from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
+from .localization.utils import locale_encoding, locale_entry_re, split_locale_name
 from .models.application import DEFAULT_KERNEL
 from .models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from .models.bootloader import Bootloader
@@ -793,34 +794,18 @@ class Installer:
 		(self.target / 'etc/hostname').write_text(hostname + '\n')
 
 	def set_locale(self, locale_config: LocaleConfiguration) -> bool:
-		modifier = ''
-		lang = locale_config.sys_lang
-		encoding = locale_config.sys_enc
-
-		# This is a temporary patch to fix #1200
-		if '.' in locale_config.sys_lang:
-			lang, potential_encoding = locale_config.sys_lang.split('.', 1)
-
-			# Override encoding if encoding is set to the default parameter
-			# and the "found" encoding differs.
-			if locale_config.sys_enc == 'UTF-8' and locale_config.sys_enc != potential_encoding:
-				encoding = potential_encoding
-
-		# Make sure we extract the modifier, that way we can put it in if needed.
-		if '@' in locale_config.sys_lang:
-			lang, modifier = locale_config.sys_lang.split('@', 1)
-			modifier = f'@{modifier}'
-		# - End patch
+		# the menu keeps language and encoding apart; locale.gen names them
+		# together, so the same splitting the encoding menu scopes itself by
+		lang, _, modifier = split_locale_name(locale_config.sys_lang)
+		encoding = locale_encoding(locale_config.sys_lang, locale_config.sys_enc)
 
 		locale_gen = self.target / 'etc/locale.gen'
 		locale_gen_lines = locale_gen.read_text().splitlines(True)
 
-		# A locale entry in /etc/locale.gen may or may not contain the encoding
-		# in the first column of the entry; check for both cases.
-		entry_re = re.compile(rf'#{lang}(\.{encoding})?{modifier} {encoding}')
+		entry_re = locale_entry_re(locale_config.sys_lang, locale_config.sys_enc)
 
 		for index, line in enumerate(locale_gen_lines):
-			if entry_re.match(line):
+			if line.startswith('#') and entry_re.fullmatch(line.removeprefix('#').strip()):
 				locale_gen_lines[index] = line.removeprefix('#')
 				locale_gen.write_text(''.join(locale_gen_lines))
 				break
@@ -1202,8 +1187,8 @@ class Installer:
 		if hostname:
 			self.set_hostname(hostname)
 
-		if locale_config:
-			self.set_locale(locale_config)
+		if locale_config and not self.set_locale(locale_config):
+			warn(f'Failed to set locale: {locale_config.sys_lang} {locale_config.sys_enc}')
 
 		if timezone and not self.set_timezone(timezone):
 			warn(f'Failed to set timezone: {timezone}')

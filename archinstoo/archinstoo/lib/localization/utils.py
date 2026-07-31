@@ -1,14 +1,19 @@
 import json
 import os
+import re
 import shutil
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import RequirementError, ServiceException, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import error
 from archinstoo.lib.utils.env import Os
 from archinstoo.lib.utils.net import fetch_data_from_url
+
+if TYPE_CHECKING:
+	from collections.abc import Iterable
 
 
 def list_keyboard_languages() -> list[str]:
@@ -74,8 +79,22 @@ def _fetch_kbd_keymaps() -> list[str]:
 # glibc lists every locale it can generate here; fetched only on non-glibc hosts
 _GLIBC_SUPPORTED_URL = 'https://raw.githubusercontent.com/bminor/glibc/master/localedata/SUPPORTED'
 
+# host copy of the same list, shipped by glibc
+_SUPPORTED_PATH = Path('/usr/share/i18n/SUPPORTED')
+
+# glibc >= 2.35 compiles these in, so Arch's /etc/locale.gen omits them even
+# though SUPPORTED lists them. Offering one means Installer.set_locale finds no
+# matching locale.gen entry and the install ends with no locale.conf.
+_BUILTIN_LOCALES = frozenset({'C.UTF-8 UTF-8'})
+
 # last-resort set if disk and network both fail, so the menu is never empty
-_MIN_LOCALES = ['C.UTF-8 UTF-8', 'en_US.UTF-8 UTF-8']
+_MIN_LOCALES = ['en_US.UTF-8 UTF-8']
+
+
+def _generatable(locales: Iterable[str]) -> list[str]:
+	# every list_locales source runs through here: menu entries must map 1:1
+	# onto commented /etc/locale.gen lines on the target
+	return [locale for locale in locales if locale and locale not in _BUILTIN_LOCALES]
 
 
 def _fetch_glibc_supported() -> list[str]:
@@ -94,19 +113,64 @@ def _fetch_glibc_supported() -> list[str]:
 		locale, charset = line.rsplit('/', 1)
 		locales.append(f'{locale} {charset}')
 
-	return locales
+	return _generatable(locales)
 
 
 def list_locales() -> list[str]:
 	# glibc hosts enumerate from i18n/SUPPORTED
-	supported = Path('/usr/share/i18n/SUPPORTED')
-	if supported.is_file():
-		with supported.open() as file:
-			return [line.rstrip() for line in file if line != 'C.UTF-8 UTF-8\n']
+	if _SUPPORTED_PATH.is_file():
+		with _SUPPORTED_PATH.open() as file:
+			return _generatable(line.rstrip() for line in file)
 
 	# non-glibc host (musl/alpine): no SUPPORTED on disk, pull the canonical
 	# list glibc ships upstream so the target (Arch/glibc) choices are accurate
 	return _fetch_glibc_supported() or _MIN_LOCALES
+
+
+def split_locale_name(sys_lang: str) -> tuple[str, str, str]:
+	# 'be_BY.UTF-8@latin' -> ('be_BY', 'UTF-8', '@latin'). The codeset comes
+	# back empty for names that omit it ('en_IL'). Peel the modifier first: it
+	# always trails the codeset, never the reverse (setlocale(3)).
+	name, modifier = sys_lang, ''
+	if '@' in name:
+		name, mod = name.split('@', 1)
+		modifier = f'@{mod}'
+
+	lang, _, codeset = name.partition('.')
+	return lang, codeset, modifier
+
+
+def locale_encoding(sys_lang: str, sys_enc: str) -> str:
+	# a name spelling its own codeset ('en_GB.UTF-8') outranks the UTF-8 the
+	# encoding menu carries by default
+	codeset = split_locale_name(sys_lang)[1]
+	return codeset if codeset and sys_enc == 'UTF-8' else sys_enc
+
+
+def locale_entry_re(sys_lang: str, sys_enc: str) -> re.Pattern[str]:
+	# matches the SUPPORTED/locale.gen entry a selection needs. The first
+	# column names the codeset only sometimes ('en_IL UTF-8' vs 'en_GB.UTF-8
+	# UTF-8'), so both spellings match; anchor with fullmatch, else the
+	# ISO-8859-1 pattern also swallows 'xx_XX ISO-8859-15'.
+	lang, _, modifier = split_locale_name(sys_lang)
+	enc = locale_encoding(sys_lang, sys_enc)
+	return re.compile(rf'{re.escape(lang)}(\.{re.escape(enc)})?{re.escape(modifier)} {re.escape(enc)}')
+
+
+def list_locale_encodings(sys_lang: str) -> list[str]:
+	# encodings are language-scoped the way xkb variants are layout-scoped:
+	# only ~870 of the ~15000 language x encoding pairs name a real locale, and
+	# a pair that names none leaves the install with no locale.conf at all.
+	# UTF-8 leads so a language switch lands on it when it is available.
+	if codeset := split_locale_name(sys_lang)[1]:
+		# the name already fixed the codeset; pairing it with another charset
+		# installs that charset under a name claiming this one
+		return [codeset]
+
+	entries = [entry.strip() for entry in list_locales()]
+	charsets = {entry.split()[1] for entry in entries}
+	scoped = [enc for enc in charsets if any(locale_entry_re(sys_lang, enc).fullmatch(entry) for entry in entries)]
+	return sorted(scoped, key=lambda enc: (enc != 'UTF-8', enc))
 
 
 def verify_keyboard_layout(layout: str) -> bool:
