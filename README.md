@@ -4,11 +4,7 @@
 
 ## What is `archinstoo`
 
-An operating system installer for [archlinux](https://archlinux.org).
-
-> MORE choices, LESS packages in end-product, LESS complex flags, and MORE hot-fixes.
-
-*Aims to make the code base more readable, maintainable and modifiable by anyone*.
+An operating system installer (and tools) for [archlinux](https://archlinux.org).
 
 > [!TIP]
 > In the [ISO](https://archlinux.org/download/), you are root by default.
