@@ -71,7 +71,8 @@ b2sums=()
 build() {
 	cd "$srcdir/../archinstoo" || exit
 
-	sed -i "s/^__version__ = f'[^ ]*/__version__ = f'$pkgver-$pkgrel/" archinstoo/_version.py
+	# wheel has no PKGBUILD to read at runtime: stamp the fallback
+	sed -i "s/^__pkgstamp__ = '[^']*'/__pkgstamp__ = '$pkgver-$pkgrel'/" archinstoo/_version.py
 	rm -rf dist/ && rm -rf ./*.egg
 	python -m build --wheel --no-isolation
 }
