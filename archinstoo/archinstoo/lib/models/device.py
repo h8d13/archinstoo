@@ -21,7 +21,7 @@ from archinstoo.lib.output import debug
 
 # libparted PED_PARTITION_* values, re-exported verbatim by pyparted.
 # Inlined (stable C ABI) so models never need pyparted at import time:
-# scripts that don't touch disk state (live) run without it installed.
+# scripts that don't touch disk state run without it installed.
 _PED_PARTITION_NORMAL = 0
 _PED_PARTITION_BOOT = 1
 _PED_PARTITION_SWAP = 3

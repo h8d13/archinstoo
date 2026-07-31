@@ -109,7 +109,8 @@ disk_depends = (
 )  # together they mirror the inner PKGBUILD -python is reloaded last
 # fmt: on
 # deps are only checked on arch hosts/arch-ISOs
-# live configures the running system: no disk, no chroot, so it takes base only
+# live/packages configure the running system: no disk, no chroot (target '/'
+# means plain `pacman -S`, never pacstrap), so they take base only
 
 # main init file of archinstoo
 # we will log some useful info
@@ -128,6 +129,8 @@ disk_depends = (
 
 
 ROOTLESS_SCRIPTS = {'list', 'size', 'mirror', 'count'}
+# scripts that only touch the running system, so they skip disk_depends
+NO_DISK_SCRIPTS = {'live', 'packages'}
 
 
 def _log_env_info() -> None:
@@ -157,13 +160,13 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 	return []
 
 
-def _arch_bootstrap(live: bool) -> int:
+def _arch_bootstrap(no_disk: bool) -> int:
 	if Os.get_env('ARCHINSTOO_DEPS_FETCHED'):
 		info('Already bootstrapped...')
 		return 0
 	try:
 		debug('Fetching deps...')
-		depends = base_depends if live else base_depends + disk_depends
+		depends = base_depends if no_disk else base_depends + disk_depends
 		missing = _missing_deps(depends)
 		# mark in current env as bootstraped
 		# avoid infinite reloads
@@ -176,7 +179,7 @@ def _arch_bootstrap(live: bool) -> int:
 		info(f'Fetching {len(missing)} missing dep(s): {" ".join(missing)}')
 		Pacman.run(f'-S --needed --noconfirm {" ".join(missing)}', peek_output=True)
 
-		if live:
+		if no_disk:
 			# no python lib in base, so nothing to re-exec for, and -S python
 			# alone on a running system is a partial upgrade
 			Os.set_env('ARCHINSTOO_DEPS_FETCHED', '1')
@@ -233,8 +236,8 @@ def _prepare() -> int:
 			Pacman.run('-Syy', peek_output=True)
 			# python deps come from the host package manager on a foreign host
 			# we only bootstrap pacman related files: ex Alpine ISOs
-			# `live` mode also skips arch bootstrap logic
-			if not foreign_host and (rc := _arch_bootstrap(_script_from_argv() == 'live')):
+			# running-system scripts also skip the disk half of the deps
+			if not foreign_host and (rc := _arch_bootstrap(_script_from_argv() in NO_DISK_SCRIPTS)):
 				return rc
 		except Exception as e:
 			error('Failed to prepare app.')
