@@ -310,12 +310,23 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 
 
 def _script_from_argv() -> str | None:
-	# peek at sys.argv for --script value without full arg parsing
-	try:
-		idx = sys.argv.index('--script')
-		return sys.argv[idx + 1] if idx + 1 < len(sys.argv) else None
-	except ValueError:
-		return None
+	# peek at sys.argv for --script value without full arg parsing.
+	# argparse takes both spellings, so a peek that only knows `--script x`
+	# reads `--script=x` as "no script" and falls back to the disk-heavy path
+	for i, arg in enumerate(sys.argv):
+		if arg.startswith('--script='):
+			return arg.split('=', 1)[1] or None
+		if arg == '--script':
+			return sys.argv[i + 1] if i + 1 < len(sys.argv) else None
+	return None
+
+
+def _is_foreign_blocked(script: str | None) -> bool:
+	# a foreign host gets its deps from its own package manager (see distros/)
+	# and pacstraps a separate target, which is fine. these scripts instead
+	# install onto the running system: target '/' means `pacman -S` straight
+	# into the Debian/Alpine root, never a chroot.
+	return script in NO_DISK_SCRIPTS and Os.running_from_foreign()
 
 
 def run_as_a_module() -> int:
@@ -324,8 +335,10 @@ def run_as_a_module() -> int:
 		print(f'archinstoo {__version__}')
 		return 0
 
+	script_peek = _script_from_argv()
+
 	# short-circuit for global help (no --script) before any preparation
-	if ('-h' in sys.argv or '--help' in sys.argv) and '--script' not in sys.argv:
+	if ('-h' in sys.argv or '--help' in sys.argv) and script_peek is None:
 		from .lib.args import get_arch_config_handler
 
 		get_arch_config_handler().print_help()
@@ -335,7 +348,10 @@ def run_as_a_module() -> int:
 	if '--debug' in sys.argv:
 		output.log_level = logging.DEBUG
 
-	script_peek = _script_from_argv()
+	if _is_foreign_blocked(script_peek):
+		error(f'archinstoo {script_peek} configures the running system, which is {Os.running_from_who() or "not Arch"}.')
+		error('Use a disk script from a foreign host (see distros/), or run this one from an Arch host/ISO.')
+		return 1
 
 	is_rootless = script_peek in ROOTLESS_SCRIPTS
 	is_help = '-h' in sys.argv or '--help' in sys.argv

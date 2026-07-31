@@ -1,20 +1,24 @@
 # pyparted is only needed for disk operations. Scripts that never touch
-# disk state (live) must import their whole module chain without it, so
-# models/device.py inlines the libparted PED_PARTITION_* constants and
+# disk state (NO_DISK_SCRIPTS) must import their whole module chain without
+# it, so models/device.py inlines the libparted PED_PARTITION_* constants and
 # disk/device_handler.py treats the parted import as optional.
 #
 # Two guards:
 #   - drift:  inlined constants still match the real pyparted values
-#   - import: the live-script module chain imports with parted blocked,
+#   - import: every no-disk script's module chain imports with parted blocked,
 #             and DeviceHandler() fails with a clear RequirementError
 
+import ast
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
+from archinstoo import NO_DISK_SCRIPTS
+
 _PKG_ROOT = Path(__file__).parent.parent
+_SCRIPTS = _PKG_ROOT / 'archinstoo' / 'scripts'
 
 # raising ModuleNotFoundError from find_spec mirrors a missing package
 # exactly (sys.modules[name] = None raises plain ImportError instead)
@@ -30,22 +34,14 @@ class _BlockParted:
 sys.meta_path.insert(0, _BlockParted())
 """
 
-# every module scripts/live.py pulls in at import time, then the same
-# dummy-disk Installer construction live.py performs (must not build a
+# the scripts call themselves at module level (`live()`), so importing one
+# would run an install; replay its top-level imports instead, then the same
+# dummy-disk Installer construction they perform (must not build a
 # DeviceHandler, which would scan disks through parted)
-_LIVE_CHAIN = """
+_DUMMY_INSTALLER = """
 from pathlib import Path
-
-from archinstoo.lib.applications.application_handler import ApplicationHandler
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments
-from archinstoo.lib.authentication.shell import ShellApp
-from archinstoo.lib.configuration import ConfigStore
-from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
-from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.profile.profiles_handler import ProfileHandler
-from archinstoo.lib.tui import Tui
 
 disk_config = DiskLayoutConfiguration(
 	config_type=DiskLayoutType.Pre_mount,
@@ -54,6 +50,15 @@ disk_config = DiskLayoutConfiguration(
 )
 Installer(Path('/'), disk_config, kernels=[])
 """
+
+
+def _script_chain(name: str) -> str:
+	# top-level imports only: nested ones belong to codepaths the script
+	# reaches at runtime, not to what it needs present to load
+	tree = ast.parse((_SCRIPTS / f'{name}.py').read_text())
+	imports = [ast.unparse(n) for n in tree.body if isinstance(n, ast.Import | ast.ImportFrom)]
+	return '\n'.join(imports) + '\n' + _DUMMY_INSTALLER
+
 
 _HANDLER_GUARD = """
 from archinstoo.lib.disk.device_handler import DeviceHandler
@@ -79,11 +84,13 @@ def _run_isolated(code: str) -> None:
 	assert result.returncode == 0, f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}'
 
 
-def test_live_chain_imports_without_parted() -> None:
-	_run_isolated(_BLOCK_PARTED + _LIVE_CHAIN)
+@pytest.mark.parametrize('script', sorted(NO_DISK_SCRIPTS), ids=str)
+def test_no_disk_chain_imports_without_parted(script: str) -> None:
+	assert (_SCRIPTS / f'{script}.py').is_file(), f'NO_DISK_SCRIPTS names {script!r}, which has no script module'
+	_run_isolated(_BLOCK_PARTED + _script_chain(script))
 
 
-def test_live_bootstrap_skips_disk_deps() -> None:
+def test_no_disk_bootstrap_skips_disk_deps() -> None:
 	# the import guard above is pointless if bootstrap installs parted anyway
 	from archinstoo import base_depends, disk_depends
 
