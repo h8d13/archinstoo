@@ -45,7 +45,7 @@ source = "pacman"
 [lvm2]
 source = "pacman"
 
-[ntfs-3g]
+[ntfsprogs]
 source = "pacman"
 
 [pacman]
@@ -109,9 +109,6 @@ source = "pacman"
 source = "pacman"
 
 [awesome]
-source = "pacman"
-
-[baobab]
 source = "pacman"
 
 [base]
@@ -267,6 +264,9 @@ source = "pacman"
 [cosmic-settings-daemon]
 source = "pacman"
 
+[cosmic-sound-theme]
+source = "pacman"
+
 [cosmic-store]
 source = "pacman"
 
@@ -289,9 +289,6 @@ source = "pacman"
 source = "pacman"
 
 [ddm]
-source = "pacman"
-
-[decibels]
 source = "pacman"
 
 [deepin-account-faces]
@@ -480,9 +477,6 @@ source = "pacman"
 [eom]
 source = "pacman"
 
-[epiphany]
-source = "pacman"
-
 [ex-vi-compat]
 source = "pacman"
 
@@ -519,58 +513,10 @@ source = "pacman"
 [gdm]
 source = "pacman"
 
-[gnome-backgrounds]
-source = "pacman"
-
-[gnome-calculator]
-source = "pacman"
-
-[gnome-calendar]
-source = "pacman"
-
-[gnome-characters]
-source = "pacman"
-
-[gnome-clocks]
-source = "pacman"
-
-[gnome-color-manager]
-source = "pacman"
-
-[gnome-connections]
-source = "pacman"
-
-[gnome-console]
-source = "pacman"
-
-[gnome-contacts]
-source = "pacman"
-
 [gnome-control-center]
 source = "pacman"
 
-[gnome-disk-utility]
-source = "pacman"
-
-[gnome-font-viewer]
-source = "pacman"
-
 [gnome-keyring]
-source = "pacman"
-
-[gnome-logs]
-source = "pacman"
-
-[gnome-maps]
-source = "pacman"
-
-[gnome-menus]
-source = "pacman"
-
-[gnome-music]
-source = "pacman"
-
-[gnome-remote-desktop]
 source = "pacman"
 
 [gnome-screenshot]
@@ -585,31 +531,10 @@ source = "pacman"
 [gnome-shell]
 source = "pacman"
 
-[gnome-software]
-source = "pacman"
-
-[gnome-system-monitor]
-source = "pacman"
-
 [gnome-terminal]
 source = "pacman"
 
-[gnome-text-editor]
-source = "pacman"
-
-[gnome-tour]
-source = "pacman"
-
 [gnome-tweaks]
-source = "pacman"
-
-[gnome-user-docs]
-source = "pacman"
-
-[gnome-user-share]
-source = "pacman"
-
-[gnome-weather]
 source = "pacman"
 
 [gnu-free-fonts]
@@ -624,9 +549,6 @@ source = "pacman"
 [greetd-regreet]
 source = "pacman"
 
-[grilo-plugins]
-source = "pacman"
-
 [grim]
 source = "pacman"
 
@@ -639,37 +561,10 @@ source = "pacman"
 [gst-plugin-pipewire]
 source = "pacman"
 
-[gst-thumbnailers]
-source = "pacman"
-
 [gvfs]
 source = "pacman"
 
-[gvfs-afc]
-source = "pacman"
-
-[gvfs-dnssd]
-source = "pacman"
-
-[gvfs-goa]
-source = "pacman"
-
-[gvfs-gphoto2]
-source = "pacman"
-
-[gvfs-mtp]
-source = "pacman"
-
-[gvfs-nfs]
-source = "pacman"
-
-[gvfs-onedrive]
-source = "pacman"
-
 [gvfs-smb]
-source = "pacman"
-
-[gvfs-wsdd]
 source = "pacman"
 
 [htop]
@@ -771,9 +666,6 @@ source = "pacman"
 [llvm]
 source = "pacman"
 
-[loupe]
-source = "pacman"
-
 [ltrace]
 source = "pacman"
 
@@ -838,9 +730,6 @@ source = "pacman"
 source = "pacman"
 
 [mako]
-source = "pacman"
-
-[malcontent]
 source = "pacman"
 
 [man-db]
@@ -987,9 +876,6 @@ source = "pacman"
 [openssh]
 source = "pacman"
 
-[orca]
-source = "pacman"
-
 [oxygen-icons]
 source = "pacman"
 
@@ -997,9 +883,6 @@ source = "pacman"
 source = "pacman"
 
 [pam-u2f]
-source = "pacman"
-
-[papers]
 source = "pacman"
 
 [papirus-icon-theme]
@@ -1092,9 +975,6 @@ source = "pacman"
 [rxvt-unicode]
 source = "pacman"
 
-[rygel]
-source = "pacman"
-
 [sbctl]
 source = "pacman"
 
@@ -1102,12 +982,6 @@ source = "pacman"
 source = "pacman"
 
 [sddm]
-source = "pacman"
-
-[showtime]
-source = "pacman"
-
-[simple-scan]
 source = "pacman"
 
 [slock]
@@ -1122,16 +996,10 @@ source = "pacman"
 [snapper]
 source = "pacman"
 
-[snapshot]
-source = "pacman"
-
 [strace]
 source = "pacman"
 
 [sudo]
-source = "pacman"
-
-[sushi]
 source = "pacman"
 
 [sway]
@@ -1153,9 +1021,6 @@ source = "pacman"
 source = "pacman"
 
 [tailscale]
-source = "pacman"
-
-[tecla]
 source = "pacman"
 
 [terminology]
@@ -1213,6 +1078,9 @@ source = "pacman"
 source = "pacman"
 
 [vim]
+source = "pacman"
+
+[vpl-gpu-rt]
 source = "pacman"
 
 [vulkan-intel]
@@ -1447,9 +1315,6 @@ source = "pacman"
 source = "pacman"
 
 [xwayland-satellite]
-source = "pacman"
-
-[yelp]
 source = "pacman"
 
 [zig]
