@@ -11,8 +11,17 @@ class GnomeProfile(WaylandProfile):
 	@property
 	@override
 	def packages(self) -> list[str]:
+		# explicit list instead of the 'gnome' group: the group pulls ~60
+		# packages (games, maps, weather, music, tour...) that a user can
+		# still install after the fact
 		return [
-			'gnome',
+			'gnome-shell',
+			'gnome-session',
+			'gnome-terminal',
+			'gnome-control-center',
+			'gnome-settings-daemon',
+			'nautilus',
+			'xdg-desktop-portal-gnome',
 			'gnome-tweaks',
 		]
 

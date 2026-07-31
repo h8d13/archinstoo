@@ -58,7 +58,7 @@
 	// -- Desktop Environments --
 	"profiles": {
 		"kde-plasma": ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "bluedevil"],
-		"gnome": ["gnome", "gnome-tweaks"],
+		"gnome": ["gnome-shell", "gnome-session", "gnome-terminal", "gnome-control-center", "gnome-settings-daemon", "nautilus", "xdg-desktop-portal-gnome", "gnome-tweaks"],
 		"xfce4": ["xfce4", "xfce4-goodies", "pavucontrol", "gvfs", "xarchiver"],
 		"cinnamon": ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed", "xdg-user-dirs-gtk"],
 		"mate": ["mate", "mate-extra"],

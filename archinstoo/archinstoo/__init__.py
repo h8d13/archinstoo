@@ -93,11 +93,11 @@ base_depends = (
 	'libxcrypt',
 	'pacman',
 	'git',  	# Cloning stashes
+        'arch-install-scripts', # For pacstrap, genfstab, chroot
 )
 
 disk_depends = (
 	'python-pyparted',
-	'arch-install-scripts', # For pacstrap, genfstab, chroot
 	'btrfs-progs', 		# btrfs filesystem support
 	'dosfstools',  		# FAT EFI filesystem support
 	'e2fsprogs',  		# ext4 filesystem support
