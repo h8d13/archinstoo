@@ -737,7 +737,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		self._interrupt_warning = reset_warning_msg
 		self._header = header
 		self._additional_title = additional_title
-		self._preview_size = preview_size
+		self._preview_size: float | Literal['auto'] = preview_size
 
 		self._header_entries = []
 		if header:

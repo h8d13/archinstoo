@@ -290,7 +290,7 @@ class PartitionTable(Enum):
 		return self == PartitionTable.MBR
 
 	@classmethod
-	def default(cls) -> Self:
+	def default(cls) -> PartitionTable:
 		return cls.GPT if SysInfo.has_uefi() else cls.MBR
 
 
@@ -548,7 +548,8 @@ class _BtrfsSubvolumeInfo:
 @dataclass
 class _PartitionInfo:
 	partition: Partition
-	name: str
+	# parted names are GPT-only: get_name() returns None on MBR labels
+	name: str | None
 	type: PartitionType
 	fs_type: FilesystemType | None
 	path: Path
@@ -571,7 +572,7 @@ class _PartitionInfo:
 		end = self.start + self.length
 
 		part_info = {
-			'Name': self.name,
+			'Name': self.name or '',
 			'Type': self.type.value,
 			'Filesystem': self.fs_type.value if self.fs_type else 'Unknown',
 			'Path': str(self.path),
@@ -788,7 +789,7 @@ class PartitionType(StrEnum):
 	_UNKNOWN = 'unknown'
 
 	@classmethod
-	def get_type_from_code(cls, code: int) -> Self:
+	def get_type_from_code(cls, code: int) -> PartitionType:
 		if code == _PED_PARTITION_NORMAL:
 			return cls.PRIMARY
 		debug(f'Partition code not supported: {code}')
@@ -839,7 +840,7 @@ class PartitionGUID(Enum):
 	LINUX_ROOT_X86_64 = '4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709'
 
 	@classmethod
-	def linux_root(cls) -> Self:
+	def linux_root(cls) -> PartitionGUID:
 		# discoverable partitions spec keys root by arch: the wrong GUID
 		# leaves systemd-gpt-auto-generator unable to find /
 		if SysInfo.arch() == 'aarch64':
@@ -1471,7 +1472,7 @@ class EncryptionType(StrEnum):
 	LUKS_ON_LVM = auto()
 
 	@classmethod
-	def _encryption_type_mapper(cls) -> dict[str, Self]:
+	def _encryption_type_mapper(cls) -> dict[str, EncryptionType]:
 		return {
 			'No Encryption': cls.NO_ENCRYPTION,
 			'LUKS': cls.LUKS,

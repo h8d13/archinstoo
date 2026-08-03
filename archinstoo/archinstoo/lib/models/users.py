@@ -48,7 +48,7 @@ class PasswordStrength(Enum):
 				return 'strong'
 
 	@classmethod
-	def strength(cls, password: str) -> Self:
+	def strength(cls, password: str) -> PasswordStrength:
 		digit = any(character.isdigit() for character in password)
 		upper = any(character.isupper() for character in password)
 		lower = any(character.islower() for character in password)
@@ -63,7 +63,7 @@ class PasswordStrength(Enum):
 		lower: bool,
 		symbol: bool,
 		length: int,
-	) -> Self:
+	) -> PasswordStrength:
 		# suggested evaluation
 		# https://github.com/archlinux/archinstall/issues/1304#issuecomment-1146768163
 		if digit and upper and lower and symbol:

@@ -2,7 +2,6 @@ import platform
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
-from typing import Self
 
 from .exceptions import RequirementError, SysCallError
 from .general import SysCommand
@@ -15,7 +14,7 @@ class CpuVendor(Enum):
 	_Unknown = 'unknown'
 
 	@classmethod
-	def get_vendor(cls, name: str) -> Self:
+	def get_vendor(cls, name: str) -> CpuVendor:
 		if name in cls.__members__:
 			return cls[name]
 		debug(f"Unknown CPU vendor '{name}' detected.")
