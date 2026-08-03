@@ -142,8 +142,10 @@ class DeviceHandler:
 
 		self._devices = block_devices
 
-	@staticmethod
-	def get_loop_devices() -> list[Device]:
+	# instance method on purpose: touches parted (getDevice/IOException), and
+	# only __init__ enforces _HAS_PARTED. As a staticmethod it was reachable
+	# as DeviceHandler.get_loop_devices() with no instance, bypassing that.
+	def get_loop_devices(self) -> list[Device]:
 		devices = []
 
 		try:
