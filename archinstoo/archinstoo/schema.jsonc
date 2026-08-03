@@ -92,7 +92,7 @@
 		"mariadb": ["mariadb"],
 		"lighttpd": ["lighttpd"],
 		"tomcat": ["tomcat10"],
-		"cockpit": ["cockpit", "udisks2", "packagekit"],
+		"cockpit": ["cockpit", "cockpit-storaged", "cockpit-packagekit"],
 		"java": ["jre-openjdk-headless"],
 		"tailscale": ["tailscale"]
 	},

@@ -207,6 +207,12 @@ source = "pacman"
 [cockpit]
 source = "pacman"
 
+[cockpit-packagekit]
+source = "pacman"
+
+[cockpit-storaged]
+source = "pacman"
+
 [cosmic-app-library]
 source = "pacman"
 
@@ -373,6 +379,9 @@ source = "pacman"
 source = "pacman"
 
 [deepin-screensaver]
+source = "pacman"
+
+[deepin-seatd]
 source = "pacman"
 
 [deepin-services]
@@ -879,9 +888,6 @@ source = "pacman"
 [oxygen-icons]
 source = "pacman"
 
-[packagekit]
-source = "pacman"
-
 [pam-u2f]
 source = "pacman"
 
@@ -1063,9 +1069,6 @@ source = "pacman"
 source = "pacman"
 
 [tuned-ppd]
-source = "pacman"
-
-[udisks2]
 source = "pacman"
 
 [ufw]
