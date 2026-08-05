@@ -175,6 +175,29 @@ class GfxDriver(Enum):
 		return packages
 
 
+# Module-level so tests can point the sweep at a synthetic sysfs tree
+_PCI_BUS = Path('/sys/bus/pci/devices')
+_USB_BUS = Path('/sys/bus/usb/devices')
+
+
+def _bus_vendors(bus: Path, attr: str, mapping: dict[str, tuple[str, ...]]) -> set[str]:
+	# USB interface nodes (1-1:1.0) carry no vendor-ID attr: skip, do not abort
+	if not bus.is_dir():
+		return set()
+
+	found: set[str] = set()
+	for dev in bus.iterdir():
+		try:
+			vendor = (dev / attr).read_text().strip().lower()
+		except OSError:
+			continue
+
+		if mapped := mapping.get(vendor):
+			found.update(mapped)
+
+	return found
+
+
 class _SysInfo:
 	efi_path = Path('/sys/firmware/efi')
 
@@ -261,16 +284,18 @@ class _SysInfo:
 
 	@cached_property
 	def firmware_vendors(self) -> list[str]:
-		# Returns FirmwareVendor enum *names* matching detected PCI vendor IDs.
+		# Returns FirmwareVendor enum *names* matching detected PCI and USB vendor
+		# IDs, plus a baseline no bus ID can reach.
 		# Limited to high-yield consumer vendors; niche vendors stay manual.
 		#
 		# Manual-only FirmwareVendor members (not auto-detected, ticked by the user)
 		#   LIQUIDIO  	Cavium LiquidIO server adapters
 		#   MELLANOX  	Mellanox Spectrum switches
 		#   NFP       	Netronome Flow Processors
+		#   QCOM      	Qualcomm SoC blobs (adreno/venus/modem), platform bus not PCI
 		#   QLOGIC    	QLogic devices
-		# PCI vendor IDs cross-checked against /usr/share/hwdata/pci.ids
-		mapping: dict[str, tuple[str, ...]] = {
+		# Vendor IDs cross-checked against /usr/share/hwdata/{pci,usb}.ids
+		pci_mapping: dict[str, tuple[str, ...]] = {
 			# AMD (0x1002) shares one vendor ID across GCN generations: amdgpu firmware
 			# drives newer cards, radeon older. Suggest both rather than guessing from
 			# the live-ISO bound driver, which is fragile.
@@ -280,27 +305,35 @@ class _SysInfo:
 			'0x10ec': ('REALTEK',),
 			'0x14e4': ('BROADCOM',),
 			'0x168c': ('ATHEROS',),
-			'0x0cf3': ('ATHEROS',),
+			# 0x17cb (QCA6390/WCN6855/WCN7850) binds ath11k/ath12k, whose blobs
+			# ship in linux-firmware-atheros, not -qcom
+			'0x17cb': ('ATHEROS',),
 			'0x14c3': ('MEDIATEK',),
-			'0x17cb': ('QCOM',),
+			# Ralink folded into MediaTek: rt2x00/mt7601u blobs ship in -mediatek
+			'0x1814': ('MEDIATEK',),
 			# Marvell 88W8xxx wifi: 0x11ab legacy, 0x1b4b newer 88W/88SE
 			'0x11ab': ('MARVELL',),
 			'0x1b4b': ('MARVELL',),
 		}
 
-		pci_devs = Path('/sys/bus/pci/devices')
-		if not pci_devs.is_dir():
-			return []
+		# BT radios and wifi dongles hang off USB even when the wifi is PCIe. Silicon
+		# vendors only: OEM rebrands (IMC, Lite-On, AzureWave) do not name the chip.
+		usb_mapping: dict[str, tuple[str, ...]] = {
+			'0cf3': ('ATHEROS',),
+			'0bda': ('REALTEK',),
+			'0e8d': ('MEDIATEK',),
+			'148f': ('MEDIATEK',),
+			'8087': ('INTEL',),
+			'0a5c': ('BROADCOM',),
+			'1286': ('MARVELL',),
+		}
 
-		detected: set[str] = set()
-		for dev in pci_devs.iterdir():
-			try:
-				vendor = (dev / 'vendor').read_text().strip().lower()
-			except OSError:
-				continue
-
-			if mapped := mapping.get(vendor):
-				detected.update(mapped)
+		# Neither is reachable above: CS35L41/CS42L43 amps enumerate over ACPI/I2C/SPI
+		# and the unsorted catch-all has no vendor ID at all. Cheap enough to always
+		# take, and a missed cirrus blob means silent laptop speakers.
+		detected = {'CIRRUS', 'OTHER'}
+		detected |= _bus_vendors(_PCI_BUS, 'vendor', pci_mapping)
+		detected |= _bus_vendors(_USB_BUS, 'idVendor', usb_mapping)
 
 		return sorted(detected)
 

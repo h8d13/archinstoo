@@ -70,7 +70,7 @@ class ArchConfig:
 	hostname: str = 'archlinux'
 	kernels: list[str] = field(default_factory=lambda: [DEFAULT_KERNEL.value])
 	kernel_headers: bool = False
-	firmware: FirmwareConfiguration = field(default_factory=FirmwareConfiguration)
+	firmware: FirmwareConfiguration = field(default_factory=FirmwareConfiguration.default)
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)

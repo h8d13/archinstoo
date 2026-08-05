@@ -94,14 +94,18 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 			raise ValueError('Unhandled result type')
 
 
-def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> FirmwareConfiguration:
+def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConfiguration:
+	# Host-dependent (MINIMAL in a VM), so it cannot be a signature default
+	default = FirmwareConfiguration.default()
+	preset = preset or default
+
 	header = 'Full installs the linux-firmware meta package.' + '\n'
 	header += 'Minimal skips firmware entirely (safe for most VMs using virtio).' + '\n'
 	header += 'Vendor lets you pick only the firmware subpackages you need.' + '\n'
 
 	type_items = [MenuItem(t.value, value=t) for t in FirmwareType]
 	type_group = MenuItemGroup(type_items, sort_items=False)
-	type_group.set_default_by_value(FirmwareType.FULL)
+	type_group.set_default_by_value(default.firmware_type)
 	type_group.set_focus_by_value(preset.firmware_type)
 
 	result = SelectMenu[FirmwareType](
@@ -116,7 +120,7 @@ def select_firmware(preset: FirmwareConfiguration = FirmwareConfiguration()) -> 
 		case ResultType.Skip:
 			return preset
 		case ResultType.Reset:
-			return FirmwareConfiguration()
+			return default
 		case ResultType.Selection:
 			firmware_type = result.get_value()
 		case _:

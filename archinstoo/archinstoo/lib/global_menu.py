@@ -140,7 +140,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text='Firmware',
-				value=FirmwareConfiguration(),
+				value=FirmwareConfiguration.default(),
 				action=select_firmware,
 				preview_action=self._prev_firmware,
 				key='firmware',
