@@ -10,6 +10,9 @@ from archinstoo.lib.pacman import Pacman
 from archinstoo.lib.pm import config, packages
 from archinstoo.lib.pm.config import PacmanConfig
 
+if TYPE_CHECKING:
+	from pathlib import Path
+
 # `pacman -Sl` on a host with multilib and third-party repos enabled. Repo order
 # is conf order; `nano` deliberately appears in two repos.
 _SL_OUTPUT = [
