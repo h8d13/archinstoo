@@ -42,7 +42,6 @@ if TYPE_CHECKING:
 
 	from .args import ArchConfig
 	from .models.mirrors import PacmanConfiguration
-	from .models.packages import Repository
 
 
 class GlobalMenu(AbstractMenu[None]):
@@ -868,30 +867,20 @@ class GlobalMenu(AbstractMenu[None]):
 		return ProfileMenu(preset=current_profile, kernels=kernels).run()
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:
-		config: PacmanConfiguration | None = self._item_group.find_by_key('pacman_config').value
-
-		repositories: set[Repository] = set()
-		custom_repos: list[str] = []
-		if config:
-			repositories = set(config.optional_repositories)
-			custom_repos = [r.name for r in config.custom_repositories]
-
-		return select_additional_packages(
-			preset,
-			repositories=repositories,
-			custom_repos=custom_repos,
-		)
+		# repos come from the live pacman.conf, which _pacman_configuration has
+		# already written by the time this runs
+		return select_additional_packages(preset)
 
 	def _pacman_configuration(self, preset: PacmanConfiguration | None = None) -> PacmanConfiguration:
 		pacman_configuration = PMenu(preset=preset).run()
 
 		needs_apply = pacman_configuration.optional_repositories or pacman_configuration.custom_repositories or pacman_configuration.pacman_options
 
-		if needs_apply:
-			# reset the package list cache in case the repository selection has changed
-			if pacman_configuration.optional_repositories or pacman_configuration.custom_repositories:
-				list_available_packages.cache_clear()
+		# the package list is keyed on nothing but the conf now, so any pass
+		# through this menu invalidates it
+		list_available_packages.cache_clear()
 
+		if needs_apply:
 			# enable the repositories and options in the config
 			pacman_config = PacmanConfig(None)
 			if pacman_configuration.optional_repositories:

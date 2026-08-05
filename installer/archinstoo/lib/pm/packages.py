@@ -2,7 +2,7 @@ import contextlib
 from dataclasses import fields
 from functools import lru_cache
 
-from archinstoo.lib.models.packages import AvailablePackage, LocalPackage, Repository
+from archinstoo.lib.models.packages import AvailablePackage, LocalPackage
 from archinstoo.lib.output import debug
 from archinstoo.lib.pacman import Pacman
 
@@ -49,11 +49,11 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 
 
 @lru_cache
-def list_available_packages(
-	repositories: tuple[Repository, ...],
-	custom_repos: tuple[str, ...] = (),
-) -> dict[str, AvailablePackage]:
-	# Returns a list of all available packages in the database
+def list_available_packages() -> dict[str, AvailablePackage]:
+	# Every repo section in the live pacman.conf, no explicit list: the conf is
+	# already the truth pacstrap installs from (PacmanConfig.apply() writes it
+	# before this menu opens), so a host's own repos (cachyos, multilib, ...)
+	# show up without archinstoo having to know their names.
 	packages: dict[str, AvailablePackage] = {}
 
 	try:
@@ -61,25 +61,15 @@ def list_available_packages(
 	except Exception as e:
 		debug(f'Failed to sync Arch Linux package database: {e}')
 
-	# Load package stubs from standard repositories
-	for repo in repositories:
-		try:
-			for line in Pacman.run(f'-Sl {repo.value}'):
-				parts = line.decode().strip().split()
-				if len(parts) >= 3:
-					packages[parts[1]] = _create_package_stub(parts[0], parts[1], parts[2])
-		except Exception as e:
-			debug(f'Failed to list packages from {repo.value}: {e}')
-
-	# Load package stubs from custom repositories
-	for repo_name in custom_repos:
-		try:
-			for line in Pacman.run(f'-Sl {repo_name}'):
-				parts = line.decode().strip().split()
-				if len(parts) >= 3:
-					packages[parts[1]] = _create_package_stub(parts[0], parts[1], parts[2])
-		except Exception as e:
-			debug(f'Failed to list packages from custom repo {repo_name}: {e}')
+	try:
+		# -Sl walks repos in conf order, so setdefault (not assignment) keeps the
+		# same winner pacman would pick when a name exists in more than one repo
+		for line in Pacman.run('-Sl'):
+			parts = line.decode().strip().split()
+			if len(parts) >= 3:
+				packages.setdefault(parts[1], _create_package_stub(parts[0], parts[1], parts[2]))
+	except Exception as e:
+		debug(f'Failed to list available packages: {e}')
 
 	return packages
 

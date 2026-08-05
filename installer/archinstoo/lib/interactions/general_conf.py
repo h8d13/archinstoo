@@ -2,7 +2,7 @@ import threading
 from enum import Enum
 
 from archinstoo.lib.localization.utils import list_timezones
-from archinstoo.lib.models.packages import AvailablePackage, PackageGroup, Repository
+from archinstoo.lib.models.packages import AvailablePackage, PackageGroup
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -92,26 +92,20 @@ def select_timezone(preset: str | None = None) -> str | None:
 			return result.get_value()
 
 
-def select_additional_packages(
-	preset: list[str] = [],
-	repositories: set[Repository] = set(),
-	custom_repos: list[str] = [],
-) -> list[str]:
-	repositories |= {Repository.Core, Repository.Extra}
+def select_additional_packages(preset: list[str] = []) -> list[str]:
+	Tui.print('Loading packages...', clear_screen=True)
 
-	repos_text = ', '.join(r.value for r in repositories)
-	if custom_repos:
-		repos_text += ', ' + ', '.join(custom_repos)
-	output = f'Repositories: {repos_text}' + '\n'
-
-	output += 'Loading packages...'
-	Tui.print(output, clear_screen=True)
-
-	packages = list_available_packages(tuple(repositories), tuple(custom_repos))
+	packages = list_available_packages()
 	package_groups = PackageGroup.from_available_packages(packages)
 
+	# repos the packages actually came from, not the ones we asked for: a repo
+	# enabled in pacman.conf whose db failed to sync must not be advertised.
+	# dict.fromkeys dedupes while holding conf order
+	repos_text = ', '.join(dict.fromkeys(p.repository for p in packages.values()))
+
 	# Additional packages (with some light weight error handling for invalid package names)
-	header = 'Only packages such as base, linux, some firmware, efibootmgr and optional profile packages are installed.' + '\n'
+	header = f'Repositories: {repos_text}' + '\n\n'
+	header += 'Only packages such as base, linux, some firmware, efibootmgr and optional profile packages are installed.' + '\n'
 	header += 'Note: base-devel is no longer installed by default. Add it here if you need build tools + devtools for tooling..' + '\n'
 	header += 'Select any packages from the below list that should be installed additionally' + '\n'  # noqa: S608 - menu prompt, not SQL
 
