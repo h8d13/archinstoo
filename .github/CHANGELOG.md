@@ -7,6 +7,58 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.14-1
+
+	- Repo layout: the middle `archinstoo/` directory is now `installer/`,
+	  so the package sits at `installer/archinstoo/` instead of three deep.
+	  Import name, `pkgname` and the console script are untouched
+	- Firmware detection reworked (`SysInfo.firmware_vendors`)
+		- `0x17cb` was mapped to `-qcom`: QCA6390/WCN6855/WCN7850 bind
+		  `ath11k`/`ath12k` and those blobs ship in `-atheros`, so a
+		  Qualcomm wifi laptop pulled 171 MiB of SoC firmware it cannot
+		  use and missed the package it needs
+		- `0x0cf3` is a USB vendor ID sitting in a PCI table (absent from
+		  `pci.ids`), so it could never match a `/sys/bus/pci` sweep
+		- USB pass added over `/sys/bus/usb/devices/*/idVendor`: BT radios
+		  and dongles hang off USB even when the wifi is PCIe. Silicon
+		  vendors only, OEM rebrands do not name the chip
+		- `0x1814` Ralink -> `-mediatek`, which carries `rt2x00`/`mt7601u`
+		- `CIRRUS` and `OTHER` are taken unconditionally: CS35L41/CS42L43
+		  amps enumerate over ACPI/I2C/SPI and the catch-all has no vendor
+		  ID at all, so no scan can ever tick them
+		- Default is `minimal` in a VM (virtio ships no blobs) and `full`
+		  on bare metal, resolved by `FirmwareConfiguration.default()` at
+		  `ArchConfig` build time, not in the menu
+	- `live`: kernel selection is back, and kernels, headers and firmware
+	  install as regular packages since `_base_packages` never runs there.
+	  Auth is no longer skipped, live mode does create users
+	- `packages` joins `live` in `NO_DISK_SCRIPTS`: target `/` means plain
+	  `pacman -S`, never pacstrap, so both skip `disk_depends`.
+	  `arch-install-scripts` moves up to `base_depends`
+	- Version has one source of truth: `read_pkgbuild_version()` reads
+	  `pkgver`/`pkgrel` off the PKGBUILD in a checkout, `__pkgstamp__` is
+	  only the wheel fallback that `build()` stamps via sed. Drift tests
+	  translate that sed back into a regex and apply it
+	- GNOME profile lists its packages instead of pulling the `gnome`
+	  group: the group carries ~60 packages (games, maps, weather, tour)
+	  that install fine after the fact
+	- Intel Gen12+/Arc: `vpl-gpu-rt` for the QSV runtime (ffmpeg, OBS),
+	  inert on older generations
+	- Upstream ports
+		- `aarch64` root partitions were stamped with the `x86_64` type
+		  GUID, so `systemd-gpt-auto-generator` could not find `/`
+		  (e8ffccc8, mapping lives on `PartitionGUID` here)
+		- Custom command scripts build their path with `LPath`, fixing
+		  `///var/tmp/...` in live mode where the target is `/` (fe162389)
+		- `cockpit` takes `cockpit-storaged`/`cockpit-packagekit` (#4688)
+		- `lsblk` goes through `run()` and `CalledProcessError`; profile
+		  URL import encodes with `data.encode()`
+	- Drop the "compile packages from source" advanced option: menu entry,
+	  `compile_packages` config key, installer branch and the `TVM` flag
+	- Locale: `set_locale` splitting moved into `localization/utils.py`
+	  next to the encoding menu that scopes itself the same way, and a
+	  failure now warns like `set_timezone` already did
+
 ## 0.1.13-7
 	- Init on arch ISO must skip updates
 
