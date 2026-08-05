@@ -1,1 +1,1 @@
-../archinstoo/docs/README.md
+../installer/docs/README.md
