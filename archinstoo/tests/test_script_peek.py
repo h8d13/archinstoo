@@ -6,6 +6,7 @@
 import pytest
 
 import archinstoo
+from archinstoo.lib.utils.env import Os
 
 
 @pytest.mark.parametrize(
@@ -25,7 +26,7 @@ import archinstoo
 	],
 )
 def test_script_peek(monkeypatch: pytest.MonkeyPatch, argv: list[str], expected: str | None) -> None:
-	monkeypatch.setattr(archinstoo.sys, 'argv', argv)
+	monkeypatch.setattr('sys.argv', argv)
 
 	assert archinstoo._script_from_argv() == expected
 
@@ -52,7 +53,7 @@ def test_foreign_blocked(
 	blocked: bool,
 ) -> None:
 	monkeypatch.setattr('platform.freedesktop_os_release', lambda: {'ID': distro_id})
-	monkeypatch.setattr(archinstoo.Os, 'running_from_host', staticmethod(lambda: not on_iso))
+	monkeypatch.setattr(Os, 'running_from_host', staticmethod(lambda: not on_iso))
 
 	assert archinstoo._is_foreign_blocked(script) is blocked
 
@@ -60,10 +61,10 @@ def test_foreign_blocked(
 @pytest.mark.parametrize('script', sorted(archinstoo.NO_DISK_SCRIPTS | archinstoo.ROOTLESS_SCRIPTS))
 def test_both_spellings_agree(monkeypatch: pytest.MonkeyPatch, script: str) -> None:
 	# the sets are matched against this peek, so both spellings must land in them
-	monkeypatch.setattr(archinstoo.sys, 'argv', ['archinstoo', f'--script={script}'])
+	monkeypatch.setattr('sys.argv', ['archinstoo', f'--script={script}'])
 	glued = archinstoo._script_from_argv()
 
-	monkeypatch.setattr(archinstoo.sys, 'argv', ['archinstoo', '--script', script])
+	monkeypatch.setattr('sys.argv', ['archinstoo', '--script', script])
 	spaced = archinstoo._script_from_argv()
 
 	assert glued == spaced == script

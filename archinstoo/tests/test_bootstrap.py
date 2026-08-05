@@ -19,7 +19,7 @@ _X86_INDEX = """
 
 
 def test_sources_x86(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(bootstrap.platform, 'machine', lambda: 'x86_64')
+	monkeypatch.setattr('platform.machine', lambda: 'x86_64')
 
 	src = bootstrap._sources()
 
@@ -28,7 +28,7 @@ def test_sources_x86(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_sources_aarch64(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(bootstrap.platform, 'machine', lambda: 'aarch64')
+	monkeypatch.setattr('platform.machine', lambda: 'aarch64')
 
 	src = bootstrap._sources()
 
@@ -63,7 +63,7 @@ def test_latest_keyring_url_missing(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_mirrorlist_taken_verbatim_off_x86(monkeypatch: pytest.MonkeyPatch) -> None:
 	mirrorlist = '# Arch Linux ARM repository mirrorlist\nServer = http://mirror.archlinuxarm.org/$arch/$repo\n'
-	monkeypatch.setattr(bootstrap.platform, 'machine', lambda: 'aarch64')
+	monkeypatch.setattr('platform.machine', lambda: 'aarch64')
 	monkeypatch.setattr(bootstrap, 'fetch_data_from_url', lambda url, **kw: mirrorlist)
 
 	assert bootstrap._build_mirrorlist() == mirrorlist

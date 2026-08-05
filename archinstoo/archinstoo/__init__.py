@@ -85,7 +85,7 @@ if TYPE_CHECKING:
 # comment columns are read as a table, ruff would collapse them
 # fmt: off
 base_depends = (
-	#'systemd',  	# For systemd-based operations - Fallbacks in place
+	'systemd',  	# For systemd-based operations
 	'coreutils',  	# Basic utilities
 	'util-linux',  	# For partition utilities
 	'pciutils',  	# For PCI device detection
@@ -95,7 +95,6 @@ base_depends = (
 	'git',  	# Cloning stashes
         'arch-install-scripts', # For pacstrap, genfstab, chroot
 )
-
 disk_depends = (
 	'python-pyparted',
 	'btrfs-progs', 		# btrfs filesystem support

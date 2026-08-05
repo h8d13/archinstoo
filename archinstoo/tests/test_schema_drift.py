@@ -17,6 +17,7 @@
 import ast
 import inspect
 import textwrap
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -40,6 +41,9 @@ from archinstoo.lib.models.users import Shell
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.scripts._resolve import SCHEMA
+
+if TYPE_CHECKING:
+	from enum import Enum
 
 # leaf profile types map 1:1 to schema['profiles']; the rest (Desktop/Server/
 # Xorg/Minimal) are abstract bases the handler also discovers
@@ -80,7 +84,7 @@ _ONE_TO_ONE_SECTIONS = (Management, Language, DevTool)
 
 
 @pytest.mark.parametrize(('key', 'enum'), _EXACT_SECTIONS.items(), ids=list(_EXACT_SECTIONS))
-def test_exact_sections(key: str, enum: type) -> None:
+def test_exact_sections(key: str, enum: type[Enum]) -> None:
 	schema_keys = set(SCHEMA[key])
 	enum_values = {e.value for e in enum}
 	assert schema_keys == enum_values, (
@@ -141,7 +145,12 @@ def _greeter_packages() -> dict[str, list[str]]:
 
 	out: dict[str, list[str]] = {}
 	for case in match.cases:
-		member = getattr(GreeterType, case.pattern.value.attr).value
+		# only `case GreeterType.X:` arms name a member, a wildcard names nothing
+		pattern = case.pattern
+		if not isinstance(pattern, ast.MatchValue) or not isinstance(pattern.value, ast.Attribute):
+			continue
+
+		member = getattr(GreeterType, pattern.value.attr).value
 		for stmt in case.body:
 			if isinstance(stmt, ast.Assign) and any(getattr(t, 'id', None) == 'packages' for t in stmt.targets):
 				out[member] = sorted(ast.literal_eval(stmt.value))
@@ -159,7 +168,7 @@ def test_greeter_packages_match() -> None:
 
 
 @pytest.mark.parametrize('enum', _ONE_TO_ONE_SECTIONS, ids=lambda e: e.__name__)
-def test_one_to_one_categories(enum: type) -> None:
+def test_one_to_one_categories(enum: type[Enum]) -> None:
 	# install path is [tool.value for tool in tools], so each option maps to
 	# exactly itself; the section is found by matching the enum's value set
 	section = next(k for k, v in SCHEMA.items() if isinstance(v, dict) and set(v) == {e.value for e in enum})
