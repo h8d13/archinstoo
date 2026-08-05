@@ -7,7 +7,7 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
-## 0.1.14-1
+## 0.1.14-0
 
 	- Repo layout: the middle `archinstoo/` directory is now `installer/`,
 	  so the package sits at `installer/archinstoo/` instead of three deep.
