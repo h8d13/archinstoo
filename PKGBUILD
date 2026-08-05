@@ -69,7 +69,7 @@ sha512sums=()
 b2sums=()
 
 build() {
-	cd "$srcdir/../archinstoo" || exit
+	cd "$srcdir/../installer" || exit
 
 	# wheel has no PKGBUILD to read at runtime: stamp the fallback
 	sed -i "s/^__pkgstamp__ = '[^']*'/__pkgstamp__ = '$pkgver-$pkgrel'/" archinstoo/_version.py
@@ -78,7 +78,7 @@ build() {
 }
 
 package() {
-	cd "$srcdir/../archinstoo" || exit
+	cd "$srcdir/../installer" || exit
 
 	python -m installer --destdir="$pkgdir" dist/*.whl
 	install -vDm 644 docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"

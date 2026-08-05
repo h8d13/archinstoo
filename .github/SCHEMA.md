@@ -70,8 +70,8 @@ This is an experimental feature which allows me to test some additional automati
 
 ## Working on customizing
 
-Configs and custom profiles references can be found in [`examples/`](https://github.com/h8d13/archinstoo/tree/master/archinstoo/examples)
+Configs and custom profiles references can be found in [`examples/`](https://github.com/h8d13/archinstoo/tree/master/installer/examples)
 
-You can also add them directly in [`default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/archinstoo/archinstoo/default_profiles) following other profiles as example or modify existing ones.
+You can also add them directly in [`default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles) following other profiles as example or modify existing ones.
 
-And master [`schema.jsonc`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/schema.jsonc)
+And master [`schema.jsonc`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/schema.jsonc)

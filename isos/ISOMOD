@@ -334,12 +334,12 @@ EOF
 		# baseline ships bash, not zsh
 		echo "Adding to bash history..."
 		cat >"$PROFILE_DIR/airootfs/root/.bash_history" <<'HISTEOF'
-pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstoo --debug --advanced
+pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/installer && python -m archinstoo --debug --advanced
 HISTEOF
 	else
 		echo "Adding to zsh history..."
 		cat >"$PROFILE_DIR/airootfs/root/.zsh_history" <<'HISTEOF'
-: 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/archinstoo && python -m archinstoo --debug --advanced
+: 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/installer && python -m archinstoo --debug --advanced
 HISTEOF
 	fi
 fi
@@ -360,7 +360,7 @@ if [ -d "$HOME/archinstoo" ]; then
 else
     git clone https://github.com/h8d13/archinstoo "$HOME/archinstoo"
 fi
-cd "$HOME/archinstoo/archinstoo"
+cd "$HOME/archinstoo/installer"
 exec sudo python -m archinstoo --debug "$@"
 CMDEOF
 else
@@ -373,7 +373,7 @@ if [ -d /root/archinstoo ]; then
 else
     git clone https://github.com/h8d13/archinstoo /root/archinstoo
 fi
-cd /root/archinstoo/archinstoo
+cd /root/archinstoo/installer
 exec python -m archinstoo --debug "$@"
 CMDEOF
 fi

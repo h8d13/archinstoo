@@ -15,7 +15,7 @@ Subcommands:
 
 How nvchecker works: pacman entries read the LOCAL sync db, so results are only
 as fresh as the last `pacman -Sy`. `check` guards on this via checkupdates and
-exits asking you to refresh rather than running sudo itself. 
+exits asking you to refresh rather than running sudo itself.
 """
 
 import argparse
@@ -34,9 +34,9 @@ _DESC_FIELD_RE = re.compile(r'%([A-Z0-9]+)%\n((?:.+\n)*)')
 NVDIR = Path(__file__).parent
 ROOT = NVDIR.parent  # nvchecker/ -> repo root
 TOML = NVDIR / 'nvchecker.toml'
-SCHEMA_PATH = ROOT / 'archinstoo' / 'archinstoo' / 'schema.jsonc'
+SCHEMA_PATH = ROOT / 'installer' / 'archinstoo' / 'schema.jsonc'
 PKGBUILD_DEV = ROOT / 'PKGBUILD'
-PKGBUILD_REL = ROOT / 'archinstoo' / 'PKGBUILD'
+PKGBUILD_REL = ROOT / 'installer' / 'PKGBUILD'
 
 def log(msg: str) -> None:
 	# progress to stderr so `gen --stdout` stays pipe-clean

@@ -11,7 +11,7 @@ jobs:
             - run: pip install import-linter
             - name: Check for circular imports (SCC) Syblings Check
               continue-on-error: true
-              working-directory: archinstoo
+              working-directory: installer
               run: lint-imports
     vulture:
         runs-on: ubuntu-latest
@@ -23,5 +23,5 @@ jobs:
             - run: pip install vulture
             - name: Check for dead code
               continue-on-error: true
-              working-directory: archinstoo
+              working-directory: installer
               run: vulture archinstoo

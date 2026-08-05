@@ -59,7 +59,7 @@ git clone https://github.com/h8d13/archinstoo
 ### **4. Run the code**
 
 ```shell
-cd archinstoo/archinstoo
+cd archinstoo/installer
 python -m archinstoo [args] # try -h or --help
 # some options are behind --advanced
 ```
@@ -85,7 +85,7 @@ See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_C
 ## Modify/Extend
 
 > You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
-Or modify existing ones directly. Can also see here for [examples](https://github.com/h8d13/archinstoo/tree/master/archinstoo/examples)
+Or modify existing ones directly. Can also see here for [examples](https://github.com/h8d13/archinstoo/tree/master/installer/examples)
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported.
 
@@ -103,11 +103,11 @@ Available options:
     rescue    [*]
 ```
 
-The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/archinstoo)
+The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/installer)
 
 Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
 
-A `man` page is also available `man -l archinstoo/docs/archinstoo.1`
+A `man` page is also available `man -l installer/docs/archinstoo.1`
 
 ### Use cases
 
@@ -131,7 +131,7 @@ See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACH
 
 ### Testing
 
-**Host-to-target:** testing (without ISOs) here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD).
+**Host-to-target:** testing (without ISOs) here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD).
 
 See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/blob/master/.github/CHANGELOG.md)
 
@@ -149,7 +149,7 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 
 >[!NOTE]
 > For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
-> For **non-dev** see [`archinstoo/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/PKGBUILD) uses the repo without its top part from git.
+> For **non-dev** see [`installer/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD) uses the repo without its top part from git.
 
 But we recommend using it from latest git `master` instead. Since fixes are often time critical and the "moving target" nature of arch systems.
 

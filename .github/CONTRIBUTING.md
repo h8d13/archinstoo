@@ -28,7 +28,7 @@ Default being `guided` and `--script list` just returns all files in this dir.
 
 - Config files only ever store all but encryption / auth info
 
-The rest of classes/defs/files can be traced using global search inside `./archinstoo/*`
+The rest of classes/defs/files can be traced using global search inside `./installer/*`
 This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
 
 ## Contrib

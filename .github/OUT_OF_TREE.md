@@ -5,7 +5,7 @@
 For some hardware using the AUR for drivers is inevitable: the fix is a build, not a firmware blob
 
 Hence why you can now use `--advanced` to get AUR support built-in 
-> Uses a modified [`grimoire`](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/grimoire.py) *during install*. As far as I know not many installers allow for this.
+> Uses a modified [`grimoire`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/grimoire.py) *during install*. As far as I know not many installers allow for this.
 
 => Make sure **to toggle kernel headers** from your desired variant(s) if you are building DKMS modules.
 
@@ -14,7 +14,7 @@ Especially given the automated nature of the installs: sufficiently harden the m
 
 ## More hardware support
 
-Directly supported [hardware](https://github.com/h8d13/archinstoo/blob/master/archinstoo/archinstoo/lib/hardware.py) can all be seen here through detection.
+Directly supported [hardware](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py) can all be seen here through detection.
 
 The AUR might be useful for RealTek (and often requires you to pick LTS kernel).
 

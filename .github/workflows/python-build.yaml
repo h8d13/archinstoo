@@ -20,9 +20,9 @@ jobs:
       - name: Remove existing archinstall (if any)
         run: pip uninstall -y archinstoo --break-system-packages || true
       - name: Build archinstoo
-        run: python -m build --wheel archinstoo
+        run: python -m build --wheel installer
       - name: Install archinstoo
-        run: pip install archinstoo/dist/*.whl --break-system-packages --no-deps
+        run: pip install installer/dist/*.whl --break-system-packages --no-deps
       - name: Run archinstoo
         run: |
           python -V
@@ -30,4 +30,4 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: archinstoo
-          path: archinstoo/dist/*
+          path: installer/dist/*

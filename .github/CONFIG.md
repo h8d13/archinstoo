@@ -3,7 +3,7 @@
 ## Intro
 
 When using `archinstoo` a config file is available in the logger directory.
-This is usually `./archinstoo/logs/` from where you are running currently.
+This is usually `./installer/logs/` from where you are running currently.
 
 This file can be saved and resumed to be used another time.
 This is handy if you want to go back to the terminal quickly before installling.

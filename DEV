@@ -5,23 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_GLOB="archinstoo-*.pkg.tar.zst"
 
 go_to() {
-	cd "$SCRIPT_DIR/archinstoo" || exit 1
-}
-
-clean() {
-	local pending
-	pending=$(git clean -Xnd)
-	[[ -n "${pending}" ]] || {
-		echo "nothing to clean"
-		return 0
-	}
-	echo "${pending}"
-	read -rp "Proceed? [y/N] " reply
-	[[ "${reply}" == [yY] ]] || {
-		echo "aborted"
-		return 0
-	}
-	git clean -Xfd
+	cd "$SCRIPT_DIR/installer" || exit 1
 }
 
 case "$1" in
@@ -33,9 +17,6 @@ case "$1" in
 		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py' | sed 's/\.py//g'
 		echo '```'
 	} >docs/README.md
-	;;
--c | --clean)
-	clean
 	;;
 -ul | --up-logs)
 	go_to

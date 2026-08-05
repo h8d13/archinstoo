@@ -14,8 +14,8 @@ import pytest
 from archinstoo._version import __pkgstamp__, __version__, read_pkgbuild_version
 
 ROOT = Path(__file__).parents[2]
-PKGBUILDS = (ROOT / 'PKGBUILD', ROOT / 'archinstoo' / 'PKGBUILD')
-VERSION_PY = ROOT / 'archinstoo' / 'archinstoo' / '_version.py'
+PKGBUILDS = (ROOT / 'PKGBUILD', ROOT / 'installer' / 'PKGBUILD')
+VERSION_PY = ROOT / 'installer' / 'archinstoo' / '_version.py'
 
 
 def test_version_comes_from_pkgbuild() -> None:

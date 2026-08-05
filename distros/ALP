@@ -10,7 +10,7 @@
 
 # apk add git
 # git clone <url>
-# cd archinstoo
+# cd installer
 # ./distros/ALP
 # ./RUN
 

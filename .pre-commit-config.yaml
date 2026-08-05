@@ -17,13 +17,13 @@ repos:
     hooks:
         # fix unused imports and sort them
       - id: ruff
-        args: ["--config", "archinstoo/pyproject.toml", "--extend-select", "I", "--fix"]
+        args: ["--config", "installer/pyproject.toml", "--extend-select", "I", "--fix"]
         # format the code
       - id: ruff-format
-        args: ["--config", "archinstoo/pyproject.toml"]
+        args: ["--config", "installer/pyproject.toml"]
         # run the linter
       - id: ruff
-        args: ["--config", "archinstoo/pyproject.toml"]
+        args: ["--config", "installer/pyproject.toml"]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -43,16 +43,16 @@ repos:
     hooks:
     - id: mypy
       args: [
-        '--config-file=archinstoo/pyproject.toml'
+        '--config-file=installer/pyproject.toml'
       ]
-      exclude: ^archinstoo/tests/
+      exclude: ^installer/tests/
       fail_fast: true
   - repo: https://github.com/pycqa/pylint
     rev: v4.0.6
     hooks:
     - id: pylint
-      args: ['--rcfile=archinstoo/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "archinstoo")']
-      exclude: ^archinstoo/tests/
+      args: ['--rcfile=installer/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "installer")']
+      exclude: ^installer/tests/
       additional_dependencies:
         - pyparted>=3.13.0
       fail_fast: true

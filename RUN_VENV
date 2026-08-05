@@ -1,7 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2154
-cd archinstoo || exit 1
-# launch venv and run archinstall
+cd installer || exit 1
 
 if [ ! -d ".venv" ]; then
 	python -m venv --system-site-packages .venv

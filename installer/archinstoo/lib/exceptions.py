@@ -27,5 +27,5 @@ class ServiceException(Exception):
 
 
 class DownloadTimeout(Exception):
-	# Stub from archinstoo/archinstoo/lib/utils/net.py
+	# Stub from installer/archinstoo/lib/utils/net.py
 	pass
