@@ -1,5 +1,5 @@
 import re
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
