@@ -190,9 +190,19 @@
     ├── data/
     │   └── test_config.json
     ├── test_args
+    ├── test_bootstrap
     ├── test_configuration_output
+    ├── test_deps
+    ├── test_env
+    ├── test_firmware
+    ├── test_locale
+    ├── test_menu_item_focus
     ├── test_mirrors
-    └── test_schema_drift
+    ├── test_parted_optional
+    ├── test_saved_config_resume
+    ├── test_schema_drift
+    ├── test_script_peek
+    └── test_version_stamp
 
-29 directories, 164 files
+29 directories, 174 files
 ```
