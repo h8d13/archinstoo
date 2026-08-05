@@ -12,6 +12,32 @@ Install normally, then swap kernels after first boot. Keeps stock kernel as fall
 
 Optionally after checking all works fine, remove the repos (`--remove`).
 
+## Their userspace packages, at install time
+
+"Additional packages" lists every repo section in the live `/etc/pacman.conf`, nothing
+hardcoded. So cachyos packages are selectable during the install, two ways in:
+
+- Run archinstoo from a host that already has the repos (`./cachyos-repo --install`
+  beforehand). They show up with no extra step.
+- Or add them in the installer under Pacman config, custom repositories.
+
+Either way `pacstrap -C /etc/pacman.conf` straps from that same file, so what you
+select installs into the target. The conf is then copied to the installed system,
+so the repos are still there after first boot (`file://` entries get stripped).
+
+Custom repos are appended after the stock ones, so conf order keeps core and extra
+winning any name clash. Same rule as below, enforced by where they land.
+
+On a host (not the ISO) `/etc/pacman.conf` is snapshotted and restored when
+archinstoo exits, so this does not leave your own conf edited.
+
+### Not the kernel
+
+`linux-cachyos` is a package like any other, but additional packages install after
+the bootloader is configured, and boot entries come from the Kernels menu
+(`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Pick it here and you get the
+files with no entry to boot them. Kernel swapping stays the post-boot route above.
+
 ## Details
 
 Simply because we want an arch base:
