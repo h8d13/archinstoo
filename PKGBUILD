@@ -8,8 +8,8 @@
 # Contributor: Demostanis Worlds <demostanis@protonmail.com>
 
 pkgname=archinstoo
-pkgver=0.1.13
-pkgrel=7
+pkgver=0.1.14
+pkgrel=1
 pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"
