@@ -68,6 +68,23 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
 
 
+def _normalize_lsblk_fstype(lsblk_info: LsblkInfo) -> str:
+	# lsblk names two filesystems differently from parted and the enum.
+	fs_type = (lsblk_info.fstype or '').lower()
+
+	# Every FAT width reports as vfat, with the width in fsver (FAT12/16/32).
+	# Missing fsver falls back to FAT32: what an ESP nearly always is, and all
+	# widths mount through the same vfat driver regardless.
+	if fs_type == 'vfat':
+		return (lsblk_info.fsver or 'FAT32').lower()
+
+	# lsblk says swap, parted and the enum say linux-swap
+	if fs_type == 'swap':
+		return FilesystemType.LINUX_SWAP.value
+
+	return fs_type
+
+
 class DeviceHandler:
 	_TMP_BTRFS_MOUNT = Path('/mnt/arch_btrfs')
 
@@ -173,16 +190,24 @@ class DeviceHandler:
 		partition: Partition,
 		lsblk_info: LsblkInfo | None = None,
 	) -> FilesystemType | None:
-		try:
-			if partition.fileSystem:
-				if partition.fileSystem.type == FilesystemType.LINUX_SWAP.parted_value:
-					return FilesystemType.LINUX_SWAP
-				return FilesystemType(partition.fileSystem.type)
-			if lsblk_info is not None:
-				return FilesystemType(lsblk_info.fstype) if lsblk_info.fstype else None
+		if partition.fileSystem:
+			fs_type = partition.fileSystem.type
+			source = 'parted'
+			if fs_type == FilesystemType.LINUX_SWAP.parted_value:
+				return FilesystemType.LINUX_SWAP
+		elif lsblk_info is not None and lsblk_info.fstype:
+			fs_type = _normalize_lsblk_fstype(lsblk_info)
+			source = 'lsblk'
+		else:
 			return None
+
+		try:
+			return FilesystemType(fs_type)
 		except ValueError:
-			debug(f'Could not determine the filesystem: {partition.fileSystem}')
+			# fs we detect but do not manage (hfs+, apfs, zfs...). Log the value,
+			# not the parted repr: the repr buries the type under object addresses
+			# and the lsblk branch used to report the unrelated fileSystem=None.
+			debug(f'Unsupported filesystem on {partition.path} ({source}): {fs_type}')
 
 		return None
 

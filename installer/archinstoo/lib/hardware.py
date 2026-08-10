@@ -243,21 +243,16 @@ class _SysInfo:
 		return cpu
 
 	@cached_property
-	def mem_info(self) -> dict[str, int]:
-		# Returns system memory information
-		mem_info_path = Path('/proc/meminfo')
-		mem_info: dict[str, int] = {}
-
-		with mem_info_path.open() as file:
+	def mem_total(self) -> int:
+		# kB. Single key, so no dict of the whole file: MemFree/MemAvailable
+		# are live values and caching them would be wrong anyway.
+		with Path('/proc/meminfo').open() as file:
 			for line in file:
-				key, value = line.strip().split(':')
-				num = value.split()[0]
-				mem_info[key] = int(num)
+				key, _, remainder = line.partition(':')
+				if key == 'MemTotal':
+					return int(remainder.split()[0])
 
-		return mem_info
-
-	def mem_info_by_key(self, key: str) -> int:
-		return self.mem_info[key]
+		raise RequirementError('MemTotal missing from /proc/meminfo')
 
 	@cached_property
 	def loaded_modules(self) -> list[str]:
@@ -426,7 +421,7 @@ class SysInfo:
 
 	@staticmethod
 	def mem_total() -> int:
-		return _sys_info.mem_info_by_key('MemTotal')
+		return _sys_info.mem_total
 
 	@staticmethod
 	def is_vm() -> bool:

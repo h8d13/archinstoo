@@ -256,7 +256,7 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
 	debug(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
-	debug(f'Memory statistics: {SysInfo.mem_total()} total installed')
+	debug(f'Memory statistics: {SysInfo.mem_total()} kB total installed')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 
