@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.default_profiles.desktops import SeatAccess
+from archinstoo.lib import pkgdata
 from archinstoo.lib.hardware import CpuVendor, GfxDriver, GfxPackage, _sys_info
 from archinstoo.lib.models.application import (
 	Audio,
@@ -252,32 +253,44 @@ def test_nvgen_toml_tracks_code_packages() -> None:
 	assert not missing, f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'
 
 
-# -- pacman groups -----------------------------------------------------------
+def test_nvgen_shares_the_installer_helper() -> None:
+	# NVGEN path-loads lib/pkgdata.py rather than keeping its own schema loader
+	# and group expansion; those two copies are what drifted before
+	nvgen = _load_nvgen()
+	assert Path(pkgdata.__file__) == nvgen.PKGDATA_PATH, f'NVGEN loads a different helper: {nvgen.PKGDATA_PATH}'
+	assert nvgen.pkgdata.load_jsonc.__doc__ == pkgdata.load_jsonc.__doc__
+	assert nvgen.pkgdata.parse_groups(_SGG_OUTPUT) == pkgdata.parse_groups(_SGG_OUTPUT)
+
+
+# -- pacman groups (lib/pkgdata.py) ------------------------------------------
 #
 # Some schema entries are groups, not packages. pactree/expac report them as
 # unknown, so resolve_deps() expands them first or the members and their whole
 # closure vanish from the count and size estimates.
 
-_SGG_OUTPUT = [
-	b'mate caja\n',
-	b'mate marco\n',
-	b'xfce4-goodies xfburn\n',
-	b'\n',
-]
+_SGG_OUTPUT = """mate caja
+mate marco
+xfce4-goodies xfburn
+
+"""
+
+
+def test_parse_groups_reads_sgg_pairs() -> None:
+	assert pkgdata.parse_groups(_SGG_OUTPUT) == {'mate': {'caja', 'marco'}, 'xfce4-goodies': {'xfburn'}}
 
 
 def test_expand_groups_replaces_groups_with_members(monkeypatch: pytest.MonkeyPatch) -> None:
-	calls: list[str] = []
-
-	def fake_syscommand(cmd: str) -> list[bytes]:
-		calls.append(cmd)
-		return _SGG_OUTPUT
-
-	monkeypatch.setattr(_resolve, 'SysCommand', fake_syscommand)
+	monkeypatch.setattr(pkgdata, 'sync_groups', lambda: pkgdata.parse_groups(_SGG_OUTPUT))
 
 	# 'nano' is a package, not a group, and must survive untouched
-	assert _resolve.expand_groups({'mate', 'xfce4-goodies', 'nano'}) == {'caja', 'marco', 'xfburn', 'nano'}
-	assert calls == ['pacman -Sgg'], f'expected one group query, got {calls}'
+	assert pkgdata.expand_groups({'mate', 'xfce4-goodies', 'nano'}) == {'caja', 'marco', 'xfburn', 'nano'}
+
+
+def test_resolve_uses_the_shared_helper() -> None:
+	# _resolve must not grow its own copy again: same function object, and the
+	# schema comes through the shared loader
+	assert _resolve.expand_groups is pkgdata.expand_groups
+	assert pkgdata.load_jsonc(_resolve._schema_path) == _resolve.SCHEMA
 
 
 def test_schema_group_entries_are_not_treated_as_packages() -> None:

@@ -23,7 +23,8 @@ exits asking you to refresh rather than running sudo itself.
 
 import argparse
 import ast
-import json
+import importlib.machinery
+import importlib.util
 import os
 import re
 import shutil
@@ -36,6 +37,7 @@ ROOT = NVDIR.parent  # nvchecker/ -> repo root
 TOML = NVDIR / 'nvchecker.toml'
 PKG = ROOT / 'installer' / 'archinstoo'
 SCHEMA_PATH = PKG / 'schema.jsonc'
+PKGDATA_PATH = PKG / 'lib' / 'pkgdata.py'
 PKGBUILD_DEV = ROOT / 'PKGBUILD'
 PKGBUILD_REL = ROOT / 'installer' / 'PKGBUILD'
 
@@ -58,6 +60,24 @@ PKG_ENUMS = (
 	(PKG / 'lib' / 'hardware.py', 'CpuVendor', ('-ucode',)),
 	(PKG / 'default_profiles' / 'desktops' / '__init__.py', 'SeatAccess', ('',)),
 )
+
+def _load_pkgdata():
+	# schema loading and pacman group expansion live in the installer package so
+	# the count/size scripts and this tool cannot drift apart. loaded by path,
+	# not `import archinstoo...`: that would run the package __init__ chain and
+	# drag in pyparted and the rest of the runtime. pkgdata.py is stdlib-only
+	# precisely so this works.
+	loader = importlib.machinery.SourceFileLoader('pkgdata', str(PKGDATA_PATH))
+	spec = importlib.util.spec_from_loader('pkgdata', loader)
+	if spec is None:
+		sys.exit(f'error: cannot load {PKGDATA_PATH}')
+	module = importlib.util.module_from_spec(spec)
+	loader.exec_module(module)
+	return module
+
+
+pkgdata = _load_pkgdata()
+
 
 def log(msg: str) -> None:
 	# progress to stderr so `gen --stdout` stays pipe-clean
@@ -85,17 +105,6 @@ def _needs_update() -> bool:
 	return False
 
 
-def load_schema() -> dict:
-	# strip // comments, then parse as json. deliberately a copy of
-	# _resolve.py:_load_schema(): importing it would pull the archinstoo
-	# runtime (pyparted et al) into a tool that must run standalone, and the
-	# drift tests already pin NVGEN against the real code
-
-	text = SCHEMA_PATH.read_text()
-	text = re.sub(r'(?m)^\s*//.*$|(?<=,)\s*//.*$', '', text)
-	return json.loads(text)
-
-
 def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 	# extract a bash array (depends, optdepends, ...) from a PKGBUILD
 	text = path.read_text()
@@ -113,26 +122,6 @@ def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 		if pkg:
 			cleaned.append(pkg)
 	return cleaned
-
-
-def sync_db_groups() -> dict[str, set[str]]:
-	# group -> member packages, from one `pacman -Sgg` (every group/member pair
-	# it knows). no hardcoded group list to rot (cf. cutefish), and unlike
-	# walking /var/lib/pacman/sync/*.db ourselves this sees exactly the repos
-	# enabled in pacman.conf: a disabled-but-present db (core-testing, a local
-	# repo) would otherwise add members pacman would never install.
-	# _resolve.py:_sync_groups() reads the same source for count/size.
-	groups: dict[str, set[str]] = {}
-	proc = subprocess.run(['pacman', '-Sgg'], capture_output=True, text=True, check=False)
-	if proc.returncode != 0:
-		log('warning: `pacman -Sgg` failed; schema group entries stay unexpanded')
-		return groups
-
-	for line in proc.stdout.splitlines():
-		parts = line.split()
-		if len(parts) == 2:
-			groups.setdefault(parts[0], set()).add(parts[1])
-	return groups
 
 
 def extract_schema_packages(schema: dict, groups: dict[str, set[str]]) -> set[str]:
@@ -202,7 +191,7 @@ def detect_source(pkg: str) -> str:
 
 def generate_toml() -> str:
 	log('Loading schema...')
-	schema = load_schema()
+	schema = pkgdata.load_jsonc(SCHEMA_PATH)
 
 	log('Parsing PKGBUILDs...')
 	depends = set(parse_pkgbuild_array(PKGBUILD_DEV, 'depends'))
@@ -212,7 +201,9 @@ def generate_toml() -> str:
 	optdepends.update(parse_pkgbuild_array(PKGBUILD_REL, 'optdepends'))
 
 	log('Reading package groups from pacman...')
-	groups = sync_db_groups()
+	groups = pkgdata.sync_groups()
+	if not groups:
+		log('warning: `pacman -Sgg` returned nothing; schema group entries stay unexpanded')
 
 	log('Extracting packages from schema...')
 	schema_pkgs = extract_schema_packages(schema, groups)
