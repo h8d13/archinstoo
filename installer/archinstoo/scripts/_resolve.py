@@ -6,13 +6,13 @@
 # import it without side effects.
 
 import re
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.network import NicType
-from archinstoo.lib.pkgdata import expand_groups, load_jsonc
+from archinstoo.lib.pm.groups import expand
+from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
@@ -27,11 +27,6 @@ def _requirements(*binaries: str) -> bool:
 		return True
 	except RequirementError:
 		return False
-
-
-_schema_path = Path(__file__).parent.parent / 'schema.jsonc'
-
-SCHEMA = load_jsonc(_schema_path)
 
 
 def _firmware_packages(config: dict[str, Any]) -> tuple[list[str], set[str]]:
@@ -285,7 +280,7 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 	if not _requirements('pactree'):
 		raise RequirementError('pactree not found; install pacman-contrib')
 
-	explicit = expand_groups(explicit)
+	explicit = expand(explicit)
 	resolved: set[str] = set()
 	roots_for_target: list[str] = []
 

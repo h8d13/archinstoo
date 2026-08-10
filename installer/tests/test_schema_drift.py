@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.default_profiles.desktops import SeatAccess
-from archinstoo.lib import pkgdata
+from archinstoo.lib import schema
 from archinstoo.lib.hardware import CpuVendor, GfxDriver, GfxPackage, _sys_info
 from archinstoo.lib.models.application import (
 	Audio,
@@ -46,6 +46,7 @@ from archinstoo.lib.models.firmware import FirmwareVendor
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.users import Shell
+from archinstoo.lib.pm import groups
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.scripts import _resolve
@@ -253,16 +254,18 @@ def test_nvgen_toml_tracks_code_packages() -> None:
 	assert not missing, f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'
 
 
-def test_nvgen_shares_the_installer_helper() -> None:
-	# NVGEN path-loads lib/pkgdata.py rather than keeping its own schema loader
-	# and group expansion; those two copies are what drifted before
+def test_nvgen_shares_the_installer_modules() -> None:
+	# NVGEN path-loads lib/schema.py and lib/pm/groups.py rather than keeping
+	# its own loader and group expansion; those copies are what drifted before.
+	# also proves both modules stay loadable without the archinstoo runtime
 	nvgen = _load_nvgen()
-	assert Path(pkgdata.__file__) == nvgen.PKGDATA_PATH, f'NVGEN loads a different helper: {nvgen.PKGDATA_PATH}'
-	assert nvgen.pkgdata.load_jsonc.__doc__ == pkgdata.load_jsonc.__doc__
-	assert nvgen.pkgdata.parse_groups(_SGG_OUTPUT) == pkgdata.parse_groups(_SGG_OUTPUT)
+	assert Path(schema.__file__) == nvgen.SCHEMA_MODULE, f'NVGEN loads a different schema module: {nvgen.SCHEMA_MODULE}'
+	assert Path(groups.__file__) == nvgen.GROUPS_MODULE, f'NVGEN loads a different groups module: {nvgen.GROUPS_MODULE}'
+	assert nvgen.schema_mod.SCHEMA == SCHEMA
+	assert nvgen.groups_mod.parse(_SGG_OUTPUT) == groups.parse(_SGG_OUTPUT)
 
 
-# -- pacman groups (lib/pkgdata.py) ------------------------------------------
+# -- pacman groups (lib/pm/groups.py) ----------------------------------------
 #
 # Some schema entries are groups, not packages. pactree/expac report them as
 # unknown, so resolve_deps() expands them first or the members and their whole
@@ -275,22 +278,21 @@ xfce4-goodies xfburn
 """
 
 
-def test_parse_groups_reads_sgg_pairs() -> None:
-	assert pkgdata.parse_groups(_SGG_OUTPUT) == {'mate': {'caja', 'marco'}, 'xfce4-goodies': {'xfburn'}}
+def test_parse_reads_sgg_pairs() -> None:
+	assert groups.parse(_SGG_OUTPUT) == {'mate': {'caja', 'marco'}, 'xfce4-goodies': {'xfburn'}}
 
 
-def test_expand_groups_replaces_groups_with_members(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(pkgdata, 'sync_groups', lambda: pkgdata.parse_groups(_SGG_OUTPUT))
+def test_expand_replaces_groups_with_members(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(groups, 'sync', lambda: groups.parse(_SGG_OUTPUT))
 
 	# 'nano' is a package, not a group, and must survive untouched
-	assert pkgdata.expand_groups({'mate', 'xfce4-goodies', 'nano'}) == {'caja', 'marco', 'xfburn', 'nano'}
+	assert groups.expand({'mate', 'xfce4-goodies', 'nano'}) == {'caja', 'marco', 'xfburn', 'nano'}
 
 
-def test_resolve_uses_the_shared_helper() -> None:
-	# _resolve must not grow its own copy again: same function object, and the
-	# schema comes through the shared loader
-	assert _resolve.expand_groups is pkgdata.expand_groups
-	assert pkgdata.load_jsonc(_resolve._schema_path) == _resolve.SCHEMA
+def test_resolve_uses_the_shared_modules() -> None:
+	# _resolve must not grow its own copies again
+	assert _resolve.expand is groups.expand
+	assert _resolve.SCHEMA is SCHEMA
 
 
 def test_schema_group_entries_are_not_treated_as_packages() -> None:
@@ -299,4 +301,4 @@ def test_schema_group_entries_are_not_treated_as_packages() -> None:
 	known_groups = {'budgie', 'cosmic', 'deepin', 'lxqt', 'mate', 'mate-extra', 'xfce4', 'xfce4-goodies'}
 	schema_entries = {p for pkgs in SCHEMA['profiles'].values() for p in pkgs}
 	present = known_groups & schema_entries
-	assert present, 'no group entries left in schema profiles; drop expand_groups() if that is intentional'
+	assert present, 'no group entries left in schema profiles; drop expand() if that is intentional'

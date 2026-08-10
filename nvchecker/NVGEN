@@ -36,8 +36,8 @@ NVDIR = Path(__file__).parent
 ROOT = NVDIR.parent  # nvchecker/ -> repo root
 TOML = NVDIR / 'nvchecker.toml'
 PKG = ROOT / 'installer' / 'archinstoo'
-SCHEMA_PATH = PKG / 'schema.jsonc'
-PKGDATA_PATH = PKG / 'lib' / 'pkgdata.py'
+SCHEMA_MODULE = PKG / 'lib' / 'schema.py'
+GROUPS_MODULE = PKG / 'lib' / 'pm' / 'groups.py'
 PKGBUILD_DEV = ROOT / 'PKGBUILD'
 PKGBUILD_REL = ROOT / 'installer' / 'PKGBUILD'
 
@@ -61,22 +61,23 @@ PKG_ENUMS = (
 	(PKG / 'default_profiles' / 'desktops' / '__init__.py', 'SeatAccess', ('',)),
 )
 
-def _load_pkgdata():
-	# schema loading and pacman group expansion live in the installer package so
-	# the count/size scripts and this tool cannot drift apart. loaded by path,
-	# not `import archinstoo...`: that would run the package __init__ chain and
-	# drag in pyparted and the rest of the runtime. pkgdata.py is stdlib-only
+def _load_module(path: Path, name: str):
+	# the schema and pacman group expansion live in the installer package so the
+	# count/size scripts and this tool cannot drift apart. loaded by path, not
+	# `import archinstoo...`: that would run the package __init__ chain and drag
+	# in pyparted and the rest of the runtime. both modules are stdlib-only
 	# precisely so this works.
-	loader = importlib.machinery.SourceFileLoader('pkgdata', str(PKGDATA_PATH))
-	spec = importlib.util.spec_from_loader('pkgdata', loader)
+	loader = importlib.machinery.SourceFileLoader(name, str(path))
+	spec = importlib.util.spec_from_loader(name, loader)
 	if spec is None:
-		sys.exit(f'error: cannot load {PKGDATA_PATH}')
+		sys.exit(f'error: cannot load {path}')
 	module = importlib.util.module_from_spec(spec)
 	loader.exec_module(module)
 	return module
 
 
-pkgdata = _load_pkgdata()
+schema_mod = _load_module(SCHEMA_MODULE, 'schema')
+groups_mod = _load_module(GROUPS_MODULE, 'groups')
 
 
 def log(msg: str) -> None:
@@ -191,7 +192,7 @@ def detect_source(pkg: str) -> str:
 
 def generate_toml() -> str:
 	log('Loading schema...')
-	schema = pkgdata.load_jsonc(SCHEMA_PATH)
+	schema = schema_mod.SCHEMA
 
 	log('Parsing PKGBUILDs...')
 	depends = set(parse_pkgbuild_array(PKGBUILD_DEV, 'depends'))
@@ -201,7 +202,7 @@ def generate_toml() -> str:
 	optdepends.update(parse_pkgbuild_array(PKGBUILD_REL, 'optdepends'))
 
 	log('Reading package groups from pacman...')
-	groups = pkgdata.sync_groups()
+	groups = groups_mod.sync()
 	if not groups:
 		log('warning: `pacman -Sgg` returned nothing; schema group entries stay unexpanded')
 
