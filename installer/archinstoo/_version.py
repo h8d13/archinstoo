@@ -5,7 +5,7 @@ from pathlib import Path
 # read it directly, so nothing here can drift; the stamp below is only what an
 # installed wheel falls back to (no PKGBUILD next to site-packages), and
 # PKGBUILD build() rewrites it via sed before building.
-__pkgstamp__ = '0.1.14-1'
+__pkgstamp__ = '0.0.0-0'
 
 _PKGBUILD = Path(__file__).parents[2] / 'PKGBUILD'
 
