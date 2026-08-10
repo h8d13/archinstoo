@@ -48,7 +48,7 @@ repos:
       exclude: ^installer/tests/
       fail_fast: true
   - repo: https://github.com/pycqa/pylint
-    rev: v4.0.6
+    rev: v4.0.7
     hooks:
     - id: pylint
       args: ['--rcfile=installer/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "installer")']
