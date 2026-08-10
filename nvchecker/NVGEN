@@ -29,11 +29,7 @@ import re
 import shutil
 import subprocess
 import sys
-import tarfile
 from pathlib import Path
-
-# desc field block: `%KEY%` then its (possibly multi-line) value until a blank line
-_DESC_FIELD_RE = re.compile(r'%([A-Z0-9]+)%\n((?:.+\n)*)')
 
 NVDIR = Path(__file__).parent
 ROOT = NVDIR.parent  # nvchecker/ -> repo root
@@ -90,7 +86,11 @@ def _needs_update() -> bool:
 
 
 def load_schema() -> dict:
-	# strip // comments, then parse as json
+	# strip // comments, then parse as json. deliberately a copy of
+	# _resolve.py:_load_schema(): importing it would pull the archinstoo
+	# runtime (pyparted et al) into a tool that must run standalone, and the
+	# drift tests already pin NVGEN against the real code
+
 	text = SCHEMA_PATH.read_text()
 	text = re.sub(r'(?m)^\s*//.*$|(?<=,)\s*//.*$', '', text)
 	return json.loads(text)
@@ -115,45 +115,23 @@ def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 	return cleaned
 
 
-def _pacman_db_path() -> Path:
-	# honour a custom DBPath in pacman.conf, else the default
-	try:
-		for line in Path('/etc/pacman.conf').read_text().splitlines():
-			if m := re.match(r'\s*DBPath\s*=\s*(\S+)', line):
-				return Path(m.group(1))
-	except OSError:
-		pass
-	return Path('/var/lib/pacman')
-
-
 def sync_db_groups() -> dict[str, set[str]]:
-	# group -> member packages, read straight from the pacman sync DB desc files
-	# (the same on-disk source grimoire uses). avoids a `pacman -Sg` subprocess and,
-	# more importantly, a hardcoded group list that silently rots (cf. cutefish).
-	# each desc carries %NAME% and an optional multi-line %GROUPS%.
+	# group -> member packages, from one `pacman -Sgg` (every group/member pair
+	# it knows). no hardcoded group list to rot (cf. cutefish), and unlike
+	# walking /var/lib/pacman/sync/*.db ourselves this sees exactly the repos
+	# enabled in pacman.conf: a disabled-but-present db (core-testing, a local
+	# repo) would otherwise add members pacman would never install.
+	# _resolve.py:_sync_groups() reads the same source for count/size.
 	groups: dict[str, set[str]] = {}
-	sync = _pacman_db_path() / 'sync'
-	try:
-		dbs = sorted(sync.glob('*.db'))
-	except OSError:
+	proc = subprocess.run(['pacman', '-Sgg'], capture_output=True, text=True, check=False)
+	if proc.returncode != 0:
+		log('warning: `pacman -Sgg` failed; schema group entries stay unexpanded')
 		return groups
 
-	for db in dbs:
-		try:
-			with tarfile.open(db, 'r:*') as tar:
-				for member in tar:
-					if not member.name.endswith('/desc'):
-						continue
-					if (handle := tar.extractfile(member)) is None:
-						continue
-					fields = dict(_DESC_FIELD_RE.findall(handle.read().decode()))
-					name = fields.get('NAME', '').strip()
-					if not name:
-						continue
-					for grp in fields.get('GROUPS', '').split():
-						groups.setdefault(grp, set()).add(name)
-		except (OSError, tarfile.TarError):
-			continue
+	for line in proc.stdout.splitlines():
+		parts = line.split()
+		if len(parts) == 2:
+			groups.setdefault(parts[0], set()).add(parts[1])
 	return groups
 
 
@@ -233,7 +211,7 @@ def generate_toml() -> str:
 	optdepends = set(parse_pkgbuild_array(PKGBUILD_DEV, 'optdepends'))
 	optdepends.update(parse_pkgbuild_array(PKGBUILD_REL, 'optdepends'))
 
-	log('Reading package groups from sync DB...')
+	log('Reading package groups from pacman...')
 	groups = sync_db_groups()
 
 	log('Extracting packages from schema...')
