@@ -127,13 +127,15 @@
 │   │   │   ├── bootloader
 │   │   │   ├── device
 │   │   │   ├── firmware
+│   │   │   ├── kernel
 │   │   │   ├── locale
 │   │   │   ├── mirrors
 │   │   │   ├── network
 │   │   │   ├── packages
 │   │   │   ├── profile
 │   │   │   ├── service
-│   │   │   └── users
+│   │   │   ├── users
+│   │   │   └── zram
 │   │   ├── network/
 │   │   │   ├── interfaces
 │   │   │   ├── network_handler
@@ -190,6 +192,7 @@
     ├── data/
     │   └── test_config.json
     ├── test_args
+    ├── test_available_packages
     ├── test_bootstrap
     ├── test_configuration_output
     ├── test_deps
@@ -204,5 +207,5 @@
     ├── test_script_peek
     └── test_version_stamp
 
-29 directories, 174 files
+29 directories, 177 files
 ```
