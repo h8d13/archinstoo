@@ -7,6 +7,51 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.14-1
+
+	- Version tracking (`nvchecker/NVGEN`) covers what a config can install,
+	  not only what `schema.jsonc` lists: kernels and their `-headers`,
+	  vendor firmware, the gfx extras the schema cannot model (`dkms`,
+	  `nvidia-open-dkms`), microcode and seat access all live in code enums.
+	- `count`/`size` never expanded pacman groups
+	- Group membership comes from a single `pacman -Sgg`. Walking
+	  `/var/lib/pacman/sync/*.db` also read repos that sit on disk but are
+	  disabled in `pacman.conf` (`core-testing`, a local repo), pulling in
+	  members pacman would never install
+	- The installer and the tooling share one copy of each: `lib/schema.py`
+	  owns `schema.jsonc` (path, comment stripping, `SCHEMA`) and
+	  `lib/pm/groups.py` owns group expansion. NVGEN loads both by path,
+	  which is why they stay stdlib-only with no intra-package imports.
+	  Drift tests pin the sharing, the enum parse and the generated toml
+	- Log directory derives from `__file__`, never the cwd: `installer/logs`
+	  from a checkout, `/var/log/archinstoo` installed as root,
+	  `$XDG_STATE_HOME/archinstoo` for the rootless scripts, which have no
+	  business writing to `/var/log`. `Path.cwd() / 'logs'` gave `./RUN`
+	  (which cds into `installer/`) and pytest (run from the repo root) a
+	  copy each. Tests now log to a tmp dir
+	- `--version` pins its git queries to the source tree with `git -C`.
+	  They ran in the process cwd, so an installed archinstoo reported
+	  whichever repo you happened to stand in, and `DEV` outside one
+	- `build()` builds from a copy in `$srcdir`, file list from
+	  `git ls-files -co --exclude-standard`: `.gitignore` stays the only
+	  place listing what to leave out, and uncommitted work still builds.
+	  The stamp `sed` no longer leaves a dirty `_version.py`, `build/` and
+	  `dist/` behind in the checkout
+	- `linux-rt` and `linux-rt-lts` join the kernel list. `Kernel` and the
+	  zram models move out of `models/application.py` into `models/kernel.py`
+	  and `models/zram.py`
+	- lsblk filesystem names are normalised before the enum lookup: every FAT
+	  width reports as `vfat` with the width in `fsver` (a missing one falls
+	  back to FAT32, which an ESP nearly always is), and lsblk's `swap` is
+	  `linux-swap` to parted. A filesystem we detect but do not manage
+	  (hfs+, apfs, zfs) logs its value, not the parted repr that buries it
+	  under object addresses
+	- `SysInfo.mem_total` reads the single key it needs from `/proc/meminfo`.
+	  The old dict cached `MemFree`/`MemAvailable` alongside it, which are
+	  live values
+	- `CONFIG.md` states where the log directory and the saved config land in
+	  each case, and that `--clean` wipes both
+
 ## 0.1.14-0
 
 	- Repo layout: the middle `archinstoo/` directory is now `installer/`,
