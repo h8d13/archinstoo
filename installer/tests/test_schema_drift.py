@@ -15,13 +15,18 @@
 #              (profiles, gfx drivers, greeters, and the enum categories)
 
 import ast
+import importlib.machinery
+import importlib.util
 import inspect
 import textwrap
+import tomllib
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.lib.hardware import GfxDriver, _sys_info
+from archinstoo.default_profiles.desktops import SeatAccess
+from archinstoo.lib.hardware import CpuVendor, GfxDriver, GfxPackage, _sys_info
 from archinstoo.lib.models.application import (
 	Audio,
 	DevTool,
@@ -36,6 +41,8 @@ from archinstoo.lib.models.application import (
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import FilesystemType, SnapshotType
+from archinstoo.lib.models.firmware import FirmwareVendor
+from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.profile.base import GreeterType, ProfileType
@@ -44,6 +51,7 @@ from archinstoo.scripts._resolve import SCHEMA
 
 if TYPE_CHECKING:
 	from enum import Enum
+	from types import ModuleType
 
 # leaf profile types map 1:1 to schema['profiles']; the rest (Desktop/Server/
 # Xorg/Minimal) are abstract bases the handler also discovers
@@ -174,3 +182,70 @@ def test_one_to_one_categories(enum: type[Enum]) -> None:
 	section = next(k for k, v in SCHEMA.items() if isinstance(v, dict) and set(v) == {e.value for e in enum})
 	for member in enum:
 		assert SCHEMA[section][member.value] == [member.value], f'{section}[{member.value!r}] should map to itself, got {SCHEMA[section][member.value]}'
+
+
+# -- nvchecker/NVGEN ---------------------------------------------------------
+#
+# NVGEN tracks package versions from schema.jsonc plus the enums that hold
+# package names the schema never sees (kernels, vendor firmware, driver extras,
+# microcode, seat access) - the non-schema sources _resolve.py reads. It parses
+# those enums statically (ast) to stay importable without the archinstoo
+# runtime, so the checks below are: the parse still matches the real enums, and
+# the committed nvchecker.toml still covers what they yield.
+
+_NVDIR = Path(__file__).parents[2] / 'nvchecker'
+
+# enum NVGEN reads -> live class, per PKG_ENUMS
+_NVGEN_ENUMS: dict[str, type[Enum]] = {
+	'Kernel': Kernel,
+	'FirmwareVendor': FirmwareVendor,
+	'GfxPackage': GfxPackage,
+	'CpuVendor': CpuVendor,
+	'SeatAccess': SeatAccess,
+}
+
+
+def _load_nvgen() -> ModuleType:
+	# NVGEN is an extensionless script; import it by path. Everything but main()
+	# is definitions, so importing has no side effects.
+	path = _NVDIR / 'NVGEN'
+	if not path.is_file():
+		pytest.skip('nvchecker/NVGEN not present')
+
+	loader = importlib.machinery.SourceFileLoader('nvgen', str(path))
+	spec = importlib.util.spec_from_loader('nvgen', loader)
+	assert spec is not None
+	module = importlib.util.module_from_spec(spec)
+	loader.exec_module(module)
+	return module
+
+
+def test_nvgen_enum_paths_resolve() -> None:
+	nvgen = _load_nvgen()
+	names = [class_name for _, class_name, _ in nvgen.PKG_ENUMS]
+	assert names == list(_NVGEN_ENUMS), f'NVGEN PKG_ENUMS drifted from the enums under test: {names}'
+	for path, class_name, _ in nvgen.PKG_ENUMS:
+		assert path.is_file(), f'NVGEN points {class_name} at a missing file: {path}'
+
+
+def test_nvgen_enum_parse_matches_code() -> None:
+	# guards the static parse: a member turned into a computed value, or an enum
+	# moved to another module, would silently drop packages from tracking.
+	# private members (CpuVendor._Unknown) are skipped by both sides on purpose
+	nvgen = _load_nvgen()
+	for path, class_name, _ in nvgen.PKG_ENUMS:
+		parsed = nvgen.enum_values(path, class_name)
+		live = {e.value for e in _NVGEN_ENUMS[class_name] if not e.name.startswith('_')}
+		assert parsed == live, f'NVGEN parse of {class_name} drifted: parsed-only={sorted(parsed - live)} code-only={sorted(live - parsed)}'
+
+
+def test_nvgen_toml_tracks_code_packages() -> None:
+	# the generated toml is committed; re-run `./NVGEN gen` when an enum changes
+	nvgen = _load_nvgen()
+	toml_path = _NVDIR / 'nvchecker.toml'
+	if not toml_path.is_file():
+		pytest.skip('nvchecker/nvchecker.toml not generated')
+
+	tracked = set(tomllib.loads(toml_path.read_text())) - {'__config__'}
+	missing = sorted(nvgen.code_packages() - tracked)
+	assert not missing, f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'

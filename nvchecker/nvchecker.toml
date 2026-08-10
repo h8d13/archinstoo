@@ -88,6 +88,159 @@ source = "pacman"
 source = "pacman"
 
 # ============================================================
+# KERNELS, FIRMWARE, DRIVER AND SEAT OPTIONS
+# ============================================================
+[amd-ucode]
+source = "pacman"
+
+[dkms]
+source = "pacman"
+
+[intel-media-driver]
+source = "pacman"
+
+[intel-ucode]
+source = "pacman"
+
+[libva-intel-driver]
+source = "pacman"
+
+[libva-nvidia-driver]
+source = "pacman"
+
+[linux]
+source = "pacman"
+
+[linux-firmware-amdgpu]
+source = "pacman"
+
+[linux-firmware-atheros]
+source = "pacman"
+
+[linux-firmware-broadcom]
+source = "pacman"
+
+[linux-firmware-cirrus]
+source = "pacman"
+
+[linux-firmware-intel]
+source = "pacman"
+
+[linux-firmware-liquidio]
+source = "pacman"
+
+[linux-firmware-marvell]
+source = "pacman"
+
+[linux-firmware-mediatek]
+source = "pacman"
+
+[linux-firmware-mellanox]
+source = "pacman"
+
+[linux-firmware-nfp]
+source = "pacman"
+
+[linux-firmware-nvidia]
+source = "pacman"
+
+[linux-firmware-other]
+source = "pacman"
+
+[linux-firmware-qcom]
+source = "pacman"
+
+[linux-firmware-qlogic]
+source = "pacman"
+
+[linux-firmware-radeon]
+source = "pacman"
+
+[linux-firmware-realtek]
+source = "pacman"
+
+[linux-hardened]
+source = "pacman"
+
+[linux-hardened-headers]
+source = "pacman"
+
+[linux-headers]
+source = "pacman"
+
+[linux-lts]
+source = "pacman"
+
+[linux-lts-headers]
+source = "pacman"
+
+[linux-rt]
+source = "pacman"
+
+[linux-rt-headers]
+source = "pacman"
+
+[linux-rt-lts]
+source = "pacman"
+
+[linux-rt-lts-headers]
+source = "pacman"
+
+[linux-zen]
+source = "pacman"
+
+[linux-zen-headers]
+source = "pacman"
+
+[mesa]
+source = "pacman"
+
+[nvidia-open]
+source = "pacman"
+
+[nvidia-open-dkms]
+source = "pacman"
+
+[polkit]
+source = "pacman"
+
+[seatd]
+source = "pacman"
+
+[vpl-gpu-rt]
+source = "pacman"
+
+[vulkan-intel]
+source = "pacman"
+
+[vulkan-nouveau]
+source = "pacman"
+
+[vulkan-radeon]
+source = "pacman"
+
+[vulkan-swrast]
+source = "pacman"
+
+[vulkan-virtio]
+source = "pacman"
+
+[xf86-video-amdgpu]
+source = "pacman"
+
+[xf86-video-ati]
+source = "pacman"
+
+[xf86-video-nouveau]
+source = "pacman"
+
+[xorg-server]
+source = "pacman"
+
+[xorg-xinit]
+source = "pacman"
+
+# ============================================================
 # INSTALLABLE PACKAGES
 # ============================================================
 [alacritty]
@@ -603,9 +756,6 @@ source = "pacman"
 [inotify-tools]
 source = "pacman"
 
-[intel-media-driver]
-source = "pacman"
-
 [inter-font]
 source = "pacman"
 
@@ -640,12 +790,6 @@ source = "pacman"
 source = "pacman"
 
 [libpulse]
-source = "pacman"
-
-[libva-intel-driver]
-source = "pacman"
-
-[libva-nvidia-driver]
 source = "pacman"
 
 [lightdm]
@@ -828,9 +972,6 @@ source = "pacman"
 [matugen]
 source = "pacman"
 
-[mesa]
-source = "pacman"
-
 [meson]
 source = "pacman"
 
@@ -868,9 +1009,6 @@ source = "pacman"
 source = "pacman"
 
 [nodejs]
-source = "pacman"
-
-[nvidia-open]
 source = "pacman"
 
 [obconf-qt]
@@ -931,9 +1069,6 @@ source = "pacman"
 source = "pacman"
 
 [pluma]
-source = "pacman"
-
-[polkit]
 source = "pacman"
 
 [postgresql]
@@ -1083,24 +1218,6 @@ source = "pacman"
 [vim]
 source = "pacman"
 
-[vpl-gpu-rt]
-source = "pacman"
-
-[vulkan-intel]
-source = "pacman"
-
-[vulkan-nouveau]
-source = "pacman"
-
-[vulkan-radeon]
-source = "pacman"
-
-[vulkan-swrast]
-source = "pacman"
-
-[vulkan-virtio]
-source = "pacman"
-
 [waybar]
 source = "pacman"
 
@@ -1156,15 +1273,6 @@ source = "pacman"
 source = "pacman"
 
 [xed]
-source = "pacman"
-
-[xf86-video-amdgpu]
-source = "pacman"
-
-[xf86-video-ati]
-source = "pacman"
-
-[xf86-video-nouveau]
 source = "pacman"
 
 [xfburn]
@@ -1294,12 +1402,6 @@ source = "pacman"
 source = "pacman"
 
 [xmonad-extras]
-source = "pacman"
-
-[xorg-server]
-source = "pacman"
-
-[xorg-xinit]
 source = "pacman"
 
 [xorg-xrandr]
