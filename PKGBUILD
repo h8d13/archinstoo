@@ -69,16 +69,26 @@ sha512sums=()
 b2sums=()
 
 build() {
-	cd "$srcdir/../installer" || exit
+	# build from a copy in $srcdir, never the checkout itself: the stamp below
+	# is a source edit, and in-tree it left a dirty _version.py (plus build/
+	# and dist/) behind after every makepkg.
+	#
+	# git picks the files: tracked plus untracked-not-ignored, so uncommitted
+	# work still gets built while .gitignore stays the only place listing what
+	# to leave out (.venv, build, dist, logs, __pycache__).
+	rm -rf "$srcdir/installer"
+	git -C "$startdir" ls-files -co --exclude-standard installer >"$srcdir/filelist"
+	tar -C "$startdir" -cf - -T "$srcdir/filelist" | tar -C "$srcdir" -xf -
+
+	cd "$srcdir/installer" || exit
 
 	# wheel has no PKGBUILD to read at runtime: stamp the fallback
 	sed -i "s/^__pkgstamp__ = '[^']*'/__pkgstamp__ = '$pkgver-$pkgrel'/" archinstoo/_version.py
-	rm -rf dist/ && rm -rf ./*.egg
 	python -m build --wheel --no-isolation
 }
 
 package() {
-	cd "$srcdir/../installer" || exit
+	cd "$srcdir/installer" || exit
 
 	python -m installer --destdir="$pkgdir" dist/*.whl
 	install -vDm 644 docs/archinstoo.1 -t "$pkgdir/usr/share/man/man1/"
