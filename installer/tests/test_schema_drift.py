@@ -47,6 +47,7 @@ from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.scripts import _resolve
 from archinstoo.scripts._resolve import SCHEMA
 
 if TYPE_CHECKING:
@@ -249,3 +250,40 @@ def test_nvgen_toml_tracks_code_packages() -> None:
 	tracked = set(tomllib.loads(toml_path.read_text())) - {'__config__'}
 	missing = sorted(nvgen.code_packages() - tracked)
 	assert not missing, f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'
+
+
+# -- pacman groups -----------------------------------------------------------
+#
+# Some schema entries are groups, not packages. pactree/expac report them as
+# unknown, so resolve_deps() expands them first or the members and their whole
+# closure vanish from the count and size estimates.
+
+_SGG_OUTPUT = [
+	b'mate caja\n',
+	b'mate marco\n',
+	b'xfce4-goodies xfburn\n',
+	b'\n',
+]
+
+
+def test_expand_groups_replaces_groups_with_members(monkeypatch: pytest.MonkeyPatch) -> None:
+	calls: list[str] = []
+
+	def fake_syscommand(cmd: str) -> list[bytes]:
+		calls.append(cmd)
+		return _SGG_OUTPUT
+
+	monkeypatch.setattr(_resolve, 'SysCommand', fake_syscommand)
+
+	# 'nano' is a package, not a group, and must survive untouched
+	assert _resolve.expand_groups({'mate', 'xfce4-goodies', 'nano'}) == {'caja', 'marco', 'xfburn', 'nano'}
+	assert calls == ['pacman -Sgg'], f'expected one group query, got {calls}'
+
+
+def test_schema_group_entries_are_not_treated_as_packages() -> None:
+	# guards the inputs the expansion exists for: these schema profile entries
+	# are pacman groups today, so they must never be counted as single packages
+	known_groups = {'budgie', 'cosmic', 'deepin', 'lxqt', 'mate', 'mate-extra', 'xfce4', 'xfce4-goodies'}
+	schema_entries = {p for pkgs in SCHEMA['profiles'].values() for p in pkgs}
+	present = known_groups & schema_entries
+	assert present, 'no group entries left in schema profiles; drop expand_groups() if that is intentional'

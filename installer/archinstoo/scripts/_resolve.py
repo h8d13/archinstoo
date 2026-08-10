@@ -1,8 +1,9 @@
 # Shared package-set resolution for the count and size scripts.
 #
 # collect() turns a saved config into its explicit package set; resolve_deps()
-# expands the full dependency tree via pactree (pacman-contrib). Kept free of a
-# module-level entrypoint so both scripts can import it without side effects.
+# expands pacman groups, then the full dependency tree via pactree
+# (pacman-contrib). Kept free of a module-level entrypoint so both scripts can
+# import it without side effects.
 
 import json
 import re
@@ -280,6 +281,31 @@ def _clean_dep(name: str) -> str | None:
 _TREE_PREFIX_RE = re.compile(r'^[\s│├└─]*')
 
 
+def _sync_groups() -> dict[str, list[str]]:
+	# group -> members, from a single `pacman -Sgg` (every group/member pair in
+	# the sync DB). Batching by name instead would need per-name error handling:
+	# `pacman -Sg <name>` fails on anything that isn't a group.
+	groups: dict[str, list[str]] = {}
+	for line in SysCommand('pacman -Sgg'):
+		parts = line.decode().split()
+		if len(parts) == 2:
+			groups.setdefault(parts[0], []).append(parts[1])
+	return groups
+
+
+def expand_groups(pkgs: set[str]) -> set[str]:
+	# Several schema entries (mate, xfce4, xfce4-goodies, lxqt, deepin, cosmic,
+	# budgie) are pacman GROUPS, which pacstrap installs as their members but
+	# pactree and expac both report as unknown. Left unexpanded a group resolves
+	# to nothing, so its members and their whole dependency closure drop out of
+	# the estimates silently. Names that aren't groups pass through untouched.
+	groups = _sync_groups()
+	expanded: set[str] = set()
+	for pkg in pkgs:
+		expanded.update(groups.get(pkg, [pkg]))
+	return expanded
+
+
 def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str], list[str]]:
 	# Resolve the full dependency tree via `pactree -s`.
 	#
@@ -293,6 +319,7 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 	if not _requirements('pactree'):
 		raise RequirementError('pactree not found; install pacman-contrib')
 
+	explicit = expand_groups(explicit)
 	resolved: set[str] = set()
 	roots_for_target: list[str] = []
 
