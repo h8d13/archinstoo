@@ -24,7 +24,6 @@ from archinstoo.lib.models.application import (
 	PrintServiceConfiguration,
 	Security,
 	SecurityConfiguration,
-	ZramConfiguration,
 )
 from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
@@ -35,6 +34,7 @@ from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.users import Password, Shell, User
+from archinstoo.lib.models.zram import ZramConfiguration
 from archinstoo.lib.profile.base import GreeterType
 
 if TYPE_CHECKING:

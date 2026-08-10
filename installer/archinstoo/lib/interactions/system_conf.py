@@ -1,8 +1,9 @@
 from typing import assert_never
 
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.models.application import DEFAULT_KERNEL, Kernel, ZramAlgorithm, ZramConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
+from archinstoo.lib.models.zram import ZramAlgorithm, ZramConfiguration
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType

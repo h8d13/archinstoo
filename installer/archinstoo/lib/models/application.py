@@ -1,16 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum, auto
-from typing import ClassVar, Final, NotRequired, Self, TypedDict
-
-
-class Kernel(StrEnum):
-	LINUX = auto()
-	LINUX_LTS = 'linux-lts'
-	LINUX_ZEN = 'linux-zen'
-	LINUX_HARDENED = 'linux-hardened'
-
-
-DEFAULT_KERNEL: Final = Kernel.LINUX
+from typing import ClassVar, NotRequired, Self, TypedDict
 
 
 class PowerManagement(StrEnum):
@@ -136,21 +126,6 @@ class DevToolConfigSerialization(TypedDict):
 class DevelopmentConfigSerialization(TypedDict):
 	language_config: NotRequired[LanguageConfigSerialization]
 	devtool_config: NotRequired[DevToolConfigSerialization]
-
-
-class ZramAlgorithm(StrEnum):
-	Default = 'default'
-	ZSTD = auto()
-	LZO_RLE = 'lzo-rle'
-	LZO = auto()
-	LZ4 = auto()
-	LZ4HC = auto()
-
-
-class ZramConfigSerialization(TypedDict):
-	enabled: bool
-	algorithm: NotRequired[str]
-	recomp_algorithm: NotRequired[str]
 
 
 class ApplicationSerialization(TypedDict):
@@ -355,24 +330,6 @@ class DevelopmentConfiguration:
 		if (devtool := arg.get('devtool_config')) is not None:
 			config.devtool_config = DevToolConfiguration.parse_arg(devtool)
 		return config
-
-
-@dataclass(frozen=True)
-class ZramConfiguration:
-	enabled: bool
-	algorithm: ZramAlgorithm = ZramAlgorithm.Default
-	recomp_algorithm: ZramAlgorithm | None = None
-
-	@classmethod
-	def parse_arg(cls, arg: bool | ZramConfigSerialization) -> Self:
-		if isinstance(arg, bool):
-			return cls(enabled=arg)
-
-		enabled = arg.get('enabled', True)
-		algo = arg.get('algorithm', ZramAlgorithm.Default.value)
-		recomp = arg.get('recomp_algorithm')
-		recomp_algo = ZramAlgorithm(recomp) if recomp else None
-		return cls(enabled=enabled, algorithm=ZramAlgorithm(algo), recomp_algorithm=recomp_algo)
 
 
 @dataclass

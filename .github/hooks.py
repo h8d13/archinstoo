@@ -2,14 +2,15 @@
 # edit_uri builds links from the docs path, so those land on GitHub's symlink
 # stub page. Rewrite edit_url to the resolved target for symlinked pages.
 import os
+from pathlib import Path
 
 
 def on_pre_page(page, config, files):
 	src = page.file.abs_src_path
-	if src and os.path.islink(src):
-		repo_root = os.path.dirname(config.config_file_path)
-		real = os.path.relpath(os.path.realpath(src), repo_root)
-		if not real.startswith(".."):
-			page.edit_url = (config.repo_url.rstrip("/")
-				+ "/blob/master/" + real.replace(os.sep, "/"))
+	if src and Path(src).is_symlink():
+		repo_root = Path(config.config_file_path).parent
+		# relpath, not relative_to: '..' is the out-of-tree signal below
+		real = os.path.relpath(Path(src).resolve(), repo_root)
+		if not real.startswith('..'):
+			page.edit_url = config.repo_url.rstrip('/') + '/blob/master/' + real.replace(os.sep, '/')
 	return page

@@ -11,16 +11,18 @@ from typing import Any, Self
 from urllib.request import Request, urlopen
 
 from archinstoo._version import __version__
-from archinstoo.lib.models.application import DEFAULT_KERNEL, ApplicationConfiguration, ZramConfiguration
+from archinstoo.lib.models.application import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration
+from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.service import UserService
+from archinstoo.lib.models.zram import ZramConfiguration
 from archinstoo.lib.output import error, warn
 
 DEFAULT_SCRIPT = 'guided'

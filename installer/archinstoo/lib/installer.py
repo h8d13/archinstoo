@@ -16,7 +16,6 @@ from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon
 from archinstoo.lib.linux_path import LPath
-from archinstoo.lib.models.application import ZramAlgorithm
 from archinstoo.lib.models.device import (
 	BOOT_ITER_TIME,
 	BOOT_PBKDF_MEMORY,
@@ -30,6 +29,7 @@ from archinstoo.lib.models.device import (
 	SubvolumeModification,
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
+from archinstoo.lib.models.zram import ZramAlgorithm
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.tui.curses_menu import Tui
 
@@ -38,9 +38,9 @@ from .exceptions import DiskError, HardwareIncompatibilityError, RequirementErro
 from .general import SysCommand, run
 from .hardware import SysInfo
 from .localization.utils import locale_encoding, locale_entry_re, split_locale_name
-from .models.application import DEFAULT_KERNEL
 from .models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from .models.bootloader import Bootloader
+from .models.kernel import DEFAULT_KERNEL
 from .models.locale import LocaleConfiguration
 from .models.users import User
 from .output import debug, error, info, log, logger, warn

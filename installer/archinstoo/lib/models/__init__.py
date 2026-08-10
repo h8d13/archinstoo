@@ -25,6 +25,7 @@ from .device import (
 	Unit,
 	_DeviceInfo,
 )
+from .kernel import DEFAULT_KERNEL, Kernel
 from .locale import LocaleConfiguration
 from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
@@ -32,8 +33,10 @@ from .packages import LocalPackage, PackageSearch, PackageSearchResult, Reposito
 from .profile import ProfileConfiguration
 from .service import UserService
 from .users import PasswordStrength, User
+from .zram import ZramAlgorithm, ZramConfiguration
 
 __all__ = [
+	'DEFAULT_KERNEL',
 	'ApplicationConfiguration',
 	'Audio',
 	'AudioConfiguration',
@@ -48,6 +51,7 @@ __all__ = [
 	'DiskLayoutType',
 	'EncryptionType',
 	'FilesystemType',
+	'Kernel',
 	'LocalPackage',
 	'LocaleConfiguration',
 	'LsblkInfo',
@@ -77,5 +81,7 @@ __all__ = [
 	'Unit',
 	'User',
 	'UserService',
+	'ZramAlgorithm',
+	'ZramConfiguration',
 	'_DeviceInfo',
 ]

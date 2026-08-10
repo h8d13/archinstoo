@@ -2,8 +2,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
-from archinstoo.lib.models.application import DEFAULT_KERNEL, ApplicationConfiguration, ZramConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, PartitionModification
+from archinstoo.lib.models.kernel import DEFAULT_KERNEL
+from archinstoo.lib.models.zram import ZramConfiguration
 from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.tui.content_editor import edit_content
@@ -38,6 +39,7 @@ from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
 
 if TYPE_CHECKING:
+	from archinstoo.lib.models.application import ApplicationConfiguration
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
 
 	from .args import ArchConfig
