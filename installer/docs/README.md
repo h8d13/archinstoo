@@ -143,6 +143,7 @@
 │   │   ├── output
 │   │   ├── pacman
 │   │   ├── pathnames
+│   │   ├── pkgdata
 │   │   ├── pm/
 │   │   │   ├── bootstrap
 │   │   │   ├── config
@@ -207,5 +208,5 @@
     ├── test_script_peek
     └── test_version_stamp
 
-29 directories, 177 files
+29 directories, 178 files
 ```
