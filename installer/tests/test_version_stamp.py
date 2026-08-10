@@ -7,11 +7,12 @@
 # reporting 0.0.0-0).
 
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
 
-from archinstoo._version import __pkgstamp__, __version__, read_pkgbuild_version
+from archinstoo._version import __pkgstamp__, __version__, git_branch, git_shash, read_pkgbuild_version
 
 ROOT = Path(__file__).parents[2]
 PKGBUILDS = (ROOT / 'PKGBUILD', ROOT / 'installer' / 'PKGBUILD')
@@ -38,3 +39,16 @@ def test_sed_stamp_matches_source(pkgbuild: Path) -> None:
 	stamped, count = re.subn(sed['pat'], 'STAMPED', VERSION_PY.read_text(), flags=re.MULTILINE)
 	assert count == 1, f'{pkgbuild} stamp matched {count} lines in _version.py'
 	assert 'STAMPED' in stamped
+
+
+def test_git_stat_describes_this_tree_not_the_cwd(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# the version stamp must describe the source it was built from. running git
+	# in the process cwd made an installed archinstoo report whatever repo the
+	# user happened to stand in, and DEV outside one
+	try:
+		branch, shash = git_branch(), git_shash()
+	except OSError, subprocess.CalledProcessError:
+		pytest.skip('not a git checkout, or git unavailable')
+
+	monkeypatch.chdir(tmp_path)  # tmp_path is not a repo
+	assert (git_branch(), git_shash()) == (branch, shash)

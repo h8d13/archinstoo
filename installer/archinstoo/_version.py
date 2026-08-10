@@ -5,7 +5,7 @@ from pathlib import Path
 # read it directly, so nothing here can drift; the stamp below is only what an
 # installed wheel falls back to (no PKGBUILD next to site-packages), and
 # PKGBUILD build() rewrites it via sed before building.
-__pkgstamp__ = '0.0.0-0'
+__pkgstamp__ = '0.1.14-1'
 
 _PKGBUILD = Path(__file__).parents[2] / 'PKGBUILD'
 
@@ -32,12 +32,18 @@ def read_pkgbuild_version() -> str | None:
 	return f'{fields["pkgver"]}-{fields["pkgrel"]}'
 
 
+# -C pins both queries to THIS source tree. without it git inherited the process
+# cwd, so an installed archinstoo reported whichever repo you happened to be
+# standing in (and DEV anywhere outside one), instead of its own build.
+_SRC = str(_PKGBUILD.parent)
+
+
 def git_shash() -> str:
-	return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()  # noqa: S607 - git from $PATH
+	return subprocess.check_output(['git', '-C', _SRC, 'rev-parse', '--short', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()  # noqa: S603,S607 - fixed argv, git from $PATH
 
 
 def git_branch() -> str:
-	return subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()  # noqa: S607 - git from $PATH
+	return subprocess.check_output(['git', '-C', _SRC, 'rev-parse', '--abbrev-ref', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()  # noqa: S603,S607 - fixed argv, git from $PATH
 
 
 # installed package: no git binary (OSError) or not a repo (CalledProcessError)
