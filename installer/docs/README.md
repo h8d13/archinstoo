@@ -143,10 +143,10 @@
 │   │   ├── output
 │   │   ├── pacman
 │   │   ├── pathnames
-│   │   ├── pkgdata
 │   │   ├── pm/
 │   │   │   ├── bootstrap
 │   │   │   ├── config
+│   │   │   ├── groups
 │   │   │   ├── mirrors
 │   │   │   └── packages
 │   │   ├── profile/
@@ -154,6 +154,7 @@
 │   │   │   ├── driver_select
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
+│   │   ├── schema
 │   │   ├── tui/
 │   │   │   ├── content_editor
 │   │   │   ├── curses_menu
@@ -208,5 +209,5 @@
     ├── test_script_peek
     └── test_version_stamp
 
-29 directories, 178 files
+29 directories, 179 files
 ```
