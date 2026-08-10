@@ -150,9 +150,30 @@ def restore_perms(path: Path, recursive: bool = False) -> None:
 		pass
 
 
+# archinstoo/lib/output.py -> archinstoo/ -> the source root (installer/)
+_PKG_ROOT = Path(__file__).parents[2]
+
+
+def _default_log_dir() -> Path:
+	# derived from __file__, never cwd: `Path.cwd() / 'logs'` scattered a logs/
+	# wherever the process happened to start, so ./RUN (which cds into
+	# installer/) and pytest (run from the repo root) each grew their own copy.
+	if (_PKG_ROOT / 'pyproject.toml').is_file():
+		return _PKG_ROOT / 'logs'
+
+	# installed: no source tree to write beside
+	if os.geteuid() == 0:
+		return Path('/var/log/archinstoo')
+
+	# ROOTLESS_SCRIPTS (list/size/mirror/count) run as a normal user, who has no
+	# business writing to /var/log
+	state = os.environ.get('XDG_STATE_HOME') or Path.home() / '.local' / 'state'
+	return Path(state) / 'archinstoo'
+
+
 class Logger:
-	def __init__(self, path: Path = Path.cwd() / 'logs') -> None:
-		self._path = path
+	def __init__(self, path: Path | None = None) -> None:
+		self._path = path or _default_log_dir()
 
 	@property
 	def path(self) -> Path:
