@@ -1,0 +1,156 @@
+{
+    "bug_report_url": "https://github.com/h8d13/archinstoo",
+    "script": "guided",
+    "archinstoo_language": "English",
+    "locale_config": {
+        "kb_layout": "us",
+        "sys_lang": "en_US.UTF-8",
+        "sys_enc": "UTF-8",
+        "console_font": "default8x16"
+    },
+    "pacman_config": {
+        "mirror_regions": {},
+        "custom_servers": [],
+        "optional_repositories": [],
+        "custom_repositories": [],
+        "pacman_options": [
+            "Color",
+            "VerbosePkgLists",
+            "ILoveCandy"
+        ],
+        "parallel_downloads": 10
+    },
+    "bootloader_config": {
+        "bootloader": "systemd-boot",
+        "uki": false,
+        "removable": false
+    },
+    "disk_config": {
+        "config_type": "default-layout",
+        "device_modifications": [
+            {
+                "device": "/dev/vda",
+                "wipe": true,
+                "partitions": [
+                    {
+                        "obj_id": "aaaaaaaa-0000-4000-8000-000000000001",
+                        "status": "create",
+                        "type": "primary",
+                        "start": {
+                            "value": 1,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "size": {
+                            "value": 1024,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "fs_type": "fat32",
+                        "mountpoint": "/boot",
+                        "mount_options": [],
+                        "flags": [
+                            "boot",
+                            "esp"
+                        ],
+                        "dev_path": null,
+                        "btrfs": []
+                    },
+                    {
+                        "obj_id": "aaaaaaaa-0000-4000-8000-000000000002",
+                        "status": "create",
+                        "type": "primary",
+                        "start": {
+                            "value": 1025,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "size": {
+                            "value": 62463,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "fs_type": "ext4",
+                        "mountpoint": "/",
+                        "mount_options": [],
+                        "flags": [],
+                        "dev_path": null,
+                        "btrfs": []
+                    }
+                ]
+            }
+        ],
+        "lvm_config": null,
+        "btrfs_options": null
+    },
+    "swap": {
+        "enabled": true,
+        "algorithm": "default",
+        "recomp_algorithm": null
+    },
+    "kernels": [
+        "linux"
+    ],
+    "kernel_headers": false,
+    "firmware": {
+        "firmware_type": "minimal"
+    },
+    "profile_config": {
+        "profiles": [
+            {
+                "main": "minimal",
+                "details": [],
+                "custom_settings": {}
+            }
+        ],
+        "gfx_driver": null,
+        "greeter": null
+    },
+    "hostname": "vm-unattended",
+    "auth_config": {
+        "root_enc_password": "$y$j9T$MwtZyQq3j0eAFWDc.pUI81$EJV4rEfwgL5nLw6gExfvxLqSuC0ee.W0903kmeZY8C/",
+        "lock_root_account": false,
+        "privilege_escalation": "sudo",
+        "users": [
+            {
+                "username": "vm",
+                "enc_password": "$y$j9T$zsSREd.NOfMD.yX6651hM0$yZLZhZbP/KX7cg6JFgKGylju2Msy3xWnhpBFAiUUFg5",
+                "elev": true,
+                "groups": null,
+                "shell": "bash"
+            }
+        ]
+    },
+    "app_config": {
+        "monitor_config": {
+            "monitor": "bottom"
+        },
+        "editor_config": {
+            "editor": "vi"
+        }
+    },
+    "network_config": {
+        "type": "iwd"
+    },
+    "timezone": "Europe/Paris",
+    "ntp": true,
+    "packages": [],
+    "aur_packages": [],
+    "services": [],
+    "sysctl": [],
+    "custom_commands": [
+        "sed -i 's|^options .*|& console=ttyS0,115200|' /boot/loader/entries/*.conf"
+    ]
+}

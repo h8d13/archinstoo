@@ -97,7 +97,10 @@ def serial_write(data):
 		die(f'{SERIAL} missing, is the VM running? (SERIAL=on ./TVM)')
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.connect(str(SERIAL))
-		sock.sendall(data)
+		# ^U first: anything the guest left half-typed (zsh refusing to run
+		# a missing binary, an aborted paste) would otherwise get this
+		# command appended to it, and neither line would ever execute
+		sock.sendall(b'\x15' + data)
 		# chardev drops buffered input on hangup, let QEMU drain first
 		time.sleep(0.2)
 
@@ -196,14 +199,20 @@ def cmd_capture(args):
 
 def cmd_login(args):
 	# wait for agetty first: bytes sent before it opens ttyS0 are dropped,
-	# which looks exactly like a hang. archiso root has no password.
+	# which looks exactly like a hang. archiso root has no password, an
+	# installed target does, hence --password.
 	text, match = wait_for(r'login:', args.timeout)
 	if not match:
 		print('\n'.join(text.splitlines()[-10:]))
 		die('no login prompt on ttyS0')
 	offset = log_size()
-	serial_write(b'root\n')
-	text, match = wait_for(r'root@archiso', args.timeout, offset)
+	serial_write(args.user.encode() + b'\n')
+	if args.password:
+		_, match = wait_for(r'[Pp]assword:', args.timeout, offset)
+		if not match:
+			die('no password prompt')
+		serial_write(args.password.encode() + b'\n')
+	text, match = wait_for(rf'{args.user}@\S+', args.timeout, offset)
 	if not match:
 		print('\n'.join(text.splitlines()[-10:]))
 		die('no shell prompt after login')
@@ -274,6 +283,8 @@ def main():
 	p.set_defaults(func=cmd_capture)
 
 	p = sub.add_parser('login')
+	p.add_argument('-u', '--user', default='root')
+	p.add_argument('-p', '--password', default='')
 	p.add_argument('-t', '--timeout', type=float, default=180)
 	p.set_defaults(func=cmd_login)
 
