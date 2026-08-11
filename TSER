@@ -218,7 +218,8 @@ def cmd_capture(args):
 	cap_offset = CAPTURE.stat().st_size if CAPTURE.exists() else 0
 	offset = log_size()
 	marker = f'TSER{offset}'
-	serial_write(f'{args.cmd} >/dev/ttyS1 2>&1; echo {marker}rc=$?\n'.encode())
+	# subshell, so a 'a; b; c' command redirects all of it and not just c
+	serial_write(f'({args.cmd}) >/dev/ttyS1 2>&1; echo {marker}rc=$?\n'.encode())
 	_, match = wait_for(fuzzy(marker) + r'rc=(\d+)', args.timeout, offset)
 	with CAPTURE.open('rb') as fh:
 		fh.seek(cap_offset)
