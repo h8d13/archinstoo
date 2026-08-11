@@ -1,4 +1,5 @@
 import platform
+import subprocess
 from enum import Enum
 from functools import cached_property
 from pathlib import Path
@@ -175,13 +176,90 @@ class GfxDriver(Enum):
 		return packages
 
 
-# Module-level so tests can point the sweep at a synthetic sysfs tree
+# Module-level so tests can point the sweeps at a synthetic tree
 _PCI_BUS = Path('/sys/bus/pci/devices')
 _USB_BUS = Path('/sys/bus/usb/devices')
+_FIRMWARE_ROOT = Path('/usr/lib/firmware')
+_MODULE_ROOT = Path('/usr/lib/modules')
+
+# linux-firmware is a metapackage. Its hard deps come with FULL whatever the
+# hardware, so detecting those only serves VENDOR trimming and firmware_splits
+# resolves them from the running kernel rather than from a table.
+#
+# Its OPTIONAL deps are why a table still exists here. pacman never pulls them
+# in, so their files are absent, so no modinfo path resolves to one and
+# `pacman -Qo` has no owner to name. A vendor ID is the last source left, and a
+# miss costs the device: a Marvell wifi card with no other NIC to fix it from.
+#
+# Vendor-wide by design. A ConnectX matches -mellanox though its firmware lives
+# in card flash, and over-installing a few MB beats tracking device IDs, which
+# is the churn this design sheds. IDs from /usr/share/hwdata/pci.ids.
+#
+# QCOM is absent: its SoC blobs sit on the platform bus, which carries no PCI ID
+# to match. Stays manual.
+_OPTDEP_PCI: dict[str, str] = {
+	'0x1077': 'linux-firmware-qlogic',
+	'0x11ab': 'linux-firmware-marvell',
+	'0x15b3': 'linux-firmware-mellanox',
+	'0x177d': 'linux-firmware-liquidio',  # pci.ids says Cavium
+	'0x19ee': 'linux-firmware-nfp',  # pci.ids says Netronome
+	'0x1b4b': 'linux-firmware-marvell',
+}
+
+# BT radios and wifi dongles hang off USB even when the wifi itself is PCIe
+_OPTDEP_USB: dict[str, str] = {
+	'1286': 'linux-firmware-marvell',
+}
+
+# No bus ID reaches either: CS35L41-class amps enumerate over ACPI/I2C/SPI, and
+# the catch-all names no vendor. Hard deps, so this only seeds the VENDOR menu.
+_SPLIT_BASELINE = ('linux-firmware-cirrus', 'linux-firmware-other')
 
 
-def _bus_vendors(bus: Path, attr: str, mapping: dict[str, tuple[str, ...]]) -> set[str]:
+def _run(cmd: list[str]) -> list[str]:
+	# Status is unusable here: pacman -Qo exits 1 over paths it could not match
+	# while still printing the owners it did find. Read stdout, ignore the rest.
+	try:
+		proc = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603 - fixed argv, no user input
+	except OSError as err:
+		debug(f'{cmd[0]} unavailable: {err}')
+		return []
+
+	return [line for line in proc.stdout.splitlines() if line]
+
+
+def _module_release() -> str:
+	# modinfo defaults to the running kernel, whose module tree is already gone
+	# after a kernel upgrade without a reboot: every lookup would return nothing.
+	release = platform.release()
+	if (_MODULE_ROOT / release).is_dir():
+		return release
+
+	installed = sorted(p.name for p in _MODULE_ROOT.glob('*') if (p / 'modules.alias').is_file())
+	if len(installed) == 1:
+		debug(f'No modules for running kernel {release}, using {installed[0]}')
+		return installed[0]
+
+	return release
+
+
+def _modalias(dev: Path) -> str | None:
+	try:
+		text = (dev / 'uevent').read_text()
+	except OSError:
+		return None
+
+	for line in text.splitlines():
+		key, _, value = line.partition('=')
+		if key == 'MODALIAS':
+			return value
+
+	return None
+
+
+def _bus_optdeps(bus: Path, attr: str, mapping: dict[str, str]) -> set[str]:
 	# USB interface nodes (1-1:1.0) carry no vendor-ID attr: skip, do not abort
+	# the sweep over the rest of the bus
 	if not bus.is_dir():
 		return set()
 
@@ -192,10 +270,53 @@ def _bus_vendors(bus: Path, attr: str, mapping: dict[str, tuple[str, ...]]) -> s
 		except OSError:
 			continue
 
-		if mapped := mapping.get(vendor):
-			found.update(mapped)
+		if pkg := mapping.get(vendor):
+			found.add(pkg)
 
 	return found
+
+
+def _bus_modules(bus: Path) -> set[str]:
+	# A driver directory is not a module name: i801_smbus lives in i2c_i801 and
+	# modinfo only answers to the latter, so go through the module symlink.
+	# Unbound devices, and builtin drivers owning no module, fall back to their
+	# modalias against modules.alias, the kernel's own PCI/USB match table.
+	if not bus.is_dir():
+		return set()
+
+	modules: set[str] = set()
+	for dev in bus.iterdir():
+		link = dev / 'driver' / 'module'
+		if link.is_symlink():
+			modules.add(link.resolve().name)
+			continue
+
+		if alias := _modalias(dev):
+			modules.update(_run(['modprobe', '-R', alias]))
+
+	return modules
+
+
+def _firmware_files(declared: list[str], root: Path) -> list[Path]:
+	# modinfo reports uncompressed names and shell globs; on disk they are zstd
+	# compressed. Grouping by top-level directory keeps iwlwifi's ~200 flat
+	# .ucode entries to one lookup, since one file names the package as well as
+	# all of them, while still splitting a module whose blobs span two packages.
+	found: dict[str, Path] = {}
+	for entry in declared:
+		top = entry.split('/')[0] if '/' in entry else ''
+		if top in found:
+			continue
+
+		if '*' in entry or '?' in entry:
+			match = next(iter(sorted(root.glob(entry))), None)
+		else:
+			match = next((p for p in (root / entry, root / f'{entry}.zst') if p.is_file()), None)
+
+		if match:
+			found[top] = match
+
+	return list(found.values())
 
 
 class _SysInfo:
@@ -278,57 +399,78 @@ class _SysInfo:
 		return cards
 
 	@cached_property
-	def firmware_vendors(self) -> list[str]:
-		# Returns FirmwareVendor enum *names* matching detected PCI and USB vendor
-		# IDs, plus a baseline no bus ID can reach.
-		# Limited to high-yield consumer vendors; niche vendors stay manual.
+	def is_vm(self) -> bool:
+		# Cached like every other probe here: a host does not become a VM
+		# mid-run, and this forks systemd-detect-virt. It gates the firmware
+		# scan, microcode and the gfx driver list, so an uncached call put a
+		# ~5ms fork on paths that only wanted a boolean.
+		try:
+			result = SysCommand('systemd-detect-virt')
+			return b'none' not in b''.join(result).lower()
+		except SysCallError:
+			# present but reported an error, treat as bare metal
+			return False
+		except RequirementError:
+			# non-systemd host (e.g. alpine): binary absent, fall back to DMI
+			pass
+
+		# xen exposes its type here, and the DMI vendor names the hypervisor for
+		# kvm/qemu/vmware/virtualbox/hyper-v on anything with a sysfs
+		if Path('/sys/hypervisor/type').exists():
+			return True
+
+		vendor = Path('/sys/class/dmi/id/sys_vendor')
+		if vendor.exists():
+			known = (
+				'qemu',
+				'kvm',
+				'vmware',
+				'virtualbox',
+				'innotek',
+				'microsoft corporation',
+				'xen',
+				'bochs',
+				'parallels',
+				'bhyve',
+			)
+			text = vendor.read_text().strip().lower()
+			return any(v in text for v in known)
+
+		return False
+
+	@cached_property
+	def firmware_optdeps(self) -> list[str]:
+		# linux-firmware's optional deps present on this host, as package names.
+		# Sysfs only, no subprocess, so the FULL install path can afford it.
+		detected = _bus_optdeps(_PCI_BUS, 'vendor', _OPTDEP_PCI)
+		detected |= _bus_optdeps(_USB_BUS, 'idVendor', _OPTDEP_USB)
+
+		return sorted(detected)
+
+	@cached_property
+	def firmware_splits(self) -> list[str]:
+		# Hard-dep splits this host needs, as package names, resolved
+		# device -> module -> firmware file -> owner. No vendor ID anywhere, and
+		# coverage is whatever the installed kernel can drive.
 		#
-		# Manual-only FirmwareVendor members (not auto-detected, ticked by the user)
-		#   LIQUIDIO  	Cavium LiquidIO server adapters
-		#   MELLANOX  	Mellanox Spectrum switches
-		#   NFP       	Netronome Flow Processors
-		#   QCOM      	Qualcomm SoC blobs (adreno/venus/modem), platform bus not PCI
-		#   QLOGIC    	QLogic devices
-		# Vendor IDs cross-checked against /usr/share/hwdata/{pci,usb}.ids
-		pci_mapping: dict[str, tuple[str, ...]] = {
-			# AMD (0x1002) shares one vendor ID across GCN generations: amdgpu firmware
-			# drives newer cards, radeon older. Suggest both rather than guessing from
-			# the live-ISO bound driver, which is fragile.
-			'0x1002': ('AMDGPU', 'RADEON'),
-			'0x10de': ('NVIDIA',),
-			'0x8086': ('INTEL',),
-			'0x10ec': ('REALTEK',),
-			'0x14e4': ('BROADCOM',),
-			'0x168c': ('ATHEROS',),
-			# 0x17cb (QCA6390/WCN6855/WCN7850) binds ath11k/ath12k, whose blobs
-			# ship in linux-firmware-atheros, not -qcom
-			'0x17cb': ('ATHEROS',),
-			'0x14c3': ('MEDIATEK',),
-			# Ralink folded into MediaTek: rt2x00/mt7601u blobs ship in -mediatek
-			'0x1814': ('MEDIATEK',),
-			# Marvell 88W8xxx wifi: 0x11ab legacy, 0x1b4b newer 88W/88SE
-			'0x11ab': ('MARVELL',),
-			'0x1b4b': ('MARVELL',),
-		}
+		# Under-detects, on purpose. Modules that build firmware names at runtime
+		# declare none (rtw88, rtw89, btusb), and a proprietary driver's blobs
+		# are unowned by pacman. Only VENDOR trimming reads this, so a miss
+		# shrinks an optional trim; it can never drop a blob FULL would install.
+		release = _module_release()
+		modules = _bus_modules(_PCI_BUS) | _bus_modules(_USB_BUS)
 
-		# BT radios and wifi dongles hang off USB even when the wifi is PCIe. Silicon
-		# vendors only: OEM rebrands (IMC, Lite-On, AzureWave) do not name the chip.
-		usb_mapping: dict[str, tuple[str, ...]] = {
-			'0cf3': ('ATHEROS',),
-			'0bda': ('REALTEK',),
-			'0e8d': ('MEDIATEK',),
-			'148f': ('MEDIATEK',),
-			'8087': ('INTEL',),
-			'0a5c': ('BROADCOM',),
-			'1286': ('MARVELL',),
-		}
+		files: list[Path] = []
+		for module in sorted(modules):
+			declared = _run(['modinfo', '-k', release, '-F', 'firmware', module])
+			files += _firmware_files(declared, _FIRMWARE_ROOT)
 
-		# Neither is reachable above: CS35L41/CS42L43 amps enumerate over ACPI/I2C/SPI
-		# and the unsorted catch-all has no vendor ID at all. Cheap enough to always
-		# take, and a missed cirrus blob means silent laptop speakers.
-		detected = {'CIRRUS', 'OTHER'}
-		detected |= _bus_vendors(_PCI_BUS, 'vendor', pci_mapping)
-		detected |= _bus_vendors(_USB_BUS, 'idVendor', usb_mapping)
+		detected = set(_SPLIT_BASELINE)
+		if files:
+			owners = _run(['pacman', '-Qoq', *(str(f) for f in files)])
+			# /usr/lib/firmware holds plenty the caller cannot resolve to a
+			# FirmwareVendor: sof-firmware, ast-firmware, the nvidia driver tree
+			detected |= {pkg for pkg in owners if pkg.startswith('linux-firmware-')}
 
 		return sorted(detected)
 
@@ -386,12 +528,18 @@ class SysInfo:
 		return any('intel' in x.lower() for x in _sys_info.graphics_devices)
 
 	@staticmethod
-	def firmware_vendor_names() -> list[str]:
-		# Skip the PCI scan on VMs. Returns FirmwareVendor enum names; caller resolves
-		# via FirmwareVendor[name] to keep this module free of any models import.
+	def firmware_optdep_packages() -> list[str]:
+		# Not skipped on VMs: passthrough hardware is real hardware, and a guest
+		# only reaches here by asking for FULL over the MINIMAL default.
+		return _sys_info.firmware_optdeps
+
+	@staticmethod
+	def firmware_split_packages() -> list[str]:
+		# Skipped on VMs: virtio ships no blobs and the scan costs a modinfo per
+		# bound driver.
 		if SysInfo.is_vm():
 			return []
-		return _sys_info.firmware_vendors
+		return _sys_info.firmware_splits
 
 	@staticmethod
 	def cpu_vendor() -> CpuVendor | None:
@@ -425,39 +573,7 @@ class SysInfo:
 
 	@staticmethod
 	def is_vm() -> bool:
-		try:
-			result = SysCommand('systemd-detect-virt')
-			return b'none' not in b''.join(result).lower()
-		except SysCallError:
-			# present but reported an error, treat as bare metal
-			return False
-		except RequirementError:
-			# non-systemd host (e.g. alpine): binary absent, fall back to DMI
-			pass
-
-		# xen exposes its type here, and the DMI vendor names the hypervisor for
-		# kvm/qemu/vmware/virtualbox/hyper-v on anything with a sysfs
-		if Path('/sys/hypervisor/type').exists():
-			return True
-
-		vendor = Path('/sys/class/dmi/id/sys_vendor')
-		if vendor.exists():
-			known = (
-				'qemu',
-				'kvm',
-				'vmware',
-				'virtualbox',
-				'innotek',
-				'microsoft corporation',
-				'xen',
-				'bochs',
-				'parallels',
-				'bhyve',
-			)
-			text = vendor.read_text().strip().lower()
-			return any(v in text for v in known)
-
-		return False
+		return _sys_info.is_vm
 
 	@staticmethod
 	def requires_sof_fw() -> bool:

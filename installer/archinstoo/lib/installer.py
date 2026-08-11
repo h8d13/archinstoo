@@ -2468,7 +2468,17 @@ def accessibility_tools_in_use() -> bool:
 	# the binary nor the unit, so report not-in-use instead of crashing
 	if not shutil.which('systemctl'):
 		return False
-	return subprocess.run(['systemctl', 'is-active', '--quiet', 'espeakup.service'], check=False).returncode == 0  # noqa: S607 - systemctl on live ISO
+
+	try:
+		SysCommand(
+			'systemctl is-active --quiet espeakup.service',
+			environment_vars={'SYSTEMD_COLORS': '0'},
+		)
+	except SysCallError:
+		# nonzero: unit inactive, or absent on this host
+		return False
+
+	return True
 
 
 def run_grimoire_installation(

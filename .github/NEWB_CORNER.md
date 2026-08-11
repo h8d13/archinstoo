@@ -19,7 +19,7 @@ Take your time, **installing is fast**, make sure you went through everything yo
 
 > [!TIP]
 > Looking up your motherboard model, CPU/GPU, memory, disks, etc... Can often save you lots of headaches.
-> You can use `lspci` and `lsusb`. On certain hardware you may need to select `Firmware` > `vendor` (Ex: Marvell WiFi cards)
+> You can use `lspci` and `lsusb`. `Firmware` > `full` detects the optional vendor packages your hardware needs (Marvell, Mellanox, QLogic and friends), which the base `linux-firmware` does not carry. `vendor` is for trimming that down by hand.
 
 You may view main schema here: [Menu-Preview](./SCHEMA.md)
 

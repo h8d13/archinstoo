@@ -9,6 +9,8 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
+_VENDOR_VALUES = {v.value for v in FirmwareVendor}
+
 
 def select_kernel(preset: list[str] = []) -> list[str]:
 	# Asks the user to select a kernel for system.
@@ -133,8 +135,11 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 	vendor_items = [MenuItem(v.value, value=v) for v in FirmwareVendor]
 	vendor_group = MenuItemGroup(vendor_items, sort_items=True)
 
-	# Seed selection from PCI detection only when the user has no prior preset.
-	initial_vendors = preset.vendors or [FirmwareVendor[name] for name in SysInfo.firmware_vendor_names()]
+	# Seed selection from detection only when the user has no prior preset. Both
+	# sources emit package names, which are the enum values; a split with no
+	# member (Arch adds one) drops here rather than raising in the menu.
+	detected = SysInfo.firmware_split_packages() + SysInfo.firmware_optdep_packages()
+	initial_vendors = preset.vendors or [FirmwareVendor(pkg) for pkg in detected if pkg in _VENDOR_VALUES]
 	vendor_group.set_selected_by_value(initial_vendors)
 
 	vendor_result = SelectMenu[FirmwareVendor](

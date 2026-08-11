@@ -49,9 +49,16 @@ class FirmwareConfiguration:
 		return cls()
 
 	def packages(self) -> list[str]:
+		from archinstoo.lib.hardware import SysInfo
+
 		match self.firmware_type:
 			case FirmwareType.FULL:
-				return ['linux-firmware']
+				# The metapackage stops at its hard deps. Its optional ones are
+				# the gap VENDOR mode exists to close, and a user on the default
+				# path never opens that menu: a Marvell laptop taking FULL used
+				# to land with no mrvl blobs and no NIC. Detected at install
+				# time, so a saved config follows the host it runs on.
+				return ['linux-firmware', *SysInfo.firmware_optdep_packages()]
 			case FirmwareType.MINIMAL:
 				return []
 			case FirmwareType.VENDOR:

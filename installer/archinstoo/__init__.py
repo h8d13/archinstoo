@@ -259,6 +259,8 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Memory statistics: {SysInfo.mem_total()} kB total installed')
 	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
+	debug(f'Firmware optional deps matched: {SysInfo.firmware_optdep_packages()}')
+	debug(f'Firmware splits detected: {SysInfo.firmware_split_packages()}')
 
 	if args.debug:
 		from .lib.disk.utils import disk_layouts

@@ -707,6 +707,10 @@ class GlobalMenu(AbstractMenu[None]):
 		output = f'{"Firmware"}: {config.firmware_type.value}'
 		if config.firmware_type == FirmwareType.VENDOR and config.vendors:
 			output += '\n' + ', '.join(v.value for v in config.vendors)
+		# Optional deps the metapackage never pulls in on its own: the one part
+		# of FULL that is not self-evident from its name
+		elif config.firmware_type == FirmwareType.FULL and (extras := SysInfo.firmware_optdep_packages()):
+			output += '\n' + ', '.join(extras)
 		return output
 
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:
