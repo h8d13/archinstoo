@@ -31,7 +31,7 @@
 # craft a config, reference found in repo
 #   ./TSER send 'python -m archinstoo --script passwd vm.json --root'
 # prompts twice, no echo
-#   ./TSER send 'python -m archinstoo --script passwd vm.json --user vm'    
+#   ./TSER send 'python -m archinstoo --script passwd vm.json --user vm'
 # creates the entry if absent
 #   ./TSER send 'python3 -B -m archinstoo --script guided \
 #       --config examples/vm_unattended.json --silent --advanced --debug'
@@ -55,6 +55,9 @@ PIDFILE = ROOT / '.dev-vm.pid'
 ANSI = re.compile(r'\x1b\[[0-9;?]*[a-zA-Z]|\x1b[()][B0]|\x1b\][^\x07]*\x07')
 # grml zsh pads the prompt line out to the tty width, 400 blanks of nothing
 PROMPT = re.compile(r'#|\S+@\S+ .* #')
+# a shell waiting for input ends the line with its prompt char: 'root@archiso
+# ~ #' on the ISO, '[root@host ~]#' once installed
+IDLE = re.compile(r'[#$]$')
 
 
 def fuzzy(text):
@@ -172,9 +175,26 @@ def cmd_send(args):
 	serial_write(args.text.encode() + b'\n')
 
 
+def wait_idle(timeout):
+	# Typing while the guest is mid-command loses the leading bytes of the
+	# new line ('systemctl' arrived as 'stemctl'), so wait for a prompt to
+	# be the last thing on the console. An interrupted TSER leaves the guest
+	# running: the VM is a daemon, it never noticed we walked away.
+	deadline = time.time() + timeout
+	while True:
+		lines = [ln.rstrip() for ln in clean(log_read()).splitlines() if ln.strip()]
+		if lines and IDLE.search(lines[-1]):
+			return True
+		if time.time() >= deadline:
+			return False
+		time.sleep(0.25)
+
+
 def cmd_run(args):
 	# marker carries the exit status back out of the guest; the log
 	# offset makes it unique per invocation without needing state
+	if not wait_idle(args.timeout):
+		die(f'guest still busy after {args.timeout}s, see ./TSER read')
 	offset = log_size()
 	marker = f'TSER{offset}'
 	serial_write(f'{args.cmd}; echo {marker}rc=$?\n'.encode())
