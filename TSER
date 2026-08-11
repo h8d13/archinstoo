@@ -25,6 +25,17 @@
 #   ./TSER status                 is the VM alive, how big is the log
 #   ./TSER quit                   kill the VM
 
+# Example:
+#   ./TSER run 'pacman -Sy --noconfirm git'
+#   ./TSER run 'git clone --depth 1 <url>/archinstoo /root/archinstoo'
+# craft a config, reference found in repo
+#   ./TSER send 'python -m archinstoo --script passwd vm.json --root'
+# prompts twice, no echo
+#   ./TSER send 'python -m archinstoo --script passwd vm.json --user vm'    
+# creates the entry if absent
+#   ./TSER send 'python3 -B -m archinstoo --script guided \
+#       --config examples/vm_unattended.json --silent --advanced --debug'
+
 import argparse
 import os
 import re
