@@ -54,7 +54,7 @@ class FirmwareConfiguration:
 		match self.firmware_type:
 			case FirmwareType.FULL:
 				# the metapackage stops at its hard deps, all opts pkgs are dropped
-				# we re-register them here based on PCI ID detection 
+				# we re-register them here based on PCI ID detection
 				return ['linux-firmware', *SysInfo.firmware_optdep_packages()]
 			case FirmwareType.MINIMAL:
 				return []

@@ -1,9 +1,7 @@
 # schema.jsonc: where it lives and how to read it.
 #
 # The count/size scripts import SCHEMA from here; nvchecker/NVGEN loads this
-# module BY PATH to reach the same file and parser without the archinstoo
-# runtime. Keep it stdlib-only and free of intra-package imports or that load
-# breaks (tests/test_schema_drift.py pins it).
+# module BY PATH, shared helper for other call sites.
 
 import json
 import re
