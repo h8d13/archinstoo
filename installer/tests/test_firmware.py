@@ -3,14 +3,19 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.lib import hardware
-from archinstoo.lib.hardware import _SysInfo
-from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.firmware import (
+	FirmwareConfiguration,
+	FirmwareType,
+	FirmwareVendor,
+	detect_optdeps,
+	detect_splits,
+)
 
 if TYPE_CHECKING:
 	from pathlib import Path
 
 # Hard deps of linux-firmware that no bus ID reaches, taken unconditionally
-BASELINE = {'linux-firmware-cirrus', 'linux-firmware-other'}
+BASELINE = {FirmwareVendor.CIRRUS, FirmwareVendor.OTHER}
 
 
 def _fake_bus(root: Path, attr: str, ids: list[str]) -> Path:
@@ -23,11 +28,18 @@ def _fake_bus(root: Path, attr: str, ids: list[str]) -> Path:
 	return root
 
 
-def _optdeps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, pci: list[str], usb: list[str]) -> set[str]:
+def _reset(monkeypatch: pytest.MonkeyPatch) -> None:
+	# detection reads the module singleton, whose probes cache for the process
+	monkeypatch.setattr(hardware, '_sys_info', hardware._SysInfo())
+	monkeypatch.setattr(hardware.SysInfo, 'is_vm', staticmethod(lambda: False))
+
+
+def _optdeps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, pci: list[str], usb: list[str]) -> set[FirmwareVendor]:
 	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_bus(tmp_path / 'pci', 'vendor', pci))
 	monkeypatch.setattr(hardware, '_USB_BUS', _fake_bus(tmp_path / 'usb', 'idVendor', usb))
+	_reset(monkeypatch)
 
-	return set(_SysInfo().firmware_optdeps)
+	return set(detect_optdeps())
 
 
 # -- optional deps: ID table ---------------------------------------------------
@@ -36,15 +48,15 @@ def _optdeps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, pci: list[str], us
 @pytest.mark.parametrize(
 	('pci', 'usb', 'expected'),
 	[
-		(['0x11ab'], [], {'linux-firmware-marvell'}),
-		(['0x1b4b'], [], {'linux-firmware-marvell'}),
-		([], ['1286'], {'linux-firmware-marvell'}),
-		(['0x15b3'], [], {'linux-firmware-mellanox'}),
-		(['0x19ee'], [], {'linux-firmware-nfp'}),
-		(['0x177d'], [], {'linux-firmware-liquidio'}),
-		(['0x1077'], [], {'linux-firmware-qlogic'}),
+		(['0x11ab'], [], {FirmwareVendor.MARVELL}),
+		(['0x1b4b'], [], {FirmwareVendor.MARVELL}),
+		([], ['1286'], {FirmwareVendor.MARVELL}),
+		(['0x15b3'], [], {FirmwareVendor.MELLANOX}),
+		(['0x19ee'], [], {FirmwareVendor.NFP}),
+		(['0x177d'], [], {FirmwareVendor.LIQUIDIO}),
+		(['0x1077'], [], {FirmwareVendor.QLOGIC}),
 		# both Marvell ranges on one host collapse to one package
-		(['0x11ab', '0x1b4b'], ['1286'], {'linux-firmware-marvell'}),
+		(['0x11ab', '0x1b4b'], ['1286'], {FirmwareVendor.MARVELL}),
 		# hard-dep vendors are NOT in this table: linux-firmware already has them
 		(['0x10de', '0x8086', '0x1002', '0x17cb'], ['0bda', '8087'], set()),
 		# root hub, Samsung NVMe, ASMedia: nothing to pull
@@ -57,7 +69,7 @@ def test_optdep_detection(
 	tmp_path: Path,
 	pci: list[str],
 	usb: list[str],
-	expected: set[str],
+	expected: set[FirmwareVendor],
 ) -> None:
 	assert _optdeps(monkeypatch, tmp_path, pci, usb) == expected
 
@@ -73,8 +85,9 @@ def test_optdeps_skip_devices_without_vendor_attr(monkeypatch: pytest.MonkeyPatc
 
 	monkeypatch.setattr(hardware, '_PCI_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_USB_BUS', usb)
+	_reset(monkeypatch)
 
-	assert set(_SysInfo().firmware_optdeps) == {'linux-firmware-marvell'}
+	assert set(detect_optdeps()) == {FirmwareVendor.MARVELL}
 
 
 # -- hard-dep splits: kernel + pacman ------------------------------------------
@@ -136,8 +149,9 @@ def test_splits_resolve_through_module_and_owner(monkeypatch: pytest.MonkeyPatch
 		firmware={'ath11k_pci': ['ath11k/WCN6855/hw2.0/*']},
 		owners={str(root / 'ath11k/WCN6855/hw2.0/board-2.bin.zst'): 'linux-firmware-atheros'},
 	)
+	_reset(monkeypatch)
 
-	assert set(_SysInfo().firmware_splits) == BASELINE | {'linux-firmware-atheros'}
+	assert set(detect_splits()) == BASELINE | {FirmwareVendor.ATHEROS}
 
 
 def test_splits_match_zst_and_collapse_flat_entries(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -155,8 +169,9 @@ def test_splits_match_zst_and_collapse_flat_entries(monkeypatch: pytest.MonkeyPa
 		firmware={'iwlwifi': ['iwlwifi-100-5.ucode', 'iwlwifi-cc-a0-77.ucode']},
 		owners={str(root / 'iwlwifi-100-5.ucode.zst'): 'linux-firmware-intel'},
 	)
+	_reset(monkeypatch)
 
-	assert set(_SysInfo().firmware_splits) == BASELINE | {'linux-firmware-intel'}
+	assert set(detect_splits()) == BASELINE | {FirmwareVendor.INTEL}
 
 	pacman = next(c for c in calls if c[0] == 'pacman')
 	assert pacman[2:] == [str(root / 'iwlwifi-100-5.ucode.zst')]
@@ -176,8 +191,9 @@ def test_splits_drop_non_split_owners(monkeypatch: pytest.MonkeyPatch, tmp_path:
 		firmware={'snd_sof_pci': ['intel/sof/blob.ri']},
 		owners={str(root / 'intel/sof/blob.ri'): 'sof-firmware'},
 	)
+	_reset(monkeypatch)
 
-	assert set(_SysInfo().firmware_splits) == BASELINE
+	assert set(detect_splits()) == BASELINE
 
 
 def test_splits_survive_modules_declaring_no_firmware(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -193,8 +209,9 @@ def test_splits_survive_modules_declaring_no_firmware(monkeypatch: pytest.Monkey
 	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(monkeypatch, firmware={}, owners={})
+	_reset(monkeypatch)
 
-	assert set(_SysInfo().firmware_splits) == BASELINE
+	assert set(detect_splits()) == BASELINE
 
 
 def test_splits_use_module_name_not_driver_name(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -214,40 +231,21 @@ def test_splits_use_module_name_not_driver_name(monkeypatch: pytest.MonkeyPatch,
 	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	calls = _stub_run(monkeypatch, firmware={}, owners={})
+	_reset(monkeypatch)
 
-	assert set(_SysInfo().firmware_splits) == BASELINE
+	assert set(detect_splits()) == BASELINE
 	assert [c[-1] for c in calls if c[0] == 'modinfo'] == ['i2c_i801']
 
 
-# -- wiring --------------------------------------------------------------------
-
-
-def test_detected_packages_resolve_to_vendors(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# drift guard for the package-name strings hardware.py hardcodes
-	assert {v.value for v in FirmwareVendor} >= BASELINE
-
-	detected = _optdeps(monkeypatch, tmp_path, ['0x11ab', '0x15b3', '0x19ee', '0x177d', '0x1077'], ['1286'])
-
-	assert [FirmwareVendor(pkg) for pkg in detected]
-
-
-@pytest.mark.parametrize(
-	('is_vm', 'expected'),
-	[
-		(True, FirmwareType.MINIMAL),
-		(False, FirmwareType.FULL),
-	],
-)
-def test_firmware_default_per_host(monkeypatch: pytest.MonkeyPatch, is_vm: bool, expected: FirmwareType) -> None:
-	monkeypatch.setattr('archinstoo.lib.hardware.SysInfo.is_vm', staticmethod(lambda: is_vm))
-
-	assert FirmwareConfiguration.default().firmware_type is expected
-
-
 def test_split_scan_skipped_on_vm(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr('archinstoo.lib.hardware.SysInfo.is_vm', staticmethod(lambda: True))
+	monkeypatch.setattr(hardware, '_sys_info', hardware._SysInfo())
+	monkeypatch.setattr(hardware.SysInfo, 'is_vm', staticmethod(lambda: True))
 
-	assert hardware.SysInfo.firmware_split_packages() == []
+	assert hardware.SysInfo.firmware_owners() == []
+	assert set(detect_splits()) == BASELINE
+
+
+# -- wiring --------------------------------------------------------------------
 
 
 def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -259,10 +257,23 @@ def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
 		return [b'none']
 
 	monkeypatch.setattr(hardware, 'SysCommand', fake_syscommand)
-	info = _SysInfo()
+	info = hardware._SysInfo()
 
 	assert (info.is_vm, info.is_vm, info.is_vm) == (False, False, False)
 	assert calls == ['systemd-detect-virt']
+
+
+@pytest.mark.parametrize(
+	('is_vm', 'expected'),
+	[
+		(True, FirmwareType.MINIMAL),
+		(False, FirmwareType.FULL),
+	],
+)
+def test_firmware_default_per_host(monkeypatch: pytest.MonkeyPatch, is_vm: bool, expected: FirmwareType) -> None:
+	monkeypatch.setattr(hardware.SysInfo, 'is_vm', staticmethod(lambda: is_vm))
+
+	assert FirmwareConfiguration.default().firmware_type is expected
 
 
 @pytest.mark.parametrize(
@@ -272,18 +283,18 @@ def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
 		(FirmwareConfiguration(), [], ['linux-firmware']),
 		(
 			FirmwareConfiguration(),
-			['linux-firmware-marvell'],
+			[FirmwareVendor.MARVELL],
 			['linux-firmware', 'linux-firmware-marvell'],
 		),
 		# MINIMAL is an explicit opt-out and stays empty even with a match
 		(
 			FirmwareConfiguration(firmware_type=FirmwareType.MINIMAL),
-			['linux-firmware-marvell'],
+			[FirmwareVendor.MARVELL],
 			[],
 		),
 		(
 			FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=[FirmwareVendor.INTEL]),
-			['linux-firmware-marvell'],
+			[FirmwareVendor.MARVELL],
 			['linux-firmware-intel'],
 		),
 	],
@@ -291,12 +302,9 @@ def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_firmware_packages(
 	monkeypatch: pytest.MonkeyPatch,
 	config: FirmwareConfiguration,
-	optdeps: list[str],
+	optdeps: list[FirmwareVendor],
 	expected: list[str],
 ) -> None:
-	monkeypatch.setattr(
-		'archinstoo.lib.hardware.SysInfo.firmware_optdep_packages',
-		staticmethod(lambda: optdeps),
-	)
+	monkeypatch.setattr('archinstoo.lib.models.firmware.detect_optdeps', lambda: optdeps)
 
 	assert config.packages() == expected

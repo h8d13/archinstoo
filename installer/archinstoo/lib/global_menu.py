@@ -29,7 +29,7 @@ from .interactions.system_conf import select_firmware, select_kernel, select_swa
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
-from .models.firmware import FirmwareConfiguration, FirmwareType
+from .models.firmware import FirmwareConfiguration, FirmwareType, detect_optdeps
 from .models.locale import LocaleConfiguration
 from .models.network import NetworkConfiguration, NicType
 from .models.profile import ProfileConfiguration
@@ -708,8 +708,8 @@ class GlobalMenu(AbstractMenu[None]):
 		if config.firmware_type == FirmwareType.VENDOR and config.vendors:
 			output += '\n' + ', '.join(v.value for v in config.vendors)
 		# the one part of FULL that its name does not already say
-		elif config.firmware_type == FirmwareType.FULL and (extras := SysInfo.firmware_optdep_packages()):
-			output += '\n' + ', '.join(extras)
+		elif config.firmware_type == FirmwareType.FULL and (extras := detect_optdeps()):
+			output += '\n' + ', '.join(v.value for v in extras)
 		return output
 
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:

@@ -1,15 +1,18 @@
 from typing import assert_never
 
-from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.firmware import (
+	FirmwareConfiguration,
+	FirmwareType,
+	FirmwareVendor,
+	detect_optdeps,
+	detect_splits,
+)
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
 from archinstoo.lib.models.zram import ZramAlgorithm, ZramConfiguration
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
-
-_VENDOR_VALUES = {v.value for v in FirmwareVendor}
 
 
 def select_kernel(preset: list[str] = []) -> list[str]:
@@ -135,10 +138,8 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 	vendor_items = [MenuItem(v.value, value=v) for v in FirmwareVendor]
 	vendor_group = MenuItemGroup(vendor_items, sort_items=True)
 
-	# Seed selection from detection only when the user has no prior preset. Both
-	# emit package names, so a split with no enum member drops instead of raising
-	detected = SysInfo.firmware_split_packages() + SysInfo.firmware_optdep_packages()
-	initial_vendors = preset.vendors or [FirmwareVendor(pkg) for pkg in detected if pkg in _VENDOR_VALUES]
+	# Seed selection from detection only when the user has no prior preset
+	initial_vendors = preset.vendors or detect_splits() + detect_optdeps()
 	vendor_group.set_selected_by_value(initial_vendors)
 
 	vendor_result = SelectMenu[FirmwareVendor](

@@ -182,29 +182,6 @@ _USB_BUS = Path('/sys/bus/usb/devices')
 _FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
 
-# linux-firmware's OPTIONAL deps only. pacman never pulls them in, so their
-# files are absent and firmware_splits can find no owner to name: an ID is the
-# last source left. Its hard deps arrive with FULL anyway and stay out of here.
-# Vendor-wide, so a ConnectX over-installs a few MB. IDs from pci.ids.
-# QCOM has none: SoC blobs sit on the platform bus, no PCI ID to match.
-_OPTDEP_PCI: dict[str, str] = {
-	'0x1077': 'linux-firmware-qlogic',
-	'0x11ab': 'linux-firmware-marvell',
-	'0x15b3': 'linux-firmware-mellanox',
-	'0x177d': 'linux-firmware-liquidio',  # pci.ids says Cavium
-	'0x19ee': 'linux-firmware-nfp',  # pci.ids says Netronome
-	'0x1b4b': 'linux-firmware-marvell',
-}
-
-# BT radios and wifi dongles hang off USB even when the wifi itself is PCIe
-_OPTDEP_USB: dict[str, str] = {
-	'1286': 'linux-firmware-marvell',
-}
-
-# No bus ID reaches either: CS35L41-class amps enumerate over ACPI/I2C/SPI and
-# the catch-all names no vendor
-_SPLIT_BASELINE = ('linux-firmware-cirrus', 'linux-firmware-other')
-
 
 def _run(cmd: list[str]) -> list[str]:
 	# pacman -Qo exits 1 over paths it could not match while still printing the
@@ -247,7 +224,7 @@ def _modalias(dev: Path) -> str | None:
 	return None
 
 
-def _bus_optdeps(bus: Path, attr: str, mapping: dict[str, str]) -> set[str]:
+def _bus_vendor_ids(bus: Path, attr: str) -> set[str]:
 	# USB interface nodes (1-1:1.0) carry no vendor-ID attr: skip, do not abort
 	if not bus.is_dir():
 		return set()
@@ -255,12 +232,9 @@ def _bus_optdeps(bus: Path, attr: str, mapping: dict[str, str]) -> set[str]:
 	found: set[str] = set()
 	for dev in bus.iterdir():
 		try:
-			vendor = (dev / attr).read_text().strip().lower()
+			found.add((dev / attr).read_text().strip().lower())
 		except OSError:
 			continue
-
-		if pkg := mapping.get(vendor):
-			found.add(pkg)
 
 	return found
 
@@ -424,19 +398,19 @@ class _SysInfo:
 		return False
 
 	@cached_property
-	def firmware_optdeps(self) -> list[str]:
-		# Sysfs only, no subprocess, so the FULL install path can afford it
-		detected = _bus_optdeps(_PCI_BUS, 'vendor', _OPTDEP_PCI)
-		detected |= _bus_optdeps(_USB_BUS, 'idVendor', _OPTDEP_USB)
-
-		return sorted(detected)
+	def pci_vendor_ids(self) -> set[str]:
+		return _bus_vendor_ids(_PCI_BUS, 'vendor')
 
 	@cached_property
-	def firmware_splits(self) -> list[str]:
+	def usb_vendor_ids(self) -> set[str]:
+		return _bus_vendor_ids(_USB_BUS, 'idVendor')
+
+	@cached_property
+	def firmware_owners(self) -> list[str]:
 		# device -> module -> firmware file -> owning package. Under-detects:
 		# rtw88/rtw89/btusb build their names at runtime and declare none, and a
-		# proprietary driver's blobs are unowned. Only VENDOR trimming reads
-		# this, so a miss shrinks a trim, never drops a blob FULL would install.
+		# proprietary driver's blobs are unowned. Callers use this to narrow an
+		# install, never to decide a blob is unneeded.
 		release = _module_release()
 		modules = _bus_modules(_PCI_BUS) | _bus_modules(_USB_BUS)
 
@@ -445,13 +419,12 @@ class _SysInfo:
 			declared = _run(['modinfo', '-k', release, '-F', 'firmware', module])
 			files += _firmware_files(declared, _FIRMWARE_ROOT)
 
-		detected = set(_SPLIT_BASELINE)
-		if files:
-			owners = _run(['pacman', '-Qoq', *(str(f) for f in files)])
-			# sof-firmware and the nvidia driver tree also live under there
-			detected |= {pkg for pkg in owners if pkg.startswith('linux-firmware-')}
+		if not files:
+			return []
 
-		return sorted(detected)
+		# raw owners: sof-firmware and the nvidia driver tree live under there
+		# too, and only the caller knows which names it can resolve
+		return sorted(set(_run(['pacman', '-Qoq', *(str(f) for f in files)])))
 
 
 _sys_info = _SysInfo()
@@ -507,16 +480,16 @@ class SysInfo:
 		return any('intel' in x.lower() for x in _sys_info.graphics_devices)
 
 	@staticmethod
-	def firmware_optdep_packages() -> list[str]:
-		# Not skipped on VMs: passthrough hardware is real hardware
-		return _sys_info.firmware_optdeps
+	def bus_vendor_ids() -> tuple[set[str], set[str]]:
+		# (pci, usb). Sysfs only, no subprocess, so FULL can afford it
+		return _sys_info.pci_vendor_ids, _sys_info.usb_vendor_ids
 
 	@staticmethod
-	def firmware_split_packages() -> list[str]:
+	def firmware_owners() -> list[str]:
 		# virtio ships no blobs, and the scan costs a modinfo per bound driver
 		if SysInfo.is_vm():
 			return []
-		return _sys_info.firmware_splits
+		return _sys_info.firmware_owners
 
 	@staticmethod
 	def cpu_vendor() -> CpuVendor | None:
