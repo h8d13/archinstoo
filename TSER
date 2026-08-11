@@ -114,7 +114,14 @@ def serial_write(data):
 		# ^U first: anything the guest left half-typed (zsh refusing to run
 		# a missing binary, an aborted paste) would otherwise get this
 		# command appended to it, and neither line would ever execute
-		sock.sendall(b'\x15' + data)
+		payload = b'\x15' + data
+		# Pace it. The emulated 16550 takes 16 bytes at a time, so a big
+		# write is always partial, and QEMU's retry re-sends a byte it
+		# already delivered ('git' arriving as 'gitt'). Small writes with a
+		# gap keep the FIFO from ever being the thing that truncates us.
+		for start in range(0, len(payload), 8):
+			sock.sendall(payload[start : start + 8])
+			time.sleep(0.015)
 		# chardev drops buffered input on hangup, let QEMU drain first
 		time.sleep(0.2)
 
@@ -251,6 +258,10 @@ def cmd_login(args):
 	# ttyS0 defaults to 80 cols, which chops long command echoes into
 	# garbage mid-token; widen so 'run' output stays parseable
 	serial_write(b'stty cols 400 rows 100\n')
+	# grml zsh ships 'correct' on: one mangled byte turns a command into an
+	# interactive 'correct git to _git [nyae]?' prompt that eats the next
+	# keystroke and wedges the session. Fail loudly instead.
+	serial_write(b'[ -n "$ZSH_VERSION" ] && unsetopt correct\n')
 	time.sleep(0.5)
 	print('logged in as root')
 
