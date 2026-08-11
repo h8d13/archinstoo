@@ -182,21 +182,11 @@ _USB_BUS = Path('/sys/bus/usb/devices')
 _FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
 
-# linux-firmware is a metapackage. Its hard deps come with FULL whatever the
-# hardware, so detecting those only serves VENDOR trimming and firmware_splits
-# resolves them from the running kernel rather than from a table.
-#
-# Its OPTIONAL deps are why a table still exists here. pacman never pulls them
-# in, so their files are absent, so no modinfo path resolves to one and
-# `pacman -Qo` has no owner to name. A vendor ID is the last source left, and a
-# miss costs the device: a Marvell wifi card with no other NIC to fix it from.
-#
-# Vendor-wide by design. A ConnectX matches -mellanox though its firmware lives
-# in card flash, and over-installing a few MB beats tracking device IDs, which
-# is the churn this design sheds. IDs from /usr/share/hwdata/pci.ids.
-#
-# QCOM is absent: its SoC blobs sit on the platform bus, which carries no PCI ID
-# to match. Stays manual.
+# linux-firmware's OPTIONAL deps only. pacman never pulls them in, so their
+# files are absent and firmware_splits can find no owner to name: an ID is the
+# last source left. Its hard deps arrive with FULL anyway and stay out of here.
+# Vendor-wide, so a ConnectX over-installs a few MB. IDs from pci.ids.
+# QCOM has none: SoC blobs sit on the platform bus, no PCI ID to match.
 _OPTDEP_PCI: dict[str, str] = {
 	'0x1077': 'linux-firmware-qlogic',
 	'0x11ab': 'linux-firmware-marvell',
@@ -211,14 +201,14 @@ _OPTDEP_USB: dict[str, str] = {
 	'1286': 'linux-firmware-marvell',
 }
 
-# No bus ID reaches either: CS35L41-class amps enumerate over ACPI/I2C/SPI, and
-# the catch-all names no vendor. Hard deps, so this only seeds the VENDOR menu.
+# No bus ID reaches either: CS35L41-class amps enumerate over ACPI/I2C/SPI and
+# the catch-all names no vendor
 _SPLIT_BASELINE = ('linux-firmware-cirrus', 'linux-firmware-other')
 
 
 def _run(cmd: list[str]) -> list[str]:
-	# Status is unusable here: pacman -Qo exits 1 over paths it could not match
-	# while still printing the owners it did find. Read stdout, ignore the rest.
+	# pacman -Qo exits 1 over paths it could not match while still printing the
+	# owners it did find, so read stdout and ignore the status
 	try:
 		proc = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603 - fixed argv, no user input
 	except OSError as err:
@@ -229,8 +219,8 @@ def _run(cmd: list[str]) -> list[str]:
 
 
 def _module_release() -> str:
-	# modinfo defaults to the running kernel, whose module tree is already gone
-	# after a kernel upgrade without a reboot: every lookup would return nothing.
+	# modinfo defaults to the running kernel, whose modules are already gone
+	# after an upgrade without a reboot: every lookup would return nothing
 	release = platform.release()
 	if (_MODULE_ROOT / release).is_dir():
 		return release
@@ -259,7 +249,6 @@ def _modalias(dev: Path) -> str | None:
 
 def _bus_optdeps(bus: Path, attr: str, mapping: dict[str, str]) -> set[str]:
 	# USB interface nodes (1-1:1.0) carry no vendor-ID attr: skip, do not abort
-	# the sweep over the rest of the bus
 	if not bus.is_dir():
 		return set()
 
@@ -278,9 +267,8 @@ def _bus_optdeps(bus: Path, attr: str, mapping: dict[str, str]) -> set[str]:
 
 def _bus_modules(bus: Path) -> set[str]:
 	# A driver directory is not a module name: i801_smbus lives in i2c_i801 and
-	# modinfo only answers to the latter, so go through the module symlink.
-	# Unbound devices, and builtin drivers owning no module, fall back to their
-	# modalias against modules.alias, the kernel's own PCI/USB match table.
+	# modinfo only answers to the latter. Unbound devices have no symlink to
+	# follow, so match their modalias against the kernel's own table instead.
 	if not bus.is_dir():
 		return set()
 
@@ -299,9 +287,8 @@ def _bus_modules(bus: Path) -> set[str]:
 
 def _firmware_files(declared: list[str], root: Path) -> list[Path]:
 	# modinfo reports uncompressed names and shell globs; on disk they are zstd
-	# compressed. Grouping by top-level directory keeps iwlwifi's ~200 flat
-	# .ucode entries to one lookup, since one file names the package as well as
-	# all of them, while still splitting a module whose blobs span two packages.
+	# compressed. One file per top-level dir names the package as well as all of
+	# them would, which keeps iwlwifi's ~200 flat .ucode entries to one lookup.
 	found: dict[str, Path] = {}
 	for entry in declared:
 		top = entry.split('/')[0] if '/' in entry else ''
@@ -400,10 +387,8 @@ class _SysInfo:
 
 	@cached_property
 	def is_vm(self) -> bool:
-		# Cached like every other probe here: a host does not become a VM
-		# mid-run, and this forks systemd-detect-virt. It gates the firmware
-		# scan, microcode and the gfx driver list, so an uncached call put a
-		# ~5ms fork on paths that only wanted a boolean.
+		# Forks systemd-detect-virt, and gates the firmware scan, microcode and
+		# the gfx driver list. A host does not become a VM mid-run
 		try:
 			result = SysCommand('systemd-detect-virt')
 			return b'none' not in b''.join(result).lower()
@@ -440,8 +425,7 @@ class _SysInfo:
 
 	@cached_property
 	def firmware_optdeps(self) -> list[str]:
-		# linux-firmware's optional deps present on this host, as package names.
-		# Sysfs only, no subprocess, so the FULL install path can afford it.
+		# Sysfs only, no subprocess, so the FULL install path can afford it
 		detected = _bus_optdeps(_PCI_BUS, 'vendor', _OPTDEP_PCI)
 		detected |= _bus_optdeps(_USB_BUS, 'idVendor', _OPTDEP_USB)
 
@@ -449,14 +433,10 @@ class _SysInfo:
 
 	@cached_property
 	def firmware_splits(self) -> list[str]:
-		# Hard-dep splits this host needs, as package names, resolved
-		# device -> module -> firmware file -> owner. No vendor ID anywhere, and
-		# coverage is whatever the installed kernel can drive.
-		#
-		# Under-detects, on purpose. Modules that build firmware names at runtime
-		# declare none (rtw88, rtw89, btusb), and a proprietary driver's blobs
-		# are unowned by pacman. Only VENDOR trimming reads this, so a miss
-		# shrinks an optional trim; it can never drop a blob FULL would install.
+		# device -> module -> firmware file -> owning package. Under-detects:
+		# rtw88/rtw89/btusb build their names at runtime and declare none, and a
+		# proprietary driver's blobs are unowned. Only VENDOR trimming reads
+		# this, so a miss shrinks a trim, never drops a blob FULL would install.
 		release = _module_release()
 		modules = _bus_modules(_PCI_BUS) | _bus_modules(_USB_BUS)
 
@@ -468,8 +448,7 @@ class _SysInfo:
 		detected = set(_SPLIT_BASELINE)
 		if files:
 			owners = _run(['pacman', '-Qoq', *(str(f) for f in files)])
-			# /usr/lib/firmware holds plenty the caller cannot resolve to a
-			# FirmwareVendor: sof-firmware, ast-firmware, the nvidia driver tree
+			# sof-firmware and the nvidia driver tree also live under there
 			detected |= {pkg for pkg in owners if pkg.startswith('linux-firmware-')}
 
 		return sorted(detected)
@@ -529,14 +508,12 @@ class SysInfo:
 
 	@staticmethod
 	def firmware_optdep_packages() -> list[str]:
-		# Not skipped on VMs: passthrough hardware is real hardware, and a guest
-		# only reaches here by asking for FULL over the MINIMAL default.
+		# Not skipped on VMs: passthrough hardware is real hardware
 		return _sys_info.firmware_optdeps
 
 	@staticmethod
 	def firmware_split_packages() -> list[str]:
-		# Skipped on VMs: virtio ships no blobs and the scan costs a modinfo per
-		# bound driver.
+		# virtio ships no blobs, and the scan costs a modinfo per bound driver
 		if SysInfo.is_vm():
 			return []
 		return _sys_info.firmware_splits

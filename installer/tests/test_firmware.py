@@ -31,9 +31,6 @@ def _optdeps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, pci: list[str], us
 
 
 # -- optional deps: ID table ---------------------------------------------------
-#
-# The only IDs archinstoo still owns. pacman never installs these splits, so
-# their files are absent and no local lookup can name them.
 
 
 @pytest.mark.parametrize(
@@ -84,8 +81,7 @@ def test_optdeps_skip_devices_without_vendor_attr(monkeypatch: pytest.MonkeyPatc
 
 
 def _fake_driver_bus(root: Path, devices: dict[str, str | None]) -> Path:
-	# name -> module for bound devices, or None for an unbound device carrying
-	# only a MODALIAS. Mirrors the two shapes _bus_modules has to handle.
+	# name -> module when bound, None for an unbound device with only a MODALIAS
 	root.mkdir(parents=True, exist_ok=True)
 	modules = root.parent / 'modules'
 	modules.mkdir(exist_ok=True)
@@ -127,8 +123,7 @@ def _stub_run(monkeypatch: pytest.MonkeyPatch, firmware: dict[str, list[str]], o
 
 
 def test_splits_resolve_through_module_and_owner(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# The 0x17cb case the old ID table got right only by hand: ath11k blobs ship
-	# in -atheros, not -qcom, and nothing here has to know that.
+	# the 0x17cb case: ath11k blobs ship in -atheros, not -qcom
 	root = tmp_path / 'fw'
 	(root / 'ath11k/WCN6855/hw2.0').mkdir(parents=True)
 	(root / 'ath11k/WCN6855/hw2.0/board-2.bin.zst').write_text('')
@@ -146,8 +141,7 @@ def test_splits_resolve_through_module_and_owner(monkeypatch: pytest.MonkeyPatch
 
 
 def test_splits_match_zst_and_collapse_flat_entries(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# modinfo reports uncompressed names; disk holds .zst. iwlwifi declares ~200
-	# flat files, and one resolved lookup has to be enough to name the package.
+	# modinfo reports uncompressed names; disk holds .zst
 	root = tmp_path / 'fw'
 	root.mkdir()
 	for ucode in ('iwlwifi-100-5.ucode', 'iwlwifi-cc-a0-77.ucode'):
@@ -169,8 +163,7 @@ def test_splits_match_zst_and_collapse_flat_entries(monkeypatch: pytest.MonkeyPa
 
 
 def test_splits_drop_non_split_owners(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# sof-firmware and the proprietary nvidia tree also live under
-	# /usr/lib/firmware; the caller can only resolve linux-firmware-* splits
+	# sof-firmware also lives under /usr/lib/firmware
 	root = tmp_path / 'fw'
 	(root / 'intel/sof').mkdir(parents=True)
 	(root / 'intel/sof/blob.ri').write_text('')
@@ -188,8 +181,7 @@ def test_splits_drop_non_split_owners(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
 
 def test_splits_survive_modules_declaring_no_firmware(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# rtw88/rtw89/btusb build their filenames at runtime and declare nothing.
-	# FULL covers them from the metapackage, so this may only shrink a trim.
+	# rtw88/rtw89/btusb build their filenames at runtime and declare nothing
 	root = tmp_path / 'fw'
 	root.mkdir()
 
@@ -206,8 +198,7 @@ def test_splits_survive_modules_declaring_no_firmware(monkeypatch: pytest.Monkey
 
 
 def test_splits_use_module_name_not_driver_name(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# i801_smbus is a driver directory; the module is i2c_i801, and modinfo only
-	# answers to the latter. Resolution has to go through the module symlink.
+	# i801_smbus is the driver directory, i2c_i801 the module modinfo answers to
 	root = tmp_path / 'fw'
 	root.mkdir()
 	bus = tmp_path / 'pci'
@@ -232,8 +223,7 @@ def test_splits_use_module_name_not_driver_name(monkeypatch: pytest.MonkeyPatch,
 
 
 def test_detected_packages_resolve_to_vendors(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# Both sweeps emit bare package names, so every one has to be an enum value
-	# on the caller's side. This is the drift guard for the strings in hardware.py.
+	# drift guard for the package-name strings hardware.py hardcodes
 	assert {v.value for v in FirmwareVendor} >= BASELINE
 
 	detected = _optdeps(monkeypatch, tmp_path, ['0x11ab', '0x15b3', '0x19ee', '0x177d', '0x1077'], ['1286'])
@@ -261,8 +251,7 @@ def test_split_scan_skipped_on_vm(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
-	# is_vm gates the firmware scan, microcode and the gfx driver list, and it
-	# forks systemd-detect-virt. Uncached it put that fork on every caller.
+	# gates the firmware scan, microcode and the gfx driver list
 	calls: list[str] = []
 
 	def fake_syscommand(cmd: str) -> list[bytes]:
@@ -279,8 +268,7 @@ def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.parametrize(
 	('config', 'optdeps', 'expected'),
 	[
-		# the gap: FULL used to stop at the metapackage, leaving a Marvell
-		# laptop with no mrvl blobs and no NIC to fix it from
+		# FULL used to stop at the metapackage
 		(FirmwareConfiguration(), [], ['linux-firmware']),
 		(
 			FirmwareConfiguration(),

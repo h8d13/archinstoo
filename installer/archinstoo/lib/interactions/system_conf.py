@@ -136,8 +136,7 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 	vendor_group = MenuItemGroup(vendor_items, sort_items=True)
 
 	# Seed selection from detection only when the user has no prior preset. Both
-	# sources emit package names, which are the enum values; a split with no
-	# member (Arch adds one) drops here rather than raising in the menu.
+	# emit package names, so a split with no enum member drops instead of raising
 	detected = SysInfo.firmware_split_packages() + SysInfo.firmware_optdep_packages()
 	initial_vendors = preset.vendors or [FirmwareVendor(pkg) for pkg in detected if pkg in _VENDOR_VALUES]
 	vendor_group.set_selected_by_value(initial_vendors)

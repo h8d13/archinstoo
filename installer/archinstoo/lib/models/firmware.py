@@ -53,11 +53,8 @@ class FirmwareConfiguration:
 
 		match self.firmware_type:
 			case FirmwareType.FULL:
-				# The metapackage stops at its hard deps. Its optional ones are
-				# the gap VENDOR mode exists to close, and a user on the default
-				# path never opens that menu: a Marvell laptop taking FULL used
-				# to land with no mrvl blobs and no NIC. Detected at install
-				# time, so a saved config follows the host it runs on.
+				# the metapackage stops at its hard deps, all opts pkgs are dropped
+				# we re-register them here based on PCI ID detection 
 				return ['linux-firmware', *SysInfo.firmware_optdep_packages()]
 			case FirmwareType.MINIMAL:
 				return []
