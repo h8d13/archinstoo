@@ -15,6 +15,12 @@ You will need the AUR. See [this](./OUT_OF_TREE.md)
 
 And you are done !
 
+### iGPU + dGPU
+
+> [!TIP]
+> If you are using a laptop with integrated + dedicated:
+> Use `nvidia-prime` or equivalent. [Wiki PRIME](https://wiki.archlinux.org/title/PRIME)
+
 ## Recent cards
 
 Is much easier: The only main thing to understand is that if you pick a kernel that is not mainline `linux` you will need `dkms`. (This is handled automatically).
