@@ -196,9 +196,16 @@ def perform_installation(
 
 		debug(f'Disk states after installing:\n{disk_layouts()}')
 
-		with Tui():
+		if args.silent:
+			# nobody to pick an action, and rebooting here would cut the
+			# caller off mid-script: leave the system up and let it decide
 			elapsed_time = time.monotonic() - start_time
-			action = select_post_installation(elapsed_time)
+			info(f'Installation completed in {elapsed_time:.0f}s')
+			action = PostInstallationAction.EXIT
+		else:
+			with Tui():
+				elapsed_time = time.monotonic() - start_time
+				action = select_post_installation(elapsed_time)
 
 		# Persist install log + saved config to /etc/archinstoo.d after the menu so the
 		# log captures everything up to the action. subprocess.run('reboot'/'poweroff')
@@ -227,17 +234,18 @@ def guided() -> None:
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	if not args.config and (cached := ConfigStore.prompt_resume()):
-		try:
-			handler.config = ArchConfig.from_config(cached)
-			info('Saved selections loaded successfully')
-		except Exception as e:
-			error(f'Failed to load saved selections: {e}')
-
-	while True:
-		show_menu(handler.config, args)
+	if args.silent:
+		# Unattended: the config is the whole input, so anything it leaves
+		# unset would otherwise be asked for interactively. Fail loud here
+		# instead of hanging on a menu nobody is watching.
+		if not args.config and not args.config_url:
+			error('--silent needs --config or --config-url')
+			raise SystemExit(1)
 
 		config = handler.config
+		if not config.disk_config:
+			error('--silent needs disk_config in the config, nothing to install to')
+			raise SystemExit(1)
 
 		store = ConfigStore(config)
 		store.write_debug()
@@ -245,12 +253,31 @@ def guided() -> None:
 
 		if args.dry_run:
 			raise SystemExit(0)
-			# just save config => no error
+	else:
+		if not args.config and (cached := ConfigStore.prompt_resume()):
+			try:
+				handler.config = ArchConfig.from_config(cached)
+				info('Saved selections loaded successfully')
+			except Exception as e:
+				error(f'Failed to load saved selections: {e}')
 
-		with Tui():
-			if store.confirm_config():
-				break
-			debug('Installation aborted')
+		while True:
+			show_menu(handler.config, args)
+
+			config = handler.config
+
+			store = ConfigStore(config)
+			store.write_debug()
+			store.save()
+
+			if args.dry_run:
+				raise SystemExit(0)
+				# just save config => no error
+
+			with Tui():
+				if store.confirm_config():
+					break
+				debug('Installation aborted')
 
 	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)

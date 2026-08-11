@@ -54,6 +54,7 @@ class Arguments:
 	offline: bool = False
 	advanced: bool = False
 	clean: bool = False
+	silent: bool = False
 
 
 @dataclass
@@ -279,6 +280,12 @@ class ArchConfigHandler:
 			action='store_true',
 			default=False,
 			help='Clean up the log directory on exit',
+		)
+		parser.add_argument(
+			'--silent',
+			action='store_true',
+			default=False,
+			help='Install straight from --config with no menus or prompts (unattended)',
 		)
 		parser.add_argument(
 			'--version',

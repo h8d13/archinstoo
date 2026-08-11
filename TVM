@@ -11,6 +11,11 @@
 # Host artifacts (created in repo root, git-ignored):
 #   .dev-disk.qcow2     VM disk image (qemu-img)
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
+#   SERIAL=on only:
+#   .dev-boot/          kernel + initramfs pulled out of the ISO
+#   .dev-serial.sock    guest ttyS0, .dev-serial.log its full transcript
+#   .dev-capture.log    guest ttyS1, byte-exact (./TSER capture)
+#   .dev-monitor.sock   QEMU HMP monitor, .dev-vm.pid the daemon pid
 #
 # Usage:
 #   ./TVM            - fresh disk, boot ISO
@@ -19,6 +24,14 @@
 #   ./TVM clean  | c - remove disk and NVRAM (ISOs untouched)
 #   ./TVM help   | h - show this help
 # Env overrides:
+#   SERIAL             'on' boots headless with the console on ttyS0 and
+#                      detaches (no window, no stdio monitor). Composes with
+#                      every mode above. Drive it with ./TSER (login/run/wait).
+#                      ISO modes direct-boot the ISO's own kernel via -kernel so
+#                      console=ttyS0 can be forced; OVMF still boots it EFI-stub,
+#                      so the guest keeps a real UEFI environment. Needs bsdtar.
+#                      'boot' mode has no such hook: the installed system only
+#                      talks to ttyS0 if its own cmdline says console=ttyS0.
 #   DEV_ISO            explicit ISO path (skips discovery)
 #   RAM, CPUS          VM resources (default 4G, 4)
 #   DISK_SIZE          new disk size (default 30G)
@@ -38,6 +51,13 @@ DISK="$PROJECT_DIR/.dev-disk.qcow2"
 OVMF_VARS="$PROJECT_DIR/.dev-ovmf-vars.fd"
 ISOMOD_OUT="$PROJECT_DIR/isos/a"
 DEV_ISO_DIR="$PROJECT_DIR/.dev-iso"
+BOOT_DIR="$PROJECT_DIR/.dev-boot"
+SERIAL_SOCK="$PROJECT_DIR/.dev-serial.sock"
+SERIAL_LOG="$PROJECT_DIR/.dev-serial.log"
+CAPTURE_LOG="$PROJECT_DIR/.dev-capture.log"
+MON_SOCK="$PROJECT_DIR/.dev-monitor.sock"
+PIDFILE="$PROJECT_DIR/.dev-vm.pid"
+SERIAL="${SERIAL:-off}"
 DISK_SIZE="${DISK_SIZE:-64G}"
 RAM="${RAM:-4G}"
 CPUS="${CPUS:-4}"
@@ -84,6 +104,44 @@ check_host_deps() {
 	if [ ${#missing[@]} -gt 0 ]; then
 		err "missing host commands: ${missing[*]} (install qemu-base)"
 	fi
+	if [ "$SERIAL" = "on" ]; then
+		command -v bsdtar >/dev/null 2>&1 ||
+			err "SERIAL=on needs bsdtar to read the ISO (install libarchive)"
+	fi
+}
+
+ensure_no_running_vm() {
+	local pid
+	[ -f "$PIDFILE" ] || return 0
+	pid="$(cat "$PIDFILE")"
+	if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+		err "VM already running (pid $pid), stop it with ./TSER quit"
+	fi
+	rm -f "$PIDFILE"
+}
+
+# The ISO's bootloader entries carry no serial console, and editing them at
+# the systemd-boot menu over serial is not scriptable. Pull the kernel and
+# initramfs out of the ISO instead and hand them to QEMU directly, reusing
+# the entry's own cmdline (archisosearchuuid changes every release) with
+# console=ttyS0 appended. The ISO stays attached as a cdrom: the archiso hook
+# still finds the squashfs on it.
+extract_iso_kernel() {
+	local iso="$1" stamp="$BOOT_DIR/.stamp" want
+	want="$iso:$(stat -c %Y "$iso")"
+	mkdir -p "$BOOT_DIR"
+	if [ ! -f "$stamp" ] || [ "$(cat "$stamp")" != "$want" ]; then
+		echo "extracting kernel/initramfs from $(basename "$iso")"
+		bsdtar -xOf "$iso" arch/boot/x86_64/vmlinuz-linux \
+			>"$BOOT_DIR/vmlinuz-linux"
+		bsdtar -xOf "$iso" arch/boot/x86_64/initramfs-linux.img \
+			>"$BOOT_DIR/initramfs-linux.img"
+		bsdtar -xOf "$iso" loader/entries/01-archiso-linux.conf |
+			sed -n 's/^options[[:space:]]\+//p' >"$BOOT_DIR/cmdline"
+		printf '%s\n' "$want" >"$stamp"
+	fi
+	[ -s "$BOOT_DIR/vmlinuz-linux" ] || err "no kernel in $iso (archiso layout?)"
+	[ -s "$BOOT_DIR/cmdline" ] || err "no boot cmdline in $iso (archiso layout?)"
 }
 
 find_iso() {
@@ -110,11 +168,14 @@ case "$ARG" in
 	exit 0
 	;;
 clean | c)
-	rm -fv "$DISK" "$OVMF_VARS"
+	ensure_no_running_vm
+	rm -fv "$DISK" "$OVMF_VARS" "$SERIAL_SOCK" "$SERIAL_LOG" "$CAPTURE_LOG" "$MON_SOCK"
+	rm -rfv "$BOOT_DIR"
 	exit 0
 	;;
 boot | b)
 	check_host_deps
+	ensure_no_running_vm
 	probe_ovmf
 	[ -f "$DISK" ] || err "Disk missing, run without args first"
 	BOOT_ORDER="c"
@@ -122,6 +183,7 @@ boot | b)
 	;;
 keep | k)
 	check_host_deps
+	ensure_no_running_vm
 	probe_ovmf
 	[ -f "$DISK" ] || err "Disk missing, run without args first"
 	require_iso >/dev/null
@@ -130,6 +192,7 @@ keep | k)
 	;;
 default)
 	check_host_deps
+	ensure_no_running_vm
 	probe_ovmf
 	require_iso >/dev/null
 	rm -f "$DISK"
@@ -144,15 +207,43 @@ esac
 
 [ -f "$OVMF_VARS" ] || cp "$OVMF_VARS_ORIG" "$OVMF_VARS"
 
-# virgl needs both ends: GL-capable device AND gl=on on the display.
-# -device help skips unloaded modules; probe with device-specific help instead.
-if [ "$GL" = "on" ]; then
-	if qemu-system-x86_64 -device virtio-vga-gl,help 2>&1 | grep -q "not found"; then
-		err "virtio-vga-gl not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} and qemu-ui-opengl)"
-	fi
-	VIDEO_ARGS=(-device virtio-vga-gl -display "$DISPLAY_BACKEND,gl=on")
+# shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
+if [ "$SERIAL" = "on" ]; then
+	# Headless and detached: the console is a unix socket with a logfile, so
+	# ./TSER can connect, act and exit instead of holding a session open.
+	# Audio is dropped, no session to play into.
+	# ttyS1 is a plain file chardev, and that is the point: the socket's
+	# logfile duplicates bytes replayed after a partial write, so guest
+	# output redirected to /dev/ttyS1 is the only byte-exact transcript
+	# (./TSER capture). ttyS0 stays the interactive end.
+	rm -f "$SERIAL_SOCK" "$MON_SOCK" "$SERIAL_LOG" "$CAPTURE_LOG"
+	CONSOLE_ARGS=(
+		-display none
+		-chardev "socket,id=ser0,path=$SERIAL_SOCK,server=on,wait=off,logfile=$SERIAL_LOG,logappend=on"
+		-serial chardev:ser0
+		-chardev "file,id=cap0,path=$CAPTURE_LOG"
+		-serial chardev:cap0
+		-monitor "unix:$MON_SOCK,server=on,wait=off"
+		-pidfile "$PIDFILE"
+		-daemonize
+	)
 else
-	VIDEO_ARGS=(-vga "$VGA" -display "$DISPLAY_BACKEND")
+	# virgl needs both ends: GL-capable device AND gl=on on the display.
+	# -device help skips unloaded modules; probe with device-specific help instead.
+	if [ "$GL" = "on" ]; then
+		if qemu-system-x86_64 -device virtio-vga-gl,help 2>&1 | grep -q "not found"; then
+			err "virtio-vga-gl not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} and qemu-ui-opengl)"
+		fi
+		CONSOLE_ARGS=(-device virtio-vga-gl -display "$DISPLAY_BACKEND,gl=on")
+	else
+		CONSOLE_ARGS=(-vga "$VGA" -display "$DISPLAY_BACKEND")
+	fi
+	CONSOLE_ARGS+=(
+		-audiodev "$AUDIO_BACKEND,id=snd0"
+		-device ich9-intel-hda
+		-device hda-duplex,audiodev=snd0
+		-monitor stdio
+	)
 fi
 
 # shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
@@ -165,11 +256,7 @@ QEMU_ARGS=(
 	-drive "file=$DISK,format=qcow2,if=virtio"
 	-device virtio-net-pci,netdev=net0
 	-netdev user,id=net0
-	"${VIDEO_ARGS[@]}"
-	-audiodev "$AUDIO_BACKEND,id=snd0"
-	-device ich9-intel-hda
-	-device hda-duplex,audiodev=snd0
-	-monitor stdio
+	"${CONSOLE_ARGS[@]}"
 	-drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
 	-drive "if=pflash,format=raw,file=$OVMF_VARS"
 	-boot "order=$BOOT_ORDER"
@@ -178,6 +265,21 @@ QEMU_ARGS=(
 if [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"
 	QEMU_ARGS+=(-cdrom "$ISO")
+	if [ "$SERIAL" = "on" ]; then
+		extract_iso_kernel "$ISO"
+		QEMU_ARGS+=(
+			-kernel "$BOOT_DIR/vmlinuz-linux"
+			-initrd "$BOOT_DIR/initramfs-linux.img"
+			-append "$(cat "$BOOT_DIR/cmdline") console=ttyS0,115200"
+		)
+	fi
+fi
+
+if [ "$SERIAL" = "on" ]; then
+	qemu-system-x86_64 "${QEMU_ARGS[@]}"
+	echo "VM detached, pid $(cat "$PIDFILE")"
+	echo "drive it: ./TSER login && ./TSER run 'ls /'"
+	exit 0
 fi
 
 trap 'stty sane' EXIT

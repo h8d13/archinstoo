@@ -10,7 +10,6 @@ archinstall/
 **/**dist
 **/**.egg*
 **/**.sh
-!archinstall/locales/locales_generator.sh
 **/**.egg-info/
 **/**build/
 **/**src/
@@ -25,6 +24,9 @@ architecture/*.tar.gz
 **/**.network
 **/**.target
 **/**.qcow2
+/.dev-boot/
+**/**.sock
+**/**.pid
 **/**.log
 **/**.fd
 **/*-git

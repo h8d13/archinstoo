@@ -1,0 +1,296 @@
+#!/usr/bin/env python3
+# Serial console driver for the headless dev VM (SERIAL=on ./TVM).
+#
+# QEMU exposes two unix sockets and two growing log files:
+#   .dev-serial.sock    guest ttyS0 (write keystrokes here)
+#   .dev-serial.log     everything the guest ever printed on ttyS0
+#   .dev-capture.log    guest ttyS1, byte-exact (see 'capture' below)
+#   .dev-monitor.sock   QEMU HMP monitor (sendkey, quit, info ...)
+#
+# Reads come from the log, not the socket: the log survives across
+# invocations, so each command here is a short-lived connect/act/exit
+# instead of an interactive session that has to stay attached.
+#
+# Usage:
+#   ./TSER read [-n LINES]        dump console output (default: last 50)
+#   ./TSER wait REGEX [-t SEC]    block until REGEX shows up in output
+#   ./TSER login                  log in as root, sane tty width
+#   ./TSER send TEXT              type TEXT + Enter on ttyS0
+#   ./TSER run CMD [-t SEC]       run CMD in the guest shell, print output,
+#                                 exit with the guest's return code
+#   ./TSER capture CMD [-t SEC]   same, but via ttyS1: exact bytes, safe to
+#                                 pipe into jq/diff
+#   ./TSER keys KEY [KEY ...]     monitor sendkey (bootloader menus: up/ret)
+#   ./TSER mon CMD                raw HMP monitor command
+#   ./TSER status                 is the VM alive, how big is the log
+#   ./TSER quit                   kill the VM
+
+import argparse
+import os
+import re
+import socket
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+SERIAL = ROOT / '.dev-serial.sock'
+MONITOR = ROOT / '.dev-monitor.sock'
+LOG = ROOT / '.dev-serial.log'
+CAPTURE = ROOT / '.dev-capture.log'
+PIDFILE = ROOT / '.dev-vm.pid'
+
+# CSI/OSC noise from agetty, pacman progress bars, the installer TUI
+ANSI = re.compile(r'\x1b\[[0-9;?]*[a-zA-Z]|\x1b[()][B0]|\x1b\][^\x07]*\x07')
+# grml zsh pads the prompt line out to the tty width, 400 blanks of nothing
+PROMPT = re.compile(r'#|\S+@\S+ .* #')
+
+
+def fuzzy(text):
+	# QEMU logs a chardev buffer before writing it, so bytes replayed after
+	# a partial socket write land in the log twice ('Swap' -> 'Swaap').
+	# Harmless in prose, fatal for an exact marker match, so let every
+	# character of the marker repeat.
+	return ''.join(re.escape(char) + '+' for char in text)
+
+
+def die(msg):
+	print(f'ERROR: {msg}', file=sys.stderr)
+	sys.exit(1)
+
+
+def log_size():
+	try:
+		return LOG.stat().st_size
+	except FileNotFoundError:
+		return 0
+
+
+def log_read(offset=0):
+	try:
+		with LOG.open('rb') as fh:
+			fh.seek(offset)
+			return fh.read()
+	except FileNotFoundError:
+		die(f'{LOG} missing, is the VM running? (SERIAL=on ./TVM)')
+
+
+def clean(raw):
+	text = raw.decode('utf-8', 'replace').replace('\r\n', '\n')
+	return ANSI.sub('', text).replace('\r', '\n')
+
+
+def vm_pid():
+	try:
+		pid = int(PIDFILE.read_text().strip())
+	except FileNotFoundError, ValueError:
+		return None
+	try:
+		os.kill(pid, 0)
+	except OSError:
+		return None
+	return pid
+
+
+def serial_write(data):
+	if not SERIAL.exists():
+		die(f'{SERIAL} missing, is the VM running? (SERIAL=on ./TVM)')
+	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+		sock.connect(str(SERIAL))
+		sock.sendall(data)
+		# chardev drops buffered input on hangup, let QEMU drain first
+		time.sleep(0.2)
+
+
+def monitor_cmd(cmd, timeout=5.0):
+	if not MONITOR.exists():
+		die(f'{MONITOR} missing, is the VM running? (SERIAL=on ./TVM)')
+	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+		sock.settimeout(timeout)
+		sock.connect(str(MONITOR))
+		sock.sendall(cmd.encode() + b'\n')
+		out = b''
+		deadline = time.time() + timeout
+		while time.time() < deadline:
+			try:
+				chunk = sock.recv(4096)
+			except TimeoutError:
+				break
+			if not chunk:
+				break
+			out += chunk
+			# HMP prompt back means the command is done
+			if out.rstrip().endswith(b'(qemu)'):
+				break
+		return clean(out)
+
+
+def wait_for(pattern, timeout, offset=0):
+	rx = re.compile(pattern, re.MULTILINE)
+	deadline = time.time() + timeout
+	while True:
+		text = clean(log_read(offset))
+		match = rx.search(text)
+		if match:
+			return text, match
+		if time.time() >= deadline:
+			return text, None
+		time.sleep(0.25)
+
+
+def cmd_read(args):
+	text = clean(log_read())
+	lines = text.splitlines()
+	if args.lines > 0:
+		lines = lines[-args.lines :]
+	print('\n'.join(lines))
+
+
+def cmd_wait(args):
+	text, match = wait_for(args.regex, args.timeout)
+	tail = '\n'.join(text.splitlines()[-args.lines :])
+	print(tail)
+	if not match:
+		die(f'timeout after {args.timeout}s waiting for {args.regex!r}')
+
+
+def cmd_send(args):
+	serial_write(args.text.encode() + b'\n')
+
+
+def cmd_run(args):
+	# marker carries the exit status back out of the guest; the log
+	# offset makes it unique per invocation without needing state
+	offset = log_size()
+	marker = f'TSER{offset}'
+	serial_write(f'{args.cmd}; echo {marker}rc=$?\n'.encode())
+	# 'rc=$?' in the echoed command line can't match 'rc=<digits>'
+	# same duplication can inflate a nonzero status ('1' -> '11'); zero
+	# survives it ('00' is still 0), so pass/fail stays trustworthy
+	text, match = wait_for(fuzzy(marker) + r'rc=(\d+)', args.timeout, offset)
+	lines = text.splitlines()
+	# drop the shell's echo of what we typed and grml zsh's prompt padding
+	body = [ln for ln in lines if marker not in ln and not PROMPT.fullmatch(ln.rstrip())]
+	print('\n'.join(body).strip())
+	if not match:
+		die(f'timeout after {args.timeout}s running {args.cmd!r}')
+	sys.exit(int(match.group(1)))
+
+
+def cmd_capture(args):
+	# ttyS1 is a file chardev, so what the guest writes there lands on
+	# disk verbatim: no socket, no partial-write replay, no dup bytes.
+	# ttyS0 still carries the marker that says when the command finished.
+	cap_offset = CAPTURE.stat().st_size if CAPTURE.exists() else 0
+	offset = log_size()
+	marker = f'TSER{offset}'
+	serial_write(f'{args.cmd} >/dev/ttyS1 2>&1; echo {marker}rc=$?\n'.encode())
+	_, match = wait_for(fuzzy(marker) + r'rc=(\d+)', args.timeout, offset)
+	with CAPTURE.open('rb') as fh:
+		fh.seek(cap_offset)
+		sys.stdout.write(fh.read().decode('utf-8', 'replace'))
+	if not match:
+		die(f'timeout after {args.timeout}s capturing {args.cmd!r}')
+	sys.exit(int(match.group(1)))
+
+
+def cmd_login(args):
+	# wait for agetty first: bytes sent before it opens ttyS0 are dropped,
+	# which looks exactly like a hang. archiso root has no password.
+	text, match = wait_for(r'login:', args.timeout)
+	if not match:
+		print('\n'.join(text.splitlines()[-10:]))
+		die('no login prompt on ttyS0')
+	offset = log_size()
+	serial_write(b'root\n')
+	text, match = wait_for(r'root@archiso', args.timeout, offset)
+	if not match:
+		print('\n'.join(text.splitlines()[-10:]))
+		die('no shell prompt after login')
+	# ttyS0 defaults to 80 cols, which chops long command echoes into
+	# garbage mid-token; widen so 'run' output stays parseable
+	serial_write(b'stty cols 400 rows 100\n')
+	time.sleep(0.5)
+	print('logged in as root')
+
+
+def cmd_keys(args):
+	for key in args.keys:
+		print(monitor_cmd(f'sendkey {key}'), end='')
+
+
+def cmd_mon(args):
+	print(monitor_cmd(' '.join(args.cmd)), end='')
+
+
+def cmd_status(args):
+	pid = vm_pid()
+	print(f'vm:      {"running pid " + str(pid) if pid else "not running"}')
+	print(f'serial:  {SERIAL} {"ok" if SERIAL.exists() else "missing"}')
+	print(f'monitor: {MONITOR} {"ok" if MONITOR.exists() else "missing"}')
+	print(f'log:     {LOG} {log_size()} bytes')
+	sys.exit(0 if pid else 1)
+
+
+def cmd_quit(args):
+	if not vm_pid():
+		print('not running')
+		return
+	monitor_cmd('quit', timeout=2.0)
+	for _ in range(20):
+		if not vm_pid():
+			print('vm stopped')
+			return
+		time.sleep(0.25)
+	die('vm still running, kill it by hand')
+
+
+def main():
+	parser = argparse.ArgumentParser(prog='TSER', description=__doc__)
+	sub = parser.add_subparsers(dest='mode', required=True)
+
+	p = sub.add_parser('read')
+	p.add_argument('-n', '--lines', type=int, default=50)
+	p.set_defaults(func=cmd_read)
+
+	p = sub.add_parser('wait')
+	p.add_argument('regex')
+	p.add_argument('-t', '--timeout', type=float, default=120)
+	p.add_argument('-n', '--lines', type=int, default=20)
+	p.set_defaults(func=cmd_wait)
+
+	p = sub.add_parser('send')
+	p.add_argument('text')
+	p.set_defaults(func=cmd_send)
+
+	p = sub.add_parser('run')
+	p.add_argument('cmd')
+	p.add_argument('-t', '--timeout', type=float, default=120)
+	p.set_defaults(func=cmd_run)
+
+	p = sub.add_parser('capture')
+	p.add_argument('cmd')
+	p.add_argument('-t', '--timeout', type=float, default=120)
+	p.set_defaults(func=cmd_capture)
+
+	p = sub.add_parser('login')
+	p.add_argument('-t', '--timeout', type=float, default=180)
+	p.set_defaults(func=cmd_login)
+
+	p = sub.add_parser('keys')
+	p.add_argument('keys', nargs='+')
+	p.set_defaults(func=cmd_keys)
+
+	p = sub.add_parser('mon')
+	p.add_argument('cmd', nargs='+')
+	p.set_defaults(func=cmd_mon)
+
+	sub.add_parser('status').set_defaults(func=cmd_status)
+	sub.add_parser('quit').set_defaults(func=cmd_quit)
+
+	args = parser.parse_args()
+	args.func(args)
+
+
+if __name__ == '__main__':
+	main()
