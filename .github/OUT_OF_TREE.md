@@ -14,7 +14,7 @@ Especially given the automated nature of the installs: sufficiently harden the m
 
 ## More hardware support
 
-Directly supported [hardware](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py) can all be seen here through detection. 
+Directly supported [hardware](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py) can all be seen here through detection.
 
 The AUR might be useful for RealTek (and often requires you to pick LTS kernel).
 
@@ -22,4 +22,4 @@ See also: [nVIDIA](./NVIDIA.md)
 
 ### Opt to `linux-firmware`
 
-Optional deps of this [https://archlinux.org/packages/core/any/linux-firmware/] will need to select `vendor` inside the menu.s
+Optional deps of this [https://archlinux.org/packages/core/any/linux-firmware/] will need to select `vendor` inside the menu.
