@@ -107,6 +107,8 @@ Another hotfix where it was `20GiB` hardcoded.
 
 You can see all work upstream [here](https://github.com/archlinux/archinstall/commits/master/?author=h8d13), and on gitlab where the more "serious" reports go.
 
+There are now a lot more I try to [send upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
+
 ----
 
 ## Building in the open
