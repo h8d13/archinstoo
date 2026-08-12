@@ -59,7 +59,7 @@ class FirewallApp:
 	) -> None:
 		# openssh listens on 22 but a fresh firewalls blocks it
 		# https://github.com/archlinux/archinstall/issues/4616
-		# makes the ssh to the machione accesible on first boot.
+		# makes the ssh port accessible to a machine on first boot.
 		debug('Opening ssh ports in firewall')
 
 		try:
