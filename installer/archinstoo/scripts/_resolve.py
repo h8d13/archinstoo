@@ -10,6 +10,10 @@ from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
+from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.models import firmware as firmware_model
+from archinstoo.lib.models.device import FilesystemType
+from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.schema import SCHEMA
@@ -29,17 +33,67 @@ def _requirements(*binaries: str) -> bool:
 		return False
 
 
-def _firmware_packages(config: dict[str, Any]) -> tuple[list[str], set[str]]:
-	base_pkgs = SCHEMA['base'].copy()
-	extra_pkgs: set[str] = set()
-	firmware_cfg = config.get('firmware', {})
-	firmware_type = firmware_cfg.get('firmware_type', 'full')
-	if firmware_type in ('minimal', 'vendor'):
-		base_pkgs = [p for p in base_pkgs if p != 'linux-firmware']
-	if firmware_type == 'vendor':
-		vendors = firmware_cfg.get('vendors', [])
-		extra_pkgs.update(vendors)
-	return base_pkgs, extra_pkgs
+def _firmware_packages(config: dict[str, Any]) -> set[str]:
+	# mirrors FirmwareConfiguration.packages(): the schema holds what is static,
+	# the vendor list comes from the config and FULL's optdeps from the host
+	firmware_cfg = config.get('firmware') or {}
+	firmware_type = firmware_cfg.get('firmware_type', FirmwareType.FULL.value)
+	pkgs = set(SCHEMA['firmware'].get(firmware_type, []))
+
+	if firmware_type == FirmwareType.VENDOR.value:
+		pkgs.update(firmware_cfg.get('vendors', []) or [])
+	elif firmware_type == FirmwareType.FULL.value:
+		# through the module so a test can pin the detection, as gfx does
+		pkgs.update(v.value for v in firmware_model.detect_optdeps())
+
+	return pkgs
+
+
+def _host_packages() -> set[str]:
+	# what the installer reads off the running system rather than the config;
+	# count and size run on that same host, so the detection carries over
+	pkgs: set[str] = set()
+
+	# installer.py:accessibility_tools_in_use, imported late: it lives in
+	# installer.py, which drags in pyparted and the rest of the runtime
+	from archinstoo.lib.installer import accessibility_tools_in_use
+
+	if accessibility_tools_in_use():
+		pkgs.update(SCHEMA['accessibility'])
+
+	if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
+		pkgs.update(SCHEMA['microcode'].get(vendor.value, []))
+
+	return pkgs
+
+
+def _filesystem_packages(disk: dict[str, Any], kernels: list[str]) -> set[str]:
+	# minimal_installation() prepares LVM volumes or partitions, never both, and
+	# lvm_config sits next to device_modifications rather than inside them
+	fs_tools = SCHEMA['filesystem_tools']
+	fs_types: set[str] = set()
+	lvm_config = disk.get('lvm_config') or {}
+
+	if lvm_config:
+		for group in lvm_config.get('vol_groups', []) or []:
+			for vol in group.get('volumes', []) or []:
+				fs_types.add(vol.get('fs_type', ''))
+	else:
+		for dev in disk.get('device_modifications', []) or []:
+			for part in dev.get('partitions', []) or []:
+				fs_types.add(part.get('fs_type', ''))
+
+	pkgs = {p for fs in fs_types if fs in fs_tools for p in fs_tools[fs]}
+
+	if lvm_config:
+		pkgs.update(SCHEMA['lvm'])
+
+	# out-of-tree module, built per kernel
+	if FilesystemType.BCACHEFS.value in fs_types:
+		pkgs.update(SCHEMA['bcachefs_extra'])
+		pkgs.update(f'{k}-headers' for k in kernels)
+
+	return pkgs
 
 
 def _development_packages(dev: dict[str, Any]) -> set[str]:
@@ -83,10 +137,10 @@ def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
-	# base + firmware
-	base_pkgs, firmware_pkgs = _firmware_packages(config)
-	pkgs.update(base_pkgs)
-	pkgs.update(firmware_pkgs)
+	# base + firmware + whatever the host itself dictates
+	pkgs.update(SCHEMA['base'])
+	pkgs.update(_firmware_packages(config))
+	pkgs.update(_host_packages())
 
 	# kernels
 	kernels = config.get('kernels', ['linux'])
@@ -189,6 +243,11 @@ def collect(config: dict[str, Any]) -> set[str]:
 	audio = (app.get('audio_config') or {}).get('audio', '')
 	if audio in SCHEMA['audio']:
 		pkgs.update(SCHEMA['audio'][audio])
+		audio_fw = SCHEMA['audio_firmware']
+		if SysInfo.requires_sof_fw():
+			pkgs.update(audio_fw['sof'])
+		if SysInfo.requires_alsa_fw():
+			pkgs.update(audio_fw['alsa'])
 
 	pm = (app.get('power_management_config') or {}).get('power_management', '')
 	if pm in SCHEMA['power_management']:
@@ -225,16 +284,13 @@ def collect(config: dict[str, Any]) -> set[str]:
 		if shell in SCHEMA['shells']:
 			pkgs.update(SCHEMA['shells'][shell])
 
-	# filesystem tools
+	# filesystem tools, lvm
 	disk = config.get('disk_config') or {}
-	fs_tools = SCHEMA['filesystem_tools']
-	for dev in disk.get('device_modifications', []) or []:
-		for part in dev.get('partitions', []) or []:
-			if (fs := part.get('fs_type', '')) in fs_tools:
-				pkgs.update(fs_tools[fs])
-		for vol in (dev.get('lvm_config') or {}).get('volumes', []) or []:
-			if (fs := vol.get('fs_type', '')) in fs_tools:
-				pkgs.update(fs_tools[fs])
+	pkgs.update(_filesystem_packages(disk, kernels))
+
+	# console font: the ISO has terminus, the target only gets it on request
+	if str((config.get('locale_config') or {}).get('console_font', '')).startswith('ter-'):
+		pkgs.update(SCHEMA['ter_fonts'])
 
 	# snapshots
 	btrfs = disk.get('btrfs_options') or {}

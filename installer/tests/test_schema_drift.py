@@ -26,7 +26,13 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.default_profiles.desktops import SeatAccess
-from archinstoo.lib import schema
+from archinstoo.lib import installer, schema
+from archinstoo.lib.applications.cat.audio import AudioApp
+from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
+from archinstoo.lib.applications.cat.firewall import FirewallApp
+from archinstoo.lib.applications.cat.power_management import PowerManagementApp
+from archinstoo.lib.applications.cat.print_service import PrintServiceApp
+from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.hardware import CpuVendor, GfxDriver, GfxPackage, _sys_info
 from archinstoo.lib.models.application import (
 	Audio,
@@ -42,12 +48,12 @@ from archinstoo.lib.models.application import (
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import FilesystemType, SnapshotType
-from archinstoo.lib.models.firmware import FirmwareVendor
+from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.pm import groups
-from archinstoo.lib.profile.base import GreeterType, ProfileType
+from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.scripts import _resolve
 from archinstoo.scripts._resolve import SCHEMA
@@ -85,13 +91,12 @@ _EXACT_SECTIONS = {
 # set lists keys modelled by _resolve.py that have no enum counterpart
 _SUBSET_SECTIONS = {
 	'shells': (Shell, set()),
-	'filesystem_tools': (FilesystemType, set()),
 	'network': (NicType, {'nm-desktop-extra'}),
 }
 
 # categories the installer expands as [tool.value for tool in tools]: each
 # schema entry must therefore be the option name mapped to itself
-_ONE_TO_ONE_SECTIONS = (Management, Language, DevTool)
+_ONE_TO_ONE_SECTIONS = (Management, Language, DevTool, Monitor, Security)
 
 
 @pytest.mark.parametrize(('key', 'enum'), _EXACT_SECTIONS.items(), ids=list(_EXACT_SECTIONS))
@@ -113,8 +118,75 @@ def test_subset_sections(key: str) -> None:
 	assert schema_keys <= enum_values, f'schema[{key!r}] has options absent from {enum.__name__}: {sorted(schema_keys - enum_values)}'
 
 
+# The checks above compare option NAMES. These compare what each option
+# installs, for every section whose codepath exposes the list without an
+# Installer: a flat list is compared whole, a dict only over the keys the code
+# yields (SecurityApp exposes three of its options as properties, the rest go
+# through [tool.value] and are covered by test_one_to_one_categories).
+def _code_sections(monkeypatch: pytest.MonkeyPatch) -> dict[str, list[str] | dict[str, list[str]]]:
+	# FULL re-registers the optdeps matched against the host's PCI/USB IDs; pin
+	# them empty so the static set comes back on any machine running the tests
+	monkeypatch.setattr('archinstoo.lib.models.firmware.detect_optdeps', list)
+
+	audio, security = AudioApp(), SecurityApp()
+	return {
+		'base': installer.__base_packages__,
+		'accessibility': installer.__accessibility_packages__,
+		'printing': PrintServiceApp().packages,
+		'bluetooth': BluetoothApp().packages,
+		'firmware': {t.value: FirmwareConfiguration(firmware_type=t).packages() for t in FirmwareType},
+		'microcode': {v.value: [ucode.stem] for v in CpuVendor if (ucode := v.get_ucode())},
+		'filesystem_tools': {fs.value: [fs.installation_pkg] for fs in FilesystemType if fs.installation_pkg},
+		'audio': {
+			Audio.PIPEWIRE.value: audio.pipewire_packages,
+			Audio.PULSEAUDIO.value: audio.pulseaudio_packages,
+		},
+		'firewalls': {
+			Firewall.UFW.value: FirewallApp().ufw_packages,
+			Firewall.FWD.value: FirewallApp().fwd_packages,
+		},
+		'power_management': {
+			PowerManagement.PPD.value: PowerManagementApp().ppd_packages,
+			PowerManagement.TUNED.value: PowerManagementApp().tuned_packages,
+		},
+		'security': {
+			Security.APPARMOR.value: security.apparmor_packages,
+			Security.FIREJAIL.value: security.firejail_packages,
+			Security.BUBBLEWRAP.value: security.bubblewrap_packages,
+		},
+	}
+
+
+_CODE_SECTIONS = (
+	'base',
+	'accessibility',
+	'printing',
+	'bluetooth',
+	'firmware',
+	'microcode',
+	'filesystem_tools',
+	'audio',
+	'firewalls',
+	'power_management',
+	'security',
+)
+
+
+@pytest.mark.parametrize('key', _CODE_SECTIONS, ids=str)
+def test_section_packages_match(key: str, monkeypatch: pytest.MonkeyPatch) -> None:
+	code = _code_sections(monkeypatch)[key]
+	if isinstance(code, dict):
+		schema_side = {k: sorted(SCHEMA[key].get(k, [])) for k in code}
+		code_side = {k: sorted(v) for k, v in code.items()}
+	else:
+		schema_side, code_side = sorted(SCHEMA[key]), sorted(code)
+
+	assert schema_side == code_side, f'schema[{key!r}] packages drifted: schema={schema_side} code={code_side}'
+
+
 def test_profiles_match() -> None:
-	profiles = {p.name: sorted(p.packages) for p in ProfileHandler().profiles if p.profile_type in _LEAF_PROFILE_TYPES}
+	leaves = [p for p in ProfileHandler().profiles if p.profile_type in _LEAF_PROFILE_TYPES]
+	profiles = {p.name: sorted(p.packages) for p in leaves}
 	schema_profiles = {k: sorted(v) for k, v in SCHEMA['profiles'].items()}
 
 	assert set(schema_profiles) == set(profiles), (
@@ -122,6 +194,12 @@ def test_profiles_match() -> None:
 	)
 	for name, code_pkgs in profiles.items():
 		assert schema_profiles[name] == code_pkgs, f'profile {name!r} packages drifted: schema={schema_profiles[name]} code={code_pkgs}'
+
+	# install_gfx_driver() adds xorg-server/xorg-xinit off DisplayServer, not off
+	# a list, so the schema copy _resolve.py reads must name the same profiles
+	x11 = {p.name for p in leaves if DisplayServer.X11 in p.display_servers()}
+	schema_x11 = set(SCHEMA['xorg_profiles'])
+	assert schema_x11 == x11, f'xorg profiles drifted: schema-only={sorted(schema_x11 - x11)} code-only={sorted(x11 - schema_x11)}'
 
 
 def test_dms_compositors_match() -> None:
@@ -176,6 +254,65 @@ def test_greeter_packages_match() -> None:
 		f'code-only={sorted(set(code) - set(schema))} '
 		f'mismatched={ {k: (schema[k], code[k]) for k in schema.keys() & code.keys() if schema[k] != code[k]} }'
 	)
+
+
+def _schema_package_names() -> set[str]:
+	names: set[str] = set()
+
+	def walk(obj: object) -> None:
+		if isinstance(obj, list):
+			names.update(p for p in obj if isinstance(p, str))
+		elif isinstance(obj, dict):
+			for value in obj.values():
+				walk(value)
+
+	walk(SCHEMA)
+	return names
+
+
+def _installer_literals() -> set[str]:
+	# every package installer.py names outright: handed to
+	# add_additional_packages/strap or appended to _base_packages. a local
+	# assigned a bare string (lvm = 'lvm2') resolves through consts; f-strings
+	# and enum lookups are runtime values and drop out
+	tree = ast.parse(Path(installer.__file__).read_text())
+
+	consts = {
+		target.id: node.value.value
+		for node in ast.walk(tree)
+		if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+		for target in node.targets
+		if isinstance(target, ast.Name)
+	}
+
+	def literals(node: ast.expr) -> set[str]:
+		if isinstance(node, ast.Constant) and isinstance(node.value, str):
+			return {node.value}
+		if isinstance(node, ast.Name):
+			return {consts[node.id]} if node.id in consts else set()
+		if isinstance(node, ast.List | ast.Tuple):
+			return {name for elt in node.elts for name in literals(elt)}
+		return set()
+
+	found: set[str] = set()
+	for node in ast.walk(tree):
+		if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+			continue
+
+		installs = node.func.attr in ('add_additional_packages', 'strap') or (
+			node.func.attr in ('append', 'extend') and getattr(node.func.value, 'attr', '') == '_base_packages'
+		)
+		if installs:
+			found.update(name for arg in node.args for name in literals(arg))
+
+	return found
+
+
+def test_installer_literals_are_in_schema() -> None:
+	# catches the reverse of every check above: a package the installer grew
+	# that no schema section claims is invisible to count, size and nvchecker
+	missing = sorted(_installer_literals() - _schema_package_names())
+	assert not missing, f'installer.py installs packages no schema section lists: {missing}'
 
 
 @pytest.mark.parametrize('enum', _ONE_TO_ONE_SECTIONS, ids=lambda e: e.__name__)

@@ -246,6 +246,12 @@ source = "pacman"
 [alacritty]
 source = "pacman"
 
+[alsa-firmware]
+source = "pacman"
+
+[alsa-utils]
+source = "pacman"
+
 [apache]
 source = "pacman"
 
@@ -270,6 +276,12 @@ source = "pacman"
 [base-devel]
 source = "pacman"
 
+[bcachefs-dkms]
+source = "pacman"
+
+[bcachefs-tools]
+source = "pacman"
+
 [bluedevil]
 source = "pacman"
 
@@ -286,6 +298,9 @@ source = "pacman"
 source = "pacman"
 
 [brightnessctl]
+source = "pacman"
+
+[brltty]
 source = "pacman"
 
 [bspwm]
@@ -439,6 +454,9 @@ source = "pacman"
 source = "pacman"
 
 [cosmic-workspaces]
+source = "pacman"
+
+[cronie]
 source = "pacman"
 
 [cups]
@@ -639,6 +657,9 @@ source = "pacman"
 [eom]
 source = "pacman"
 
+[espeakup]
+source = "pacman"
+
 [ex-vi-compat]
 source = "pacman"
 
@@ -673,6 +694,9 @@ source = "pacman"
 source = "pacman"
 
 [gdm]
+source = "pacman"
+
+[ghostscript]
 source = "pacman"
 
 [gnome-control-center]
@@ -787,6 +811,9 @@ source = "pacman"
 source = "pacman"
 
 [labwc]
+source = "pacman"
+
+[libfido2]
 source = "pacman"
 
 [libpulse]
@@ -978,6 +1005,9 @@ source = "pacman"
 [micro]
 source = "pacman"
 
+[mkinitcpio]
+source = "pacman"
+
 [mousepad]
 source = "pacman"
 
@@ -1135,6 +1165,9 @@ source = "pacman"
 source = "pacman"
 
 [snapper]
+source = "pacman"
+
+[sof-firmware]
 source = "pacman"
 
 [strace]

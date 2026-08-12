@@ -3,10 +3,29 @@
 	// This is the single source of truth for all package mappings
 	// Used by count.py and should stay in sync with default_profiles/ and lib/
 
-	"base": ["base", "linux-firmware"],
+	// mirrors installer.py __base_packages__; firmware is separate below
+	"base": ["base", "mkinitcpio"],
+
+	// firmware_type picks the set. `vendor` takes its packages from the saved
+	// config (FirmwareVendor values), `full` adds the optdeps detect_optdeps()
+	// matches against the host PCI/USB IDs, neither of which is static
+	"firmware": {
+		"full": ["linux-firmware"],
+		"minimal": [],
+		"vendor": []
+	},
+
+	// live ISO with accessibility active installs these onto the target
+	"accessibility": ["brltty", "espeakup", "alsa-utils"],
+
+	// microcode is picked from the detected CPU, VMs get none
+	"microcode": {
+		"amd": ["amd-ucode"],
+		"intel": ["intel-ucode"]
+	},
 
 	"ter_fonts": ["terminus-font"], // to match iso when `ter` fonts are chosen only
-	
+
 	"bootloaders": {
 		// note efibootmgr probably isn't needed for some of these
         // like refind should be able to self-handle entries
@@ -20,17 +39,31 @@
 	"filesystem_tools": {
 		// note most are handled by base (e2fsprogs, dosfstools)
 		// if not they are appended to base install
+		"bcachefs": ["bcachefs-tools"],
 		"btrfs": ["btrfs-progs"],
 		"xfs": ["xfsprogs"],
 		"f2fs": ["f2fs-tools"]
 	},
+
+	// bcachefs is out of tree: the module is built per kernel, so every
+	// selected kernel also pulls its -headers
+	"bcachefs_extra": ["bcachefs-dkms"],
+
+	// any lvm layout
+	"lvm": ["lvm2"],
+
+	// sd-encrypt only bundles the fido2 dlopen libs if this is present at
+	// initramfs build time. disk_encryption is never saved to a config
+	// (the password would go with it), so count/size cannot reach this
+	"fido2": ["libfido2"],
 
 	// grub + btrfs snapshots adds these
 	"grub_extra": ["grub-btrfs", "inotify-tools"],
 
 	"snapshots": {
 		"snapper": ["snapper"],
-		"timeshift": ["timeshift"]
+		// timeshift schedules its snapshots through cron
+		"timeshift": ["timeshift", "cronie"]
 	},
 
 	"swap": {
@@ -106,7 +139,8 @@
 	// we could add sway, labwc or any they support here
 
 	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
-	"xorg_profiles": ["xfce4", "cinnamon", "mate", "budgie", "lxqt", "deepin", "i3-wm", "bspwm", "awesome", "enlightenment", "qtile", "xmonad"],
+	// (the X11 half of DisplayServer, i.e. every XorgProfile subclass)
+	"xorg_profiles": ["xfce4", "cinnamon", "mate", "lxqt", "deepin", "i3-wm", "bspwm", "awesome", "enlightenment", "qtile", "xmonad"],
 
 	// each desktop specifies a default greeter
 	// None is always available (stored as null in config) and any greeter can be picked
@@ -144,7 +178,14 @@
 		"pulseaudio": ["pulseaudio"]
 	},
 
-	"printing": ["cups", "system-config-printer", "cups-pk-helper"],
+	// added with either audio server when the matching driver is loaded
+	"audio_firmware": {
+		"sof": ["sof-firmware"],
+		"alsa": ["alsa-firmware"]
+	},
+
+	// ghostscript is the PostScript interpreter cups needs for most drivers
+	"printing": ["cups", "system-config-printer", "cups-pk-helper", "ghostscript"],
 
 	"firewalls": {
 		"ufw": ["ufw"],
