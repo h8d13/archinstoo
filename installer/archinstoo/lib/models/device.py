@@ -694,6 +694,12 @@ class SubvolumeModification:
 	name: Path | str
 	mountpoint: Path | None = None
 
+	def __post_init__(self) -> None:
+		# the menu builds these with a Path, parse_args() with the raw config
+		# string; is_default_root() compares against Path and silently missed
+		# every config-driven install until both shapes met here
+		self.name = Path(self.name)
+
 	@classmethod
 	def from_existing_subvol_info(cls, info: _BtrfsSubvolumeInfo) -> SubvolumeModification:
 		return cls(info.name, mountpoint=info.mountpoint)

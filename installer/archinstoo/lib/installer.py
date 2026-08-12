@@ -425,8 +425,19 @@ class Installer:
 		if not part_mod.dev_path:
 			return
 
-		# it would be none if it's btrfs as the subvolumes will have the mountpoints defined
-		if part_mod.mountpoint:
+		# subvolumes carry their own mountpoints and win over the partition's, which
+		# a manual layout can still set: mounting that would put the install on the
+		# top-level subvolume and leave every subvolume created but unused
+		if part_mod.fs_type == FilesystemType.BTRFS and part_mod.btrfs_subvols:
+			# Only mount BTRFS subvolumes that have mountpoints specified
+			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
+			if subvols_with_mountpoints:
+				self._mount_btrfs_subvol(
+					part_mod.dev_path,
+					part_mod.btrfs_subvols,
+					part_mod.mount_options,
+				)
+		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
 			options = list(part_mod.mount_options)
@@ -438,15 +449,6 @@ class Installer:
 						options.append(opt)
 
 			mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
-		elif part_mod.fs_type == FilesystemType.BTRFS:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
-				self._mount_btrfs_subvol(
-					part_mod.dev_path,
-					part_mod.btrfs_subvols,
-					part_mod.mount_options,
-				)
 		elif part_mod.is_swap():
 			swapon(part_mod.dev_path)
 
