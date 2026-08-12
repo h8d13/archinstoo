@@ -81,6 +81,10 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 
 	def _select_profiles(self, preset: list[Profile]) -> list[Profile]:
 		profiles = select_profiles(preset)
+		# skipping the list hands back the preset: re-seeding the greeter then
+		# would drop a deliberate pick for the profile default, and just
+		# entering the menu is enough to trigger it
+		changed = profiles != preset
 
 		if profiles:
 			# Check if any profile needs display servers
@@ -97,12 +101,14 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 				self._item_group.find_by_key('greeter').enabled = False
 				self._item_group.find_by_key('greeter').value = None
 			else:
-				self._item_group.find_by_key('greeter').enabled = True
+				greeter_item = self._item_group.find_by_key('greeter')
+				greeter_item.enabled = True
 				# Get default greeter from first desktop profile
-				for p in profiles:
-					if p.default_greeter_type:
-						self._item_group.find_by_key('greeter').value = p.default_greeter_type
-						break
+				if changed or greeter_item.value is None:
+					for p in profiles:
+						if p.default_greeter_type:
+							greeter_item.value = p.default_greeter_type
+							break
 		else:
 			self._item_group.find_by_key('gfx_driver').value = None
 			self._item_group.find_by_key('greeter').value = None
