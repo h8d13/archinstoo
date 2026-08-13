@@ -442,9 +442,12 @@ class Installer:
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
 			options = list(part_mod.mount_options)
 
-			# restrict ESP to root-only (dirs 0700, files 0600)
-			if part_mod.is_efi() and part_mod.fs_type == FilesystemType.FAT32:
-				for opt in ('fmask=0077', 'dmask=0077'):
+			# restrict ESP/XBOOTLDR to root-only (dirs 0700, files 0600):
+			# an initramfs on a world-readable /boot can carry a keyfile.
+			# same masks systemd uses: src/shared/dissect-image.c
+			esp_or_boot = part_mod.is_efi() or part_mod.is_xbootldr()
+			if esp_or_boot and part_mod.fs_type == FilesystemType.FAT32:
+				for opt in ('fmask=0177', 'dmask=0077'):
 					if opt not in options:
 						options.append(opt)
 

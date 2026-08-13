@@ -1024,6 +1024,9 @@ class PartitionModification:
 	def is_efi(self) -> bool:
 		return PartitionFlag.ESP in self.flags
 
+	def is_xbootldr(self) -> bool:
+		return PartitionFlag.XBOOTLDR in self.flags
+
 	def is_boot(self) -> bool:
 		if self.mountpoint is not None:
 			return self.mountpoint == Path('/boot')
