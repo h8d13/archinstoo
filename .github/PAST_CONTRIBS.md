@@ -167,7 +167,7 @@ Ordering bug: the desktop pulls its own gfx assumptions if it gets there first.
 
 [4711](https://github.com/archlinux/archinstall/commit/8157685d04cf146676cf9e8e1182295f34495e2f) # Add [`linux-rt`](https://archlinux.org/packages/?sort=&q=linux-rt) kernel variants from upstream
 
-[4705](https://github.com/archlinux/archinstall/commit/426e2732657611f188a7ab7801bda585f62f1a62) # Intel open-source post Gen12 needs this for `ffmpeg`, OBS, etc
+[4705](https://github.com/archlinux/archinstall/commit/426e2732657611f188a7ab7801bda585f62f1a62) # Intel open-source post Gen12 needs this for `ffmpeg`, `obs-studio`, etc
 
 [4713](https://github.com/archlinux/archinstall/commit/3ffa1a98a0c1881fdb2cfb6c7e31efd324a7d405) # Continue [4705](https://github.com/archlinux/archinstall/pull/4705): Intel VPL
 
