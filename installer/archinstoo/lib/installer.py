@@ -421,6 +421,31 @@ class Installer:
 			if vol.mapper_name and vol.dev_path
 		}
 
+	# same set systemd mounts boot media with: partition_pick_mount_options in
+	# src/shared/dissect-image.c. FAT has no on-disk perms, hence the masks
+	@staticmethod
+	def _harden_boot_options(part_mod: PartitionModification, options: list[str]) -> list[str]:
+		if not (part_mod.is_efi() or part_mod.is_xbootldr() or part_mod.is_boot()):
+			return options
+
+		hardened = ['nodev', 'nosuid', 'noexec']
+
+		# by designator, not fs type: a plain /boot keeps symlinks, UKI layouts use them
+		if part_mod.is_efi() or part_mod.is_xbootldr():
+			hardened.append('nosymfollow')
+
+		if part_mod.fs_type == FilesystemType.FAT32:
+			hardened += ['fmask=0177', 'dmask=0077']
+
+		# an explicit opposite in the config wins: mount takes the last option
+		inverse = {'nodev': 'dev', 'nosuid': 'suid', 'noexec': 'exec', 'nosymfollow': 'symfollow'}
+		for opt in hardened:
+			if opt in options or inverse.get(opt, opt) in options:
+				continue
+			options.append(opt)
+
+		return options
+
 	def _mount_partition(self, part_mod: PartitionModification) -> None:
 		if not part_mod.dev_path:
 			return
@@ -440,16 +465,7 @@ class Installer:
 		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
-			options = list(part_mod.mount_options)
-
-			# restrict ESP/XBOOTLDR to root-only (dirs 0700, files 0600):
-			# an initramfs on a world-readable /boot can carry a keyfile.
-			# same masks systemd uses: src/shared/dissect-image.c
-			esp_or_boot = part_mod.is_efi() or part_mod.is_xbootldr()
-			if esp_or_boot and part_mod.fs_type == FilesystemType.FAT32:
-				for opt in ('fmask=0177', 'dmask=0077'):
-					if opt not in options:
-						options.append(opt)
+			options = self._harden_boot_options(part_mod, list(part_mod.mount_options))
 
 			mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
 		elif part_mod.is_swap():
@@ -481,7 +497,9 @@ class Installer:
 		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
-			mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=part_mod.mount_options)
+			# encrypted /boot (GRUB) needs the same hardening as a plain one
+			options = self._harden_boot_options(part_mod, list(part_mod.mount_options))
+			mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
 		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and luks_handler.mapper_dev:
