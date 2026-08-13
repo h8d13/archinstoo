@@ -772,6 +772,16 @@ class GlobalMenu(AbstractMenu[None]):
 		if bootloader == Bootloader.Systemd and efi_partition and not boot_partition and not bootloader_config.uki:
 			errors.append('systemd-boot with ESP at /efi requires UKI or a separate XBOOTLDR /boot partition')
 
+		# systemd-boot reads a separate /boot through EFI's SFSP (FAT only) and
+		# finds it by partition type GUID. bootctl verifies the GUID but never
+		# the filesystem, so an ext4 XBOOTLDR installs cleanly and then boots
+		# into an empty menu.
+		if bootloader == Bootloader.Systemd and boot_partition is not None and boot_partition != efi_partition:
+			if boot_partition.fs_type is None or not boot_partition.fs_type.is_fat():
+				errors.append('systemd-boot requires a FAT /boot partition')
+			if not boot_partition.is_xbootldr():
+				errors.append('A separate /boot for systemd-boot must be marked XBOOTLDR')
+
 		if bootloader in (Bootloader.Systemd, Bootloader.Efistub, Bootloader.Refind) and not SysInfo.has_uefi():
 			errors.append(f'{bootloader.display_name()} requires a UEFI system')
 
