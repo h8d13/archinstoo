@@ -11,19 +11,19 @@ Two distinct places to send things: Arch **packaging** (gitlab, the pkgs the ins
 
 Issues tracker:
 
-- Missing deps in linux-variant-headers
+- Missing deps in `linux-*-headers` variants
 
 Reported [here](https://github.com/archlinux/archinstall/issues/4360)
 
 Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/188)
 
-- Gnupg hang on `dirmngr` call
+- `gnupg` hang on `dirmngr` call
 
 Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/-/work_items/13)
 
 Fixed a week later [here](https://gitlab.archlinux.org/archlinux/packaging/packages/gnupg/-/commit/c1bee871ca9b1d6899da9279287b92654b698f30)
 
-- Duplicated `.mo` files wasting 10 mb
+- Duplicated `.mo` files in `coreutils` wasting 10 mb
 
 Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/coreutils/-/work_items/10)
 
@@ -43,7 +43,7 @@ The first step to this is **finding a bug**, for something I care enough about t
 
 The initial bug I found was that when installing from one computer to another (instead of from a USB), then rebooting it on another machine simply didn't work: it would get stuck at mounting drives for about 2 minutes.
 
-[3599](https://github.com/archlinux/archinstall/issues/3599) # /etc/fstab boot hanging
+[3599](https://github.com/archlinux/archinstall/issues/3599) # `/etc/fstab` boot hanging
 
 > Bug was quickly reproduced by a maintainer, which made it worthy of fixing!
 
@@ -61,7 +61,7 @@ So I looked at other `SysCommand` calls (about 100 of them in total).
 
 And I found this gem:
 
-```python
+```bash
 pacstrap -C /etc/pacman.conf -K {self.target} {" ".join(packages)} --noconfirm
 ```
 
@@ -72,9 +72,9 @@ Which is normal but useless compute. So I added `--needed` and logs properly sho
 
 Now I have more that got pulled in:
 
-[3930](https://github.com/archlinux/archinstall/commit/375d64a6001086dd0aeb22140e1e022247c33059) # snapper -> grub integration fix
+[3930](https://github.com/archlinux/archinstall/commit/375d64a6001086dd0aeb22140e1e022247c33059) # `snapper` -> `grub` integration fix
 
-[3928](https://github.com/archlinux/archinstall/commit/6b50815eb67c4c5fef9fa08c916be7884687427c) # Vconsole.conf KEYMAP= FONT= mkinitcpio v40 error
+[3928](https://github.com/archlinux/archinstall/commit/6b50815eb67c4c5fef9fa08c916be7884687427c) # `vconsole.conf` `KEYMAP=` `FONT=` `mkinitcpio` v40 error
 
 [3978](https://github.com/archlinux/archinstall/commit/6b23eff4226a7574e2d763aa3b49fdfb4153b75d) # Add host-to-target (H2T) installation mode detection
 
@@ -82,12 +82,12 @@ Now I have more that got pulled in:
 - Function checks for `/run/archiso` existence (ISO mode) vs host mode
 - Add clear logging of installation mode on startup
 - Skip keyboard layout changes when running from host system
-- Fix Pyright type error in jsonify() by using Any instead of object
+- Fix Pyright type error in `jsonify()` by using `Any` instead of `object`
 - Update README to mention installation from existing system
 
 This enables archinstall to be run from an existing Arch installation to perform host-to-target installs on other disks/partitions.
 
-[4022](https://github.com/archlinux/archinstall/commit/9e7a5f693108aad80a731bb719454547b97e50c9) # Do not install base-devel by default
+[4022](https://github.com/archlinux/archinstall/commit/9e7a5f693108aad80a731bb719454547b97e50c9) # Do not install `base-devel` by default
 
 A funny one I'm also very proud of: `base-devel` is more of a dev tool than a user's tool.
 Building systems should explicitly state it as a dependency and not assume it's installed by default.
@@ -101,11 +101,11 @@ Because testing should be quick.
 
 Hotfix for LVMs to not hang on `Setting up LVM config...`, which I had experienced myself.
 
-[4005](https://github.com/archlinux/archinstall/commit/1227babd8cf67750926df4bb75a8106a114a4693) # Change LVM /root def to adapt dynamically
+[4005](https://github.com/archlinux/archinstall/commit/1227babd8cf67750926df4bb75a8106a114a4693) # Change LVM `/root` def to adapt dynamically
 
 Another hotfix where it was `20GiB` hardcoded.
 
-[4007](https://github.com/archlinux/archinstall/commit/17dc00185724d07a92abb19904c773ea95ea38c8) # Cache property of graphics_devices
+[4007](https://github.com/archlinux/archinstall/commit/17dc00185724d07a92abb19904c773ea95ea38c8) # Cache property of `graphics_devices`
 
 Then it stopped being one bug at a time and became areas.
 
@@ -115,13 +115,13 @@ Then it stopped being one bug at a time and became areas.
 
 A greeter that never shows up is a black screen. The unit needs the tty instance.
 
-[4027](https://github.com/archlinux/archinstall/commit/9412f977718983b7d261cdac3e275a538f3163c8) # Set up Zram dynamically based on best practice
+[4027](https://github.com/archlinux/archinstall/commit/9412f977718983b7d261cdac3e275a538f3163c8) # Set up `zram` dynamically based on best practice
 
-[4042](https://github.com/archlinux/archinstall/commit/2954e4397b053841851d9c79e2b4cde946c0f7e1) # Zram algorithm config
+[4042](https://github.com/archlinux/archinstall/commit/2954e4397b053841851d9c79e2b4cde946c0f7e1) # `zram` algorithm config
 
-Hardcoded sizes again. Then the follow-up: if you expose zram, expose the compressor too.
+Hardcoded sizes again. Then the follow-up: if you expose `zram`, expose the compressor/decompressor too.
 
-[4025](https://github.com/archlinux/archinstall/commit/c1eae10e93a94edbd0f9b94da4ad3d1c73ae993c) # Enable IWD to be used as back-end in network selection
+[4025](https://github.com/archlinux/archinstall/commit/c1eae10e93a94edbd0f9b94da4ad3d1c73ae993c) # Enable `iwd` to be used as back-end in network selection
 
 [4031](https://github.com/archlinux/archinstall/commit/79313c4942ea10acf26a284037ac842012cc6f42) # Fix mirrors hang when `/status` endpoint is down
 
@@ -129,7 +129,7 @@ Third-party endpoint down should not stall an installer. Timeout and move on.
 
 [4050](https://github.com/archlinux/archinstall/commit/eb5e88f31784809098bb30754b3639d9ce08f0c1) # Mirrors sort ([4046](https://github.com/archlinux/archinstall/issues/4046))
 
-[4047](https://github.com/archlinux/archinstall/commit/747385a8831774afa76a08708448af0767cbbf6f) # Lvm2/LUKS fixes + mirror logic
+[4047](https://github.com/archlinux/archinstall/commit/747385a8831774afa76a08708448af0767cbbf6f) # `lvm2`/LUKS fixes + mirror logic
 
 [4043](https://github.com/archlinux/archinstall/commit/ac984b7622462c0e9b791541fc603ddad21a7852) # Change the order of the main menu
 
@@ -145,13 +145,13 @@ Implicit deps break the day the pkg that pulled them in drops them. Say it out l
 
 [4073](https://github.com/archlinux/archinstall/commit/01884599173049323aab584a266d37f6ff3a6f46) # Bootloader changes
 
-[4099](https://github.com/archlinux/archinstall/commit/62edc56a52879846d16bbd9544fcd8642f5bf666) # Hotfix: revert Grub changes
+[4099](https://github.com/archlinux/archinstall/commit/62edc56a52879846d16bbd9544fcd8642f5bf666) # Hotfix: revert `grub` changes
 
 [4100](https://github.com/archlinux/archinstall/commit/ef9f704761c3123b04434a88eaa3e74036556244) # Hotfix: firewall
 
 Two hotfixes three days after the features. Worth keeping in the record: shipping to an installer means the blast radius is somebody's unbootable machine, so reverting fast is part of the job, not a failure of it.
 
-[4231](https://github.com/archlinux/archinstall/commit/8148b1d9bf8985394044b8074e04c541ac4e3a90) # Fix efistub bootloader to use backslashes
+[4231](https://github.com/archlinux/archinstall/commit/8148b1d9bf8985394044b8074e04c541ac4e3a90) # Fix `efistub` bootloader to use backslashes
 
 EFI paths are DOS paths. `/` works until firmware decides it doesn't.
 
@@ -159,15 +159,15 @@ EFI paths are DOS paths. `/` works until firmware decides it doesn't.
 
 Ordering bug: the desktop pulls its own gfx assumptions if it gets there first.
 
-[4358](https://github.com/archlinux/archinstall/commit/3ba29f1193dd996a5ec4e9e68d0bb47ba063be28) # Patch plasma profile, add essentials ([4336](https://github.com/archlinux/archinstall/issues/4336))
+[4358](https://github.com/archlinux/archinstall/commit/3ba29f1193dd996a5ec4e9e68d0bb47ba063be28) # Patch `plasma` profile, add essentials ([4336](https://github.com/archlinux/archinstall/issues/4336))
 
-[4528](https://github.com/archlinux/archinstall/commit/b81fe955f0c789e371b96ed03c79642d4c607f82) # IWD standalone option + fix NM_IWD
+[4528](https://github.com/archlinux/archinstall/commit/b81fe955f0c789e371b96ed03c79642d4c607f82) # `iwd` standalone option + fix `NM_IWD`
 
-`NicType.IWD` as a third option next to NM and NM_IWD: iwd does its own DHCP, `systemd-resolved` picks up DNS through the symlink, no NetworkManager pulled in. Also filled in the `parse_arg` cases so both nic types round-trip through a config file.
+`NicType.IWD` as a third option next to `NM` and `NM_IWD`: `iwd` does its own DHCP, `systemd-resolved` picks up DNS through the symlink, no `NetworkManager` pulled in. Also filled in the `parse_arg` cases so both nic types round-trip through a config file.
 
-[4711](https://github.com/archlinux/archinstall/commit/8157685d04cf146676cf9e8e1182295f34495e2f) # Add [RT kernel](https://archlinux.org/packages/?sort=&q=linux-rt) variants from upstream
+[4711](https://github.com/archlinux/archinstall/commit/8157685d04cf146676cf9e8e1182295f34495e2f) # Add [`linux-rt`](https://archlinux.org/packages/?sort=&q=linux-rt) kernel variants from upstream
 
-[4705](https://github.com/archlinux/archinstall/commit/426e2732657611f188a7ab7801bda585f62f1a62) # Intel open-source post Gen12 needs this for ffmpeg, OBS, etc
+[4705](https://github.com/archlinux/archinstall/commit/426e2732657611f188a7ab7801bda585f62f1a62) # Intel open-source post Gen12 needs this for `ffmpeg`, OBS, etc
 
 [4713](https://github.com/archlinux/archinstall/commit/3ffa1a98a0c1881fdb2cfb6c7e31efd324a7d405) # Continue [4705](https://github.com/archlinux/archinstall/pull/4705): Intel VPL
 
@@ -193,7 +193,7 @@ In this category I see two main things:
 One: overly complex issue categories, flows, reviews, and codebases, which slow down a project during traction.
 Backwards-compat claims and style nits that make the code a magical piece instead, too few dare to touch. Instead of a place for fast iteration.
 
-Two: amazing tools that are under-exploited should be made clearer to likely future contributors, especially local hooks such as shellcheck, ruff, etc.
+Two: amazing tools that are under-exploited should be made clearer to likely future contributors, especially local hooks such as `shellcheck`, `ruff`, etc.
 
 ### **Systematic testing**
 
@@ -233,7 +233,7 @@ A simple solution is to force the user to select a timezone by starting at `None
 
 ### Speed
 
-Testing is annoying. Physical tests need you to flash the latest ISOs (monthly), go into BIOS, test install, grep logs, then reboot and verify.
+Testing is annoying. Physical tests need you to flash the latest ISOs (monthly), go into BIOS, test install, `grep` logs, then reboot and verify.
 Sometimes several times for one scenario.
 
 So I thought, while I'm coding, this needs to be faster. Which needed two things:
@@ -255,7 +255,7 @@ These options are philosophy: a good starting point but barebones, due to arch b
 
 This places the installer in a weird position, kind of being downstream from everything.
 But at the same time, breaking changes do occur in dev cycles, meaning testing here becomes both hell and fun.
-Notably `systemd` or other major base libs (mkinitcpio, encryption libs) can break everything, or some rules change for x or y. This is often hotfixed in a few days and back to normal.
+Notably `systemd` or other major base libs (`mkinitcpio`, encryption libs) can break everything, or some rules change for x or y. This is often hotfixed in a few days and back to normal.
 
 And in the end it's kind of **upstream of everything**, since different components have similar structure and do kind of compete.
 
