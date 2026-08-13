@@ -241,14 +241,14 @@ So I thought, while I'm coding, this needs to be faster. Which needed two things
 **1.** a decent `QEMU` script to test different scenarios in VMs (the GUI managers needed more options)
 **2.** an ISO with KDE files so I could test full desktop features in less time.
 
-I even made it so the target would have `git` pre-installed with the repo already cloned in `sudo_user(0)` home.
+Made it so the target would have `git` pre-installed with the repo already cloned in `sudo_user(0)` home (very inception like).
 
 Current best time is **1m54s**, achieved when I moved all the pkgs with hooks in the installer to the first base-strap.
 Which you shouldn't do, for obvious reasons.
 
 ## Weird structure of an OS installer
 
-The archinstall project is especially relevant to me because it covers thousands of use-cases in a TUI that could run on a potato or the latest most expensive hardware.
+The archinstall project is especially relevant to me because it covers thousands of use-cases in a TUI that could run on a potato, a small server in your closet or the latest most expensive hardware.
 
 This makes it interesting: it covers a lot of ground, and has many options within (bootloaders, FS types, encryption, UKI, U2F keys, HSM, desktops/servers, etc).
 These options are philosophy: a good starting point but barebones, due to arch being arch.

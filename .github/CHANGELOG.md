@@ -748,22 +748,7 @@ Historical changes/commits before I went rogue:
         - This means original profiles list now only contains `xdg-utils |
           smartmontools` for desktops
 
-Down from original list (the rest is all in logic or choices):
-
-```python
-	@property
-	@override
-	def packages(self) -> list[str]:
-		return [
-			'vi',
-			'openssh',
-			'wget',
-			'iwd',
-			'wireless_tools',
-			'smartmontools',
-			'xdg-utils',
-		]
-```
+Down from the original list (the rest is all in logic or choices), see [PHILOSOPHY](PHILOSOPHY.md).
 
 ## 0.1.02-0
 
