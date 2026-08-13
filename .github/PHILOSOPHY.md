@@ -31,7 +31,7 @@ And better implementations.
 This "draft state" is the work, before anyone is watching or stakes to exist.
 Someone's dead-end, or disagreement, or random forum post might actually be exactly what another person needs.
 
-> Simplicity does not precede complexity, but follows it. 
+> Simplicity does not precede complexity, but follows it.
 > ― Alan Perlis
 
 ## Rebuilding more with less
@@ -50,7 +50,7 @@ Regardless of environment or intent. Over time, this created hidden dependencies
 
 Some better examples:
 
-Historically this list from `default_profiles/desktop.py`
+Historically this list from [`default_profiles/desktop.py`](https://github.com/archlinux/archinstall/blame/master/archinstall/default_profiles/desktop.py#L29)
 
 ```python
 	@property
@@ -67,9 +67,9 @@ Historically this list from `default_profiles/desktop.py`
 		]
 ```
 (Which I have already been tearing apart)
-Used to hardcode stuff like `htop vim wpa_supplicant ...`
+Used to hardcode stuff like `nano htop vim wpa_supplicant ...`
 
-My goal is this, to keep reducing hard-coded "standard" to choices/logic options.
+My goal is this, to keep reducing hard-coded "standard" to choices/logic options. Every thing here becomes a menu of it's own.
 The same is true with `base-devel` that used to be installed by default in archinstall.
 But also pulled in `sudo` instead of giving liberty of choice there again.
 
