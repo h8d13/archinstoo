@@ -1,4 +1,4 @@
-# Historical changes to upstream Archinstall
+# Historical changes
 
 ## Fork's origin
 
@@ -87,25 +87,25 @@ Now I have more that got pulled in:
 
 This enables archinstall to be run from an existing Arch installation to perform host-to-target installs on other disks/partitions.
 
-[4022](https://github.com/h8d13/archinstall-patch/commit/9e7a5f693108aad80a731bb719454547b97e50c9) # Do not install base-devel by default
+[4022](https://github.com/archlinux/archinstall/commit/9e7a5f693108aad80a731bb719454547b97e50c9) # Do not install base-devel by default
 
 A funny one I'm also very proud of: `base-devel` is more of a dev tool than a user's tool.
 Building systems should explicitly state it as a dependency and not assume it's installed by default.
 The first line of AUR helpers is often `sudo pacman -S git base-devel` anyway.
 
-[4028](https://github.com/h8d13/archinstall-patch/commit/e5ccdb0c1c4495e63a7e1b5fe4b99c4a95c05cf8) # Adds a timer to post install screen
+[4028](https://github.com/archlinux/archinstall/commit/e5ccdb0c1c4495e63a7e1b5fe4b99c4a95c05cf8) # Adds a timer to post install screen
 
 Because testing should be quick.
 
-[4024](https://github.com/h8d13/archinstall-patch/commit/5fcea379b9cd1f65343056dcfd70a441dc0ab744) # Fix LVM creation/info
+[4024](https://github.com/archlinux/archinstall/commit/5fcea379b9cd1f65343056dcfd70a441dc0ab744) # Fix LVM creation/info
 
 Hotfix for LVMs to not hang on `Setting up LVM config...`, which I had experienced myself.
 
-[4005](https://github.com/h8d13/archinstall-patch/commit/1227babd8cf67750926df4bb75a8106a114a4693) # Change LVM /root def to adapt dynamically
+[4005](https://github.com/archlinux/archinstall/commit/1227babd8cf67750926df4bb75a8106a114a4693) # Change LVM /root def to adapt dynamically
 
 Another hotfix where it was `20GiB` hardcoded.
 
-[4007](https://github.com/h8d13/archinstall-patch/commit/17dc00185724d07a92abb19904c773ea95ea38c8) # Cache property of graphics_devices
+[4007](https://github.com/archlinux/archinstall/commit/17dc00185724d07a92abb19904c773ea95ea38c8) # Cache property of graphics_devices
 
 Then it stopped being one bug at a time and became areas.
 
