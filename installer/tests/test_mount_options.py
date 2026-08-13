@@ -4,6 +4,7 @@ import pytest
 
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import (
+	BootMountOption,
 	FilesystemType,
 	ModificationStatus,
 	PartitionFlag,
@@ -65,17 +66,24 @@ def test_root_and_home_untouched() -> None:
 
 
 @pytest.mark.parametrize(
-	('explicit', 'dropped'),
-	[('exec', 'noexec'), ('dev', 'nodev'), ('suid', 'nosuid'), ('symfollow', 'nosymfollow')],
+	'option',
+	[BootMountOption.dev, BootMountOption.suid, BootMountOption.exec, BootMountOption.symfollow],
 )
-def test_explicit_opposite_wins(explicit: str, dropped: str) -> None:
-	part = _part('/boot', FilesystemType.EXT4, [PartitionFlag.XBOOTLDR], [explicit])
-	options = Installer._harden_boot_options(part, [explicit])
-	assert dropped not in options
-	assert explicit in options
+def test_explicit_opposite_wins(option: BootMountOption) -> None:
+	part = _part('/boot', FilesystemType.EXT4, [PartitionFlag.XBOOTLDR], [option.name])
+	options = Installer._harden_boot_options(part, [option.name])
+	assert option.value not in options
+	assert option.name in options
 
 
 def test_no_duplicates_on_preset_options() -> None:
 	part = _part('/efi', FilesystemType.FAT32, [PartitionFlag.ESP], ['nodev', 'fmask=0177'])
 	options = Installer._harden_boot_options(part, ['nodev', 'fmask=0177'])
 	assert sorted(options) == sorted(BOOT_MEDIA + MASKS)
+
+
+def test_configured_mask_value_kept() -> None:
+	part = _part('/efi', FilesystemType.FAT32, [PartitionFlag.ESP], ['fmask=0022'])
+	options = Installer._harden_boot_options(part, ['fmask=0022'])
+	assert 'fmask=0022' in options
+	assert 'fmask=0177' not in options

@@ -19,6 +19,7 @@ from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.device import (
 	BOOT_ITER_TIME,
 	BOOT_PBKDF_MEMORY,
+	BootMountOption,
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	EncryptionType,
@@ -428,21 +429,21 @@ class Installer:
 		if not (part_mod.is_efi() or part_mod.is_xbootldr() or part_mod.is_boot()):
 			return options
 
-		hardened = ['nodev', 'nosuid', 'noexec']
+		boot_opts = [BootMountOption.dev, BootMountOption.suid, BootMountOption.exec]
 
 		# by designator, not fs type: a plain /boot keeps symlinks, UKI layouts use them
 		if part_mod.is_efi() or part_mod.is_xbootldr():
-			hardened.append('nosymfollow')
+			boot_opts.append(BootMountOption.symfollow)
 
 		if part_mod.fs_type == FilesystemType.FAT32:
-			hardened += ['fmask=0177', 'dmask=0077']
+			boot_opts += [BootMountOption.fmask, BootMountOption.dmask]
 
-		# an explicit opposite in the config wins: mount takes the last option
-		inverse = {'nodev': 'dev', 'nosuid': 'suid', 'noexec': 'exec', 'nosymfollow': 'symfollow'}
-		for opt in hardened:
-			if opt in options or inverse.get(opt, opt) in options:
+		for opt in boot_opts:
+			# mount takes the last occurrence, so appending over an option the
+			# config already sets ('exec', 'fmask=0022') would override it
+			if any(o in (opt.name, opt.value) or o.startswith(f'{opt.name}=') for o in options):
 				continue
-			options.append(opt)
+			options.append(opt.value)
 
 		return options
 

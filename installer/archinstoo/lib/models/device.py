@@ -539,6 +539,17 @@ class BtrfsMountOption(Enum):
 	noatime = 'noatime'
 
 
+# member name = what a config spells to flip the option ('exec', 'fmask=0022'),
+# value = the hardened form we mount with
+class BootMountOption(Enum):
+	dev = 'nodev'
+	suid = 'nosuid'
+	exec = 'noexec'
+	symfollow = 'nosymfollow'
+	fmask = 'fmask=0177'
+	dmask = 'dmask=0077'
+
+
 @dataclass
 class _BtrfsSubvolumeInfo:
 	name: Path
