@@ -5,7 +5,9 @@
 Divergence [point](https://github.com/archlinux/archinstall/pull/3997)
 > At this point I wanted to add a lot of menu entries and remove some of the hardcoded defaults.
 
-## Upstreamed
+Two distinct places to send things: Arch **packaging** (gitlab, the pkgs the installer sits on top of) and **archinstall** itself (github). Different trackers, different review, different lifetimes.
+
+## Arch packaging
 
 Issues tracker:
 
@@ -33,7 +35,7 @@ Pending upstream fixes:
 
 Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-devel/-/work_items/7)
 
-## Past solutions
+## Archinstall
 
 Sending my patches upstream finally meant the months of testing something privately made sense to other people publicly.
 
@@ -105,9 +107,73 @@ Another hotfix where it was `20GiB` hardcoded.
 
 [4007](https://github.com/h8d13/archinstall-patch/commit/17dc00185724d07a92abb19904c773ea95ea38c8) # Cache property of graphics_devices
 
-You can see all work upstream [here](https://github.com/archlinux/archinstall/commits/master/?author=h8d13), and on gitlab where the more "serious" reports go.
+Then it stopped being one bug at a time and became areas.
 
-There are now a lot more I try to [send upstream](https://github.com/archlinux/archinstall/commits/master/?author=h8d13)
+[3979](https://github.com/archlinux/archinstall/commit/326232098a93bf81d35b0620e59a58ec19c0486b) # Full disclosure for bootloaders/keymaps
+
+[4006](https://github.com/archlinux/archinstall/commit/f639290c2025f378ee60562c48ea29b272fab99e) # `ly.service` -> `ly@tty1.service`
+
+A greeter that never shows up is a black screen. The unit needs the tty instance.
+
+[4027](https://github.com/archlinux/archinstall/commit/9412f977718983b7d261cdac3e275a538f3163c8) # Set up Zram dynamically based on best practice
+
+[4042](https://github.com/archlinux/archinstall/commit/2954e4397b053841851d9c79e2b4cde946c0f7e1) # Zram algorithm config
+
+Hardcoded sizes again. Then the follow-up: if you expose zram, expose the compressor too.
+
+[4025](https://github.com/archlinux/archinstall/commit/c1eae10e93a94edbd0f9b94da4ad3d1c73ae993c) # Enable IWD to be used as back-end in network selection
+
+[4031](https://github.com/archlinux/archinstall/commit/79313c4942ea10acf26a284037ac842012cc6f42) # Fix mirrors hang when `/status` endpoint is down
+
+Third-party endpoint down should not stall an installer. Timeout and move on.
+
+[4050](https://github.com/archlinux/archinstall/commit/eb5e88f31784809098bb30754b3639d9ce08f0c1) # Mirrors sort ([4046](https://github.com/archlinux/archinstall/issues/4046))
+
+[4047](https://github.com/archlinux/archinstall/commit/747385a8831774afa76a08708448af0767cbbf6f) # Lvm2/LUKS fixes + mirror logic
+
+[4043](https://github.com/archlinux/archinstall/commit/ac984b7622462c0e9b791541fc603ddad21a7852) # Change the order of the main menu
+
+[4048](https://github.com/archlinux/archinstall/commit/83c9bf06b25854647eef6b6b4445fc2348b80b2d) # Language display handled like other sections
+
+Menu order and consistency are not cosmetics here: the order is the install flow a first-timer reads top to bottom.
+
+[4074](https://github.com/archlinux/archinstall/commit/450664cdc43ac90db34cc4b9036f1a626ac0770d) # Firewalls
+
+[4082](https://github.com/archlinux/archinstall/commit/cc6e247dcfd131d059288c53f217552593291d80) # State `libfido2` dependency
+
+Implicit deps break the day the pkg that pulled them in drops them. Say it out loud.
+
+[4073](https://github.com/archlinux/archinstall/commit/01884599173049323aab584a266d37f6ff3a6f46) # Bootloader changes
+
+[4099](https://github.com/archlinux/archinstall/commit/62edc56a52879846d16bbd9544fcd8642f5bf666) # Hotfix: revert Grub changes
+
+[4100](https://github.com/archlinux/archinstall/commit/ef9f704761c3123b04434a88eaa3e74036556244) # Hotfix: firewall
+
+Two hotfixes three days after the features. Worth keeping in the record: shipping to an installer means the blast radius is somebody's unbootable machine, so reverting fast is part of the job, not a failure of it.
+
+[4231](https://github.com/archlinux/archinstall/commit/8148b1d9bf8985394044b8074e04c541ac4e3a90) # Fix efistub bootloader to use backslashes
+
+EFI paths are DOS paths. `/` works until firmware decides it doesn't.
+
+[4238](https://github.com/archlinux/archinstall/commit/f736b8c4ec9c2b16d98db914824eb283a6a8b032) # Install gfx before DE/WM/Server
+
+Ordering bug: the desktop pulls its own gfx assumptions if it gets there first.
+
+[4358](https://github.com/archlinux/archinstall/commit/3ba29f1193dd996a5ec4e9e68d0bb47ba063be28) # Patch plasma profile, add essentials ([4336](https://github.com/archlinux/archinstall/issues/4336))
+
+[4528](https://github.com/archlinux/archinstall/commit/b81fe955f0c789e371b96ed03c79642d4c607f82) # IWD standalone option + fix NM_IWD
+
+`NicType.IWD` as a third option next to NM and NM_IWD: iwd does its own DHCP, `systemd-resolved` picks up DNS through the symlink, no NetworkManager pulled in. Also filled in the `parse_arg` cases so both nic types round-trip through a config file.
+
+[4711](https://github.com/archlinux/archinstall/commit/8157685d04cf146676cf9e8e1182295f34495e2f) # Add [RT kernel](https://archlinux.org/packages/?sort=&q=linux-rt) variants from upstream
+
+[4705](https://github.com/archlinux/archinstall/commit/426e2732657611f188a7ab7801bda585f62f1a62) # Intel open-source post Gen12 needs this for ffmpeg, OBS, etc
+
+[4713](https://github.com/archlinux/archinstall/commit/3ffa1a98a0c1881fdb2cfb6c7e31efd324a7d405) # Continue [4705](https://github.com/archlinux/archinstall/pull/4705): Intel VPL
+
+Gen12 and up moved to a different media stack. Miss it and hardware accel silently isn't there, which the user only finds out when a recording drops frames. Per the [wiki](https://wiki.archlinux.org/title/Hardware_video_acceleration#Intel_Video_Processing_Library_(Intel_VPL)).
+
+You can see all work upstream [here](https://github.com/archlinux/archinstall/commits/master/?author=h8d13), and on gitlab where the more "serious" reports go.
 
 ----
 
