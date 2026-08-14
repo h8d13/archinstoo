@@ -28,16 +28,6 @@ so the repos are still there after first boot (`file://` entries get stripped).
 Custom repos are appended after the stock ones, so conf order keeps core and extra
 winning any name clash. Same rule as below, enforced by where they land.
 
-On a host (not the ISO) `/etc/pacman.conf` is snapshotted and restored when
-archinstoo exits, so this does not leave your own conf edited.
-
-### Not the kernel
-
-`linux-cachyos` is a package like any other, but additional packages install after
-the bootloader is configured, and boot entries come from the Kernels menu
-(`linux`, `linux-lts`, `linux-zen`, `linux-hardened`). Pick it here and you get the
-files with no entry to boot them. Kernel swapping stays the post-boot route above.
-
 ## Details
 
 Simply because we want an arch base:

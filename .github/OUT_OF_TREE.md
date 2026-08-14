@@ -4,7 +4,7 @@
 
 For some hardware using the AUR for drivers is inevitable: the fix is a build, not a firmware blob
 
-Hence why you can now use `--advanced` to get AUR support built-in 
+Hence why you can now use `--advanced` to get AUR support built-in
 > Uses a modified [`grimoire`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/grimoire.py) *during install*. As far as I know not many installers allow for this.
 
 => Make sure **to toggle kernel headers** from your desired variant(s) if you are building DKMS modules.
@@ -22,4 +22,4 @@ See also: [nVIDIA](./NVIDIA.md)
 
 ### Opt to `linux-firmware`
 
-Optional deps of this [https://archlinux.org/packages/core/any/linux-firmware/] will need to select `vendor` inside the menu.
+Optional deps of this [linux-firmware](https://archlinux.org/packages/core/any/linux-firmware/) will need to select `vendor` inside the menu.
