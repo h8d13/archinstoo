@@ -17,7 +17,8 @@ class PrintServiceApp:
 		return [
 			'cups',
 			# cups dnssd backend needs the daemon running to discover network
-			# printers (temporary queues cover IPP Everywhere in DE dialogs).
+			# printers (temporary queues cover IPP Everywhere in DE dialogs);
+			# resolved can't substitute https://github.com/OpenPrinting/libcups/issues/81
 			# not covered: .local via glibc (nss-mdns + nsswitch edit) and
 			# pre-IPP printers needing vendor drivers (hplip etc.)
 			'avahi-daemon',
