@@ -199,7 +199,8 @@
 		"base-devel": ["base-devel"],
 		"man-db": ["man-db"],
 		"pacman-contrib": ["pacman-contrib"],
-		"reflector": ["reflector"]
+		"reflector": ["reflector"],
+		"ntsync-autoload": ["ntsync-autoload"]
 	},
 
 	"monitors": {

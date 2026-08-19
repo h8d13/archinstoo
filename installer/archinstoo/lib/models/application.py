@@ -78,6 +78,9 @@ class Management(StrEnum):
 	MAN = 'man-db'
 	PACMAN_CONTRIB = 'pacman-contrib'
 	REFLECTOR = 'reflector'
+	# modules-load.d entry so wine finds /dev/ntsync (kernels ship the module
+	# but nothing autoloads it) docs.kernel.org/userspace-api/ntsync.html
+	NTSYNC = 'ntsync-autoload'
 
 
 class ManagementConfigSerialization(TypedDict):
