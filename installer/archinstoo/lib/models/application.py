@@ -12,6 +12,38 @@ class PowerManagementConfigSerialization(TypedDict):
 	power_management: str
 
 
+class CPUScheduler(StrEnum):
+	# values match scx_loader's scheduler names (binaries in scx-scheds)
+	BEERLAND = 'scx_beerland'
+	BPFLAND = 'scx_bpfland'
+	CAKE = 'scx_cake'
+	COSMOS = 'scx_cosmos'
+	FLASH = 'scx_flash'
+	FLOW = 'scx_flow'
+	FORGE = 'scx_forge'
+	LAVD = 'scx_lavd'
+	P2DQ = 'scx_p2dq'
+	PANDEMONIUM = 'scx_pandemonium'
+	RUSTLAND = 'scx_rustland'
+	RUSTY = 'scx_rusty'
+	TICKLESS = 'scx_tickless'
+
+
+# per upstream sched-ext/scx maturity table; rest are production-ready
+EXPERIMENTAL_CPU_SCHEDULERS = frozenset(
+	{
+		CPUScheduler.CAKE,
+		CPUScheduler.FLOW,
+		CPUScheduler.FORGE,
+		CPUScheduler.TICKLESS,
+	}
+)
+
+
+class CPUSchedulerConfigSerialization(TypedDict):
+	scheduler: str
+
+
 class BluetoothConfigSerialization(TypedDict):
 	enabled: bool
 
@@ -132,6 +164,7 @@ class ApplicationSerialization(TypedDict):
 	bluetooth_config: NotRequired[BluetoothConfigSerialization]
 	audio_config: NotRequired[AudioConfigSerialization]
 	power_management_config: NotRequired[PowerManagementConfigSerialization]
+	cpu_scheduler_config: NotRequired[CPUSchedulerConfigSerialization]
 	print_service_config: NotRequired[PrintServiceConfigSerialization]
 	firewall_config: NotRequired[FirewallConfigSerialization]
 	management_config: NotRequired[ManagementConfigSerialization]
@@ -182,6 +215,22 @@ class PowerManagementConfiguration:
 	def parse_arg(cls, arg: PowerManagementConfigSerialization) -> Self:
 		return cls(
 			PowerManagement(arg['power_management']),
+		)
+
+
+@dataclass
+class CPUSchedulerConfiguration:
+	scheduler: CPUScheduler
+
+	def json(self) -> CPUSchedulerConfigSerialization:
+		return {
+			'scheduler': self.scheduler.value,
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: CPUSchedulerConfigSerialization) -> Self:
+		return cls(
+			CPUScheduler(arg['scheduler']),
 		)
 
 
@@ -337,6 +386,7 @@ class ApplicationConfiguration:
 	bluetooth_config: BluetoothConfiguration | None = None
 	audio_config: AudioConfiguration | None = None
 	power_management_config: PowerManagementConfiguration | None = None
+	cpu_scheduler_config: CPUSchedulerConfiguration | None = None
 	print_service_config: PrintServiceConfiguration | None = None
 	firewall_config: FirewallConfiguration | None = None
 	management_config: ManagementConfiguration | None = None
@@ -349,6 +399,7 @@ class ApplicationConfiguration:
 		'bluetooth_config': BluetoothConfiguration,
 		'audio_config': AudioConfiguration,
 		'power_management_config': PowerManagementConfiguration,
+		'cpu_scheduler_config': CPUSchedulerConfiguration,
 		'print_service_config': PrintServiceConfiguration,
 		'firewall_config': FirewallConfiguration,
 		'management_config': ManagementConfiguration,

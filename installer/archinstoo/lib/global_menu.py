@@ -424,6 +424,11 @@ class GlobalMenu(AbstractMenu[None]):
 				output += f'{"Power management"}: {power_management_config.power_management.value}'
 				output += '\n'
 
+			if app_config.cpu_scheduler_config:
+				cpu_scheduler_config = app_config.cpu_scheduler_config
+				output += f'{"CPU scheduler"}: {cpu_scheduler_config.scheduler.value}'
+				output += '\n'
+
 			if app_config.firewall_config:
 				firewall_config = app_config.firewall_config
 				output += f'{"Firewall"}: {firewall_config.firewall.value}'
