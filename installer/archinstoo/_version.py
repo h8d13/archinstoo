@@ -46,12 +46,18 @@ def git_branch() -> str:
 	return subprocess.check_output(['git', '-C', _SRC, 'rev-parse', '--abbrev-ref', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()  # noqa: S603,S607 - fixed argv, git from $PATH
 
 
-# installed package: no git binary (OSError) or not a repo (CalledProcessError)
-try:
-	__gitstat__ = f'{git_branch()}-{git_shash()}'
-except OSError, subprocess.CalledProcessError:
-	__gitstat__ = 'DEV'
+# no git binary (OSError) or not a repo (CalledProcessError): an installed
+# package (stamped, no PKGBUILD next to site-packages) is a release, only a
+# checkout without git history is DEV
+def resolve_gitstat(has_pkgbuild: bool) -> str:
+	try:
+		return f'{git_branch()}-{git_shash()}'
+	except OSError, subprocess.CalledProcessError:
+		return 'DEV' if has_pkgbuild else 'REL'
 
-__pkgver__ = read_pkgbuild_version() or __pkgstamp__
+
+_from_pkgbuild = read_pkgbuild_version()
+__gitstat__ = resolve_gitstat(_from_pkgbuild is not None)
+__pkgver__ = _from_pkgbuild or __pkgstamp__
 __license__ = '- Copyright (C) 2026 - Hadean Eon'
 __version__ = f'{__pkgver__} ({__gitstat__}) {__license__}'

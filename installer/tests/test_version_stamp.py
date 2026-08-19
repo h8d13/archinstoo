@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from archinstoo._version import __pkgstamp__, __version__, git_branch, git_shash, read_pkgbuild_version
+import archinstoo._version
+from archinstoo._version import __pkgstamp__, __version__, git_branch, git_shash, read_pkgbuild_version, resolve_gitstat
 
 ROOT = Path(__file__).parents[2]
 PKGBUILDS = (ROOT / 'PKGBUILD', ROOT / 'installer' / 'PKGBUILD')
@@ -52,3 +53,14 @@ def test_git_stat_describes_this_tree_not_the_cwd(monkeypatch: pytest.MonkeyPatc
 
 	monkeypatch.chdir(tmp_path)  # tmp_path is not a repo
 	assert (git_branch(), git_shash()) == (branch, shash)
+
+
+def test_no_repo_means_rel_when_installed_dev_in_checkout(monkeypatch: pytest.MonkeyPatch) -> None:
+	# git always fails around site-packages, so the fallback IS the installed
+	# label: releases were reporting DEV
+	def _no_repo() -> str:
+		raise subprocess.CalledProcessError(128, 'git')
+
+	monkeypatch.setattr(archinstoo._version, 'git_branch', _no_repo)
+	assert resolve_gitstat(has_pkgbuild=False) == 'REL'
+	assert resolve_gitstat(has_pkgbuild=True) == 'DEV'
