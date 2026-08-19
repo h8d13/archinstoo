@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from .cat.audio import AudioApp
 from .cat.bluetooth import BluetoothApp
+from .cat.cpu_scheduler import CPUSchedulerApp
 from .cat.devtools import DevToolsApp
 from .cat.editor import EditorApp
 from .cat.firewall import FirewallApp
@@ -37,6 +38,12 @@ class ApplicationHandler:
 			PowerManagementApp().install(
 				install_session,
 				app_config.power_management_config,
+			)
+
+		if app_config.cpu_scheduler_config:
+			CPUSchedulerApp().install(
+				install_session,
+				app_config.cpu_scheduler_config,
 			)
 
 		if app_config.print_service_config and app_config.print_service_config.enabled:

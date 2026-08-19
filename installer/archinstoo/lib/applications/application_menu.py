@@ -3,10 +3,13 @@ from typing import override
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.application import (
+	EXPERIMENTAL_CPU_SCHEDULERS,
 	ApplicationConfiguration,
 	Audio,
 	AudioConfiguration,
 	BluetoothConfiguration,
+	CPUScheduler,
+	CPUSchedulerConfiguration,
 	DevelopmentConfiguration,
 	DevTool,
 	DevToolConfiguration,
@@ -119,8 +122,16 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			),
 		]
 
-		# development tooling is opt-in; only surfaced with --advanced
+		# development tooling and sched_ext are opt-in; only surfaced with --advanced
 		if self._advanced:
+			items.append(
+				MenuItem(
+					text='CPU scheduler',
+					action=select_cpu_scheduler,
+					preview_action=self._prev_cpu_scheduler,
+					key='cpu_scheduler_config',
+				),
+			)
 			items.append(
 				MenuItem(
 					text='Development',
@@ -136,6 +147,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: PowerManagementConfiguration = item.value
 			return f'{"Power management"}: {config.power_management.value}'
+		return None
+
+	def _prev_cpu_scheduler(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: CPUSchedulerConfiguration = item.value
+			return f'{"CPU scheduler"}: {config.scheduler.value}'
 		return None
 
 	def _prev_bluetooth(self, item: MenuItem) -> str | None:
@@ -286,6 +303,33 @@ def select_power_management(preset: PowerManagementConfiguration | None = None) 
 			return preset
 		case ResultType.Selection:
 			return PowerManagementConfiguration(power_management=result.get_value())
+		case ResultType.Reset:
+			return None
+
+
+def select_cpu_scheduler(preset: CPUSchedulerConfiguration | None = None) -> CPUSchedulerConfiguration | None:
+	items = [MenuItem(text='Stable', read_only=True)]
+	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s not in EXPERIMENTAL_CPU_SCHEDULERS]
+	items.append(MenuItem(text='Experimental', read_only=True))
+	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s in EXPERIMENTAL_CPU_SCHEDULERS]
+	group = MenuItemGroup(items)
+
+	if preset:
+		group.set_focus_by_value(preset.scheduler)
+
+	result = SelectMenu[CPUScheduler](
+		group,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min('CPU scheduler'),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return CPUSchedulerConfiguration(scheduler=result.get_value())
 		case ResultType.Reset:
 			return None
 
