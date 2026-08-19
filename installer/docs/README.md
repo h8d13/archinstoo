@@ -69,6 +69,7 @@
 │   │   │   └── cat/
 │   │   │       ├── audio
 │   │   │       ├── bluetooth
+│   │   │       ├── cpu_scheduler
 │   │   │       ├── devtools
 │   │   │       ├── editor
 │   │   │       ├── firewall
@@ -178,6 +179,7 @@
 │   │   ├── minimal
 │   │   ├── mirror
 │   │   ├── packages
+│   │   ├── passwd
 │   │   ├── rescue
 │   │   ├── _resolve
 │   │   └── size
@@ -186,7 +188,8 @@
 │   ├── config_custom.json
 │   ├── config_sample_full.json
 │   ├── custom
-│   └── vm_configuration.json
+│   ├── vm_configuration.json
+│   └── vm_unattended.json
 ├── PKGBUILD
 ├── pyproject.toml
 └── tests/
@@ -201,13 +204,15 @@
     ├── test_env
     ├── test_firmware
     ├── test_locale
+    ├── test_log_dir
     ├── test_menu_item_focus
     ├── test_mirrors
+    ├── test_mount_options
     ├── test_parted_optional
     ├── test_saved_config_resume
     ├── test_schema_drift
     ├── test_script_peek
     └── test_version_stamp
 
-29 directories, 179 files
+29 directories, 184 files
 ```
