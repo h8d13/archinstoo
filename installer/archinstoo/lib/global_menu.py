@@ -577,6 +577,9 @@ class GlobalMenu(AbstractMenu[None]):
 	# Performance
 	#   sched_autogroup_enabled = 0: inert on systemd, avoids nice(1) breakage
 	#     ref: lwn.net/Articles/416641
+	#   nmi_watchdog = 0: hard lockup detector, periodic NMIs while CPUs are
+	#     busy and pins a perf counter; KVM guests already default off
+	#     ref: docs.kernel.org/admin-guide/sysctl/kernel.html#nmi-watchdog
 	#   vfs_cache_pressure = 50: retain dentry/inode caches longer
 	#   dirty_ratio = 15: reduce worst-case write stall (default 20)
 	#   dirty_background_ratio = 5: earlier background flush, smoother IO (default 10)
@@ -617,6 +620,7 @@ class GlobalMenu(AbstractMenu[None]):
 			'kernel.yama.ptrace_scope = 1',
 			'# Performance',
 			'kernel.sched_autogroup_enabled = 0',
+			'kernel.nmi_watchdog = 0',
 			'vm.vfs_cache_pressure = 50',
 			'vm.dirty_ratio = 15',
 			'vm.dirty_background_ratio = 5',
