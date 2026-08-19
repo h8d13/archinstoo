@@ -16,6 +16,11 @@ class PrintServiceApp:
 	def services(self) -> list[str]:
 		return [
 			'cups',
+			# cups dnssd backend needs the daemon running to discover network
+			# printers (temporary queues cover IPP Everywhere in DE dialogs).
+			# not covered: .local via glibc (nss-mdns + nsswitch edit) and
+			# pre-IPP printers needing vendor drivers (hplip etc.)
+			'avahi-daemon',
 		]
 
 	def install(self, install_session: Installer) -> None:
