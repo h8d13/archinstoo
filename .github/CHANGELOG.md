@@ -7,6 +7,39 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.14-2
+
+	- Boot partition mount hardening (#4714), centralised in
+	  `_harden_boot_options` and shared with the encrypted-`/boot` path
+		- `nodev,nosuid,noexec` on ESP, XBOOTLDR and `/boot`;
+		  `nosymfollow` only on ESP/XBOOTLDR (a plain `/boot` keeps
+		  symlinks, UKI layouts use them)
+		- FAT32 masks tightened to `fmask=0177,dmask=0077` (files 0600,
+		  same set systemd mounts boot media with) and now cover XBOOTLDR,
+		  not only the ESP: an initramfs on a world-readable `/boot` can
+		  carry a keyfile
+		- An explicit opposite in the saved config wins (`exec`, `dev`,
+		  ...): mount takes the last option. `BootMountOption` maps what a
+		  config spells to the hardened form; tests in
+		  `test_mount_options.py`
+	- systemd-boot with a separate `/boot` is validated up front: it must
+	  be FAT and marked XBOOTLDR. bootctl verifies the partition GUID but
+	  never the filesystem, so an ext4 XBOOTLDR installed cleanly and then
+	  booted into an empty menu
+	- `sched_ext` CPU scheduler choice under Applications (`--advanced`):
+	  the 13 scx schedulers split stable/experimental per the upstream
+	  maturity table. Installs `scx-scheds` + `scx-tools`, writes
+	  `/etc/scx_loader/config.toml` and enables `scx_loader`; userspace
+	  BPF, no initramfs involvement
+	- `kernel.nmi_watchdog = 0` joins the sysctl defaults: the hard lockup
+	  detector fires periodic NMIs while CPUs are busy and pins a perf
+	  counter; KVM guests already default off
+	- Print service enables `avahi-daemon` next to `cups`: the dnssd
+	  backend needs the daemon running to discover network printers,
+	  resolved can't substitute (OpenPrinting/libcups#81)
+	- `ntsync-autoload` in Management: modules-load.d entry so Wine/Proton
+	  find `/dev/ntsync` (kernels ship the module, nothing autoloads it)
+
 ## 0.1.14-1
 
 	- Version tracking (`nvchecker/NVGEN`) covers what a config can install,
