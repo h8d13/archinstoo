@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.disk.device_handler import DeviceHandler
 	from archinstoo.lib.models.users import Password
 
-from uuid import UUID
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug
@@ -216,7 +215,7 @@ class DiskLayoutConfiguration:
 					btrfs_subvols=SubvolumeModification.parse_args(partition.get('btrfs', [])),
 				)
 				# special 'invisible' attr to internally identify the part mod
-				device_partition._obj_id = partition['obj_id']
+				device_partition._obj_id = str(partition['obj_id'])
 				device_partitions.append(device_partition)
 
 			device_modification.partitions = device_partitions
@@ -976,12 +975,14 @@ class PartitionModification:
 	partuuid: str | None = None
 	uuid: str | None = None
 
-	_obj_id: UUID | str = field(init=False)
+	# str, not UUID: config restores this from json as a string, and __hash__
+	# reads it raw, so mixing the two hashes one identity into two buckets
+	_obj_id: str = field(init=False)
 
 	def __post_init__(self) -> None:
 		# needed to use the object as a dictionary key due to hash func
 		if not hasattr(self, '_obj_id'):
-			self._obj_id = uuid.uuid4()
+			self._obj_id = str(uuid.uuid4())
 
 		if self.is_exists_or_modify() and not self.dev_path:
 			raise ValueError('If partition marked as existing a path must be set')
@@ -1000,7 +1001,7 @@ class PartitionModification:
 	@property
 	def obj_id(self) -> str:
 		if hasattr(self, '_obj_id'):
-			return str(self._obj_id)
+			return self._obj_id
 		return ''
 
 	@property
@@ -1224,12 +1225,12 @@ class LvmVolume:
 	# mapper device path /dev/<vg>/<vol>
 	dev_path: Path | None = None
 
-	_obj_id: uuid.UUID | str = field(init=False)
+	_obj_id: str = field(init=False)
 
 	def __post_init__(self) -> None:
 		# needed to use the object as a dictionary key due to hash func
 		if not hasattr(self, '_obj_id'):
-			self._obj_id = uuid.uuid4()
+			self._obj_id = str(uuid.uuid4())
 
 	@override
 	def __hash__(self) -> int:
@@ -1238,7 +1239,7 @@ class LvmVolume:
 	@property
 	def obj_id(self) -> str:
 		if hasattr(self, '_obj_id'):
-			return str(self._obj_id)
+			return self._obj_id
 		return ''
 
 	@property
@@ -1287,7 +1288,7 @@ class LvmVolume:
 			btrfs_subvols=SubvolumeModification.parse_args(arg.get('btrfs', [])),
 		)
 
-		volume._obj_id = arg['obj_id']
+		volume._obj_id = str(arg['obj_id'])
 
 		return volume
 
