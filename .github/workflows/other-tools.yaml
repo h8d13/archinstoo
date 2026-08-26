@@ -1,5 +1,6 @@
 on: [push]
 name: Other tools (track-only)
+permissions: {}
 jobs:
     import-linter:
         runs-on: ubuntu-latest
@@ -13,6 +14,20 @@ jobs:
               continue-on-error: true
               working-directory: installer
               run: lint-imports
+    zizmor:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+              with:
+                # nothing here pushes, so don't leave the token in .git/config
+                persist-credentials: false
+            - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+              with:
+                python-version: '3.14'
+            - run: pip install zizmor
+            - name: Audit workflow security
+              continue-on-error: true
+              run: zizmor --offline .github/workflows
     vulture:
         runs-on: ubuntu-latest
         steps:

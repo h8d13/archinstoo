@@ -1,5 +1,6 @@
 on: [ push ]
 name: Ruff check linting
+permissions: {}
 jobs:
     ruff:
         runs-on: ubuntu-latest

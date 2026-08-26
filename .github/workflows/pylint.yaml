@@ -1,5 +1,6 @@
 on: [ push ]
 name: Pylint linting
+permissions: {}
 jobs:
     pylint:
         runs-on: ubuntu-latest

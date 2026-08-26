@@ -2,6 +2,8 @@ name: Build archinstoo
 
 on: [ push ]
 
+permissions: {}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
