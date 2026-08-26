@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 
-from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import (
 	FilesystemType,
 	ModificationStatus,
@@ -12,6 +11,7 @@ from archinstoo.lib.models.device import (
 	SectorSize,
 	Size,
 	Unit,
+	has_separate_boot,
 )
 
 SECTOR = SectorSize(512, Unit.B)
@@ -37,32 +37,42 @@ SEPARATE_BOOT = ('/boot', '/dev/vda2', [PartitionFlag.BOOT])
 
 
 @pytest.mark.parametrize(
-	('boot', 'efi', 'expected'),
+	('layout', 'shared'),
 	[
 		# add_bootloader hands the same object twice when nothing is at /boot
-		(ESP_EFI, ESP_EFI, False),
-		(ESP_BOOT_EFI, ESP_BOOT_EFI, False),
-		# ESP mounted at /boot: both getters return the one partition
-		(ESP_BOOT, ESP_BOOT, False),
-		# the only layout with a real second partition
-		(SEPARATE_BOOT, ESP_EFI, True),
+		(ESP_EFI, True),
+		(ESP_BOOT_EFI, True),
+		# ESP mounted at /boot: both getters return that one partition
+		(ESP_BOOT, True),
 	],
 )
-def test_has_separate_boot(
-	boot: tuple[str, str, list[PartitionFlag]],
-	efi: tuple[str, str, list[PartitionFlag]],
-	expected: bool,
-) -> None:
-	assert Installer._has_separate_boot(_part(*boot), _part(*efi)) is expected
+def test_no_separate_boot_when_one_partition(layout: tuple[str, str, list[PartitionFlag]], shared: bool) -> None:
+	part = _part(*layout)
+	assert has_separate_boot(part, part) is not shared
 
 
-def test_has_separate_boot_ignores_obj_id() -> None:
-	# _obj_id is a fresh uuid4 per instance and takes part in the dataclass
-	# __eq__, so `boot != efi` reported "separate" for two descriptions of one
-	# partition. Compare the device instead.
-	assert _part(*ESP_BOOT) != _part(*ESP_BOOT)
-	assert Installer._has_separate_boot(_part(*ESP_BOOT), _part(*ESP_BOOT)) is False
+def test_separate_boot_when_two_partitions() -> None:
+	assert has_separate_boot(_part(*SEPARATE_BOOT), _part(*ESP_EFI)) is True
+
+
+def test_has_separate_boot_is_identity() -> None:
+	# both getters return elements of one partition list, so the same
+	# partition is always the same object; dev_path cannot be used instead
+	# because it is still None everywhere before partitioning runs
+	esp = _part(*ESP_BOOT)
+	assert has_separate_boot(esp, esp) is False
+	unpartitioned = PartitionModification(
+		status=ModificationStatus.CREATE,
+		type=PartitionType.PRIMARY,
+		start=Size(1, Unit.MiB, SECTOR),
+		length=Size(1, Unit.GiB, SECTOR),
+		mountpoint=Path('/boot'),
+		fs_type=FilesystemType.FAT32,
+		flags=[PartitionFlag.BOOT],
+	)
+	assert unpartitioned.dev_path is None
+	assert has_separate_boot(unpartitioned, esp) is True
 
 
 def test_has_separate_boot_without_esp() -> None:
-	assert Installer._has_separate_boot(_part(*SEPARATE_BOOT), None) is False
+	assert has_separate_boot(_part(*SEPARATE_BOOT), None) is False

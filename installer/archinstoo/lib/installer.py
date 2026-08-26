@@ -28,6 +28,7 @@ from archinstoo.lib.models.device import (
 	PartitionModification,
 	SnapshotType,
 	SubvolumeModification,
+	has_separate_boot,
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.zram import ZramAlgorithm
@@ -1358,17 +1359,6 @@ class Installer:
 				return root
 		return None
 
-	@staticmethod
-	def _has_separate_boot(
-		boot_partition: PartitionModification,
-		efi_partition: PartitionModification | None,
-	) -> bool:
-		# add_bootloader falls back to boot_partition = efi_partition when no
-		# partition is mounted at /boot, so both names can be one object.
-		if efi_partition is None:
-			return False
-		return boot_partition.dev_path != efi_partition.dev_path
-
 	def _configure_grub_btrfsd(self, snapshot_type: SnapshotType) -> None:
 		if snapshot_type == SnapshotType.Timeshift:
 			snapshot_path = '--timeshift-auto'
@@ -1563,7 +1553,7 @@ class Installer:
 		# nothing from a separate boot partition even though pacman still drops
 		# the raw kernel there. Naming it makes bootctl demand XBOOTLDR typing
 		# for no gain, and plain BOOT-flagged /boot then fails the install.
-		if not uki_enabled and self._has_separate_boot(boot_partition, efi_partition):
+		if not uki_enabled and has_separate_boot(boot_partition, efi_partition):
 			bootctl_options.append(f'--esp-path={efi_partition.mountpoint}')
 			bootctl_options.append(f'--boot-path={boot_partition.mountpoint}')
 
@@ -1874,7 +1864,7 @@ class Installer:
 
 		path_root = 'boot()'
 		if efi_partition:
-			if self._has_separate_boot(boot_partition, efi_partition):
+			if has_separate_boot(boot_partition, efi_partition):
 				path_root = f'uuid({boot_partition.partuuid})'
 			elif efi_partition.mountpoint != Path('/boot') and isinstance(root, PartitionModification):
 				path_root = f'uuid({root.partuuid})'
@@ -1988,7 +1978,7 @@ class Installer:
 		if not boot_partition.mountpoint:
 			raise ValueError('Boot partition is not mounted, cannot write rEFInd config')
 
-		if self._has_separate_boot(boot_partition, efi_partition):
+		if has_separate_boot(boot_partition, efi_partition):
 			# kernels sit on their own /boot partition
 			config_path = self.target / boot_partition.mountpoint.relative_to('/') / 'refind_linux.conf'
 			boot_on_root = False
@@ -2187,7 +2177,7 @@ class Installer:
 		# systemd-boot-random-seed.service sets it on the first real boot.
 		if efi_partition is not None and (uki_enabled or bootloader == Bootloader.Systemd):
 			seed_cmd = ['bootctl', '--graceful']
-			if self._has_separate_boot(boot_partition, efi_partition):
+			if has_separate_boot(boot_partition, efi_partition):
 				seed_cmd.append(f'--esp-path={efi_partition.mountpoint}')
 			seed_cmd.append('random-seed')
 			try:

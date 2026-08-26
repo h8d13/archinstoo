@@ -945,6 +945,19 @@ class _PartitionModificationSerialization(TypedDict):
 	dev_path: str | None
 
 
+def has_separate_boot(
+	boot_partition: PartitionModification,
+	efi_partition: PartitionModification | None,
+) -> bool:
+	# add_bootloader falls back to boot_partition = efi_partition when nothing
+	# is mounted at /boot, so both names can be one object. Both getters walk
+	# the same partition list, so identity is the whole question, and `!=`
+	# answered it only by accident: _obj_id is a per-instance uuid4 sitting in
+	# the dataclass __eq__. Comparing dev_path instead reads tidier but is
+	# wrong before partitioning, where every dev_path is still None.
+	return efi_partition is not None and boot_partition is not efi_partition
+
+
 @dataclass
 class PartitionModification:
 	status: ModificationStatus
