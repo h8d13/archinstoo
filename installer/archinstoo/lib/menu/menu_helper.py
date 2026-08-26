@@ -6,11 +6,11 @@ class MenuHelper[ValueT]:
 	def __init__(
 		self,
 		data: list[ValueT],
-		additional_options: list[str] = [],
+		additional_options: list[str] | None = None,
 	) -> None:
 		self._separator = ''
 		self._data = data
-		self._additional_options = additional_options
+		self._additional_options = list(additional_options or [])
 
 	def create_menu_group(self) -> MenuItemGroup:
 		table_data_mapping = self._table_to_data_mapping(self._data)

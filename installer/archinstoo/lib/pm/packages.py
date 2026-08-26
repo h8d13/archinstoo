@@ -18,7 +18,10 @@ def _update_package(pkg: AvailablePackage, detailed: AvailablePackage) -> None:
 		setattr(pkg, f.name, getattr(detailed, f.name))
 
 
-def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] = []) -> None:
+def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] | None = None) -> None:
+	if prefetch is None:
+		prefetch = []
+
 	# Collect packages that need enrichment
 	to_enrich = []
 	if not pkg.description:

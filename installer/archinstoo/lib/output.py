@@ -4,7 +4,6 @@ import pwd
 import sys
 from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
-from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, TypeIs, runtime_checkable
 
@@ -35,11 +34,14 @@ class FormattedOutput:
 	def _get_values(
 		o: object,
 		class_formatter: str | Callable[[object, list[str]], dict[str, Any]] | None = None,
-		filter_list: list[str] = [],
+		filter_list: list[str] | None = None,
 	) -> dict[str, Any]:
 		# the original values returned a dataclass as dict thru the call to some specific methods
 		# this version allows thru the parameter class_formatter to call a dynamically selected formatting method.
 		# Can transmit a filter list to the class_formatter,
+		if filter_list is None:
+			filter_list = []
+
 		if class_formatter:
 			# if invoked per reference it has to be a standard function or a classmethod.
 			# A method of an instance does not make sense
@@ -66,7 +68,7 @@ class FormattedOutput:
 		cls,
 		obj: Sequence[object],
 		class_formatter: str | Callable[[object, list[str]], dict[str, Any]] | None = None,
-		filter_list: list[str] = [],
+		filter_list: list[str] | None = None,
 		capitalize: bool = False,
 	) -> str:
 		# variant of as_table (subtly different code) which has two additional parameters
@@ -76,6 +78,9 @@ class FormattedOutput:
 		# A general comment, the format selected for the output (a string where every data record is separated by newline)
 		# is for compatibility with a print statement
 		# As_table_filter can be a drop in replacement for as_table
+		if filter_list is None:
+			filter_list = []
+
 		raw_data = [cls._get_values(o, class_formatter, filter_list) for o in obj]
 
 		# determine the maximum column size
@@ -221,21 +226,11 @@ def _supports_color() -> bool:
 	return supported_platform and is_a_tty
 
 
-class Font(Enum):
-	bold = '1'
-	italic = '3'
-	underscore = '4'
-	blink = '5'
-	reverse = '7'
-	conceal = '8'
-
-
 def _stylize_output(
 	text: str,
 	fg: str,
 	bg: str | None,
 	reset: bool,
-	font: list[Font] = [],
 ) -> str:
 	# Heavily influenced by:
 	# https://github.com/django/django/blob/ae8338daf34fd746771e0678081999b656177bae/django/utils/termcolors.py#L13
@@ -273,8 +268,6 @@ def _stylize_output(
 	if bg:
 		code_list.append(background[str(bg)])
 
-	code_list.extend(o.value for o in font)
-
 	ansi = ';'.join(code_list)
 
 	return f'\033[{ansi}m{text}\033[0m'
@@ -286,14 +279,13 @@ def info(
 	fg: str = 'white',
 	bg: str | None = None,
 	reset: bool = False,
-	font: list[Font] = [],
 	step: bool = False,
 ) -> None:
 	if step:
 		# Mark a major install phase: prepend ==> (cyan unless caller overrode fg)
-		log('==>', *msgs, level=level, fg='cyan' if fg == 'white' else fg, bg=bg, reset=reset, font=font)
+		log('==>', *msgs, level=level, fg='cyan' if fg == 'white' else fg, bg=bg, reset=reset)
 		return
-	log(*msgs, level=level, fg=fg, bg=bg, reset=reset, font=font)
+	log(*msgs, level=level, fg=fg, bg=bg, reset=reset)
 
 
 def _timestamp() -> str:
@@ -307,9 +299,8 @@ def debug(
 	fg: str = 'white',
 	bg: str | None = None,
 	reset: bool = False,
-	font: list[Font] = [],
 ) -> None:
-	log(*msgs, level=level, fg=fg, bg=bg, reset=reset, font=font)
+	log(*msgs, level=level, fg=fg, bg=bg, reset=reset)
 
 
 def error(
@@ -318,9 +309,8 @@ def error(
 	fg: str = 'red',
 	bg: str | None = None,
 	reset: bool = False,
-	font: list[Font] = [],
 ) -> None:
-	log(*msgs, level=level, fg=fg, bg=bg, reset=reset, font=font)
+	log(*msgs, level=level, fg=fg, bg=bg, reset=reset)
 
 
 def warn(
@@ -329,9 +319,8 @@ def warn(
 	fg: str = 'yellow',
 	bg: str | None = None,
 	reset: bool = False,
-	font: list[Font] = [],
 ) -> None:
-	log(*msgs, level=level, fg=fg, bg=bg, reset=reset, font=font)
+	log(*msgs, level=level, fg=fg, bg=bg, reset=reset)
 
 
 def log(
@@ -340,7 +329,6 @@ def log(
 	fg: str = 'white',
 	bg: str | None = None,
 	reset: bool = False,
-	font: list[Font] = [],
 ) -> None:
 	if level < log_level:
 		return
@@ -352,7 +340,7 @@ def log(
 	# Attempt to colorize the output if supported
 	# Insert default colors and override with **kwargs
 	if _supports_color():
-		text = _stylize_output(text, fg, bg, reset, font)
+		text = _stylize_output(text, fg, bg, reset)
 
 	if level != logging.DEBUG:
 		from archinstoo.lib.tui.curses_menu import Tui

@@ -76,7 +76,7 @@ class Installer:
 		self,
 		target: Path,
 		disk_config: DiskLayoutConfiguration,
-		base_packages: list[str] = [],
+		base_packages: list[str] | None = None,
 		kernels: list[str] | None = None,
 		firmware: FirmwareConfiguration | None = None,
 		*,
@@ -94,7 +94,7 @@ class Installer:
 		self._args = handler.args if handler else Arguments()
 		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/h8d13/archinstoo/issues'
 
-		self._base_packages = base_packages or __base_packages__.copy()
+		self._base_packages = list(base_packages or __base_packages__)
 		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
 		self.kernels = kernels or [DEFAULT_KERNEL.value]
 		self._disk_config = disk_config
@@ -363,7 +363,10 @@ class Installer:
 				else:
 					self._mount_partition(part_mod)
 
-	def _mount_lvm_layout(self, luks_handlers: dict[PartitionModification | LvmVolume, Luks2] = {}) -> None:
+	def _mount_lvm_layout(self, luks_handlers: dict[PartitionModification | LvmVolume, Luks2] | None = None) -> None:
+		if luks_handlers is None:
+			luks_handlers = {}
+
 		lvm_config = self._disk_config.lvm_config
 
 		if not lvm_config:
@@ -517,8 +520,11 @@ class Installer:
 		self,
 		dev_path: Path,
 		subvolumes: list[SubvolumeModification],
-		mount_options: list[str] = [],
+		mount_options: list[str] | None = None,
 	) -> None:
+		if mount_options is None:
+			mount_options = []
+
 		# Filter out subvolumes without mountpoints to avoid errors when sorting
 		subvols_with_mountpoints = [sv for sv in subvolumes if sv.mountpoint is not None]
 		for subvol in sorted(subvols_with_mountpoints, key=lambda x: x.relative_mountpoint):
@@ -1135,12 +1141,15 @@ class Installer:
 
 	def minimal_installation(
 		self,
-		optional_repositories: list[Repository] = [],
+		optional_repositories: list[Repository] | None = None,
 		mkinitcpio: bool = True,
 		hostname: str | None = None,
 		locale_config: LocaleConfiguration | None = LocaleConfiguration.default(),
 		timezone: str | None = None,
 	) -> None:
+		if optional_repositories is None:
+			optional_repositories = []
+
 		info(f'Installing base system: kernels={", ".join(self.kernels)}, hostname={hostname or "(unset)"}', step=True)
 
 		if self._disk_config.lvm_config:

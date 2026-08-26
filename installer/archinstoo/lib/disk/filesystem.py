@@ -183,8 +183,11 @@ class FilesystemHandler:
 	def _setup_lvm(
 		self,
 		lvm_config: LvmConfiguration,
-		enc_mods: dict[PartitionModification, Luks2] = {},
+		enc_mods: dict[PartitionModification, Luks2] | None = None,
 	) -> None:
+		if enc_mods is None:
+			enc_mods = {}
+
 		self._lvm_create_pvs(lvm_config, enc_mods)
 
 		for vg in lvm_config.vol_groups:
@@ -237,8 +240,11 @@ class FilesystemHandler:
 	def _format_lvm_vols(
 		self,
 		lvm_config: LvmConfiguration,
-		enc_vols: dict[LvmVolume, Luks2] = {},
+		enc_vols: dict[LvmVolume, Luks2] | None = None,
 	) -> None:
+		if enc_vols is None:
+			enc_vols = {}
+
 		for vol in lvm_config.get_all_volumes():
 			if enc_vol := enc_vols.get(vol):
 				if not enc_vol.mapper_dev:
@@ -257,8 +263,11 @@ class FilesystemHandler:
 	def _lvm_create_pvs(
 		self,
 		lvm_config: LvmConfiguration,
-		enc_mods: dict[PartitionModification, Luks2] = {},
+		enc_mods: dict[PartitionModification, Luks2] | None = None,
 	) -> None:
+		if enc_mods is None:
+			enc_mods = {}
+
 		pv_paths: set[Path] = set()
 
 		for vg in lvm_config.vol_groups:
@@ -269,8 +278,11 @@ class FilesystemHandler:
 	def _get_all_pv_dev_paths(
 		self,
 		pvs: list[PartitionModification],
-		enc_mods: dict[PartitionModification, Luks2] = {},
+		enc_mods: dict[PartitionModification, Luks2] | None = None,
 	) -> set[Path]:
+		if enc_mods is None:
+			enc_mods = {}
+
 		pv_paths: set[Path] = set()
 
 		for pv in pvs:

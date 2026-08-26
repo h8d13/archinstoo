@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 def select_driver(
-	options: list[GfxDriver] = [],
+	options: list[GfxDriver] | None = None,
 	preset: GfxDriver | None = None,
 	profile: Profile | None = None,
 	kernels: list[str] | None = None,

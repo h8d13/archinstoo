@@ -92,7 +92,10 @@ def select_timezone(preset: str | None = None) -> str | None:
 			return result.get_value()
 
 
-def select_additional_packages(preset: list[str] = []) -> list[str]:
+def select_additional_packages(preset: list[str] | None = None) -> list[str]:
+	if preset is None:
+		preset = []
+
 	Tui.print('Loading packages...', clear_screen=True)
 
 	packages = list_available_packages()
@@ -200,8 +203,11 @@ def select_additional_packages(preset: list[str] = []) -> list[str]:
 			return [pkg.name for pkg in selected_pacakges]
 
 
-def select_aur_packages(preset: list[str] = []) -> list[str]:
+def select_aur_packages(preset: list[str] | None = None) -> list[str]:
 	from archinstoo.lib.grimoire import exists_in_aur_mirror
+
+	if preset is None:
+		preset = []
 
 	base_header = 'Enter AUR package names separated by commas' + '\n'
 	base_header += 'base-devel, git and kernel-headers will be installed automatically' + '\n'

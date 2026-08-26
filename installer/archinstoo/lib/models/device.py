@@ -604,8 +604,11 @@ class _PartitionInfo:
 		partition: Partition,
 		lsblk_info: LsblkInfo,
 		fs_type: FilesystemType | None,
-		btrfs_subvol_infos: list[_BtrfsSubvolumeInfo] = [],
+		btrfs_subvol_infos: list[_BtrfsSubvolumeInfo] | None = None,
 	) -> Self:
+		if btrfs_subvol_infos is None:
+			btrfs_subvol_infos = []
+
 		partition_type = PartitionType.get_type_from_code(partition.type)
 		flags = [f for f in PartitionFlag if partition.getFlag(f.flag_id)]
 

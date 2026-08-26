@@ -224,5 +224,8 @@ def _select_groups(preset: list[str] | None = None) -> list[str]:
 			return preset or []
 
 
-def select_users(prompt: str = '', defined_users: list[User] = []) -> list[User]:
+def select_users(prompt: str = '', defined_users: list[User] | None = None) -> list[User]:
+	if defined_users is None:
+		defined_users = []
+
 	return UserList(prompt, defined_users).run()

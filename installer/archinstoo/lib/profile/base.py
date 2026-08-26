@@ -57,17 +57,17 @@ class Profile:
 		self,
 		name: str,
 		profile_type: ProfileType,
-		current_selection: list[Self] = [],
-		packages: list[str] = [],
-		services: list[str] = [],
+		current_selection: list[Self] | None = None,
+		packages: list[str] | None = None,
+		services: list[str] | None = None,
 	) -> None:
 		self.name = name
 		self.profile_type = profile_type
 		self.custom_settings: dict[str, str | list[str] | None] = {}
 
-		self.current_selection = current_selection
-		self._packages = packages
-		self._services = services
+		self.current_selection = list(current_selection or [])
+		self._packages = list(packages or [])
+		self._services = list(services or [])
 
 	@property
 	def packages(self) -> list[str]:

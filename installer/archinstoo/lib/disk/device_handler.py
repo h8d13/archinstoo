@@ -290,8 +290,11 @@ class DeviceHandler:
 		self,
 		fs_type: FilesystemType,
 		path: Path,
-		additional_parted_options: list[str] = [],
+		additional_parted_options: list[str] | None = None,
 	) -> None:
+		if additional_parted_options is None:
+			additional_parted_options = []
+
 		mkfs_type = fs_type.value
 		command = None
 		options = []
