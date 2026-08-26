@@ -41,8 +41,11 @@ def _boot_partition(
 	start = Size(1, Unit.MiB, sector_size)
 
 	if uefi:
-		# UEFI: ESP, mount at /efi for btrfs subvolumes so /boot stays in @
-		mountpoint = Path('/efi') if using_subvolumes else Path('/boot')
+		# UEFI: ESP, mount at /efi for btrfs subvolumes so /boot stays in @.
+		# Limine is the exception: it reads FAT only, so leaving the kernels
+		# on the root filesystem makes them unreachable and it panics at boot.
+		esp_at_efi = using_subvolumes and bootloader != Bootloader.Limine
+		mountpoint = Path('/efi') if esp_at_efi else Path('/boot')
 		partitions.append(
 			PartitionModification(
 				status=ModificationStatus.CREATE,
