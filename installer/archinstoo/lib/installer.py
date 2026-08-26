@@ -1947,6 +1947,21 @@ class Installer:
 
 		self._helper_flags['bootloader'] = 'efistub'
 
+	@staticmethod
+	def _refind_kernel_dir(root: PartitionModification | LvmVolume, *, boot_on_root: bool) -> str:
+		# Directory holding vmlinuz/initramfs in refind's backslash form,
+		# relative to the volume refind addresses. On a btrfs root nothing
+		# sets a default subvolume, so the root subvolume is part of the path.
+		if not boot_on_root:
+			# kernels sit at the top of the ESP or a separate /boot partition
+			return '\\'
+		subvols = getattr(root, 'btrfs_subvols', None)
+		if subvols:
+			root_subvol = next((sv for sv in subvols if sv.is_root()), None)
+			if root_subvol:
+				return f'{root_subvol.name}\\boot\\'
+		return '\\boot\\'
+
 	def _add_refind_bootloader(
 		self,
 		boot_partition: PartitionModification,
@@ -1996,22 +2011,8 @@ class Installer:
 			if uki_enabled:
 				entry = f'"Arch Linux ({kernel}) UKI" "{kernel_params}"'
 			else:
-				if boot_on_root:
-					# Kernels are in /boot subdirectory of root filesystem
-					if hasattr(root, 'btrfs_subvols') and root.btrfs_subvols:
-						# Root is btrfs with subvolume, find the root subvolume
-						root_subvol = next((sv for sv in root.btrfs_subvols if sv.is_root()), None)
-						if root_subvol:
-							subvol_name = root_subvol.name
-							initrd_path = f'initrd={subvol_name}\\boot\\initramfs-{kernel}.img'
-						else:
-							initrd_path = f'initrd=\\boot\\initramfs-{kernel}.img'
-					else:
-						# Root without btrfs subvolume
-						initrd_path = f'initrd=\\boot\\initramfs-{kernel}.img'
-				else:
-					# Kernels are at root of their partition (ESP or separate boot partition)
-					initrd_path = f'initrd=\\initramfs-{kernel}.img'
+				kernel_dir = self._refind_kernel_dir(root, boot_on_root=boot_on_root)
+				initrd_path = f'initrd={kernel_dir}initramfs-{kernel}.img'
 				entry = f'"Arch Linux ({kernel})" "{kernel_params} {initrd_path}"'
 
 			config_contents.append(entry)

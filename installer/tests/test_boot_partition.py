@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import (
 	FilesystemType,
 	ModificationStatus,
@@ -10,6 +11,7 @@ from archinstoo.lib.models.device import (
 	PartitionType,
 	SectorSize,
 	Size,
+	SubvolumeModification,
 	Unit,
 	has_separate_boot,
 )
@@ -76,3 +78,60 @@ def test_has_separate_boot_is_identity() -> None:
 
 def test_has_separate_boot_without_esp() -> None:
 	assert has_separate_boot(_part(*SEPARATE_BOOT), None) is False
+
+
+def test_obj_id_hash_survives_a_config_round_trip() -> None:
+	# __hash__ reads _obj_id raw. __post_init__ used to mint a UUID while
+	# parse_arg restored the same identity from json as a str, so one
+	# partition hashed into two buckets depending on where it came from.
+	part = _part(*ESP_EFI)
+	restored = _part(*ESP_EFI)
+	restored._obj_id = part.obj_id  # what DiskLayoutConfiguration.parse_arg does
+
+	assert isinstance(part._obj_id, str)
+	assert part.obj_id == restored.obj_id
+	assert hash(part) == hash(restored)
+	assert {part: 'luks'}[restored] == 'luks'
+
+
+DEFAULT_SUBVOLS = [('@', '/'), ('@home', '/home'), ('@log', '/var/log'), ('@pkg', '/var/cache/pacman/pkg')]
+
+
+def _btrfs_root(subvols: list[tuple[str, str]] | None) -> PartitionModification:
+	part = PartitionModification(
+		status=ModificationStatus.CREATE,
+		type=PartitionType.PRIMARY,
+		start=Size(1, Unit.MiB, SECTOR),
+		length=Size(8, Unit.GiB, SECTOR),
+		mountpoint=Path('/'),
+		fs_type=FilesystemType.BTRFS,
+		flags=[],
+		dev_path=Path('/dev/vda2'),
+	)
+	if subvols is not None:
+		part.btrfs_subvols = [SubvolumeModification(Path(name), Path(mp)) for name, mp in subvols]
+	return part
+
+
+@pytest.mark.parametrize(
+	('boot_on_root', 'subvols', 'expected'),
+	[
+		# ESP at /boot or a separate /boot partition: kernels at the top
+		(False, DEFAULT_SUBVOLS, '\\'),
+		(False, None, '\\'),
+		# btrfs root, no default subvolume is ever set, so @ is in the path
+		(True, DEFAULT_SUBVOLS, '@\\boot\\'),
+		(True, [('@root', '/'), ('@home', '/home')], '@root\\boot\\'),
+		# btrfs with nothing mounted at /, and non-btrfs roots
+		(True, [('@home', '/home')], '\\boot\\'),
+		(True, None, '\\boot\\'),
+	],
+)
+def test_refind_kernel_dir(boot_on_root: bool, subvols: list[tuple[str, str]] | None, expected: str) -> None:
+	assert Installer._refind_kernel_dir(_btrfs_root(subvols), boot_on_root=boot_on_root) == expected
+
+
+def test_refind_initrd_matches_installed_system() -> None:
+	# byte-for-byte what a real refind + ESP-at-/efi + btrfs install wrote
+	kernel_dir = Installer._refind_kernel_dir(_btrfs_root(DEFAULT_SUBVOLS), boot_on_root=True)
+	assert f'initrd={kernel_dir}initramfs-linux.img' == 'initrd=@\\boot\\initramfs-linux.img'
