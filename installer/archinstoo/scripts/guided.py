@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
+from archinstoo.lib.bootloader.validation import validate_bootloader
 from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstoo.lib.models.device import (
@@ -245,6 +247,14 @@ def guided() -> None:
 		config = handler.config
 		if not config.disk_config:
 			error('--silent needs disk_config in the config, nothing to install to')
+			raise SystemExit(1)
+
+		# the menu runs these before it lets you start; unattended skipped them
+		# entirely, so a bad pairing only showed up as a failed bootloader
+		# install after pacstrap, or a system that installs and never boots
+		if bootloader_errors := validate_bootloader(config.bootloader_config, config.disk_config, SysInfo.has_uefi()):
+			for msg in bootloader_errors:
+				error(f'invalid bootloader configuration: {msg}')
 			raise SystemExit(1)
 
 		store = ConfigStore(config)

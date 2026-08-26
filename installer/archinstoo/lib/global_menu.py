@@ -1,8 +1,7 @@
-from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
-from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType, PartitionModification
+from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.zram import ZramConfiguration
 from archinstoo.lib.pm import list_available_packages
@@ -16,6 +15,7 @@ from archinstoo.lib.tui.types import Alignment, Orientation
 from .applications.application_menu import ApplicationMenu
 from .authentication.authentication_menu import AuthenticationMenu
 from .bootloader.bootloader_menu import BootloaderMenu
+from .bootloader.validation import validate_bootloader
 from .configuration import ConfigStore
 from .hardware import SysInfo
 from .interactions.general_conf import (
@@ -728,96 +728,11 @@ class GlobalMenu(AbstractMenu[None]):
 		return None
 
 	def _validate_bootloader(self) -> list[str]:
-		# Checks the selected bootloader is valid for the selected filesystem
-		# type of the boot partition.
-		# Returns a list of error messages, empty if the configuration is valid.
-		errors: list[str] = []
-
-		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
-
-		if not bootloader_config or bootloader_config.bootloader is None:
-			return errors
-
-		bootloader = bootloader_config.bootloader
-
-		root_partition: PartitionModification | None = None
-		boot_partition: PartitionModification | None = None
-		efi_partition: PartitionModification | None = None
-
-		if disk_config := self._item_group.find_by_key('disk_config').value:
-			for layout in disk_config.device_modifications:
-				if root_partition := layout.get_root_partition():
-					break
-			for layout in disk_config.device_modifications:
-				if boot_partition := layout.get_boot_partition():
-					break
-			if self._uefi:
-				for layout in disk_config.device_modifications:
-					if efi_partition := layout.get_efi_partition():
-						break
-		else:
-			return ['No disk layout selected']
-
-		if root_partition is None:
-			errors.append('Root partition not found')
-
-		# Legacy vs /efi newer standard
-		if self._uefi:
-			if efi_partition is None:
-				errors.append('EFI system partition (ESP) not found')
-			elif efi_partition.fs_type is None or not efi_partition.fs_type.is_fat():
-				errors.append('ESP must be formatted as a FAT filesystem')
-		elif boot_partition is None:
-			errors.append('Boot partition not found')
-
-		if disk_config.disk_encryption and bootloader != Bootloader.Grub:
-			enc = disk_config.disk_encryption
-			if any(p.is_boot() for p in enc.partitions):
-				errors.append('Encrypted /boot is only supported with GRUB')
-
-		# When ESP is at /efi with no separate /boot (e.g. btrfs subvolumes),
-		# systemd-boot has no partition to find the kernel/initramfs;
-		# either UKI must be enabled or a separate /boot (XBOOTLDR) is needed
-		if bootloader == Bootloader.Systemd and efi_partition and not boot_partition and not bootloader_config.uki:
-			errors.append('systemd-boot with ESP at /efi requires UKI or a separate XBOOTLDR /boot partition')
-
-		# systemd-boot reads a separate /boot through EFI's SFSP (FAT only) and
-		# finds it by partition type GUID. bootctl verifies the GUID but never
-		# the filesystem, so an ext4 XBOOTLDR installs cleanly and then boots
-		# into an empty menu.
-		if bootloader == Bootloader.Systemd and boot_partition is not None and boot_partition != efi_partition:
-			if boot_partition.fs_type is None or not boot_partition.fs_type.is_fat():
-				errors.append('systemd-boot requires a FAT /boot partition')
-			if not boot_partition.is_xbootldr():
-				errors.append('A separate /boot for systemd-boot must be marked XBOOTLDR')
-
-		if bootloader in (Bootloader.Systemd, Bootloader.Efistub, Bootloader.Refind) and not SysInfo.has_uefi():
-			errors.append(f'{bootloader.display_name()} requires a UEFI system')
-
-		# Firmware reads the kernel directly from the boot partition, which must be FAT.
-		if bootloader == Bootloader.Efistub and boot_partition is not None and (boot_partition.fs_type is None or not boot_partition.fs_type.is_fat()):
-			errors.append('Efistub does not support booting with a non-FAT boot partition')
-
-		if bootloader == Bootloader.Limine:
-			limine_boot = boot_partition or efi_partition
-			if limine_boot is not None and (limine_boot.fs_type is None or not limine_boot.fs_type.is_fat()):
-				errors.append('Limine does not support booting with a non-FAT boot partition')
-
-			# When the ESP is the boot partition but mounted outside /boot and
-			# UKI is disabled, kernels end up on the root filesystem which
-			# Limine cannot access.
-			if (
-				not bootloader_config.uki
-				and efi_partition is not None
-				and efi_partition == boot_partition
-				and efi_partition.mountpoint != Path('/boot')
-			):
-				errors.append(
-					f'Limine requires kernels on a FAT partition. The ESP is mounted at {efi_partition.mountpoint}, '
-					'enable UKI or add a separate /boot partition to install Limine.'
-				)
-
-		return errors
+		return validate_bootloader(
+			self._item_group.find_by_key('bootloader_config').value,
+			self._item_group.find_by_key('disk_config').value,
+			self._uefi,
+		)
 
 	def _prev_install_invalid_config(self, item: MenuItem) -> str | None:
 		text = ''
