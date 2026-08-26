@@ -1559,7 +1559,11 @@ class Installer:
 
 		bootctl_options = []
 
-		if self._has_separate_boot(boot_partition, efi_partition):
+		# A UKI is self-contained on the ESP (EFI/Linux), so systemd-boot reads
+		# nothing from a separate boot partition even though pacman still drops
+		# the raw kernel there. Naming it makes bootctl demand XBOOTLDR typing
+		# for no gain, and plain BOOT-flagged /boot then fails the install.
+		if not uki_enabled and self._has_separate_boot(boot_partition, efi_partition):
 			bootctl_options.append(f'--esp-path={efi_partition.mountpoint}')
 			bootctl_options.append(f'--boot-path={boot_partition.mountpoint}')
 
