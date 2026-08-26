@@ -1302,18 +1302,6 @@ class Installer:
 			self._configure_grub_btrfsd(snapshot_type)
 			self.enable_service('grub-btrfsd')
 
-			# grub-btrfs's 41_snapshots-btrfs hook defaults to /boot/grub, but archinstoo
-			# installs grub.cfg under <esp>/grub when the ESP isn't mounted at /boot
-			# (e.g. ESP at /efi). Override GRUB_BTRFS_GRUB_DIRNAME to match.
-			boot_dir = Path('/boot')
-			boot_partition = self._get_boot_partition()
-			if boot_partition is None and SysInfo.has_uefi():
-				boot_partition = self._get_efi_partition()
-			if boot_partition and boot_partition.mountpoint and boot_partition.mountpoint != boot_dir:
-				grub_btrfs_dir = self.target / 'etc/default/grub-btrfs'
-				grub_btrfs_dir.mkdir(parents=True, exist_ok=True)
-				(grub_btrfs_dir / 'config').write_text(f'GRUB_BTRFS_GRUB_DIRNAME="{boot_partition.mountpoint / "grub"}"\n')
-
 	def setup_swap(
 		self,
 		kind: str = 'zram',
@@ -1636,8 +1624,6 @@ class Installer:
 
 		info(f'GRUB boot partition: {boot_partition.dev_path}')
 
-		boot_dir = Path('/boot')
-
 		command = [
 			*self._arch_chroot_prefix,
 			'grub-install',
@@ -1652,11 +1638,6 @@ class Installer:
 
 			self.pacman.strap('efibootmgr')  # TODO: Do we need? Yes, but remove from minimal_installation() instead?
 
-			boot_dir_arg = []
-			if boot_partition.mountpoint and boot_partition.mountpoint != boot_dir:
-				boot_dir_arg.append(f'--boot-directory={boot_partition.mountpoint}')
-				boot_dir = boot_partition.mountpoint
-
 			if platform.machine() == 'aarch64':
 				# grub names its EFI target arm64, not aarch64
 				grub_target = 'arm64-efi'
@@ -1668,7 +1649,6 @@ class Installer:
 			add_options = [
 				f'--target={grub_target}',
 				f'--efi-directory={efi_partition.mountpoint}',
-				*boot_dir_arg,
 				'--bootloader-id=GRUB',
 			]
 
@@ -1741,7 +1721,7 @@ class Installer:
 
 		try:
 			self.arch_chroot(
-				f'grub-mkconfig -o {boot_dir}/grub/grub.cfg',
+				'grub-mkconfig -o /boot/grub/grub.cfg',
 			)
 		except SysCallError as err:
 			raise DiskError(f'Could not configure GRUB: {err}')
