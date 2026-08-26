@@ -659,7 +659,7 @@ class _DeviceInfo:
 	dirty: bool
 
 	def table_data(self) -> dict[str, str | int | bool]:
-		total_free_space = sum([region.get_length(unit=Unit.MiB) for region in self.free_space_regions])
+		total_free_space = sum(region.get_length(unit=Unit.MiB) for region in self.free_space_regions)
 		return {
 			'Model': self.model,
 			'Path': str(self.path),

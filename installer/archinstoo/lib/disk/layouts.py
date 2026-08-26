@@ -305,7 +305,7 @@ def suggest_lvm_layout(
 		raise ValueError('Unable to find boot partition in partition modifications')
 
 	total_vol_available = sum(
-		[p.length for p in other_part],
+		(p.length for p in other_part),
 		Size(0, Unit.B, SectorSize.default()),
 	)
 	if home_volume:

@@ -207,7 +207,7 @@ class FilesystemHandler:
 			# to the desired sizes and subtract some equally from the actually
 			# created volume
 			avail_size = vg_info.vg_size
-			desired_size = sum([vol.length for vol in vg.volumes], Size(0, Unit.B, SectorSize.default()))
+			desired_size = sum((vol.length for vol in vg.volumes), Size(0, Unit.B, SectorSize.default()))
 
 			delta = desired_size - avail_size
 			delta_bytes = delta.convert(Unit.B)

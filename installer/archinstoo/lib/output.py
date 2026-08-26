@@ -89,7 +89,7 @@ class FormattedOutput:
 			for k, v in o.items():
 				if not filter_list or k in filter_list:
 					column_width.setdefault(k, 0)
-					column_width[k] = max([column_width[k], len(str(v)), len(k)])
+					column_width[k] = max(column_width[k], len(str(v)), len(k))
 
 		if not filter_list:
 			filter_list = list(column_width.keys())

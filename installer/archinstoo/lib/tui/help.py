@@ -21,10 +21,10 @@ class HelpGroup:
 	group_entries: list[HelpText]
 
 	def get_desc_width(self) -> int:
-		return max([len(e.description) for e in self.group_entries])
+		return max(len(e.description) for e in self.group_entries)
 
 	def get_key_width(self) -> int:
-		return max([len(', '.join(e.keys)) for e in self.group_entries])
+		return max(len(', '.join(e.keys)) for e in self.group_entries)
 
 
 class Help:

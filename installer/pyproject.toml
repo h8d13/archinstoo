@@ -170,6 +170,11 @@ quote-style = "single"
 docstring-code-format = true
 
 [tool.ruff.lint]
+# preview behaviour for the rules already selected below (C419 catching
+# sum/min/max, ...), without pulling in unselected preview rules
+preview = true
+explicit-preview-rules = true
+
 select = [
     "A",      # flake8-builtins
     "ANN401", # any-type in signatures

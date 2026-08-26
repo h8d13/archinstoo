@@ -54,7 +54,7 @@ class AbstractCurses[ValueT](metaclass=ABCMeta):
 		max_height, max_width = Tui.t().max_yx
 		height = max_height - 10
 
-		max_help_width = max([len(line) for line in Help.get_help_text().split('\n')])
+		max_help_width = max(len(line) for line in Help.get_help_text().split('\n'))
 		x_start = int((max_width / 2) - (max_help_width / 2))
 
 		return Viewport(
@@ -210,7 +210,7 @@ class AbstractViewport:
 		header_len += 3  # for header padding
 
 		if frame.w_frame_style == FrameStyle.MIN:
-			frame_start = min([e.col for e in entries])
+			frame_start = min(e.col for e in entries)
 			max_row_cols = [(e.col + len(e.text) + 1) for e in entries]
 			max_row_cols.append(header_len)
 			frame_end = max(max_row_cols)

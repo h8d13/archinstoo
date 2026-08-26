@@ -189,11 +189,11 @@ class MenuItemGroup:
 	def get_max_width(self) -> int:
 		# use the menu_items not the items here otherwise the preview
 		# will get resized all the time when a filter is applied
-		return max([len(self.get_item_text(item)) for item in self._menu_items])
+		return max(len(self.get_item_text(item)) for item in self._menu_items)
 
 	@cached_property
 	def _max_items_text_width(self) -> int:
-		return max([len(item.text) for item in self._menu_items])
+		return max(len(item.text) for item in self._menu_items)
 
 	def get_item_text(self, item: MenuItem) -> str:
 		if item.is_empty():
