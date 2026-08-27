@@ -163,6 +163,9 @@ class Luks2:
 
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
 
+		# dm-crypt drops discards without this, so fstrim.timer trims nothing on
+		# an encrypted root. --persistent stores it in the LUKS2 header, so every
+		# later unlock inherits it. Tradeoff: cryptsetup-open(8) --allow-discards.
 		cmd = [
 			'cryptsetup',
 			'--batch-mode',
@@ -172,6 +175,8 @@ class Luks2:
 			*key_file_arg,
 			'--type',
 			'luks2',
+			'--allow-discards',
+			'--persistent',
 		]
 
 		try:
