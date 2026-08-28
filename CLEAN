@@ -14,9 +14,13 @@
 # ⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀
 # ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 
-git clean -Xnd
+# ISOs stay: ignored by git but expensive to redownload
+git clean -Xnd ':(exclude)*.iso'
 
 read -rp "Proceed? [y/N] " reply
-[[ "${reply}" == [yY] ]] || { echo "aborted"; exit 0; }
+[[ "${reply}" == [yY] ]] || {
+	echo "aborted"
+	exit 0
+}
 
-git clean -Xfd
+git clean -Xfd ':(exclude)*.iso'
