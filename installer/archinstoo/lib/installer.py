@@ -685,12 +685,10 @@ class Installer:
 							str(dev),
 						]
 					)
-				except CalledProcessError as e:
+				except SysCallError as e:
 					stderr = e.stderr.decode(errors='replace').strip() if e.stderr else ''
 					stdout = e.stdout.decode(errors='replace').strip() if e.stdout else ''
 					warn(f'TPM2 enrollment failed for {dev} (exit {e.returncode}): {stderr or stdout or e}')
-				except SysCallError as e:
-					warn(f'TPM2 enrollment failed for {dev}: {e}')
 		finally:
 			if key_in_target.exists():
 				key_in_target.unlink()
