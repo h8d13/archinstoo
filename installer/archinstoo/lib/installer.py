@@ -1305,7 +1305,12 @@ class Installer:
 		if config.zram:
 			self._setup_zram(config.algorithm, config.recomp_algorithm)
 		if config.hibernation:
-			self._setup_swapfile(config.size_gib)
+			try:
+				self._setup_swapfile(config.size_gib)
+			except (SysCallError, DiskError) as err:
+				# hibernation is an enhancement, not worth aborting a
+				# finished-installing system over (cf. allow_ssh)
+				warn(f'Failed to set up hibernation swap file: {err}')
 
 	def _setup_zram(self, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
 		info('Setting up swap on zram')
@@ -1351,7 +1356,9 @@ class Installer:
 				result = self.arch_chroot(['btrfs', 'inspect-internal', 'map-swapfile', '-r', swapfile])
 				offset = result.stdout.decode().strip() if isinstance(result, CompletedProcess) else str(result).strip()
 			else:
-				result = self.arch_chroot(['filefrag', '-v', swapfile])
+				# -b4096: the kernel wants the offset in PAGE_SIZE units,
+				# filefrag's default unit is the fs block size
+				result = self.arch_chroot(['filefrag', '-b4096', '-v', swapfile])
 				out = result.stdout.decode() if isinstance(result, CompletedProcess) else str(result)
 				match = re.search(r'^\s*0:\s+\d+\.\.\s*\d+:\s+(\d+)', out, re.MULTILINE)
 				if not match:

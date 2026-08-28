@@ -26,12 +26,15 @@
 # Env overrides:
 #   SERIAL             'on' boots headless with the console on ttyS0 and
 #                      detaches (no window, no stdio monitor). Composes with
-#                      every mode above. Drive it with ./TSER (login/run/wait).
+#                      every mode above. Drive it with ./TSER (login/run).
 #                      ISO modes direct-boot the ISO's own kernel via -kernel so
 #                      console=ttyS0 can be forced; OVMF still boots it EFI-stub,
 #                      so the guest keeps a real UEFI environment. Needs bsdtar.
 #                      'boot' mode has no such hook: the installed system only
 #                      talks to ttyS0 if its own cmdline says console=ttyS0.
+#   BIOS               'on' boots SeaBIOS instead of OVMF: no pflash, no
+#                      NVRAM. The installed disk must carry a BIOS-capable
+#                      bootloader (grub with a bios_grub partition).
 #   DEV_ISO            explicit ISO path (skips discovery)
 #   RAM, CPUS          VM resources (default 4G, 4)
 #   DISK_SIZE          new disk size (default 30G)
@@ -58,6 +61,7 @@ CAPTURE_LOG="$PROJECT_DIR/.dev-capture.log"
 MON_SOCK="$PROJECT_DIR/.dev-monitor.sock"
 PIDFILE="$PROJECT_DIR/.dev-vm.pid"
 SERIAL="${SERIAL:-off}"
+BIOS="${BIOS:-off}"
 DISK_SIZE="${DISK_SIZE:-64G}"
 RAM="${RAM:-4G}"
 CPUS="${CPUS:-4}"
@@ -76,6 +80,7 @@ err() {
 }
 
 probe_ovmf() {
+	[ "$BIOS" = "on" ] && return 0
 	local pairs=(
 		"/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd"
 		"/usr/share/edk2-ovmf/x64/OVMF_CODE.fd:/usr/share/edk2-ovmf/x64/OVMF_VARS.fd"
@@ -205,7 +210,9 @@ default)
 	;;
 esac
 
-[ -f "$OVMF_VARS" ] || cp "$OVMF_VARS_ORIG" "$OVMF_VARS"
+if [ "$BIOS" != "on" ]; then
+	[ -f "$OVMF_VARS" ] || cp "$OVMF_VARS_ORIG" "$OVMF_VARS"
+fi
 
 # shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
 if [ "$SERIAL" = "on" ]; then
@@ -257,10 +264,15 @@ QEMU_ARGS=(
 	-device virtio-net-pci,netdev=net0
 	-netdev user,id=net0
 	"${CONSOLE_ARGS[@]}"
-	-drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
-	-drive "if=pflash,format=raw,file=$OVMF_VARS"
 	-boot "order=$BOOT_ORDER"
 )
+
+if [ "$BIOS" != "on" ]; then
+	QEMU_ARGS+=(
+		-drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
+		-drive "if=pflash,format=raw,file=$OVMF_VARS"
+	)
+fi
 
 if [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"

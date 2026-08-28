@@ -13,7 +13,6 @@
 #
 # Usage:
 #   ./TSER read [-n LINES]        dump console output (default: last 50)
-#   ./TSER wait REGEX [-t SEC]    block until REGEX shows up in output
 #   ./TSER login                  log in as root, sane tty width
 #   ./TSER send TEXT              type TEXT + Enter on ttyS0
 #   ./TSER run CMD [-t SEC]       run CMD in the guest shell, print output,
@@ -63,7 +62,8 @@ ANSI = re.compile(r'\x1b\[[0-9;?]*[a-zA-Z]|\x1b[()][B0]|\x1b\][^\x07]*\x07')
 PROMPT = re.compile(r'#|\S+@\S+ .* #')
 # a shell waiting for input ends the line with its prompt char: 'root@archiso
 # ~ #' on the ISO, '[root@host ~]#' once installed
-IDLE = re.compile(r'[#$]$')
+# grml appends ' :(' to the prompt after a nonzero exit
+IDLE = re.compile(r'[#$](\s*:\()?$')
 
 
 def fuzzy(text: str) -> str:
@@ -174,14 +174,6 @@ def cmd_read(args: argparse.Namespace) -> None:
 	if args.lines > 0:
 		lines = lines[-args.lines :]
 	print('\n'.join(lines))
-
-
-def cmd_wait(args: argparse.Namespace) -> None:
-	text, match = wait_for(args.regex, args.timeout)
-	tail = '\n'.join(text.splitlines()[-args.lines :])
-	print(tail)
-	if not match:
-		die(f'timeout after {args.timeout}s waiting for {args.regex!r}')
 
 
 def cmd_send(args: argparse.Namespace) -> None:
@@ -310,12 +302,6 @@ def main() -> None:
 	p = sub.add_parser('read')
 	p.add_argument('-n', '--lines', type=int, default=50)
 	p.set_defaults(func=cmd_read)
-
-	p = sub.add_parser('wait')
-	p.add_argument('regex')
-	p.add_argument('-t', '--timeout', type=float, default=120)
-	p.add_argument('-n', '--lines', type=int, default=20)
-	p.set_defaults(func=cmd_wait)
 
 	p = sub.add_parser('send')
 	p.add_argument('text')
