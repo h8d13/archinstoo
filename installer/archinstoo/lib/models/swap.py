@@ -43,7 +43,7 @@ class SwapConfiguration:
 	def parse_arg(cls, arg: SwapConfigSerialization) -> Self:
 		recomp = arg.get('recomp_algorithm')
 		return cls(
-			zram=arg['zram'],
+			zram=arg.get('zram', True),
 			algorithm=ZramAlgorithm(arg.get('algorithm', ZramAlgorithm.Default.value)),
 			recomp_algorithm=ZramAlgorithm(recomp) if recomp else None,
 			hibernation=arg.get('hibernation', True),

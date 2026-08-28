@@ -66,10 +66,10 @@
 		"timeshift": ["timeshift", "cronie"]
 	},
 
-	// swapfile needs no packages: mkswap/btrfs ship with base tooling
+	// hibernation swapfile needs no entry: mkswap --file is util-linux (base
+	// dep), btrfs filesystem mkswapfile is btrfs-progs via filesystem_tools
 	"swap": {
-		"zram": ["zram-generator"],
-		"swapfile": []
+		"zram": ["zram-generator"]
 	},
 
 	// always installed with any profile

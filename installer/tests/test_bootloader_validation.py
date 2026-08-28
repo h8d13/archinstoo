@@ -162,3 +162,16 @@ def test_bios_gpt_grub_with_bios_grub_accepted() -> None:
 
 def test_bios_mbr_grub_accepted() -> None:
 	assert _bios_errors([BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.MBR) == []
+
+
+def test_mbr_partition_count_rejected_preflight() -> None:
+	# was only caught in device_handler.partition() after the wipe started
+	swap_part = _part(None, '/dev/vda4', FilesystemType.LINUX_SWAP, [])
+	errors = _bios_errors([BOOT_EXT4_BIOS, ROOT_EXT4, ROOT_EXT4, swap_part], PartitionTable.MBR)
+	assert 'Too many partitions on disk, MBR disks can only have 3 primary partitions' in errors
+
+
+def test_gpt_partition_count_unrestricted() -> None:
+	swap_part = _part(None, '/dev/vda5', FilesystemType.LINUX_SWAP, [])
+	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4, swap_part], PartitionTable.GPT)
+	assert errors == []

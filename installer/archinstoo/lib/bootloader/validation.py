@@ -59,6 +59,8 @@ def validate_bootloader(
 			errors.append('bios_grub flag requires a GPT partition table (msdos label selected)')
 		if not uefi and bootloader == Bootloader.Grub and gpt and not has_bios_grub:
 			errors.append('BIOS boot from a GPT disk needs a 1MiB bios_grub partition')
+		if layout.wipe and not gpt and len(layout.partitions) > 3:
+			errors.append('Too many partitions on disk, MBR disks can only have 3 primary partitions')
 
 	if disk_config.disk_encryption and bootloader != Bootloader.Grub:
 		enc = disk_config.disk_encryption
