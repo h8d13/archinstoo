@@ -8,10 +8,8 @@ def validate_bootloader(
 	disk_config: DiskLayoutConfiguration | None,
 	uefi: bool,
 ) -> list[str]:
-	# Checks the selected bootloader is valid for the selected filesystem type
-	# of the boot partition. Returns error messages, empty if the config is
-	# valid. Kept free of menu state so --silent can run it too: every one of
-	# these otherwise surfaces as a failed install or an unbootable system.
+	# Single pre-flight gate on purpose, disk-shape rules included: a second
+	# validate function is one the menu or --silent path forgets to call.
 	errors: list[str] = []
 
 	if not bootloader_config or bootloader_config.bootloader is None:
