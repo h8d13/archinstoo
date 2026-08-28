@@ -102,8 +102,6 @@ def select_swap(preset: SwapConfiguration = SwapConfiguration()) -> SwapConfigur
 		if algo != ZramAlgorithm.Default:
 			recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
 
-	# zram cannot hold a hibernation image; a disk swap file sized to RAM can,
-	# and the two coexist (zram keeps the higher priority for everyday swap)
 	hib_prompt = 'Enable hibernation? Creates a disk swap file sized to RAM.' + '\n'
 
 	hib_group = MenuItemGroup.yes_no()

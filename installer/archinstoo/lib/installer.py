@@ -1324,12 +1324,9 @@ class Installer:
 
 		self._zram_enabled = True
 
-	# A disk-backed swap file is what makes hibernation possible: zram pages
-	# live in the RAM being written out, so logind refuses to hibernate into
-	# it. With the systemd initramfs hook the resume mechanism ships in the
-	# initrd already, and on UEFI systemd-sleep records the swap space in the
-	# HibernateLocation EFI variable at hibernate time, so no kernel
-	# parameters are needed. Only BIOS boots need resume=/resume_offset=.
+	# No resume hook (the systemd initramfs hook ships it) and no kernel
+	# params on UEFI (systemd-sleep records the HibernateLocation EFI var);
+	# only BIOS needs resume=/resume_offset=.
 	def _setup_swapfile(self, size_gib: int) -> None:
 		# ceil MemTotal (kB) to GiB: the image must fit even on a full RAM
 		size = size_gib or -(-SysInfo.mem_total() // 2**20)
