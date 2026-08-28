@@ -105,6 +105,8 @@ class _DiskLayoutConfigurationSerialization(TypedDict):
 	config_type: str
 	device_modifications: NotRequired[list[_DeviceModificationSerialization]]
 	lvm_config: NotRequired[_LvmConfigurationSerialization]
+	# parse-only, json() never emits it (passphrase hygiene)
+	disk_encryption: NotRequired[_DiskEncryptionSerialization]
 	mountpoint: NotRequired[str]
 	btrfs_options: NotRequired[_BtrfsOptionsSerialization]
 
@@ -134,7 +136,8 @@ class DiskLayoutConfiguration:
 		if self.lvm_config:
 			config['lvm_config'] = self.lvm_config.json()
 
-		# disk_encryption is never saved (password not persisted)
+		# parse-only: never written back, the passphrase would land in
+		# plaintext in every saved/debug config copy
 
 		if self.btrfs_options:
 			config['btrfs_options'] = self.btrfs_options.json()
@@ -259,7 +262,8 @@ class DiskLayoutConfiguration:
 		if (lvm_arg := disk_config.get('lvm_config', None)) is not None:
 			config.lvm_config = LvmConfiguration.parse_arg(lvm_arg, config)
 
-		# disk_encryption is not parsed from config (password never saved)
+		if (enc_arg := disk_config.get('disk_encryption', None)) is not None:
+			config.disk_encryption = DiskEncryption.parse_arg(enc_arg, config)
 
 		if config.has_default_btrfs_vols() and (btrfs_arg := disk_config.get('btrfs_options', None)) is not None:
 			config.btrfs_options = BtrfsOptions.parse_arg(btrfs_arg)
@@ -1530,6 +1534,19 @@ class Fido2Device:
 	product: str
 
 
+class _DiskEncryptionSerialization(TypedDict):
+	encryption_type: str
+	encryption_password: NotRequired[str]
+	partitions: NotRequired[list[str]]
+	lvm_volumes: NotRequired[list[str]]
+	iter_time: NotRequired[int]
+	pbkdf: NotRequired[str]
+	cipher: NotRequired[str]
+	auto_unlock_root: NotRequired[bool]
+	tpm2_unlock: NotRequired[bool]
+	tpm2_pcrs: NotRequired[str]
+
+
 @dataclass
 class DiskEncryption:
 	encryption_type: EncryptionType = EncryptionType.NO_ENCRYPTION
@@ -1574,6 +1591,42 @@ class DiskEncryption:
 
 		# assume one boot and at least 2 additional
 		return not (len(partitions) > 2 and lvm_config)
+
+	@classmethod
+	def parse_arg(cls, arg: _DiskEncryptionSerialization, disk_config: DiskLayoutConfiguration) -> Self:
+		# users imports stay lazy here: device.py only type-checks Password
+		from archinstoo.lib.models.users import Password
+
+		encryption_type = EncryptionType(arg['encryption_type'])
+
+		password: Password | None = None
+		if plaintext := arg.get('encryption_password'):
+			password = Password(plaintext=plaintext)
+		if encryption_type != EncryptionType.NO_ENCRYPTION and password is None:
+			raise ValueError('disk_encryption needs encryption_password (unattended has nobody to prompt)')
+
+		part_ids = arg.get('partitions', [])
+		partitions = [p for mod in disk_config.device_modifications for p in mod.partitions if p.obj_id in part_ids]
+		if len(partitions) != len(part_ids):
+			raise ValueError('disk_encryption.partitions contains obj_ids not present in device_modifications')
+
+		vol_ids = arg.get('lvm_volumes', [])
+		volumes = [v for v in (disk_config.lvm_config.get_all_volumes() if disk_config.lvm_config else []) if v.obj_id in vol_ids]
+		if len(volumes) != len(vol_ids):
+			raise ValueError('disk_encryption.lvm_volumes contains obj_ids not present in lvm_config')
+
+		return cls(
+			encryption_type=encryption_type,
+			encryption_password=password,
+			partitions=partitions,
+			lvm_volumes=volumes,
+			iter_time=arg.get('iter_time', DEFAULT_ITER_TIME),
+			pbkdf=LuksPbkdf(arg.get('pbkdf', LuksPbkdf.Argon2id.value)),
+			cipher=EncryptionCipher(cipher) if (cipher := arg.get('cipher')) else None,
+			auto_unlock_root=arg.get('auto_unlock_root', False),
+			tpm2_unlock=arg.get('tpm2_unlock', False),
+			tpm2_pcrs=arg.get('tpm2_pcrs', '0+7'),
+		)
 
 
 @dataclass
