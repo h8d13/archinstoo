@@ -86,7 +86,8 @@
 │   │   │   ├── shell
 │   │   │   └── users_menu
 │   │   ├── bootloader/
-│   │   │   └── bootloader_menu
+│   │   │   ├── bootloader_menu
+│   │   │   └── validation
 │   │   ├── checkpoints
 │   │   ├── configuration
 │   │   ├── crypt
@@ -135,8 +136,8 @@
 │   │   │   ├── packages
 │   │   │   ├── profile
 │   │   │   ├── service
-│   │   │   ├── users
-│   │   │   └── zram
+│   │   │   ├── swap
+│   │   │   └── users
 │   │   ├── network/
 │   │   │   ├── interfaces
 │   │   │   ├── network_handler
@@ -184,6 +185,13 @@
 │   │   ├── _resolve
 │   │   └── size
 │   └── _version
+├── archinstoo.egg-info/
+│   ├── dependency_links.txt
+│   ├── entry_points.txt
+│   ├── PKG-INFO
+│   ├── requires.txt
+│   ├── SOURCES.txt
+│   └── top_level.txt
 ├── examples/
 │   ├── config_custom.json
 │   ├── config_sample_full.json
@@ -198,21 +206,26 @@
     │   └── test_config.json
     ├── test_args
     ├── test_available_packages
+    ├── test_bootloader_validation
+    ├── test_boot_partition
     ├── test_bootstrap
     ├── test_configuration_output
     ├── test_deps
     ├── test_env
     ├── test_firmware
+    ├── test_limine_layout
     ├── test_locale
     ├── test_log_dir
+    ├── test_luks_discards
     ├── test_menu_item_focus
     ├── test_mirrors
     ├── test_mount_options
     ├── test_parted_optional
+    ├── test_run_exceptions
     ├── test_saved_config_resume
     ├── test_schema_drift
     ├── test_script_peek
     └── test_version_stamp
 
-29 directories, 184 files
+30 directories, 196 files
 ```
