@@ -35,7 +35,10 @@
     "bootloader_config": {
         "bootloader": "grub",
         "uki": true,
-        "removable": true
+        "removable": true,
+        "quiet": false,
+        "splash": false,
+        "serial_console": null
     },
     "disk_config": {
         "config_type": "default-layout",
@@ -180,9 +183,10 @@
         }
     },
     "swap": {
-        "enabled": true,
+        "zram": true,
         "algorithm": "lz4",
-        "recomp_algorithm": "zstd"
+        "recomp_algorithm": "zstd",
+        "hibernation": true
     },
     "kernels": [
         "linux-zen"

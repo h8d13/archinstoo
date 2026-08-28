@@ -302,9 +302,9 @@ def collect(config: dict[str, Any]) -> set[str]:
 		if bl_name == 'grub':
 			pkgs.update(SCHEMA['grub_extra'])
 
-	# swap
+	# swap: only zram pulls a package, a swap file is plain tooling
 	swap = config.get('swap') or {}
-	if swap.get('enabled', False):
+	if swap.get('zram', False):
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
 	return pkgs

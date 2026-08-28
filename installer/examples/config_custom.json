@@ -32,7 +32,7 @@
         "removable": false
     },
     "swap": {
-        "enabled": true,
+        "zram": true,
         "algorithm": "zstd"
     },
     "kernels": [

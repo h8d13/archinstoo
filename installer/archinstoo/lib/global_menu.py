@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, override
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.models.zram import ZramConfiguration
+from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.tui.content_editor import edit_content
@@ -126,7 +126,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text='Swap',
-				value=ZramConfiguration(enabled=True),
+				value=SwapConfiguration(),
 				action=select_swap,
 				preview_action=self._prev_swap,
 				key='swap',
@@ -654,12 +654,15 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_swap(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			output = f'{"Swap on zram"}: '
-			output += 'Enabled' if item.value.enabled else 'Disabled'
-			if item.value.enabled:
+			output = f'Swap on zram: {"Enabled" if item.value.zram else "Disabled"}'
+			if item.value.zram:
 				output += f'\n{"Compression algorithm"}: {item.value.algorithm.value}'
 				if item.value.recomp_algorithm:
 					output += f'\n{"Recompression algorithm"}: {item.value.recomp_algorithm.value}'
+			output += f'\nHibernation: {"Enabled" if item.value.hibernation else "Disabled"}'
+			if item.value.hibernation:
+				size = f'{item.value.size_gib}GiB' if item.value.size_gib else 'RAM size'
+				output += f'\nSwap file size: {size}'
 			return output
 		return None
 

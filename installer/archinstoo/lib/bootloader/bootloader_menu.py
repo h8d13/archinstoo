@@ -1,9 +1,10 @@
 import textwrap
 from typing import override
 
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstoo.lib.tui.curses_menu import SelectMenu
+from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
@@ -81,6 +82,13 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				preview_action=self._prev_quiet,
 				key='quiet',
 			),
+			MenuItem(
+				text='Serial console',
+				action=self._select_serial_console,
+				value=self._bootloader_conf.serial_console,
+				preview_action=self._prev_serial_console,
+				key='serial_console',
+			),
 		]
 
 	def _prev_bootloader(self, item: MenuItem) -> str | None:
@@ -106,6 +114,11 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 	def _prev_splash(self, item: MenuItem) -> str | None:
 		state = 'Enabled' if item.value else 'Disabled'
 		return '{}: {}'.format('Boot splash', state)
+
+	def _prev_serial_console(self, item: MenuItem) -> str | None:
+		if item.value:
+			return f'{"Serial console"}: console={item.value}'
+		return '{}: {}'.format('Serial console', 'Disabled')
 
 	@override
 	def run(
@@ -159,6 +172,28 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				return preset
 			case ResultType.Selection:
 				return result.item() == MenuItem.yes()
+			case ResultType.Reset:
+				raise ValueError('Unhandled result type')
+
+	def _select_serial_console(self, preset: str | None) -> str | None:
+		# pl011 UART on ARM, 16550 everywhere else
+		default = 'ttyAMA0,115200' if SysInfo.arch() == 'aarch64' else 'ttyS0,115200'
+		header = f'Kernel "console=" value for a serial console (e.g. {default}).\nLeave empty to disable.\n'
+
+		result = EditMenu(
+			'Serial console',
+			header=header,
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+			default_text=preset or default,
+		).input()
+
+		match result.type_:
+			case ResultType.Skip:
+				return preset
+			case ResultType.Selection:
+				value = result.text().strip()
+				return value or None
 			case ResultType.Reset:
 				raise ValueError('Unhandled result type')
 

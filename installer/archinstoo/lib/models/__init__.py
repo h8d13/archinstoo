@@ -32,8 +32,8 @@ from .network import NetworkConfiguration, Nic, NicType
 from .packages import LocalPackage, PackageSearch, PackageSearchResult, Repository
 from .profile import ProfileConfiguration
 from .service import UserService
+from .swap import SwapConfiguration, ZramAlgorithm
 from .users import PasswordStrength, User
-from .zram import ZramAlgorithm, ZramConfiguration
 
 __all__ = [
 	'DEFAULT_KERNEL',
@@ -78,10 +78,10 @@ __all__ = [
 	'SectorSize',
 	'Size',
 	'SubvolumeModification',
+	'SwapConfiguration',
 	'Unit',
 	'User',
 	'UserService',
 	'ZramAlgorithm',
-	'ZramConfiguration',
 	'_DeviceInfo',
 ]

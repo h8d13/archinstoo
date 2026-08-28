@@ -8,7 +8,7 @@ from archinstoo.lib.models.firmware import (
 	detect_splits,
 )
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
-from archinstoo.lib.models.zram import ZramAlgorithm, ZramConfiguration
+from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -47,12 +47,12 @@ def select_kernel(preset: list[str] | None = None) -> list[str]:
 			return [k.value for k in result.get_values()]
 
 
-def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> ZramConfiguration:
+def select_swap(preset: SwapConfiguration = SwapConfiguration()) -> SwapConfiguration:
 	prompt = 'Would you like to use swap on zram?' + '\n'
 
 	group = MenuItemGroup.yes_no()
 	group.set_default_by_value(True)
-	group.set_focus_by_value(preset.enabled)
+	group.set_focus_by_value(preset.zram)
 
 	result = SelectMenu[bool](
 		group,
@@ -67,40 +67,75 @@ def select_swap(preset: ZramConfiguration = ZramConfiguration(enabled=True)) -> 
 		case ResultType.Skip:
 			return preset
 		case ResultType.Selection:
-			enabled = result.item() == MenuItem.yes()
-			if not enabled:
-				return ZramConfiguration(enabled=False)
-
-			# Ask for compression algorithm
-			algo_group = MenuItemGroup.from_enum(ZramAlgorithm, sort_items=False)
-			algo_group.set_default_by_value(ZramAlgorithm.Default)
-			algo_group.set_focus_by_value(preset.algorithm)
-
-			algo_result = SelectMenu[ZramAlgorithm](
-				algo_group,
-				header='Select zram compression algorithm:' + '\n',
-				alignment=Alignment.CENTER,
-				allow_skip=True,
-			).run()
-
-			match algo_result.type_:
-				case ResultType.Skip:
-					algo = preset.algorithm
-				case ResultType.Selection:
-					algo = algo_result.get_value()
-				case ResultType.Reset:
-					raise ValueError('Unhandled result type')
-				case _:
-					assert_never(algo_result.type_)
-
-			# Ask for idle recompression algorithm (only if a specific primary algo was chosen)
-			recomp_algo: ZramAlgorithm | None = None
-			if algo != ZramAlgorithm.Default:
-				recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
-
-			return ZramConfiguration(enabled=True, algorithm=algo, recomp_algorithm=recomp_algo)
+			zram = result.item() == MenuItem.yes()
 		case ResultType.Reset:
 			raise ValueError('Unhandled result type')
+		case _:
+			assert_never(result.type_)
+
+	algo = preset.algorithm
+	recomp_algo: ZramAlgorithm | None = None
+	if zram:
+		# Ask for compression algorithm
+		algo_group = MenuItemGroup.from_enum(ZramAlgorithm, sort_items=False)
+		algo_group.set_default_by_value(ZramAlgorithm.Default)
+		algo_group.set_focus_by_value(preset.algorithm)
+
+		algo_result = SelectMenu[ZramAlgorithm](
+			algo_group,
+			header='Select zram compression algorithm:' + '\n',
+			alignment=Alignment.CENTER,
+			allow_skip=True,
+		).run()
+
+		match algo_result.type_:
+			case ResultType.Skip:
+				algo = preset.algorithm
+			case ResultType.Selection:
+				algo = algo_result.get_value()
+			case ResultType.Reset:
+				raise ValueError('Unhandled result type')
+			case _:
+				assert_never(algo_result.type_)
+
+		# Ask for idle recompression algorithm (only if a specific primary algo was chosen)
+		if algo != ZramAlgorithm.Default:
+			recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
+
+	# zram cannot hold a hibernation image; a disk swap file sized to RAM can,
+	# and the two coexist (zram keeps the higher priority for everyday swap)
+	hib_prompt = 'Enable hibernation? Creates a disk swap file sized to RAM.' + '\n'
+
+	hib_group = MenuItemGroup.yes_no()
+	hib_group.set_default_by_value(True)
+	hib_group.set_focus_by_value(preset.hibernation)
+
+	hib_result = SelectMenu[bool](
+		hib_group,
+		header=hib_prompt,
+		columns=2,
+		orientation=Orientation.HORIZONTAL,
+		alignment=Alignment.CENTER,
+		allow_skip=True,
+	).run()
+
+	match hib_result.type_:
+		case ResultType.Skip:
+			hibernation = preset.hibernation
+		case ResultType.Selection:
+			hibernation = hib_result.item() == MenuItem.yes()
+		case ResultType.Reset:
+			raise ValueError('Unhandled result type')
+		case _:
+			assert_never(hib_result.type_)
+
+	return SwapConfiguration(
+		zram=zram,
+		algorithm=algo,
+		recomp_algorithm=recomp_algo,
+		hibernation=hibernation,
+		size_gib=preset.size_gib,
+	)
 
 
 def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConfiguration:

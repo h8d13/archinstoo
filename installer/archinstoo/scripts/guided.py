@@ -103,7 +103,7 @@ def perform_installation(
 			installation.set_mirrors(pacman_config, on_target=True)
 
 		if config.swap and config.swap.enabled:
-			installation.setup_swap('zram', algo=config.swap.algorithm, recomp_algo=config.swap.recomp_algorithm)
+			installation.setup_swap(config.swap)
 
 		if config.sysctl:
 			installation.setup_sysctl(config.sysctl)
@@ -128,6 +128,7 @@ def perform_installation(
 				config.bootloader_config.removable,
 				config.bootloader_config.quiet,
 				config.bootloader_config.splash,
+				config.bootloader_config.serial_console,
 			)
 
 		if disk_config.has_default_btrfs_vols():

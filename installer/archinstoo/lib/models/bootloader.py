@@ -55,6 +55,8 @@ class BootloaderConfiguration:
 	quiet: bool = False
 	# embeds the Arch splash bmp into the UKI; only meaningful with uki=True
 	splash: bool = False
+	# kernel 'console=' value (e.g. 'ttyS0,115200'); None = no serial console
+	serial_console: str | None = None
 
 	def json(self) -> dict[str, Any]:
 		return {
@@ -63,6 +65,7 @@ class BootloaderConfiguration:
 			'removable': self.removable,
 			'quiet': self.quiet,
 			'splash': self.splash,
+			'serial_console': self.serial_console,
 		}
 
 	@classmethod
@@ -73,7 +76,15 @@ class BootloaderConfiguration:
 		removable = config.get('removable', True)
 		quiet = config.get('quiet', False)
 		splash = config.get('splash', False)
-		return cls(bootloader=bootloader, uki=uki, removable=removable, quiet=quiet, splash=splash)
+		serial_console = config.get('serial_console') or None
+		return cls(
+			bootloader=bootloader,
+			uki=uki,
+			removable=removable,
+			quiet=quiet,
+			splash=splash,
+			serial_console=serial_console,
+		)
 
 	@classmethod
 	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
@@ -100,4 +111,5 @@ class BootloaderConfiguration:
 			text += f'{"Removable"}: {removable_string}'
 			text += '\n'
 		text += '{}: {}\n'.format('Quiet boot', 'Enabled' if self.quiet else 'Disabled')
+		text += '{}: {}\n'.format('Serial console', self.serial_console or 'Disabled')
 		return text

@@ -8,7 +8,7 @@ import textwrap
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError, CompletedProcess
 from typing import TYPE_CHECKING, Self
 
 from archinstoo.lib.disk.cleanup import teardown_layout
@@ -31,7 +31,7 @@ from archinstoo.lib.models.device import (
 	has_separate_boot,
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
-from archinstoo.lib.models.zram import ZramAlgorithm
+from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.tui.curses_menu import Tui
 
@@ -1301,30 +1301,66 @@ class Installer:
 			self._configure_grub_btrfsd(snapshot_type)
 			self.enable_service('grub-btrfsd')
 
-	def setup_swap(
-		self,
-		kind: str = 'zram',
-		algo: ZramAlgorithm = ZramAlgorithm.Default,
-		recomp_algo: ZramAlgorithm | None = None,
-	) -> None:
-		if kind == 'zram':
-			info('Setting up swap on zram')
-			self.pacman.strap('zram-generator')
+	def setup_swap(self, config: SwapConfiguration) -> None:
+		if config.zram:
+			self._setup_zram(config.algorithm, config.recomp_algorithm)
+		if config.hibernation:
+			self._setup_swapfile(config.size_gib)
 
-			with (self.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
-				zram_conf.write('[zram0]\n')
-				zram_conf.write('zram-size = ram / 2\n')
-				if algo != ZramAlgorithm.Default:
-					comp_line = algo.value
-					if recomp_algo:
-						comp_line += f' {recomp_algo.value} (type=idle)'
-					zram_conf.write(f'compression-algorithm = {comp_line}\n')
+	def _setup_zram(self, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
+		info('Setting up swap on zram')
+		self.pacman.strap('zram-generator')
 
-			self.enable_service('systemd-zram-setup@zram0')
+		with (self.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
+			zram_conf.write('[zram0]\n')
+			zram_conf.write('zram-size = ram / 2\n')
+			if algo != ZramAlgorithm.Default:
+				comp_line = algo.value
+				if recomp_algo:
+					comp_line += f' {recomp_algo.value} (type=idle)'
+				zram_conf.write(f'compression-algorithm = {comp_line}\n')
 
-			self._zram_enabled = True
+		self.enable_service('systemd-zram-setup@zram0')
+
+		self._zram_enabled = True
+
+	# A disk-backed swap file is what makes hibernation possible: zram pages
+	# live in the RAM being written out, so logind refuses to hibernate into
+	# it. With the systemd initramfs hook the resume mechanism ships in the
+	# initrd already, and on UEFI systemd-sleep records the swap space in the
+	# HibernateLocation EFI variable at hibernate time, so no kernel
+	# parameters are needed. Only BIOS boots need resume=/resume_offset=.
+	def _setup_swapfile(self, size_gib: int) -> None:
+		# ceil MemTotal (kB) to GiB: the image must fit even on a full RAM
+		size = size_gib or -(-SysInfo.mem_total() // 2**20)
+		fs_type = SysCommand(['findmnt', '-no', 'FSTYPE', str(self.target)]).decode().strip()
+		info(f'Setting up {size}GiB swap file on {fs_type}')
+
+		if fs_type == 'btrfs':
+			# nested subvolume: snapshots of the parent don't recurse into
+			# it, so root snapshots keep working with the swapfile in place
+			swapfile = '/swap/swapfile'
+			self.arch_chroot(['btrfs', 'subvolume', 'create', '/swap'])
+			self.arch_chroot(['btrfs', 'filesystem', 'mkswapfile', '--size', f'{size}g', '--uuid', 'clear', swapfile])
 		else:
-			raise ValueError('Archinstoo currently only supports setting up swap on zram')
+			swapfile = '/swapfile'
+			self.arch_chroot(['mkswap', '-U', 'clear', '--size', f'{size}G', '--file', swapfile])
+
+		self._fstab_entries.append(f'{swapfile}\tnone\tswap\tdefaults\t0\t0')
+
+		if not SysInfo.has_uefi():
+			fs_uuid = SysCommand(['findmnt', '-no', 'UUID', str(self.target)]).decode().strip()
+			if fs_type == 'btrfs':
+				result = self.arch_chroot(['btrfs', 'inspect-internal', 'map-swapfile', '-r', swapfile])
+				offset = result.stdout.decode().strip() if isinstance(result, CompletedProcess) else str(result).strip()
+			else:
+				result = self.arch_chroot(['filefrag', '-v', swapfile])
+				out = result.stdout.decode() if isinstance(result, CompletedProcess) else str(result)
+				match = re.search(r'^\s*0:\s+\d+\.\.\s*\d+:\s+(\d+)', out, re.MULTILINE)
+				if not match:
+					raise DiskError(f'Could not determine swap file offset from filefrag:\n{out}')
+				offset = match.group(1)
+			self._kernel_params.extend([f'resume=UUID={fs_uuid}', f'resume_offset={offset}'])
 
 	def setup_sysctl(self, entries: list[str]) -> None:
 		if not entries:
@@ -2119,7 +2155,15 @@ class Installer:
 		if not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
 
-	def add_bootloader(self, bootloader: Bootloader, uki_enabled: bool = False, removable: bool = False, quiet: bool = False, splash: bool = False) -> None:
+	def add_bootloader(
+		self,
+		bootloader: Bootloader,
+		uki_enabled: bool = False,
+		removable: bool = False,
+		quiet: bool = False,
+		splash: bool = False,
+		serial_console: str | None = None,
+	) -> None:
 		# Run before bootloader install so kernel cmdline reflects rd.luks.options
 		# (tpm2-device/fido2-device) but is extensively gated and a no-op if not present/selected
 		self.enroll_tpm2()
@@ -2127,6 +2171,9 @@ class Installer:
 
 		if quiet and 'quiet' not in self._kernel_params:
 			self._kernel_params.append('quiet')
+
+		if serial_console and (param := f'console={serial_console}') not in self._kernel_params:
+			self._kernel_params.append(param)
 
 		efi_partition = self._get_efi_partition()
 		boot_partition = self._get_boot_partition()

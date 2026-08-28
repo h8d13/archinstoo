@@ -38,20 +38,6 @@ Usually I pick Copy to ISO from VMs or a desktop (cabled) and other two options 
 
 This is all up to user preference, can be multi-selected / some set the global default (like `Editor`) through `/etc/environment`
 
-```
-  Bluetooth
-  Audio
-  Print service
-  Firewall
-  Power Management (laptops only)
-  Management
-  Monitor
-  Editor
-  Security
-  Development (Advanced)
-  ← Back
-```
-
 > Hardware drivers can also be skipped and added to AUR step below if needed.
 
 - `Additional packages` & `AUR packages`

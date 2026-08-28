@@ -66,8 +66,10 @@
 		"timeshift": ["timeshift", "cronie"]
 	},
 
+	// swapfile needs no packages: mkswap/btrfs ship with base tooling
 	"swap": {
-		"zram": ["zram-generator"]
+		"zram": ["zram-generator"],
+		"swapfile": []
 	},
 
 	// always installed with any profile

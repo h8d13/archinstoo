@@ -45,7 +45,8 @@
   "bootloader_config": {
     "bootloader": "systemd-boot",
     "uki": false,
-    "removable": false
+    "removable": false,
+    "serial_console": "ttyS0,115200"
   },
   "services": [
     "service_1",
@@ -233,6 +234,6 @@
   "custom_commands": [
     "echo 'Hello, World!'"
   ],
-  "swap": false,
+  "swap": {"zram": false, "hibernation": false},
   "timezone": "UTC"
 }

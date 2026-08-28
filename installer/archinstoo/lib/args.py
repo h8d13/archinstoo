@@ -22,7 +22,7 @@ from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.service import UserService
-from archinstoo.lib.models.zram import ZramConfiguration
+from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.output import error, warn
 
 DEFAULT_SCRIPT = 'guided'
@@ -69,7 +69,7 @@ class ArchConfig:
 	bootloader_config: BootloaderConfiguration | None = None
 	app_config: ApplicationConfiguration | None = None
 	auth_config: AuthenticationConfiguration | None = None
-	swap: ZramConfiguration | None = None
+	swap: SwapConfiguration | None = None
 	hostname: str = 'archlinux'
 	kernels: list[str] = field(default_factory=lambda: [DEFAULT_KERNEL.value])
 	kernel_headers: bool = False
@@ -155,7 +155,7 @@ class ArchConfig:
 			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader)
 
 		if (swap := args_config.get('swap')) is not None:
-			arch_config.swap = ZramConfiguration.parse_arg(swap)
+			arch_config.swap = SwapConfiguration.parse_arg(swap)
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 		if firmware := args_config.get('firmware'):

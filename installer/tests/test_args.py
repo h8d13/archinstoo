@@ -33,8 +33,8 @@ from archinstoo.lib.models.mirrors import CustomRepository, CustomServer, Mirror
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.models.service import UserService
+from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.users import Password, Shell, User
-from archinstoo.lib.models.zram import ZramConfiguration
 from archinstoo.lib.profile.base import GreeterType
 
 if TYPE_CHECKING:
@@ -235,12 +235,13 @@ def test_config_file_parsing(
 			bootloader=Bootloader.Systemd,
 			uki=False,
 			removable=False,
+			serial_console='ttyS0,115200',
 		),
 		hostname='archy',
 		kernels=['linux-zen'],
 		ntp=True,
 		packages=['firefox'],
-		swap=ZramConfiguration(enabled=False),
+		swap=SwapConfiguration(zram=False, hibernation=False),
 		timezone='UTC',
 		services=['service_1', 'service_2', UserService(unit='syncthing.service', user='testuser', linger=True)],
 		custom_commands=["echo 'Hello, World!'"],

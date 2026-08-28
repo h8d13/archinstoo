@@ -23,7 +23,8 @@
     "bootloader_config": {
         "bootloader": "systemd-boot",
         "uki": false,
-        "removable": false
+        "removable": false,
+        "serial_console": "ttyS0,115200"
     },
     "disk_config": {
         "config_type": "default-layout",
@@ -96,9 +97,8 @@
         "btrfs_options": null
     },
     "swap": {
-        "enabled": true,
-        "algorithm": "default",
-        "recomp_algorithm": null
+        "zram": true,
+        "hibernation": true
     },
     "kernels": [
         "linux"
@@ -150,7 +150,5 @@
     "aur_packages": [],
     "services": [],
     "sysctl": [],
-    "custom_commands": [
-        "sed -i 's|^options .*|& console=ttyS0,115200|' /boot/loader/entries/*.conf"
-    ]
+    "custom_commands": []
 }
