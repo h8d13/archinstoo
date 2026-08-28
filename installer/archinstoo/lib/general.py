@@ -171,6 +171,7 @@ class SysCommandWorker:
 				f'{self.cmd} exited with abnormal exit code [{self.exit_code}]: {cleaned_log.decode("utf-8", errors="ignore")[-500:]}',
 				self.exit_code,
 				worker_log=cleaned_log,
+				cmd=self.cmd,
 			)
 
 	def is_alive(self) -> bool:
@@ -477,9 +478,21 @@ def run(
 ) -> subprocess.CompletedProcess[bytes]:
 	_cmd_history(cmd)
 
-	return subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
-		cmd,
-		input=input_data,
-		capture_output=True,
-		check=True,
-	)
+	try:
+		return subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
+			cmd,
+			input=input_data,
+			capture_output=True,
+			check=True,
+		)
+	except subprocess.CalledProcessError as err:
+		# normalize to the SysCommand path's type so handlers written
+		# against either exception see failures from both exec paths
+		raise SysCallError(
+			f'{cmd} exited with abnormal exit code [{err.returncode}]: {(err.stderr or err.stdout or b"").decode("utf-8", errors="ignore")[-500:]}',
+			err.returncode,
+			worker_log=(err.stdout or b'') + (err.stderr or b''),
+			cmd=err.cmd,
+			output=err.output,
+			stderr=err.stderr,
+		) from err
