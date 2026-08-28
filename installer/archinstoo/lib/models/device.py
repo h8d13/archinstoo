@@ -190,9 +190,11 @@ class DiskLayoutConfiguration:
 			if not device:
 				continue
 
+			table = entry.get('partition_table')
 			device_modification = DeviceModification(
 				wipe=entry.get('wipe', False),
 				device=device,
+				partition_table=PartitionTable(table) if table else None,
 			)
 
 			device_partitions: list[PartitionModification] = []
@@ -1461,6 +1463,8 @@ class BtrfsOptions:
 class _DeviceModificationSerialization(TypedDict):
 	device: str
 	wipe: bool
+	# 'gpt' | 'msdos'; absent means host default (GPT on UEFI, MBR on BIOS)
+	partition_table: NotRequired[str]
 	partitions: list[_PartitionModificationSerialization]
 
 
@@ -1477,7 +1481,7 @@ class DeviceModification:
 
 	def using_gpt(self, partition_table: PartitionTable) -> bool:
 		if self.wipe:
-			return partition_table.is_gpt()
+			return (self.partition_table or partition_table).is_gpt()
 
 		is_gpt: bool = self.device.disk.type == PartitionTable.GPT.value
 		return is_gpt
@@ -1499,11 +1503,14 @@ class DeviceModification:
 
 	def json(self) -> _DeviceModificationSerialization:
 		# Called when generating configuration files
-		return {
+		config: _DeviceModificationSerialization = {
 			'device': str(self.device.device_info.path),
 			'wipe': self.wipe,
 			'partitions': [p.json() for p in self.partitions],
 		}
+		if self.partition_table:
+			config['partition_table'] = self.partition_table.value
+		return config
 
 
 class EncryptionType(StrEnum):

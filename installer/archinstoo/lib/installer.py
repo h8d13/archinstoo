@@ -1356,9 +1356,11 @@ class Installer:
 				result = self.arch_chroot(['btrfs', 'inspect-internal', 'map-swapfile', '-r', swapfile])
 				offset = result.stdout.decode().strip() if isinstance(result, CompletedProcess) else str(result).strip()
 			else:
-				# -b4096: the kernel wants the offset in PAGE_SIZE units,
-				# filefrag's default unit is the fs block size
-				result = self.arch_chroot(['filefrag', '-b4096', '-v', swapfile])
+				# the kernel wants the offset in PAGE_SIZE units, filefrag's
+				# default unit is the fs block size; page size is an arch
+				# property (arm64 kernels ship 4k/16k/64k), not always 4096
+				page_size = os.sysconf('SC_PAGE_SIZE')
+				result = self.arch_chroot(['filefrag', f'-b{page_size}', '-v', swapfile])
 				out = result.stdout.decode() if isinstance(result, CompletedProcess) else str(result)
 				match = re.search(r'^\s*0:\s+\d+\.\.\s*\d+:\s+(\d+)', out, re.MULTILINE)
 				if not match:

@@ -13,6 +13,7 @@ from archinstoo.lib.models.device import (
 	ModificationStatus,
 	PartitionFlag,
 	PartitionModification,
+	PartitionTable,
 	PartitionType,
 	SectorSize,
 	Size,
@@ -121,3 +122,43 @@ def test_limine_esp_at_efi_allowed_under_uki() -> None:
 def test_grub_esp_at_efi_accepted() -> None:
 	# rows A/D/E: grub reads btrfs, so /boot staying in @ is fine
 	assert _errors(Bootloader.Grub, [ESP_EFI, ROOT_BTRFS]) == []
+
+
+# table-vs-firmware pre-flight: these used to surface as a parted
+# exception mid-partitioning, after the wipe had started
+
+BIOS_GRUB_PART = _part(None, '/dev/vda1', None, [PartitionFlag.BIOS_GRUB])
+BOOT_EXT4_BIOS = _part('/boot', '/dev/vda2', FilesystemType.EXT4, [PartitionFlag.BOOT])
+ROOT_EXT4 = _part('/', '/dev/vda3', FilesystemType.EXT4, [])
+
+
+def _bios_errors(parts: list[PartitionModification], table: PartitionTable | None) -> list[str]:
+	disk_config = DiskLayoutConfiguration(
+		config_type=DiskLayoutType.Manual,
+		device_modifications=[DeviceModification(device=None, wipe=True, partitions=parts, partition_table=table)],  # type: ignore[arg-type]
+	)
+	return validate_bootloader(BootloaderConfiguration(Bootloader.Grub, uki=False), disk_config, uefi=False)
+
+
+def test_bios_grub_flag_on_msdos_rejected() -> None:
+	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.MBR)
+	assert 'bios_grub flag requires a GPT partition table (msdos label selected)' in errors
+
+
+def test_bios_grub_flag_on_host_default_mbr_rejected() -> None:
+	# no explicit table: BIOS host defaults to msdos, same parted crash
+	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], None)
+	assert 'bios_grub flag requires a GPT partition table (msdos label selected)' in errors
+
+
+def test_bios_gpt_grub_without_bios_grub_rejected() -> None:
+	errors = _bios_errors([BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.GPT)
+	assert 'BIOS boot from a GPT disk needs a 1MiB bios_grub partition' in errors
+
+
+def test_bios_gpt_grub_with_bios_grub_accepted() -> None:
+	assert _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.GPT) == []
+
+
+def test_bios_mbr_grub_accepted() -> None:
+	assert _bios_errors([BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.MBR) == []

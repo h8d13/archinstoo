@@ -1,6 +1,6 @@
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstoo.lib.models.device import DiskLayoutConfiguration, PartitionModification, has_separate_boot
+from archinstoo.lib.models.device import DiskLayoutConfiguration, PartitionFlag, PartitionModification, PartitionTable, has_separate_boot
 
 
 def validate_bootloader(
@@ -48,6 +48,17 @@ def validate_bootloader(
 			errors.append('ESP must be formatted as a FAT filesystem')
 	elif boot_partition is None:
 		errors.append('Boot partition not found')
+
+	# Table-vs-firmware pre-flight: parted only rejects these while
+	# partitioning, after the disk wipe has already started
+	default_table = PartitionTable.GPT if uefi else PartitionTable.MBR
+	for layout in disk_config.device_modifications:
+		gpt = layout.using_gpt(default_table)
+		has_bios_grub = any(PartitionFlag.BIOS_GRUB in p.flags for p in layout.partitions)
+		if not gpt and has_bios_grub:
+			errors.append('bios_grub flag requires a GPT partition table (msdos label selected)')
+		if not uefi and bootloader == Bootloader.Grub and gpt and not has_bios_grub:
+			errors.append('BIOS boot from a GPT disk needs a 1MiB bios_grub partition')
 
 	if disk_config.disk_encryption and bootloader != Bootloader.Grub:
 		enc = disk_config.disk_encryption
