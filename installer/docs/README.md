@@ -185,13 +185,6 @@
 │   │   ├── _resolve
 │   │   └── size
 │   └── _version
-├── archinstoo.egg-info/
-│   ├── dependency_links.txt
-│   ├── entry_points.txt
-│   ├── PKG-INFO
-│   ├── requires.txt
-│   ├── SOURCES.txt
-│   └── top_level.txt
 ├── examples/
 │   ├── config_custom.json
 │   ├── config_sample_full.json
@@ -227,5 +220,5 @@
     ├── test_script_peek
     └── test_version_stamp
 
-30 directories, 196 files
+29 directories, 190 files
 ```
