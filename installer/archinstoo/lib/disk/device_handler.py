@@ -235,7 +235,7 @@ class DeviceHandler:
 
 	def get_btrfs_info(
 		self,
-		dev_path: Path,
+		dev_path: Path | str,
 		lsblk_info: LsblkInfo | None = None,
 	) -> list[_BtrfsSubvolumeInfo]:
 		if not lsblk_info:

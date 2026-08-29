@@ -55,6 +55,7 @@ archinstoo = "archinstoo"
 [tool.mypy]
 python_version = "3.14"
 files = "."
+mypy_path = "stubs"
 exclude = "^build/"
 disallow_any_explicit = false
 disallow_any_expr = false
@@ -79,23 +80,12 @@ strict = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = "archinstoo.lib.disk.*"
-# 'Any' imports are allowed because pyparted doesn't have type hints
-disallow_any_unimported = false
-
-[[tool.mypy.overrides]]
-module = "archinstoo.lib.models.device"
-# 'Any' imports are allowed because pyparted doesn't have type hints
-disallow_any_unimported = false
-
-[[tool.mypy.overrides]]
 module = "archinstoo.lib.grimoire"
 # tracked in its own repo
 ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = [
-    "parted",
     "_pytest.*",
     "pytest",
 ]

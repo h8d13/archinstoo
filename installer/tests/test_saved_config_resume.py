@@ -47,7 +47,8 @@ def _stub_device(path: Path) -> BDevice:
 		dirty=False,
 	)
 
-	return BDevice(disk=None, device_info=device_info, partition_infos=[])
+	# the fixture never touches the parted Disk; it is only carried around
+	return BDevice(disk=None, device_info=device_info, partition_infos=[])  # type: ignore[arg-type]
 
 
 def _saved_disk_config(config_fixture: Path) -> dict[str, Any]:

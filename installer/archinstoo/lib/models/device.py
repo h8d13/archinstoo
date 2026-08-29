@@ -629,7 +629,7 @@ class _PartitionInfo:
 		)
 
 		length = Size(
-			int(partition.getLength(unit='B')),
+			partition.getLength(unit='B'),
 			Unit.B,
 			SectorSize(partition.disk.device.sectorSize, Unit.B),
 		)
@@ -696,7 +696,7 @@ class _DeviceInfo:
 			path=Path(device.path),
 			type=device_type,
 			sector_size=sector_size,
-			total_size=Size(int(device.getLength(unit='B')), Unit.B, sector_size),
+			total_size=Size(device.getLength(unit='B'), Unit.B, sector_size),
 			free_space_regions=free_space,
 			read_only=device.readOnly,
 			dirty=device.dirty,
@@ -820,12 +820,13 @@ class PartitionType(StrEnum):
 		debug(f'Partition code not supported: {code}')
 		return cls._UNKNOWN
 
-	def get_partition_code(self) -> int | None:
-		if self == PartitionType.PRIMARY:
-			return _PED_PARTITION_NORMAL
+	def get_partition_code(self) -> int:
 		if self == PartitionType.BOOT:
 			return _PED_PARTITION_BOOT
-		return None
+
+		# _UNKNOWN included: it reaches parted as a partition type, and None
+		# is not one. A normal partition is the right fallback.
+		return _PED_PARTITION_NORMAL
 
 
 @dataclass(frozen=True)
