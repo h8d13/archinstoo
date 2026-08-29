@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, TypeIs, runtime_checkable
 
 if TYPE_CHECKING:
-	from collections.abc import Callable, Sequence
+	from collections.abc import Sequence
 
 	from _typeshed import DataclassInstance
 
@@ -31,29 +31,7 @@ def _is_dataclass_instance(o: object) -> TypeIs[DataclassInstance]:
 
 class FormattedOutput:
 	@staticmethod
-	def _get_values(
-		o: object,
-		class_formatter: str | Callable[[object, list[str]], dict[str, Any]] | None = None,
-		filter_list: list[str] | None = None,
-	) -> dict[str, Any]:
-		# the original values returned a dataclass as dict thru the call to some specific methods
-		# this version allows thru the parameter class_formatter to call a dynamically selected formatting method.
-		# Can transmit a filter list to the class_formatter,
-		if filter_list is None:
-			filter_list = []
-
-		if class_formatter:
-			# if invoked per reference it has to be a standard function or a classmethod.
-			# A method of an instance does not make sense
-			if callable(class_formatter):
-				return class_formatter(o, filter_list)
-			# if is invoked by name we restrict it to a method of the class. No need to mess more
-			if hasattr(o, class_formatter) and callable(getattr(o, class_formatter)):
-				func = getattr(o, class_formatter)
-				formatted: dict[str, Any] = func(filter_list)
-				return formatted
-
-			raise ValueError('Unsupported formatting call')
+	def _get_values(o: object) -> dict[str, Any]:
 		if isinstance(o, _HasTableData):
 			return o.table_data()
 		if isinstance(o, _HasJson):
@@ -64,46 +42,22 @@ class FormattedOutput:
 		return obj_dict
 
 	@classmethod
-	def as_table(
-		cls,
-		obj: Sequence[object],
-		class_formatter: str | Callable[[object, list[str]], dict[str, Any]] | None = None,
-		filter_list: list[str] | None = None,
-		capitalize: bool = False,
-	) -> str:
-		# variant of as_table (subtly different code) which has two additional parameters
-		# filter which is a list of fields which will be shown
-		# class_formatter a special method to format the outgoing data
-		#
-		# A general comment, the format selected for the output (a string where every data record is separated by newline)
-		# is for compatibility with a print statement
-		# As_table_filter can be a drop in replacement for as_table
-		if filter_list is None:
-			filter_list = []
-
-		raw_data = [cls._get_values(o, class_formatter, filter_list) for o in obj]
+	def as_table(cls, obj: Sequence[object]) -> str:
+		# one data record per line, separated by newline, for compatibility with a print statement
+		raw_data = [cls._get_values(o) for o in obj]
 
 		# determine the maximum column size
 		column_width: dict[str, int] = {}
 		for o in raw_data:
 			for k, v in o.items():
-				if not filter_list or k in filter_list:
-					column_width.setdefault(k, 0)
-					column_width[k] = max(column_width[k], len(str(v)), len(k))
-
-		if not filter_list:
-			filter_list = list(column_width.keys())
+				column_width.setdefault(k, 0)
+				column_width[k] = max(column_width[k], len(str(v)), len(k))
 
 		# create the header lines
 		output = ''
 		key_list = []
-		for key in filter_list:
-			width = column_width[key]
+		for key, width in column_width.items():
 			key = key.replace('!', '').replace('_', ' ')
-
-			if capitalize:
-				key = key.capitalize()
-
 			key_list.append(unicode_ljust(key, width))
 
 		output += ' | '.join(key_list) + '\n'
@@ -112,8 +66,7 @@ class FormattedOutput:
 		# create the data lines
 		for record in raw_data:
 			obj_data = []
-			for key in filter_list:
-				width = column_width.get(key, len(key))
+			for key, width in column_width.items():
 				value = record.get(key, '')
 
 				if '!' in key:

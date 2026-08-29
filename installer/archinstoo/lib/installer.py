@@ -2619,7 +2619,7 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 
 		# Do not throw error instead warn
 		info(f'Executing custom command "{command}" ...')
-		chroot_path.write_text(command)
+		chroot_path.write_text(command, encoding='utf-8')
 
 		try:
 			SysCommand(f'{" ".join(installation._arch_chroot_prefix)} bash {script_path}')

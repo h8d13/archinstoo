@@ -7,8 +7,11 @@ from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 from urllib.request import Request, urlopen
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
 from archinstoo._version import __version__
 from archinstoo.lib.models.application import ApplicationConfiguration
@@ -34,10 +37,10 @@ def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) ->
 			setattr(obj, attr, value)
 
 
-def _set_parsed(obj: object, config: dict[str, Any], mapping: dict[str, tuple[type, str]]) -> None:
-	for key, (klass, method) in mapping.items():
+def _set_parsed(obj: object, config: dict[str, Any], mapping: dict[str, Callable[[Any], object]]) -> None:
+	for key, parser in mapping.items():
 		if value := config.get(key):
-			setattr(obj, key, getattr(klass, method)(value))
+			setattr(obj, key, parser(value))
 
 
 @dataclass
@@ -139,12 +142,12 @@ class ArchConfig:
 			arch_config,
 			args_config,
 			{
-				'pacman_config': (PacmanConfiguration, 'parse_args'),
-				'disk_config': (DiskLayoutConfiguration, 'parse_arg'),
-				'profile_config': (ProfileConfiguration, 'parse_arg'),
-				'auth_config': (AuthenticationConfiguration, 'parse_arg'),
-				'app_config': (ApplicationConfiguration, 'parse_arg'),
-				'network_config': (NetworkConfiguration, 'parse_arg'),
+				'pacman_config': PacmanConfiguration.parse_args,
+				'disk_config': DiskLayoutConfiguration.parse_arg,
+				'profile_config': ProfileConfiguration.parse_arg,
+				'auth_config': AuthenticationConfiguration.parse_arg,
+				'app_config': ApplicationConfiguration.parse_arg,
+				'network_config': NetworkConfiguration.parse_arg,
 			},
 		)
 
