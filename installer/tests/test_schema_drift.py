@@ -55,8 +55,8 @@ from archinstoo.lib.models.users import Shell
 from archinstoo.lib.pm import groups
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.lib.schema import SCHEMA
 from archinstoo.scripts import _resolve
-from archinstoo.scripts._resolve import SCHEMA
 
 if TYPE_CHECKING:
 	from enum import Enum
@@ -175,6 +175,8 @@ _CODE_SECTIONS = (
 @pytest.mark.parametrize('key', _CODE_SECTIONS, ids=str)
 def test_section_packages_match(key: str, monkeypatch: pytest.MonkeyPatch) -> None:
 	code = _code_sections(monkeypatch)[key]
+	schema_side: dict[str, list[str]] | list[str]
+	code_side: dict[str, list[str]] | list[str]
 	if isinstance(code, dict):
 		schema_side = {k: sorted(SCHEMA[key].get(k, [])) for k in code}
 		code_side = {k: sorted(v) for k, v in code.items()}
@@ -428,8 +430,9 @@ def test_expand_replaces_groups_with_members(monkeypatch: pytest.MonkeyPatch) ->
 
 def test_resolve_uses_the_shared_modules() -> None:
 	# _resolve must not grow its own copies again
-	assert _resolve.expand is groups.expand
-	assert _resolve.SCHEMA is SCHEMA
+	resolve_ns = vars(_resolve)
+	assert resolve_ns['expand'] is groups.expand
+	assert resolve_ns['SCHEMA'] is SCHEMA
 
 
 def test_schema_group_entries_are_not_treated_as_packages() -> None:

@@ -3,6 +3,7 @@
 # a logs/ each. It is derived from __file__ instead, with a rootless fallback
 # for the scripts in ROOTLESS_SCRIPTS.
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 def _pin_layout(monkeypatch: pytest.MonkeyPatch, root: Path, *, euid: int) -> None:
 	monkeypatch.setattr(output, '_PKG_ROOT', root)
-	monkeypatch.setattr(output.os, 'geteuid', lambda: euid)
+	monkeypatch.setattr(os, 'geteuid', lambda: euid)
 
 
 def test_source_checkout_logs_beside_the_package(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
