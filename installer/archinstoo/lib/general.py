@@ -106,6 +106,7 @@ class SysCommandWorker:
 		self._trace_log_pos = 0
 		self.poll_object = epoll()
 		self.child_fd: int | None = None
+		self.pid: int | None = None
 		self.started = False
 		self.ended = False
 		self.remove_vt100_escape_codes_from_lines: bool = remove_vt100_escape_codes_from_lines

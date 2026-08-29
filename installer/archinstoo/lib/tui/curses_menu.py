@@ -7,7 +7,7 @@ import termios
 from abc import ABCMeta, abstractmethod
 from curses.ascii import isprint
 from curses.textpad import Textbox
-from typing import TYPE_CHECKING, ClassVar, Literal, Self, override
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, override
 
 from .help import Help
 from .menu_item import MenuItem, MenuItemGroup, MenuItemsState
@@ -1325,6 +1325,11 @@ class Tui:
 	_abort_handler: ClassVar[Callable[[], None] | None] = None
 	_abort_active: ClassVar[bool] = False
 
+	# instance attrs assigned by init()/_main_loop(); curses setup is deferred past construction
+	_screen: curses.window
+	_prev_sigwinch: Callable[[int, FrameType | None], object] | int | None
+	_component: AbstractCurses[Any]
+
 	@classmethod
 	def set_abort_handler(cls, handler: Callable[[], None] | None) -> None:
 		cls._abort_handler = handler
@@ -1464,8 +1469,8 @@ class Tui:
 			curses.resizeterm(*self._screen.getmaxyx())
 			self._screen.clear()
 			self._screen.refresh()
-			if hasattr(self, '_component') and self._component is not None:  # pylint: disable=no-member
-				self._component.resize_win()  # pylint: disable=no-member
+			if hasattr(self, '_component') and self._component is not None:
+				self._component.resize_win()
 		except curses.error:
 			pass
 
