@@ -63,7 +63,6 @@ But also lets standards compete in a better environment. Banner made on 10/02/20
 """
 
 import logging
-import os
 import sys
 import textwrap
 import traceback
@@ -333,13 +332,6 @@ def _is_foreign_blocked(script: str | None) -> bool:
 
 
 def run_as_a_module() -> int:
-	# force UTF-8 mode (PEP 686 makes it default in 3.15): every open()/read_text()
-	# in the codebase is locale-independent without per-site encoding= arguments
-	if not sys.flags.utf8_mode:
-		os.environ['PYTHONUTF8'] = '1'
-		flags = ['-B'] if sys.flags.dont_write_bytecode else []
-		os.execv(sys.executable, [sys.executable, *flags, '-m', 'archinstoo', *sys.argv[1:]])  # noqa: S606 - re-exec self, no shell wanted
-
 	# short-circuit for version before any preparation
 	if '-v' in sys.argv or '--version' in sys.argv:
 		print(f'archinstoo {__version__}')
