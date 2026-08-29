@@ -55,7 +55,8 @@ archinstoo = "archinstoo"
 [tool.mypy]
 python_version = "3.14"
 files = "."
-mypy_path = "stubs"
+# relative to this file, not the cwd: CI runs mypy from the repo root
+mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 exclude = "^build/"
 disallow_any_explicit = false
 disallow_any_expr = false
@@ -131,7 +132,6 @@ disable = [
     "attribute-defined-outside-init",
     "broad-exception-caught",
     "cell-var-from-loop",
-    "dangerous-default-value",
     "fixme",
     "protected-access",
     "raise-missing-from",

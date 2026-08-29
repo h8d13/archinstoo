@@ -45,10 +45,11 @@ class Geometry:
 	def device(self) -> Device: ...
 	def getLength(self, unit: str = ...) -> int: ...
 
+# type/fs shadow builtins because those are pyparted's own parameter names
 class FileSystem:
 	def __init__(
 		self,
-		type: str,  # noqa: A002 - matches pyparted's own parameter name
+		type: str,  # noqa: A002  # pylint: disable=redefined-builtin
 		geometry: Geometry,
 	) -> None: ...
 	@property
@@ -78,7 +79,7 @@ class Partition:
 	def __init__(
 		self,
 		disk: Disk,
-		type: int,  # noqa: A002 - matches pyparted's own parameter name
+		type: int,  # noqa: A002  # pylint: disable=redefined-builtin
 		fs: FileSystem | None,
 		geometry: Geometry,
 	) -> None: ...
