@@ -47,7 +47,10 @@ def select_kernel(preset: list[str] | None = None) -> list[str]:
 			return [k.value for k in result.get_values()]
 
 
-def select_swap(preset: SwapConfiguration = SwapConfiguration()) -> SwapConfiguration:
+def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
+	if preset is None:
+		preset = SwapConfiguration()
+
 	prompt = 'Would you like to use swap on zram?' + '\n'
 
 	group = MenuItemGroup.yes_no()

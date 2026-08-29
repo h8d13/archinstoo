@@ -8,6 +8,7 @@ from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models import Bootloader
+from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.network.network_handler import NetworkHandler
@@ -44,7 +45,7 @@ def perform_installation(
 		# Strap in the base system, add a bootloader and configure
 		# some other minor details as specified by this profile and user.
 		installation.mount_ordered_layout()
-		installation.minimal_installation()
+		installation.minimal_installation(locale_config=LocaleConfiguration.default())
 		installation.set_hostname('minimal-arch')
 		installation.add_bootloader(Bootloader.Systemd)
 

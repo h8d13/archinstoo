@@ -37,7 +37,7 @@ def _read_password(from_stdin: bool) -> str:
 
 
 def _write_config(path: Path, enc_password: str, root: bool, username: str | None) -> str:
-	config = json.loads(path.read_text())
+	config = json.loads(path.read_text(encoding='utf-8'))
 	# the shipped examples carry "auth_config": null, so setdefault is not
 	# enough: an explicit null has to become a dict too
 	auth = config.get('auth_config') or {}

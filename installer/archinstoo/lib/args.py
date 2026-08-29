@@ -345,7 +345,7 @@ class ArchConfigHandler:
 			error(f'Could not find file {path}')
 			sys.exit(1)
 
-		return path.read_text()
+		return path.read_text(encoding='utf-8')
 
 	def _cleanup_config(self, config: Namespace | dict[str, Any]) -> dict[str, Any]:
 		clean_args = {}

@@ -43,7 +43,6 @@ from .localization.utils import locale_encoding, locale_entry_re, split_locale_n
 from .models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from .models.bootloader import Bootloader
 from .models.kernel import DEFAULT_KERNEL
-from .models.locale import LocaleConfiguration
 from .models.users import User
 from .output import debug, error, info, log, logger, warn
 from .pm import Pacman
@@ -57,6 +56,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.packages import Repository
 
 	from .args import ArchConfigHandler
+	from .models.locale import LocaleConfiguration
 	from .models.mirrors import PacmanConfiguration
 	from .models.network import Nic
 	from .models.service import UserService
@@ -1145,7 +1145,7 @@ class Installer:
 		optional_repositories: list[Repository] | None = None,
 		mkinitcpio: bool = True,
 		hostname: str | None = None,
-		locale_config: LocaleConfiguration | None = LocaleConfiguration.default(),
+		locale_config: LocaleConfiguration | None = None,
 		timezone: str | None = None,
 	) -> None:
 		if optional_repositories is None:
@@ -2439,7 +2439,7 @@ class Installer:
 		vconsole_content = f'KEYMAP={kb_vconsole}\n'
 		vconsole_content += f'FONT={font_vconsole}\n'
 
-		vconsole_path.write_text(vconsole_content)
+		vconsole_path.write_text(vconsole_content, encoding='utf-8')
 		info(f'Wrote to {vconsole_path} using {kb_vconsole} and {font_vconsole}')
 
 	def set_keyboard(self, locale_config: LocaleConfiguration) -> bool:

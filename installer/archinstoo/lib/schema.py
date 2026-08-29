@@ -18,7 +18,7 @@ _COMMENT_RE = re.compile(r'(?m)^\s*//.*$|(?<=,)\s*//.*$')
 
 def load(path: Path = SCHEMA_PATH) -> dict[str, Any]:
 	# strip // comments, then parse as json
-	result: dict[str, Any] = json.loads(_COMMENT_RE.sub('', path.read_text()))
+	result: dict[str, Any] = json.loads(_COMMENT_RE.sub('', path.read_text(encoding='utf-8')))
 	return result
 
 

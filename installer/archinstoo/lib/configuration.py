@@ -61,7 +61,7 @@ class ConfigStore:
 			return result.item() == MenuItem.yes()
 
 	def _save_file(self, path: Path, content: str) -> None:
-		path.write_text(content)
+		path.write_text(content, encoding='utf-8')
 		path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
 		restore_perms(path.parent, recursive=True)
 		info(f'Saved {path}')
