@@ -777,23 +777,23 @@ class Installer:
 			mirrorlist_path = MIRRORLIST
 			pacman_conf_path = PACMAN_CONF
 
-		existing_content = pacman_conf_path.read_text(encoding='utf-8')
+		existing_content = pacman_conf_path.read_text()
 		if repos_config := pacman_configuration.repositories_config(existing_content):
 			debug(f'Pacman config: {repos_config}')
-			with pacman_conf_path.open('a', encoding='utf-8') as fp:
+			with pacman_conf_path.open('a') as fp:
 				fp.write(repos_config)
 
 		# Speed test only for the live system, target reuses the same order
 		regions_config = pacman_configuration.regions_config(speed_sort=not on_target)
 		if regions_config:
 			debug(f'Mirrorlist:\n{regions_config}')
-			mirrorlist_path.write_text(regions_config, encoding='utf-8')
+			mirrorlist_path.write_text(regions_config)
 
 		if custom_servers := pacman_configuration.custom_servers_config():
 			debug(f'Custom servers:\n{custom_servers}')
 
-			content = mirrorlist_path.read_text(encoding='utf-8')
-			mirrorlist_path.write_text(f'{custom_servers}\n\n{content}', encoding='utf-8')
+			content = mirrorlist_path.read_text()
+			mirrorlist_path.write_text(f'{custom_servers}\n\n{content}')
 
 		# Persist pacman options (Color, ILoveCandy, etc.) to target
 		if on_target and pacman_configuration.pacman_options:
@@ -1016,7 +1016,7 @@ class Installer:
 		if Os.running_from_foreign():
 			host_resolv = Path('/etc/resolv.conf')
 			if host_resolv.is_file():  # follows symlink, False if dangling
-				resolv.write_text(host_resolv.read_text(encoding='utf-8'), encoding='utf-8')
+				resolv.write_text(host_resolv.read_text())
 			else:
 				debug('No host /etc/resolv.conf to copy, leaving target unset')
 			return
@@ -2439,7 +2439,7 @@ class Installer:
 		vconsole_content = f'KEYMAP={kb_vconsole}\n'
 		vconsole_content += f'FONT={font_vconsole}\n'
 
-		vconsole_path.write_text(vconsole_content, encoding='utf-8')
+		vconsole_path.write_text(vconsole_content)
 		info(f'Wrote to {vconsole_path} using {kb_vconsole} and {font_vconsole}')
 
 	def set_keyboard(self, locale_config: LocaleConfiguration) -> bool:
@@ -2619,7 +2619,7 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 
 		# Do not throw error instead warn
 		info(f'Executing custom command "{command}" ...')
-		chroot_path.write_text(command, encoding='utf-8')
+		chroot_path.write_text(command)
 
 		try:
 			SysCommand(f'{" ".join(installation._arch_chroot_prefix)} bash {script_path}')

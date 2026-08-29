@@ -59,7 +59,7 @@ def _has_repos() -> bool:
 	# True only if pacman.conf already declares a real repo, not just [options].
 	if not PACMAN_CONF.exists():
 		return False
-	return bool(re.search(r'^\[(?!options\b)[\w-]+\]', PACMAN_CONF.read_text(encoding='utf-8'), re.MULTILINE))
+	return bool(re.search(r'^\[(?!options\b)[\w-]+\]', PACMAN_CONF.read_text(), re.MULTILINE))
 
 
 def _build_mirrorlist() -> str:
@@ -86,7 +86,7 @@ def pacman_conf() -> None:
 		return
 
 	info('Configuring pacman for non-Arch host...')
-	MIRRORLIST.write_text(_build_mirrorlist(), encoding='utf-8')
+	MIRRORLIST.write_text(_build_mirrorlist())
 
 	conf_url = _sources().pacman_conf
 	info(f'Fetching pacman.conf from {conf_url}...')
@@ -96,7 +96,7 @@ def pacman_conf() -> None:
 	# Packaging templates leave Architecture = @CARCH@ for build time to fill;
 	# no-op on a conf that ships already substituted.
 	conf = conf.replace('@CARCH@', platform.machine())
-	PACMAN_CONF.write_text(conf, encoding='utf-8')
+	PACMAN_CONF.write_text(conf)
 
 
 def _latest_keyring_url(mirror: str, pkg_name: str) -> str:

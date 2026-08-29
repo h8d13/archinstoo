@@ -37,7 +37,7 @@ def _read_password(from_stdin: bool) -> str:
 
 
 def _write_config(path: Path, enc_password: str, root: bool, username: str | None) -> str:
-	config = json.loads(path.read_text(encoding='utf-8'))
+	config = json.loads(path.read_text())
 	# the shipped examples carry "auth_config": null, so setdefault is not
 	# enough: an explicit null has to become a dict too
 	auth = config.get('auth_config') or {}
@@ -64,7 +64,7 @@ def _write_config(path: Path, enc_password: str, root: bool, username: str | Non
 	# write via a sibling temp file: a crash mid-write leaves the original
 	# config intact instead of a truncated one
 	tmp = path.with_suffix(path.suffix + '.tmp')
-	tmp.write_text(json.dumps(config, indent=4) + '\n', encoding='utf-8')
+	tmp.write_text(json.dumps(config, indent=4) + '\n')
 	tmp.replace(path)
 	return changed
 

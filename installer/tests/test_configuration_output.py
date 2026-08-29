@@ -26,7 +26,7 @@ def test_user_config_roundtrip(
 	store.save()
 
 	result = json.loads(test_out_file.read_text())
-	expected = json.loads(config_fixture.read_text(encoding='utf-8'))
+	expected = json.loads(config_fixture.read_text())
 
 	# the parsed config will check if the given device exists otherwise
 	# it will ignore the modification; as this test will run on various local systems

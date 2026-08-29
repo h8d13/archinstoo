@@ -52,7 +52,7 @@ def _stub_device(path: Path) -> BDevice:
 
 
 def _saved_disk_config(config_fixture: Path) -> dict[str, Any]:
-	disk_config = json.loads(config_fixture.read_text(encoding='utf-8'))['disk_config']
+	disk_config = json.loads(config_fixture.read_text())['disk_config']
 
 	# a partition with no mountpoint is what triggers the dropped key
 	disk_config['device_modifications'][0]['partitions'][2]['mountpoint'] = None

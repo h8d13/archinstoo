@@ -119,7 +119,7 @@ def _fetch_glibc_supported() -> list[str]:
 def list_locales() -> list[str]:
 	# glibc hosts enumerate from i18n/SUPPORTED
 	if _SUPPORTED_PATH.is_file():
-		with _SUPPORTED_PATH.open(encoding='utf-8') as file:
+		with _SUPPORTED_PATH.open() as file:
 			return _generatable(line.rstrip() for line in file)
 
 	# non-glibc host (musl/alpine): no SUPPORTED on disk, pull the canonical

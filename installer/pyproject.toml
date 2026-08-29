@@ -132,6 +132,7 @@ disable = [
     "broad-exception-caught",
     "fixme",
     "protected-access",
+    "unspecified-encoding",
 ]
 
 [tool.pylint.refactoring]
@@ -186,7 +187,6 @@ select = [
     "PLC",    # Pylint conventions
     "PLE",    # Pylint errors
     "PLW",    # Pylint warnings
-    "PLW1514", # unspecified-encoding (preview, needs explicit select)
     "PT",     # flake8-pytest-style
     "PTH",    # flake8-use-pathlib
     "PYI",    # flake8-pyi

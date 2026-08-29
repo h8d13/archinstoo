@@ -1146,8 +1146,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 	def _calc_prev_scroll_pos(self, total_prev_rows: int) -> None:
 		if self._prev_scroll_pos >= total_prev_rows:
 			self._prev_scroll_pos = total_prev_rows - 2
-		elif self._prev_scroll_pos < 0:
-			self._prev_scroll_pos = 0
+		self._prev_scroll_pos = max(self._prev_scroll_pos, 0)
 
 	def _multi_prefix(self, item: MenuItem) -> str:
 		if item.read_only:

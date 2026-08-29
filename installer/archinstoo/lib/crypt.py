@@ -60,7 +60,7 @@ def _search_login_defs(key: str) -> str | None:
 	if not LOGIN_DEFS.is_file():
 		return None
 
-	defs = LOGIN_DEFS.read_text(encoding='utf-8')
+	defs = LOGIN_DEFS.read_text()
 	for line in defs.split('\n'):
 		line = line.strip()
 

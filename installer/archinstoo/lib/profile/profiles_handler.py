@@ -338,7 +338,7 @@ class ProfileHandler:
 	def _is_legacy(self, file: Path) -> bool:
 		# Check if the provided profile file contains a
 		# legacy profile definition
-		with file.open(encoding='utf-8') as fp:
+		with file.open() as fp:
 			for line in fp:
 				if '__packages__' in line:
 					return True

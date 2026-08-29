@@ -3,6 +3,7 @@ import math
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
+from itertools import zip_longest
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
@@ -1666,8 +1667,13 @@ class LsblkInfo:
 		log_sec = data.get('log-sec', 512)
 		sector_size = SectorSize(log_sec, Unit.B)
 		size = Size(data.get('size', 0), Unit.B, sector_size)
-		mountpoints = [Path(m) for m in data.get('mountpoints', []) if m is not None and m != '[SWAP]']
-		fsroots = [Path(f) for f in data.get('fsroots', []) if f is not None]
+		# lsblk emits mountpoints/fsroots as parallel arrays (one entry per mount);
+		# filter pairwise so fsroot→mountpoint zips stay aligned (a swapfile on a
+		# btrfs subvol reports mountpoint [SWAP] with a real fsroot). zip_longest:
+		# saved configs/fixtures may omit the fsroots column entirely.
+		mount_pairs = [(m, f) for m, f in zip_longest(data.get('mountpoints', []), data.get('fsroots', [])) if m is not None and m != '[SWAP]']
+		mountpoints = [Path(m) for m, _ in mount_pairs]
+		fsroots = [Path(f) for _, f in mount_pairs if f is not None]
 		children: list[LsblkInfo] = [LsblkInfo.from_dict(c) for c in data.get('children', [])]
 
 		return cls(

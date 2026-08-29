@@ -57,7 +57,7 @@ class FormattedOutput:
 		output = ''
 		key_list = []
 		for key, width in column_width.items():
-			key = key.replace('!', '').replace('_', ' ')
+			key = key.replace('_', ' ')
 			key_list.append(unicode_ljust(key, width))
 
 		output += ' | '.join(key_list) + '\n'
@@ -69,13 +69,12 @@ class FormattedOutput:
 			for key, width in column_width.items():
 				value = record.get(key, '')
 
-				if '!' in key:
-					value = '*' * len(value)
-
+				# keep cells single-line: consumers (menu_helper) count one row per record
+				text = str(value).replace('\n', ' ')
 				if isinstance(value, (int, float)) or (isinstance(value, str) and value.isnumeric()):
-					obj_data.append(unicode_rjust(str(value), width))
+					obj_data.append(unicode_rjust(text, width))
 				else:
-					obj_data.append(unicode_ljust(str(value), width))
+					obj_data.append(unicode_ljust(text, width))
 
 			output += ' | '.join(obj_data) + '\n'
 
