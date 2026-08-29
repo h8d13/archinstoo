@@ -62,7 +62,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return [
 			MenuItem(
 				text='Encryption type',
-				action=lambda x: select_encryption_type(self._device_modifications, self._lvm_config, x),
+				action=lambda x: select_encryption_type(self._lvm_config, x),
 				value=self._enc_config.encryption_type,
 				preview_action=self._preview,
 				key='encryption_type',
@@ -334,7 +334,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		return None
 
-	def _preview(self, item: MenuItem) -> str | None:
+	def _preview(self, _item: MenuItem) -> str | None:
 		output = ''
 
 		if (enc_type := self._prev_type()) is not None:
@@ -479,7 +479,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 
 def select_encryption_type(
-	device_modifications: list[DeviceModification],
 	lvm_config: LvmConfiguration | None = None,
 	preset: EncryptionType | None = None,
 ) -> EncryptionType | None:

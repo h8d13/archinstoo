@@ -64,7 +64,7 @@ def reset_conf() -> bool:
 		from .utils.net import fetch_data_from_url
 
 		conf_data = fetch_data_from_url(default_pm_conf)
-		Path('/etc/pacman.conf').write_text(conf_data)
+		Path('/etc/pacman.conf').write_text(conf_data, encoding='utf-8')
 		info('Replaced /etc/pacman.conf with upstream default.')
 		return True
 	except Exception as e:

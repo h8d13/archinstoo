@@ -327,7 +327,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		return preset
 
-	def _prev_theme(self, item: MenuItem) -> str | None:
+	def _prev_theme(self, _item: MenuItem) -> str | None:
 		return f'Theme: {Tui._mode.capitalize()} / {Tui._accent.capitalize()}'
 
 	def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
@@ -737,7 +737,7 @@ class GlobalMenu(AbstractMenu[None]):
 			self._uefi,
 		)
 
-	def _prev_install_invalid_config(self, item: MenuItem) -> str | None:
+	def _prev_install_invalid_config(self, _item: MenuItem) -> str | None:
 		text = ''
 
 		if missing := self._missing_configs():
@@ -867,7 +867,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 		return output.strip()
 
-	def _handle_abort(self, preset: None) -> None:
+	def _handle_abort(self, _preset: None) -> None:
 		items = []
 		# Only offer to save if meaningful config has been set
 		disk_config = self._item_group.find_by_key('disk_config').value

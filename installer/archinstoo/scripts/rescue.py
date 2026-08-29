@@ -3,7 +3,6 @@ from getpass import getpass
 from pathlib import Path
 
 from archinstoo.lib.args import get_arch_config_handler
-from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.luks import Luks2
 from archinstoo.lib.disk.utils import get_all_lsblk_info, get_lsblk_by_mountpoint, mount
 from archinstoo.lib.exceptions import DiskError, SysCallError
@@ -93,7 +92,7 @@ def verify_linux_root(mount_point: Path) -> bool:
 	return os_release.exists()
 
 
-def mount_partition(partition: LsblkInfo, mount_point: Path, handler: DeviceHandler) -> bool:
+def mount_partition(partition: LsblkInfo, mount_point: Path) -> bool:
 	try:
 		info(f'Mounting {partition.path} to {mount_point}...')
 		mount(partition.path, mount_point, create_target_mountpoint=True)
@@ -103,7 +102,7 @@ def mount_partition(partition: LsblkInfo, mount_point: Path, handler: DeviceHand
 		return False
 
 
-def mount_additional_filesystems(mount_point: Path, handler: DeviceHandler) -> None:
+def mount_additional_filesystems(mount_point: Path) -> None:
 	fstab_path = mount_point / 'etc' / 'fstab'
 
 	if not fstab_path.exists():
@@ -311,9 +310,6 @@ def rescue() -> None:
 	# Track unlocked LUKS devices for cleanup
 	unlocked_luks: list[Luks2] = []
 
-	# Initialize device handler
-	device_handler = DeviceHandler()
-
 	# Activate LVM volume groups first
 	info('Activating LVM volume groups...')
 	activate_lvm_volumes()
@@ -378,7 +374,7 @@ def rescue() -> None:
 	mount_point.mkdir(parents=True, exist_ok=True)
 
 	# Mount the root partition
-	if not mount_partition(selected_partition, mount_point, device_handler):
+	if not mount_partition(selected_partition, mount_point):
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
 			with contextlib.suppress(DiskError, SysCallError):
@@ -398,7 +394,7 @@ def rescue() -> None:
 	info('Linux root filesystem verified!')
 
 	# Mount additional filesystems from fstab
-	mount_additional_filesystems(mount_point, device_handler)
+	mount_additional_filesystems(mount_point)
 
 	# Display information
 	info(f'Installation mounted at: {mount_point}')

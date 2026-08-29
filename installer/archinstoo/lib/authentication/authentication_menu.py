@@ -100,7 +100,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 		return None
 
 
-def select_root_password(preset: str | None = None) -> Password | None:
+def select_root_password(_preset: str | None = None) -> Password | None:
 	return get_password(text='Root password', allow_skip=True)
 
 

@@ -513,7 +513,7 @@ class MirrorListHandler:
 			return False
 
 	def load_local_mirrors(self) -> None:
-		with self._local_mirrorlist.open('r') as fp:
+		with self._local_mirrorlist.open('r', encoding='utf-8') as fp:
 			mirrorlist = fp.read()
 			_MirrorCache.data.update(self._parse_local_mirrors(mirrorlist))
 

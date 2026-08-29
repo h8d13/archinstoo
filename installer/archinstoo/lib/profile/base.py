@@ -85,11 +85,12 @@ class Profile:
 	def default_greeter_type(self) -> GreeterType | None:
 		return None
 
-	def install(self, install_session: Installer) -> None: ...
+	# no-op hooks: subclasses override, args are the hook contract
+	def install(self, install_session: Installer) -> None: ...  # pylint: disable=unused-argument
 
-	def post_install(self, install_session: Installer) -> None: ...
+	def post_install(self, install_session: Installer) -> None: ...  # pylint: disable=unused-argument
 
-	def provision(self, install_session: Installer, users: list[User]) -> None: ...
+	def provision(self, install_session: Installer, users: list[User]) -> None: ...  # pylint: disable=unused-argument
 
 	def json(self) -> dict[str, str]:
 		# Returns a json representation of the profile

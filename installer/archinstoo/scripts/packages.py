@@ -12,7 +12,7 @@ from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 
 
-def show_menu(config: ArchConfig, args: Arguments) -> None:
+def show_menu(config: ArchConfig, _args: Arguments) -> None:
 	with Tui():
 		global_menu = GlobalMenu(config, skip_boot=True, skip_auth=True)
 		global_menu.disable_all()

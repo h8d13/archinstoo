@@ -753,7 +753,7 @@ class Installer:
 			if key_in_target.exists():
 				key_in_target.unlink()
 
-	def post_install_check(self, *args: str, **kwargs: str) -> list[str]:
+	def post_install_check(self, *_args: str, **_kwargs: str) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
 
 	def set_mirrors(
@@ -777,23 +777,23 @@ class Installer:
 			mirrorlist_path = MIRRORLIST
 			pacman_conf_path = PACMAN_CONF
 
-		existing_content = pacman_conf_path.read_text()
+		existing_content = pacman_conf_path.read_text(encoding='utf-8')
 		if repos_config := pacman_configuration.repositories_config(existing_content):
 			debug(f'Pacman config: {repos_config}')
-			with pacman_conf_path.open('a') as fp:
+			with pacman_conf_path.open('a', encoding='utf-8') as fp:
 				fp.write(repos_config)
 
 		# Speed test only for the live system, target reuses the same order
 		regions_config = pacman_configuration.regions_config(speed_sort=not on_target)
 		if regions_config:
 			debug(f'Mirrorlist:\n{regions_config}')
-			mirrorlist_path.write_text(regions_config)
+			mirrorlist_path.write_text(regions_config, encoding='utf-8')
 
 		if custom_servers := pacman_configuration.custom_servers_config():
 			debug(f'Custom servers:\n{custom_servers}')
 
-			content = mirrorlist_path.read_text()
-			mirrorlist_path.write_text(f'{custom_servers}\n\n{content}')
+			content = mirrorlist_path.read_text(encoding='utf-8')
+			mirrorlist_path.write_text(f'{custom_servers}\n\n{content}', encoding='utf-8')
 
 		# Persist pacman options (Color, ILoveCandy, etc.) to target
 		if on_target and pacman_configuration.pacman_options:
@@ -1016,7 +1016,7 @@ class Installer:
 		if Os.running_from_foreign():
 			host_resolv = Path('/etc/resolv.conf')
 			if host_resolv.is_file():  # follows symlink, False if dangling
-				resolv.write_text(host_resolv.read_text())
+				resolv.write_text(host_resolv.read_text(encoding='utf-8'), encoding='utf-8')
 			else:
 				debug('No host /etc/resolv.conf to copy, leaving target unset')
 			return
@@ -1047,7 +1047,7 @@ class Installer:
 					# This function will be called after minimal_installation()
 					# as a hook for post-installs. This hook is only needed if
 					# base is not installed yet.
-					def post_install_enable_iwd_service(*args: str, **kwargs: str) -> None:
+					def post_install_enable_iwd_service(*_args: str, **_kwargs: str) -> None:
 						self.enable_service('iwd')
 
 					self.post_base_install.append(post_install_enable_iwd_service)
@@ -1073,7 +1073,7 @@ class Installer:
 				# If we haven't installed the base yet (function called pre-maturely)
 				if self._helper_flags.get('base', False) is False:
 
-					def post_install_enable_networkd_resolved(*args: str, **kwargs: str) -> None:
+					def post_install_enable_networkd_resolved(*_args: str, **_kwargs: str) -> None:
 						self.enable_service(['systemd-networkd', 'systemd-resolved'])
 
 					self.post_base_install.append(post_install_enable_networkd_resolved)

@@ -68,10 +68,10 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 		case _:
 			assert_never(result.type_)
 
-	with PACMAN_CONF.open() as f:
+	with PACMAN_CONF.open(encoding='utf-8') as f:
 		pacman_conf = f.read().split('\n')
 
-	with PACMAN_CONF.open('w') as fwrite:
+	with PACMAN_CONF.open('w', encoding='utf-8') as fwrite:
 		for line in pacman_conf:
 			if 'ParallelDownloads' in line:
 				fwrite.write(f'ParallelDownloads = {downloads}\n')
@@ -136,7 +136,7 @@ class PacmanConfig:
 			else:
 				repos_to_enable.append(repo.value)
 
-		content = PACMAN_CONF.read_text().splitlines(keepends=True)
+		content = PACMAN_CONF.read_text(encoding='utf-8').splitlines(keepends=True)
 		options_found: set[str] = set()
 		last_opt_row = 0
 
@@ -186,13 +186,13 @@ class PacmanConfig:
 				content.append(f'Server = {custom.url}\n')
 
 		# Host conf is snapshotted and restored on exit by guard_host_conf(); just write.
-		with PACMAN_CONF.open('w') as f:
+		with PACMAN_CONF.open('w', encoding='utf-8') as f:
 			f.writelines(content)
 
 	def persist(self) -> None:
 		has_changes = self._repositories or self._custom_repositories or self._misc_options
 		if has_changes and self._config_remote_path and not PACMAN_CONF.samefile(self._config_remote_path):
-			content = PACMAN_CONF.read_text()
+			content = PACMAN_CONF.read_text(encoding='utf-8')
 			content = re.sub(r'\n\[[^\]]+\]\nSigLevel = [^\n]+\nServer = file://[^\n]+\n', '', content)
 			self._config_remote_path.write_text(content)
 
@@ -213,7 +213,7 @@ class PacmanConfig:
 	@classmethod
 	def get_existing_custom_repos(cls) -> list[CustomRepository]:
 		# Parse pacman.conf for existing custom repositories.
-		content = PACMAN_CONF.read_text()
+		content = PACMAN_CONF.read_text(encoding='utf-8')
 		repos: list[CustomRepository] = []
 
 		for match in re.finditer(r'\[([^\]]+)\]\s*\n([^[]*)', content):

@@ -418,7 +418,7 @@ class Viewport(AbstractViewport):
 	def update(
 		self,
 		entries: list[ViewportEntry],
-		cur_pos: int = 0,
+		cur_pos: int = 0,  # pylint: disable=unused-argument  # keyword-called; part of viewport signature
 		scroll_pos: int | None = None,
 	) -> None:
 		# self._state = self._get_viewport_state(lines, cur_pos, scroll_pos)
@@ -1098,7 +1098,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		total_prev_rows = len(entries)
 		available_rows = self._preview_vp.height - 2  # for the preview frame
 
-		self._calc_prev_scroll_pos(entries, total_prev_rows)
+		self._calc_prev_scroll_pos(total_prev_rows)
 		prev_entries = self._get_scroll_win_prev_entries(entries, total_prev_rows, available_rows)
 		scroll_pct = self._get_scroll_pct(total_prev_rows, available_rows)
 
@@ -1143,11 +1143,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 
 		return prev_entries
 
-	def _calc_prev_scroll_pos(
-		self,
-		entries: list[ViewportEntry],
-		total_prev_rows: int,
-	) -> None:
+	def _calc_prev_scroll_pos(self, total_prev_rows: int) -> None:
 		if self._prev_scroll_pos >= total_prev_rows:
 			self._prev_scroll_pos = total_prev_rows - 2
 		elif self._prev_scroll_pos < 0:

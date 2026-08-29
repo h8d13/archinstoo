@@ -316,7 +316,7 @@ class _SysInfo:
 		cpu_info_path = Path('/proc/cpuinfo')
 		cpu: dict[str, str] = {}
 
-		with cpu_info_path.open() as file:
+		with cpu_info_path.open(encoding='utf-8') as file:
 			for line in file:
 				if line := line.strip():
 					key, value = line.split(':', maxsplit=1)
@@ -328,7 +328,7 @@ class _SysInfo:
 	def mem_total(self) -> int:
 		# kB. Single key, so no dict of the whole file: MemFree/MemAvailable
 		# are live values and caching them would be wrong anyway.
-		with Path('/proc/meminfo').open() as file:
+		with Path('/proc/meminfo').open(encoding='utf-8') as file:
 			for line in file:
 				key, _, remainder = line.partition(':')
 				if key == 'MemTotal':
@@ -342,7 +342,7 @@ class _SysInfo:
 		modules_path = Path('/proc/modules')
 		modules: list[str] = []
 
-		with modules_path.open() as file:
+		with modules_path.open(encoding='utf-8') as file:
 			for line in file:
 				module = line.split(maxsplit=1)[0]
 				modules.append(module)
@@ -392,7 +392,7 @@ class _SysInfo:
 				'parallels',
 				'bhyve',
 			)
-			text = vendor.read_text().strip().lower()
+			text = vendor.read_text(encoding='utf-8').strip().lower()
 			return any(v in text for v in known)
 
 		return False
@@ -504,7 +504,7 @@ class SysInfo:
 	@staticmethod
 	def sys_vendor() -> str | None:
 		try:
-			with Path('/sys/devices/virtual/dmi/id/sys_vendor').open() as vendor:
+			with Path('/sys/devices/virtual/dmi/id/sys_vendor').open(encoding='utf-8') as vendor:
 				return vendor.read().strip()
 		except FileNotFoundError:
 			return None
@@ -512,7 +512,7 @@ class SysInfo:
 	@staticmethod
 	def product_name() -> str | None:
 		try:
-			with Path('/sys/devices/virtual/dmi/id/product_name').open() as product:
+			with Path('/sys/devices/virtual/dmi/id/product_name').open(encoding='utf-8') as product:
 				return product.read().strip()
 		except FileNotFoundError:
 			return None

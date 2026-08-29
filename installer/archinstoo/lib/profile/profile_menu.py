@@ -124,7 +124,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		profile = next((p for p in profiles if p.is_greeter_supported()), None)
 		return select_greeter(profile=profile, preset=preset)
 
-	def _customize_packages(self, preset: None = None) -> None:
+	def _customize_packages(self, _preset: None = None) -> None:
 		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
 		targets = [p for pr in profiles for p in [pr, *(pr.current_selection or [])]]
 
@@ -160,12 +160,12 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			# Use first profile with display servers for driver selection
 			for profile in profiles:
 				if profile.display_servers():
-					driver = select_driver(preset=preset, profile=profile, kernels=self._kernels)
+					driver = select_driver(preset=preset, kernels=self._kernels)
 					break
 
 		return driver
 
-	def _prev_customize_packages(self, item: MenuItem) -> str | None:
+	def _prev_customize_packages(self, _item: MenuItem) -> str | None:
 		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
 		excluded = sorted(
 			{pkg for pr in profiles for p in [pr, *(pr.current_selection or [])] for pkg in (p.custom_settings.get('excluded_packages') or [])}

@@ -1,19 +1,13 @@
-from typing import TYPE_CHECKING
-
 from archinstoo.lib.hardware import GfxDriver, SysInfo
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import FrameProperties, FrameStyle, PreviewStyle
 
-if TYPE_CHECKING:
-	from archinstoo.lib.profile.base import Profile
-
 
 def select_driver(
 	options: list[GfxDriver] | None = None,
 	preset: GfxDriver | None = None,
-	profile: Profile | None = None,
 	kernels: list[str] | None = None,
 ) -> GfxDriver | None:
 	# Somewhat convoluted function, whose job is simple.

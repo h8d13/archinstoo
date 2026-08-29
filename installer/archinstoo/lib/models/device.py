@@ -148,7 +148,6 @@ class DiskLayoutConfiguration:
 	def parse_arg(
 		cls,
 		disk_config: _DiskLayoutConfigurationSerialization,
-		enc_password: Password | None = None,
 		device_handler: DeviceHandler | None = None,
 	) -> Self | None:
 		from archinstoo.lib.disk.device_handler import DeviceHandler

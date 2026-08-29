@@ -96,7 +96,7 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 			),
 		]
 
-	def _prev_locale(self, item: MenuItem) -> str:
+	def _prev_locale(self, _item: MenuItem) -> str:
 		default = LocaleConfiguration.default()
 		kb_layout = self._menu_item_group.find_by_key('kb_layout').value or default.kb_layout
 		sys_lang = self._menu_item_group.find_by_key('sys_lang').value or default.sys_lang

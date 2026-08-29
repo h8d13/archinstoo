@@ -146,6 +146,7 @@ class ListManager[ValueT]:
 		# a specific action for an entry is triggered
 		raise NotImplementedError('Please implement me in the child class')
 
-	def filter_options(self, selection: ValueT, options: list[str]) -> list[str]:
+	# hook: subclasses filter on selection, args are the contract
+	def filter_options(self, selection: ValueT, options: list[str]) -> list[str]:  # pylint: disable=unused-argument
 		# filter which actions to show for a specific selection
 		return options

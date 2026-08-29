@@ -132,8 +132,6 @@ disable = [
     "broad-exception-caught",
     "fixme",
     "protected-access",
-    "unspecified-encoding",
-    "unused-argument",
 ]
 
 [tool.pylint.refactoring]

@@ -62,7 +62,7 @@ def size() -> None:
 	args = parser.parse_args()
 	unit = Unit[args.unit] if args.unit else None
 
-	with Path(args.config).open() as f:
+	with Path(args.config).open(encoding='utf-8') as f:
 		config = json.load(f)
 
 	if not _requirements('expac'):
