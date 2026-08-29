@@ -21,7 +21,7 @@ class _HasTableData(Protocol):
 
 
 @runtime_checkable
-class _HasJson(Protocol):
+class HasJson(Protocol):
 	def json(self) -> dict[str, Any]: ...
 
 
@@ -34,7 +34,7 @@ class FormattedOutput:
 	def _get_values(o: object) -> dict[str, Any]:
 		if isinstance(o, _HasTableData):
 			return o.table_data()
-		if isinstance(o, _HasJson):
+		if isinstance(o, HasJson):
 			return o.json()
 		if _is_dataclass_instance(o):
 			return asdict(o)

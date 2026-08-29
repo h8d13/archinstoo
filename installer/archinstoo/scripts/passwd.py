@@ -64,7 +64,7 @@ def _write_config(path: Path, enc_password: str, root: bool, username: str | Non
 	# write via a sibling temp file: a crash mid-write leaves the original
 	# config intact instead of a truncated one
 	tmp = path.with_suffix(path.suffix + '.tmp')
-	tmp.write_text(json.dumps(config, indent=4) + '\n')
+	tmp.write_text(json.dumps(config, indent=4) + '\n', encoding='utf-8')
 	tmp.replace(path)
 	return changed
 

@@ -14,7 +14,7 @@ from select import EPOLLHUP, EPOLLIN, epoll
 from typing import TYPE_CHECKING, Any, Self, override
 
 from .exceptions import SysCallError
-from .output import debug, error, logger
+from .output import HasJson, debug, error, logger
 from .utils.env import Os
 
 if TYPE_CHECKING:
@@ -50,7 +50,7 @@ def jsonify(obj: object, safe: bool = True) -> Any:  # noqa: ANN401 - dynamic JS
 		}
 	if isinstance(obj, Enum):
 		return obj.value
-	if hasattr(obj, 'json'):
+	if isinstance(obj, HasJson):
 		# json() is a friendly name for json-helper, it should return
 		# a dictionary representation of the object so that it can be
 		# processed by the json library.
