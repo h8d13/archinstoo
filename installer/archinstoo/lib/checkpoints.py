@@ -24,7 +24,7 @@ def _run_script(script: str) -> None:
 		# Only catch if the missing module is the script itself
 		if f'archinstoo.scripts.{script}' in str(e):
 			error(f'Script: {script} does not exist. Try `--script list` to see your options.')
-			raise SystemExit(1)
+			raise SystemExit(1) from e
 
 
 def clean_cache(root_dir: str) -> None:

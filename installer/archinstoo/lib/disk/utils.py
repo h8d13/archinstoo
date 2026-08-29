@@ -48,7 +48,7 @@ def _fetch_lsblk_info(
 			debug(f'Error calling lsblk: {stdout.decode().rstrip()}')
 
 		if dev_path:
-			raise DiskError(f'Failed to read disk "{dev_path}" with lsblk')
+			raise DiskError(f'Failed to read disk "{dev_path}" with lsblk') from err
 
 		raise err
 
@@ -158,7 +158,7 @@ def mount(
 	try:
 		SysCommand(command)
 	except SysCallError as err:
-		raise DiskError(f'Could not mount {dev_path}: {command}\n{err.message}')
+		raise DiskError(f'Could not mount {dev_path}: {command}\n{err.message}') from err
 
 
 def umount(mountpoint: Path | str, recursive: bool = False) -> None:
@@ -197,7 +197,7 @@ def swapon(path: Path) -> None:
 	try:
 		SysCommand(['swapon', str(path)])
 	except SysCallError as err:
-		raise DiskError(f'Could not enable swap {path}:\n{err.message}')
+		raise DiskError(f'Could not enable swap {path}:\n{err.message}') from err
 
 
 def swapoff(path: Path | str) -> None:

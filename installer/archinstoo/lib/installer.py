@@ -808,7 +808,9 @@ class Installer:
 		try:
 			gen_fstab = SysCommand(f'genfstab {flags} -f {self.target} {self.target}').output()
 		except SysCallError as err:
-			raise RequirementError(f'Could not generate fstab, strapping in packages most likely failed (disk out of space?)\n Error: {err}')
+			raise RequirementError(
+				f'Could not generate fstab, strapping in packages most likely failed (disk out of space?)\n Error: {err}'
+			) from err
 
 		with fstab_path.open('ab') as fp:
 			fp.write(gen_fstab)
@@ -905,7 +907,7 @@ class Installer:
 			try:
 				self._systemctl_target('enable', service)
 			except SysCallError as err:
-				raise ServiceException(f'Unable to start service {service}: {err}')
+				raise ServiceException(f'Unable to start service {service}: {err}') from err
 
 	def enable_linger(self, user: str) -> None:
 		linger_dir = self.target / 'var/lib/systemd/linger'
@@ -954,7 +956,7 @@ class Installer:
 			try:
 				self._systemctl_target('disable', service)
 			except SysCallError as err:
-				raise ServiceException(f'Unable to disable service {service}: {err}')
+				raise ServiceException(f'Unable to disable service {service}: {err}') from err
 
 	@property
 	def _arch_chroot_prefix(self) -> list[str]:
@@ -1282,7 +1284,7 @@ class Installer:
 				try:
 					SysCommand(command, peek_output=True)
 				except SysCallError as err:
-					raise DiskError(f'Could not setup Btrfs snapper: {err}')
+					raise DiskError(f'Could not setup Btrfs snapper: {err}') from err
 
 			self.enable_service('snapper-timeline.timer')
 			self.enable_service('snapper-cleanup.timer')
@@ -1705,7 +1707,7 @@ class Installer:
 			try:
 				SysCommand(command, peek_output=True, silent=True)
 			except SysCallError as err:
-				raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}')
+				raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}') from err
 		else:
 			info(f'GRUB boot partition: {boot_partition.dev_path}')
 
@@ -1720,7 +1722,7 @@ class Installer:
 			try:
 				SysCommand(command + add_options, peek_output=True, silent=True)
 			except SysCallError as err:
-				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}')
+				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}') from err
 
 		if SysInfo.has_uefi() and uki_enabled:
 			grub_d = LPath(self.target) / 'etc/grub.d'
@@ -1769,7 +1771,7 @@ class Installer:
 				'grub-mkconfig -o /boot/grub/grub.cfg',
 			)
 		except SysCallError as err:
-			raise DiskError(f'Could not configure GRUB: {err}')
+			raise DiskError(f'Could not configure GRUB: {err}') from err
 
 		self._helper_flags['bootloader'] = 'grub'
 
@@ -1823,7 +1825,7 @@ class Installer:
 				for file in efi_binaries:
 					(limine_path / file).copy_into(efi_dir_path)
 			except Exception as err:
-				raise DiskError(f'Failed to install Limine in {self.target}{efi_partition.mountpoint}: {err}')
+				raise DiskError(f'Failed to install Limine in {self.target}{efi_partition.mountpoint}: {err}') from err
 
 			hook_command = ' && '.join(f'/usr/bin/cp /usr/share/limine/{file} {efi_dir_path_target}/' for file in efi_binaries)
 
@@ -1834,7 +1836,7 @@ class Installer:
 					# mixed mode booting (32bit UEFI on x86_64 CPU)
 					efi_bitness = SysInfo._bitness()
 				except Exception as err:
-					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}')
+					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}') from err
 
 				if efi_bitness == 64:
 					loader_path = f'\\EFI\\arch-limine\\{efi_binaries[-1]}'
@@ -1855,7 +1857,7 @@ class Installer:
 						' --verbose',
 					)
 				except Exception as err:
-					raise ValueError(f'SysCommand for efibootmgr failed: {err}')
+					raise ValueError(f'SysCommand for efibootmgr failed: {err}') from err
 		else:
 			boot_limine_path = self.target / 'boot' / 'limine'
 			boot_limine_path.mkdir(parents=True, exist_ok=True)
@@ -1874,7 +1876,7 @@ class Installer:
 				# `limine bios-install` deploys the stage 1 and 2 to the
 				self.arch_chroot(f'limine bios-install {parent_dev_path}', peek_output=True)
 			except Exception as err:
-				raise DiskError(f'Failed to install Limine on {parent_dev_path}: {err}')
+				raise DiskError(f'Failed to install Limine on {parent_dev_path}: {err}') from err
 
 			hook_command = f'/usr/bin/limine bios-install {parent_dev_path} && /usr/bin/cp /usr/share/limine/limine-bios.sys /boot/limine/'
 
@@ -2028,7 +2030,7 @@ class Installer:
 		try:
 			self.arch_chroot('refind-install')
 		except SysCallError as err:
-			raise DiskError(f'Could not install rEFInd to {self.target}{efi_partition.mountpoint}: {err}')
+			raise DiskError(f'Could not install rEFInd to {self.target}{efi_partition.mountpoint}: {err}') from err
 
 		if not boot_partition.mountpoint:
 			raise ValueError('Boot partition is not mounted, cannot write rEFInd config')

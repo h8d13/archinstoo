@@ -126,9 +126,9 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 		data: str = response.read().decode('UTF-8')
 		return data
 	except URLError as e:
-		raise ValueError(f'Unable to fetch data from url: {url}\n{e}')
+		raise ValueError(f'Unable to fetch data from url: {url}\n{e}') from e
 	except Exception as e:
-		raise ValueError(f'Unexpected error when parsing response: {e}')
+		raise ValueError(f'Unexpected error when parsing response: {e}') from e
 
 
 def download_file_from_url(url: str, dest: Path, timeout: int = 30) -> None:
@@ -147,4 +147,4 @@ def download_file_from_url(url: str, dest: Path, timeout: int = 30) -> None:
 		with urlopen(url, context=ssl_context, timeout=timeout) as resp, dest.open('wb') as out:  # noqa: S310 - scheme restricted above
 			shutil.copyfileobj(resp, out)
 	except URLError as e:
-		raise ValueError(f'Unable to download from url: {url}\n{e}')
+		raise ValueError(f'Unable to download from url: {url}\n{e}') from e

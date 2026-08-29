@@ -307,7 +307,7 @@ def set_kb_layout(locale: str) -> bool:
 		try:
 			SysCommand(f'localectl set-keymap {locale}')
 		except SysCallError as err:
-			raise ServiceException(f"Unable to set locale '{locale}' for console: {err}")
+			raise ServiceException(f"Unable to set locale '{locale}' for console: {err}") from err
 
 		return True
 

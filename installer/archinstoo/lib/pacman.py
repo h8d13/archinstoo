@@ -138,16 +138,16 @@ class Pacman:
 					func(*args, **kwargs)
 					return
 				except Exception as retry_err:
-					raise RequirementError(f'{bail_message}: {retry_err}')
+					raise RequirementError(f'{bail_message}: {retry_err}') from retry_err
 
 			if input('Would you like to re-try this download? (Y/n): ').lower().strip() in ('', 'y'):
 				try:
 					func(*args, **kwargs)
 					return
 				except Exception as retry_err:
-					raise RequirementError(f'{bail_message}: {retry_err}')
+					raise RequirementError(f'{bail_message}: {retry_err}') from retry_err
 
-			raise RequirementError(f'{bail_message}: {err}')
+			raise RequirementError(f'{bail_message}: {err}') from err
 
 	def sync(self) -> None:
 		if self.synced:

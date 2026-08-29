@@ -319,7 +319,7 @@ class ArchConfigHandler:
 
 			except JSONDecodeError as e:
 				warn(f'Malformed JSON at line {e.lineno}, column {e.colno}: {e.msg}')
-				raise SystemExit(1)
+				raise SystemExit(1) from e
 
 		return self._cleanup_config(config)
 

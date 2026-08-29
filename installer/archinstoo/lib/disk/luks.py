@@ -126,7 +126,7 @@ class Luks2:
 		except CalledProcessError as err:
 			output = (err.stdout or b'').decode().rstrip()
 			err_output = (err.stderr or b'').decode().rstrip()
-			raise DiskError(f'Could not encrypt volume "{self.luks_dev_path}": {output} {err_output}'.rstrip())
+			raise DiskError(f'Could not encrypt volume "{self.luks_dev_path}": {output} {err_output}'.rstrip()) from err
 
 		debug(f'cryptsetup luksFormat output: {result.stdout.decode().rstrip()}')
 
@@ -184,7 +184,7 @@ class Luks2:
 		except CalledProcessError as err:
 			output = (err.stdout or b'').decode().rstrip()
 			err_output = (err.stderr or b'').decode().rstrip()
-			raise DiskError(f'Could not unlock luks2 device "{self.luks_dev_path}": {output} {err_output}'.rstrip())
+			raise DiskError(f'Could not unlock luks2 device "{self.luks_dev_path}": {output} {err_output}'.rstrip()) from err
 
 		debug(f'cryptsetup open output: {result.stdout.decode().rstrip()}')
 

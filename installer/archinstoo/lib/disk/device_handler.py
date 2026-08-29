@@ -619,13 +619,13 @@ class DeviceHandler:
 				try:
 					SysCommand(f'chattr +C {subvol_path}')
 				except SysCallError as err:
-					raise DiskError(f'Could not set nodatacow attribute at {subvol_path}: {err}')
+					raise DiskError(f'Could not set nodatacow attribute at {subvol_path}: {err}') from err
 
 			if BtrfsMountOption.compress.value in mount_options:
 				try:
 					SysCommand(f'chattr +c {subvol_path}')
 				except SysCallError as err:
-					raise DiskError(f'Could not set compress attribute at {subvol_path}: {err}')
+					raise DiskError(f'Could not set compress attribute at {subvol_path}: {err}') from err
 
 		umount(path)
 
