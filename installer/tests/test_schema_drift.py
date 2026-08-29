@@ -277,7 +277,7 @@ def _installer_literals() -> set[str]:
 	# add_additional_packages/strap or appended to _base_packages. a local
 	# assigned a bare string (lvm = 'lvm2') resolves through consts; f-strings
 	# and enum lookups are runtime values and drop out
-	tree = ast.parse(Path(installer.__file__).read_text())
+	tree = ast.parse(Path(installer.__file__).read_text(encoding='utf-8'))
 
 	consts = {
 		target.id: node.value.value

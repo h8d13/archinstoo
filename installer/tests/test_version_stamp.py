@@ -34,7 +34,7 @@ def test_stamp_stays_a_placeholder() -> None:
 @pytest.mark.parametrize('pkgbuild', PKGBUILDS, ids=lambda p: p.relative_to(ROOT).as_posix())
 def test_sed_stamp_matches_source(pkgbuild: Path) -> None:
 	# translate the PKGBUILD's own sed s/// into a python regex and apply it
-	sed = re.search(r'sed -i \"s/(?P<pat>.+?)/(?P<repl>.*?)/\" archinstoo/_version\.py', pkgbuild.read_text())
+	sed = re.search(r'sed -i \"s/(?P<pat>.+?)/(?P<repl>.*?)/\" archinstoo/_version\.py', pkgbuild.read_text(encoding='utf-8'))
 	assert sed, f'no _version.py stamp found in {pkgbuild}'
 
 	stamped, count = re.subn(sed['pat'], 'STAMPED', VERSION_PY.read_text(), flags=re.MULTILINE)
