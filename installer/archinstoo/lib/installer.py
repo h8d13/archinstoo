@@ -115,7 +115,7 @@ class Installer:
 		if accessibility_tools_in_use():
 			self._base_packages.extend(__accessibility_packages__)
 
-		self.post_base_install: list[Callable[..., None]] = []
+		self.post_base_install: list[Callable[[], None]] = []
 
 		self._modules: list[str] = []
 		self._binaries: list[str] = []
@@ -753,7 +753,7 @@ class Installer:
 			if key_in_target.exists():
 				key_in_target.unlink()
 
-	def post_install_check(self, *_args: str, **_kwargs: str) -> list[str]:
+	def post_install_check(self) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
 
 	def set_mirrors(
@@ -1047,7 +1047,7 @@ class Installer:
 					# This function will be called after minimal_installation()
 					# as a hook for post-installs. This hook is only needed if
 					# base is not installed yet.
-					def post_install_enable_iwd_service(*_args: str, **_kwargs: str) -> None:
+					def post_install_enable_iwd_service() -> None:
 						self.enable_service('iwd')
 
 					self.post_base_install.append(post_install_enable_iwd_service)
@@ -1073,7 +1073,7 @@ class Installer:
 				# If we haven't installed the base yet (function called pre-maturely)
 				if self._helper_flags.get('base', False) is False:
 
-					def post_install_enable_networkd_resolved(*_args: str, **_kwargs: str) -> None:
+					def post_install_enable_networkd_resolved() -> None:
 						self.enable_service(['systemd-networkd', 'systemd-resolved'])
 
 					self.post_base_install.append(post_install_enable_networkd_resolved)
@@ -1241,7 +1241,7 @@ class Installer:
 		# Run registered post-install hooks
 		for function in self.post_base_install:
 			info(f'Running post-installation hook: {function}')
-			function(self)
+			function()
 
 	def _btrfs_snapshot_type(self) -> SnapshotType | None:
 		if not self._disk_config.has_default_btrfs_vols():
