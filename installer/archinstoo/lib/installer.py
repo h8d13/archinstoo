@@ -530,7 +530,7 @@ class Installer:
 		subvols_with_mountpoints = [sv for sv in subvolumes if sv.mountpoint is not None]
 		for subvol in sorted(subvols_with_mountpoints, key=lambda x: x.relative_mountpoint):
 			mountpoint = self.target / subvol.relative_mountpoint
-			options = mount_options + [f'subvol={subvol.name}']
+			options = [*mount_options, f'subvol={subvol.name}']
 			mount(dev_path, mountpoint, mount_fs='btrfs', options=options)
 
 	def generate_key_files(self) -> None:
@@ -1086,10 +1086,10 @@ class Installer:
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		with (self.target / 'etc/mkinitcpio.conf').open('r+') as mkinit:
 			content = mkinit.read()
-			content = re.sub('\nMODULES=(.*)', f'\nMODULES=({" ".join(self._modules)})', content)
-			content = re.sub('\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self._binaries)})', content)
-			content = re.sub('\nFILES=(.*)', f'\nFILES=({" ".join(self._files)})', content)
-			content = re.sub('\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self._hooks)})', content)
+			content = re.sub(r'\nMODULES=(.*)', f'\nMODULES=({" ".join(self._modules)})', content)
+			content = re.sub(r'\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self._binaries)})', content)
+			content = re.sub(r'\nFILES=(.*)', f'\nFILES=({" ".join(self._files)})', content)
+			content = re.sub(r'\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self._hooks)})', content)
 			mkinit.seek(0)
 			mkinit.truncate()
 			mkinit.write(content)
@@ -2104,8 +2104,8 @@ class Installer:
 		if efi_partition.mountpoint != Path('/efi'):
 			diff_mountpoint = str(efi_partition.mountpoint)
 
-		image_re = re.compile('(.+_image="/([^"]+).+\n)')
-		uki_re = re.compile('#((.+_uki=")/[^/]+(.+\n))')
+		image_re = re.compile(r'(.+_image="/([^"]+).+\n)')
+		uki_re = re.compile(r'#((.+_uki=")/[^/]+(.+\n))')
 		presets_re = re.compile(r'^(PRESETS=)\((.*)\)\s*$')
 
 		# Per-kernel os-release so GRUB UKI entries show the kernel variant

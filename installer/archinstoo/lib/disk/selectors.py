@@ -147,6 +147,6 @@ def select_mount_options() -> list[str]:
 		case ResultType.Skip:
 			return default_options
 		case ResultType.Selection:
-			return default_options + [result.get_value()]
+			return [*default_options, result.get_value()]
 		case _:
 			raise ValueError('Unhandled result type')

@@ -283,7 +283,7 @@ def get_kb_layout() -> str:
 		if 'VC Keymap: ' in line:
 			vcline = line
 
-	if vcline == '':
+	if not vcline:
 		return ''
 
 	layout = vcline.split(': ')[1]

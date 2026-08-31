@@ -63,7 +63,7 @@ def reload_python() -> None:
 	# skip reload during testing
 	if 'pytest' in sys.modules:
 		return
-	os.execv(sys.executable, [sys.executable, '-m', 'archinstoo'] + sys.argv[1:])  # noqa: S606 - explicit re-exec of current interpreter
+	os.execv(sys.executable, [sys.executable, '-m', 'archinstoo', *sys.argv[1:]])  # noqa: S606 - explicit re-exec of current interpreter
 
 
 def is_root() -> bool:

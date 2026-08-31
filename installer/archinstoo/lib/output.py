@@ -212,7 +212,7 @@ def _stylize_output(
 	background = {key: f'4{colors[key]}' for key in colors}
 	code_list = []
 
-	if text == '' and reset:
+	if not text and reset:
 		return '\x1b[0m'
 
 	code_list.append(foreground[str(fg)])

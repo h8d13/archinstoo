@@ -166,7 +166,7 @@ def perform_installation(
 				profile.post_install(installation)
 				profile.provision(installation, users)
 
-		if config.packages and config.packages[0] != '':
+		if config.packages and config.packages[0]:
 			installation.add_additional_packages(config.packages)
 
 		if config.ntp:

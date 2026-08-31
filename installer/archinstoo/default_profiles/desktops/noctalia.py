@@ -73,7 +73,8 @@ class NoctaliaProfile(WaylandProfile):
 			'inter-font',
 			'ttf-jetbrains-mono-nerd',
 			_TERMINAL,
-		] + additional
+			*additional,
+		]
 
 	@property
 	@override

@@ -112,7 +112,7 @@ class ListManager[ValueT]:
 		return self._data
 
 	def _run_actions_on_entry(self, entry: ValueT) -> None:
-		options = self.filter_options(entry, self._sub_menu_actions) + [self._back_action]
+		options = [*self.filter_options(entry, self._sub_menu_actions), self._back_action]
 
 		items = [MenuItem(o, value=o) for o in options]
 		group = MenuItemGroup(items, sort_items=False)

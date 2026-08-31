@@ -16,7 +16,7 @@ from archinstoo.lib.models.device import (
 )
 
 HARDENED = ['nodev', 'nosuid', 'noexec']
-BOOT_MEDIA = HARDENED + ['nosymfollow']
+BOOT_MEDIA = [*HARDENED, 'nosymfollow']
 MASKS = ['fmask=0177', 'dmask=0077']
 
 

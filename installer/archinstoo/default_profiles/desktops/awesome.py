@@ -14,7 +14,8 @@ class AwesomeProfile(XorgProfile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return super().packages + [
+		return [
+			*super().packages,
 			'awesome',
 			'alacritty',
 			'xorg-xinit',

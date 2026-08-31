@@ -201,7 +201,7 @@ class ArchConfigHandler:
 		return self.args.script or DEFAULT_SCRIPT
 
 	def pass_args_to_subscript(self) -> None:
-		sys.argv = [sys.argv[0]] + self._remaining
+		sys.argv = [sys.argv[0], *self._remaining]
 
 	def print_help(self) -> None:
 		self._parser.print_help()

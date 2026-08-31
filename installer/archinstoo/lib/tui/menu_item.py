@@ -51,7 +51,7 @@ class MenuItem:
 		return cls(text='───────────────────', read_only=True)
 
 	def is_empty(self) -> bool:
-		return self.text == '' or self.text is None
+		return not self.text
 
 	def has_value(self) -> bool:
 		if self.value is None or (isinstance(self.value, list) and len(self.value) == 0) or (isinstance(self.value, dict) and len(self.value) == 0):
@@ -247,7 +247,7 @@ class MenuItemGroup:
 		return self._filter_pattern
 
 	def has_filter(self) -> bool:
-		return self._filter_pattern != ''
+		return bool(self._filter_pattern)
 
 	def set_filter_pattern(self, pattern: str) -> None:
 		self._filter_pattern = pattern

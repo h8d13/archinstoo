@@ -46,7 +46,7 @@ def jsonify(obj: object, safe: bool = True) -> Any:  # noqa: ANN401 - dynamic JS
 			if isinstance(key, compatible_types)
 			and not (isinstance(key, str) and key.startswith('!') and safe)
 			and value is not None
-			and value != ''
+			and value != ''  # noqa: PLC1901 - value is Any, truthiness would also drop False/0
 		}
 	if isinstance(obj, Enum):
 		return obj.value

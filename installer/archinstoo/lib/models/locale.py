@@ -21,7 +21,7 @@ class LocaleConfiguration:
 	@classmethod
 	def default(cls) -> Self:
 		layout = get_kb_layout()
-		if layout == '':
+		if not layout:
 			layout = 'us'
 		return cls(layout, 'en_US.UTF-8', 'UTF-8')
 

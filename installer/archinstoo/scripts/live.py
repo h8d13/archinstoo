@@ -130,7 +130,7 @@ def perform_installation(
 				installation.set_keyboard(locale_config)
 
 		# Additional packages
-		if config.packages and config.packages[0] != '':
+		if config.packages and config.packages[0]:
 			installation.add_additional_packages(config.packages)
 
 		# AUR packages

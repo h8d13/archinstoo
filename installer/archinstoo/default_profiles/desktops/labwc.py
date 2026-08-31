@@ -29,7 +29,8 @@ class LabwcProfile(WaylandProfile):
 		return [
 			'alacritty',
 			'labwc',
-		] + additional
+			*additional,
+		]
 
 	@property
 	@override

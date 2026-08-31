@@ -160,7 +160,10 @@ docstring-code-format = true
 
 [tool.ruff.lint]
 # preview behaviour for the rules already selected below (C419 catching
-# sum/min/max, ...), without pulling in unselected preview rules
+# sum/min/max, ...), without pulling in unselected preview rules.
+# a preview rule needs its exact code in `select`: a prefix like `RUF` will not
+# reach it, and listing one in `ignore` alone suppresses nothing until it
+# stabilizes. `ruff rule <CODE>` reports whether a rule is still preview.
 preview = true
 explicit-preview-rules = true
 
@@ -169,6 +172,7 @@ select = [
     "ANN401", # any-type in signatures
     "ASYNC",  # flake8-async
     "B",      # flake8-bugbear
+    "B909",   # loop-iterator-mutation (preview)
     "C4",     # flake8-comprehensions
     "C90",    # mccabe
     "COM",    # flake8-commas
@@ -188,6 +192,7 @@ select = [
     "PGH",    # pygrep-hooks
     "PIE",    # flake8-pie
     "PLC",    # Pylint conventions
+    "PLC1901", # compare-to-empty-string (preview)
     "PLE",    # Pylint errors
     "PLW",    # Pylint warnings
     "PT",     # flake8-pytest-style
@@ -196,6 +201,7 @@ select = [
     "RET",    # flake8-return
     "RSE",    # flake8-raise
     "RUF",    # Ruff-specific rules
+    "RUF039", # unraw-re-pattern (preview)
     "S",      # flake8-bandit
     "SIM",    # flake8-simplify
     "SLOT",   # flake8-slot
@@ -208,18 +214,24 @@ select = [
     "YTT",    # flake8-2020
 ]
 
+# grouped by why, not alphabetically: the reason is what decides whether a
+# future ruff release makes an entry worth revisiting
 ignore = [
-    "B909",     # loop-iterator-mutation
+    # formatter-incompatible, per ruff's own documented list. these fight
+    # `ruff format` under the tab + magic-trailing-comma style set above.
     "COM812",   # missing-trailing-comma
-    "PLC0415",  # import-outside-top-level
-    "PLC1901",  # compare-to-empty-string
-    "PLW1641",  # eq-without-hash
-    "PLW2901",  # redefined-loop-name
-    "RUF005",   # collection-literal-concatenation
-    "RUF039",   # unraw-re-pattern
-    "RUF067",   # non-empty-init-module
-    "SIM108",   # if-else-block-instead-of-if-exp
     "W191",     # tab-indentation
+
+    # deliberate architecture
+    "PLC0415",  # import-outside-top-level: models/ -> hardware, disk breaks cycles
+    "RUF067",   # non-empty-init-module: __init__ holds the dep tables and main()
+
+    # deliberate idiom
+    "PLW1641",  # eq-without-hash: the dataclasses are mutable, unhashable is correct.
+                # models/users.py Password hand-rolls __eq__, so it is genuinely
+                # unhashable: revisit if anything ever needs to hash one.
+    "PLW2901",  # redefined-loop-name: every site is `line = line.strip()` normalization
+    "SIM108",   # if-else-block-instead-of-if-exp: installer.py would nest 3 ternaries
 ]
 
 [tool.ruff.lint.mccabe]

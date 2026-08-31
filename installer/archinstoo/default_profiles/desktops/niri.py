@@ -38,7 +38,8 @@ class NiriProfile(WaylandProfile):
 			'swaylock',
 			'xdg-desktop-portal-gnome',
 			'xdg-desktop-portal-gtk',
-		] + additional
+			*additional,
+		]
 
 	@property
 	@override

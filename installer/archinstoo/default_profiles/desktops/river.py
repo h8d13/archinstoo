@@ -27,7 +27,8 @@ class RiverProfile(WaylandProfile):
 			'foot',
 			'xdg-desktop-portal-wlr',
 			'river',
-		] + additional
+			*additional,
+		]
 
 	@property
 	@override

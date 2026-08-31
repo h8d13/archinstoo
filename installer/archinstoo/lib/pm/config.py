@@ -159,7 +159,8 @@ class PacmanConfig:
 
 				# also uncomment the next line (Include statement) if it exists and is commented
 				if row + 1 < len(content) and content[row + 1].lstrip().startswith('#'):
-					content[row + 1] = re.sub(r'^#\s*', '', content[row + 1])
+					# item assignment only, the list is never resized inside the loop
+					content[row + 1] = re.sub(r'^#\s*', '', content[row + 1])  # noqa: B909
 
 		for opt in set(self._misc_options) - options_found:
 			content.insert(last_opt_row + 1, f'{opt}\n')

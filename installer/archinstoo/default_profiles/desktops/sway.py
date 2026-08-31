@@ -38,7 +38,8 @@ class SwayProfile(WaylandProfile):
 			'pavucontrol',
 			'foot',
 			'xorg-xwayland',
-		] + additional
+			*additional,
+		]
 
 	@property
 	@override

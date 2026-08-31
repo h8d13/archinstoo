@@ -558,7 +558,7 @@ class MirrorListHandler:
 			):
 				continue
 
-			if mirror.country == '':
+			if not mirror.country:
 				# TODO: This should be removed once RFC!29 is merged and completed
 				# Until then, there are mirrors which lacks data in the backend
 				# and there is no way of knowing where they're located.

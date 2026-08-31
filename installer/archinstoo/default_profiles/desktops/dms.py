@@ -69,7 +69,8 @@ class DmsProfile(WaylandProfile):
 			'inter-font',
 			'ttf-fira-code',
 			_TERMINAL,
-		] + additional
+			*additional,
+		]
 
 	@property
 	@override
