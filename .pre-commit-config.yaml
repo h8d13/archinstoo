@@ -1,5 +1,5 @@
 default_stages: ['pre-commit']
-# run ch and ruff everywher, rest is scoped to installer/
+# run sc and ruff everywhere, rest is scoped to installer/
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
