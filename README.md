@@ -87,7 +87,7 @@ See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_C
 > You can create any profile in [`archinstoo/default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles) following convention, which will be imported automatically.
 Or modify existing ones directly. Can also see here for [examples](https://github.com/h8d13/archinstoo/tree/master/installer/examples)
 
-You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported.
+You can make plugins easily `--script list` for `archinstoo`, anything inside [`scripts/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/scripts) is also imported.
 
 ```yaml
 Available options:
