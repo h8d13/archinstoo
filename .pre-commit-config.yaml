@@ -43,12 +43,18 @@ repos:
       args: [
         '--config-file=installer/pyproject.toml'
       ]
+      # installer-specific config; also keeps extensionless root scripts
+      # (TSER, NVGEN) from colliding as duplicate __main__ modules
+      files: ^installer/
+      exclude: ^installer/tests/
       fail_fast: true
   - repo: https://github.com/pycqa/pylint
     rev: v4.0.8
     hooks:
     - id: pylint
-      args: ['--rcfile=installer/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "installer")']
+      args: ['--rcfile=installer/pyproject.toml']
+      files: ^installer/
+      exclude: ^installer/tests/
       additional_dependencies:
         - pyparted>=3.13.0
       fail_fast: true

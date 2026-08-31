@@ -245,6 +245,10 @@ known-first-party = ["archinstoo"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"] # init hacks are standard.
+"**/NVGEN" = [
+    "S603",   # dev tooling runs fixed local commands, not untrusted input
+    "S607",   # nvchecker/pacman helpers resolved from $PATH by design
+]
 "**/tests/**" = [
     "S101",   # pytest uses assert
     "S106",   # test fixtures use placeholder passwords

@@ -25,7 +25,6 @@ import argparse
 import ast
 import importlib.machinery
 import importlib.util
-import os
 import re
 import shutil
 import subprocess
@@ -60,6 +59,7 @@ PKG_ENUMS = (
 	(PKG / 'lib' / 'hardware.py', 'CpuVendor', ('-ucode',)),
 	(PKG / 'default_profiles' / 'desktops' / '__init__.py', 'SeatAccess', ('',)),
 )
+
 
 def _load_module(path: Path, name: str):
 	# the schema and pacman group expansion live in the installer package so the
@@ -98,7 +98,7 @@ def _needs_update() -> bool:
 	if not shutil.which('checkupdates'):
 		log('checkupdates not found (pacman-contrib); skipping freshness guard')
 		return False
-	proc = subprocess.run(['checkupdates'], capture_output=True, text=True)
+	proc = subprocess.run(['checkupdates'], capture_output=True, text=True, check=False)
 	if proc.returncode == 0:
 		pending = len([ln for ln in proc.stdout.splitlines() if ln.strip()])
 		log(f'{pending} pending update(s): local sync DB is behind the mirrors.')
@@ -186,7 +186,7 @@ def code_packages() -> set[str]:
 	return pkgs
 
 
-def detect_source(pkg: str) -> str:
+def detect_source(_pkg: str) -> str:
 	return 'pacman'
 
 
@@ -254,7 +254,7 @@ def write_toml() -> None:
 	toml = generate_toml()
 	tmp = TOML.with_name(TOML.name + '.tmp')
 	tmp.write_text(toml + '\n')
-	os.replace(tmp, TOML)
+	Path(tmp).replace(TOML)
 	log(f'wrote {TOML}')
 
 
@@ -283,9 +283,9 @@ def cmd_check(args: argparse.Namespace) -> int:
 		nv += ['-t', str(args.tries)]
 	if args.entry:
 		nv += ['-e', args.entry]
-	rc = subprocess.run(nv).returncode
+	rc = subprocess.run(nv, check=False).returncode
 
-	diff = subprocess.run(['nvcmp', '-c', str(TOML)], capture_output=True, text=True)
+	diff = subprocess.run(['nvcmp', '-c', str(TOML)], capture_output=True, text=True, check=False)
 	out = diff.stdout.strip()
 	if out:
 		print(out)
@@ -302,7 +302,7 @@ def cmd_take(args: argparse.Namespace) -> int:
 	if args.all:
 		cmd.append('--all')
 	cmd += args.pkgs
-	return subprocess.run(cmd).returncode
+	return subprocess.run(cmd, check=False).returncode
 
 
 def main() -> int:
