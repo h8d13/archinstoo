@@ -67,11 +67,15 @@ set `ProfileType` (`ServerType` / `DesktopEnv` / `WindowMgr`). Contract
   collector ([server.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/default_profiles/server.py)).
 - `install(install_session)`: extra install-time steps (e.g.
   [sshd.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/default_profiles/servers/sshd.py)
-  opens the firewall).
+  opens the firewall). Runs inside `install_profile_config`, before
+  greeter setup; every flow.
 - `post_install(install_session)`: system-level finalize after packages
-  land, no user context (e.g. mariadb runs `mariadb-install-db`).
+  land, no user context (e.g. mariadb runs `mariadb-install-db`). Runs
+  after `install_profile_config` in guided/live/packages; not minimal.
 - `provision(install_session, users)`: per-user wiring that needs the user
-  list (e.g. docker/seatd add each user to a group via `usermod -aG`).
+  list (e.g. docker/wayland add each user to a group,
+  `add_to_seat_group`). Runs right after `post_install`, only in
+  guided/live: the flows that create users.
 - `do_on_select()`: menu-time hook run when the profile is picked.
 - `default_greeter_type` / `display_servers()`: graphical metadata (greeter
   default, Xorg/Wayland advertised).
