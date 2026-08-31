@@ -88,12 +88,15 @@ There might therefore be older code which does not follow the coding convention 
 
 A lot of these are also checked in CI.
 
+Some style in the codebase includes: 80 chars limit in code, 8 spaces for a tab, no docstrings (inline comments).
+Reduce duplicates and function grouping into clear models/utils/dispatchers.
+
 ## Submitting Changes
 
 `archinstoo` uses GitHub's workflows and all contributions in terms of code should be done through pull requests.
 Direct pushes to master are permitted to code-owners.
 
-Anyone interested in `archinstoo` may review your code. One of the core developers will merge your pull request when they
+Anyone interested may review your code. One of the core developers will merge your pull request when they
 think it is ready.
 
 For every pull request, we aim to promptly either merge it or say why it is not yet ready; or edit it and merge directly.
