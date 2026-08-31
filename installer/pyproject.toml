@@ -217,7 +217,6 @@ ignore = [
     "PLW2901",  # redefined-loop-name
     "RUF005",   # collection-literal-concatenation
     "RUF039",   # unraw-re-pattern
-    "RET504",   # unnecessary-assign-before-return
     "RUF067",   # non-empty-init-module
     "SIM108",   # if-else-block-instead-of-if-exp
     "W191",     # tab-indentation
