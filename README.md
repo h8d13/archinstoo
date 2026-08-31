@@ -84,7 +84,7 @@ See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_C
 
 ## Modify/Extend
 
-> You can create any profile in `archinstoo/default_profiles/` following convention, which will be imported automatically.
+> You can create any profile in [`archinstoo/default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles) following convention, which will be imported automatically.
 Or modify existing ones directly. Can also see here for [examples](https://github.com/h8d13/archinstoo/tree/master/installer/examples)
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside `scripts/` is also imported.
@@ -106,7 +106,7 @@ Available options:
 
 The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/installer)
 
-Core changes you can perform in `installer.py` and related defs (here search/find/replace is your friend).
+Core changes you can perform in [`installer.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py) and related defs (here search/find/replace is your friend).
 
 A `man` page is also available `man -l installer/docs/archinstoo.1`
 
