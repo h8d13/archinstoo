@@ -1,6 +1,4 @@
 default_stages: ['pre-commit']
-# nvchecker/ is a dev tool, not part of the shipped package
-exclude: ^nvchecker/
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
@@ -45,14 +43,12 @@ repos:
       args: [
         '--config-file=installer/pyproject.toml'
       ]
-      exclude: ^installer/tests/
       fail_fast: true
   - repo: https://github.com/pycqa/pylint
     rev: v4.0.8
     hooks:
     - id: pylint
       args: ['--rcfile=installer/pyproject.toml', '--init-hook', 'import sys; sys.path.insert(0, "installer")']
-      exclude: ^installer/tests/
       additional_dependencies:
         - pyparted>=3.13.0
       fail_fast: true
