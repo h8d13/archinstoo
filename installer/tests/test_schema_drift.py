@@ -204,15 +204,16 @@ def test_profiles_match() -> None:
 	assert schema_x11 == x11, f'xorg profiles drifted: schema-only={sorted(schema_x11 - x11)} code-only={sorted(x11 - schema_x11)}'
 
 
-def test_dms_compositors_match() -> None:
-	# the dms "profiles" entry bakes in the niri default; _resolve.py swaps
-	# per-compositor sets via schema['dms_compositors'] when the saved config
-	# carries a dms_compositor selection
-	from archinstoo.default_profiles.desktops.dms import _COMPOSITOR_PACKAGES
+@pytest.mark.parametrize('name', ['dms', 'noctalia'], ids=str)
+def test_compositor_sets_match(name: str) -> None:
+	# these "profiles" entries bake in the niri default; _resolve.py swaps
+	# per-compositor sets via schema['<name>_compositors'] when the saved
+	# config carries a <name>_compositor selection
+	module = importlib.import_module(f'archinstoo.default_profiles.desktops.{name}')
 
-	code = {k: sorted(v) for k, v in _COMPOSITOR_PACKAGES.items()}
-	schema = {k: sorted(v) for k, v in SCHEMA['dms_compositors'].items()}
-	assert schema == code, f'dms compositor packages drifted: schema={schema} code={code}'
+	code = {k: sorted(v) for k, v in module._COMPOSITOR_PACKAGES.items()}
+	schema = {k: sorted(v) for k, v in SCHEMA[f'{name}_compositors'].items()}
+	assert schema == code, f'{name} compositor packages drifted: schema={schema} code={code}'
 
 
 def test_gfx_driver_packages_match(monkeypatch: pytest.MonkeyPatch) -> None:

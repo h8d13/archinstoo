@@ -16,6 +16,11 @@ if TYPE_CHECKING:
 
 
 _TERMINAL = 'alacritty'
+# canonical source (embedded in the dms binary, per AvengeMedia/DankMaterialShell#2851):
+# https://github.com/AvengeMedia/DankMaterialShell/tree/master/core/internal/config/embedded
+# dms/* files mirror it verbatim (niri outputs/cursor are deployed empty upstream;
+# ours carry comment placeholders). hyprland.lua = embedded file plus the deployer's
+# env lines in the DMS_STARTUP block (core/internal/config/hyprland_lua.go)
 _ASSETS_DIR = Path(__file__).parent / 'dms_assets'
 
 # dms-shell-<compositor> pulls dms-shell (quickshell, dgop, greeter assets)
@@ -58,9 +63,11 @@ class DmsProfile(WaylandProfile):
 			'matugen',
 			'cava',
 			'kimageformats',
-			# dms bundles its shell fonts privately; jetbrains option is 200mb instead of heavy full nerd fonts
+			# dms defaults: Inter Variable + Fira Code. the shell bundles both
+			# privately, but doctor <= 1.5.3 only checks fontconfig, and the
+			# terminal needs a real mono font anyway
 			'inter-font',
-			'ttf-jetbrains-mono-nerd',
+			'ttf-fira-code',
 			_TERMINAL,
 		] + additional
 
@@ -79,6 +86,27 @@ class DmsProfile(WaylandProfile):
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
+
+		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
+		# any session that activates the target: niri natively, hyprland via the
+		# session target below
+		install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
+
+		if 'hyprland' in self.compositors:
+			# upstream's deployer writes this per-user; system-wide covers all.
+			# starting it from hyprland.lua pulls graphical-session.target up
+			# (BindsTo) even in sessions without a manager (plain "Hyprland"
+			# entry), and is a no-op under uwsm where the target already runs
+			target = install_session.target / 'etc/systemd/user/hyprland-session.target'
+			target.parent.mkdir(parents=True, exist_ok=True)
+			target.write_text(
+				'[Unit]\n'
+				'Description=Hyprland Session Target\n'
+				'BindsTo=graphical-session.target\n'
+				'Before=graphical-session.target\n'
+				'Wants=graphical-session-pre.target\n'
+				'After=graphical-session-pre.target\n'
+			)
 
 		for user in users:
 			home = install_session.target / 'home' / user.username
@@ -99,18 +127,14 @@ class DmsProfile(WaylandProfile):
 		dms_dir.mkdir(parents=True, exist_ok=True)
 
 		shutil.copy(_ASSETS_DIR / 'niri/niri.kdl', niri_dir / 'config.kdl')
-		for name in ('colors.kdl', 'layout.kdl', 'alttab.kdl', 'outputs.kdl', 'cursor.kdl'):
+		# input.kdl is a seed: dms regenerates it from its settings UI
+		for name in ('colors.kdl', 'layout.kdl', 'alttab.kdl', 'outputs.kdl', 'cursor.kdl', 'input.kdl'):
 			shutil.copy(_ASSETS_DIR / 'niri/dms' / name, dms_dir / name)
 		(dms_dir / 'binds.kdl').write_text(binds)
 
-		# niri runs as a systemd session; dms starts as its user service
-		niri_unit_dropin = home / '.config/systemd/user/niri.service.d'
-		niri_unit_dropin.mkdir(parents=True, exist_ok=True)
-		(niri_unit_dropin / 'dms.conf').write_text('[Unit]\nWants=dms.service\n')
-
 	def _provision_hyprland(self, home: Path) -> None:
-		# hyprland 0.55+ lua configs, mirroring the dms deployer's non-systemd
-		# layout: dms starts via "dms run" on hyprland.start
+		# hyprland 0.55+ lua configs; dms.service starts via
+		# hyprland-session.target on hyprland.start
 		hypr_dir = home / '.config/hypr'
 		dms_dir = hypr_dir / 'dms'
 		dms_dir.mkdir(parents=True, exist_ok=True)

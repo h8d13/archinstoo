@@ -507,6 +507,9 @@ source = "pacman"
 [deepin-editor]
 source = "pacman"
 
+[deepin-fcitx5configtool-plugin]
+source = "pacman"
+
 [deepin-file-manager]
 source = "pacman"
 
@@ -586,9 +589,6 @@ source = "pacman"
 source = "pacman"
 
 [deepin-widgets]
-source = "pacman"
-
-[deepin-wloutput-daemon]
 source = "pacman"
 
 [dmenu]
@@ -1038,7 +1038,13 @@ source = "pacman"
 [niri]
 source = "pacman"
 
+[noctalia]
+source = "pacman"
+
 [nodejs]
+source = "pacman"
+
+[ntsync-autoload]
 source = "pacman"
 
 [obconf-qt]
@@ -1222,6 +1228,9 @@ source = "pacman"
 source = "pacman"
 
 [treeland]
+source = "pacman"
+
+[ttf-fira-code]
 source = "pacman"
 
 [ttf-jetbrains-mono-nerd]

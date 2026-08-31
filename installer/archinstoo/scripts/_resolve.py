@@ -109,15 +109,15 @@ def _development_packages(dev: dict[str, Any]) -> set[str]:
 def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	prof_pkgs = set(SCHEMA['profiles'][name])
 
-	# dms_compositor swaps the default (niri) compositor set
-	if name == 'dms':
-		comps = settings.get('dms_compositor') or ['niri']
+	# <name>_compositor swaps the default (niri) compositor set
+	if name in ('dms', 'noctalia'):
+		comps = settings.get(f'{name}_compositor') or ['niri']
 		if isinstance(comps, str):
 			comps = [comps]
-		dms_compositors = SCHEMA['dms_compositors']
-		prof_pkgs.difference_update(dms_compositors['niri'])
+		comp_sets = SCHEMA[f'{name}_compositors']
+		prof_pkgs.difference_update(comp_sets['niri'])
 		for comp in comps:
-			prof_pkgs.update(dms_compositors.get(comp, []))
+			prof_pkgs.update(comp_sets.get(comp, []))
 
 	return prof_pkgs
 
