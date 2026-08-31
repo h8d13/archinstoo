@@ -23,13 +23,16 @@ _COMPOSITOR_PACKAGES = {
 	# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
 	'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
 	'sway': ['sway', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
+	'labwc': ['labwc', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
 }
 
-# compositor -> (asset, target path under ~/.config)
-_COMPOSITOR_CONFIGS = {
-	'niri': ('niri/config.kdl', 'niri/config.kdl'),
-	'hyprland': ('hyprland/hyprland.lua', 'hypr/hyprland.lua'),
-	'sway': ('sway/config', 'sway/config'),
+# compositor -> config dir under ~/.config; every file in the matching
+# noctalia_assets/<compositor>/ dir is provisioned into it
+_COMPOSITOR_CONFIG_DIRS = {
+	'niri': 'niri',
+	'hyprland': 'hypr',
+	'sway': 'sway',
+	'labwc': 'labwc',
 }
 
 
@@ -86,12 +89,12 @@ class NoctaliaProfile(WaylandProfile):
 			config_dir = install_session.target / 'home' / user.username / '.config'
 
 			for comp in self.compositors:
-				asset, target = _COMPOSITOR_CONFIGS[comp]
-				conf = (_ASSETS_DIR / asset).read_text().replace('{{TERMINAL_COMMAND}}', _TERMINAL)
+				dest_dir = config_dir / _COMPOSITOR_CONFIG_DIRS[comp]
+				dest_dir.mkdir(parents=True, exist_ok=True)
 
-				dest = config_dir / target
-				dest.parent.mkdir(parents=True, exist_ok=True)
-				dest.write_text(conf)
+				for asset in sorted((_ASSETS_DIR / comp).iterdir()):
+					conf = asset.read_text().replace('{{TERMINAL_COMMAND}}', _TERMINAL)
+					(dest_dir / asset.name).write_text(conf)
 
 			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
 

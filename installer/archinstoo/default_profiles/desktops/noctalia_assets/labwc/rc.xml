@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Labwc configuration: labwc-config(5) -->
+<!-- Noctalia integration: https://docs.noctalia.dev/noctalia/compositor-settings/labwc/ -->
+<labwc_config>
+  <core>
+    <gap>10</gap>
+  </core>
+
+  <!-- thumbnail-based native window switcher (A-Tab) -->
+  <windowSwitcher preview="no" outlines="yes">
+    <osd style="thumbnail"/>
+  </windowSwitcher>
+
+  <keyboard>
+    <!-- include the default labwc keybinds -->
+    <default />
+
+    <!-- application launchers -->
+    <keybind key="W-t"><action name="Execute"><command>{{TERMINAL_COMMAND}}</command></action></keybind>
+    <keybind key="W-Return"><action name="Execute"><command>{{TERMINAL_COMMAND}}</command></action></keybind>
+    <keybind key="W-space"><action name="Execute"><command>noctalia msg panel-toggle launcher</command></action></keybind>
+    <keybind key="W-s"><action name="Execute"><command>noctalia msg panel-toggle control-center</command></action></keybind>
+    <keybind key="W-,"><action name="Execute"><command>noctalia msg settings-toggle</command></action></keybind>
+    <keybind key="W-v"><action name="Execute"><command>noctalia msg panel-toggle clipboard</command></action></keybind>
+    <keybind key="W-y"><action name="Execute"><command>noctalia msg panel-toggle wallpaper</command></action></keybind>
+    <keybind key="W-x"><action name="Execute"><command>noctalia msg panel-toggle session</command></action></keybind>
+
+    <!-- security -->
+    <keybind key="W-A-l"><action name="Execute"><command>noctalia msg session lock</command></action></keybind>
+
+    <!-- window management -->
+    <keybind key="W-q"><action name="Close"/></keybind>
+
+    <!-- audio controls (noctalia OSDs) -->
+    <keybind key="XF86AudioRaiseVolume"><action name="Execute"><command>noctalia msg volume-up</command></action></keybind>
+    <keybind key="XF86AudioLowerVolume"><action name="Execute"><command>noctalia msg volume-down</command></action></keybind>
+    <keybind key="XF86AudioMute"><action name="Execute"><command>noctalia msg volume-mute</command></action></keybind>
+    <keybind key="XF86AudioMicMute"><action name="Execute"><command>noctalia msg mic-mute</command></action></keybind>
+    <keybind key="XF86AudioPlay"><action name="Execute"><command>noctalia msg media toggle</command></action></keybind>
+    <keybind key="XF86AudioPause"><action name="Execute"><command>noctalia msg media toggle</command></action></keybind>
+    <keybind key="XF86AudioPrev"><action name="Execute"><command>noctalia msg media previous</command></action></keybind>
+    <keybind key="XF86AudioNext"><action name="Execute"><command>noctalia msg media next</command></action></keybind>
+
+    <!-- brightness controls -->
+    <keybind key="XF86MonBrightnessUp"><action name="Execute"><command>noctalia msg brightness-up</command></action></keybind>
+    <keybind key="XF86MonBrightnessDown"><action name="Execute"><command>noctalia msg brightness-down</command></action></keybind>
+
+    <!-- screenshots -->
+    <keybind key="Print"><action name="Execute"><command>noctalia msg screenshot-region</command></action></keybind>
+    <keybind key="C-Print"><action name="Execute"><command>noctalia msg screenshot-fullscreen</command></action></keybind>
+  </keyboard>
+</labwc_config>

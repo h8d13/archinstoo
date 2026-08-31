@@ -47,6 +47,9 @@ include-package-data = true
     "**/*.json",
     "**/*.kdl",
     "**/*.lua",
+    "**/*.xml",
+    "**/sway/config",
+    "**/labwc/autostart",
 ]
 
 [tool.setuptools.package-dir]

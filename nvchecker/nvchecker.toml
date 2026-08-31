@@ -507,6 +507,9 @@ source = "pacman"
 [deepin-editor]
 source = "pacman"
 
+[deepin-fcitx5configtool-plugin]
+source = "pacman"
+
 [deepin-file-manager]
 source = "pacman"
 

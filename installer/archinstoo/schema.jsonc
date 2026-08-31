@@ -145,7 +145,8 @@
 	"noctalia_compositors": {
 		"niri": ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland"],
 		"hyprland": ["hyprland", "xdg-desktop-portal-hyprland", "uwsm"],
-		"sway": ["sway", "xdg-desktop-portal-wlr", "xorg-xwayland"]
+		"sway": ["sway", "xdg-desktop-portal-wlr", "xorg-xwayland"],
+		"labwc": ["labwc", "xdg-desktop-portal-wlr", "xorg-xwayland"]
 	},
 
 	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
