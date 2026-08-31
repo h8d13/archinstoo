@@ -588,9 +588,6 @@ source = "pacman"
 [deepin-widgets]
 source = "pacman"
 
-[deepin-wloutput-daemon]
-source = "pacman"
-
 [dmenu]
 source = "pacman"
 
@@ -1038,7 +1035,13 @@ source = "pacman"
 [niri]
 source = "pacman"
 
+[noctalia]
+source = "pacman"
+
 [nodejs]
+source = "pacman"
+
+[ntsync-autoload]
 source = "pacman"
 
 [obconf-qt]

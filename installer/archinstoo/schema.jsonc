@@ -108,6 +108,7 @@
 		"river": ["foot", "xdg-desktop-portal-wlr", "river"],
 		"niri": ["niri", "alacritty", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"],
 		"dms": ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "matugen", "cava", "kimageformats", "inter-font", "ttf-jetbrains-mono-nerd", "alacritty"],
+		"noctalia": ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "noctalia", "inter-font", "ttf-jetbrains-mono-nerd", "kitty"],
 		"labwc": ["alacritty", "labwc"],
 
 		// -- Xorg WMs --
@@ -139,6 +140,13 @@
 		"hyprland": ["hyprland", "dms-shell-hyprland", "xdg-desktop-portal-hyprland", "uwsm"]
 	},
 	// we could add sway, labwc or any they support here
+
+	// same mechanism for the noctalia profile (niri default baked above)
+	"noctalia_compositors": {
+		"niri": ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland"],
+		"hyprland": ["hyprland", "xdg-desktop-portal-hyprland", "uwsm"],
+		"sway": ["sway", "xdg-desktop-portal-wlr", "xorg-xwayland"]
+	},
 
 	// profiles that need xorg-server/xorg-xinit when a gfx driver is selected
 	// (the X11 half of DisplayServer, i.e. every XorgProfile subclass)

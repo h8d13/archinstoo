@@ -1,0 +1,135 @@
+# Sway configuration: man 5 sway
+# Noctalia integration: https://docs.noctalia.dev/noctalia/compositor-settings/sway-scroll/
+
+set $mod Mod4
+set $left h
+set $down j
+set $up k
+set $right l
+set $term {{TERMINAL_COMMAND}}
+set $ipc noctalia msg
+
+# noctalia owns bar, launcher, notifications, wallpaper, lock and OSDs
+exec noctalia
+
+input type:touchpad {
+    tap enabled
+    natural_scroll enabled
+}
+
+default_border pixel 2
+gaps inner 5
+gaps outer 5
+
+# noctalia settings window floats
+for_window [app_id="dev.noctalia.Noctalia"] floating enable
+
+### Core binds
+bindsym $mod+Return exec $term
+bindsym $mod+t exec $term
+bindsym $mod+space exec $ipc panel-toggle launcher
+bindsym $mod+s exec $ipc panel-toggle control-center
+bindsym $mod+comma exec $ipc settings-toggle
+bindsym $mod+v exec $ipc panel-toggle clipboard
+bindsym $mod+y exec $ipc panel-toggle wallpaper
+bindsym $mod+x exec $ipc panel-toggle session
+bindsym Mod1+Tab exec $ipc window-switcher
+
+### Security
+bindsym $mod+Mod1+l exec $ipc session lock
+bindsym $mod+Shift+e exec $ipc panel-toggle session
+
+### Audio Controls (noctalia OSDs)
+bindsym --locked XF86AudioRaiseVolume exec $ipc volume-up
+bindsym --locked XF86AudioLowerVolume exec $ipc volume-down
+bindsym --locked XF86AudioMute exec $ipc volume-mute
+bindsym --locked XF86AudioMicMute exec $ipc mic-mute
+bindsym --locked XF86AudioPlay exec $ipc media toggle
+bindsym --locked XF86AudioPause exec $ipc media toggle
+bindsym --locked XF86AudioPrev exec $ipc media previous
+bindsym --locked XF86AudioNext exec $ipc media next
+
+### Brightness Controls
+bindsym --locked XF86MonBrightnessUp exec $ipc brightness-up
+bindsym --locked XF86MonBrightnessDown exec $ipc brightness-down
+
+### Screenshots
+bindsym Print exec $ipc screenshot-region
+bindsym Ctrl+Print exec $ipc screenshot-fullscreen
+
+### Window Management
+bindsym $mod+q kill
+bindsym $mod+f fullscreen
+bindsym $mod+Shift+t floating toggle
+bindsym $mod+Shift+v focus mode_toggle
+bindsym $mod+Shift+c reload
+
+# drag/resize floating windows with $mod held down
+floating_modifier $mod normal
+
+### Focus Navigation
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+### Window Movement
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+### Numbered Workspaces
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+6 workspace number 6
+bindsym $mod+7 workspace number 7
+bindsym $mod+8 workspace number 8
+bindsym $mod+9 workspace number 9
+
+### Move to Numbered Workspaces
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+bindsym $mod+Shift+6 move container to workspace number 6
+bindsym $mod+Shift+7 move container to workspace number 7
+bindsym $mod+Shift+8 move container to workspace number 8
+bindsym $mod+Shift+9 move container to workspace number 9
+
+### Layout
+bindsym $mod+b splith
+bindsym $mod+n splitv
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+bindsym $mod+a focus parent
+
+### Resizing
+mode "resize" {
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+    bindsym Left resize shrink width 10px
+    bindsym Down resize grow height 10px
+    bindsym Up resize shrink height 10px
+    bindsym Right resize grow width 10px
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
+# arch drop-ins (systemd user session env, etc.)
+include /etc/sway/config.d/*
