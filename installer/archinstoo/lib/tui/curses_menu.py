@@ -31,6 +31,14 @@ if TYPE_CHECKING:
 	from types import FrameType, TracebackType
 
 
+def style_attr(style: STYLE) -> int:
+	# mono terminals (serial console vt220, TERM=dumb): start_color() never
+	# ran, so color_pair() raises; attribute 0 keeps the TUI usable uncolored
+	if not curses.has_colors():
+		return 0
+	return curses.color_pair(style.value)
+
+
 class AbstractCurses[ValueT](metaclass=ABCMeta):
 	def __init__(self) -> None:
 		self._help_window = self._set_help_viewport()
@@ -305,7 +313,7 @@ class EditViewport(AbstractViewport):
 	def _init_wins(self) -> None:
 		self._main_win = curses.newwin(self._edit_height, self._width, self.y_start, 0)
 		self._main_win.nodelay(False)
-		self._main_win.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
+		self._main_win.bkgd(' ', style_attr(STYLE.NORMAL))
 
 		x_offset = 0
 		if self._alignment == Alignment.CENTER:
@@ -317,7 +325,7 @@ class EditViewport(AbstractViewport):
 			self.y_start + 1,
 			self.x_start + x_offset + 1,
 		)
-		self._edit_win.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
+		self._edit_win.bkgd(' ', style_attr(STYLE.NORMAL))
 
 	def update(self) -> None:
 		if not self._main_win:
@@ -405,7 +413,7 @@ class Viewport(AbstractViewport):
 
 		self._main_win = curses.newwin(self.height, self.width, self.y_start, self.x_start)
 		self._main_win.nodelay(False)
-		self._main_win.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
+		self._main_win.bkgd(' ', style_attr(STYLE.NORMAL))
 		self._main_win.standout()
 
 	def getch(self) -> int:
@@ -1498,7 +1506,7 @@ class Tui:
 		curses.init_pair(STYLE.ERROR.value, curses.COLOR_RED, bg_color)
 
 		# Set the screen background
-		self._screen.bkgd(' ', curses.color_pair(STYLE.NORMAL.value))
+		self._screen.bkgd(' ', style_attr(STYLE.NORMAL))
 
 	def get_color(self, color: STYLE) -> int:
-		return curses.color_pair(color.value)
+		return style_attr(color)
