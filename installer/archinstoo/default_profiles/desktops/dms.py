@@ -16,6 +16,11 @@ if TYPE_CHECKING:
 
 
 _TERMINAL = 'alacritty'
+# canonical source (embedded in the dms binary, per AvengeMedia/DankMaterialShell#2851):
+# https://github.com/AvengeMedia/DankMaterialShell/tree/master/core/internal/config/embedded
+# dms/* files mirror it verbatim (niri outputs/cursor are deployed empty upstream;
+# ours carry comment placeholders). hyprland.lua = embedded file with the deployer's
+# non-systemd DMS_STARTUP block pre-applied (core/internal/config/hyprland_lua.go)
 _ASSETS_DIR = Path(__file__).parent / 'dms_assets'
 
 # dms-shell-<compositor> pulls dms-shell (quickshell, dgop, greeter assets)
@@ -99,7 +104,8 @@ class DmsProfile(WaylandProfile):
 		dms_dir.mkdir(parents=True, exist_ok=True)
 
 		shutil.copy(_ASSETS_DIR / 'niri/niri.kdl', niri_dir / 'config.kdl')
-		for name in ('colors.kdl', 'layout.kdl', 'alttab.kdl', 'outputs.kdl', 'cursor.kdl'):
+		# input.kdl is a seed: dms regenerates it from its settings UI
+		for name in ('colors.kdl', 'layout.kdl', 'alttab.kdl', 'outputs.kdl', 'cursor.kdl', 'input.kdl'):
 			shutil.copy(_ASSETS_DIR / 'niri/dms' / name, dms_dir / name)
 		(dms_dir / 'binds.kdl').write_text(binds)
 

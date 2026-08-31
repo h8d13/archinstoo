@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import User
 
 _TERMINAL = 'kitty'
+# assets follow the canonical per-compositor integration docs (docs.noctalia.dev
+# renders these): https://github.com/noctalia-dev/noctalia/tree/main/docs/user/compositor-settings
 _ASSETS_DIR = Path(__file__).parent / 'noctalia_assets'
 
 # noctalia v5: native wayland shell (bar, launcher, lock, notifications,

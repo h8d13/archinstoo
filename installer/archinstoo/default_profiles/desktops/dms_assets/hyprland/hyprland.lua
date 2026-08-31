@@ -16,9 +16,7 @@ end)
 
 hl.config({
 	input = {
-		-- empty = libxkbcommon falls back to XKB_DEFAULT_* from
-		-- /etc/environment (set_keyboard), then "us"; mirrors niri
-		-- inheriting the system layout via locale1
+		-- empty inherits XKB_DEFAULT_LAYOUT (libxkbcommon), falls back to "us"
 		kb_layout = "",
 		numlock_by_default = true,
 		follow_mouse = 0,
