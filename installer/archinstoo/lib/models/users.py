@@ -17,7 +17,7 @@ class SupplementaryGroup(StrEnum):
 	# wheel is excluded auto-added for elevated users.
 	# audio/video/storage/input/network are excluded
 	# device access handled by systemd-logind for active sessions,
-	# seat management by the seat_access choice (polkit/seatd).
+	# seat management by the seat_access choice (logind/seatd).
 
 	ADM = auto()  # read access to protected logs / journal
 	FTP = auto()  # access to FTP served files

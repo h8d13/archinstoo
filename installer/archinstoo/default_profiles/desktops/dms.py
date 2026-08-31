@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -75,8 +75,7 @@ class DmsProfile(WaylandProfile):
 	@property
 	@override
 	def services(self) -> list[str]:
-		pref = self.custom_settings.get('seat_access')
-		return [pref] if isinstance(pref, str) else []
+		return seat_services(self.custom_settings.get('seat_access'))
 
 	@property
 	@override
@@ -172,7 +171,7 @@ class DmsProfile(WaylandProfile):
 		header = 'DMS needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
 		header += '\n' + 'Choose an option to give DMS access to your hardware' + '\n'
 
-		items = [MenuItem(s.value, value=s) for s in SeatAccess]
+		items = [MenuItem(s.label, value=s) for s in SeatAccess]
 		group = MenuItemGroup(items, sort_items=True)
 
 		default = self.custom_settings.get('seat_access', None)
