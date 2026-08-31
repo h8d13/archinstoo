@@ -3,6 +3,7 @@ from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
 from archinstoo.lib.crypt import crypt_yescrypt
+from archinstoo.lib.utils.env import Os
 
 
 class Shell(StrEnum):
@@ -206,3 +207,12 @@ class User:
 			users.append(user)
 
 		return users
+
+
+# live/packages run on the running system (target /): with no auth config the
+# person driving the install through sudo/doas is the provision target, so
+# profile group wiring (seat/docker) reaches their account, not every account.
+def invoking_user() -> User | None:
+	if name := Os.invoking_username():
+		return User(name, None, False)
+	return None

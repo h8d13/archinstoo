@@ -7,6 +7,7 @@ from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
+from archinstoo.lib.models.users import invoking_user
 from archinstoo.lib.output import debug, info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
@@ -64,10 +65,13 @@ def perform_installation(
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config)
 
-			# Post-install profile hooks
+			# Post-install profile hooks; no auth config here, so provision
+			# targets whoever is driving the install (see invoking_user)
 			if profile_config.profiles:
+				users = [user] if (user := invoking_user()) else []
 				for profile in profile_config.profiles:
 					profile.post_install(installation)
+					profile.provision(installation, users)
 
 		# Additional packages
 		if config.packages and config.packages[0]:

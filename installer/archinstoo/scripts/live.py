@@ -8,7 +8,7 @@ from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
-from archinstoo.lib.models.users import User
+from archinstoo.lib.models.users import User, invoking_user
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
@@ -153,9 +153,12 @@ def perform_installation(
 			if config.auth_config.lock_root_account:
 				installation.lock_root_account()
 
-		# Post-install profile hooks
+		# Post-install profile hooks; auth skipped means no configured users,
+		# fall back to whoever is driving the install (see invoking_user)
 		if (profile_config := config.profile_config) and profile_config.profiles:
 			users = config.auth_config.users if config.auth_config else []
+			if not users and (user := invoking_user()):
+				users = [user]
 			for profile in profile_config.profiles:
 				profile.post_install(installation)
 				profile.provision(installation, users)

@@ -46,6 +46,14 @@ class Os:
 		return Os.running_from_host() and not Os.running_from_arch()
 
 	@staticmethod
+	def invoking_username() -> str | None:
+		# the human behind sudo/doas; None when running as real root (su -, autologin)
+		name = os.environ.get('SUDO_USER') or os.environ.get('DOAS_USER')
+		if not name or name == 'root':
+			return None
+		return name
+
+	@staticmethod
 	def locate_binary(name: str) -> str:
 		if path := which(name):
 			return path
