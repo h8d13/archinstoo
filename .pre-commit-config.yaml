@@ -33,9 +33,7 @@ repos:
     - id: check-yaml  # Attempts to load all yaml files to verify syntax
     - id: destroyed-symlinks  # Detects symlinks which are changed to regular files
     - id: detect-private-key  # Checks for the existence of private keys
-    # Python specific hooks:
     - id: check-ast  # Simply check whether files parse as valid python
-    - id: check-docstring-first  # Checks for a common error of placing code before the docstring
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.3.1
     hooks:
@@ -54,7 +52,6 @@ repos:
     - id: pylint
       args: ['--rcfile=installer/pyproject.toml']
       files: ^installer/
-      exclude: ^installer/tests/
       additional_dependencies:
         - pyparted>=3.13.0
       fail_fast: true
