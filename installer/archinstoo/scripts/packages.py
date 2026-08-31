@@ -8,7 +8,7 @@ from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.users import invoking_user
-from archinstoo.lib.output import debug, info
+from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 
@@ -96,17 +96,12 @@ def packages() -> None:
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
 
-	if cached := ConfigStore.prompt_resume():
-		try:
-			handler.config = ArchConfig.from_config(cached)
-			info('Saved selections loaded successfully')
-		except Exception as e:
-			debug(f'Failed to load saved selections: {e}')
-
-	while True:
-		show_menu(handler.config, args)
-
-		config = handler.config
+	if args.silent:
+		# unattended: the config is the whole input, fail loud instead of
+		# hanging on a menu nobody is watching
+		if not args.config and not args.config_url:
+			error('--silent needs --config or --config-url')
+			raise SystemExit(1)
 
 		store = ConfigStore(config)
 		store.write_debug()
@@ -114,11 +109,30 @@ def packages() -> None:
 
 		if args.dry_run:
 			raise SystemExit(0)
+	else:
+		if not args.config and (cached := ConfigStore.prompt_resume()):
+			try:
+				handler.config = ArchConfig.from_config(cached)
+				info('Saved selections loaded successfully')
+			except Exception as e:
+				debug(f'Failed to load saved selections: {e}')
 
-		with Tui():
-			if store.confirm_config():
-				break
-			debug('Configuration aborted')
+		while True:
+			show_menu(handler.config, args)
+
+			config = handler.config
+
+			store = ConfigStore(config)
+			store.write_debug()
+			store.save()
+
+			if args.dry_run:
+				raise SystemExit(0)
+
+			with Tui():
+				if store.confirm_config():
+					break
+				debug('Configuration aborted')
 
 	perform_installation(
 		config,
