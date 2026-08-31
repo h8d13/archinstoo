@@ -4,13 +4,13 @@ from pathlib import Path
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
-from archinstoo.lib.configuration import ConfigStore
+from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.users import User, invoking_user
 from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.output import debug, info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 
@@ -184,49 +184,11 @@ def perform_installation(
 def live() -> None:
 	handler = get_arch_config_handler()
 	args = handler.args
-	config = handler.config
-
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	if args.silent:
-		# unattended: the config is the whole input, fail loud instead of
-		# hanging on a menu nobody is watching
-		if not args.config and not args.config_url:
-			error('--silent needs --config or --config-url')
-			raise SystemExit(1)
-
-		store = ConfigStore(config)
-		store.write_debug()
-		store.save()
-
-		if args.dry_run:
-			raise SystemExit(0)
-	else:
-		if not args.config and (cached := ConfigStore.prompt_resume()):
-			try:
-				handler.config = ArchConfig.from_config(cached)
-				info('Saved selections loaded successfully')
-			except Exception as e:
-				debug(f'Failed to load saved selections: {e}')
-
-		while True:
-			show_menu(handler.config, args)
-
-			config = handler.config
-
-			store = ConfigStore(config)
-			store.write_debug()
-			store.save()
-
-			if args.dry_run:
-				raise SystemExit(0)
-
-			with Tui():
-				if store.confirm_config():
-					break
-				debug('Configuration aborted')
+	config = resolve_config(handler, show_menu)
 
 	perform_installation(
 		config,

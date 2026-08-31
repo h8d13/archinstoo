@@ -7,7 +7,7 @@ from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
 from archinstoo.lib.bootloader.validation import validate_bootloader
-from archinstoo.lib.configuration import ConfigStore
+from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
@@ -227,6 +227,20 @@ def perform_installation(
 					installation.drop_to_shell()
 
 
+def _validate_silent(config: ArchConfig) -> None:
+	if not config.disk_config:
+		error('--silent needs disk_config in the config, nothing to install to')
+		raise SystemExit(1)
+
+	# the menu runs these before it lets you start; unattended skipped them
+	# entirely, so a bad pairing only showed up as a failed bootloader
+	# install after pacstrap, or a system that installs and never boots
+	if bootloader_errors := validate_bootloader(config.bootloader_config, config.disk_config, SysInfo.has_uefi()):
+		for msg in bootloader_errors:
+			error(f'invalid bootloader configuration: {msg}')
+		raise SystemExit(1)
+
+
 def guided() -> None:
 	handler = get_arch_config_handler()
 	args = handler.args
@@ -237,58 +251,7 @@ def guided() -> None:
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	if args.silent:
-		# Unattended: the config is the whole input, so anything it leaves
-		# unset would otherwise be asked for interactively. Fail loud here
-		# instead of hanging on a menu nobody is watching.
-		if not args.config and not args.config_url:
-			error('--silent needs --config or --config-url')
-			raise SystemExit(1)
-
-		config = handler.config
-		if not config.disk_config:
-			error('--silent needs disk_config in the config, nothing to install to')
-			raise SystemExit(1)
-
-		# the menu runs these before it lets you start; unattended skipped them
-		# entirely, so a bad pairing only showed up as a failed bootloader
-		# install after pacstrap, or a system that installs and never boots
-		if bootloader_errors := validate_bootloader(config.bootloader_config, config.disk_config, SysInfo.has_uefi()):
-			for msg in bootloader_errors:
-				error(f'invalid bootloader configuration: {msg}')
-			raise SystemExit(1)
-
-		store = ConfigStore(config)
-		store.write_debug()
-		store.save()
-
-		if args.dry_run:
-			raise SystemExit(0)
-	else:
-		if not args.config and (cached := ConfigStore.prompt_resume()):
-			try:
-				handler.config = ArchConfig.from_config(cached)
-				info('Saved selections loaded successfully')
-			except Exception as e:
-				error(f'Failed to load saved selections: {e}')
-
-		while True:
-			show_menu(handler.config, args)
-
-			config = handler.config
-
-			store = ConfigStore(config)
-			store.write_debug()
-			store.save()
-
-			if args.dry_run:
-				raise SystemExit(0)
-				# just save config => no error
-
-			with Tui():
-				if store.confirm_config():
-					break
-				debug('Installation aborted')
+	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
 
 	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)

@@ -7,12 +7,13 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
 from .general import JSON
-from .output import debug, info, logger, restore_perms, warn
+from .output import debug, error, info, logger, restore_perms, warn
 
 if TYPE_CHECKING:
+	from collections.abc import Callable
 	from pathlib import Path
 
-	from .args import ArchConfig
+	from .args import ArchConfig, ArchConfigHandler, Arguments
 
 
 class ConfigStore:
@@ -138,3 +139,59 @@ class ConfigStore:
 					cls.delete_saved_config()
 
 		return None
+
+
+# Shared config resolution for the entry scripts (guided/live/packages).
+# Silent: the config file is the whole input, fail loud instead of hanging on
+# a menu nobody is watching. Interactive: offer resume of the saved config
+# (skipped when --config was given), then loop menu -> save -> confirm.
+def resolve_config(
+	handler: ArchConfigHandler,
+	show_menu: Callable[[ArchConfig, Arguments], None],
+	validate_silent: Callable[[ArchConfig], None] | None = None,
+) -> ArchConfig:
+	from .args import ArchConfig
+
+	args = handler.args
+
+	if args.silent:
+		if not args.config and not args.config_url:
+			error('--silent needs --config or --config-url')
+			raise SystemExit(1)
+
+		config = handler.config
+		if validate_silent:
+			validate_silent(config)
+
+		store = ConfigStore(config)
+		store.write_debug()
+		store.save()
+
+		if args.dry_run:
+			raise SystemExit(0)
+		return config
+
+	if not args.config and (cached := ConfigStore.prompt_resume()):
+		try:
+			handler.config = ArchConfig.from_config(cached)
+			info('Saved selections loaded successfully')
+		except Exception as e:
+			debug(f'Failed to load saved selections: {e}')
+
+	while True:
+		show_menu(handler.config, args)
+
+		config = handler.config
+
+		store = ConfigStore(config)
+		store.write_debug()
+		store.save()
+
+		if args.dry_run:
+			raise SystemExit(0)
+			# just save config => no error
+
+		with Tui():
+			if store.confirm_config():
+				return config
+			debug('Configuration aborted')
