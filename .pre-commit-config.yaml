@@ -15,13 +15,15 @@ repos:
     rev: v0.16.5
     hooks:
         # fix unused imports and sort them
-      - id: ruff
+      - id: ruff-check
+        name: ruff-fix
         args: ["--config", "installer/pyproject.toml", "--extend-select", "I", "--fix"]
         # format the code
       - id: ruff-format
         args: ["--config", "installer/pyproject.toml"]
         # run the linter
-      - id: ruff
+      - id: ruff-check
+        name: ruff-lint
         args: ["--config", "installer/pyproject.toml"]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
