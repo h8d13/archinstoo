@@ -1230,6 +1230,9 @@ source = "pacman"
 [treeland]
 source = "pacman"
 
+[ttf-fira-code]
+source = "pacman"
+
 [ttf-jetbrains-mono-nerd]
 source = "pacman"
 

@@ -226,6 +226,32 @@ class ProfileHandler:
 		if greeter == GreeterType.GreetdDms:
 			compositor = self._dms_compositor(profiles or [])
 			dms_greeter = '/usr/share/quickshell/dms/Modules/Greetd/assets/dms-greeter'
+			command = f'{dms_greeter} --command {compositor} -p /usr/share/quickshell/dms'
+
+			# without -C the greeter generates its own hyprland config: no
+			# kb_layout (hyprland defaults to "us", ignoring the installed
+			# keymap) and, pre-1.5.4, legacy .conf syntax. Empty kb_layout
+			# defers to XKB_DEFAULT_* from /etc/environment (set_keyboard);
+			# dms-greeter appends its own start hook to -C lua configs
+			if compositor == 'hyprland':
+				greeter_conf = install_session.target.joinpath('etc/greetd/dms-hypr.lua')
+				greeter_conf.parent.mkdir(parents=True, exist_ok=True)
+				greeter_conf.write_text(
+					dedent("""\
+						hl.env("DMS_RUN_GREETER", "1")
+
+						hl.config({
+							misc = {
+								disable_hyprland_logo = true,
+							},
+							input = {
+								kb_layout = "",
+							},
+						})
+					""")
+				)
+				command += ' -C /etc/greetd/dms-hypr.lua'
+
 			path = install_session.target.joinpath('etc/greetd/config.toml')
 			path.parent.mkdir(parents=True, exist_ok=True)
 			path.write_text(
@@ -235,7 +261,7 @@ class ProfileHandler:
 
 					[default_session]
 					user = "greeter"
-					command = "{dms_greeter} --command {compositor} -p /usr/share/quickshell/dms"
+					command = "{command}"
 				""")
 			)
 

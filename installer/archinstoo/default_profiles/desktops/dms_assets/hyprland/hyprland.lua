@@ -10,7 +10,8 @@ hl.env("QT_QPA_PLATFORMTHEME_QT6", "gtk3")
 hl.env("TERMINAL", "{{TERMINAL_COMMAND}}")
 
 hl.on("hyprland.start", function()
-	hl.exec_cmd("dms run")
+	hl.exec_cmd("dbus-update-activation-environment --systemd --all")
+	hl.exec_cmd("systemctl --user start hyprland-session.target")
 end)
 -- DMS_STARTUP_END
 
