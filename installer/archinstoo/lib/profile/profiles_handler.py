@@ -275,10 +275,9 @@ class ProfileHandler:
 				""")
 			)
 
-		# under seatd the greeter joins seat, else its compositor (cage/niri) can't open DRM.
-		# group exists only when seatd was installed; skip otherwise so usermod can't abort.
-		if greeter in (GreeterType.Regreet, GreeterType.GreetdDms) and 'seat:' in install_session.target.joinpath('etc/group').read_text():
-			install_session.arch_chroot(['usermod', '-a', '-G', 'seat', 'greeter'])
+		# only these greeters run a compositor (cage/niri) as the greeter user
+		if greeter in (GreeterType.Regreet, GreeterType.GreetdDms):
+			install_session.add_to_seat_group(['greeter'])
 
 	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
 		debug(f'Installing GFX driver: {driver.value}')

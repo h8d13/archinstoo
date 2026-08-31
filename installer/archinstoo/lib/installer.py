@@ -2278,6 +2278,16 @@ class Installer:
 		# Guarantees sudoer conf file recommended perms
 		rule_file.chmod(0o440)
 
+	# under seatd, compositors need seat membership to reach /run/seatd.sock (DRM/input).
+	# group exists only when the seatd package landed (sysusers); skip otherwise so
+	# usermod can't abort the install on logind/polkit systems.
+	def add_to_seat_group(self, usernames: list[str]) -> None:
+		group_lines = self.target.joinpath('etc/group').read_text().splitlines()
+		if not any(line.startswith('seat:') for line in group_lines):
+			return
+		for name in usernames:
+			self.arch_chroot(['usermod', '-a', '-G', 'seat', name])
+
 	def enable_doas(self, user: User) -> None:
 		info(f'Enabling doas permissions for {user.username}')
 
