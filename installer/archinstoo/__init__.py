@@ -161,7 +161,7 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 
 
 def _arch_bootstrap(no_disk: bool) -> int:
-	if Os.get_env('ARCHINSTOO_DEPS_FETCHED'):
+	if Os.get_env('A2_DEPS_FETCHED'):
 		info('Already bootstrapped...')
 		return 0
 	try:
@@ -173,7 +173,7 @@ def _arch_bootstrap(no_disk: bool) -> int:
 		if not missing:
 			# nothing installed, so nothing new to import: the ISO ships these
 			info('Deps already satisfied...')
-			Os.set_env('ARCHINSTOO_DEPS_FETCHED', '1')
+			Os.set_env('A2_DEPS_FETCHED', '1')
 			return 0
 
 		info(f'Fetching {len(missing)} missing dep(s): {" ".join(missing)}')
@@ -182,11 +182,11 @@ def _arch_bootstrap(no_disk: bool) -> int:
 		if no_disk:
 			# no python lib in base, so nothing to re-exec for, and -S python
 			# alone on a running system is a partial upgrade
-			Os.set_env('ARCHINSTOO_DEPS_FETCHED', '1')
+			Os.set_env('A2_DEPS_FETCHED', '1')
 			return 0
 		# refresh python last then re-exec to load new libraries
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
-		Os.set_env('ARCHINSTOO_DEPS_FETCHED', '1')
+		Os.set_env('A2_DEPS_FETCHED', '1')
 	except Exception:
 		debug('Failed to fetch deps.')
 		return 1

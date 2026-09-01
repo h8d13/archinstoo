@@ -8,20 +8,20 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Use exported vars from ISOMOD or set defaults
-PROFILE_DIR="${PROFILE_DIR:-$SCRIPT_DIR/archiso_profile}"
-SILENT_MODE="${SILENT_MODE:-0}"
+A2_PROFILE_DIR="${A2_PROFILE_DIR:-$SCRIPT_DIR/archiso_profile}"
+A2_SILENT_MODE="${A2_SILENT_MODE:-0}"
 
 # Load profile config
-ISO_PROFILE="${ISO_PROFILE:-ISOMOD_CACHE}"
+A2_ISO_PROFILE="${A2_ISO_PROFILE:-ISOMOD_CACHE}"
 
-PROFILE_LIST="$SCRIPT_DIR/$ISO_PROFILE.conf"
+PROFILE_LIST="$SCRIPT_DIR/$A2_ISO_PROFILE.conf"
 
 # Check for system updates
 command -v checkupdates >/dev/null 2>&1 && [ -n "$(checkupdates 2>/dev/null)" ] &&
 	echo "System has pending updates." && exit 1
 
 # Verify profile directory exists
-if [ ! -d "$PROFILE_DIR" ]; then
+if [ ! -d "$A2_PROFILE_DIR" ]; then
 	echo "ERROR: Profile directory not found."
 	exit 1
 fi
@@ -31,7 +31,7 @@ if [ ! -f "$PROFILE_LIST" ]; then
 	exit 0
 fi
 
-echo "Creating local package repository for $ISO_PROFILE packages..."
+echo "Creating local package repository for $A2_ISO_PROFILE packages..."
 
 # Read packages from profile (skip comments and empty lines)
 packages=$(grep -v '^#' "$PROFILE_LIST" | grep -v '^$' | tr '\n' ' ')
@@ -42,14 +42,14 @@ if [ -z "$packages" ]; then
 fi
 
 # Create local repo directory in airootfs
-REPO_DIR="$PROFILE_DIR/airootfs/root/local_packages"
+REPO_DIR="$A2_PROFILE_DIR/airootfs/root/local_packages"
 mkdir -p "$REPO_DIR"
 
 echo "Downloading packages with dependencies: $packages"
 
 # Download packages
 # shellcheck disable=SC2086 # Word splitting intentional for package list
-if [ "$SILENT_MODE" = "1" ]; then
+if [ "$A2_SILENT_MODE" = "1" ]; then
 	if ! sudo pacman -Sw --noconfirm $packages >/dev/null 2>&1; then
 		echo "Failed to download packages, continuing without cache"
 		exit 0
@@ -94,7 +94,7 @@ cache_size=$(du -sh "$REPO_DIR" | cut -f1)
 
 # Insert local_repo BEFORE [core] so it has priority
 echo "Configuring pacman to use local repository with priority..."
-PACMAN_CONF="$PROFILE_DIR/airootfs/etc/pacman.conf"
+PACMAN_CONF="$A2_PROFILE_DIR/airootfs/etc/pacman.conf"
 
 awk '
     /^\[core\]/ && !inserted {
