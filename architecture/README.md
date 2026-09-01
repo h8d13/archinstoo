@@ -52,7 +52,7 @@ The script needs the board's tarball and finds it one of three ways:
    ```
 3. Not downloaded at all, let the script fetch it:
    ```shell
-   sudo FETCH=1 ./architecture/ARM rpi5 /dev/sdX
+   sudo A2_FETCH=1 ./architecture/ARM rpi5 /dev/sdX
    ```
 
 The core does everything generic: msdos label, fat32 boot + ext4 root,
@@ -75,9 +75,9 @@ Copy `boards/rpi5`, adjust. A board file is sourced by `ARM` and can set:
 | What | Required | Purpose |
 |------|----------|---------|
 | `ARCHIVE` | yes | tarball filename |
-| `TARBALL_URL` | no | enables `FETCH=1` and the download hint |
+| `TARBALL_URL` | no | enables `A2_FETCH=1` and the download hint |
 | `BOARD_CHROOT` | no | shell run inside the chroot (kernel/bootloader swap) |
-| `board_finish()` | no | after chroot: cmdline, firmware config, boot cleanup. `$MNT`, `$BOOT_PARTUUID`, `$ROOT_PARTUUID`, `$DEVICE` in scope |
+| `board_finish()` | no | after chroot: cmdline, firmware config, boot cleanup. `$A2_MNT`, `$BOOT_PARTUUID`, `$ROOT_PARTUUID`, `$DEVICE` in scope |
 | `board_partition()` | no | replaces default partitioning entirely (exotic layouts, U-Boot at raw offsets) |
 
 Boards whose tarball boots as shipped (generic `linux-aarch64` +

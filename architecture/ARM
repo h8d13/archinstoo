@@ -15,12 +15,12 @@
 #
 # Tarballs: https://archlinuxarm.org/about/downloads
 # Drop next to this script (or pass a path as third arg).
-# FETCH=1 downloads the board default if missing.
+# A2_FETCH=1 downloads the board default if missing.
 #
 # Env overrides:
-#   BOOT_END   boot partition end (default 513MiB, bump if space allows)
-#   MNT        mount point (default /mnt)
-#   FETCH=1    curl the board tarball when not found
+#   A2_BOOT_END   boot partition end (default 513MiB, bump if space allows)
+#   A2_MNT        mount point (default /mnt)
+#   A2_FETCH=1    curl the board tarball when not found
 #
 # Default credentials after boot: root:root, alarm:alarm
 # Post-boot setup (users, wifi, desktop): ./RUN --script live
@@ -29,8 +29,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BOARDS_DIR="$SCRIPT_DIR/boards"
-MNT="${MNT:-/mnt}"
-BOOT_END="${BOOT_END:-513MiB}"
+A2_MNT="${A2_MNT:-/mnt}"
+A2_BOOT_END="${A2_BOOT_END:-513MiB}"
 
 usage() {
 	echo "Usage: sudo $0 <board> <block-device> [tarball]"
@@ -80,7 +80,7 @@ esac
 BOOT_PART="${DEVICE}${SEP}1"
 ROOT_PART="${DEVICE}${SEP}2"
 
-# Resolve tarball: explicit path > next to script > cwd > FETCH=1
+# Resolve tarball: explicit path > next to script > cwd > A2_FETCH=1
 if [ -n "$3" ]; then
 	ARCHIVE_PATH="$3"
 elif [ -f "$SCRIPT_DIR/$ARCHIVE" ]; then
@@ -89,13 +89,13 @@ else
 	ARCHIVE_PATH="./$ARCHIVE"
 fi
 if [ ! -f "$ARCHIVE_PATH" ]; then
-	if [ "$FETCH" = "1" ] && [ -n "$TARBALL_URL" ]; then
+	if [ "$A2_FETCH" = "1" ] && [ -n "$TARBALL_URL" ]; then
 		echo "Fetching $TARBALL_URL"
 		curl -L -o "$SCRIPT_DIR/$ARCHIVE" "$TARBALL_URL"
 		ARCHIVE_PATH="$SCRIPT_DIR/$ARCHIVE"
 	else
 		echo "Tarball not found: $ARCHIVE_PATH"
-		[ -n "$TARBALL_URL" ] && echo "FETCH=1 to download, or: curl -LO $TARBALL_URL"
+		[ -n "$TARBALL_URL" ] && echo "A2_FETCH=1 to download, or: curl -LO $TARBALL_URL"
 		exit 1
 	fi
 fi
@@ -125,8 +125,8 @@ wait_dirty() {
 
 partition_default() {
 	parted -s -a optimal "$DEVICE" mklabel msdos
-	parted -s -a optimal "$DEVICE" mkpart primary fat32 1MiB "$BOOT_END"
-	parted -s -a optimal "$DEVICE" mkpart primary ext4 "$BOOT_END" 100%
+	parted -s -a optimal "$DEVICE" mkpart primary fat32 1MiB "$A2_BOOT_END"
+	parted -s -a optimal "$DEVICE" mkpart primary ext4 "$A2_BOOT_END" 100%
 	parted -s "$DEVICE" set 1 boot on
 	mkfs.vfat -F 32 "$BOOT_PART"
 	mkfs.ext4 -F "$ROOT_PART"
@@ -138,21 +138,21 @@ else
 	partition_default
 fi
 
-mount "$ROOT_PART" "$MNT"
-mkdir -p "$MNT/boot"
-mount "$BOOT_PART" "$MNT/boot"
+mount "$ROOT_PART" "$A2_MNT"
+mkdir -p "$A2_MNT/boot"
+mount "$BOOT_PART" "$A2_MNT/boot"
 
-bsdtar -xpf "$ARCHIVE_PATH" -C "$MNT" &
+bsdtar -xpf "$ARCHIVE_PATH" -C "$A2_MNT" &
 wait_dirty $! "Extracting..." sync
 
 # vconsole.conf must exist before any kernel install (mkinitcpio needs it)
-echo "KEYMAP=us" >"$MNT/etc/vconsole.conf"
-echo "en_US.UTF-8 UTF-8" >"$MNT/etc/locale.gen"
-echo "LANG=en_US.UTF-8" >"$MNT/etc/locale.conf"
+echo "KEYMAP=us" >"$A2_MNT/etc/vconsole.conf"
+echo "en_US.UTF-8 UTF-8" >"$A2_MNT/etc/locale.gen"
+echo "LANG=en_US.UTF-8" >"$A2_MNT/etc/locale.conf"
 
 # DisableSandbox: pacman's landlock sandbox breaks under qemu-user
 echo "Setting up chroot (keyring, openssh, board packages)..."
-arch-chroot "$MNT" /bin/bash -e -c "
+arch-chroot "$A2_MNT" /bin/bash -e -c "
 	sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf
 	pacman-key --init
 	pacman-key --populate archlinuxarm
@@ -164,7 +164,7 @@ arch-chroot "$MNT" /bin/bash -e -c "
 # Stock fstab references mmcblk0p1 which is wrong off USB/NVMe
 BOOT_PARTUUID=$(blkid -s PARTUUID -o value "$BOOT_PART")
 ROOT_PARTUUID=$(blkid -s PARTUUID -o value "$ROOT_PART")
-cat >"$MNT/etc/fstab" <<EOF
+cat >"$A2_MNT/etc/fstab" <<EOF
 # <file system>             <dir>   <type>  <options>       <dump>  <pass>
 PARTUUID=${ROOT_PARTUUID}   /       ext4    defaults        0       1
 PARTUUID=${BOOT_PARTUUID}   /boot   vfat    defaults        0       2
@@ -176,7 +176,7 @@ if declare -f board_finish >/dev/null; then
 fi
 
 echo "Boot partition kernel files:"
-KERNELS=$(find "$MNT/boot" -maxdepth 1 \
+KERNELS=$(find "$A2_MNT/boot" -maxdepth 1 \
 	\( -name "Image*" -o -name "kernel*" -o -name "initramfs*" \) \
 	-exec ls -lh {} +)
 if [ -n "$KERNELS" ]; then
@@ -186,8 +186,8 @@ else
 fi
 
 # Wired DHCP only. Wi-Fi goes through ./RUN --script live after boot.
-mkdir -p "$MNT/etc/systemd/network"
-cat >"$MNT/etc/systemd/network/20-wired.network" <<'EOF'
+mkdir -p "$A2_MNT/etc/systemd/network"
+cat >"$A2_MNT/etc/systemd/network/20-wired.network" <<'EOF'
 [Match]
 Name=en*
 
@@ -197,16 +197,16 @@ EOF
 
 # Enable base services by hand (no systemctl inside emulated chroot)
 ln -sf /usr/lib/systemd/system/multi-user.target \
-	"$MNT/etc/systemd/system/default.target"
-mkdir -p "$MNT/etc/systemd/system/getty.target.wants"
+	"$A2_MNT/etc/systemd/system/default.target"
+mkdir -p "$A2_MNT/etc/systemd/system/getty.target.wants"
 ln -sf /usr/lib/systemd/system/getty@.service \
-	"$MNT/etc/systemd/system/getty.target.wants/getty@tty1.service"
+	"$A2_MNT/etc/systemd/system/getty.target.wants/getty@tty1.service"
 # sshd won't start without host keys, generate them now
-ssh-keygen -A -f "$MNT"
-mkdir -p "$MNT/etc/systemd/system/multi-user.target.wants"
+ssh-keygen -A -f "$A2_MNT"
+mkdir -p "$A2_MNT/etc/systemd/system/multi-user.target.wants"
 for svc in sshd systemd-networkd systemd-resolved; do
 	ln -sf "/usr/lib/systemd/system/${svc}.service" \
-		"$MNT/etc/systemd/system/multi-user.target.wants/${svc}.service"
+		"$A2_MNT/etc/systemd/system/multi-user.target.wants/${svc}.service"
 done
 
 echo ""
@@ -214,5 +214,5 @@ echo "Final sync... (can take a while on slow USB)"
 sync &
 wait_dirty $! "Flushing..."
 echo "Unmounting..."
-umount "$MNT/boot" "$MNT"
+umount "$A2_MNT/boot" "$A2_MNT"
 echo "Done. Boot the device, then: passwd && passwd alarm (or add a user)"

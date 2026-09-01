@@ -15,10 +15,10 @@ BOARD_CHROOT='
 
 board_finish() {
 	# leftover U-Boot script files (NOT kernel files, linux-rpi manages those)
-	rm -f "$MNT"/boot/boot.scr "$MNT"/boot/boot.txt "$MNT"/boot/mkscr
+	rm -f "$A2_MNT"/boot/boot.scr "$A2_MNT"/boot/boot.txt "$A2_MNT"/boot/mkscr
 	# skip firmware os check, don't overwrite whatever config.txt is there
-	grep -q "os_check" "$MNT/boot/config.txt" || \
-		sed -i '1i os_check=0' "$MNT/boot/config.txt"
+	grep -q "os_check" "$A2_MNT/boot/config.txt" || \
+		sed -i '1i os_check=0' "$A2_MNT/boot/config.txt"
 	echo "root=PARTUUID=${ROOT_PARTUUID} rw rootwait console=tty1 console=ttyAMA10,115200 quiet loglevel=0 audit=0" \
-		> "$MNT/boot/cmdline.txt"
+		> "$A2_MNT/boot/cmdline.txt"
 }
