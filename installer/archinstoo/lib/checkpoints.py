@@ -21,10 +21,13 @@ def _run_script(script: str) -> None:
 		# by importing we automatically run it
 		importlib.import_module(f'archinstoo.scripts.{script}')
 	except ModuleNotFoundError as e:
-		# Only catch if the missing module is the script itself
-		if f'archinstoo.scripts.{script}' in str(e):
-			error(f'Script: {script} does not exist. Try `--script list` to see your options.')
-			raise SystemExit(1) from e
+		# only the script itself missing is a usage error; a bad import inside
+		# the script (`e.name` is the module it asked for) must surface as the
+		# crash it is, or `--script` exits 0 having done nothing
+		if e.name != f'archinstoo.scripts.{script}':
+			raise
+		error(f'Script: {script} does not exist. Try `--script list` to see your options.')
+		raise SystemExit(1) from e
 
 
 def clean_cache(root_dir: str) -> None:
