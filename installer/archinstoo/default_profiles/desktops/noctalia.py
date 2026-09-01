@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.users import User
 
-_TERMINAL = 'kitty'
 # assets follow the canonical per-compositor integration docs (docs.noctalia.dev
 # renders these): https://github.com/noctalia-dev/noctalia/tree/main/docs/user/compositor-settings
 _ASSETS_DIR = Path(__file__).parent / 'noctalia_assets'
@@ -72,7 +71,7 @@ class NoctaliaProfile(WaylandProfile):
 			# bare installs ship none, so seed one sans + one mono
 			'inter-font',
 			'ttf-jetbrains-mono-nerd',
-			_TERMINAL,
+			terminal_command(),
 			*additional,
 		]
 
@@ -95,7 +94,7 @@ class NoctaliaProfile(WaylandProfile):
 				dest_dir.mkdir(parents=True, exist_ok=True)
 
 				for asset in sorted((_ASSETS_DIR / comp).iterdir()):
-					conf = asset.read_text().replace('{{TERMINAL_COMMAND}}', _TERMINAL)
+					conf = asset.read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
 					(dest_dir / asset.name).write_text(conf)
 
 			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])

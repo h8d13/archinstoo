@@ -44,6 +44,7 @@ from archinstoo.lib.models.application import (
 	Monitor,
 	PowerManagement,
 	Security,
+	Terminal,
 )
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
@@ -75,6 +76,7 @@ _EXACT_SECTIONS = {
 	'audio': Audio,
 	'monitors': Monitor,
 	'editors': Editor,
+	'terminals': Terminal,
 	'firewalls': Firewall,
 	'power_management': PowerManagement,
 	'security': Security,

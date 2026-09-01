@@ -1,12 +1,16 @@
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services
+from archinstoo.default_profiles.desktops import SeatAccess, provision_terminal_config, seat_services, terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
+
+if TYPE_CHECKING:
+	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.users import User
 
 
 class HyprlandProfile(WaylandProfile):
@@ -23,7 +27,7 @@ class HyprlandProfile(WaylandProfile):
 		return [
 			'hyprland',
 			'dunst',
-			'kitty',
+			terminal_command(),
 			'uwsm',
 			'hyprlauncher',
 			'xdg-desktop-portal-hyprland',
@@ -39,6 +43,19 @@ class HyprlandProfile(WaylandProfile):
 	@override
 	def services(self) -> list[str]:
 		return seat_services(self.custom_settings.get('seat_access'))
+
+	@override
+	def provision(self, install_session: Installer, users: list[User]) -> None:
+		super().provision(install_session, users)
+
+		# the shipped hyprland.lua hardcodes `local terminal = "kitty"`
+		provision_terminal_config(
+			install_session,
+			users,
+			install_session.target / 'usr/share/hypr/hyprland.lua',
+			'hypr/hyprland.lua',
+			'kitty',
+		)
 
 	def _select_seat_access(self) -> None:
 		# need to activate seat service and add to seat group

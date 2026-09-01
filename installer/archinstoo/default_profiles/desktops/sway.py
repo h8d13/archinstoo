@@ -1,12 +1,16 @@
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services, swap_terminal, terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
+from archinstoo.lib.output import warn
 from archinstoo.lib.profile.base import ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
+
+if TYPE_CHECKING:
+	from archinstoo.lib.installer import Installer
 
 
 class SwayProfile(WaylandProfile):
@@ -36,7 +40,7 @@ class SwayProfile(WaylandProfile):
 			'grim',
 			'slurp',
 			'pavucontrol',
-			'foot',
+			terminal_command(),
 			'xorg-xwayland',
 			*additional,
 		]
@@ -45,6 +49,19 @@ class SwayProfile(WaylandProfile):
 	@override
 	def services(self) -> list[str]:
 		return seat_services(self.custom_settings.get('seat_access'))
+
+	@override
+	def install(self, install_session: Installer) -> None:
+		super().install(install_session)
+
+		# sway reads /etc/sway/config directly when the user has no
+		# ~/.config/sway/config, and it ships `set $term foot`
+		config = install_session.target / 'etc/sway/config'
+		if not config.is_file():
+			warn(f'{config} missing, leaving the sway terminal binding as shipped')
+			return
+
+		config.write_text(swap_terminal(config.read_text(), 'foot', config))
 
 	def _select_seat_access(self) -> None:
 		# need to activate seat service and add to seat group

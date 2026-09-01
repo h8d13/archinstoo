@@ -103,18 +103,18 @@
 		"cosmic": ["cosmic", "xdg-user-dirs"],
 
 		// -- Wayland WMs --
-		"hyprland": ["hyprland", "dunst", "kitty", "uwsm", "hyprlauncher", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "hyprpolkitagent", "grim", "slurp", "wl-clipboard"],
-		"sway": ["sway", "swaybg", "swaylock", "swayidle", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "foot", "xorg-xwayland"],
-		"river": ["foot", "xdg-desktop-portal-wlr", "river"],
+		"hyprland": ["hyprland", "dunst", "alacritty", "uwsm", "hyprlauncher", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "hyprpolkitagent", "grim", "slurp", "wl-clipboard"],
+		"sway": ["sway", "swaybg", "swaylock", "swayidle", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "alacritty", "xorg-xwayland"],
+		"river": ["alacritty", "xdg-desktop-portal-wlr", "river"],
 		"niri": ["niri", "alacritty", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"],
 		"dms": ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "matugen", "cava", "kimageformats", "inter-font", "ttf-fira-code", "alacritty"],
-		"noctalia": ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "noctalia", "inter-font", "ttf-jetbrains-mono-nerd", "kitty"],
+		"noctalia": ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "noctalia", "inter-font", "ttf-jetbrains-mono-nerd", "alacritty"],
 		"labwc": ["alacritty", "labwc"],
 
 		// -- Xorg WMs --
-		"i3-wm": ["i3-wm", "i3lock", "i3status", "i3blocks", "xss-lock", "xterm", "lightdm-gtk-greeter", "lightdm", "dmenu"],
+		"i3-wm": ["i3-wm", "i3lock", "i3status", "i3blocks", "xss-lock", "alacritty", "lightdm-gtk-greeter", "lightdm", "dmenu"],
 		"bspwm": ["bspwm", "sxhkd", "dmenu", "xdo", "rxvt-unicode"],
-		"awesome": ["xorg-server", "awesome", "alacritty", "xorg-xinit", "xorg-xrandr", "xterm", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"],
+		"awesome": ["xorg-server", "awesome", "alacritty", "xorg-xinit", "xorg-xrandr", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"],
 		"enlightenment": ["enlightenment", "terminology"],
 		"qtile": ["qtile", "alacritty"],
 		"xmonad": ["xmonad", "xmonad-contrib", "xmonad-extras", "xterm", "dmenu"],
@@ -227,6 +227,18 @@
 		"vim": ["vim"],
 		"neovim": ["neovim"],
 		"emacs": ["emacs"]
+	},
+
+	// one choice, shared by every profile that needs a terminal. package and
+	// binary share a name, and TERMINAL lands in /etc/environment
+	"terminals": {
+		"alacritty": ["alacritty"],
+		"foot": ["foot"],
+		"kitty": ["kitty"],
+		"ghostty": ["ghostty"],
+		"konsole": ["konsole"],
+		"wezterm": ["wezterm"],
+		"xterm": ["xterm"]
 	},
 
 	// only showed on laptops

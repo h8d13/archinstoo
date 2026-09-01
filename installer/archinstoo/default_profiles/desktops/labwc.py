@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -27,8 +27,8 @@ class LabwcProfile(WaylandProfile):
 			additional = [seat]
 
 		return [
-			'alacritty',
 			'labwc',
+			terminal_command(),
 			*additional,
 		]
 

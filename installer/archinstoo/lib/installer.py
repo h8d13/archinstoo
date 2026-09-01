@@ -2452,6 +2452,22 @@ class Installer:
 		vconsole_path.write_text(vconsole_content)
 		info(f'Wrote to {vconsole_path} using {kb_vconsole} and {font_vconsole}')
 
+	def set_environment(self, env_vars: dict[str, str]) -> None:
+		# pam_env exports /etc/environment into the session, graphical ones
+		# included, which is the only path Wayland has for XKB_DEFAULT_* and
+		# the one $TERMINAL rides on. Guarded per key so a second writer (or a
+		# re-run) does not stack duplicate lines.
+		env_path = self.target / 'etc/environment'
+		existing = env_path.read_text() if env_path.exists() else ''
+		defined = {line.split('=', 1)[0] for line in existing.splitlines()}
+
+		fresh = {k: v for k, v in env_vars.items() if k not in defined}
+		if not fresh:
+			return
+
+		env_path.write_text(existing + ''.join(f'{k}={v}\n' for k, v in fresh.items()))
+		info(f'Wrote {", ".join(fresh)} to {env_path}')
+
 	def set_keyboard(self, locale_config: LocaleConfiguration) -> bool:
 		# Graphical (X11/Wayland) keyboard config, separate from the console
 		# keymap in vconsole.conf. Writes the Xorg InputClass (00-keyboard.conf)
@@ -2484,9 +2500,8 @@ class Installer:
 		(xorg_conf_dir / '00-keyboard.conf').write_text(content)
 		info(f'Wrote X11 keyboard config: layout={layout} variant={variant or "-"}')
 
-		# Wayland: pam_env exports /etc/environment into the session.
-		# libxkbcommon ignores vconsole.conf and 00-keyboard.conf. Append-guarded
-		# per-key so we don't clobber existing entries.
+		# Wayland: libxkbcommon ignores vconsole.conf and 00-keyboard.conf,
+		# so the layout has to reach the session as env vars.
 		env_vars = {'XKB_DEFAULT_LAYOUT': layout}
 		if model:
 			env_vars['XKB_DEFAULT_MODEL'] = model
@@ -2495,12 +2510,7 @@ class Installer:
 		if options:
 			env_vars['XKB_DEFAULT_OPTIONS'] = options
 
-		env_path = self.target / 'etc/environment'
-		existing = env_path.read_text() if env_path.exists() else ''
-		additions = ''.join(f'{k}={v}\n' for k, v in env_vars.items() if f'{k}=' not in existing)
-		if additions:
-			env_path.write_text(existing + additions)
-			info(f'Wrote Wayland keyboard env to {env_path}')
+		self.set_environment(env_vars)
 
 		return True
 

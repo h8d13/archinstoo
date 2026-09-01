@@ -36,7 +36,12 @@ Usually I pick Copy to ISO from VMs or a desktop (cabled) and other two options 
 
 - `Applications` & `Profile`
 
-This is all up to user preference, can be multi-selected / some set the global default (like `Editor`) through `/etc/environment`
+This is all up to user preference, can be multi-selected / some set the global default
+(like `Editor` and `Terminal`) through `/etc/environment`
+
+`Terminal` is the one every window manager profile shares: it installs the package, exports
+`TERMINAL`, and repoints the keybind in whatever config the profile ships. Skipping it leaves
+the profiles on `alacritty`.
 
 > Hardware drivers can also be skipped and added to AUR step below if needed.
 

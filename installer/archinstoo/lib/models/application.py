@@ -110,6 +110,20 @@ class EditorConfigSerialization(TypedDict):
 	editor: str
 
 
+class Terminal(StrEnum):
+	ALACRITTY = auto()
+	FOOT = auto()
+	KITTY = auto()
+	GHOSTTY = auto()
+	KONSOLE = auto()
+	WEZTERM = auto()
+	XTERM = auto()
+
+
+class TerminalConfigSerialization(TypedDict):
+	terminal: str
+
+
 class Security(StrEnum):
 	APPARMOR = auto()
 	FIREJAIL = auto()
@@ -173,6 +187,7 @@ class ApplicationSerialization(TypedDict):
 	management_config: NotRequired[ManagementConfigSerialization]
 	monitor_config: NotRequired[MonitorConfigSerialization]
 	editor_config: NotRequired[EditorConfigSerialization]
+	terminal_config: NotRequired[TerminalConfigSerialization]
 	security_config: NotRequired[SecurityConfigSerialization]
 	development_config: NotRequired[DevelopmentConfigSerialization]
 
@@ -314,6 +329,22 @@ class EditorConfiguration:
 
 
 @dataclass
+class TerminalConfiguration:
+	terminal: Terminal
+
+	def json(self) -> TerminalConfigSerialization:
+		return {
+			'terminal': self.terminal.value,
+		}
+
+	@classmethod
+	def parse_arg(cls, arg: TerminalConfigSerialization) -> Self:
+		return cls(
+			Terminal(arg['terminal']),
+		)
+
+
+@dataclass
 class SecurityConfiguration:
 	tools: list[Security]
 
@@ -395,6 +426,7 @@ class ApplicationConfiguration:
 	management_config: ManagementConfiguration | None = None
 	monitor_config: MonitorConfiguration | None = None
 	editor_config: EditorConfiguration | None = None
+	terminal_config: TerminalConfiguration | None = None
 	security_config: SecurityConfiguration | None = None
 	development_config: DevelopmentConfiguration | None = None
 
@@ -408,6 +440,7 @@ class ApplicationConfiguration:
 		'management_config': ManagementConfiguration,
 		'monitor_config': MonitorConfiguration,
 		'editor_config': EditorConfiguration,
+		'terminal_config': TerminalConfiguration,
 		'security_config': SecurityConfiguration,
 		'development_config': DevelopmentConfiguration,
 	}
