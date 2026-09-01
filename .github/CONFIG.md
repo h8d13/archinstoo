@@ -14,16 +14,23 @@ This is handy if you want to go back to the terminal quickly before installling.
 
 ## Where it lands
 
-The directory comes from where `archinstoo` is installed, not from the
-directory you launched it in:
+The directory belongs to the user who ran the command, not to the source
+checkout, the install layout, or the directory you launched it in. Source and
+installed, `sudo` and not, all land in the same place for a given user:
 
 | Running | Directory |
 | --- | --- |
-| From source (`./RUN`, `./DEV`) | `installer/logs/` |
-| Installed, as root | `/var/log/archinstoo/` |
-| Installed, rootless scripts (`list`, `size`, `mirror`, `count`) | `$XDG_STATE_HOME/archinstoo/`, default `~/.local/state/archinstoo/` |
+| Anything, as a user (`./RUN`, `sudo ./RUN`, `archinstoo`, `--script list`) | `$XDG_STATE_HOME/archinstoo/`, default `~/.local/state/archinstoo/` |
+| Real root, no invoking user (ISO, autologin, `su -`) | `/root/.local/state/archinstoo/` |
+
+Under `sudo` the path comes from the invoking user's passwd entry, so root's
+`HOME` and `XDG_STATE_HOME` do not pull the logs into `/root`.
 
 `Logger path:` is printed at startup with the exact file.
+
+On the ISO the state directory is tmpfs and dies with the live session. The
+copy that survives is written into the installed system, at
+`/etc/archinstoo.d/<timestamp>_install.log` and `_config.json`.
 
 `--clean` wipes that directory, saved configuration included.
 

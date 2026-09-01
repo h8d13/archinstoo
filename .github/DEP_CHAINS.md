@@ -6,7 +6,7 @@ Basically to figure out why some things turn out the way they do:
 
 Using `pacman-contrib` we can explore full dep trees. This simulates the install flow and counts/parses recursive deps.
 
-You can simply exit the menu and select `Save selections`, you'll then find your config in the `logs/` directory.
+You can simply exit the menu and select `Save selections`, you'll then find your config in the logger directory (`~/.local/state/archinstoo/`).
 
 ```shell
 ./RUN --script count examples/config_sample_full.json --why polkit

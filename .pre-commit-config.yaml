@@ -42,16 +42,22 @@ repos:
     hooks:
     - id: mypy
       args: [
-        '--config-file=installer/pyproject.toml'
+        '--config-file=installer/pyproject.toml',
+        'installer/archinstoo',
+        'installer/tests'
       ]
+      pass_filenames: false
       files: ^installer/
+      additional_dependencies:
+        - pytest  # hook venv has none, tests type-check against it
       fail_fast: true
   - repo: https://github.com/pycqa/pylint
     rev: v4.0.8
     hooks:
     - id: pylint
-      args: ['--rcfile=installer/pyproject.toml']
-      files: ^installer/
+      args: ['--rcfile=installer/pyproject.toml', 'installer/archinstoo']
+      pass_filenames: false
+      files: ^installer/archinstoo/
       additional_dependencies:
         - pyparted>=3.13.0
       fail_fast: true

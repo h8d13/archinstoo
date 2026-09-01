@@ -1,9 +1,9 @@
-# The log directory must not depend on the cwd: `Path.cwd() / 'logs'` used to
-# give ./RUN (which cds into installer/) and pytest (run from the repo root)
-# a logs/ each. It is derived from __file__ instead, with a rootless fallback
-# for the scripts in ROOTLESS_SCRIPTS.
+# The log directory follows the human who invoked the command, never the cwd,
+# the install layout or the effective uid. Under sudo the environment is root's
+# (HOME=/root, XDG_STATE_HOME dropped by env_reset), so the invoker's path has
+# to come from passwd for `./RUN` and `sudo ./RUN` to land in the same tree.
 
-import os
+import pwd
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -13,35 +13,58 @@ if TYPE_CHECKING:
 	import pytest
 
 
-def _pin_layout(monkeypatch: pytest.MonkeyPatch, root: Path, *, euid: int) -> None:
-	monkeypatch.setattr(output, '_PKG_ROOT', root)
-	monkeypatch.setattr(os, 'geteuid', lambda: euid)
+def _unelevated(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.delenv('SUDO_USER', raising=False)
+	monkeypatch.delenv('DOAS_USER', raising=False)
 
 
-def test_source_checkout_logs_beside_the_package(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	(tmp_path / 'pyproject.toml').touch()
-	_pin_layout(monkeypatch, tmp_path, euid=1000)
+def _passwd_home(monkeypatch: pytest.MonkeyPatch, name: str, home: Path) -> None:
+	def getpwnam(user: str) -> pwd.struct_passwd:
+		if user != name:
+			raise KeyError(user)
+		return pwd.struct_passwd(('', '', 1000, 1000, '', str(home), ''))
 
-	assert output._default_log_dir() == tmp_path / 'logs'
-
-
-def test_installed_as_root_logs_to_var_log(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# no pyproject.toml beside the package: site-packages, not a checkout
-	_pin_layout(monkeypatch, tmp_path, euid=0)
-
-	assert output._default_log_dir() == Path('/var/log/archinstoo')
+	monkeypatch.setattr(pwd, 'getpwnam', getpwnam)
 
 
-def test_installed_rootless_logs_to_xdg_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	_pin_layout(monkeypatch, tmp_path, euid=1000)
+def test_sudo_logs_to_the_invoking_users_state_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# root's environment must not leak into the path
+	monkeypatch.setenv('SUDO_USER', 'hadean')
+	monkeypatch.setenv('HOME', '/root')
+	monkeypatch.setenv('XDG_STATE_HOME', '/root/.local/state')
+	_passwd_home(monkeypatch, 'hadean', tmp_path / 'home')
+
+	assert output._default_log_dir() == tmp_path / 'home' / '.local' / 'state' / 'archinstoo'
+
+
+def test_unelevated_honours_xdg_state_home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	_unelevated(monkeypatch)
 	monkeypatch.setenv('XDG_STATE_HOME', str(tmp_path / 'state'))
 
 	assert output._default_log_dir() == tmp_path / 'state' / 'archinstoo'
 
 
+def test_real_root_logs_under_its_own_home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# ISO, autologin, `su -`: no invoking human to hand the logs back to
+	_unelevated(monkeypatch)
+	monkeypatch.delenv('XDG_STATE_HOME', raising=False)
+	monkeypatch.setenv('HOME', str(tmp_path / 'root'))
+
+	assert output._default_log_dir() == tmp_path / 'root' / '.local' / 'state' / 'archinstoo'
+
+
+def test_unknown_sudo_user_falls_back_instead_of_raising(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# SUDO_USER naming a user no longer in passwd must not take the logger down
+	monkeypatch.setenv('SUDO_USER', 'ghost')
+	monkeypatch.setenv('XDG_STATE_HOME', str(tmp_path / 'state'))
+	_passwd_home(monkeypatch, 'someone-else', tmp_path / 'home')
+
+	assert output._default_log_dir() == tmp_path / 'state' / 'archinstoo'
+
+
 def test_log_dir_ignores_the_cwd(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	(tmp_path / 'pyproject.toml').touch()
-	_pin_layout(monkeypatch, tmp_path, euid=1000)
+	_unelevated(monkeypatch)
+	monkeypatch.setenv('XDG_STATE_HOME', str(tmp_path / 'state'))
 
 	monkeypatch.chdir(tmp_path)
 	from_here = output._default_log_dir()

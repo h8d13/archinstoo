@@ -7,6 +7,12 @@ go_to() {
 	cd "$SCRIPT_DIR/installer" || exit 1
 }
 
+# the logger owns its path (invoking user's XDG state dir), so ask it
+log_path() {
+	go_to
+	python3 -c 'from archinstoo.lib.output import logger; print(logger.path)'
+}
+
 case "$1" in
 -t | --tree)
 	go_to
@@ -18,12 +24,12 @@ case "$1" in
 	} >docs/README.md
 	;;
 -ul | --up-logs)
-	go_to
-	curl --data-binary @./logs/install.log https://paste.rs
+	log=$(log_path)
+	curl --data-binary @"$log" https://paste.rs
 	;;
 -gl | --grep-logs)
-	go_to
-	grep -i "$2" ./logs/install.log
+	log=$(log_path)
+	grep -i "$2" "$log"
 	;;
 -gc | --grep-code)
 	go_to

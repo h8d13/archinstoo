@@ -107,23 +107,24 @@ def restore_perms(path: Path, recursive: bool = False) -> None:
 		pass
 
 
-# archinstoo/lib/output.py -> archinstoo/ -> the source root (installer/)
-_PKG_ROOT = Path(__file__).parents[2]
-
-
 def _default_log_dir() -> Path:
-	# derived from __file__, never cwd: `Path.cwd() / 'logs'` scattered a logs/
-	# wherever the process happened to start, so ./RUN (which cds into
-	# installer/) and pytest (run from the repo root) each grew their own copy.
-	if (_PKG_ROOT / 'pyproject.toml').is_file():
-		return _PKG_ROOT / 'logs'
+	# One rule everywhere: logs belong to the human who invoked the command,
+	# not to the cwd, the install layout, or the effective uid. So `./RUN` and
+	# `sudo ./RUN` append to one tree, and the directory (which also holds
+	# user_configuration.json and is wiped wholesale by --clean) is never
+	# shared between users.
+	#
+	# Under sudo the environment is root's, so the invoker's path comes from
+	# passwd rather than HOME/XDG_STATE_HOME.
+	invoker = os.environ.get('SUDO_USER') or os.environ.get('DOAS_USER')
+	if invoker and invoker != 'root':
+		try:
+			home = Path(pwd.getpwnam(invoker).pw_dir)
+			return home / '.local' / 'state' / 'archinstoo'
+		except KeyError:
+			pass
 
-	# installed: no source tree to write beside
-	if os.geteuid() == 0:
-		return Path('/var/log/archinstoo')
-
-	# ROOTLESS_SCRIPTS (list/size/mirror/count) run as a normal user, who has no
-	# business writing to /var/log
+	# not elevated, or elevated from real root (ISO, su -): the env is ours
 	state = os.environ.get('XDG_STATE_HOME') or Path.home() / '.local' / 'state'
 	return Path(state) / 'archinstoo'
 
