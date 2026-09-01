@@ -37,6 +37,7 @@ makedepends=(
 	'python-pylint'
 	'python-setuptools'
 	'python-wheel'
+	'python-pytest'
 )
 
 # marked as optional because they depend
