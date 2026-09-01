@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Serial console driver for the headless dev VM (SERIAL=on ./TVM).
+# Serial console driver for the headless dev VM (A2_SERIAL=on ./TVM).
 #
 # QEMU exposes two unix sockets and two growing log files:
 #   .dev-serial.sock    guest ttyS0 (write keystrokes here)
@@ -36,7 +36,7 @@
 #       --config examples/vm_unattended.json --silent --advanced --debug'
 # examples/vm_unattended.json ships root and user 'vm' both with password
 # 'test' (yescrypt hashes in auth_config). After a guided install, boot the
-# disk (SERIAL=on ./TVM boot) and log in straight away, no chpasswd needed:
+# disk (A2_SERIAL=on ./TVM boot) and log in straight away, no chpasswd needed:
 #   ./TSER login -p test           # root
 #   ./TSER login -u vm -p test     # user
 
@@ -92,7 +92,7 @@ def log_read(offset: int = 0) -> bytes:
 			fh.seek(offset)
 			return fh.read()
 	except FileNotFoundError:
-		die(f'{LOG} missing, is the VM running? (SERIAL=on ./TVM)')
+		die(f'{LOG} missing, is the VM running? (A2_SERIAL=on ./TVM)')
 
 
 def clean(raw: bytes) -> str:
@@ -114,7 +114,7 @@ def vm_pid() -> int | None:
 
 def serial_write(data: bytes) -> None:
 	if not SERIAL.exists():
-		die(f'{SERIAL} missing, is the VM running? (SERIAL=on ./TVM)')
+		die(f'{SERIAL} missing, is the VM running? (A2_SERIAL=on ./TVM)')
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.connect(str(SERIAL))
 		# ^U first: anything the guest left half-typed (zsh refusing to run
@@ -134,7 +134,7 @@ def serial_write(data: bytes) -> None:
 
 def monitor_cmd(cmd: str, timeout: float = 5.0) -> str:
 	if not MONITOR.exists():
-		die(f'{MONITOR} missing, is the VM running? (SERIAL=on ./TVM)')
+		die(f'{MONITOR} missing, is the VM running? (A2_SERIAL=on ./TVM)')
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.settimeout(timeout)
 		sock.connect(str(MONITOR))

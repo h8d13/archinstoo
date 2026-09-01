@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2154
 # sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
-# (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set DISPLAY_BACKEND to match)
-# (audio backend is a separate pkg: qemu-audio-pipewire (default), qemu-audio-pa, qemu-audio-alsa; set AUDIO_BACKEND to match)
+# (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set A2_DISPLAY_BACKEND to match)
+# (audio backend is a separate pkg: qemu-audio-pipewire (default), qemu-audio-pa, qemu-audio-alsa; set A2_AUDIO_BACKEND to match)
 #
 # Dev test VM for archinstoo. Boots an ISO under QEMU.
 # ISO building is intentionally NOT done here, use isos/ISOMOD for that/default Arch ISO.
@@ -11,7 +11,7 @@
 # Host artifacts (created in repo root, git-ignored):
 #   .dev-disk.qcow2     VM disk image (qemu-img)
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
-#   SERIAL=on only:
+#   A2_SERIAL=on only:
 #   .dev-boot/          kernel + initramfs pulled out of the ISO
 #   .dev-serial.sock    guest ttyS0, .dev-serial.log its full transcript
 #   .dev-capture.log    guest ttyS1, byte-exact (./TSER capture)
@@ -24,27 +24,27 @@
 #   ./TVM clean  | c - remove disk and NVRAM (ISOs untouched)
 #   ./TVM help   | h - show this help
 # Env overrides:
-#   SERIAL             'on' boots headless with the console on ttyS0 and
-#                      detaches (no window, no stdio monitor). Composes with
-#                      every mode above. Drive it with ./TSER (login/run).
-#                      ISO modes direct-boot the ISO's own kernel via -kernel so
-#                      console=ttyS0 can be forced; OVMF still boots it EFI-stub,
-#                      so the guest keeps a real UEFI environment. Needs bsdtar.
-#                      'boot' mode has no such hook: the installed system only
-#                      talks to ttyS0 if its own cmdline says console=ttyS0.
-#   BIOS               'on' boots SeaBIOS instead of OVMF: no pflash, no
-#                      NVRAM. The installed disk must carry a BIOS-capable
-#                      bootloader (grub with a bios_grub partition).
-#   DEV_ISO            explicit ISO path (skips discovery)
-#   RAM, CPUS          VM resources (default 4G, 4)
-#   DISK_SIZE          new disk size (default 30G)
-#   DISPLAY_BACKEND    qemu -display value (default 'gtk,zoom-to-fit=off')
-#   VGA                qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
-#   GL                 'on' swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
-#                      Overrides VGA. niri/DMS have no software fallback, black-screen
-#                      without this. Needs the full module chain (vga-gl alone won't load):
-#                      qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
-#   AUDIO_BACKEND      qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
+#   A2_SERIAL           'on' boots headless with the console on ttyS0 and
+#                       detaches (no window, no stdio monitor). Composes with
+#                       every mode above. Drive it with ./TSER (login/run).
+#                       ISO modes direct-boot the ISO's own kernel via -kernel so
+#                       console=ttyS0 can be forced; OVMF still boots it EFI-stub,
+#                       so the guest keeps a real UEFI environment. Needs bsdtar.
+#                       'boot' mode has no such hook: the installed system only
+#                       talks to ttyS0 if its own cmdline says console=ttyS0.
+#   A2_BIOS             'on' boots SeaBIOS instead of OVMF: no pflash, no
+#                       NVRAM. The installed disk must carry a BIOS-capable
+#                       bootloader (grub with a bios_grub partition).
+#   A2_DEV_ISO          explicit ISO path (skips discovery)
+#   A2_RAM, A2_CPUS     VM resources (default 4G, 4)
+#   A2_DISK_SIZE        new disk size (default 64G)
+#   A2_DISPLAY_BACKEND  qemu -display value (default 'gtk,zoom-to-fit=off')
+#   A2_VGA              qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
+#   A2_GL               'on' swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
+#                       Overrides A2_VGA. niri/DMS have no software fallback, black-screen
+#                       without this. Needs the full module chain (vga-gl alone won't load):
+#                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
+#   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
 
 set -euo pipefail
 
@@ -60,15 +60,15 @@ SERIAL_LOG="$PROJECT_DIR/.dev-serial.log"
 CAPTURE_LOG="$PROJECT_DIR/.dev-capture.log"
 MON_SOCK="$PROJECT_DIR/.dev-monitor.sock"
 PIDFILE="$PROJECT_DIR/.dev-vm.pid"
-SERIAL="${SERIAL:-off}"
-BIOS="${BIOS:-off}"
-DISK_SIZE="${DISK_SIZE:-64G}"
-RAM="${RAM:-4G}"
-CPUS="${CPUS:-4}"
-DISPLAY_BACKEND="${DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
-VGA="${VGA:-std}"
-GL="${GL:-off}"
-AUDIO_BACKEND="${AUDIO_BACKEND:-pipewire}"
+A2_SERIAL="${A2_SERIAL:-off}"
+A2_BIOS="${A2_BIOS:-off}"
+A2_DISK_SIZE="${A2_DISK_SIZE:-64G}"
+A2_RAM="${A2_RAM:-4G}"
+A2_CPUS="${A2_CPUS:-4}"
+A2_DISPLAY_BACKEND="${A2_DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
+A2_VGA="${A2_VGA:-std}"
+A2_GL="${A2_GL:-off}"
+A2_AUDIO_BACKEND="${A2_AUDIO_BACKEND:-pipewire}"
 ARG="${1:-default}"
 
 OVMF_CODE=""
@@ -80,7 +80,7 @@ err() {
 }
 
 probe_ovmf() {
-	[ "$BIOS" = "on" ] && return 0
+	[ "$A2_BIOS" = "on" ] && return 0
 	local pairs=(
 		"/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd"
 		"/usr/share/edk2-ovmf/x64/OVMF_CODE.fd:/usr/share/edk2-ovmf/x64/OVMF_VARS.fd"
@@ -109,9 +109,9 @@ check_host_deps() {
 	if [ ${#missing[@]} -gt 0 ]; then
 		err "missing host commands: ${missing[*]} (install qemu-base)"
 	fi
-	if [ "$SERIAL" = "on" ]; then
+	if [ "$A2_SERIAL" = "on" ]; then
 		command -v bsdtar >/dev/null 2>&1 ||
-			err "SERIAL=on needs bsdtar to read the ISO (install libarchive)"
+			err "A2_SERIAL=on needs bsdtar to read the ISO (install libarchive)"
 	fi
 }
 
@@ -150,9 +150,9 @@ extract_iso_kernel() {
 }
 
 find_iso() {
-	if [ -n "${DEV_ISO:-}" ]; then
-		[ -f "$DEV_ISO" ] || err "DEV_ISO=$DEV_ISO not found"
-		printf '%s\n' "$DEV_ISO"
+	if [ -n "${A2_DEV_ISO:-}" ]; then
+		[ -f "$A2_DEV_ISO" ] || err "A2_DEV_ISO=$A2_DEV_ISO not found"
+		printf '%s\n' "$A2_DEV_ISO"
 		return
 	fi
 	{ ls -t "$ISOMOD_OUT"/*.iso "$DEV_ISO_DIR"/*.iso 2>/dev/null || true; } | head -n1
@@ -162,7 +162,7 @@ require_iso() {
 	local iso
 	iso="$(find_iso)"
 	if [ -z "$iso" ]; then
-		err "No ISO found. Build one with isos/ISOMOD, drop one in $DEV_ISO_DIR/ or $ISOMOD_OUT, or set DEV_ISO=/path/to.iso"
+		err "No ISO found. Build one with isos/ISOMOD, drop one in $DEV_ISO_DIR/ or $ISOMOD_OUT, or set A2_DEV_ISO=/path/to.iso"
 	fi
 	printf '%s\n' "$iso"
 }
@@ -201,7 +201,7 @@ default)
 	probe_ovmf
 	require_iso >/dev/null
 	rm -f "$DISK"
-	qemu-img create -f qcow2 "$DISK" "$DISK_SIZE"
+	qemu-img create -f qcow2 "$DISK" "$A2_DISK_SIZE"
 	BOOT_ORDER="d"
 	ATTACH_ISO=true
 	;;
@@ -210,12 +210,12 @@ default)
 	;;
 esac
 
-if [ "$BIOS" != "on" ]; then
+if [ "$A2_BIOS" != "on" ]; then
 	[ -f "$OVMF_VARS" ] || cp "$OVMF_VARS_ORIG" "$OVMF_VARS"
 fi
 
 # shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
-if [ "$SERIAL" = "on" ]; then
+if [ "$A2_SERIAL" = "on" ]; then
 	# Headless and detached: the console is a unix socket with a logfile, so
 	# ./TSER can connect, act and exit instead of holding a session open.
 	# Audio is dropped, no session to play into.
@@ -237,16 +237,16 @@ if [ "$SERIAL" = "on" ]; then
 else
 	# virgl needs both ends: GL-capable device AND gl=on on the display.
 	# -device help skips unloaded modules; probe with device-specific help instead.
-	if [ "$GL" = "on" ]; then
+	if [ "$A2_GL" = "on" ]; then
 		if qemu-system-x86_64 -device virtio-vga-gl,help 2>&1 | grep -q "not found"; then
 			err "virtio-vga-gl not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} and qemu-ui-opengl)"
 		fi
-		CONSOLE_ARGS=(-device virtio-vga-gl -display "$DISPLAY_BACKEND,gl=on")
+		CONSOLE_ARGS=(-device virtio-vga-gl -display "$A2_DISPLAY_BACKEND,gl=on")
 	else
-		CONSOLE_ARGS=(-vga "$VGA" -display "$DISPLAY_BACKEND")
+		CONSOLE_ARGS=(-vga "$A2_VGA" -display "$A2_DISPLAY_BACKEND")
 	fi
 	CONSOLE_ARGS+=(
-		-audiodev "$AUDIO_BACKEND,id=snd0"
+		-audiodev "$A2_AUDIO_BACKEND,id=snd0"
 		-device ich9-intel-hda
 		-device hda-duplex,audiodev=snd0
 		-monitor stdio
@@ -258,8 +258,8 @@ QEMU_ARGS=(
 	-machine q35
 	-cpu host
 	-enable-kvm
-	-m "$RAM"
-	-smp "$CPUS"
+	-m "$A2_RAM"
+	-smp "$A2_CPUS"
 	-drive "file=$DISK,format=qcow2,if=virtio"
 	-device virtio-net-pci,netdev=net0
 	-netdev user,id=net0
@@ -267,7 +267,7 @@ QEMU_ARGS=(
 	-boot "order=$BOOT_ORDER"
 )
 
-if [ "$BIOS" != "on" ]; then
+if [ "$A2_BIOS" != "on" ]; then
 	QEMU_ARGS+=(
 		-drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
 		-drive "if=pflash,format=raw,file=$OVMF_VARS"
@@ -277,7 +277,7 @@ fi
 if [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"
 	QEMU_ARGS+=(-cdrom "$ISO")
-	if [ "$SERIAL" = "on" ]; then
+	if [ "$A2_SERIAL" = "on" ]; then
 		extract_iso_kernel "$ISO"
 		QEMU_ARGS+=(
 			-kernel "$BOOT_DIR/vmlinuz-linux"
@@ -287,7 +287,7 @@ if [ "$ATTACH_ISO" = "true" ]; then
 	fi
 fi
 
-if [ "$SERIAL" = "on" ]; then
+if [ "$A2_SERIAL" = "on" ]; then
 	qemu-system-x86_64 "${QEMU_ARGS[@]}"
 	echo "VM detached, pid $(cat "$PIDFILE")"
 	echo "drive it: ./TSER login && ./TSER run 'ls /'"
