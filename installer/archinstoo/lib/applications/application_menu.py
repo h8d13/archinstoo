@@ -28,6 +28,8 @@ from archinstoo.lib.models.application import (
 	PrintServiceConfiguration,
 	Security,
 	SecurityConfiguration,
+	Terminal,
+	TerminalConfiguration,
 )
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -113,6 +115,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				action=select_editor,
 				preview_action=self._prev_editor,
 				key='editor_config',
+			),
+			MenuItem(
+				text='Terminal',
+				action=select_terminal,
+				preview_action=self._prev_terminal,
+				key='terminal_config',
 			),
 			MenuItem(
 				text='Security',
@@ -202,6 +210,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: EditorConfiguration = item.value
 			return f'{"Editor"}: {config.editor.value}'
+		return None
+
+	def _prev_terminal(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: TerminalConfiguration = item.value
+			return f'Terminal: {config.terminal.value}'
 		return None
 
 	def _prev_security(self, item: MenuItem) -> str | None:
@@ -512,6 +526,33 @@ def select_editor(preset: EditorConfiguration | None = None) -> EditorConfigurat
 			return preset
 		case ResultType.Selection:
 			return EditorConfiguration(editor=result.get_value())
+		case ResultType.Reset:
+			return None
+
+
+def select_terminal(preset: TerminalConfiguration | None = None) -> TerminalConfiguration | None:
+	group = MenuItemGroup.from_enum(Terminal)
+
+	if preset:
+		group.set_focus_by_value(preset.terminal)
+
+	header = 'Set a terminal globally through /etc/environment?' + '\n'
+	header += 'Window manager profiles bind it too (foot is Wayland only)' + '\n'
+
+	result = SelectMenu[Terminal](
+		group,
+		header=header,
+		allow_skip=True,
+		alignment=Alignment.CENTER,
+		allow_reset=True,
+		frame=FrameProperties.min('Terminal'),
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return preset
+		case ResultType.Selection:
+			return TerminalConfiguration(terminal=result.get_value())
 		case ResultType.Reset:
 			return None
 

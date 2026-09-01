@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, override
 
+from archinstoo.default_profiles.desktops import swap_terminal, terminal_command
 from archinstoo.default_profiles.xorg import XorgProfile
 from archinstoo.lib.profile.base import ProfileType
 
@@ -17,10 +18,9 @@ class AwesomeProfile(XorgProfile):
 		return [
 			*super().packages,
 			'awesome',
-			'alacritty',
+			terminal_command(),
 			'xorg-xinit',
 			'xorg-xrandr',
-			'xterm',
 			'feh',
 			'slock',
 			'terminus-font',
@@ -38,8 +38,9 @@ class AwesomeProfile(XorgProfile):
 		with rc_lua_path.open() as fh:
 			awesome_lua = fh.read()
 
-		# Replace xterm with alacritty for a smoother experience.
-		awesome_lua = awesome_lua.replace('"xterm"', '"alacritty"')
+		# rc.lua hardcodes `terminal = "xterm"`, and everything else in it
+		# (menu entries, menubar.utils.terminal) reads that one variable
+		awesome_lua = swap_terminal(awesome_lua, 'xterm', rc_lua_path)
 
 		with rc_lua_path.open('w') as fh:
 			fh.write(awesome_lua)

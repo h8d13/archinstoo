@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import User
 
 
-_TERMINAL = 'alacritty'
 # canonical source (embedded in the dms binary, per AvengeMedia/DankMaterialShell#2851):
 # https://github.com/AvengeMedia/DankMaterialShell/tree/master/core/internal/config/embedded
 # dms/* files mirror it verbatim (niri outputs/cursor are deployed empty upstream;
@@ -68,7 +67,7 @@ class DmsProfile(WaylandProfile):
 			# terminal needs a real mono font anyway
 			'inter-font',
 			'ttf-fira-code',
-			_TERMINAL,
+			terminal_command(),
 			*additional,
 		]
 
@@ -120,7 +119,7 @@ class DmsProfile(WaylandProfile):
 			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
 
 	def _provision_niri(self, home: Path) -> None:
-		binds = (_ASSETS_DIR / 'niri/dms/binds.kdl').read_text().replace('{{TERMINAL_COMMAND}}', _TERMINAL)
+		binds = (_ASSETS_DIR / 'niri/dms/binds.kdl').read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
 
 		niri_dir = home / '.config/niri'
 		dms_dir = niri_dir / 'dms'
@@ -140,7 +139,7 @@ class DmsProfile(WaylandProfile):
 		dms_dir.mkdir(parents=True, exist_ok=True)
 
 		for src, dest in (('hyprland.lua', hypr_dir), ('dms/binds.lua', dms_dir)):
-			conf = (_ASSETS_DIR / 'hyprland' / src).read_text().replace('{{TERMINAL_COMMAND}}', _TERMINAL)
+			conf = (_ASSETS_DIR / 'hyprland' / src).read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
 			(dest / Path(src).name).write_text(conf)
 
 		for name in ('binds-user.lua', 'colors.lua', 'cursor.lua', 'layout.lua', 'outputs.lua', 'windowrules.lua'):
