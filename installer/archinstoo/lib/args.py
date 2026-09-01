@@ -270,7 +270,7 @@ class ArchConfigHandler:
 			'--offline',
 			action='store_true',
 			default=False,
-			help='Skip db refresh, bootstrap, reflector and keyring update.',
+			help='Skip db refresh, bootstrap and keyring update.',
 		)
 		parser.add_argument(
 			'--advanced',

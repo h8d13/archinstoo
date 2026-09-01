@@ -243,7 +243,7 @@ class Installer:
 		# https://github.com/archlinux/archinstall/issues/3688
 		# be more descriptive about status in code + what user sees
 		if Os.running_from_foreign():
-			# NTP/reflector/keyring-wkd-sync are live-ISO startup units; a
+			# NTP/keyring-wkd-sync are live-ISO startup units; a
 			# foreign host has none of them, so the waits would block forever
 			# (the wkd-sync timer never appears -> _service_started stays None).
 			debug('Running from foreign host, skipping ISO service-stop checks')
@@ -266,26 +266,6 @@ class Installer:
 				time.sleep(1)
 		else:
 			info('Skipping NTP time sync (may cause issues if system time is incorrect)')
-
-		if not self._args.offline and SysInfo.arch() == 'x86_64':
-			info('Waiting for reflector mirror selection...')
-			reflector_state = self._service_state('reflector')
-			timed_out = True
-			for _ in range(60):
-				if reflector_state in ('dead', 'failed', 'exited'):
-					timed_out = False
-					break
-				time.sleep(1)
-				reflector_state = self._service_state('reflector')
-
-			if timed_out:
-				warn('Reflector did not complete within 60 seconds, continuing anyway...')
-			elif reflector_state == 'failed':
-				warn('Reflector mirror selection failed')
-			else:
-				info('Reflector mirror selection completed')
-		else:
-			info('Skipping reflector (offline mode or non-x86_64 architecture)')
 
 		if not self._args.skip_wkd and SysInfo.arch() == 'x86_64':
 			info('Waiting for Arch Linux keyring sync...')
