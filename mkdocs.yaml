@@ -68,7 +68,7 @@ nav:
   - Home: index.md
   - Getting Started:
       - Newcomers: NEWB_CORNER.md
-      - JSON file: CONFIG.md
+      - JSON file / logs: CONFIG.md
       - Config schema: SCHEMA.md
   - Cases:
       - Headless / servers: HEADLESS.md
