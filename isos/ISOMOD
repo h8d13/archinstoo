@@ -1,54 +1,54 @@
 #!/bin/bash
-ELEV="${ELEV:-sudo}"
+A2_ELEV="${A2_ELEV:-sudo}"
 # Strict
 set -e #uo pipefail
 
 # DO NOT RUN AS ROOT // Will prompt when needed
 [ "$(id -u)" -eq 0 ] && echo "Error: Root not required." && exit 1
 
-THREADS="${THREADS:-$(nproc)}"
+A2_THREADS="${A2_THREADS:-$(nproc)}"
 # Build stage 1 ISO with slight modifs
 # Requires 'archiso'
-SILENT_MODE="${SILENT_MODE:-0}"
-PRECLEAN="${PRECLEAN:-0}"
-CLEANUP="${CLEANUP:-1}"
-LOG_FILE="${LOG_FILE:-1}"
+A2_SILENT_MODE="${A2_SILENT_MODE:-0}"
+A2_PRECLEAN="${A2_PRECLEAN:-0}"
+A2_CLEANUP="${A2_CLEANUP:-1}"
+A2_LOG_FILE="${A2_LOG_FILE:-1}"
 # bcachefs support (removed from mainline kernel 6.18+, needs DKMS)
-ISOMOD_BCACHEFS="${ISOMOD_BCACHEFS:-0}"
+A2_BCACHEFS="${A2_BCACHEFS:-0}"
 
-# LIVE=1 -> ship a Plasma live session with autologin and a normal user.
-# LIVE=0 -> installer ISO, lands at root shell, run 'archinstoo'.
-LIVE="${LIVE:-0}"
-# Live-mode only (ignored when LIVE=0)
-LIVE_USER="${LIVE_USER:-live}"
-LIVE_PASS="${LIVE_PASS:-live}"
-AUTOLOGIN="${AUTOLOGIN:-1}"
+# A2_LIVE=1 -> ship a Plasma live session with autologin and a normal user.
+# A2_LIVE=0 -> installer ISO, lands at root shell, run 'archinstoo'.
+A2_LIVE="${A2_LIVE:-0}"
+# Live-mode only (ignored when A2_LIVE=0)
+A2_LIVE_USER="${A2_LIVE_USER:-live}"
+A2_LIVE_PASS="${A2_LIVE_PASS:-live}"
+A2_AUTOLOGIN="${A2_AUTOLOGIN:-1}"
 
-# MINIMAL=1 -> use archiso 'baseline' profile (~12 pkgs) + network tools + archinstoo deps.
-# MINIMAL=0 -> use archiso 'releng' profile (full installer environment).
-# Mutually exclusive with LIVE=1.
-MINIMAL="${MINIMAL:-0}"
+# A2_MINIMAL=1 -> use archiso 'baseline' profile (~12 pkgs) + network tools + archinstoo deps.
+# A2_MINIMAL=0 -> use archiso 'releng' profile (full installer environment).
+# Mutually exclusive with A2_LIVE=1.
+A2_MINIMAL="${A2_MINIMAL:-0}"
 
 # Requires 'pacman-contrib' if this is enabled
-CACHING="${CACHING:-0}"
+A2_CACHING="${A2_CACHING:-0}"
 
-if [ "$LIVE" = "1" ] && [ "$MINIMAL" = "1" ]; then
-	echo "ERROR: LIVE=1 and MINIMAL=1 are mutually exclusive" && exit 1
+if [ "$A2_LIVE" = "1" ] && [ "$A2_MINIMAL" = "1" ]; then
+	echo "ERROR: A2_LIVE=1 and A2_MINIMAL=1 are mutually exclusive" && exit 1
 fi
 
 # Defaults that differ by mode
-if [ "$LIVE" = "1" ]; then
-	COW_SIZE="${COW_SIZE:-2G}"
+if [ "$A2_LIVE" = "1" ]; then
+	A2_COW_SIZE="${A2_COW_SIZE:-2G}"
 	ISO_NAME_TAG="EVOQUUS_LIVE"
 	ISO_LABEL_TAG="mod_archlinux_live"
 	LOG_TAG="z_isomod_live"
-elif [ "$MINIMAL" = "1" ]; then
-	# No COW_SIZE default: keep archiso's stock 256M (skip the bump below)
+elif [ "$A2_MINIMAL" = "1" ]; then
+	# No A2_COW_SIZE default: keep archiso's stock 256M (skip the bump below)
 	ISO_NAME_TAG="EVOQUUS_MIN"
 	ISO_LABEL_TAG="mod_archlinux_min"
 	LOG_TAG="z_isomod_min"
 else
-	COW_SIZE="${COW_SIZE:-1G}"
+	A2_COW_SIZE="${A2_COW_SIZE:-1G}"
 	ISO_NAME_TAG="EVOQUUS_DEF"
 	ISO_LABEL_TAG="mod_archlinux"
 	LOG_TAG="z_isomod_def"
@@ -57,12 +57,12 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Setup logging if enabled
-if [ "$LOG_FILE" = "1" ]; then
+if [ "$A2_LOG_FILE" = "1" ]; then
 	LOG_PATH="$SCRIPT_DIR/${LOG_TAG}_$(date '+%Y%m%d_%H%M%S').log"
 	exec > >(tee -a "$LOG_PATH") 2>&1
 	echo "Logging to: $LOG_PATH"
 fi
-PROFILE_DIR="$SCRIPT_DIR/archiso_profile"
+A2_PROFILE_DIR="$SCRIPT_DIR/archiso_profile"
 WORK_DIR="$SCRIPT_DIR/archiso_work" # tmp
 OUTPUT_DIR="$SCRIPT_DIR/a"
 BUILD_DATE=$(date '+%Y.%m.%d')
@@ -71,20 +71,20 @@ ISO_LABEL="${ISO_LABEL_TAG}-${BUILD_DATE}"
 
 # Cleanup function
 cleanup() {
-	if [ "$CLEANUP" = "1" ]; then
+	if [ "$A2_CLEANUP" = "1" ]; then
 		echo "Cleaning up build directories..."
-		[ -d "$PROFILE_DIR" ] && rm -rf "$PROFILE_DIR"
+		[ -d "$A2_PROFILE_DIR" ] && rm -rf "$A2_PROFILE_DIR"
 
 		if [ -d "$WORK_DIR" ]; then
 			# Kill any processes using the work dir
-			"$ELEV" fuser -sk "$WORK_DIR" 2>/dev/null || true
+			"$A2_ELEV" fuser -sk "$WORK_DIR" 2>/dev/null || true
 			# Force lazy recursive unmount
-			"$ELEV" umount -lR "$WORK_DIR" 2>/dev/null || true
-			"$ELEV" rm -rf "$WORK_DIR"
+			"$A2_ELEV" umount -lR "$WORK_DIR" 2>/dev/null || true
+			"$A2_ELEV" rm -rf "$WORK_DIR"
 		fi
 		echo "Cleanup complete."
 	else
-		echo "CLEANUP=0, preserving build directories."
+		echo "A2_CLEANUP=0, preserving build directories."
 	fi
 }
 
@@ -101,66 +101,66 @@ trap 'echo "Script interrupted!"; cleanup; exit 130' INT TERM
 trap 'cleanup; exit 1' ERR
 
 # Pre-clean if requested
-if [ "$PRECLEAN" = "1" ]; then
+if [ "$A2_PRECLEAN" = "1" ]; then
 	echo "Pre-cleaning previous build artifacts..."
 	cleanup
 	echo "Pre-clean complete."
 fi
 
 echo "Setting up archiso profile..."
-mkdir -p "$PROFILE_DIR" || error_exit "Failed to create profile directory"
+mkdir -p "$A2_PROFILE_DIR" || error_exit "Failed to create profile directory"
 
 echo "Creating root FS..."
-mkdir -p "$PROFILE_DIR/airootfs/root" || error_exit "Failed to create airootfs"
+mkdir -p "$A2_PROFILE_DIR/airootfs/root" || error_exit "Failed to create airootfs"
 
-if [ "$MINIMAL" = "1" ]; then
+if [ "$A2_MINIMAL" = "1" ]; then
 	echo "Copy baseline profile..."
-	cp -r /usr/share/archiso/configs/baseline/* "$PROFILE_DIR" || error_exit "Failed to copy baseline profile"
+	cp -r /usr/share/archiso/configs/baseline/* "$A2_PROFILE_DIR" || error_exit "Failed to copy baseline profile"
 	# baseline ships no pacman.d/hooks/, so /etc/pacman.d/mirrorlist stays fully
 	# commented and pacman has no servers. Borrow releng's uncomment-mirrors hook.
 	echo "Borrowing releng pacman hooks (mirrorlist uncomment)..."
-	mkdir -p "$PROFILE_DIR/airootfs/etc/pacman.d/hooks"
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/pacman.d/hooks"
 	cp /usr/share/archiso/configs/releng/airootfs/etc/pacman.d/hooks/uncomment-mirrors.hook \
-		"$PROFILE_DIR/airootfs/etc/pacman.d/hooks/" ||
+		"$A2_PROFILE_DIR/airootfs/etc/pacman.d/hooks/" ||
 		error_exit "Failed to copy uncomment-mirrors hook"
 	cp /usr/share/archiso/configs/releng/airootfs/etc/pacman.d/hooks/zzzz99-remove-custom-hooks-from-airootfs.hook \
-		"$PROFILE_DIR/airootfs/etc/pacman.d/hooks/" ||
+		"$A2_PROFILE_DIR/airootfs/etc/pacman.d/hooks/" ||
 		error_exit "Failed to copy custom-hooks-removal hook"
 	# baseline lacks pacman keyring init: /etc/pacman.d/gnupg is on read-only
 	# squashfs so pacman-key --init can't write there. Borrow releng's tmpfs
 	# mount + pacman-init.service so the keyring is set up at boot.
 	echo "Borrowing releng pacman keyring init units..."
-	mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
 	cp /usr/share/archiso/configs/releng/airootfs/etc/systemd/system/etc-pacman.d-gnupg.mount \
-		"$PROFILE_DIR/airootfs/etc/systemd/system/" ||
+		"$A2_PROFILE_DIR/airootfs/etc/systemd/system/" ||
 		error_exit "Failed to copy gnupg tmpfs mount unit"
 	cp /usr/share/archiso/configs/releng/airootfs/etc/systemd/system/pacman-init.service \
-		"$PROFILE_DIR/airootfs/etc/systemd/system/" ||
+		"$A2_PROFILE_DIR/airootfs/etc/systemd/system/" ||
 		error_exit "Failed to copy pacman-init.service"
 	ln -sf /etc/systemd/system/pacman-init.service \
-		"$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/pacman-init.service"
+		"$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/pacman-init.service"
 else
 	echo "Copy releng profile..."
-	cp -r /usr/share/archiso/configs/releng/* "$PROFILE_DIR" || error_exit "Failed to copy releng profile"
+	cp -r /usr/share/archiso/configs/releng/* "$A2_PROFILE_DIR" || error_exit "Failed to copy releng profile"
 fi
 
 echo "Mod ISO name..."
-sed -i "s/^iso_name=.*/iso_name=\"${ISO_NAME_TAG}\"/" "$PROFILE_DIR/profiledef.sh"
+sed -i "s/^iso_name=.*/iso_name=\"${ISO_NAME_TAG}\"/" "$A2_PROFILE_DIR/profiledef.sh"
 
-if [ -n "${COW_SIZE:-}" ]; then
-	echo "Modifying COW overlay size to ${COW_SIZE}..."
+if [ -n "${A2_COW_SIZE:-}" ]; then
+	echo "Modifying COW overlay size to ${A2_COW_SIZE}..."
 	# Modify systemd-boot (efiboot) configs
-	find "$PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i "s|\(options.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
+	find "$A2_PROFILE_DIR/efiboot/loader/entries" -name "*.conf" -exec sed -i "s|\(options.*\)|\1 cow_spacesize=${A2_COW_SIZE}|" {} \;
 	# Modify GRUB config
-	sed -i "s|\(linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux.*\)|\1 cow_spacesize=${COW_SIZE}|" "$PROFILE_DIR/grub/grub.cfg"
+	sed -i "s|\(linux /%INSTALL_DIR%/boot/%ARCH%/vmlinuz-linux.*\)|\1 cow_spacesize=${A2_COW_SIZE}|" "$A2_PROFILE_DIR/grub/grub.cfg"
 	# Modify SYSLINUX configs
-	find "$PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i "s|\(APPEND.*archiso.*\)|\1 cow_spacesize=${COW_SIZE}|" {} \;
+	find "$A2_PROFILE_DIR/syslinux" -name "*.cfg" -exec sed -i "s|\(APPEND.*archiso.*\)|\1 cow_spacesize=${A2_COW_SIZE}|" {} \;
 else
 	echo "Keeping archiso stock COW overlay size."
 fi
 
 echo "Mod pkg list..."
-if [ "$MINIMAL" = "1" ]; then
+if [ "$A2_MINIMAL" = "1" ]; then
 	# baseline (~12 pkgs) + network tools + archinstoo runtime deps + fs tools
 	{
 		# network: both NetworkManager and iwd, user picks at runtime
@@ -188,8 +188,8 @@ if [ "$MINIMAL" = "1" ]; then
 		echo "xfsprogs"
 		echo "cryptsetup"
 		echo "lvm2"
-	} >>"$PROFILE_DIR/packages.x86_64"
-elif [ "$LIVE" = "1" ]; then
+	} >>"$A2_PROFILE_DIR/packages.x86_64"
+elif [ "$A2_LIVE" = "1" ]; then
 	# Plasma live session (mirrors archinstoo PlasmaProfile)
 	{
 		echo "sudo"
@@ -213,26 +213,26 @@ elif [ "$LIVE" = "1" ]; then
 		echo "xdg-utils"
 		echo "ttf-dejavu"
 		echo "networkmanager"
-	} >>"$PROFILE_DIR/packages.x86_64"
+	} >>"$A2_PROFILE_DIR/packages.x86_64"
 else
 	{
 		echo "git"
-	} >>"$PROFILE_DIR/packages.x86_64"
+	} >>"$A2_PROFILE_DIR/packages.x86_64"
 fi
 
-if [ "$ISOMOD_BCACHEFS" = "1" ]; then
+if [ "$A2_BCACHEFS" = "1" ]; then
 	echo "Adding bcachefs packages..."
 	{
 		echo "linux-headers"
 		echo "bcachefs-dkms"
 		echo "bcachefs-tools"
 		echo "dkms"
-	} >>"$PROFILE_DIR/packages.x86_64"
+	} >>"$A2_PROFILE_DIR/packages.x86_64"
 
 	# Ensure bcachefs DKMS module is built and loaded at boot
 	echo "Adding bcachefs DKMS boot service..."
-	mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
-	cat >"$PROFILE_DIR/airootfs/etc/systemd/system/bcachefs-dkms.service" <<'SVCEOF'
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+	cat >"$A2_PROFILE_DIR/airootfs/etc/systemd/system/bcachefs-dkms.service" <<'SVCEOF'
 [Unit]
 Description=Build and load bcachefs DKMS module
 After=local-fs.target
@@ -247,34 +247,34 @@ ExecStart=/usr/sbin/modprobe bcachefs
 [Install]
 WantedBy=multi-user.target
 SVCEOF
-	ln -sf /etc/systemd/system/bcachefs-dkms.service "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/bcachefs-dkms.service"
+	ln -sf /etc/systemd/system/bcachefs-dkms.service "$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/bcachefs-dkms.service"
 fi
 
-if [ "$LIVE" = "1" ]; then
-	echo "Staging live-user first-boot setup (user: '$LIVE_USER')..."
+if [ "$A2_LIVE" = "1" ]; then
+	echo "Staging live-user first-boot setup (user: '$A2_LIVE_USER')..."
 	# Grant wheel sudo this file is safe to ship as-is (doesn't conflict with pacstrap)
-	mkdir -p "$PROFILE_DIR/airootfs/etc/sudoers.d"
-	echo "%wheel ALL=(ALL:ALL) ALL" >"$PROFILE_DIR/airootfs/etc/sudoers.d/10-wheel"
-	sed -i '/^file_permissions=(/a\  ["/etc/sudoers.d/10-wheel"]="0:0:0440"' "$PROFILE_DIR/profiledef.sh"
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/sudoers.d"
+	echo "%wheel ALL=(ALL:ALL) ALL" >"$A2_PROFILE_DIR/airootfs/etc/sudoers.d/10-wheel"
+	sed -i '/^file_permissions=(/a\  ["/etc/sudoers.d/10-wheel"]="0:0:0440"' "$A2_PROFILE_DIR/profiledef.sh"
 
 	# Setup script runs once at boot, creates the user via real useradd so pacstrap's
 	# /etc/passwd, /etc/shadow, /etc/group stay intact (prevents UID/GID collisions
 	# with system users like sddm, polkitd, uuidd, systemd-journal, etc).
-	mkdir -p "$PROFILE_DIR/airootfs/usr/local/bin"
-	cat >"$PROFILE_DIR/airootfs/usr/local/bin/live-user-setup" <<SETUPEOF
+	mkdir -p "$A2_PROFILE_DIR/airootfs/usr/local/bin"
+	cat >"$A2_PROFILE_DIR/airootfs/usr/local/bin/live-user-setup" <<SETUPEOF
 #!/bin/bash
 set -e
-if ! id "$LIVE_USER" >/dev/null 2>&1; then
-    useradd -m -G wheel,audio,video,input,storage,optical,network -s /bin/bash "$LIVE_USER"
-    echo "$LIVE_USER:$LIVE_PASS" | chpasswd
+if ! id "$A2_LIVE_USER" >/dev/null 2>&1; then
+    useradd -m -G wheel,audio,video,input,storage,optical,network -s /bin/bash "$A2_LIVE_USER"
+    echo "$A2_LIVE_USER:$A2_LIVE_PASS" | chpasswd
 fi
 touch /var/lib/.live-user-created
 SETUPEOF
-	chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/live-user-setup"
-	sed -i '/^file_permissions=(/a\  ["/usr/local/bin/live-user-setup"]="0:0:0755"' "$PROFILE_DIR/profiledef.sh"
+	chmod +x "$A2_PROFILE_DIR/airootfs/usr/local/bin/live-user-setup"
+	sed -i '/^file_permissions=(/a\  ["/usr/local/bin/live-user-setup"]="0:0:0755"' "$A2_PROFILE_DIR/profiledef.sh"
 
-	mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system"
-	cat >"$PROFILE_DIR/airootfs/etc/systemd/system/live-user-setup.service" <<'UNITEOF'
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/systemd/system"
+	cat >"$A2_PROFILE_DIR/airootfs/etc/systemd/system/live-user-setup.service" <<'UNITEOF'
 [Unit]
 Description=Create live user on first boot
 DefaultDependencies=no
@@ -290,36 +290,36 @@ ExecStart=/usr/local/bin/live-user-setup
 [Install]
 WantedBy=sysinit.target
 UNITEOF
-	mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/sysinit.target.wants"
-	ln -sf /etc/systemd/system/live-user-setup.service "$PROFILE_DIR/airootfs/etc/systemd/system/sysinit.target.wants/live-user-setup.service"
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/systemd/system/sysinit.target.wants"
+	ln -sf /etc/systemd/system/live-user-setup.service "$A2_PROFILE_DIR/airootfs/etc/systemd/system/sysinit.target.wants/live-user-setup.service"
 
 	echo "Enabling services (NetworkManager + SDDM)..."
-	mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
-	mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/graphical.target.wants"
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+	mkdir -p "$A2_PROFILE_DIR/airootfs/etc/systemd/system/graphical.target.wants"
 	# Switch default target to graphical
-	ln -sf /usr/lib/systemd/system/graphical.target "$PROFILE_DIR/airootfs/etc/systemd/system/default.target"
-	ln -sf /usr/lib/systemd/system/NetworkManager.service "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
-	ln -sf /usr/lib/systemd/system/sddm.service "$PROFILE_DIR/airootfs/etc/systemd/system/display-manager.service"
+	ln -sf /usr/lib/systemd/system/graphical.target "$A2_PROFILE_DIR/airootfs/etc/systemd/system/default.target"
+	ln -sf /usr/lib/systemd/system/NetworkManager.service "$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
+	ln -sf /usr/lib/systemd/system/sddm.service "$A2_PROFILE_DIR/airootfs/etc/systemd/system/display-manager.service"
 
-	if [ "$AUTOLOGIN" = "1" ]; then
-		echo "Configuring SDDM autologin for $LIVE_USER..."
-		mkdir -p "$PROFILE_DIR/airootfs/etc/sddm.conf.d"
-		cat >"$PROFILE_DIR/airootfs/etc/sddm.conf.d/autologin.conf" <<EOF
+	if [ "$A2_AUTOLOGIN" = "1" ]; then
+		echo "Configuring SDDM autologin for $A2_LIVE_USER..."
+		mkdir -p "$A2_PROFILE_DIR/airootfs/etc/sddm.conf.d"
+		cat >"$A2_PROFILE_DIR/airootfs/etc/sddm.conf.d/autologin.conf" <<EOF
 [Autologin]
-User=$LIVE_USER
+User=$A2_LIVE_USER
 Session=plasma
 EOF
 	fi
 else
-	if [ "$MINIMAL" = "1" ]; then
+	if [ "$A2_MINIMAL" = "1" ]; then
 		# baseline doesn't enable any network service by default
 		echo "Enabling NetworkManager (MINIMAL mode)..."
-		mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+		mkdir -p "$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
 		ln -sf /usr/lib/systemd/system/NetworkManager.service \
-			"$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
+			"$A2_PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
 	fi
 	# Installer mode: custom MOTD + zsh history hint
-	cat >>"$PROFILE_DIR/airootfs/etc/motd" <<EOF
+	cat >>"$A2_PROFILE_DIR/airootfs/etc/motd" <<EOF
 
         Archinstoo Mods Projects
         Media Gen: ${BUILD_DATE}
@@ -330,28 +330,28 @@ else
 EOF
 
 	# add git clone command to shell history (arrow up faster testing)
-	if [ "$MINIMAL" = "1" ]; then
+	if [ "$A2_MINIMAL" = "1" ]; then
 		# baseline ships bash, not zsh
 		echo "Adding to bash history..."
-		cat >"$PROFILE_DIR/airootfs/root/.bash_history" <<'HISTEOF'
+		cat >"$A2_PROFILE_DIR/airootfs/root/.bash_history" <<'HISTEOF'
 pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/installer && python -m archinstoo --debug --advanced
 HISTEOF
 	else
 		echo "Adding to zsh history..."
-		cat >"$PROFILE_DIR/airootfs/root/.zsh_history" <<'HISTEOF'
+		cat >"$A2_PROFILE_DIR/airootfs/root/.zsh_history" <<'HISTEOF'
 : 1728000000:0;pacman-key --init && git clone --depth 1 https://github.com/h8d13/archinstoo && cd archinstoo/installer && python -m archinstoo --debug --advanced
 HISTEOF
 	fi
 fi
 
 echo "Adding archinstoo to file_permissions..."
-sed -i '/^file_permissions=(/a\  ["/usr/local/bin/archinstoo"]="0:0:755"' "$PROFILE_DIR/profiledef.sh"
+sed -i '/^file_permissions=(/a\  ["/usr/local/bin/archinstoo"]="0:0:755"' "$A2_PROFILE_DIR/profiledef.sh"
 
-# add 'archinstoo' command to PATH (form differs by mode: live runs as $LIVE_USER + sudo)
+# add 'archinstoo' command to PATH (form differs by mode: live runs as $A2_LIVE_USER + sudo)
 echo "Adding archinstoo command..."
-mkdir -p "$PROFILE_DIR/airootfs/usr/local/bin"
-if [ "$LIVE" = "1" ]; then
-	cat >"$PROFILE_DIR/airootfs/usr/local/bin/archinstoo" <<'CMDEOF'
+mkdir -p "$A2_PROFILE_DIR/airootfs/usr/local/bin"
+if [ "$A2_LIVE" = "1" ]; then
+	cat >"$A2_PROFILE_DIR/airootfs/usr/local/bin/archinstoo" <<'CMDEOF'
 #!/bin/bash
 set -e
 sudo pacman-key --init
@@ -364,7 +364,7 @@ cd "$HOME/archinstoo/installer"
 exec sudo python -m archinstoo --debug "$@"
 CMDEOF
 else
-	cat >"$PROFILE_DIR/airootfs/usr/local/bin/archinstoo" <<'CMDEOF'
+	cat >"$A2_PROFILE_DIR/airootfs/usr/local/bin/archinstoo" <<'CMDEOF'
 #!/bin/bash
 set -e
 pacman-key --init
@@ -377,55 +377,55 @@ cd /root/archinstoo/installer
 exec python -m archinstoo --debug "$@"
 CMDEOF
 fi
-chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/archinstoo"
+chmod +x "$A2_PROFILE_DIR/airootfs/usr/local/bin/archinstoo"
 
 echo "Styling pacman.conf (Color + ILoveCandy)..."
 # Ensure pacman.conf exists in airootfs/etc
-mkdir -p "$PROFILE_DIR/airootfs/etc"
-if [ ! -f "$PROFILE_DIR/airootfs/etc/pacman.conf" ]; then
+mkdir -p "$A2_PROFILE_DIR/airootfs/etc"
+if [ ! -f "$A2_PROFILE_DIR/airootfs/etc/pacman.conf" ]; then
 	# Copy from the build profile's pacman.conf
-	cp "$PROFILE_DIR/pacman.conf" "$PROFILE_DIR/airootfs/etc/pacman.conf"
+	cp "$A2_PROFILE_DIR/pacman.conf" "$A2_PROFILE_DIR/airootfs/etc/pacman.conf"
 fi
 # fun stuff
-PACMAN_CONF="$PROFILE_DIR/airootfs/etc/pacman.conf"
+PACMAN_CONF="$A2_PROFILE_DIR/airootfs/etc/pacman.conf"
 sed -i 's/^#Color$/Color/' "$PACMAN_CONF"
 if ! grep -q "ILoveCandy" "$PACMAN_CONF"; then
 	sed -i '/^# Misc options$/a ILoveCandy' "$PACMAN_CONF"
 fi
 
 # Conditionally add packages to cache (with prio)
-if [ "$CACHING" = "1" ]; then
+if [ "$A2_CACHING" = "1" ]; then
 	echo "Running ISOMOD_CACHE..."
 	"$SCRIPT_DIR/ISOMOD_CACHE"
 fi
 
 # show pre info
 echo "Building ISO with mkarchiso..."
-if [ "$LIVE" = "1" ]; then
+if [ "$A2_LIVE" = "1" ]; then
 	echo "Mode: LIVE (Plasma)"
-elif [ "$MINIMAL" = "1" ]; then
+elif [ "$A2_MINIMAL" = "1" ]; then
 	echo "Mode: MINIMAL (baseline + net + archinstoo deps)"
 else
 	echo "Mode: Default"
 fi
-echo "Silent mode: $SILENT_MODE"
-echo "Using $THREADS threads for build"
+echo "Silent mode: $A2_SILENT_MODE"
+echo "Using $A2_THREADS threads for build"
 
 # tmp dir
 mkdir -p "$WORK_DIR"
 
 # Will prompt to build
-if [ "$SILENT_MODE" = "1" ]; then
-	"$ELEV" taskset -c 0-$((THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" >/dev/null 2>&1 || error_exit "mkarchiso failed"
+if [ "$A2_SILENT_MODE" = "1" ]; then
+	"$A2_ELEV" taskset -c 0-$((THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$A2_PROFILE_DIR" >/dev/null 2>&1 || error_exit "mkarchiso failed"
 else
-	"$ELEV" taskset -c 0-$((THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$PROFILE_DIR" || error_exit "mkarchiso failed"
+	"$A2_ELEV" taskset -c 0-$((THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$A2_PROFILE_DIR" || error_exit "mkarchiso failed"
 fi
 
 echo ""
 echo "✓ SUCCESS! ISO created in: $OUTPUT_DIR"
 echo "Restoring permissions..."
 # restores both folder and any file within to correct permissions
-"$ELEV" chown -R "$USER":"$USER" "$OUTPUT_DIR"
+"$A2_ELEV" chown -R "$USER":"$USER" "$OUTPUT_DIR"
 echo ""
 
 cleanup && exit 0
