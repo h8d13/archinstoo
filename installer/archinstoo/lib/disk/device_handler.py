@@ -730,15 +730,9 @@ class DeviceHandler:
 		self.udev_sync()
 
 		# Remove any remaining dm devices on this device
-		try:
-			result = SysCommand('dmsetup ls')
-			for line in result.decode().strip().split('\n'):
-				if line and not line.startswith('No devices'):
-					dm_name = line.split()[0]
-					with contextlib.suppress(SysCallError):
-						SysCommand(f'dmsetup remove --force {dm_name}')
-		except SysCallError:
-			pass
+		for dm_name in self.dm_names_on_device(modification.device.device_info.path):
+			with contextlib.suppress(SysCallError):
+				SysCommand(f'dmsetup remove --force {dm_name}')
 
 		# Sync after dm cleanup
 		self.udev_sync()
@@ -775,6 +769,32 @@ class DeviceHandler:
 			device_mods.append(device_mod)
 
 		return device_mods
+
+	@staticmethod
+	def dm_names_on_device(device_path: Path, sysfs: Path = Path('/sys/block')) -> list[str]:
+		# `dmsetup ls` names every mapper on the host with no hint of what it
+		# sits on; tearing all of them down took the host's own LUKS/LVM with
+		# it. sysfs knows: /sys/block/dm-N/slaves/ lists the backing devices,
+		# a partition of the disk or another dm-M for stacked mappers.
+		disk = sysfs / device_path.name
+
+		def hops_to_disk(block: str, hops: int) -> int | None:
+			if block == disk.name or (disk / block).is_dir():
+				return hops
+			slaves = sysfs / block / 'slaves'
+			if not block.startswith('dm-') or not slaves.is_dir():
+				return None
+			found = [hops_to_disk(s.name, hops + 1) for s in slaves.iterdir()]
+			return max((h for h in found if h is not None), default=None)
+
+		chained: list[tuple[int, str]] = []
+		for dm in sysfs.glob('dm-*'):
+			hops = hops_to_disk(dm.name, 0)
+			if hops is not None:
+				chained.append((hops, (dm / 'dm' / 'name').read_text().strip()))
+
+		# deepest first: a mapper stacked on another must go before its base
+		return [name for _, name in sorted(chained, reverse=True)]
 
 	@staticmethod
 	def wipefs(dev_path: Path) -> bool:

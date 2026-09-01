@@ -243,7 +243,7 @@ class Installer:
 		# https://github.com/archlinux/archinstall/issues/3688
 		# be more descriptive about status in code + what user sees
 		if Os.running_from_foreign():
-			# NTP/reflector/keyring-wkd-sync are live-ISO startup units; a
+			# NTP/keyring-wkd-sync are live-ISO startup units; a
 			# foreign host has none of them, so the waits would block forever
 			# (the wkd-sync timer never appears -> _service_started stays None).
 			debug('Running from foreign host, skipping ISO service-stop checks')
@@ -252,55 +252,51 @@ class Installer:
 		if not self._args.skip_ntp:
 			info('Waiting for NTP time synchronization...')
 
+			# a stalled timesyncd (no route, blocked UDP 123) would otherwise
+			# hold the install forever; keyring and TLS still work with a
+			# roughly right RTC, so give up after a minute and say so
 			started_wait = time.monotonic()
 			notified = False
-			while True:
+			synced = False
+			while time.monotonic() - started_wait < 60:
 				if not notified and time.monotonic() - started_wait > 5:
 					notified = True
 					warn('NTP sync taking longer than expected, still waiting...')
 
 				time_val = SysCommand('timedatectl show --property=NTPSynchronized --value').decode()
 				if time_val and time_val.strip() == 'yes':
-					info('NTP time synchronization completed')
+					synced = True
 					break
 				time.sleep(1)
+
+			if synced:
+				info('NTP time synchronization completed')
+			else:
+				warn('NTP did not sync within 60 seconds, continuing anyway (or use --skip-ntp)')
 		else:
 			info('Skipping NTP time sync (may cause issues if system time is incorrect)')
 
-		if not self._args.offline and SysInfo.arch() == 'x86_64':
-			info('Waiting for reflector mirror selection...')
-			reflector_state = self._service_state('reflector')
-			timed_out = True
-			for _ in range(60):
-				if reflector_state in ('dead', 'failed', 'exited'):
-					timed_out = False
-					break
-				time.sleep(1)
-				reflector_state = self._service_state('reflector')
-
-			if timed_out:
-				warn('Reflector did not complete within 60 seconds, continuing anyway...')
-			elif reflector_state == 'failed':
-				warn('Reflector mirror selection failed')
-			else:
-				info('Reflector mirror selection completed')
-		else:
-			info('Skipping reflector (offline mode or non-x86_64 architecture)')
-
 		if not self._args.skip_wkd and SysInfo.arch() == 'x86_64':
 			info('Waiting for Arch Linux keyring sync...')
+			# same bound as NTP: a timer that never fires or a sync that never
+			# returns (no route to the WKD host) must not hold the install
+			deadline = time.monotonic() + 60
+			timer = 'archlinux-keyring-wkd-sync.timer'
+			service = 'archlinux-keyring-wkd-sync.service'
 			# Wait for the timer to kick in
-			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:
+			while self._service_started(timer) is None and time.monotonic() < deadline:
 				time.sleep(1)
 
 			# Wait for the service to enter a finished state
-			keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
-			while keyring_state not in ('dead', 'failed', 'exited'):
+			keyring_state = self._service_state(service)
+			while keyring_state not in ('dead', 'failed', 'exited') and time.monotonic() < deadline:
 				time.sleep(1)
-				keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
+				keyring_state = self._service_state(service)
 
 			if keyring_state == 'failed':
 				warn('Arch Linux keyring sync failed')
+			elif keyring_state not in ('dead', 'exited'):
+				warn('Keyring sync did not finish within 60 seconds, continuing anyway (or use --skip-wkd)')
 			else:
 				info('Arch Linux keyring sync completed')
 		else:
@@ -2599,9 +2595,13 @@ def run_grimoire_installation(
 			aur_rule = doas_conf
 			if not doas_conf.exists():
 				doas_conf.write_text('')
-			debug(f'Adding temporary doas rule for AUR build: permit nopass {build_user.username} as root')
+			# doas matches cmd against argv[0] as typed: grimoire runs `doas
+			# pacman`, makepkg -i runs `doas /usr/bin/pacman` (PACMAN_PATH),
+			# so both spellings need a rule
+			debug(f'Adding temporary doas rules for AUR build: permit nopass {build_user.username} as root cmd pacman')
 			with doas_conf.open('a') as doas:
-				doas.write(f'permit nopass {build_user.username} as root\n')
+				for cmd in ('pacman', '/usr/bin/pacman'):
+					doas.write(f'permit nopass {build_user.username} as root cmd {cmd}\n')
 			doas_conf.chmod(0o644)
 		else:
 			sudoers_dir = installation.target / 'etc/sudoers.d'
