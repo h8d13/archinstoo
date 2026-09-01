@@ -2589,9 +2589,13 @@ def run_grimoire_installation(
 			aur_rule = doas_conf
 			if not doas_conf.exists():
 				doas_conf.write_text('')
-			debug(f'Adding temporary doas rule for AUR build: permit nopass {build_user.username} as root')
+			# doas matches cmd against argv[0] as typed: grimoire runs `doas
+			# pacman`, makepkg -i runs `doas /usr/bin/pacman` (PACMAN_PATH),
+			# so both spellings need a rule
+			debug(f'Adding temporary doas rules for AUR build: permit nopass {build_user.username} as root cmd pacman')
 			with doas_conf.open('a') as doas:
-				doas.write(f'permit nopass {build_user.username} as root\n')
+				for cmd in ('pacman', '/usr/bin/pacman'):
+					doas.write(f'permit nopass {build_user.username} as root cmd {cmd}\n')
 			doas_conf.chmod(0o644)
 		else:
 			sudoers_dir = installation.target / 'etc/sudoers.d'
