@@ -401,7 +401,7 @@ class Viewport(AbstractViewport):
 		y_start: int,
 		frame: FrameProperties | None = None,
 		alignment: Alignment = Alignment.LEFT,
-	):
+	) -> None:
 		super().__init__()
 
 		self.width = width
@@ -473,7 +473,7 @@ class EditMenu(AbstractCurses[str]):
 		alignment: Alignment = Alignment.CENTER,
 		default_text: str | None = None,
 		hide_input: bool = False,
-	):
+	) -> None:
 		super().__init__()
 
 		self._max_height, self._max_width = Tui.t().max_yx
@@ -725,7 +725,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		preview_size: float | Literal['auto'] = 0.2,
 		preview_frame: FrameProperties | None = None,
 		additional_title: str | None = None,
-	):
+	) -> None:
 		super().__init__()
 
 		self._multi = multi

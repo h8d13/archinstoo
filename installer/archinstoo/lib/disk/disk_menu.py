@@ -43,7 +43,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		allow_auto_unlock: bool = False,
 		bootloader: Bootloader | None = None,
 		advanced: bool = False,
-	):
+	) -> None:
 		self._allow_auto_unlock = allow_auto_unlock
 		self._bootloader = bootloader
 		self._advanced = advanced

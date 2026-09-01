@@ -83,7 +83,7 @@ class Installer:
 		*,
 		handler: ArchConfigHandler | None = None,
 		device_handler: DeviceHandler | None = None,
-	):
+	) -> None:
 		# `Installer()` is the wrapper for most basic installation steps.
 		# It also wraps :py:func:`~archinstoo.Installer.pacstrap` among other things.
 		from .args import Arguments

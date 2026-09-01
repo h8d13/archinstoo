@@ -83,7 +83,7 @@ class SysCommandWorker:
 		working_directory: str = './',
 		remove_vt100_escape_codes_from_lines: bool = True,
 		silent: bool = False,
-	):
+	) -> None:
 		if isinstance(cmd, str):
 			cmd = shlex.split(cmd)
 
@@ -312,7 +312,7 @@ class SysCommand:
 		working_directory: str = './',
 		remove_vt100_escape_codes_from_lines: bool = True,
 		silent: bool = False,
-	):
+	) -> None:
 		self.cmd = cmd
 		self.peek_output = peek_output
 		self.silent = silent

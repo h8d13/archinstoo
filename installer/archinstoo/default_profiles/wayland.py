@@ -16,7 +16,7 @@ class WaylandProfile(Profile):
 		self,
 		name: str = 'wayland',
 		profile_type: ProfileType = ProfileType.Wayland,
-	):
+	) -> None:
 		super().__init__(
 			name,
 			profile_type,

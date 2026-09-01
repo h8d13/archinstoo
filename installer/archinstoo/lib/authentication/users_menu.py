@@ -12,7 +12,7 @@ from .password_prompt import get_password
 
 
 class UserList(ListManager[User]):
-	def __init__(self, prompt: str, lusers: list[User]):
+	def __init__(self, prompt: str, lusers: list[User]) -> None:
 		self._actions = [
 			'Add a user',
 			'Manage stash URLs',

@@ -19,7 +19,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		self,
 		preset: ProfileConfiguration | None = None,
 		kernels: list[str] | None = None,
-	):
+	) -> None:
 		if preset:
 			self._profile_config = preset
 		else:

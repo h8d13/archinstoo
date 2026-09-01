@@ -11,7 +11,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 class ManualNetworkConfig(ListManager[Nic]):
-	def __init__(self, prompt: str, preset: list[Nic]):
+	def __init__(self, prompt: str, preset: list[Nic]) -> None:
 		self._actions = [
 			'Add interface',
 			'Edit interface',

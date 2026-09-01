@@ -42,7 +42,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		self,
 		preset: ApplicationConfiguration | None = None,
 		advanced: bool = False,
-	):
+	) -> None:
 		self._advanced = advanced
 
 		if preset:
@@ -247,7 +247,7 @@ class DevelopmentMenu(AbstractSubMenu[DevelopmentConfiguration]):
 	def __init__(
 		self,
 		preset: DevelopmentConfiguration | None = None,
-	):
+	) -> None:
 		if preset:
 			self._dev_config = preset
 		else:

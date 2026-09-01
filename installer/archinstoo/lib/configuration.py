@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class ConfigStore:
 	_USER_CONFIG_FILENAME = 'user_configuration.json'
 
-	def __init__(self, config: ArchConfig):
+	def __init__(self, config: ArchConfig) -> None:
 		# Consolidated into one file
 		#
 		# :param config: Archinstoo configuration object

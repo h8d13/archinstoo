@@ -16,7 +16,7 @@ class ListManager[ValueT]:
 		sub_menu_actions: list[str],
 		prompt: str | None = None,
 		allow_reset: bool = False,
-	):
+	) -> None:
 		# :param prompt:  Text which will appear at the header
 		# type param: string
 		#

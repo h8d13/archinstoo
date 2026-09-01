@@ -20,7 +20,7 @@ class AbstractMenu[ValueT]:
 		auto_cursor: bool = True,
 		allow_reset: bool = False,
 		reset_warning: str | None = None,
-	):
+	) -> None:
 		bug_report_url = 'https://github.com/h8d13/archinstoo'
 		self._menu_item_group = item_group
 		self._config = config
@@ -135,7 +135,7 @@ class AbstractSubMenu[ValueT](AbstractMenu[ValueT]):
 		config: Any,  # noqa: ANN401 - menu config can be any type
 		auto_cursor: bool = True,
 		allow_reset: bool = False,
-	):
+	) -> None:
 		back_text = f'{Chars.Right_arrow} ' + 'Back'
 		item_group.add_item(MenuItem(text=back_text))
 

@@ -30,6 +30,10 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+	from types import ModuleType
 
 NVDIR = Path(__file__).parent
 ROOT = NVDIR.parent  # nvchecker/ -> repo root
@@ -61,7 +65,7 @@ PKG_ENUMS = (
 )
 
 
-def _load_module(path: Path, name: str):
+def _load_module(path: Path, name: str) -> ModuleType:
 	# the schema and pacman group expansion live in the installer package so the
 	# count/size scripts and this tool cannot drift apart. loaded by path, not
 	# `import archinstoo...`: that would run the package __init__ chain and drag
@@ -131,7 +135,7 @@ def extract_schema_packages(schema: dict, groups: dict[str, set[str]]) -> set[st
 	# to their members so each member gets version-tracked individually.
 	pkgs: set[str] = set()
 
-	def walk(obj):
+	def walk(obj: object) -> None:
 		if isinstance(obj, list):
 			for item in obj:
 				if isinstance(item, str):

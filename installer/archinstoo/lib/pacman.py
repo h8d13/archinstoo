@@ -73,7 +73,7 @@ def reset_conf() -> bool:
 
 
 class Pacman:
-	def __init__(self, target: Path):
+	def __init__(self, target: Path) -> None:
 		self.synced = False
 		self.target = target
 

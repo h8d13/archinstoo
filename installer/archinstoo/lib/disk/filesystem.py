@@ -36,7 +36,7 @@ class FilesystemHandler:
 		self,
 		disk_config: DiskLayoutConfiguration,
 		device_handler: DeviceHandler | None = None,
-	):
+	) -> None:
 		self._disk_config = disk_config
 		self._enc_config = disk_config.disk_encryption
 		self._device_handler = device_handler or DeviceHandler()

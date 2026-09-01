@@ -102,7 +102,7 @@ if TYPE_CHECKING:
 
 
 class PacmanConfig:
-	def __init__(self, target: Path | None):
+	def __init__(self, target: Path | None) -> None:
 		self._config_remote_path: Path | None = None
 
 		if target:

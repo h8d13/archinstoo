@@ -169,7 +169,7 @@ explicit-preview-rules = true
 
 select = [
     "A",      # flake8-builtins
-    "ANN401", # any-type in signatures
+    "ANN",    # flake8-annotations
     "ASYNC",  # flake8-async
     "B",      # flake8-bugbear
     "B909",   # loop-iterator-mutation (preview)

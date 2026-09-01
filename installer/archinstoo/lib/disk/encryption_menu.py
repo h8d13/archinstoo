@@ -35,7 +35,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		lvm_config: LvmConfiguration | None = None,
 		preset: DiskEncryption | None = None,
 		allow_auto_unlock: bool = False,
-	):
+	) -> None:
 		if preset:
 			self._enc_config = preset
 		else:

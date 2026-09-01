@@ -12,7 +12,7 @@ class ContentEditor:
 		title: str = 'Editor',
 		preset: str = '',
 		mode: str = 'free',  # vs kvp
-	):
+	) -> None:
 		self._title = title
 		self._lines: list[str] = preset.split('\n') if preset else ['']
 		self._cursor_y = 0

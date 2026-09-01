@@ -8,7 +8,7 @@ class XorgProfile(Profile):
 		self,
 		name: str = 'xorg',
 		profile_type: ProfileType = ProfileType.Xorg,
-	):
+	) -> None:
 		super().__init__(
 			name,
 			profile_type,

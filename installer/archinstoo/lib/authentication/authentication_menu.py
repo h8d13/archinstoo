@@ -14,7 +14,7 @@ from .users_menu import select_users
 
 
 class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
-	def __init__(self, preset: AuthenticationConfiguration | None = None):
+	def __init__(self, preset: AuthenticationConfiguration | None = None) -> None:
 		if preset:
 			self._auth_config = preset
 		else:

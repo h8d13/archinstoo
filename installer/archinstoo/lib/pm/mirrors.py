@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
-	def __init__(self, custom_repositories: list[CustomRepository]):
+	def __init__(self, custom_repositories: list[CustomRepository]) -> None:
 		self._actions = [
 			'Add a custom repository',
 			'Change custom repository',
@@ -152,7 +152,7 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 
 
 class CustomMirrorServersList(ListManager[CustomServer]):
-	def __init__(self, custom_servers: list[CustomServer]):
+	def __init__(self, custom_servers: list[CustomServer]) -> None:
 		self._actions = [
 			'Add a custom server',
 			'Change custom server',
@@ -214,7 +214,7 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 	def __init__(
 		self,
 		preset: PacmanConfiguration | None = None,
-	):
+	) -> None:
 		if preset:
 			self._mirror_config = preset
 		else:
