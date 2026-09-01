@@ -57,9 +57,10 @@ git checkout <existing>
 git checkout -b <new>
 git add <file(s)>
 git commit
-# describe what this commit fixes, ideally one fix/feat per commit
+# describe what this commit fixes, ideally one fix/feat/chore per commit
 git push
 ```
+
 Then open the PR with explanations too, link to resources/issues.
 If your commits are well scoped/documented you can skip most theatrics.
 
@@ -88,7 +89,7 @@ There might therefore be older code which does not follow the coding convention 
 
 A lot of these are also checked in CI.
 
-Some style in the codebase includes: 80 chars limit in code, 8 spaces for a tab, no docstrings (inline comments).
+Some style in the codebase includes: 80 chars soft limit in code (160 hard enforced), 8 spaces for a tab, no docstrings (inline comments).
 Reduce duplicates and function grouping into clear models/utils/dispatchers.
 
 ## Submitting Changes
