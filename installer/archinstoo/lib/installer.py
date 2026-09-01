@@ -278,18 +278,25 @@ class Installer:
 
 		if not self._args.skip_wkd and SysInfo.arch() == 'x86_64':
 			info('Waiting for Arch Linux keyring sync...')
+			# same bound as NTP: a timer that never fires or a sync that never
+			# returns (no route to the WKD host) must not hold the install
+			deadline = time.monotonic() + 60
+			timer = 'archlinux-keyring-wkd-sync.timer'
+			service = 'archlinux-keyring-wkd-sync.service'
 			# Wait for the timer to kick in
-			while self._service_started('archlinux-keyring-wkd-sync.timer') is None:
+			while self._service_started(timer) is None and time.monotonic() < deadline:
 				time.sleep(1)
 
 			# Wait for the service to enter a finished state
-			keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
-			while keyring_state not in ('dead', 'failed', 'exited'):
+			keyring_state = self._service_state(service)
+			while keyring_state not in ('dead', 'failed', 'exited') and time.monotonic() < deadline:
 				time.sleep(1)
-				keyring_state = self._service_state('archlinux-keyring-wkd-sync.service')
+				keyring_state = self._service_state(service)
 
 			if keyring_state == 'failed':
 				warn('Arch Linux keyring sync failed')
+			elif keyring_state not in ('dead', 'exited'):
+				warn('Keyring sync did not finish within 60 seconds, continuing anyway (or use --skip-wkd)')
 			else:
 				info('Arch Linux keyring sync completed')
 		else:
