@@ -252,18 +252,27 @@ class Installer:
 		if not self._args.skip_ntp:
 			info('Waiting for NTP time synchronization...')
 
+			# a stalled timesyncd (no route, blocked UDP 123) would otherwise
+			# hold the install forever; keyring and TLS still work with a
+			# roughly right RTC, so give up after a minute and say so
 			started_wait = time.monotonic()
 			notified = False
-			while True:
+			synced = False
+			while time.monotonic() - started_wait < 60:
 				if not notified and time.monotonic() - started_wait > 5:
 					notified = True
 					warn('NTP sync taking longer than expected, still waiting...')
 
 				time_val = SysCommand('timedatectl show --property=NTPSynchronized --value').decode()
 				if time_val and time_val.strip() == 'yes':
-					info('NTP time synchronization completed')
+					synced = True
 					break
 				time.sleep(1)
+
+			if synced:
+				info('NTP time synchronization completed')
+			else:
+				warn('NTP did not sync within 60 seconds, continuing anyway (or use --skip-ntp)')
 		else:
 			info('Skipping NTP time sync (may cause issues if system time is incorrect)')
 
