@@ -24,6 +24,11 @@ class HyprlandProfile(WaylandProfile):
 	@property
 	@override
 	def packages(self) -> list[str]:
+		additional: list[str] = []
+		seat = self.custom_settings.get('seat_access')
+		if isinstance(seat, str):
+			additional = [seat]
+
 		return [
 			'hyprland',
 			'dunst',
@@ -37,6 +42,7 @@ class HyprlandProfile(WaylandProfile):
 			'grim',
 			'slurp',
 			'wl-clipboard',
+			*additional,
 		]
 
 	@property

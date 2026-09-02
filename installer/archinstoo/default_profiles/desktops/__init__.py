@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.output import warn
@@ -12,11 +12,16 @@ if TYPE_CHECKING:
 DEFAULT_TERMINAL = 'alacritty'
 
 
-class SeatAccess(Enum):
+class SeatAccess(StrEnum):
 	# value is the package to install, label is the mechanism it provides.
 	# polkit grants no seat access on its own: the real choice is
-	# systemd-logind (which hard-depends on polkit on Arch) or seatd.
+	# systemd-logind or seatd. Arch builds logind with polkit support, so
+	# logind needs polkit at runtime for its permission checks (pacman only
+	# lists it as an optdep of systemd, the requirement is functional).
 	# https://github.com/archlinux/archinstall/issues/3467
+	#
+	# StrEnum so the saved string compares equal to the member: the menus
+	# hand custom_settings['seat_access'] straight to set_default_by_value.
 	seatd = 'seatd'
 	logind = 'polkit'
 
