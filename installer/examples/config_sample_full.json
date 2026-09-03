@@ -240,6 +240,12 @@
         "audio_config": {
             "audio": "pipewire"
         },
+        "power_management_config": {
+            "power_management": "power-profiles-daemon"
+        },
+        "cpu_scheduler_config": {
+            "scheduler": "scx_lavd"
+        },
         "print_service_config": {
             "enabled": true
         },
@@ -259,6 +265,22 @@
         "editor_config": {
             "editor": "micro"
         },
+        "terminal_config": {
+            "terminal": "alacritty"
+        },
+        "development_config": {
+            "language_config": {
+                "tools": [
+                    "rustup"
+                ]
+            },
+            "devtool_config": {
+                "tools": [
+                    "make",
+                    "gdb"
+                ]
+            }
+        },
         "security_config": {
             "tools": [
                 "fail2ban"
@@ -277,6 +299,7 @@
     "aur_packages": [
         "nvidia-580xx-utils"
     ],
+    "sysctl": [],
     "services": [
         "sshd",
         {"unit": "syncthing.service", "user": "myuser", "linger": true}

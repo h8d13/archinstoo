@@ -63,6 +63,9 @@
         },
         "print_service_config": {
             "enabled": true
+        },
+        "terminal_config": {
+            "terminal": "alacritty"
         }
     },
     "network_config": {
