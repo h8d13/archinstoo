@@ -14,8 +14,8 @@ from archinstoo.lib.models.firmware import (
 if TYPE_CHECKING:
 	from pathlib import Path
 
-# Hard deps of linux-firmware that no bus ID reaches, taken unconditionally
-BASELINE = {FirmwareVendor.CIRRUS, FirmwareVendor.OTHER}
+# The catch-all split no owner lookup can name, taken unconditionally
+BASELINE = {FirmwareVendor.OTHER}
 
 
 def _fake_bus(root: Path, attr: str, ids: list[str]) -> Path:
@@ -114,12 +114,21 @@ def _fake_driver_bus(root: Path, devices: dict[str, str | None]) -> Path:
 	return root
 
 
-def _stub_run(monkeypatch: pytest.MonkeyPatch, firmware: dict[str, list[str]], owners: dict[str, str]) -> list[list[str]]:
+def _stub_run(
+	monkeypatch: pytest.MonkeyPatch,
+	firmware: dict[str, list[str]],
+	owners: dict[str, str],
+	depends: dict[str, str] | None = None,
+) -> list[list[str]]:
 	calls: list[list[str]] = []
+	depends = depends or {}
 
 	def fake_run(cmd: list[str]) -> list[str]:
 		calls.append(cmd)
 		match cmd[0]:
+			case 'modinfo' if cmd[-2] == 'depends':
+				# modinfo prints one comma-joined line, dashes not underscores
+				return [depends[cmd[-1]]] if cmd[-1] in depends else []
 			case 'modinfo':
 				return firmware.get(cmd[-1], [])
 			case 'modprobe':
@@ -143,6 +152,7 @@ def test_splits_resolve_through_module_and_owner(monkeypatch: pytest.MonkeyPatch
 
 	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:01.0': 'ath11k_pci'}))
 	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(
 		monkeypatch,
@@ -163,6 +173,7 @@ def test_splits_match_zst_and_collapse_flat_entries(monkeypatch: pytest.MonkeyPa
 
 	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:14.3': 'iwlwifi'}))
 	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	calls = _stub_run(
 		monkeypatch,
@@ -185,6 +196,7 @@ def test_splits_drop_non_split_owners(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
 	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:1f.3': 'snd_sof_pci'}))
 	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(
 		monkeypatch,
@@ -207,6 +219,7 @@ def test_splits_survive_modules_declaring_no_firmware(monkeypatch: pytest.Monkey
 		_fake_driver_bus(tmp_path / 'pci', {'0000:00:02.0': 'rtw88_8822be', '0000:00:03.0': None}),
 	)
 	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(monkeypatch, firmware={}, owners={})
 	_reset(monkeypatch)
@@ -229,12 +242,54 @@ def test_splits_use_module_name_not_driver_name(monkeypatch: pytest.MonkeyPatch,
 
 	monkeypatch.setattr(hardware, '_PCI_BUS', bus)
 	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	calls = _stub_run(monkeypatch, firmware={}, owners={})
 	_reset(monkeypatch)
 
 	assert set(detect_splits()) == BASELINE
-	assert [c[-1] for c in calls if c[0] == 'modinfo'] == ['i2c_i801']
+	assert {c[-1] for c in calls if c[0] == 'modinfo'} == {'i2c_i801'}
+
+
+def test_splits_reach_acpi_amps_through_wrapper_depends(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# CS35L41 sits on the ACPI bus, binds through the _i2c wrapper, and the
+	# wrapper declares no firmware: the blobs are on the parent it depends on
+	root = tmp_path / 'fw'
+	(root / 'cirrus').mkdir(parents=True)
+	(root / 'cirrus/cs35l41-dsp1-spk-prot-10280c05.wmfw.zst').write_text('')
+
+	monkeypatch.setattr(hardware, '_PCI_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(
+		hardware,
+		'_ACPI_BUS',
+		_fake_driver_bus(tmp_path / 'acpi', {'CSC3551:00': 'snd_hda_scodec_cs35l41_i2c'}),
+	)
+	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
+	_stub_run(
+		monkeypatch,
+		firmware={'snd_hda_scodec_cs35l41': ['cirrus/cs35l41-*.bin', 'cirrus/cs35l41-*.wmfw']},
+		owners={str(root / 'cirrus/cs35l41-dsp1-spk-prot-10280c05.wmfw.zst'): 'linux-firmware-cirrus'},
+		depends={'snd_hda_scodec_cs35l41_i2c': 'snd-hda-scodec-cs35l41,snd-soc-cs35l41-lib'},
+	)
+	_reset(monkeypatch)
+
+	assert set(detect_splits()) == BASELINE | {FirmwareVendor.CIRRUS}
+
+
+def test_splits_skip_cirrus_without_amp(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# Realtek-only codec (Latitude 5540): no ACPI amp node, no cirrus split
+	root = tmp_path / 'fw'
+	root.mkdir()
+
+	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:1f.3': 'snd_hda_intel'}))
+	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
+	monkeypatch.setattr(hardware, '_ACPI_BUS', _fake_driver_bus(tmp_path / 'acpi', {'PNP0C09:00': 'ec'}))
+	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
+	_stub_run(monkeypatch, firmware={}, owners={})
+	_reset(monkeypatch)
+
+	assert set(detect_splits()) == BASELINE
 
 
 def test_split_scan_skipped_on_vm(monkeypatch: pytest.MonkeyPatch) -> None:

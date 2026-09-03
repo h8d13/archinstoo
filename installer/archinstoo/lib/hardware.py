@@ -42,7 +42,8 @@ class GfxPackage(Enum):
 	Mesa = 'mesa'  # provides libva-mesa-driver since 24.2.7
 	NvidiaOpen = 'nvidia-open'
 	NvidiaOpenDkms = 'nvidia-open-dkms'
-	VplGpuRt = 'vpl-gpu-rt'  # QSV runtime for Gen12+/Arc; inert on older gens
+	VplGpuRt = 'vpl-gpu-rt'
+	LibVpl = 'libvpl'
 	VulkanIntel = 'vulkan-intel'
 	VulkanRadeon = 'vulkan-radeon'
 	VulkanNouveau = 'vulkan-nouveau'
@@ -120,6 +121,7 @@ class GfxDriver(Enum):
 					GfxPackage.LibvaIntelDriver,
 					GfxPackage.IntelMediaDriver,
 					GfxPackage.VplGpuRt,
+					GfxPackage.LibVpl,
 					GfxPackage.VulkanRadeon,
 					GfxPackage.VulkanIntel,
 					GfxPackage.VulkanNouveau,
@@ -137,6 +139,7 @@ class GfxDriver(Enum):
 					GfxPackage.LibvaIntelDriver,
 					GfxPackage.IntelMediaDriver,
 					GfxPackage.VplGpuRt,
+					GfxPackage.LibVpl,
 					GfxPackage.VulkanIntel,
 				]
 			case GfxDriver.NvidiaOpenKernel:
@@ -179,6 +182,8 @@ class GfxDriver(Enum):
 # Module-level so tests can point the sweeps at a synthetic tree
 _PCI_BUS = Path('/sys/bus/pci/devices')
 _USB_BUS = Path('/sys/bus/usb/devices')
+# CS35L41-class amps enumerate here (acpi:CSC3551:) and bind on i2c/spi
+_ACPI_BUS = Path('/sys/bus/acpi/devices')
 _FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
 
@@ -259,6 +264,18 @@ def _bus_modules(bus: Path) -> set[str]:
 	return modules
 
 
+def _module_depends(release: str, module: str) -> set[str]:
+	# Bus wrappers declare no firmware: snd_hda_scodec_cs35l41_i2c binds the
+	# device while the blobs sit on snd_hda_scodec_cs35l41 it depends on. One
+	# level is enough; deeper deps are shared libs (snd, cs_dsp) with none.
+	# modinfo prints dashes here where it answers to underscores.
+	deps: set[str] = set()
+	for line in _run(['modinfo', '-k', release, '-F', 'depends', module]):
+		deps.update(d.replace('-', '_') for d in line.split(',') if d)
+
+	return deps
+
+
 def _firmware_files(declared: list[str], root: Path) -> list[Path]:
 	# modinfo reports uncompressed names and shell globs; on disk they are zstd
 	# compressed. One file per top-level dir names the package as well as all of
@@ -270,7 +287,9 @@ def _firmware_files(declared: list[str], root: Path) -> list[Path]:
 			continue
 
 		if '*' in entry or '?' in entry:
-			match = next(iter(sorted(root.glob(entry))), None)
+			# a suffixed glob (cirrus/cs35l41-*.wmfw) misses the .zst on disk,
+			# only a bare trailing * happened to cover it
+			match = next(iter(sorted([*root.glob(entry), *root.glob(f'{entry}.zst')])), None)
 		else:
 			match = next((p for p in (root / entry, root / f'{entry}.zst') if p.is_file()), None)
 
@@ -412,7 +431,10 @@ class _SysInfo:
 		# proprietary driver's blobs are unowned. Callers use this to narrow an
 		# install, never to decide a blob is unneeded.
 		release = _module_release()
-		modules = _bus_modules(_PCI_BUS) | _bus_modules(_USB_BUS)
+		bound = _bus_modules(_PCI_BUS) | _bus_modules(_USB_BUS) | _bus_modules(_ACPI_BUS)
+		modules = set(bound)
+		for module in sorted(bound):
+			modules |= _module_depends(release, module)
 
 		files: list[Path] = []
 		for module in sorted(modules):

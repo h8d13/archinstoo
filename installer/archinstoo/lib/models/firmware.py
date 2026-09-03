@@ -47,9 +47,8 @@ _OPTDEP_USB: dict[str, FirmwareVendor] = {
 	'1286': FirmwareVendor.MARVELL,
 }
 
-# No bus ID reaches either: CS35L41-class amps enumerate over ACPI/I2C/SPI and
-# the catch-all names no vendor
-_SPLIT_BASELINE = (FirmwareVendor.CIRRUS, FirmwareVendor.OTHER)
+# The catch-all names no vendor, so no owner lookup can ever land on it
+_SPLIT_BASELINE = (FirmwareVendor.OTHER,)
 
 
 def detect_optdeps() -> list[FirmwareVendor]:
