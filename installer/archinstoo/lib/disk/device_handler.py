@@ -70,7 +70,10 @@ if TYPE_CHECKING:
 
 def _normalize_lsblk_fstype(lsblk_info: LsblkInfo) -> str:
 	# lsblk names two filesystems differently from parted and the enum.
-	fs_type = (lsblk_info.fstype or '').lower()
+	# Compare lowercased, return the original: the enum spells crypto_LUKS
+	# in lsblk's own casing, and lsblk is the only source that reports it
+	raw = lsblk_info.fstype or ''
+	fs_type = raw.lower()
 
 	# Every FAT width reports as vfat, with the width in fsver (FAT12/16/32).
 	# Missing fsver falls back to FAT32: what an ESP nearly always is, and all
@@ -82,7 +85,7 @@ def _normalize_lsblk_fstype(lsblk_info: LsblkInfo) -> str:
 	if fs_type == 'swap':
 		return FilesystemType.LINUX_SWAP.value
 
-	return fs_type
+	return raw
 
 
 class DeviceHandler:
