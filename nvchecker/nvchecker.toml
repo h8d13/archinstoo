@@ -108,6 +108,9 @@ source = "pacman"
 [libva-nvidia-driver]
 source = "pacman"
 
+[libvpl]
+source = "pacman"
+
 [linux]
 source = "pacman"
 
@@ -699,6 +702,9 @@ source = "pacman"
 [ghostscript]
 source = "pacman"
 
+[ghostty]
+source = "pacman"
+
 [gnome-control-center]
 source = "pacman"
 
@@ -1261,6 +1267,9 @@ source = "pacman"
 source = "pacman"
 
 [waybar]
+source = "pacman"
+
+[wezterm]
 source = "pacman"
 
 [wget]
