@@ -139,7 +139,7 @@ def _stub_run(
 			case _:
 				return []
 
-	monkeypatch.setattr(hardware, '_run', fake_run)
+	monkeypatch.setattr(hardware, '_run_splitlines', fake_run)
 	monkeypatch.setattr(hardware, '_module_release', lambda: '0-test')
 	return calls
 
