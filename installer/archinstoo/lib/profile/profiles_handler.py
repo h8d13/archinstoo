@@ -269,11 +269,8 @@ class ProfileHandler:
 		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
 			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers)
 
-		# One terminal for every profile that ships a keybind rather than its own
-		# (see default_profiles/desktops/__init__.py). TerminalApp has already
-		# installed the pick when the menu entry was used; this covers a skipped
-		# entry, where the profiles fall back to the default. A top-level profile
-		# carries the real picks in current_selection, so check both levels.
+		# one terminal for every profile that ships a keybind rather than its own;
+		# terminal_command() is the menu pick, or the default when it was skipped
 		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
 		if any(p.needs_terminal for p in selected):
 			from archinstoo.default_profiles.desktops import terminal_command
@@ -368,7 +365,9 @@ class ProfileHandler:
 		# Search the profile path for profile definitions
 		profiles_path = Path(__file__).parents[2] / 'default_profiles'
 		profiles = []
-		for file in profiles_path.glob('**/*.py'):
+		# sorted: the discovery order is the menu order, and schema.toml is
+		# generated from it, so it cannot ride on the filesystem's dirent order
+		for file in sorted(profiles_path.glob('**/*.py')):
 			# ignore the abstract default_profiles classes
 			# and wayland standalone
 			if file.name in ('profile.py', 'wayland.py'):

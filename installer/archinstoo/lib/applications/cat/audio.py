@@ -10,15 +10,6 @@ if TYPE_CHECKING:
 
 
 class AudioApp:
-	# added with either audio server when the matching driver is loaded
-	@property
-	def sof_packages(self) -> list[str]:
-		return ['sof-firmware']
-
-	@property
-	def alsa_packages(self) -> list[str]:
-		return ['alsa-firmware']
-
 	@property
 	def pulseaudio_packages(self) -> list[str]:
 		return [
@@ -38,6 +29,15 @@ class AudioApp:
 			# realtime scheduling; only ever as optional (and in pulse-audio) but we pin it here.
 			'rtkit',
 		]
+
+	# both go in with either audio server, when the driver is loaded
+	@property
+	def sof_packages(self) -> list[str]:
+		return ['sof-firmware']
+
+	@property
+	def alsa_packages(self) -> list[str]:
+		return ['alsa-firmware']
 
 	def _enable_pipewire(
 		self,

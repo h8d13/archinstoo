@@ -332,7 +332,8 @@ def collect(config: dict[str, Any]) -> set[str]:
 	pkgs.update(_application_packages(config.get('app_config') or {}, details))
 
 	# shells (per-user in auth_config)
-	for user in auth.get('users', []) or []:
+	users = auth.get('users', []) or []
+	for user in users:
 		shell = user.get('shell', '')
 		if shell in SCHEMA['shells']:
 			pkgs.update(SCHEMA['shells'][shell])
@@ -361,11 +362,12 @@ def collect(config: dict[str, Any]) -> set[str]:
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
 	# grimoire builds AUR packages on the target, so its toolchain lands there.
-	# the AUR packages themselves are in no repo and cannot be resolved here
-	if config.get('aur_packages') and auth.get('users'):
+	# it needs an elevated user to build as, and the AUR packages themselves are
+	# in no repo, so nothing here can size them
+	if config.get('aur_packages') and any(user.get('elev') for user in users):
 		pkgs.update(_flat('aur_bootstrap'))
 
-	if any(user.get('stash_urls') for user in auth.get('users', []) or []):
+	if any(user.get('stash_urls') for user in users):
 		pkgs.update(_flat('stash'))
 
 	return pkgs

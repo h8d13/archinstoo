@@ -28,13 +28,13 @@ class Bootloader(Enum):
 			case Bootloader.Refind:
 				return 'Refind'
 
-	@property
-	def packages(self) -> list[str]:
-		# what add_bootloader() straps on UEFI; a BIOS install skips efibootmgr,
-		# so this is the upper bound, which is what an estimate wants
+	def packages(self, uefi: bool = True) -> list[str]:
+		# what _add_<name>_bootloader() straps. the default is the UEFI set,
+		# the upper bound an estimate wants: a BIOS install has no EFI entry to
+		# write, and refind-install writes its own
 		match self:
 			case Bootloader.Grub | Bootloader.Limine:
-				return [self.value, EFIBOOTMGR]
+				return [self.value, *([EFIBOOTMGR] if uefi else [])]
 			case Bootloader.Refind:
 				return [self.value]
 			case _:

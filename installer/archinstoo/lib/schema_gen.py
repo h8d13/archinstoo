@@ -182,7 +182,7 @@ SECTIONS: tuple[Section, ...] = (
 	Section('languages', '', lambda: _one_to_one(Language)),
 	Section('devtools', '', lambda: _one_to_one(DevTool)),
 	# -- bootloader and snapshots --
-	Section('bootloaders', 'the UEFI set; a BIOS install skips efibootmgr, and refind never needs it', lambda: {b.value: b.packages for b in Bootloader}),
+	Section('bootloaders', 'the UEFI set; a BIOS install skips efibootmgr, and refind never needs it', lambda: {b.value: b.packages() for b in Bootloader}),
 	Section('snapshots', '', lambda: {s.value: s.packages for s in SnapshotType}),
 	Section('grub_extra', 'grub plus either snapshot tool adds these', lambda: installer.__grub_snapshot_packages__),
 	# -- network --

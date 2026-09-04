@@ -33,7 +33,9 @@ def sync() -> dict[str, set[str]]:
 def expand(pkgs: set[str]) -> set[str]:
 	# Several schema entries (mate, xfce4, xfce4-goodies, lxqt, deepin, cosmic,
 	# budgie) are pacman GROUPS, which pacstrap installs as their members but
-	# pactree and expac both report as unknown.
+	# pactree and expac both report as unknown: left unexpanded a group resolves
+	# to nothing, silently dropping its members and their whole closure from the
+	# estimates. Names that aren't groups pass through untouched.
 	groups = sync()
 	expanded: set[str] = set()
 	for pkg in pkgs:

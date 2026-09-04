@@ -41,7 +41,7 @@ from .general import SysCommand, run
 from .hardware import SysInfo
 from .localization.utils import locale_encoding, locale_entry_re, split_locale_name
 from .models.authentication import AuthenticationConfiguration, PrivilegeEscalation
-from .models.bootloader import EFIBOOTMGR, Bootloader
+from .models.bootloader import Bootloader
 from .models.kernel import DEFAULT_KERNEL
 from .models.network import ISO_PSK_EXTRA
 from .models.users import User
@@ -1591,7 +1591,7 @@ class Installer:
 	) -> None:
 		debug('Installing systemd bootloader')
 
-		self.pacman.strap(EFIBOOTMGR)
+		self.pacman.strap(Bootloader.Systemd.packages())
 
 		if not SysInfo.has_uefi():
 			raise HardwareIncompatibilityError
@@ -1671,7 +1671,7 @@ class Installer:
 	) -> None:
 		debug('Installing grub bootloader')
 
-		self.pacman.strap(Bootloader.Grub.value)
+		self.pacman.strap(Bootloader.Grub.packages(SysInfo.has_uefi()))
 
 		# enable GRUB cryptodisk before grub-install so crypto modules
 		# are embedded in the core image (required for encrypted /boot)
@@ -1694,8 +1694,6 @@ class Installer:
 				raise ValueError('Could not detect efi partition')
 
 			info(f'GRUB EFI partition: {efi_partition.dev_path}')
-
-			self.pacman.strap(EFIBOOTMGR)  # TODO: Do we need? Yes, but remove from minimal_installation() instead?
 
 			if platform.machine() == 'aarch64':
 				# grub names its EFI target arm64, not aarch64
@@ -1797,7 +1795,7 @@ class Installer:
 	) -> None:
 		debug('Installing Limine bootloader')
 
-		self.pacman.strap(Bootloader.Limine.value)
+		self.pacman.strap(Bootloader.Limine.packages(SysInfo.has_uefi()))
 
 		info(f'Limine boot partition: {boot_partition.dev_path}')
 
@@ -1806,8 +1804,6 @@ class Installer:
 		hook_command = None
 
 		if SysInfo.has_uefi():
-			self.pacman.strap(EFIBOOTMGR)
-
 			if not efi_partition:
 				raise ValueError('Could not detect efi partition')
 			if not efi_partition.mountpoint:
@@ -1954,7 +1950,7 @@ class Installer:
 	) -> None:
 		debug('Installing efistub bootloader')
 
-		self.pacman.strap(EFIBOOTMGR)
+		self.pacman.strap(Bootloader.Efistub.packages())
 
 		if not SysInfo.has_uefi():
 			raise HardwareIncompatibilityError
@@ -2025,7 +2021,7 @@ class Installer:
 	) -> None:
 		debug('Installing rEFInd bootloader')
 
-		self.pacman.strap(Bootloader.Refind.value)
+		self.pacman.strap(Bootloader.Refind.packages())
 
 		if not SysInfo.has_uefi():
 			raise HardwareIncompatibilityError

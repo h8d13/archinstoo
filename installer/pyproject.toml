@@ -45,6 +45,7 @@ include-package-data = true
 "archinstoo" = [
     "**/*.py",
     "**/*.json",
+    "**/*.toml",
     "**/*.kdl",
     "**/*.lua",
     "**/*.xml",

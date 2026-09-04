@@ -267,8 +267,8 @@ def _log_sys_info(args: Arguments) -> None:
 
 
 def main(script: str, handler: ArchConfigHandler) -> int:
-	#Usually ran straight as a module: python -m archinstoo or compiled as a package.
-	#In any case we will be attempting to load the provided script to be run from the scripts/ folder
+	# Usually ran straight as a module: python -m archinstoo or compiled as a package.
+	# In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	args = handler.args
 
 	if not is_root():

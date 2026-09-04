@@ -1,12 +1,4 @@
-# Drift guard for schema.toml.
-#
-# schema.toml is generated from the installer's own package definitions by
-# lib/schema_gen.py, so the mappings cannot disagree with the install: they are
-# the same objects. What can still go wrong is the file going stale, a package
-# growing in a codepath no section reaches, or the tools that read the file
-# (scripts/_resolve.py, nvchecker/NVGEN) losing track of a section.
-#
-# So the checks here are:
+# Drift guard for schema.toml (generated, see lib/schema_gen.py):
 #   - the committed file is what the generator produces right now
 #   - every package literal anywhere in the package is claimed by some section
 #   - every option set the installer offers has a section covering it
