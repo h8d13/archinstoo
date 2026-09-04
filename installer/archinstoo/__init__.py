@@ -86,15 +86,15 @@ if TYPE_CHECKING:
 # comment columns are read as a table, ruff would collapse them
 # fmt: off
 base_depends = (
-	'systemd',  	# For systemd-based operations
-	'coreutils',  	# Basic utilities
-	'util-linux',  	# For partition utilities
-	'pciutils',  	# For PCI device detection
-	'kbd',  	# For keyboard layout configuration
+	'systemd',  	        # For systemd-based operations
+	'coreutils',  	        # Basic utilities
+	'util-linux',  	        # For partition utilities
+	'pciutils',  	        # For PCI device detection
+	'kbd',  	            # For keyboard layout configuration
 	'libxcrypt',
 	'pacman',
-	'git',  	# Cloning stashes
-        'arch-install-scripts', # For pacstrap, genfstab, chroot
+	'git',  	            # Cloning stashes
+    'arch-install-scripts', # For pacstrap, genfstab, chroot
 )
 disk_depends = (
 	'python-pyparted',
@@ -105,12 +105,10 @@ disk_depends = (
 	'ntfsprogs',  		# NTFS filesystem support
 	'xfsprogs',  		# XFS filesystem support
 	'cryptsetup',  		# LUKS encryption support
-	'lvm2',  		# LVM layout support
+	'lvm2',  		    # LVM layout support
 )  # together they mirror the inner PKGBUILD -python is reloaded last
 # fmt: on
-# deps are only checked on arch hosts/arch-ISOs
-# live/packages configure the running system: no disk, no chroot (target '/'
-# means plain `pacman -S`, never pacstrap), so they take base only
+
 
 # main init file of archinstoo
 # we will log some useful info
@@ -128,7 +126,7 @@ disk_depends = (
 # short-circuit all of the ini
 
 
-ROOTLESS_SCRIPTS = {'list', 'size', 'mirror', 'count', 'passwd'}
+ROOTLESS_SCRIPTS = {'list', 'size', 'mirror', 'count', 'passwd', 'schema'}
 # scripts that only touch the running system, so they skip disk_depends
 NO_DISK_SCRIPTS = {'live', 'packages'}
 
@@ -203,7 +201,6 @@ def _arch_bootstrap(no_disk: bool) -> int:
 def _check_online() -> int:
 	try:
 		ping('1.1.1.1')
-		# ideally we'd check ntp here and remove it from installer methods
 		return 0
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
@@ -270,10 +267,8 @@ def _log_sys_info(args: Arguments) -> None:
 
 
 def main(script: str, handler: ArchConfigHandler) -> int:
-	"""
-	Usually ran straight as a module: python -m archinstoo or compiled as a package.
-	In any case we will be attempting to load the provided script to be run from the scripts/ folder
-	"""
+	#Usually ran straight as a module: python -m archinstoo or compiled as a package.
+	#In any case we will be attempting to load the provided script to be run from the scripts/ folder
 	args = handler.args
 
 	if not is_root():

@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, ClassVar, Self
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -45,6 +45,55 @@ class GreeterType(Enum):
 	Regreet = 'regreet'
 	CosmicSession = 'cosmic-greeter'
 
+	@property
+	def packages(self) -> list[str]:
+		match self:
+			case GreeterType.Lightdm:
+				return ['lightdm', 'lightdm-gtk-greeter']
+			case GreeterType.LightdmSlick:
+				return ['lightdm', 'lightdm-slick-greeter']
+			case GreeterType.PlasmaLoginManager:
+				return ['plasma-login-manager']
+			case GreeterType.Sddm:
+				return ['sddm']
+			case GreeterType.Gdm:
+				return ['gdm']
+			case GreeterType.Ly:
+				return ['ly']
+			case GreeterType.Greetd:
+				return ['greetd']
+			case GreeterType.GreetdDms:
+				# the greeter itself ships with dms-shell-<compositor>
+				return ['greetd']
+			case GreeterType.Regreet:
+				# regreet (GUI) runs inside the cage kiosk compositor
+				return ['greetd', 'greetd-regreet', 'cage']
+			case GreeterType.CosmicSession:
+				return ['cosmic-greeter']
+
+	@property
+	def services(self) -> list[str]:
+		match self:
+			case GreeterType.Lightdm | GreeterType.LightdmSlick:
+				return ['lightdm']
+			case GreeterType.PlasmaLoginManager:
+				return ['plasmalogin']
+			case GreeterType.Ly:
+				return ['ly@tty1']
+			case GreeterType.Regreet | GreeterType.GreetdDms:
+				return ['greetd']
+			case _:
+				return [self.value]
+
+	@property
+	def disabled_services(self) -> list[str]:
+		# these take over vt1, so the getty that owns it has to go
+		match self:
+			case GreeterType.Ly | GreeterType.Regreet | GreeterType.GreetdDms:
+				return ['getty@tty1']
+			case _:
+				return []
+
 
 class SelectResult(Enum):
 	NewSelection = auto()
@@ -53,6 +102,14 @@ class SelectResult(Enum):
 
 
 class Profile:
+	# ships a terminal keybind rather than a terminal: install_profile_config()
+	# installs the one Terminal choice for these, so their package list stays fixed
+	needs_terminal: bool = False
+
+	# profiles that run on top of a compositor of the user's choosing; the
+	# <name>_compositor custom_setting picks which of these sets to install
+	compositor_packages: ClassVar[dict[str, list[str]]] = {}
+
 	def __init__(
 		self,
 		name: str,

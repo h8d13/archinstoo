@@ -2,6 +2,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import NotRequired, Self, TypedDict
 
+# NetworkManager on a desktop gets its tray applet as well
+NM_DESKTOP_EXTRA = ['network-manager-applet']
+
+# copy_iso_network_config() carries the ISO's iwd PSKs over when it finds any,
+# and the target needs iwd to read them back
+ISO_PSK_EXTRA = ['iwd']
+
 
 class NicType(Enum):
 	ISO = 'iso'
@@ -9,6 +16,21 @@ class NicType(Enum):
 	NM_IWD = 'nm-iwd'
 	IWD = 'iwd'
 	MANUAL = 'manual'
+
+	@property
+	def packages(self) -> list[str]:
+		match self:
+			case NicType.NM:
+				# legacy backend
+				return ['networkmanager', 'wpa_supplicant']
+			case NicType.NM_IWD:
+				# iwd backend, usually for intel devices
+				return ['networkmanager', 'iwd']
+			case NicType.IWD:
+				return ['iwd']
+			case NicType.ISO | NicType.MANUAL:
+				# systemd-networkd/resolved only, both part of base
+				return []
 
 	def display_msg(self) -> str:
 		match self:

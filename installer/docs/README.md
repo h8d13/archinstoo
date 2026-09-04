@@ -157,6 +157,7 @@
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
 │   │   ├── schema
+│   │   ├── schema_gen
 │   │   ├── tui/
 │   │   │   ├── content_editor
 │   │   │   ├── curses_menu
@@ -170,7 +171,7 @@
 │   │       ├── net
 │   │       └── unicode
 │   ├── __main__
-│   ├── schema.jsonc
+│   ├── schema.toml
 │   ├── scripts/
 │   │   ├── count
 │   │   ├── format
@@ -183,6 +184,7 @@
 │   │   ├── passwd
 │   │   ├── rescue
 │   │   ├── _resolve
+│   │   ├── schema
 │   │   └── size
 │   └── _version
 ├── examples/
@@ -216,7 +218,7 @@
     ├── test_parted_optional
     ├── test_run_exceptions
     ├── test_saved_config_resume
-    ├── test_schema_drift
+    ├── test_schema
     ├── test_script_peek
     └── test_version_stamp
 

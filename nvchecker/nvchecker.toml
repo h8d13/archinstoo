@@ -1164,6 +1164,12 @@ source = "pacman"
 [screengrab]
 source = "pacman"
 
+[scx-scheds]
+source = "pacman"
+
+[scx-tools]
+source = "pacman"
+
 [sddm]
 source = "pacman"
 

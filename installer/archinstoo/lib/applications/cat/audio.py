@@ -10,6 +10,15 @@ if TYPE_CHECKING:
 
 
 class AudioApp:
+	# added with either audio server when the matching driver is loaded
+	@property
+	def sof_packages(self) -> list[str]:
+		return ['sof-firmware']
+
+	@property
+	def alsa_packages(self) -> list[str]:
+		return ['alsa-firmware']
+
 	@property
 	def pulseaudio_packages(self) -> list[str]:
 		return [
@@ -75,10 +84,10 @@ class AudioApp:
 		debug(f'Installing audio server: {audio_config.audio.value}')
 
 		if SysInfo.requires_sof_fw():
-			install_session.add_additional_packages('sof-firmware')
+			install_session.add_additional_packages(self.sof_packages)
 
 		if SysInfo.requires_alsa_fw():
-			install_session.add_additional_packages('alsa-firmware')
+			install_session.add_additional_packages(self.alsa_packages)
 
 		match audio_config.audio:
 			case Audio.PIPEWIRE:

@@ -98,6 +98,9 @@ Then `archinstoo` becomes lighter, clearer, and no less capable.
 For example, by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that only depends directly on `python-pyparted`.
 (And what is expected on ISOs) Without losing any functionality.
 
+Up until recently, the official installer [used](https://github.com/archlinux/archinstall/commit/6c6c8d8000af4d395abe9c453b21bdd074b6c6bb) to also install x11 packages unconditionally.
+Following [issue/discussion](https://github.com/archlinux/archinstall/issues/4190). This illustrates the larger theme of why `archinstoo`.
+
 ### Withstanding to-dos
 
 Working in a volunteer-driven project with limited feedback loops often means long-standing issues survive simply because they are hard to address incrementally.

@@ -105,6 +105,16 @@ class Editor(StrEnum):
 	NEOVIM = auto()
 	EMACS = auto()
 
+	@property
+	def packages(self) -> list[str]:
+		# vi is provided by a differently named package
+		return ['ex-vi-compat'] if self is Editor.VI else [self.value]
+
+	@property
+	def binary(self) -> str:
+		# what lands in EDITOR= in /etc/environment
+		return 'nvim' if self is Editor.NEOVIM else self.value
+
 
 class EditorConfigSerialization(TypedDict):
 	editor: str
@@ -118,6 +128,11 @@ class Terminal(StrEnum):
 	KONSOLE = auto()
 	WEZTERM = auto()
 	XTERM = auto()
+
+	@property
+	def packages(self) -> list[str]:
+		# package and binary share a name for every entry
+		return [self.value]
 
 
 class TerminalConfigSerialization(TypedDict):

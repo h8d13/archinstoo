@@ -1,0 +1,321 @@
+# schema.toml - generated, do not edit.
+#
+# The package sets an archinstoo install can pull, flattened out of the code
+# that installs them. Read by scripts/_resolve.py (count, size) and by
+# nvchecker/NVGEN, neither of which should have to guess.
+#
+# Sections follow the order the install runs them. Every section is a table so
+# that order survives: a top-level `key = [...]` after the first [header] would
+# silently nest under it. A section that is one flat list holds it under
+# `packages`, or `profiles` where the names are profiles rather than packages.
+#
+# To change what a section holds, change the codepath named above it, then:
+#
+#     python -m archinstoo --script schema
+
+# the seed of every pacstrap
+[base]
+packages = ["base", "mkinitcpio"]
+
+# the static half: `vendor` takes its packages from the saved config,
+# `full` adds the optdeps matched against the host PCI/USB IDs
+[firmware]
+full = ["linux-firmware"]
+minimal = []
+vendor = []
+
+# a live ISO with accessibility active installs these onto the target
+[accessibility]
+packages = ["brltty", "espeakup", "alsa-utils"]
+
+# any lvm layout
+[lvm]
+packages = ["lvm2"]
+
+# base already covers e2fsprogs and dosfstools; these are the rest
+[filesystem_tools]
+bcachefs = ["bcachefs-tools"]
+btrfs = ["btrfs-progs"]
+f2fs = ["f2fs-tools"]
+xfs = ["xfsprogs"]
+
+# out of tree: built per kernel, so every kernel also pulls its -headers
+[bcachefs_extra]
+packages = ["bcachefs-dkms"]
+
+# sd-encrypt only bundles the fido2 dlopen libs if this is present when the
+# initramfs is built. never reachable from a saved config: the password
+# would have to be saved with it
+[fido2]
+packages = ["libfido2"]
+
+# picked from the detected CPU; VMs get none
+[microcode]
+amd = ["amd-ucode"]
+intel = ["intel-ucode"]
+
+# to match the ISO when `ter-` console fonts are chosen
+[ter_fonts]
+packages = ["terminus-font"]
+
+# only zram pulls a package: a hibernation swapfile is mkswap (util-linux,
+# a base dep) or btrfs-progs, both already covered
+[swap]
+zram = ["zram-generator"]
+
+# run0 is part of systemd and only needs polkit
+[privilege_escalation]
+sudo = ["sudo"]
+doas = ["opendoas"]
+run0 = ["polkit"]
+
+# bash is default and rbash is bash restricted, so neither needs a package
+[shells]
+bash = []
+zsh = ["zsh"]
+fish = ["fish"]
+rbash = []
+
+[bluetooth]
+packages = ["bluez", "bluez-utils"]
+
+[audio]
+pipewire = ["pipewire", "pipewire-alsa", "pipewire-jack", "pipewire-pulse", "gst-plugin-pipewire", "libpulse", "wireplumber", "rtkit"]
+pulseaudio = ["pulseaudio"]
+
+# added with either audio server when the matching driver is loaded
+[audio_firmware]
+sof = ["sof-firmware"]
+alsa = ["alsa-firmware"]
+
+# only shown on laptops
+[power_management]
+power-profiles-daemon = ["power-profiles-daemon"]
+tuned = ["tuned", "tuned-ppd"]
+
+# sched_ext: one set, the choice only picks which binary scx_loader starts
+[cpu_scheduler]
+packages = ["scx-scheds", "scx-tools"]
+
+# ghostscript is the PostScript interpreter cups needs for most drivers
+[printing]
+packages = ["cups", "system-config-printer", "cups-pk-helper", "ghostscript"]
+
+[firewalls]
+ufw = ["ufw"]
+firewalld = ["firewalld"]
+
+[management]
+git = ["git"]
+openssh = ["openssh"]
+wget = ["wget"]
+base-devel = ["base-devel"]
+man-db = ["man-db"]
+pacman-contrib = ["pacman-contrib"]
+reflector = ["reflector"]
+ntsync-autoload = ["ntsync-autoload"]
+
+[monitors]
+htop = ["htop"]
+btop = ["btop"]
+bottom = ["bottom"]
+
+# EDITOR lands in /etc/environment; only vi is not named after the option
+[editors]
+vi = ["ex-vi-compat"]
+nano = ["nano"]
+micro = ["micro"]
+vim = ["vim"]
+neovim = ["neovim"]
+emacs = ["emacs"]
+
+# one choice, shared by every profile in terminal_profiles. package and
+# binary share a name, and TERMINAL lands in /etc/environment
+[terminals]
+alacritty = ["alacritty"]
+foot = ["foot"]
+kitty = ["kitty"]
+ghostty = ["ghostty"]
+konsole = ["konsole"]
+wezterm = ["wezterm"]
+xterm = ["xterm"]
+
+# three carry extra configuration, the rest install themselves
+[security]
+apparmor = ["apparmor"]
+firejail = ["firejail"]
+bubblewrap = ["bubblewrap"]
+fail2ban = ["fail2ban"]
+pam-u2f = ["pam-u2f"]
+sbctl = ["sbctl"]
+audit = ["audit"]
+
+[languages]
+rustup = ["rustup"]
+go = ["go"]
+jdk-openjdk = ["jdk-openjdk"]
+nodejs = ["nodejs"]
+clang = ["clang"]
+zig = ["zig"]
+lua = ["lua"]
+
+[devtools]
+cmake = ["cmake"]
+make = ["make"]
+ninja = ["ninja"]
+meson = ["meson"]
+gdb = ["gdb"]
+llvm = ["llvm"]
+lld = ["lld"]
+lldb = ["lldb"]
+perf = ["perf"]
+strace = ["strace"]
+ltrace = ["ltrace"]
+valgrind = ["valgrind"]
+
+# the UEFI set; a BIOS install skips efibootmgr, and refind never needs it
+[bootloaders]
+systemd-boot = ["efibootmgr"]
+grub = ["grub", "efibootmgr"]
+efistub = ["efibootmgr"]
+limine = ["limine", "efibootmgr"]
+refind = ["refind"]
+
+[snapshots]
+snapper = ["snapper"]
+timeshift = ["timeshift", "cronie"]
+
+# grub plus either snapshot tool adds these
+[grub_extra]
+packages = ["grub-btrfs", "inotify-tools"]
+
+# iso and manual configure systemd-networkd/resolved, both part of base
+[network]
+iso = []
+nm = ["networkmanager", "wpa_supplicant"]
+nm-iwd = ["networkmanager", "iwd"]
+iwd = ["iwd"]
+manual = []
+
+# NetworkManager on a desktop profile also gets its tray applet
+[network_desktop_extra]
+packages = ["network-manager-applet"]
+
+# the ISO config carries iwd PSKs over, and the target needs iwd to read them
+[network_iso_extra]
+packages = ["iwd"]
+
+# added before desktops, which may depend on a virtual vulkan-something.
+# libva-mesa-driver is provided by mesa since 24.2.7
+[gfx_drivers]
+all-open-source = ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-intel-driver", "intel-media-driver", "vpl-gpu-rt", "libvpl", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"]
+amd-open-source = ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "vulkan-radeon"]
+intel-open-source = ["mesa", "libva-intel-driver", "intel-media-driver", "vpl-gpu-rt", "libvpl", "vulkan-intel"]
+nvidia-open-kernel = ["nvidia-open", "libva-nvidia-driver"]
+nvidia-open-nouveau = ["mesa", "xf86-video-nouveau", "vulkan-nouveau"]
+mesa-open-source = ["mesa"]
+vm-software = ["mesa", "vulkan-swrast"]
+vm-virtio = ["mesa", "vulkan-virtio"]
+
+# what a driver installs instead when a non-standard kernel needs a build
+[gfx_drivers_dkms]
+nvidia-open-kernel = ["nvidia-open-dkms", "libva-nvidia-driver", "dkms"]
+
+# the generic driver adds a vulkan layer for whatever GPU the host has
+[gfx_mesa_extra]
+intel = ["vulkan-intel"]
+amd = ["vulkan-radeon"]
+
+# the X11 half, added off DisplayServer rather than off the driver
+[xorg_extra]
+packages = ["xorg-server", "xorg-xinit"]
+
+# pull xorg_extra when a gfx driver is selected, i.e. every XorgProfile
+[xorg_profiles]
+profiles = ["awesome", "bspwm", "cinnamon", "deepin", "enlightenment", "i3-wm", "lxqt", "mate", "qtile", "xfce4", "xmonad"]
+
+# always installed alongside a top-level profile
+[profile_base]
+desktop = ["smartmontools", "xdg-utils"]
+server = ["smartmontools"]
+
+# every desktop, window manager and server profile. one listed in
+# terminal_profiles has none here: that comes from the shared choice
+[profiles]
+awesome = ["xorg-server", "awesome", "xorg-xinit", "xorg-xrandr", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"]
+bspwm = ["bspwm", "sxhkd", "dmenu", "xdo", "rxvt-unicode"]
+budgie = ["materia-gtk-theme", "budgie", "konsole", "dolphin", "papirus-icon-theme"]
+cinnamon = ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed", "xdg-user-dirs-gtk"]
+cosmic = ["cosmic", "xdg-user-dirs"]
+deepin = ["deepin", "deepin-terminal", "deepin-editor"]
+dms = ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "matugen", "cava", "kimageformats", "inter-font", "ttf-fira-code"]
+enlightenment = ["enlightenment", "terminology"]
+gnome = ["gnome-shell", "gnome-session", "gnome-terminal", "gnome-control-center", "gnome-settings-daemon", "nautilus", "xdg-desktop-portal-gnome", "gnome-tweaks"]
+hyprland = ["hyprland", "dunst", "uwsm", "hyprlauncher", "xdg-desktop-portal-hyprland", "qt5-wayland", "qt6-wayland", "hyprpolkitagent", "grim", "slurp", "wl-clipboard"]
+i3-wm = ["i3-wm", "i3lock", "i3status", "i3blocks", "xss-lock", "lightdm-gtk-greeter", "lightdm", "dmenu"]
+labwc = ["labwc"]
+lxqt = ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "gnu-free-fonts", "l3afpad", "slock"]
+mate = ["mate", "mate-extra"]
+niri = ["niri", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"]
+noctalia = ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "noctalia", "inter-font", "ttf-jetbrains-mono-nerd"]
+kde-plasma = ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "bluedevil"]
+qtile = ["qtile"]
+river = ["xdg-desktop-portal-wlr", "river"]
+sway = ["sway", "swaybg", "swaylock", "swayidle", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "xorg-xwayland"]
+xfce4 = ["xfce4", "xfce4-goodies", "pavucontrol", "gvfs", "xarchiver"]
+xmonad = ["xmonad", "xmonad-contrib", "xmonad-extras", "xterm", "dmenu"]
+cockpit = ["cockpit", "cockpit-storaged", "cockpit-packagekit"]
+docker = ["docker"]
+httpd = ["apache"]
+java = ["jre-openjdk-headless"]
+lighttpd = ["lighttpd"]
+mariadb = ["mariadb"]
+nginx = ["nginx"]
+postgresql = ["postgresql"]
+sshd = ["openssh"]
+tailscale = ["tailscale"]
+tomcat = ["tomcat10"]
+
+# ship a keybind rather than a terminal. install_profile_config() installs
+# the choice once for these, or the default when the menu was skipped
+[terminal_profiles]
+profiles = ["awesome", "dms", "hyprland", "i3-wm", "labwc", "niri", "noctalia", "qtile", "river", "sway"]
+
+# profiles that run on a compositor of the user's choosing. their entry
+# above bakes in the niri default, a <name>_compositor custom_setting swaps it
+[compositors.dms]
+niri = ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland"]
+hyprland = ["hyprland", "dms-shell-hyprland", "xdg-desktop-portal-hyprland", "uwsm"]
+
+[compositors.noctalia]
+niri = ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland"]
+hyprland = ["hyprland", "xdg-desktop-portal-hyprland", "uwsm"]
+sway = ["sway", "xdg-desktop-portal-wlr", "xorg-xwayland"]
+labwc = ["labwc", "xdg-desktop-portal-wlr", "xorg-xwayland"]
+
+# per-profile seat_access custom_setting; the value is the package
+[seat_access]
+seatd = ["seatd"]
+logind = ["polkit"]
+
+# each desktop names a default; None (null in a config) is always available
+[greeters]
+lightdm-gtk-greeter = ["lightdm", "lightdm-gtk-greeter"]
+lightdm-slick-greeter = ["lightdm", "lightdm-slick-greeter"]
+plasma-login-manager = ["plasma-login-manager"]
+sddm = ["sddm"]
+gdm = ["gdm"]
+ly = ["ly"]
+greetd = ["greetd"]
+dms-greeter = ["greetd"]
+regreet = ["greetd", "greetd-regreet", "cage"]
+cosmic-greeter = ["cosmic-greeter"]
+
+# what grimoire needs on the target to build from the AUR. the AUR packages
+# themselves are in no repo, so nothing can size them
+[aur_bootstrap]
+packages = ["base-devel", "git"]
+
+# cloning a user stash
+[stash]
+packages = ["git"]

@@ -41,8 +41,9 @@ from .general import SysCommand, run
 from .hardware import SysInfo
 from .localization.utils import locale_encoding, locale_entry_re, split_locale_name
 from .models.authentication import AuthenticationConfiguration, PrivilegeEscalation
-from .models.bootloader import Bootloader
+from .models.bootloader import EFIBOOTMGR, Bootloader
 from .models.kernel import DEFAULT_KERNEL
+from .models.network import ISO_PSK_EXTRA
 from .models.users import User
 from .output import debug, error, info, log, logger, warn
 from .pm import Pacman
@@ -67,6 +68,27 @@ if TYPE_CHECKING:
 # hosts (EndeavourOS prefers dracut, etc.) breaks the installer's mkinitcpio() and
 # _config_uki() methods that assume mkinitcpio is present in the chroot.
 __base_packages__ = ['base', 'mkinitcpio']
+
+# Package sets minimal_installation() and the steps after it add conditionally.
+# Named rather than inlined so schema_gen can read the same list the installer
+# straps, instead of a transcription of it.
+LVM = 'lvm2'  # package and mkinitcpio hook share the name
+__lvm_packages__ = [LVM]
+# out-of-tree module, built per kernel: every selected kernel also pulls -headers
+__bcachefs_packages__ = ['bcachefs-dkms']
+# sd-encrypt only bundles the fido2 dlopen libs if this is present when the
+# initramfs is built
+__fido2_packages__ = ['libfido2']
+# fonts that are in the ISO but wont be on target unless requested before base,
+# otherwise mkinitcpio will be screaming at you
+__ter_font_packages__ = ['terminus-font']
+# grub integration for either snapshot tool
+__grub_snapshot_packages__ = ['grub-btrfs', 'inotify-tools']
+__zram_packages__ = ['zram-generator']
+# what grimoire needs on the target before it can build anything from the AUR
+__aur_bootstrap_packages__ = ['base-devel', 'git']
+# cloning a user stash
+__stash_packages__ = ['git']
 
 # Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
@@ -1040,7 +1062,7 @@ class Installer:
 			if enable_services:
 				# If we haven't installed the base yet (function called pre-maturely)
 				if self._helper_flags.get('base', False) is False:
-					self._base_packages.append('iwd')
+					self._base_packages.extend(ISO_PSK_EXTRA)
 
 					# This function will be called after minimal_installation()
 					# as a hook for post-installs. This hook is only needed if
@@ -1052,7 +1074,7 @@ class Installer:
 				# Otherwise, we can go ahead and add the required package
 				# and enable it's service:
 				else:
-					self.pacman.strap('iwd')
+					self.pacman.strap(ISO_PSK_EXTRA)
 					self.enable_service('iwd')
 
 		self.link_resolved_stub()
@@ -1117,7 +1139,7 @@ class Installer:
 		# xxhash is required by objtool (part of linux-headers) at dkms build time
 		if fs_type == FilesystemType.BCACHEFS:
 			self._base_packages.extend(f'{kernel}-headers' for kernel in self.kernels)
-			self._base_packages.append('bcachefs-dkms')
+			self._base_packages.extend(__bcachefs_packages__)
 
 		# https://github.com/archlinux/archinstall/issues/1837
 		# https://github.com/koverstreet/bcachefs/issues/916
@@ -1152,9 +1174,8 @@ class Installer:
 		info(f'Installing base system: kernels={", ".join(self.kernels)}, hostname={hostname or "(unset)"}', step=True)
 
 		if self._disk_config.lvm_config:
-			lvm = 'lvm2'
-			self.add_additional_packages(lvm)
-			self._hooks.insert(self._hooks.index('filesystems') - 1, lvm)
+			self.add_additional_packages(__lvm_packages__)
+			self._hooks.insert(self._hooks.index('filesystems') - 1, LVM)
 
 			for vg in self._disk_config.lvm_config.vol_groups:
 				for vol in vg.volumes:
@@ -1163,7 +1184,7 @@ class Installer:
 
 			types = (EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM)
 			if self._disk_encryption.encryption_type in types:
-				self._prepare_encrypt(lvm)
+				self._prepare_encrypt(LVM)
 		else:
 			for mod in self._disk_config.device_modifications:
 				for part in mod.partitions:
@@ -1176,9 +1197,7 @@ class Installer:
 						self._prepare_encrypt()
 
 		if self._disk_encryption.fido2_device:
-			# sd-encrypt only bundles the fido2 dlopen libs if libfido2 is
-			# present when the initramfs is built
-			self._base_packages.append('libfido2')
+			self._base_packages.extend(__fido2_packages__)
 
 		if ucode := self._get_microcode():
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)
@@ -1195,11 +1214,8 @@ class Installer:
 
 		if locale_config:
 			self.set_vconsole(locale_config)
-			# fonts that are in the ISO but wont be on target
-			# unless we specifically request it before base
-			# otherwise mkinitcpio will be screaming at you
 			if locale_config.console_font.startswith('ter-'):
-				self._base_packages.append('terminus-font')
+				self._base_packages.extend(__ter_font_packages__)
 
 		self.pacman.strap(list(dict.fromkeys(self._base_packages)))
 		self._helper_flags['base-strapped'] = True
@@ -1255,7 +1271,7 @@ class Installer:
 	) -> None:
 		if snapshot_type == SnapshotType.Snapper:
 			debug('Setting up Btrfs snapper')
-			self.pacman.strap('snapper')
+			self.pacman.strap(snapshot_type.packages)
 
 			snapper: dict[str, str] = {
 				'root': '/',
@@ -1290,14 +1306,12 @@ class Installer:
 		elif snapshot_type == SnapshotType.Timeshift:
 			debug('Setting up Btrfs timeshift')
 
-			self.pacman.strap('cronie')
-			self.pacman.strap('timeshift')
+			self.pacman.strap(snapshot_type.packages)
 			self.enable_service('cronie')
 
 		if bootloader and bootloader == Bootloader.Grub:
 			debug('Setting up grub integration for either')
-			self.pacman.strap('grub-btrfs')
-			self.pacman.strap('inotify-tools')
+			self.pacman.strap(__grub_snapshot_packages__)
 			self._configure_grub_btrfsd(snapshot_type)
 			self.enable_service('grub-btrfsd')
 
@@ -1314,7 +1328,7 @@ class Installer:
 
 	def _setup_zram(self, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
 		info('Setting up swap on zram')
-		self.pacman.strap('zram-generator')
+		self.pacman.strap(__zram_packages__)
 
 		with (self.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
 			zram_conf.write('[zram0]\n')
@@ -1577,7 +1591,7 @@ class Installer:
 	) -> None:
 		debug('Installing systemd bootloader')
 
-		self.pacman.strap('efibootmgr')
+		self.pacman.strap(EFIBOOTMGR)
 
 		if not SysInfo.has_uefi():
 			raise HardwareIncompatibilityError
@@ -1657,7 +1671,7 @@ class Installer:
 	) -> None:
 		debug('Installing grub bootloader')
 
-		self.pacman.strap('grub')
+		self.pacman.strap(Bootloader.Grub.value)
 
 		# enable GRUB cryptodisk before grub-install so crypto modules
 		# are embedded in the core image (required for encrypted /boot)
@@ -1681,7 +1695,7 @@ class Installer:
 
 			info(f'GRUB EFI partition: {efi_partition.dev_path}')
 
-			self.pacman.strap('efibootmgr')  # TODO: Do we need? Yes, but remove from minimal_installation() instead?
+			self.pacman.strap(EFIBOOTMGR)  # TODO: Do we need? Yes, but remove from minimal_installation() instead?
 
 			if platform.machine() == 'aarch64':
 				# grub names its EFI target arm64, not aarch64
@@ -1783,7 +1797,7 @@ class Installer:
 	) -> None:
 		debug('Installing Limine bootloader')
 
-		self.pacman.strap('limine')
+		self.pacman.strap(Bootloader.Limine.value)
 
 		info(f'Limine boot partition: {boot_partition.dev_path}')
 
@@ -1792,7 +1806,7 @@ class Installer:
 		hook_command = None
 
 		if SysInfo.has_uefi():
-			self.pacman.strap('efibootmgr')
+			self.pacman.strap(EFIBOOTMGR)
 
 			if not efi_partition:
 				raise ValueError('Could not detect efi partition')
@@ -1940,7 +1954,7 @@ class Installer:
 	) -> None:
 		debug('Installing efistub bootloader')
 
-		self.pacman.strap('efibootmgr')
+		self.pacman.strap(EFIBOOTMGR)
 
 		if not SysInfo.has_uefi():
 			raise HardwareIncompatibilityError
@@ -2011,7 +2025,7 @@ class Installer:
 	) -> None:
 		debug('Installing rEFInd bootloader')
 
-		self.pacman.strap('refind')
+		self.pacman.strap(Bootloader.Refind.value)
 
 		if not SysInfo.has_uefi():
 			raise HardwareIncompatibilityError
@@ -2377,7 +2391,7 @@ class Installer:
 	def _clone_user_stash(self, username: str, stash_url: str) -> None:
 		info(f'Cloning {stash_url} for {username}')
 
-		self.add_additional_packages('git')
+		self.add_additional_packages(__stash_packages__)
 
 		url, _, branch = stash_url.partition('#')
 		repo_name = url.rstrip('/').split('/')[-1].removesuffix('.git')
@@ -2581,7 +2595,7 @@ def run_grimoire_installation(
 		warn('No elevated user found, skipping AUR packages')
 		return
 
-	installation.add_additional_packages(['base-devel', 'git'])
+	installation.add_additional_packages(__aur_bootstrap_packages__)
 
 	grimoire_src = Path(__file__).parent / 'grimoire.py'
 	grimoire_dest = installation.target / 'usr/local/bin/grimoire'

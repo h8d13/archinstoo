@@ -6,11 +6,13 @@
 # import it without side effects.
 
 import re
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from archinstoo.default_profiles.desktops import DEFAULT_TERMINAL
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
-from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.hardware import CpuVendor, GfxDriver, SysInfo
 from archinstoo.lib.models import firmware as firmware_model
 from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
@@ -22,6 +24,13 @@ from archinstoo.lib.utils.env import Os
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
 	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
+
+
+def _flat(key: str) -> list[str]:
+	# sections that are one list rather than a map of options hold it under
+	# `packages` (see lib/schema_gen.py for why every section is a table)
+	packages: list[str] = SCHEMA[key]['packages']
+	return packages
 
 
 def _requirements(*binaries: str) -> bool:
@@ -49,6 +58,12 @@ def _firmware_packages(config: dict[str, Any]) -> set[str]:
 	return pkgs
 
 
+def _iso_has_psks() -> bool:
+	# mirrors copy_iso_network_config(): the target only needs iwd when there
+	# are ISO PSKs to carry over
+	return bool(list(Path('/var/lib/iwd').glob('*.psk')))
+
+
 def _host_packages() -> set[str]:
 	# what the installer reads off the running system rather than the config;
 	# count and size run on that same host, so the detection carries over
@@ -59,7 +74,7 @@ def _host_packages() -> set[str]:
 	from archinstoo.lib.installer import accessibility_tools_in_use
 
 	if accessibility_tools_in_use():
-		pkgs.update(SCHEMA['accessibility'])
+		pkgs.update(_flat('accessibility'))
 
 	if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
 		pkgs.update(SCHEMA['microcode'].get(vendor.value, []))
@@ -86,11 +101,11 @@ def _filesystem_packages(disk: dict[str, Any], kernels: list[str]) -> set[str]:
 	pkgs = {p for fs in fs_types if fs in fs_tools for p in fs_tools[fs]}
 
 	if lvm_config:
-		pkgs.update(SCHEMA['lvm'])
+		pkgs.update(_flat('lvm'))
 
 	# out-of-tree module, built per kernel
 	if FilesystemType.BCACHEFS.value in fs_types:
-		pkgs.update(SCHEMA['bcachefs_extra'])
+		pkgs.update(_flat('bcachefs_extra'))
 		pkgs.update(f'{k}-headers' for k in kernels)
 
 	return pkgs
@@ -110,11 +125,10 @@ def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	prof_pkgs = set(SCHEMA['profiles'][name])
 
 	# <name>_compositor swaps the default (niri) compositor set
-	if name in ('dms', 'noctalia'):
+	if comp_sets := SCHEMA['compositors'].get(name):
 		comps = settings.get(f'{name}_compositor') or ['niri']
 		if isinstance(comps, str):
 			comps = [comps]
-		comp_sets = SCHEMA[f'{name}_compositors']
 		prof_pkgs.difference_update(comp_sets['niri'])
 		for comp in comps:
 			prof_pkgs.update(comp_sets.get(comp, []))
@@ -134,11 +148,100 @@ def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	return [profile for tp in entries if (profile := handler.parse_profile_config(tp))]
 
 
+def _gfx_packages(gfx: str, kernels: list[str], details: list[str]) -> set[str]:
+	# mirrors profiles_handler.install_gfx_driver(): the driver set, then the
+	# X11 half if any selected profile needs it
+	if gfx not in SCHEMA['gfx_drivers']:
+		return set()
+
+	# a non-standard kernel swaps the whole driver set for its DKMS build
+	dkms = SCHEMA['gfx_drivers_dkms'].get(gfx) if any('-' in k for k in kernels) else None
+	if dkms:
+		pkgs = set(dkms)
+		pkgs.update(f'{k}-headers' for k in kernels)
+	else:
+		pkgs = set(SCHEMA['gfx_drivers'][gfx])
+
+	# the generic driver picks its vulkan layer off the host GPU, the way the
+	# microcode does; count and size run on that same host
+	if gfx == GfxDriver.MesaOpenSource.value:
+		mesa_extra = SCHEMA['gfx_mesa_extra']
+		if SysInfo.has_intel_graphics():
+			pkgs.update(mesa_extra[CpuVendor.GenuineIntel.value])
+		elif SysInfo.has_amd_graphics():
+			pkgs.update(mesa_extra[CpuVendor.AuthenticAMD.value])
+
+	if set(details) & set(SCHEMA['xorg_profiles']['profiles']):
+		pkgs.update(_flat('xorg_extra'))
+
+	return pkgs
+
+
+def _terminal_packages(app: dict[str, Any], details: list[str]) -> set[str]:
+	# one terminal, shared by every profile in terminal_profiles. TerminalApp
+	# installs the pick; a skipped menu entry leaves those profiles on the
+	# default, which install_profile_config() installs instead
+	terminal = (app.get('terminal_config') or {}).get('terminal', '')
+
+	if terminal not in SCHEMA['terminals']:
+		if not set(details) & set(SCHEMA['terminal_profiles']['profiles']):
+			return set()
+		terminal = DEFAULT_TERMINAL
+
+	return set(SCHEMA['terminals'][terminal])
+
+
+def _application_packages(app: dict[str, Any], details: list[str]) -> set[str]:
+	# every app_config section that pulls packages. the result is a set, so the
+	# à-la-carte ones are grouped by shape rather than by install order
+	pkgs: set[str] = set()
+
+	if (app.get('bluetooth_config') or {}).get('enabled', False):
+		pkgs.update(_flat('bluetooth'))
+
+	audio = (app.get('audio_config') or {}).get('audio', '')
+	if audio in SCHEMA['audio']:
+		pkgs.update(SCHEMA['audio'][audio])
+		audio_fw = SCHEMA['audio_firmware']
+		if SysInfo.requires_sof_fw():
+			pkgs.update(audio_fw['sof'])
+		if SysInfo.requires_alsa_fw():
+			pkgs.update(audio_fw['alsa'])
+
+	# option -> section, for the categories that are a single pick
+	for key, field, section in (
+		('power_management_config', 'power_management', 'power_management'),
+		('firewall_config', 'firewall', 'firewalls'),
+		('monitor_config', 'monitor', 'monitors'),
+		('editor_config', 'editor', 'editors'),
+	):
+		choice = (app.get(key) or {}).get(field, '')
+		if choice in SCHEMA[section]:
+			pkgs.update(SCHEMA[section][choice])
+
+	if app.get('cpu_scheduler_config'):
+		pkgs.update(_flat('cpu_scheduler'))
+
+	if (app.get('print_service_config') or {}).get('enabled', False):
+		pkgs.update(_flat('printing'))
+
+	# and the ones that are a multi-select
+	for key, section in (('management_config', 'management'), ('security_config', 'security')):
+		for tool in (app.get(key) or {}).get('tools', []) or []:
+			if tool in SCHEMA[section]:
+				pkgs.update(SCHEMA[section][tool])
+
+	pkgs.update(_terminal_packages(app, details))
+	pkgs.update(_development_packages(app.get('development_config') or {}))
+
+	return pkgs
+
+
 def collect(config: dict[str, Any]) -> set[str]:
 	pkgs: set[str] = set()
 
 	# base + firmware + whatever the host itself dictates
-	pkgs.update(SCHEMA['base'])
+	pkgs.update(_flat('base'))
 	pkgs.update(_firmware_packages(config))
 	pkgs.update(_host_packages())
 
@@ -172,7 +275,8 @@ def collect(config: dict[str, Any]) -> set[str]:
 		main = tp.get('main', '')
 		if main:
 			mains.add(main)
-			pkgs.update(SCHEMA['profile_base'])
+			# desktop and server carry different base sets
+			pkgs.update(SCHEMA['profile_base'].get(main, []))
 
 		tp_details = tp.get('details', []) or []
 		details.extend(tp_details)
@@ -206,19 +310,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
-	# gfx driver
-	gfx = pc.get('gfx_driver', '')
-	if gfx in SCHEMA['gfx_drivers']:
-		pkgs.update(SCHEMA['gfx_drivers'][gfx])
-		xorg_profiles = set(SCHEMA['xorg_profiles'])
-		if any(d in xorg_profiles for d in details):
-			pkgs.update(['xorg-server', 'xorg-xinit'])
-		# dkms for nvidia with non-standard kernels
-		if gfx == 'nvidia-open-kernel' and any('-' in k for k in kernels):
-			pkgs.discard('nvidia-open')
-			pkgs.add('nvidia-open-dkms')
-			pkgs.add('dkms')
-			pkgs.update(f'{k}-headers' for k in kernels)
+	pkgs.update(_gfx_packages(pc.get('gfx_driver', ''), kernels, details))
 
 	# network
 	net = config.get('network_config') or {}
@@ -226,7 +318,10 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
 		if has_desktop and net_type in (NicType.NM.value, NicType.NM_IWD.value):
-			pkgs.update(SCHEMA['network']['nm-desktop-extra'])
+			pkgs.update(_flat('network_desktop_extra'))
+		# copy_iso_network_config() only adds iwd when the ISO has PSKs to carry
+		if net_type == NicType.ISO.value and _iso_has_psks():
+			pkgs.update(_flat('network_iso_extra'))
 
 	# privilege escalation
 	auth = config.get('auth_config') or {}
@@ -234,49 +329,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
-	# applications
-	app = config.get('app_config') or {}
-
-	if (app.get('bluetooth_config') or {}).get('enabled', False):
-		pkgs.update(SCHEMA['bluetooth'])
-
-	audio = (app.get('audio_config') or {}).get('audio', '')
-	if audio in SCHEMA['audio']:
-		pkgs.update(SCHEMA['audio'][audio])
-		audio_fw = SCHEMA['audio_firmware']
-		if SysInfo.requires_sof_fw():
-			pkgs.update(audio_fw['sof'])
-		if SysInfo.requires_alsa_fw():
-			pkgs.update(audio_fw['alsa'])
-
-	pm = (app.get('power_management_config') or {}).get('power_management', '')
-	if pm in SCHEMA['power_management']:
-		pkgs.update(SCHEMA['power_management'][pm])
-
-	if (app.get('print_service_config') or {}).get('enabled', False):
-		pkgs.update(SCHEMA['printing'])
-
-	fw = (app.get('firewall_config') or {}).get('firewall', '')
-	if fw in SCHEMA['firewalls']:
-		pkgs.update(SCHEMA['firewalls'][fw])
-
-	for tool in (app.get('management_config') or {}).get('tools', []) or []:
-		if tool in SCHEMA['management']:
-			pkgs.update(SCHEMA['management'][tool])
-
-	for tool in (app.get('security_config') or {}).get('tools', []) or []:
-		if tool in SCHEMA['security']:
-			pkgs.update(SCHEMA['security'][tool])
-
-	pkgs.update(_development_packages(app.get('development_config') or {}))
-
-	monitor = (app.get('monitor_config') or {}).get('monitor', '')
-	if monitor in SCHEMA['monitors']:
-		pkgs.update(SCHEMA['monitors'][monitor])
-
-	editor = (app.get('editor_config') or {}).get('editor', '')
-	if editor in SCHEMA['editors']:
-		pkgs.update(SCHEMA['editors'][editor])
+	pkgs.update(_application_packages(config.get('app_config') or {}, details))
 
 	# shells (per-user in auth_config)
 	for user in auth.get('users', []) or []:
@@ -290,7 +343,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	# console font: the ISO has terminus, the target only gets it on request
 	if str((config.get('locale_config') or {}).get('console_font', '')).startswith('ter-'):
-		pkgs.update(SCHEMA['ter_fonts'])
+		pkgs.update(_flat('ter_fonts'))
 
 	# snapshots
 	btrfs = disk.get('btrfs_options') or {}
@@ -300,12 +353,20 @@ def collect(config: dict[str, Any]) -> set[str]:
 		pkgs.update(SCHEMA['snapshots'][snap_type])
 		# grub + btrfs snapshots
 		if bl_name == 'grub':
-			pkgs.update(SCHEMA['grub_extra'])
+			pkgs.update(_flat('grub_extra'))
 
 	# swap: only zram pulls a package, a swap file is plain tooling
 	swap = config.get('swap') or {}
 	if swap.get('zram', False):
 		pkgs.update(SCHEMA['swap'].get('zram', []))
+
+	# grimoire builds AUR packages on the target, so its toolchain lands there.
+	# the AUR packages themselves are in no repo and cannot be resolved here
+	if config.get('aur_packages') and auth.get('users'):
+		pkgs.update(_flat('aur_bootstrap'))
+
+	if any(user.get('stash_urls') for user in auth.get('users', []) or []):
+		pkgs.update(_flat('stash'))
 
 	return pkgs
 

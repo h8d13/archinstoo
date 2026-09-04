@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -10,6 +10,8 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 class RiverProfile(WaylandProfile):
+	needs_terminal = True
+
 	def __init__(self) -> None:
 		super().__init__('river', ProfileType.WindowMgr)
 
@@ -24,7 +26,6 @@ class RiverProfile(WaylandProfile):
 			additional = [seat]
 
 		return [
-			terminal_command(),
 			'xdg-desktop-portal-wlr',
 			'river',
 			*additional,

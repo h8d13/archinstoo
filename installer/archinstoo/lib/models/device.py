@@ -1425,6 +1425,15 @@ class SnapshotType(Enum):
 	Snapper = 'snapper'
 	Timeshift = 'timeshift'
 
+	@property
+	def packages(self) -> list[str]:
+		match self:
+			case SnapshotType.Snapper:
+				return ['snapper']
+			case SnapshotType.Timeshift:
+				# timeshift schedules its snapshots through cron
+				return ['timeshift', 'cronie']
+
 	def display_name(self) -> str:
 		match self:
 			case SnapshotType.Snapper:

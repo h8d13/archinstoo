@@ -1,6 +1,6 @@
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
@@ -22,15 +22,17 @@ if TYPE_CHECKING:
 # env lines in the DMS_STARTUP block (core/internal/config/hyprland_lua.go)
 _ASSETS_DIR = Path(__file__).parent / 'dms_assets'
 
-# dms-shell-<compositor> pulls dms-shell (quickshell, dgop, greeter assets)
-_COMPOSITOR_PACKAGES = {
-	'niri': ['niri', 'dms-shell-niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
-	# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
-	'hyprland': ['hyprland', 'dms-shell-hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
-}
-
 
 class DmsProfile(WaylandProfile):
+	needs_terminal = True
+
+	# dms-shell-<compositor> pulls dms-shell (quickshell, dgop, greeter assets)
+	compositor_packages: ClassVar[dict[str, list[str]]] = {
+		'niri': ['niri', 'dms-shell-niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
+		# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
+		'hyprland': ['hyprland', 'dms-shell-hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+	}
+
 	def __init__(self) -> None:
 		super().__init__(
 			'dms',
@@ -55,7 +57,7 @@ class DmsProfile(WaylandProfile):
 		if isinstance(seat, str):
 			additional = [seat]
 
-		compositor_pkgs = [p for comp in self.compositors for p in _COMPOSITOR_PACKAGES[comp]]
+		compositor_pkgs = [p for comp in self.compositors for p in self.compositor_packages[comp]]
 
 		return [
 			*compositor_pkgs,
@@ -67,7 +69,6 @@ class DmsProfile(WaylandProfile):
 			# terminal needs a real mono font anyway
 			'inter-font',
 			'ttf-fira-code',
-			terminal_command(),
 			*additional,
 		]
 
@@ -149,7 +150,7 @@ class DmsProfile(WaylandProfile):
 		header = 'DankMaterialShell runs on top of a Wayland compositor' + '\n'
 		header += 'Choose one or more to install' + '\n'
 
-		items = [MenuItem(c, value=c) for c in _COMPOSITOR_PACKAGES]
+		items = [MenuItem(c, value=c) for c in self.compositor_packages]
 		group = MenuItemGroup(items, sort_items=True)
 		group.set_selected_by_value(self.compositors)
 

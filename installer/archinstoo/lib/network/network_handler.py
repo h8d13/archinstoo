@@ -13,7 +13,7 @@ class NetworkHandler:
 		installation: Installer,
 		profile_config: ProfileConfiguration | None = None,
 	) -> None:
-		from archinstoo.lib.models.network import NicType
+		from archinstoo.lib.models.network import NM_DESKTOP_EXTRA, NicType
 
 		match network_config.type:
 			case NicType.ISO:
@@ -21,16 +21,10 @@ class NetworkHandler:
 					enable_services=True,
 				)
 			case NicType.NM | NicType.NM_IWD:
-				packages = ['networkmanager']
-				if network_config.type == NicType.NM:  # legacy
-					packages.append('wpa_supplicant')
-				else:  # iwd for intel devices
-					packages.append('iwd')
-
-				installation.add_additional_packages(packages)
+				installation.add_additional_packages(network_config.type.packages)
 
 				if profile_config and profile_config.profiles and profile_config.has_desktop_profile():
-					installation.add_additional_packages('network-manager-applet')
+					installation.add_additional_packages(NM_DESKTOP_EXTRA)
 
 				installation.enable_service('NetworkManager')
 
@@ -39,7 +33,7 @@ class NetworkHandler:
 					installation.disable_service('iwd')
 
 			case NicType.IWD:
-				installation.add_additional_packages(['iwd'])
+				installation.add_additional_packages(network_config.type.packages)
 				_configure_iwd_standalone(installation)
 				installation.enable_service('iwd')
 				installation.enable_service('systemd-networkd')

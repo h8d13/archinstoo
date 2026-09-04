@@ -15,6 +15,7 @@ from archinstoo.lib import args
 from archinstoo.lib.applications.cat.terminal import TerminalApp
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.application import ApplicationConfiguration, Terminal, TerminalConfiguration
+from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.users import User
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
@@ -144,11 +145,27 @@ _TERMINAL_PROFILES = ('i3-wm', 'qtile', 'labwc', 'river', 'sway', 'hyprland', 'n
 
 
 @pytest.mark.parametrize('name', _TERMINAL_PROFILES)
-def test_profile_packages_follow_the_choice(name: str, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_terminal_profiles_ship_no_terminal(name: str, monkeypatch: pytest.MonkeyPatch) -> None:
+	# these carry a keybind, not a terminal: install_profile_config() installs
+	# the one choice for them, which is what keeps their package list fixed
 	_pin_terminal(monkeypatch, Terminal.GHOSTTY)
 
 	profile: Profile = next(p for p in ProfileHandler().profiles if p.name == name)
-	packages = profile.packages
 
-	assert 'ghostty' in packages
-	assert not {'alacritty', 'foot', 'kitty', 'xterm'} & set(packages), f'{name} still hardcodes a terminal'
+	assert profile.needs_terminal
+	assert not {'ghostty', 'alacritty', 'foot', 'kitty', 'xterm'} & set(profile.packages), f'{name} still carries a terminal'
+
+
+@pytest.mark.parametrize(('pick', 'expected'), [(Terminal.GHOSTTY, 'ghostty'), (None, DEFAULT_TERMINAL)])
+def test_install_adds_the_choice_once(pick: Terminal | None, expected: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# a skipped menu entry still has to leave those profiles with a terminal
+	_pin_terminal(monkeypatch, pick)
+	installed: list[str] = []
+	session = _session(tmp_path, monkeypatch)
+	monkeypatch.setattr(session, 'add_additional_packages', installed.extend, raising=False)
+
+	handler = ProfileHandler()
+	sway = next(p for p in handler.profiles if p.name == 'sway')
+	handler.install_profile_config(session, ProfileConfiguration(profiles=[sway]))
+
+	assert installed.count(expected) == 1

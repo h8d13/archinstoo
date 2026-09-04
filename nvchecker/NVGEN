@@ -4,7 +4,7 @@
 Tracks (into nvchecker.toml) the Arch packages archinstoo touches:
 - Direct dependencies (PKGBUILD depends)
 - Optional dependencies (PKGBUILD optdepends)
-- All installable packages (schema.jsonc)
+- All installable packages (schema.toml)
 - Config-conditional packages that live in code enums, not the schema:
   kernels + headers, vendor firmware, gfx extras (dkms), microcode, seat
   access (the sources _resolve.py reads when expanding a saved config)
@@ -44,7 +44,7 @@ GROUPS_MODULE = PKG / 'lib' / 'pm' / 'groups.py'
 PKGBUILD_DEV = ROOT / 'PKGBUILD'
 PKGBUILD_REL = ROOT / 'installer' / 'PKGBUILD'
 
-# enums holding package names that never reach schema.jsonc, so the schema walk
+# enums holding package names that never reach schema.toml, so the schema walk
 # alone under-reports what an install can pull. covers the non-schema sources
 # _resolve.py:collect() reads, plus the microcode installer.py adds from the
 # detected CPU. each member value becomes one package per suffix:
@@ -130,27 +130,15 @@ def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 
 
 def extract_schema_packages(schema: dict, groups: dict[str, set[str]]) -> set[str]:
-	# collect package names (list strings only; dict keys are category labels).
-	# schema meta-packages that are really pacman groups (gnome, xfce4, ...) expand
-	# to their members so each member gets version-tracked individually.
+	# schema_mod.package_names() knows which entries are packages and which name
+	# profiles. meta-packages that are really pacman groups (gnome, xfce4, ...)
+	# expand to their members so each member gets version-tracked individually.
 	pkgs: set[str] = set()
 
-	def walk(obj: object) -> None:
-		if isinstance(obj, list):
-			for item in obj:
-				if isinstance(item, str):
-					name = item.lower()
-					if name in groups:
-						pkgs.update(groups[name])
-					else:
-						pkgs.add(name)
-				else:
-					walk(item)
-		elif isinstance(obj, dict):
-			for v in obj.values():
-				walk(v)
+	for item in schema_mod.package_names(schema):
+		name = item.lower()
+		pkgs.update(groups[name] if name in groups else {name})
 
-	walk(schema)
 	return pkgs
 
 

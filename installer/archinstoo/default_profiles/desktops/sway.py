@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services, swap_terminal, terminal_command
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services, swap_terminal
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.output import warn
 from archinstoo.lib.profile.base import ProfileType
@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class SwayProfile(WaylandProfile):
+	needs_terminal = True
+
 	def __init__(self) -> None:
 		super().__init__(
 			'sway',
@@ -40,7 +42,6 @@ class SwayProfile(WaylandProfile):
 			'grim',
 			'slurp',
 			'pavucontrol',
-			terminal_command(),
 			'xorg-xwayland',
 			*additional,
 		]

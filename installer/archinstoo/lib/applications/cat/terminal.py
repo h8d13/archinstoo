@@ -13,12 +13,11 @@ class TerminalApp:
 		install_session: Installer,
 		terminal_config: TerminalConfiguration,
 	) -> None:
-		# package and binary share a name for every entry in the enum
-		terminal = terminal_config.terminal.value
-		debug(f'Installing terminal: {terminal}')
+		terminal = terminal_config.terminal
+		debug(f'Installing terminal: {terminal.value}')
 
-		install_session.add_additional_packages([terminal])
+		install_session.add_additional_packages(terminal.packages)
 
 		# profiles read this back through terminal_command(); the WMs whose
 		# sensible-terminal helpers honour $TERMINAL (i3, labwc) need nothing else
-		install_session.set_environment({'TERMINAL': terminal})
+		install_session.set_environment({'TERMINAL': terminal.value})

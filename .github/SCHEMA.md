@@ -65,4 +65,20 @@ Configs and custom profiles references can be found in [`examples/`](https://git
 
 You can also add them directly in [`default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles) following other profiles as example or modify existing ones.
 
-And master [`schema.jsonc`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/schema.jsonc)
+### The package schema
+
+[`schema.toml`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/schema.toml) lists every
+package an install can pull, in the order the install pulls them. It is **generated**, the
+package lists live in the code that installs them (profiles under `default_profiles/`, the enums under
+`lib/models/`, the app handlers under `lib/applications/cat/`), and
+[`lib/schema_gen.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py)
+flattens them out.
+
+So to change what gets installed, change the codepath, then regenerate:
+
+```shell
+python -m archinstoo --script schema
+```
+
+`tests/test_schema.py` fails if the committed file is stale, and `--script count` / `--script size` and
+`nvchecker/NVGEN` all read the generated file rather than the runtime.

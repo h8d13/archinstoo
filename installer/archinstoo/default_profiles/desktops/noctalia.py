@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
@@ -17,15 +17,6 @@ if TYPE_CHECKING:
 # renders these): https://github.com/noctalia-dev/noctalia/tree/main/docs/user/compositor-settings
 _ASSETS_DIR = Path(__file__).parent / 'noctalia_assets'
 
-# noctalia v5: native wayland shell (bar, launcher, lock, notifications,
-# clipboard, polkit agent), no qt/gtk deps; compositor is a free choice
-_COMPOSITOR_PACKAGES = {
-	'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
-	# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
-	'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
-	'sway': ['sway', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
-	'labwc': ['labwc', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
-}
 
 # compositor -> config dir under ~/.config; every file in the matching
 # noctalia_assets/<compositor>/ dir is provisioned into it
@@ -38,6 +29,18 @@ _COMPOSITOR_CONFIG_DIRS = {
 
 
 class NoctaliaProfile(WaylandProfile):
+	needs_terminal = True
+
+	# noctalia v5: native wayland shell (bar, launcher, lock, notifications,
+	# clipboard, polkit agent), no qt/gtk deps; compositor is a free choice
+	compositor_packages: ClassVar[dict[str, list[str]]] = {
+		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
+		# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
+		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+		'sway': ['sway', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
+		'labwc': ['labwc', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
+	}
+
 	# noctalia-greeter (greetd) is not packaged in the arch repos yet;
 	# fall back to sddm like the plain hyprland profile
 	_default_greeter_non_seatd = GreeterType.Sddm
@@ -62,7 +65,7 @@ class NoctaliaProfile(WaylandProfile):
 		if isinstance(seat, str):
 			additional = [seat]
 
-		compositor_pkgs = [p for comp in self.compositors for p in _COMPOSITOR_PACKAGES[comp]]
+		compositor_pkgs = [p for comp in self.compositors for p in self.compositor_packages[comp]]
 
 		return [
 			*compositor_pkgs,
@@ -71,7 +74,6 @@ class NoctaliaProfile(WaylandProfile):
 			# bare installs ship none, so seed one sans + one mono
 			'inter-font',
 			'ttf-jetbrains-mono-nerd',
-			terminal_command(),
 			*additional,
 		]
 
@@ -103,7 +105,7 @@ class NoctaliaProfile(WaylandProfile):
 		header = 'Noctalia runs on top of a Wayland compositor' + '\n'
 		header += 'Choose one or more to install' + '\n'
 
-		items = [MenuItem(c, value=c) for c in _COMPOSITOR_PACKAGES]
+		items = [MenuItem(c, value=c) for c in self.compositor_packages]
 		group = MenuItemGroup(items, sort_items=True)
 		group.set_selected_by_value(self.compositors)
 

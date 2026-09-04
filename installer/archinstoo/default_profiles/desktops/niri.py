@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, provision_terminal_config, seat_services, terminal_command
+from archinstoo.default_profiles.desktops import SeatAccess, provision_terminal_config, seat_services
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class NiriProfile(WaylandProfile):
+	needs_terminal = True
+
 	def __init__(self) -> None:
 		super().__init__(
 			'niri',
@@ -32,7 +34,6 @@ class NiriProfile(WaylandProfile):
 
 		return [
 			'niri',
-			terminal_command(),
 			'fuzzel',
 			'mako',
 			'xwayland-satellite',

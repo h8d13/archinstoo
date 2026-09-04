@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -10,6 +10,8 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 class LabwcProfile(WaylandProfile):
+	needs_terminal = True
+
 	def __init__(self) -> None:
 		super().__init__(
 			'labwc',
@@ -28,7 +30,6 @@ class LabwcProfile(WaylandProfile):
 
 		return [
 			'labwc',
-			terminal_command(),
 			*additional,
 		]
 

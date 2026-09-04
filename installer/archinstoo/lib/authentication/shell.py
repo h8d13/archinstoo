@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.users import Shell, User
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.users import User
 
 
 # any special handling for a shell can go here bellow
@@ -15,13 +15,14 @@ class ShellApp:
 		install_session: Installer,
 		users: list[User],
 	) -> None:
-		# collect unique shells that need a package install
-		# bash and rbash are already available (rbash is bash in restricted mode)
-		shells_needed = {user.shell for user in users if user.shell not in (Shell.BASH, Shell.RBASH)}
+		# unique shells that need a package install; Shell.packages is empty for
+		# the ones base already covers
+		for shell in {user.shell for user in users}:
+			if not (packages := shell.packages):
+				continue
 
-		for shell in shells_needed:
 			debug(f'Installing shell: {shell.value}')
-			install_session.add_additional_packages([shell.value])
+			install_session.add_additional_packages(packages)
 
 		for user in users:
 			shell_path = f'/usr/bin/{user.shell.value}'

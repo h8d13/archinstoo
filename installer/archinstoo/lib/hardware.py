@@ -109,75 +109,83 @@ class GfxDriver(Enum):
 	def gfx_packages(self, kernels: list[str] | None = None) -> list[GfxPackage]:
 		# GPU-vendor packages only. xorg-server/xorg-xinit are a display-server concern
 		# and added by the caller (profiles_handler.install_gfx_driver) when X11 is in use.
-		packages: list[GfxPackage] = []
+		packages = list(GFX_PACKAGES[self])
 
-		match self:
-			case GfxDriver.AllOpenSource:
-				packages += [
-					GfxPackage.Mesa,
-					GfxPackage.Xf86VideoAmdgpu,
-					GfxPackage.Xf86VideoAti,
-					GfxPackage.Xf86VideoNouveau,
-					GfxPackage.LibvaIntelDriver,
-					GfxPackage.IntelMediaDriver,
-					GfxPackage.VplGpuRt,
-					GfxPackage.LibVpl,
-					GfxPackage.VulkanRadeon,
-					GfxPackage.VulkanIntel,
-					GfxPackage.VulkanNouveau,
-				]
-			case GfxDriver.AmdOpenSource:
-				packages += [
-					GfxPackage.Mesa,
-					GfxPackage.Xf86VideoAmdgpu,
-					GfxPackage.Xf86VideoAti,
-					GfxPackage.VulkanRadeon,
-				]
-			case GfxDriver.IntelOpenSource:
-				packages += [
-					GfxPackage.Mesa,
-					GfxPackage.LibvaIntelDriver,
-					GfxPackage.IntelMediaDriver,
-					GfxPackage.VplGpuRt,
-					GfxPackage.LibVpl,
-					GfxPackage.VulkanIntel,
-				]
-			case GfxDriver.NvidiaOpenKernel:
-				nvidia_pkg = GfxPackage.NvidiaOpenDkms if self.use_dkms(kernels) else GfxPackage.NvidiaOpen
-				packages += [
-					nvidia_pkg,
-					GfxPackage.LibvaNvidiaDriver,
-				]
-				if self.use_dkms(kernels):
-					packages.append(GfxPackage.Dkms)
-			case GfxDriver.NvidiaOpenSource:
-				packages += [
-					GfxPackage.Mesa,
-					GfxPackage.Xf86VideoNouveau,
-					GfxPackage.VulkanNouveau,
-				]
-			case GfxDriver.MesaOpenSource:
-				packages += [
-					GfxPackage.Mesa,
-				]
-				# Add driver based on detection
-				if SysInfo.has_intel_graphics():
-					packages.append(GfxPackage.VulkanIntel)
-				elif SysInfo.has_amd_graphics():
-					packages.append(GfxPackage.VulkanRadeon)
-			case GfxDriver.VMSoftware:
-				packages += [
-					GfxPackage.Mesa,
-					GfxPackage.VulkanSwrast,
-				]
-			case GfxDriver.VMVirtio:
-				packages += [
-					GfxPackage.Mesa,
-					GfxPackage.VulkanVirtio,
-				]
+		# out-of-tree build against a non-standard kernel
+		if self.use_dkms(kernels):
+			packages = [GfxPackage.NvidiaOpenDkms if p is GfxPackage.NvidiaOpen else p for p in packages]
+			packages.append(GfxPackage.Dkms)
+
+		# the generic driver adds the vulkan layer for whatever GPU is present
+		if self is GfxDriver.MesaOpenSource:
+			if SysInfo.has_intel_graphics():
+				packages += MESA_HOST_EXTRA[CpuVendor.GenuineIntel.value]
+			elif SysInfo.has_amd_graphics():
+				packages += MESA_HOST_EXTRA[CpuVendor.AuthenticAMD.value]
 
 		return packages
 
+
+# the static half of every driver, before the DKMS and host-GPU conditionals
+GFX_PACKAGES: dict[GfxDriver, list[GfxPackage]] = {
+	GfxDriver.AllOpenSource: [
+		GfxPackage.Mesa,
+		GfxPackage.Xf86VideoAmdgpu,
+		GfxPackage.Xf86VideoAti,
+		GfxPackage.Xf86VideoNouveau,
+		GfxPackage.LibvaIntelDriver,
+		GfxPackage.IntelMediaDriver,
+		GfxPackage.VplGpuRt,
+		GfxPackage.LibVpl,
+		GfxPackage.VulkanRadeon,
+		GfxPackage.VulkanIntel,
+		GfxPackage.VulkanNouveau,
+	],
+	GfxDriver.AmdOpenSource: [
+		GfxPackage.Mesa,
+		GfxPackage.Xf86VideoAmdgpu,
+		GfxPackage.Xf86VideoAti,
+		GfxPackage.VulkanRadeon,
+	],
+	GfxDriver.IntelOpenSource: [
+		GfxPackage.Mesa,
+		GfxPackage.LibvaIntelDriver,
+		GfxPackage.IntelMediaDriver,
+		GfxPackage.VplGpuRt,
+		GfxPackage.LibVpl,
+		GfxPackage.VulkanIntel,
+	],
+	GfxDriver.NvidiaOpenKernel: [
+		GfxPackage.NvidiaOpen,
+		GfxPackage.LibvaNvidiaDriver,
+	],
+	GfxDriver.NvidiaOpenSource: [
+		GfxPackage.Mesa,
+		GfxPackage.Xf86VideoNouveau,
+		GfxPackage.VulkanNouveau,
+	],
+	GfxDriver.MesaOpenSource: [
+		GfxPackage.Mesa,
+	],
+	GfxDriver.VMSoftware: [
+		GfxPackage.Mesa,
+		GfxPackage.VulkanSwrast,
+	],
+	GfxDriver.VMVirtio: [
+		GfxPackage.Mesa,
+		GfxPackage.VulkanVirtio,
+	],
+}
+
+# what MesaOpenSource adds once the host GPU is known, keyed by vendor tag
+MESA_HOST_EXTRA: dict[str, list[GfxPackage]] = {
+	CpuVendor.GenuineIntel.value: [GfxPackage.VulkanIntel],
+	CpuVendor.AuthenticAMD.value: [GfxPackage.VulkanRadeon],
+}
+
+# the X11 half of a graphical install, added off DisplayServer rather than
+# off the driver (profiles_handler.install_gfx_driver)
+XORG_EXTRA: list[GfxPackage] = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
 
 # Module-level so tests can point the sweeps at a synthetic tree
 _PCI_BUS = Path('/sys/bus/pci/devices')

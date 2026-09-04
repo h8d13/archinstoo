@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, provision_terminal_config, seat_services, terminal_command
+from archinstoo.default_profiles.desktops import SeatAccess, provision_terminal_config, seat_services
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class HyprlandProfile(WaylandProfile):
+	needs_terminal = True
+
 	_default_greeter_non_seatd = GreeterType.Sddm
 
 	def __init__(self) -> None:
@@ -32,7 +34,6 @@ class HyprlandProfile(WaylandProfile):
 		return [
 			'hyprland',
 			'dunst',
-			terminal_command(),
 			'uwsm',
 			'hyprlauncher',
 			'xdg-desktop-portal-hyprland',

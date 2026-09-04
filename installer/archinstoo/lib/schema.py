@@ -1,25 +1,37 @@
-# schema.jsonc: where it lives and how to read it.
+# schema.toml: where it lives and how to read it.
 #
-# The count/size scripts import SCHEMA from here; nvchecker/NVGEN loads this
-# module BY PATH, shared helper for other call sites.
+# The file is generated from the installer's own package definitions by
+# lib/schema_gen.py, so nothing here should ever be hand-edited, used by various scripts.
 
-import json
-import re
+import tomllib
 from pathlib import Path
 from typing import Any
 
-SCHEMA_PATH = Path(__file__).parent.parent / 'schema.jsonc'
+SCHEMA_PATH = Path(__file__).parent.parent / 'schema.toml'
 
-# `// comment` on its own line, or a trailing one that follows a comma. anything
-# else (a comment after `]` with no comma) stays in place and surfaces as a
-# JSONDecodeError rather than silently eating a line
-_COMMENT_RE = re.compile(r'(?m)^\s*//.*$|(?<=,)\s*//.*$')
+# an entry under this name holds profile names, not packages
+PROFILE_KEY = 'profiles'
 
 
 def load(path: Path = SCHEMA_PATH) -> dict[str, Any]:
-	# strip // comments, then parse as json
-	result: dict[str, Any] = json.loads(_COMMENT_RE.sub('', path.read_text()))
+	with path.open('rb') as f:
+		result: dict[str, Any] = tomllib.load(f)
 	return result
+
+
+def package_names(schema: dict[str, Any]) -> set[str]:
+	# every package the schema names, for callers that want the set
+	names: set[str] = set()
+
+	for section in schema.values():
+		for name, values in section.items():
+			if name == PROFILE_KEY:
+				continue
+			# a nested section (compositors) is one table per profile
+			for pkgs in values.values() if isinstance(values, dict) else [values]:
+				names.update(pkgs)
+
+	return names
 
 
 SCHEMA = load()

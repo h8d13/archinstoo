@@ -50,6 +50,9 @@ _OPTDEP_USB: dict[str, FirmwareVendor] = {
 # The catch-all names no vendor, so no owner lookup can ever land on it
 _SPLIT_BASELINE = (FirmwareVendor.OTHER,)
 
+# the static half of FirmwareType.FULL; detect_optdeps() adds the rest per host
+FULL_FIRMWARE = ['linux-firmware']
+
 
 def detect_optdeps() -> list[FirmwareVendor]:
 	from archinstoo.lib.hardware import SysInfo
@@ -97,7 +100,7 @@ class FirmwareConfiguration:
 			case FirmwareType.FULL:
 				# the metapackage stops at its hard deps, all opts pkgs are dropped
 				# we re-register them here based on PCI ID detection
-				return ['linux-firmware', *(v.value for v in detect_optdeps())]
+				return [*FULL_FIRMWARE, *(v.value for v in detect_optdeps())]
 			case FirmwareType.MINIMAL:
 				return []
 			case FirmwareType.VENDOR:

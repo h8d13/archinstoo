@@ -1,11 +1,12 @@
 from typing import override
 
-from archinstoo.default_profiles.desktops import terminal_command
 from archinstoo.default_profiles.xorg import XorgProfile
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 
 class I3wmProfile(XorgProfile):
+	needs_terminal = True
+
 	def __init__(self) -> None:
 		super().__init__('i3-wm', ProfileType.WindowMgr)
 
@@ -18,7 +19,6 @@ class I3wmProfile(XorgProfile):
 			'i3status',
 			'i3blocks',
 			'xss-lock',
-			terminal_command(),
 			'lightdm-gtk-greeter',
 			'lightdm',
 			'dmenu',

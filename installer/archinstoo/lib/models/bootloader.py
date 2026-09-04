@@ -4,6 +4,9 @@ from typing import Any, Self
 
 from archinstoo.lib.output import warn
 
+# writes the EFI boot entry, for every bootloader that does not manage its own
+EFIBOOTMGR = 'efibootmgr'
+
 
 class Bootloader(Enum):
 	Systemd = 'systemd-boot'
@@ -24,6 +27,19 @@ class Bootloader(Enum):
 				return 'Limine'
 			case Bootloader.Refind:
 				return 'Refind'
+
+	@property
+	def packages(self) -> list[str]:
+		# what add_bootloader() straps on UEFI; a BIOS install skips efibootmgr,
+		# so this is the upper bound, which is what an estimate wants
+		match self:
+			case Bootloader.Grub | Bootloader.Limine:
+				return [self.value, EFIBOOTMGR]
+			case Bootloader.Refind:
+				return [self.value]
+			case _:
+				# systemd-boot ships with systemd, efistub is a kernel feature
+				return [EFIBOOTMGR]
 
 	def has_removable_support(self) -> bool:
 		match self:

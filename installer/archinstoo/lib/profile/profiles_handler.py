@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstoo.lib.hardware import GfxDriver, GfxPackage
+from archinstoo.lib.hardware import XORG_EXTRA, GfxDriver
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -150,52 +150,13 @@ class ProfileHandler:
 		return 'niri'
 
 	def install_greeter(self, install_session: Installer, greeter: GreeterType, profiles: list[Profile] | None = None) -> None:
-		packages = []
-		service = None
-		service_disable = None
+		# what each greeter pulls and runs lives on GreeterType; only the
+		# per-greeter configuration below is this function's own business
+		install_session.add_additional_packages(greeter.packages)
+		install_session.enable_service(greeter.services)
 
-		match greeter:
-			case GreeterType.LightdmSlick:
-				packages = ['lightdm', 'lightdm-slick-greeter']
-				service = ['lightdm']
-			case GreeterType.Lightdm:
-				packages = ['lightdm', 'lightdm-gtk-greeter']
-				service = ['lightdm']
-			case GreeterType.PlasmaLoginManager:
-				packages = ['plasma-login-manager']
-				service = ['plasmalogin']
-			case GreeterType.Sddm:
-				packages = ['sddm']
-				service = ['sddm']
-			case GreeterType.Gdm:
-				packages = ['gdm']
-				service = ['gdm']
-			case GreeterType.Ly:
-				packages = ['ly']
-				service = ['ly@tty1']
-				service_disable = ['getty@tty1']
-			case GreeterType.Greetd:
-				packages = ['greetd']
-				service = ['greetd']
-			case GreeterType.Regreet:
-				# regreet (GUI) runs inside the cage kiosk compositor, launched by greetd
-				packages = ['greetd', 'greetd-regreet', 'cage']
-				service = ['greetd']
-				service_disable = ['getty@tty1']
-			case GreeterType.CosmicSession:
-				packages = ['cosmic-greeter']
-				service = ['cosmic-greeter']
-			case GreeterType.GreetdDms:
-				packages = ['greetd']
-				service = ['greetd']
-				service_disable = ['getty@tty1']
-
-		if packages:
-			install_session.add_additional_packages(packages)
-		if service:
-			install_session.enable_service(service)
-		if service_disable:
-			install_session.disable_service(service_disable)
+		if disable := greeter.disabled_services:
+			install_session.disable_service(disable)
 
 		# slick-greeter requires a config change
 		if greeter == GreeterType.LightdmSlick:
@@ -294,7 +255,7 @@ class ProfileHandler:
 		# Add X11 base packages if any selected profile uses X11. Wayland is handled by
 		# the DE/WM itself via package deps, so it gets nothing here.
 		if DisplayServer.X11 in display_servers:
-			pkg_names += [GfxPackage.XorgServer.value, GfxPackage.XorgXinit.value]
+			pkg_names += [p.value for p in XORG_EXTRA]
 
 		install_session.add_additional_packages(pkg_names)
 
@@ -307,6 +268,17 @@ class ProfileHandler:
 		# correctly include the X11 base packages.
 		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
 			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers)
+
+		# One terminal for every profile that ships a keybind rather than its own
+		# (see default_profiles/desktops/__init__.py). TerminalApp has already
+		# installed the pick when the menu entry was used; this covers a skipped
+		# entry, where the profiles fall back to the default. A top-level profile
+		# carries the real picks in current_selection, so check both levels.
+		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
+		if any(p.needs_terminal for p in selected):
+			from archinstoo.default_profiles.desktops import terminal_command
+
+			install_session.add_additional_packages([terminal_command()])
 
 		# Install all selected profiles AFTER
 		for profile in profile_config.profiles:
