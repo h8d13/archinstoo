@@ -196,7 +196,7 @@ _FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
 
 
-def _run(cmd: list[str]) -> list[str]:
+def _run_splitlines(cmd: list[str]) -> list[str]:
 	# pacman -Qo exits 1 over paths it could not match while still printing the
 	# owners it did find, so read stdout and ignore the status
 	try:
@@ -267,7 +267,7 @@ def _bus_modules(bus: Path) -> set[str]:
 			continue
 
 		if alias := _modalias(dev):
-			modules.update(_run(['modprobe', '-R', alias]))
+			modules.update(_run_splitlines(['modprobe', '-R', alias]))
 
 	return modules
 
@@ -278,7 +278,7 @@ def _module_depends(release: str, module: str) -> set[str]:
 	# level is enough; deeper deps are shared libs (snd, cs_dsp) with none.
 	# modinfo prints dashes here where it answers to underscores.
 	deps: set[str] = set()
-	for line in _run(['modinfo', '-k', release, '-F', 'depends', module]):
+	for line in _run_splitlines(['modinfo', '-k', release, '-F', 'depends', module]):
 		deps.update(d.replace('-', '_') for d in line.split(',') if d)
 
 	return deps
@@ -446,7 +446,7 @@ class _SysInfo:
 
 		files: list[Path] = []
 		for module in sorted(modules):
-			declared = _run(['modinfo', '-k', release, '-F', 'firmware', module])
+			declared = _run_splitlines(['modinfo', '-k', release, '-F', 'firmware', module])
 			files += _firmware_files(declared, _FIRMWARE_ROOT)
 
 		if not files:
@@ -454,7 +454,7 @@ class _SysInfo:
 
 		# raw owners: sof-firmware and the nvidia driver tree live under there
 		# too, and only the caller knows which names it can resolve
-		return sorted(set(_run(['pacman', '-Qoq', *(str(f) for f in files)])))
+		return sorted(set(_run_splitlines(['pacman', '-Qoq', *(str(f) for f in files)])))
 
 
 _sys_info = _SysInfo()
