@@ -200,13 +200,6 @@
 │   │   ├── schema
 │   │   └── size
 │   └── _version
-├── archinstoo.egg-info/
-│   ├── dependency_links.txt
-│   ├── entry_points.txt
-│   ├── PKG-INFO
-│   ├── requires.txt
-│   ├── SOURCES.txt
-│   └── top_level.txt
 ├── examples/
 │   ├── config_custom.json
 │   ├── config_sample_full.json
@@ -219,5 +212,5 @@
     └── parted/
         └── __init__i
 
-35 directories, 183 files
+34 directories, 177 files
 ```

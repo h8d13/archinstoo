@@ -19,7 +19,7 @@ case "$1" in
 	{
 		echo '# Project Tree'
 		echo '```'
-		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|locales|docs|logs|__pycache__|__init__.py|tests' | sed 's/\.py//g'
+		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|*.egg-info|locales|docs|logs|__pycache__|__init__.py|tests' | sed 's/\.py//g'
 		echo '```'
 	} >docs/README.md
 	;;
