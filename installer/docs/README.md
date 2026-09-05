@@ -28,6 +28,7 @@
 │   │   │   │       │   ├── binds.kdl
 │   │   │   │       │   ├── colors.kdl
 │   │   │   │       │   ├── cursor.kdl
+│   │   │   │       │   ├── input.kdl
 │   │   │   │       │   ├── layout.kdl
 │   │   │   │       │   └── outputs.kdl
 │   │   │   │       └── niri.kdl
@@ -40,6 +41,17 @@
 │   │   │   ├── lxqt
 │   │   │   ├── mate
 │   │   │   ├── niri
+│   │   │   ├── noctalia_assets/
+│   │   │   │   ├── hyprland/
+│   │   │   │   │   └── hyprland.lua
+│   │   │   │   ├── labwc/
+│   │   │   │   │   ├── autostart
+│   │   │   │   │   └── rc.xml
+│   │   │   │   ├── niri/
+│   │   │   │   │   └── config.kdl
+│   │   │   │   └── sway/
+│   │   │   │       └── config
+│   │   │   ├── noctalia
 │   │   │   ├── plasma
 │   │   │   ├── qtile
 │   │   │   ├── river
@@ -78,7 +90,8 @@
 │   │   │       ├── monitor
 │   │   │       ├── power_management
 │   │   │       ├── print_service
-│   │   │       └── security
+│   │   │       ├── security
+│   │   │       └── terminal
 │   │   ├── args
 │   │   ├── authentication/
 │   │   │   ├── authentication_menu
@@ -156,8 +169,8 @@
 │   │   │   ├── driver_select
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
-│   │   ├── schema
 │   │   ├── schema_gen
+│   │   ├── schema
 │   │   ├── tui/
 │   │   │   ├── content_editor
 │   │   │   ├── curses_menu
@@ -187,6 +200,13 @@
 │   │   ├── schema
 │   │   └── size
 │   └── _version
+├── archinstoo.egg-info/
+│   ├── dependency_links.txt
+│   ├── entry_points.txt
+│   ├── PKG-INFO
+│   ├── requires.txt
+│   ├── SOURCES.txt
+│   └── top_level.txt
 ├── examples/
 │   ├── config_custom.json
 │   ├── config_sample_full.json
@@ -195,32 +215,9 @@
 │   └── vm_unattended.json
 ├── PKGBUILD
 ├── pyproject.toml
-└── tests/
-    ├── conftest
-    ├── data/
-    │   └── test_config.json
-    ├── test_args
-    ├── test_available_packages
-    ├── test_bootloader_validation
-    ├── test_boot_partition
-    ├── test_bootstrap
-    ├── test_configuration_output
-    ├── test_deps
-    ├── test_env
-    ├── test_firmware
-    ├── test_limine_layout
-    ├── test_locale
-    ├── test_log_dir
-    ├── test_luks_discards
-    ├── test_menu_item_focus
-    ├── test_mirrors
-    ├── test_mount_options
-    ├── test_parted_optional
-    ├── test_run_exceptions
-    ├── test_saved_config_resume
-    ├── test_schema
-    ├── test_script_peek
-    └── test_version_stamp
+└── stubs/
+    └── parted/
+        └── __init__i
 
-29 directories, 190 files
+35 directories, 183 files
 ```

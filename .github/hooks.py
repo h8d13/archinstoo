@@ -1,4 +1,4 @@
-# Some docs in .github/ are symlinks into the repo (index.md -> ../README.md).
+# Some docs in .github/ are symlinks into the repo (index.md -> ../readme.md).
 # edit_uri builds links from the docs path, so those land on GitHub's symlink
 # stub page. Rewrite edit_url to the resolved target for symlinked pages.
 import os
