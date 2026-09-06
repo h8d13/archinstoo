@@ -1,6 +1,9 @@
-from dataclasses import dataclass
-from enum import StrEnum, auto
-from typing import ClassVar, NotRequired, Self, TypedDict
+from dataclasses import dataclass, fields
+from enum import Enum, StrEnum, auto
+from typing import TYPE_CHECKING, Any, ClassVar, NotRequired, Self, TypedDict, get_args, get_origin
+
+if TYPE_CHECKING:
+	from collections.abc import Mapping
 
 
 class PowerManagement(StrEnum):
@@ -213,215 +216,95 @@ class ApplicationSerialization(TypedDict):
 
 
 @dataclass
-class AudioConfiguration:
+class _Category:
+	# one dataclass field: an enum, a bool, or a list of enums. json() and
+	# parse_arg() read it off the field, so a category is its declaration
+	def json(self) -> dict[str, Any]:
+		((name, value),) = vars(self).items()
+		if isinstance(value, list):
+			return {name: [v.value for v in value]}
+		return {name: value.value if isinstance(value, Enum) else value}
+
+	@classmethod
+	def parse_arg(cls, arg: Mapping[str, Any]) -> Self:
+		(spec,) = fields(cls)
+		raw = arg[spec.name]
+		if get_origin(spec.type) is list:
+			(member,) = get_args(spec.type)
+			return cls(**{spec.name: [member(v) for v in raw]})
+		if isinstance(spec.type, type) and issubclass(spec.type, Enum):
+			return cls(**{spec.name: spec.type(raw)})
+		return cls(**{spec.name: raw})
+
+
+@dataclass
+class AudioConfiguration(_Category):
 	audio: Audio
 
-	def json(self) -> AudioConfigSerialization:
-		return {
-			'audio': self.audio.value,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: AudioConfigSerialization) -> Self:
-		return cls(
-			Audio(arg['audio']),
-		)
-
 
 @dataclass
-class BluetoothConfiguration:
+class BluetoothConfiguration(_Category):
 	enabled: bool
 
-	def json(self) -> BluetoothConfigSerialization:
-		return {'enabled': self.enabled}
-
-	@classmethod
-	def parse_arg(cls, arg: BluetoothConfigSerialization) -> Self:
-		return cls(arg['enabled'])
-
 
 @dataclass
-class PowerManagementConfiguration:
+class PowerManagementConfiguration(_Category):
 	power_management: PowerManagement
 
-	def json(self) -> PowerManagementConfigSerialization:
-		return {
-			'power_management': self.power_management.value,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: PowerManagementConfigSerialization) -> Self:
-		return cls(
-			PowerManagement(arg['power_management']),
-		)
-
 
 @dataclass
-class CPUSchedulerConfiguration:
+class CPUSchedulerConfiguration(_Category):
 	scheduler: CPUScheduler
 
-	def json(self) -> CPUSchedulerConfigSerialization:
-		return {
-			'scheduler': self.scheduler.value,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: CPUSchedulerConfigSerialization) -> Self:
-		return cls(
-			CPUScheduler(arg['scheduler']),
-		)
-
 
 @dataclass
-class PrintServiceConfiguration:
+class PrintServiceConfiguration(_Category):
 	enabled: bool
 
-	def json(self) -> PrintServiceConfigSerialization:
-		return {'enabled': self.enabled}
-
-	@classmethod
-	def parse_arg(cls, arg: PrintServiceConfigSerialization) -> Self:
-		return cls(arg['enabled'])
-
 
 @dataclass
-class MediaCodecsConfiguration:
+class MediaCodecsConfiguration(_Category):
 	enabled: bool
 
-	def json(self) -> MediaCodecsConfigSerialization:
-		return {'enabled': self.enabled}
-
-	@classmethod
-	def parse_arg(cls, arg: MediaCodecsConfigSerialization) -> Self:
-		return cls(arg['enabled'])
-
 
 @dataclass
-class FirewallConfiguration:
+class FirewallConfiguration(_Category):
 	firewall: Firewall
 
-	def json(self) -> FirewallConfigSerialization:
-		return {
-			'firewall': self.firewall.value,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: FirewallConfigSerialization) -> Self:
-		return cls(
-			Firewall(arg['firewall']),
-		)
-
 
 @dataclass
-class ManagementConfiguration:
+class ManagementConfiguration(_Category):
 	tools: list[Management]
 
-	def json(self) -> ManagementConfigSerialization:
-		return {
-			'tools': [t.value for t in self.tools],
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: ManagementConfigSerialization) -> Self:
-		return cls(
-			tools=[Management(t) for t in arg['tools']],
-		)
-
 
 @dataclass
-class MonitorConfiguration:
+class MonitorConfiguration(_Category):
 	monitor: Monitor
 
-	def json(self) -> MonitorConfigSerialization:
-		return {
-			'monitor': self.monitor.value,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: MonitorConfigSerialization) -> Self:
-		return cls(
-			Monitor(arg['monitor']),
-		)
-
 
 @dataclass
-class EditorConfiguration:
+class EditorConfiguration(_Category):
 	editor: Editor
 
-	def json(self) -> EditorConfigSerialization:
-		return {
-			'editor': self.editor.value,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: EditorConfigSerialization) -> Self:
-		return cls(
-			Editor(arg['editor']),
-		)
-
 
 @dataclass
-class TerminalConfiguration:
+class TerminalConfiguration(_Category):
 	terminal: Terminal
 
-	def json(self) -> TerminalConfigSerialization:
-		return {
-			'terminal': self.terminal.value,
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: TerminalConfigSerialization) -> Self:
-		return cls(
-			Terminal(arg['terminal']),
-		)
-
 
 @dataclass
-class SecurityConfiguration:
+class SecurityConfiguration(_Category):
 	tools: list[Security]
 
-	def json(self) -> SecurityConfigSerialization:
-		return {
-			'tools': [t.value for t in self.tools],
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: SecurityConfigSerialization) -> Self:
-		return cls(
-			tools=[Security(t) for t in arg['tools']],
-		)
-
 
 @dataclass
-class LanguageConfiguration:
+class LanguageConfiguration(_Category):
 	tools: list[Language]
 
-	def json(self) -> LanguageConfigSerialization:
-		return {
-			'tools': [t.value for t in self.tools],
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: LanguageConfigSerialization) -> Self:
-		return cls(
-			tools=[Language(t) for t in arg['tools']],
-		)
-
 
 @dataclass
-class DevToolConfiguration:
+class DevToolConfiguration(_Category):
 	tools: list[DevTool]
-
-	def json(self) -> DevToolConfigSerialization:
-		return {
-			'tools': [t.value for t in self.tools],
-		}
-
-	@classmethod
-	def parse_arg(cls, arg: DevToolConfigSerialization) -> Self:
-		return cls(
-			tools=[DevTool(t) for t in arg['tools']],
-		)
 
 
 @dataclass
@@ -429,8 +312,8 @@ class DevelopmentConfiguration:
 	language_config: LanguageConfiguration | None = None
 	devtool_config: DevToolConfiguration | None = None
 
-	def json(self) -> DevelopmentConfigSerialization:
-		out: DevelopmentConfigSerialization = {}
+	def json(self) -> dict[str, Any]:
+		out: dict[str, Any] = {}
 		if self.language_config:
 			out['language_config'] = self.language_config.json()
 		if self.devtool_config:
@@ -463,21 +346,8 @@ class ApplicationConfiguration:
 	security_config: SecurityConfiguration | None = None
 	development_config: DevelopmentConfiguration | None = None
 
-	_config_parsers: ClassVar[dict[str, type]] = {
-		'bluetooth_config': BluetoothConfiguration,
-		'audio_config': AudioConfiguration,
-		'power_management_config': PowerManagementConfiguration,
-		'cpu_scheduler_config': CPUSchedulerConfiguration,
-		'print_service_config': PrintServiceConfiguration,
-		'media_codecs_config': MediaCodecsConfiguration,
-		'firewall_config': FirewallConfiguration,
-		'management_config': ManagementConfiguration,
-		'monitor_config': MonitorConfiguration,
-		'editor_config': EditorConfiguration,
-		'terminal_config': TerminalConfiguration,
-		'security_config': SecurityConfiguration,
-		'development_config': DevelopmentConfiguration,
-	}
+	# category -> its class, read off the fields below the class body
+	_config_parsers: ClassVar[dict[str, type]]
 
 	@classmethod
 	def parse_arg(
@@ -490,11 +360,14 @@ class ApplicationConfiguration:
 			for attr, parser_cls in cls._config_parsers.items():
 				if (value := args.get(attr)) is not None:
 					setattr(app_config, attr, parser_cls.parse_arg(value))  # type: ignore[attr-defined]
-					# a new category is a field here, in _config_parsers and in
-					# ApplicationSerialization; the rest of the flow is in
-					# .github/API_REF.md, "Add an application"
+					# a new category is a field here and in ApplicationSerialization;
+					# the rest of the flow is in .github/API_REF.md, "Add an application"
 
 		return app_config
 
 	def json(self) -> ApplicationSerialization:
 		return {attr: obj.json() for attr in self._config_parsers if (obj := getattr(self, attr))}  # type: ignore[return-value]
+
+
+# every field is `<Category>Configuration | None`; the class is the first arm
+ApplicationConfiguration._config_parsers = {f.name: get_args(f.type)[0] for f in fields(ApplicationConfiguration)}
