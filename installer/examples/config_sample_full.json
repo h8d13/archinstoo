@@ -291,7 +291,11 @@
         }
     },
     "network_config": {
-        "type": "nm-iwd"
+        "type": "nm-iwd",
+        "dns": {
+            "provider": "quad9",
+            "over_tls": true
+        }
     },
     "timezone": "Europe/Berlin",
     "ntp": true,
