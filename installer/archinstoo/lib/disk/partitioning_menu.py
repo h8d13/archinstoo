@@ -17,9 +17,9 @@ from archinstoo.lib.models.device import (
 	Unit,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_dir, prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_dir, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -512,24 +512,8 @@ class PartitioningList(ListManager[DiskSegment]):
 
 		title = f'Size (default: {max_size.format_highest()}): '
 
-		result = EditMenu(
-			title,
-			header=f'{prompt}\b',
-			allow_skip=True,
-			validator=validate,
-		).input()
-
-		size: Size | None = None
-
-		match result.type_:
-			case ResultType.Skip:
-				size = max_size
-			case ResultType.Selection:
-				value = result.text()
-
-				size = self._validate_value(sector_size, max_size, value) if value else max_size
-			case _:
-				pass
+		value = prompt_text(title, f'{prompt}\b', validator=validate)
+		size = self._validate_value(sector_size, max_size, value) if value else max_size
 
 		if not size:
 			raise RuntimeError('Size prompt returned no value')

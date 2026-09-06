@@ -6,7 +6,7 @@ from archinstoo.lib.models.packages import AvailablePackage, PackageGroup
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, PreviewStyle
 
@@ -30,23 +30,10 @@ def select_ntp(preset: bool = True) -> bool:
 
 
 def select_hostname(preset: str | None = None) -> str | None:
-	result = EditMenu(
-		'Hostname',
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-		default_text=preset,
-	).input()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			hostname = result.text()
-			if len(hostname) < 1:
-				return None
-			return hostname
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')
+	hostname = prompt_text('Hostname', preset=preset)
+	if hostname is None:
+		return preset
+	return hostname or None
 
 
 def select_timezone(preset: str | None = None) -> str | None:

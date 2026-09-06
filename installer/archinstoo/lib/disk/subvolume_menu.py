@@ -1,12 +1,9 @@
 from pathlib import Path
-from typing import assert_never, override
+from typing import override
 
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.device import SubvolumeModification
-from archinstoo.lib.tui.curses_menu import EditMenu
-from archinstoo.lib.tui.prompts import prompt_dir
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment
+from archinstoo.lib.tui.prompts import prompt_dir, prompt_text
 
 from .layouts import get_default_btrfs_subvols
 
@@ -41,23 +38,9 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 				return None
 			return 'Value cannot be empty'
 
-		result = EditMenu(
-			'Subvolume name',
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-			default_text=str(preset.name) if preset else None,
-			validator=validate,
-		).input()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				name = result.text()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
-			case _:
-				assert_never(result.type_)
+		name = prompt_text('Subvolume name', preset=str(preset.name) if preset else None, validator=validate)
+		if name is None:
+			return preset
 
 		header = f'{"Subvolume name"}: {name}\n'
 

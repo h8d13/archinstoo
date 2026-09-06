@@ -4,9 +4,9 @@ from typing import override
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -164,22 +164,10 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		default = 'ttyAMA0,115200' if SysInfo.arch() == 'aarch64' else 'ttyS0,115200'
 		header = f'Kernel "console=" value for a serial console (e.g. {default}).\nLeave empty to disable.\n'
 
-		result = EditMenu(
-			'Serial console',
-			header=header,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-			default_text=preset or default,
-		).input()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				value = result.text().strip()
-				return value or None
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		value = prompt_text('Serial console', header, preset or default)
+		if value is None:
+			return preset
+		return value.strip() or None
 
 	def _select_splash(self, preset: bool) -> bool:
 		prompt = 'Embed the Arch logo splash image into the unified kernel image?' + '\n'

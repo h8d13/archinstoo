@@ -19,9 +19,9 @@ from archinstoo.lib.models.device import (
 	PartitionModification,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -619,21 +619,5 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 		except ValueError:
 			return 'Please enter a valid number'
 
-	result = EditMenu(
-		'Iteration time',
-		header=header,
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-		default_text=str(preset) if preset else str(DEFAULT_ITER_TIME),
-		validator=validate_iter_time,
-	).input()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			if not result.text():
-				return preset
-			return int(result.text())
-		case ResultType.Reset:
-			return None
+	text = prompt_text('Iteration time', header, str(preset) if preset else str(DEFAULT_ITER_TIME), validate_iter_time)
+	return int(text) if text else preset

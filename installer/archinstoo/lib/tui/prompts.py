@@ -1,10 +1,13 @@
 from pathlib import Path
-from typing import Literal, overload
+from typing import TYPE_CHECKING, Literal, overload
 
 from .curses_menu import EditMenu, SelectMenu
 from .menu_item import MenuItem, MenuItemGroup
 from .result import ResultType
 from .types import Alignment, Orientation
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
 
 @overload
@@ -37,6 +40,29 @@ def prompt_yes_no(header: str, preset: bool | None = None, *, allow_skip: bool =
 	return result.item() == MenuItem.yes()
 
 
+def prompt_text(
+	title: str,
+	header: str | None = None,
+	preset: str | None = None,
+	validator: Callable[[str | None], str | None] | None = None,
+	*,
+	allow_skip: bool = True,
+) -> str | None:
+	# one line of input. None back is a skip; an empty entry comes back as ''
+	# so the caller decides what empty means
+	result = EditMenu(
+		title,
+		header=header,
+		validator=validator,
+		allow_skip=allow_skip,
+		default_text=preset or None,
+	).input()
+
+	if result.type_ == ResultType.Skip:
+		return None
+	return result.text()
+
+
 def confirm_abort() -> None:
 	if prompt_yes_no('Do you really want to abort?' + '\n', allow_skip=False):
 		raise SystemExit(0)
@@ -62,25 +88,5 @@ def prompt_dir(
 
 		return 'Not a valid directory'
 
-	validate_func = validate_path if validate else None
-
-	result = EditMenu(
-		text,
-		header=header,
-		alignment=Alignment.CENTER,
-		allow_skip=allow_skip,
-		validator=validate_func,
-		default_text=preset,
-	).input()
-
-	match result.type_:
-		case ResultType.Skip:
-			return None
-		case ResultType.Selection:
-			if not result.text():
-				return None
-			return Path(result.text())
-		case _:
-			pass
-
-	return None
+	path = prompt_text(text, header, preset, validate_path if validate else None, allow_skip=allow_skip)
+	return Path(path) if path else None
