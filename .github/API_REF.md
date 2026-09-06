@@ -36,9 +36,10 @@ flag for an enum, the way `firewall`/`management` do.
 
 1. [models/application.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/application.py):
    `MediaCodecsConfigSerialization` (TypedDict, the JSON shape),
-   `MediaCodecsConfiguration` (dataclass with `json()`/`parse_arg()`), then
-   the field in `ApplicationSerialization`, `ApplicationConfiguration` and
-   `_config_parsers`. A choice category adds its `StrEnum` first.
+   `MediaCodecsConfiguration` (a `_Category` dataclass with its one field:
+   an enum, a bool, or a list of enums; `json()`/`parse_arg()` come from the
+   base), then the field in `ApplicationSerialization` and
+   `ApplicationConfiguration`. A choice category adds its `StrEnum` first.
 2. [applications/cat/media_codecs.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/cat/media_codecs.py):
    `packages` (and `services`) as `@property` literal lists, then
    `install(self, install_session, ...)` using the Installer primitives
