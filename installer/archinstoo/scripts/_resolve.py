@@ -24,6 +24,7 @@ from archinstoo.lib.utils.env import Os
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
 	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
+	from archinstoo.lib.schema_gen import Section
 
 
 def _flat(key: str) -> list[str]:
@@ -111,16 +112,6 @@ def _filesystem_packages(disk: dict[str, Any], kernels: list[str]) -> set[str]:
 	return pkgs
 
 
-def _development_packages(dev: dict[str, Any]) -> set[str]:
-	# development_config nests two à-la-carte tool lists; resolve both against the schema
-	pkgs: set[str] = set()
-	for section, schema_key in (('language_config', 'languages'), ('devtool_config', 'devtools')):
-		for tool in (dev.get(section) or {}).get('tools', []) or []:
-			if tool in SCHEMA[schema_key]:
-				pkgs.update(SCHEMA[schema_key][tool])
-	return pkgs
-
-
 def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	prof_pkgs = set(SCHEMA['profiles'][name])
 
@@ -177,62 +168,49 @@ def _gfx_packages(gfx: str, kernels: list[str], details: list[str]) -> set[str]:
 	return pkgs
 
 
-def _terminal_packages(app: dict[str, Any], details: list[str]) -> set[str]:
-	# one terminal, shared by every profile in terminal_profiles. TerminalApp
-	# installs the pick; a skipped menu entry leaves those profiles on the
-	# default, which install_profile_config() installs instead
-	terminal = (app.get('terminal_config') or {}).get('terminal', '')
-
-	if terminal not in SCHEMA['terminals']:
-		if not set(details) & set(SCHEMA['terminal_profiles']['profiles']):
+def _pick(app: dict[str, Any], section: Section) -> set[str]:
+	# walk the section's pick path into app_config. the value's shape says how
+	# the section is read: a flag or a name takes a flat section whole, a name
+	# indexes a table, a list unions its rows
+	value: Any = app
+	for key in section.pick:
+		value = (value or {}).get(key)
+		if value is None:
 			return set()
-		terminal = DEFAULT_TERMINAL
 
-	return set(SCHEMA['terminals'][terminal])
+	table: dict[str, list[str]] = SCHEMA[section.key]
+
+	if section.list_key in table:
+		return set(table[section.list_key]) if value else set()
+	if isinstance(value, list):
+		return {p for name in value if name in table for p in table[name]}
+	return set(table.get(value, []))
 
 
 def _application_packages(app: dict[str, Any], details: list[str]) -> set[str]:
-	# every app_config section that pulls packages. the result is a set, so the
-	# à-la-carte ones are grouped by shape rather than by install order
+	# every app_config category is a section with a pick; what follows is the
+	# part a pick alone cannot say. schema_gen drags the installer in, so it
+	# stays a function-local import like installer above
+	from archinstoo.lib.schema_gen import SECTIONS
+
 	pkgs: set[str] = set()
+	for section in SECTIONS:
+		if section.pick:
+			pkgs.update(_pick(app, section))
 
-	if (app.get('bluetooth_config') or {}).get('enabled', False):
-		pkgs.update(_flat('bluetooth'))
-
-	audio = (app.get('audio_config') or {}).get('audio', '')
-	if audio in SCHEMA['audio']:
-		pkgs.update(SCHEMA['audio'][audio])
+	if (app.get('audio_config') or {}).get('audio', '') in SCHEMA['audio']:
 		audio_fw = SCHEMA['audio_firmware']
 		if SysInfo.requires_sof_fw():
 			pkgs.update(audio_fw['sof'])
 		if SysInfo.requires_alsa_fw():
 			pkgs.update(audio_fw['alsa'])
 
-	# option -> section, for the categories that are a single pick
-	for key, field, section in (
-		('power_management_config', 'power_management', 'power_management'),
-		('firewall_config', 'firewall', 'firewalls'),
-		('monitor_config', 'monitor', 'monitors'),
-		('editor_config', 'editor', 'editors'),
-	):
-		choice = (app.get(key) or {}).get(field, '')
-		if choice in SCHEMA[section]:
-			pkgs.update(SCHEMA[section][choice])
-
-	if app.get('cpu_scheduler_config'):
-		pkgs.update(_flat('cpu_scheduler'))
-
-	if (app.get('print_service_config') or {}).get('enabled', False):
-		pkgs.update(_flat('printing'))
-
-	# and the ones that are a multi-select
-	for key, section in (('management_config', 'management'), ('security_config', 'security')):
-		for tool in (app.get(key) or {}).get('tools', []) or []:
-			if tool in SCHEMA[section]:
-				pkgs.update(SCHEMA[section][tool])
-
-	pkgs.update(_terminal_packages(app, details))
-	pkgs.update(_development_packages(app.get('development_config') or {}))
+	# one terminal, shared by every profile in terminal_profiles. a skipped
+	# menu entry leaves those profiles on the default, which
+	# install_profile_config() installs instead
+	terminal = (app.get('terminal_config') or {}).get('terminal', '')
+	if terminal not in SCHEMA['terminals'] and set(details) & set(SCHEMA['terminal_profiles']['profiles']):
+		pkgs.update(SCHEMA['terminals'][DEFAULT_TERMINAL])
 
 	return pkgs
 

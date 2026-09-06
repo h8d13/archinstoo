@@ -240,6 +240,9 @@
         "audio_config": {
             "audio": "pipewire"
         },
+        "media_codecs_config": {
+            "enabled": true
+        },
         "power_management_config": {
             "power_management": "power-profiles-daemon"
         },

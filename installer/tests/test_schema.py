@@ -2,6 +2,8 @@
 #   - the committed file is what the generator produces right now
 #   - every package literal anywhere in the package is claimed by some section
 #   - every option set the installer offers has a section covering it
+#   - every app_config category has a section with a pick, and the pick path
+#     is real
 #   - _resolve reads every section, and NVGEN still tracks what it yields
 
 import ast
@@ -9,14 +11,16 @@ import importlib.machinery
 import importlib.util
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, get_type_hints
 
 import pytest
 
-from archinstoo.default_profiles.desktops import SeatAccess
+from archinstoo.default_profiles.desktops import DEFAULT_TERMINAL, SeatAccess
 from archinstoo.lib import installer, schema, schema_gen
 from archinstoo.lib.hardware import CpuVendor, GfxPackage
 from archinstoo.lib.models.application import (
+	ApplicationConfiguration,
+	ApplicationSerialization,
 	Audio,
 	Firewall,
 	PowerManagement,
@@ -70,6 +74,60 @@ def test_exact_sections(key: str, enum: type[Enum]) -> None:
 		f'schema-only={sorted(schema_keys - enum_values)} '
 		f'code-only={sorted(enum_values - schema_keys)}'
 	)
+
+
+# -- app_config picks --------------------------------------------------------
+#
+# The literal test below cannot see an enum-driven category (its packages are
+# runtime values), so a category with no section would pass everything and be
+# invisible to count, size and nvchecker. The pick is what ties app_config to
+# the section that answers it.
+
+_PICKED = [s for s in schema_gen.SECTIONS if s.pick]
+
+
+def test_every_app_category_has_a_pick() -> None:
+	picked = {s.pick[0] for s in _PICKED}
+	categories = set(ApplicationConfiguration._config_parsers)
+	assert picked == categories, f'categories with no pick: {sorted(categories - picked)}; picks with no category: {sorted(picked - categories)}'
+
+
+def _walk(serialization: type, path: tuple[str, ...]) -> None:
+	# NotRequired is stripped by get_type_hints, leaving the nested TypedDict
+	hints = get_type_hints(serialization)
+	assert path[0] in hints, f'{path[0]!r} is not a field of {serialization.__name__}'
+	if len(path) > 1:
+		_walk(hints[path[0]], path[1:])
+
+
+@pytest.mark.parametrize('section', _PICKED, ids=[s.key for s in _PICKED])
+def test_pick_paths_exist_in_the_serialization(section: schema_gen.Section) -> None:
+	# a typo in a pick would walk past the field and resolve to nothing forever
+	_walk(ApplicationSerialization, section.pick)
+
+
+def test_resolve_walks_the_picks() -> None:
+	# one of each shape: flag on a flat section, name on a flat section, name
+	# on a table, list on a table, nested path; an unknown name drops out
+	app: dict[str, Any] = {
+		'media_codecs_config': {'enabled': True},
+		'print_service_config': {'enabled': False},
+		'cpu_scheduler_config': {'scheduler': 'scx_lavd'},
+		'monitor_config': {'monitor': 'htop'},
+		'management_config': {'tools': ['git', 'not-a-tool']},
+		'development_config': {'devtool_config': {'tools': ['gdb']}},
+	}
+
+	expected = set(SCHEMA['media_codecs']['packages']) | set(SCHEMA['cpu_scheduler']['packages']) | {'htop', 'git', 'gdb'}
+	assert _resolve._application_packages(app, []) == expected
+
+
+def test_resolve_defaults_the_terminal_for_terminal_profiles() -> None:
+	# a skipped terminal entry still installs the default for a profile that
+	# ships a keybind; a profile that does not gets nothing
+	default = set(SCHEMA['terminals'][DEFAULT_TERMINAL])
+	assert _resolve._application_packages({}, ['sway']) == default
+	assert _resolve._application_packages({}, ['gnome']) == set()
 
 
 # -- reverse cover -----------------------------------------------------------
@@ -141,10 +199,12 @@ _NOT_READ = {'fido2'}
 
 
 def test_resolve_reads_every_section() -> None:
-	# a section nobody consumes silently does nothing. _resolve names them as
-	# string literals, so read them back the same way
+	# a section nobody consumes silently does nothing. picked sections are read
+	# by construction; _resolve names the rest as string literals, so read
+	# them back the same way
 	source = Path(_resolve.__file__).read_text()
-	unread = {key for key in SCHEMA if f"'{key}'" not in source}
+	picked = {s.key for s in _PICKED}
+	unread = {key for key in SCHEMA if f"'{key}'" not in source and key not in picked}
 	assert unread == _NOT_READ, f'sections _resolve.py never reads: {sorted(unread - _NOT_READ)}; exempted but now read: {sorted(_NOT_READ - unread)}'
 
 

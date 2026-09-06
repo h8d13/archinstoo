@@ -23,6 +23,7 @@ from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
 from archinstoo.lib.applications.cat.cpu_scheduler import CPUSchedulerApp
 from archinstoo.lib.applications.cat.firewall import FirewallApp
+from archinstoo.lib.applications.cat.media_codecs import MediaCodecsApp
 from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
@@ -88,6 +89,12 @@ class Section:
 	# _HEADER). `profiles` marks names rather than packages, so version tracking
 	# can skip them
 	list_key: str = 'packages'
+	# where a saved config keeps the choice this section answers, as a key path
+	# under app_config. _resolve walks these instead of naming each category
+	# again: a flag or a name takes a flat section whole, a name indexes a
+	# table, a list unions its rows. tests/test_schema.py holds every
+	# app_config category to having one
+	pick: tuple[str, ...] = ()
 
 
 SECTIONS: tuple[Section, ...] = (
@@ -129,7 +136,7 @@ SECTIONS: tuple[Section, ...] = (
 	Section('privilege_escalation', 'run0 is part of systemd and only needs polkit', lambda: {p.value: p.packages() for p in PrivilegeEscalation}),
 	Section('shells', 'bash is default and rbash is bash restricted, so neither needs a package', lambda: {s.value: s.packages for s in Shell}),
 	# -- applications, in ApplicationHandler.install_applications() order --
-	Section('bluetooth', '', lambda: BluetoothApp().packages),
+	Section('bluetooth', '', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled')),
 	Section(
 		'audio',
 		'',
@@ -137,11 +144,18 @@ SECTIONS: tuple[Section, ...] = (
 			Audio.PIPEWIRE.value: AudioApp().pipewire_packages,
 			Audio.PULSEAUDIO.value: AudioApp().pulseaudio_packages,
 		},
+		pick=('audio_config', 'audio'),
 	),
 	Section(
 		'audio_firmware',
 		'added with either audio server when the matching driver is loaded',
 		lambda: {'sof': AudioApp().sof_packages, 'alsa': AudioApp().alsa_packages},
+	),
+	Section(
+		'media_codecs',
+		'the codec half of eos-base-group; gstreamer core, base, good and ffmpeg\ncome in as deps',
+		lambda: MediaCodecsApp().packages,
+		pick=('media_codecs_config', 'enabled'),
 	),
 	Section(
 		'power_management',
@@ -150,9 +164,20 @@ SECTIONS: tuple[Section, ...] = (
 			PowerManagement.PPD.value: PowerManagementApp().ppd_packages,
 			PowerManagement.TUNED.value: PowerManagementApp().tuned_packages,
 		},
+		pick=('power_management_config', 'power_management'),
 	),
-	Section('cpu_scheduler', 'sched_ext: one set, the choice only picks which binary scx_loader starts', lambda: CPUSchedulerApp().packages),
-	Section('printing', 'ghostscript is the PostScript interpreter cups needs for most drivers', lambda: PrintServiceApp().packages),
+	Section(
+		'cpu_scheduler',
+		'sched_ext: one set, the choice only picks which binary scx_loader starts',
+		lambda: CPUSchedulerApp().packages,
+		pick=('cpu_scheduler_config', 'scheduler'),
+	),
+	Section(
+		'printing',
+		'ghostscript is the PostScript interpreter cups needs for most drivers',
+		lambda: PrintServiceApp().packages,
+		pick=('print_service_config', 'enabled'),
+	),
 	Section(
 		'firewalls',
 		'',
@@ -160,14 +185,21 @@ SECTIONS: tuple[Section, ...] = (
 			Firewall.UFW.value: FirewallApp().ufw_packages,
 			Firewall.FWD.value: FirewallApp().fwd_packages,
 		},
+		pick=('firewall_config', 'firewall'),
 	),
-	Section('management', '', lambda: _one_to_one(Management)),
-	Section('monitors', '', lambda: _one_to_one(Monitor)),
-	Section('editors', 'EDITOR lands in /etc/environment; only vi is not named after the option', lambda: {e.value: e.packages for e in Editor}),
+	Section('management', '', lambda: _one_to_one(Management), pick=('management_config', 'tools')),
+	Section('monitors', '', lambda: _one_to_one(Monitor), pick=('monitor_config', 'monitor')),
+	Section(
+		'editors',
+		'EDITOR lands in /etc/environment; only vi is not named after the option',
+		lambda: {e.value: e.packages for e in Editor},
+		pick=('editor_config', 'editor'),
+	),
 	Section(
 		'terminals',
 		'one choice, shared by every profile in terminal_profiles. package and\nbinary share a name, and TERMINAL lands in /etc/environment',
 		lambda: {t.value: t.packages for t in Terminal},
+		pick=('terminal_config', 'terminal'),
 	),
 	Section(
 		'security',
@@ -178,9 +210,10 @@ SECTIONS: tuple[Section, ...] = (
 			Security.BUBBLEWRAP.value: SecurityApp().bubblewrap_packages,
 			**{s.value: [s.value] for s in Security if s not in (Security.APPARMOR, Security.FIREJAIL, Security.BUBBLEWRAP)},
 		},
+		pick=('security_config', 'tools'),
 	),
-	Section('languages', '', lambda: _one_to_one(Language)),
-	Section('devtools', '', lambda: _one_to_one(DevTool)),
+	Section('languages', '', lambda: _one_to_one(Language), pick=('development_config', 'language_config', 'tools')),
+	Section('devtools', '', lambda: _one_to_one(DevTool), pick=('development_config', 'devtool_config', 'tools')),
 	# -- bootloader and snapshots --
 	Section('bootloaders', 'the UEFI set; a BIOS install skips efibootmgr, and refind never needs it', lambda: {b.value: b.packages() for b in Bootloader}),
 	Section('snapshots', '', lambda: {s.value: s.packages for s in SnapshotType}),

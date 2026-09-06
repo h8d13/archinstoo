@@ -400,76 +400,14 @@ class GlobalMenu(AbstractMenu[None]):
 		return True
 
 	def _prev_applications(self, item: MenuItem) -> str | None:
-		if item.value:
-			app_config: ApplicationConfiguration = item.value
-			output = ''
+		if not item.value:
+			return None
 
-			if app_config.bluetooth_config:
-				output += f'{"Bluetooth"}: '
-				output += 'Enabled' if app_config.bluetooth_config.enabled else 'Disabled'
-				output += '\n'
-
-			if app_config.audio_config:
-				audio_config = app_config.audio_config
-				output += f'{"Audio"}: {audio_config.audio.value}'
-				output += '\n'
-
-			if app_config.print_service_config:
-				output += f'{"Print service"}: '
-				output += 'Enabled' if app_config.print_service_config.enabled else 'Disabled'
-				output += '\n'
-
-			if app_config.power_management_config:
-				power_management_config = app_config.power_management_config
-				output += f'{"Power management"}: {power_management_config.power_management.value}'
-				output += '\n'
-
-			if app_config.cpu_scheduler_config:
-				cpu_scheduler_config = app_config.cpu_scheduler_config
-				output += f'{"CPU scheduler"}: {cpu_scheduler_config.scheduler.value}'
-				output += '\n'
-
-			if app_config.firewall_config:
-				firewall_config = app_config.firewall_config
-				output += f'{"Firewall"}: {firewall_config.firewall.value}'
-				output += '\n'
-
-			if app_config.management_config and app_config.management_config.tools:
-				tools = ', '.join([t.value for t in app_config.management_config.tools])
-				output += f'{"Management"}: {tools}'
-				output += '\n'
-
-			if app_config.monitor_config:
-				monitor_config = app_config.monitor_config
-				output += f'{"Monitor"}: {monitor_config.monitor.value}'
-				output += '\n'
-
-			if app_config.editor_config:
-				editor_config = app_config.editor_config
-				output += f'{"Editor"}: {editor_config.editor.value}'
-				output += '\n'
-
-			if app_config.security_config and app_config.security_config.tools:
-				tools = ', '.join([t.value for t in app_config.security_config.tools])
-				output += f'{"Security"}: {tools}'
-				output += '\n'
-
-			if app_config.development_config:
-				dev_config = app_config.development_config
-
-				if dev_config.language_config and dev_config.language_config.tools:
-					tools = ', '.join([t.value for t in dev_config.language_config.tools])
-					output += f'{"Languages"}: {tools}'
-					output += '\n'
-
-				if dev_config.devtool_config and dev_config.devtool_config.tools:
-					tools = ', '.join([t.value for t in dev_config.devtool_config.tools])
-					output += f'{"Build & Debug"}: {tools}'
-					output += '\n'
-
-			return output
-
-		return None
+		# the application menu already previews every category off the config
+		# it is handed; read those rather than naming each category again here
+		menu = ApplicationMenu(item.value, advanced=True)
+		lines = [text for entry in menu._item_group.items if entry.preview_action and (text := entry.preview_action(entry))]
+		return '\n'.join(lines) + '\n' if lines else None
 
 	def _prev_tz(self, item: MenuItem) -> str | None:
 		if item.value:

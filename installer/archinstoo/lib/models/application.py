@@ -61,6 +61,10 @@ class PrintServiceConfigSerialization(TypedDict):
 	enabled: bool
 
 
+class MediaCodecsConfigSerialization(TypedDict):
+	enabled: bool
+
+
 class Firewall(StrEnum):
 	UFW = auto()
 	FWD = 'firewalld'
@@ -198,6 +202,7 @@ class ApplicationSerialization(TypedDict):
 	power_management_config: NotRequired[PowerManagementConfigSerialization]
 	cpu_scheduler_config: NotRequired[CPUSchedulerConfigSerialization]
 	print_service_config: NotRequired[PrintServiceConfigSerialization]
+	media_codecs_config: NotRequired[MediaCodecsConfigSerialization]
 	firewall_config: NotRequired[FirewallConfigSerialization]
 	management_config: NotRequired[ManagementConfigSerialization]
 	monitor_config: NotRequired[MonitorConfigSerialization]
@@ -276,6 +281,18 @@ class PrintServiceConfiguration:
 
 	@classmethod
 	def parse_arg(cls, arg: PrintServiceConfigSerialization) -> Self:
+		return cls(arg['enabled'])
+
+
+@dataclass
+class MediaCodecsConfiguration:
+	enabled: bool
+
+	def json(self) -> MediaCodecsConfigSerialization:
+		return {'enabled': self.enabled}
+
+	@classmethod
+	def parse_arg(cls, arg: MediaCodecsConfigSerialization) -> Self:
 		return cls(arg['enabled'])
 
 
@@ -437,6 +454,7 @@ class ApplicationConfiguration:
 	power_management_config: PowerManagementConfiguration | None = None
 	cpu_scheduler_config: CPUSchedulerConfiguration | None = None
 	print_service_config: PrintServiceConfiguration | None = None
+	media_codecs_config: MediaCodecsConfiguration | None = None
 	firewall_config: FirewallConfiguration | None = None
 	management_config: ManagementConfiguration | None = None
 	monitor_config: MonitorConfiguration | None = None
@@ -451,6 +469,7 @@ class ApplicationConfiguration:
 		'power_management_config': PowerManagementConfiguration,
 		'cpu_scheduler_config': CPUSchedulerConfiguration,
 		'print_service_config': PrintServiceConfiguration,
+		'media_codecs_config': MediaCodecsConfiguration,
 		'firewall_config': FirewallConfiguration,
 		'management_config': ManagementConfiguration,
 		'monitor_config': MonitorConfiguration,
@@ -471,10 +490,9 @@ class ApplicationConfiguration:
 			for attr, parser_cls in cls._config_parsers.items():
 				if (value := args.get(attr)) is not None:
 					setattr(app_config, attr, parser_cls.parse_arg(value))  # type: ignore[attr-defined]
-					# general rule of thumb if copy pasting more than 5x, abstract
-					# dev can add to _config and to dataclass to import a new structure
-					# then make the appropriate changes in applications/application_type.py
-					# and archinstoo/lib/applications
+					# a new category is a field here, in _config_parsers and in
+					# ApplicationSerialization; the rest of the flow is in
+					# .github/API_REF.md, "Add an application"
 
 		return app_config
 

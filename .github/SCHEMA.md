@@ -82,3 +82,8 @@ python -m archinstoo --script schema
 
 `tests/test_schema.py` fails if the committed file is stale, and `--script count` / `--script size` and
 `nvchecker/NVGEN` all read the generated file rather than the runtime.
+
+Each application category's `Section` also carries a `pick`: the key path under `app_config` where
+a saved config keeps that choice. `count`/`size` walk the picks, so a new category is one `Section`
+line and a regenerate; the test fails on a category without one. The step list is in
+[API_REF.md](API_REF.md), "Add an application".

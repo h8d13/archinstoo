@@ -741,6 +741,9 @@ source = "pacman"
 [greetd-regreet]
 source = "pacman"
 
+[greetd-tuigreet]
+source = "pacman"
+
 [grim]
 source = "pacman"
 
@@ -750,7 +753,16 @@ source = "pacman"
 [grub-btrfs]
 source = "pacman"
 
+[gst-libav]
+source = "pacman"
+
 [gst-plugin-pipewire]
+source = "pacman"
+
+[gst-plugins-bad]
+source = "pacman"
+
+[gst-plugins-ugly]
 source = "pacman"
 
 [gvfs]
@@ -819,7 +831,13 @@ source = "pacman"
 [labwc]
 source = "pacman"
 
+[libdvdcss]
+source = "pacman"
+
 [libfido2]
+source = "pacman"
+
+[libopenraw]
 source = "pacman"
 
 [libpulse]

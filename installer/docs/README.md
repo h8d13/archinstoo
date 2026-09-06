@@ -11,27 +11,6 @@
 │   │   │   ├── cinnamon
 │   │   │   ├── cosmic
 │   │   │   ├── deepin
-│   │   │   ├── dms_assets/
-│   │   │   │   ├── hyprland/
-│   │   │   │   │   ├── dms/
-│   │   │   │   │   │   ├── binds.lua
-│   │   │   │   │   │   ├── binds-user.lua
-│   │   │   │   │   │   ├── colors.lua
-│   │   │   │   │   │   ├── cursor.lua
-│   │   │   │   │   │   ├── layout.lua
-│   │   │   │   │   │   ├── outputs.lua
-│   │   │   │   │   │   └── windowrules.lua
-│   │   │   │   │   └── hyprland.lua
-│   │   │   │   └── niri/
-│   │   │   │       ├── dms/
-│   │   │   │       │   ├── alttab.kdl
-│   │   │   │       │   ├── binds.kdl
-│   │   │   │       │   ├── colors.kdl
-│   │   │   │       │   ├── cursor.kdl
-│   │   │   │       │   ├── input.kdl
-│   │   │   │       │   ├── layout.kdl
-│   │   │   │       │   └── outputs.kdl
-│   │   │   │       └── niri.kdl
 │   │   │   ├── dms
 │   │   │   ├── enlightenment
 │   │   │   ├── gnome
@@ -87,6 +66,7 @@
 │   │   │       ├── firewall
 │   │   │       ├── languages
 │   │   │       ├── management
+│   │   │       ├── media_codecs
 │   │   │       ├── monitor
 │   │   │       ├── power_management
 │   │   │       ├── print_service
@@ -212,5 +192,5 @@
     └── parted/
         └── __init__i
 
-34 directories, 177 files
+29 directories, 162 files
 ```

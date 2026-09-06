@@ -88,6 +88,11 @@ pulseaudio = ["pulseaudio"]
 sof = ["sof-firmware"]
 alsa = ["alsa-firmware"]
 
+# the codec half of eos-base-group; gstreamer core, base, good and ffmpeg
+# come in as deps
+[media_codecs]
+packages = ["gst-libav", "gst-plugins-bad", "gst-plugins-ugly", "gst-plugin-pipewire", "libdvdcss", "libopenraw"]
+
 # only shown on laptops
 [power_management]
 power-profiles-daemon = ["power-profiles-daemon"]

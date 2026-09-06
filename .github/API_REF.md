@@ -30,24 +30,42 @@ importing == running.
 
 ## Add an application (audio/firewall/... category or `cat/`)
 
-Four edits, model first:
+Worked example: `media_codecs`, a yes/no that installs a fixed set. Follow
+it file by file; a single-pick or multi-select category swaps the `enabled`
+flag for an enum, the way `firewall`/`management` do.
 
 1. [models/application.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/application.py):
-   add the `StrEnum` of choices, a `XConfiguration` dataclass with
-   `json()`/`parse_arg()`, a `XConfigSerialization` TypedDict, then wire it
-   into `ApplicationConfiguration` (new field), `_config_parsers` (the
-   dispatch dict), and `ApplicationSerialization`. The in-file comment near
-   `parse_arg` documents this.
-2. [applications/cat/](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/cat)
-   new `x.py`: class with `install(self, install_session, x_config)`.
-   Package/service lists as `@property`. Use `install_session`
-   primitives (below). Pattern:
-   [firewall.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/cat/firewall.py).
+   `MediaCodecsConfigSerialization` (TypedDict, the JSON shape),
+   `MediaCodecsConfiguration` (dataclass with `json()`/`parse_arg()`), then
+   the field in `ApplicationSerialization`, `ApplicationConfiguration` and
+   `_config_parsers`. A choice category adds its `StrEnum` first.
+2. [applications/cat/media_codecs.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/cat/media_codecs.py):
+   `packages` (and `services`) as `@property` literal lists, then
+   `install(self, install_session, ...)` using the Installer primitives
+   (below).
 3. [application_handler.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/application_handler.py):
-   `install_applications()` add `if app_config.x_config: XApp().install(...)`.
-   Ordering matters (apps run before bootloader, after users).
+   `if app_config.media_codecs_config and ...enabled: MediaCodecsApp().install(...)`.
+   Order is install order (apps run before bootloader, after users).
 4. [application_menu.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/application_menu.py):
-   add a `MenuItem` + `select_x()` + `_prev_x()` so the user can pick it.
+   a `MenuItem` with `key='media_codecs_config'`, its `_prev_media_codecs`
+   and `select_media_codecs`. Flags reuse `_select_enabled` / `_enabled_text`.
+   The global menu's Applications preview reads these previews, nothing to
+   add there.
+5. [schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py):
+   one `Section` in install order, with `pick=('media_codecs_config', 'enabled')`,
+   the key path the choice lives at under `app_config`. The pick is what
+   `--script count`/`size` walk, so `_resolve.py` needs no edit. Then:
+
+   ```shell
+   python -m archinstoo --script schema   # regenerates schema.toml
+   ./nvchecker/NVGEN gen                  # tracks the new packages
+   ```
+
+`tests/test_schema.py` fails until 5 is done: every `_config_parsers` key
+needs a section with a pick, every pick path has to exist in the
+serialization, and the committed `schema.toml`/`nvchecker.toml` must match.
+Add the category to `examples/config_sample_full.json` so `--config` users
+see it.
 
 ## Add a profile (server or desktop)
 

@@ -21,6 +21,7 @@ from archinstoo.lib.models.application import (
 	LanguageConfiguration,
 	Management,
 	ManagementConfiguration,
+	MediaCodecsConfiguration,
 	Monitor,
 	MonitorConfiguration,
 	PowerManagement,
@@ -84,6 +85,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				action=select_print_service,
 				preview_action=self._prev_print_service,
 				key='print_service_config',
+			),
+			MenuItem(
+				text='Media codecs',
+				action=select_media_codecs,
+				preview_action=self._prev_media_codecs,
+				key='media_codecs_config',
 			),
 			MenuItem(
 				text='Power management',
@@ -165,11 +172,8 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 
 	def _prev_bluetooth(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			bluetooth_config: BluetoothConfiguration = item.value
-
-			output = f'{"Bluetooth"}: '
-			output += 'Enabled' if bluetooth_config.enabled else 'Disabled'
-			return output
+			config: BluetoothConfiguration = item.value
+			return _enabled_text('Bluetooth', config.enabled)
 		return None
 
 	def _prev_audio(self, item: MenuItem) -> str | None:
@@ -180,11 +184,14 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 
 	def _prev_print_service(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			print_service_config: PrintServiceConfiguration = item.value
+			config: PrintServiceConfiguration = item.value
+			return _enabled_text('Print service', config.enabled)
+		return None
 
-			output = f'{"Print service"}: '
-			output += 'Enabled' if print_service_config.enabled else 'Disabled'
-			return output
+	def _prev_media_codecs(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: MediaCodecsConfiguration = item.value
+			return _enabled_text('Media codecs', config.enabled)
 		return None
 
 	def _prev_firewall(self, item: MenuItem) -> str | None:
@@ -348,18 +355,21 @@ def select_cpu_scheduler(preset: CPUSchedulerConfiguration | None = None) -> CPU
 			return None
 
 
-def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfiguration | None:
+def _enabled_text(label: str, enabled: bool) -> str:
+	return f'{label}: {"Enabled" if enabled else "Disabled"}'
+
+
+def _select_enabled(preset: bool | None, header: str) -> bool | None:
+	# the yes/no every flag category asks; None is a skip, keep the preset
 	group = MenuItemGroup.yes_no()
 	group.focus_item = MenuItem.no()
 
 	if preset is not None:
-		group.set_selected_by_value(preset.enabled)
-
-	header = 'Would you like to configure Bluetooth?' + '\n'
+		group.set_selected_by_value(preset)
 
 	result = SelectMenu[bool](
 		group,
-		header=header,
+		header=header + '\n',
 		alignment=Alignment.CENTER,
 		columns=2,
 		orientation=Orientation.HORIZONTAL,
@@ -368,40 +378,26 @@ def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfigur
 
 	match result.type_:
 		case ResultType.Selection:
-			enabled = result.item() == MenuItem.yes()
-			return BluetoothConfiguration(enabled)
+			return result.item() == MenuItem.yes()
 		case ResultType.Skip:
-			return preset
+			return None
 		case _:
 			raise ValueError('Unhandled result type')
+
+
+def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfiguration | None:
+	enabled = _select_enabled(preset.enabled if preset else None, 'Would you like to configure Bluetooth?')
+	return preset if enabled is None else BluetoothConfiguration(enabled)
 
 
 def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServiceConfiguration | None:
-	group = MenuItemGroup.yes_no()
-	group.focus_item = MenuItem.no()
+	enabled = _select_enabled(preset.enabled if preset else None, 'Would you like to configure the print service?')
+	return preset if enabled is None else PrintServiceConfiguration(enabled)
 
-	if preset is not None:
-		group.set_selected_by_value(preset.enabled)
 
-	header = 'Would you like to configure the print service?' + '\n'
-
-	result = SelectMenu[bool](
-		group,
-		header=header,
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			enabled = result.item() == MenuItem.yes()
-			return PrintServiceConfiguration(enabled)
-		case ResultType.Skip:
-			return preset
-		case _:
-			raise ValueError('Unhandled result type')
+def select_media_codecs(preset: MediaCodecsConfiguration | None) -> MediaCodecsConfiguration | None:
+	enabled = _select_enabled(preset.enabled if preset else None, 'Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?')
+	return preset if enabled is None else MediaCodecsConfiguration(enabled)
 
 
 def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration | None:

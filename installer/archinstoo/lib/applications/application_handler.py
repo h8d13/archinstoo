@@ -8,6 +8,7 @@ from .cat.editor import EditorApp
 from .cat.firewall import FirewallApp
 from .cat.languages import LanguagesApp
 from .cat.management import ManagementApp
+from .cat.media_codecs import MediaCodecsApp
 from .cat.monitor import MonitorApp
 from .cat.power_management import PowerManagementApp
 from .cat.print_service import PrintServiceApp
@@ -34,6 +35,9 @@ class ApplicationHandler:
 				app_config.audio_config,
 				users,
 			)
+
+		if app_config.media_codecs_config and app_config.media_codecs_config.enabled:
+			MediaCodecsApp().install(install_session)
 
 		if app_config.power_management_config:
 			PowerManagementApp().install(
