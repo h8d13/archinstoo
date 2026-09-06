@@ -564,7 +564,7 @@ class _BtrfsSubvolumeInfo:
 @dataclass
 class _PartitionInfo:
 	partition: Partition
-	# parted names are GPT-only: get_name() returns None on MBR labels
+	# parted names are GPT-only: `name` is None on MBR labels
 	name: str | None
 	type: PartitionType
 	fs_type: FilesystemType | None
@@ -636,7 +636,7 @@ class _PartitionInfo:
 
 		return cls(
 			partition=partition,
-			name=partition.get_name(),
+			name=partition.name,
 			type=partition_type,
 			fs_type=fs_type,
 			path=Path(partition.path),
