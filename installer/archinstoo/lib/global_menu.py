@@ -353,6 +353,10 @@ class GlobalMenu(AbstractMenu[None]):
 			else:
 				output = f'{"Network configuration"}:\n{network_config.type.display_msg()}'
 
+			if dns := network_config.dns:
+				output += f'\nDNS: {dns.provider.display_msg()}'
+				output += ' over TLS' if dns.over_tls else ''
+
 			return output
 		return None
 

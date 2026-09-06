@@ -2,12 +2,12 @@ import ipaddress
 from typing import assert_never, override
 
 from archinstoo.lib.menu.list_manager import ListManager
-from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
+from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, Nic, NicType
 from archinstoo.lib.network.interfaces import list_interfaces
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
 
 
 class ManualNetworkConfig(ListManager[Nic]):
@@ -169,6 +169,48 @@ class ManualNetworkConfig(ListManager[Nic]):
 		return Nic(iface=iface_name)
 
 
+def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
+	# system-wide resolver; None keeps whatever the link hands out
+	items = [MenuItem(p.display_msg(), value=p) for p in DnsProvider]
+	items.append(MenuItem(text='Use the DNS the network provides', value=None))
+	group = MenuItemGroup(items)
+
+	if preset:
+		group.set_selected_by_value(preset.provider)
+	else:
+		group.set_focus_by_value(None)
+
+	result = SelectMenu[DnsProvider | None](
+		group,
+		header='DNS resolver for the whole system' + '\n',
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min('DNS'),
+		allow_skip=True,
+	).run()
+
+	if result.type_ == ResultType.Skip:
+		return preset
+
+	provider = result.get_value()
+	if provider is None:
+		return None
+
+	tls_group = MenuItemGroup.yes_no()
+	tls_group.set_selected_by_value(preset.over_tls if preset else True)
+
+	tls = SelectMenu[bool](
+		tls_group,
+		header='Encrypt lookups with DNS over TLS?' + '\n',
+		alignment=Alignment.CENTER,
+		columns=2,
+		orientation=Orientation.HORIZONTAL,
+		allow_skip=True,
+	).run()
+
+	over_tls = tls.item() == MenuItem.yes() if tls.type_ == ResultType.Selection else True
+	return DnsConfiguration(provider, over_tls)
+
+
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:
 	# Configure the network on the newly installed system
 	items = [MenuItem(n.display_msg(), value=n) for n in NicType]
@@ -197,22 +239,13 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 			if config is None:
 				return None
 
-			match config:
-				case NicType.ISO:
-					return NetworkConfiguration(NicType.ISO)
-				case NicType.NM:
-					return NetworkConfiguration(NicType.NM)
-				case NicType.NM_IWD:
-					return NetworkConfiguration(NicType.NM_IWD)
-				case NicType.IWD:
-					return NetworkConfiguration(NicType.IWD)
-				case NicType.MANUAL:
-					preset_nics = preset.nics if preset else []
-					nics = ManualNetworkConfig('Configure interfaces', preset_nics).run()
+			nics: list[Nic] = []
+			if config == NicType.MANUAL:
+				preset_nics = preset.nics if preset else []
+				nics = ManualNetworkConfig('Configure interfaces', preset_nics).run()
 
-					if nics:
-						return NetworkConfiguration(NicType.MANUAL, nics)
-				case _:
-					pass
+				if not nics:
+					return preset
 
-	return preset
+			dns = _select_dns(preset.dns if preset else None)
+			return NetworkConfiguration(config, nics, dns)
