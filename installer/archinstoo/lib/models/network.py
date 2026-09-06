@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict
 
 # NetworkManager on a desktop gets its tray applet as well
@@ -46,10 +46,12 @@ class NicType(Enum):
 				return 'Manual configuration'
 
 
-class DnsProvider(Enum):
-	QUAD9 = 'quad9'
-	CLOUDFLARE = 'cloudflare'
-	GOOGLE = 'google'
+class DnsProvider(StrEnum):
+	QUAD9 = auto()
+	CLOUDFLARE = auto()
+	GOOGLE = auto()
+	# servers and certificate name come from the config instead
+	CUSTOM = auto()
 
 	@property
 	def servers(self) -> list[str]:
@@ -60,6 +62,8 @@ class DnsProvider(Enum):
 				return ['1.1.1.1', '1.0.0.1', '2606:4700:4700::1111', '2606:4700:4700::1001']
 			case DnsProvider.GOOGLE:
 				return ['8.8.8.8', '8.8.4.4', '2001:4860:4860::8888', '2001:4860:4860::8844']
+			case DnsProvider.CUSTOM:
+				return []
 
 	@property
 	def tls_name(self) -> str:
@@ -71,41 +75,67 @@ class DnsProvider(Enum):
 				return 'cloudflare-dns.com'
 			case DnsProvider.GOOGLE:
 				return 'dns.google'
+			case DnsProvider.CUSTOM:
+				return ''
 
 	def display_msg(self) -> str:
-		match self:
-			case DnsProvider.QUAD9:
-				return 'Quad9 (malware blocking, no logging)'
-			case DnsProvider.CLOUDFLARE:
-				return 'Cloudflare (1.1.1.1)'
-			case DnsProvider.GOOGLE:
-				return 'Google (8.8.8.8)'
+		if self is DnsProvider.CUSTOM:
+			return 'Custom servers'
+		return f'{self.value.capitalize()} ({self.servers[0]})'
 
 
 class _DnsSerialization(TypedDict):
 	provider: str
 	over_tls: bool
+	servers: NotRequired[list[str]]
+	tls_name: NotRequired[str]
 
 
 @dataclass
 class DnsConfiguration:
 	provider: DnsProvider
 	over_tls: bool = True
+	# custom only: the addresses, and the certificate name when over_tls
+	servers: list[str] = field(default_factory=list)
+	tls_name: str = ''
 
 	def json(self) -> _DnsSerialization:
-		return {'provider': self.provider.value, 'over_tls': self.over_tls}
+		config: _DnsSerialization = {'provider': self.provider.value, 'over_tls': self.over_tls}
+		if self.provider is DnsProvider.CUSTOM:
+			config['servers'] = self.servers
+			if self.over_tls:
+				config['tls_name'] = self.tls_name
+
+		return config
 
 	@classmethod
 	def parse_arg(cls, arg: _DnsSerialization) -> Self:
-		return cls(DnsProvider(arg['provider']), arg.get('over_tls', True))
+		return cls(
+			DnsProvider(arg['provider']),
+			arg.get('over_tls', True),
+			list(arg.get('servers', [])),
+			arg.get('tls_name', ''),
+		)
+
+	@property
+	def effective_servers(self) -> list[str]:
+		return self.servers if self.provider is DnsProvider.CUSTOM else self.provider.servers
+
+	@property
+	def effective_tls_name(self) -> str:
+		return self.tls_name if self.provider is DnsProvider.CUSTOM else self.provider.tls_name
+
+	def display_msg(self) -> str:
+		text = ' '.join(self.servers) if self.provider is DnsProvider.CUSTOM else self.provider.display_msg()
+		return text + (' over TLS' if self.over_tls else '')
 
 	def as_resolved_config(self) -> str:
 		# a resolved.conf.d drop-in. Domains=~. routes every lookup here ahead
 		# of the per-link servers DHCP hands out, which is what makes the pick
 		# system-wide rather than a fallback
 		# https://wiki.archlinux.org/title/Systemd-resolved#DNS_over_TLS
-		suffix = f'#{self.provider.tls_name}' if self.over_tls else ''
-		servers = ' '.join(f'{ip}{suffix}' for ip in self.provider.servers)
+		suffix = f'#{self.effective_tls_name}' if self.over_tls else ''
+		servers = ' '.join(f'{ip}{suffix}' for ip in self.effective_servers)
 
 		lines = ['[Resolve]', f'DNS={servers}']
 		if self.over_tls:
@@ -115,13 +145,13 @@ class DnsConfiguration:
 		return '\n'.join(lines) + '\n'
 
 
-class MacAddressPolicy(Enum):
+class MacAddressPolicy(StrEnum):
 	# keep: hardware address. stable: one address per network, so DHCP leases
 	# and captive portals still recognise the machine. random: new address per
 	# connection (per boot on the networkd paths)
-	KEEP = 'keep'
-	STABLE = 'stable'
-	RANDOM = 'random'
+	KEEP = auto()
+	STABLE = auto()
+	RANDOM = auto()
 
 	def display_msg(self) -> str:
 		match self:

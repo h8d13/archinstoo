@@ -1,5 +1,6 @@
 import ipaddress
-from typing import assert_never, override
+import re
+from typing import TYPE_CHECKING, assert_never, override
 
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, Nic, NicType
@@ -8,6 +9,9 @@ from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
 
 class ManualNetworkConfig(ListManager[Nic]):
@@ -169,6 +173,30 @@ class ManualNetworkConfig(ListManager[Nic]):
 		return Nic(iface=iface_name)
 
 
+def _valid_addresses(text: str | None) -> str | None:
+	if not text:
+		return 'Enter at least one server address'
+	for address in text.split():
+		try:
+			ipaddress.ip_address(address)
+		except ValueError:
+			return f'{address!r} is not an IPv4 or IPv6 address'
+	return None
+
+
+def _valid_hostname(text: str | None) -> str | None:
+	# the name on the resolver's certificate, dns.example.net style; resolved
+	# refuses the session when it does not match, so keep the obvious typos out
+	if not text or not re.fullmatch(r'[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+', text.lower()):
+		return 'Enter the hostname on the server certificate (e.g. dns.quad9.net)'
+	return None
+
+
+def _edit(title: str, header: str, preset: str, validator: Callable[[str | None], str | None]) -> str | None:
+	result = EditMenu(title, header=header + '\n', validator=validator, allow_skip=True, default_text=preset or None).input()
+	return result.text() if result.type_ == ResultType.Selection else None
+
+
 def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	# system-wide resolver; None keeps whatever the link hands out
 	items = [MenuItem(p.display_msg(), value=p) for p in DnsProvider]
@@ -191,9 +219,18 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	if result.type_ == ResultType.Skip:
 		return preset
 
-	provider = result.get_value()
+	# the "network provides" entry carries None, which get_value() refuses
+	provider = result.item().value
 	if provider is None:
 		return None
+
+	custom = preset if preset and preset.provider is DnsProvider.CUSTOM else None
+	servers: list[str] = []
+	if provider is DnsProvider.CUSTOM:
+		text = _edit('DNS servers', 'Server addresses, space separated', ' '.join(custom.servers) if custom else '', _valid_addresses)
+		if text is None:
+			return preset
+		servers = text.split()
 
 	tls_group = MenuItemGroup.yes_no()
 	tls_group.set_selected_by_value(preset.over_tls if preset else True)
@@ -208,7 +245,15 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	).run()
 
 	over_tls = tls.item() == MenuItem.yes() if tls.type_ == ResultType.Selection else True
-	return DnsConfiguration(provider, over_tls)
+
+	tls_name = ''
+	if provider is DnsProvider.CUSTOM and over_tls:
+		name = _edit('Certificate name', 'Hostname the servers present over TLS', custom.tls_name if custom else '', _valid_hostname)
+		if name is None:
+			return preset
+		tls_name = name.lower()
+
+	return DnsConfiguration(provider, over_tls, servers, tls_name)
 
 
 def _select_mac_address(preset: MacAddressPolicy) -> MacAddressPolicy:

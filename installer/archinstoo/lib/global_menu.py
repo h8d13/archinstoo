@@ -353,9 +353,8 @@ class GlobalMenu(AbstractMenu[None]):
 			else:
 				output = f'{"Network configuration"}:\n{network_config.type.display_msg()}'
 
-			if dns := network_config.dns:
-				output += f'\nDNS: {dns.provider.display_msg()}'
-				output += ' over TLS' if dns.over_tls else ''
+			if network_config.dns:
+				output += f'\nDNS: {network_config.dns.display_msg()}'
 
 			if network_config.mac_address is not MacAddressPolicy.KEEP:
 				output += f'\nMAC address: {network_config.mac_address.display_msg()}'
