@@ -52,6 +52,38 @@ Historical changes/commits before I went rogue:
 	  `[Install]` and printed systemd's "not meant to be enabled".
 	  `usermod` centralised in `add_to_seat_group`
 	  (archlinux/archinstall#3467)
+	- DNS is a system-wide choice with DNS over TLS (#4757).
+	  `DnsProvider` (quad9, cloudflare, google, custom) carries the servers
+	  and the certificate name resolved validates against, and the handler
+	  writes one `resolved.conf.d` drop-in for every network type.
+	  `Domains=~.` is what makes it system-wide: it puts the choice ahead
+	  of the per-link DHCP servers
+		- the picker sits after the network type, with "use the DNS the
+		  network provides" as the way out and a DoT yes/no that
+		  defaults to yes. That entry carries `None`, which
+		  `Result.get_value()` refuses, so it reads `item().value` like
+		  `select_network`
+		- `CUSTOM` takes space-separated addresses, checked one by one,
+		  plus the certificate hostname when over TLS
+		- the DoH half of the request is a pass: DoT is native to
+		  resolved and dnscrypt-proxy would be a second resolver daemon.
+		  A foreign host warns, its `resolv.conf` being a copy
+	- NetworkManager resolves through systemd-resolved like the iwd, iso
+	  and manual paths already did. NM flips to `dns=systemd-resolved`
+	  itself once `/etc/resolv.conf` is the stub symlink, so there is no NM
+	  drop-in to write. The enable-plus-symlink pair was spread over four
+	  branches and is one `Installer.use_resolved()` called after the type
+	  match, which fixes manual: it enabled resolved but never linked the
+	  stub, so glibc kept reading an empty `resolv.conf` and the DNS
+	  drop-in sat idle. `tests/test_network.py` locks both per type
+	- MAC address randomization, `keep` by default (#4758). NetworkManager
+	  gets a `cloned-mac-address` drop-in, iwd standalone
+	  `AddressRandomization` in `main.conf`, networkd a `.link` with
+	  `MACAddressPolicy=random`. `stable` is the per-network hash that
+	  keeps DHCP leases and captive portals working; it has no wired
+	  equivalent under networkd, so that path warns and keeps the hardware
+	  address
+	- `media_codecs` application category, the codec list from EOS'
 	- Boot layouts, each found in a VM and now unit-tested
 		- limine reads FAT and ISO9660 only, but guided UEFI+btrfs put
 		  the ESP at `/efi` and left kernels in `@`: installed, then
@@ -144,6 +176,26 @@ Historical changes/commits before I went rogue:
 	  site-packages, so the plain fallback labelled every installed
 	  package `DEV`. `resolve_gitstat(has_pkgbuild)` tells a stamped
 	  wheel from a checkout
+	- Three helpers in `tui/prompts.py` absorb the menu boilerplate:
+	  `prompt_yes_no` (17 sites over 11 files), `prompt_text` (11 over 8)
+	  and `prompt_choice` (33 over 15). Each takes a header, a preset and
+	  `allow_skip`, returns `None` for a skip, and overloads give a bare
+	  value where skipping is off, so the caller reads the answer instead
+	  of the result type. The unreachable Reset branches and their
+	  "Unhandled result type" raises go with them, and
+	  `select_encryption_type` stops focusing by display text against enum
+	  values, which had kept the cursor off the preset
+		- left alone deliberately: menus that branch on skip vs
+		  selection, the two with preview panes, the list-manager core,
+		  the two-column btrfs mount-option picker, the hidden-input
+		  password prompts and the curses-internal interrupt prompt
+	- `_Category` base collapses the 14 single-field application config
+	  classes to a decorator, a class line and a field: `json()` and
+	  `parse_arg()` read the one field, whether it holds an enum, a bool
+	  or a list. `ApplicationConfiguration._config_parsers` derives from
+	  its own fields, so a new category is the field plus its TypedDict.
+	  Field names and keyword construction unchanged, so menus, handlers
+	  and saved configs are untouched
 	- `color_pair` gated behind `has_colors`
 	- Lint and typing: ruff `ANN`, `B006`, `B905`, `RUF015`, `RET504`,
 	  `B909`, `C419`, pylint `cell-var-from-loop`,
@@ -154,7 +206,7 @@ Historical changes/commits before I went rogue:
 	  dependency's own (#4735). Examples carry `terminal_config` and the
 	  full sample fills `power_management`, `cpu_scheduler`,
 	  `development` and `sysctl`, round-tripped by `test_config_drift`
-	- PCH: Simplified pre-commits
+	- PCH: Simplified pre-commits hooks
 	- Fix parted stub
 
 ## 0.1.14-2
