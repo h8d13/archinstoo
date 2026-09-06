@@ -255,8 +255,7 @@ These options are philosophy: a good starting point but barebones, due to arch b
 
 This places the installer in a weird position, kind of being downstream from everything.
 But at the same time, breaking changes do occur in dev cycles, meaning testing here becomes both hell and fun.
-Notably `systemd` or other major base libs (`mkinitcpio`, encryption libs) can break everything, or some rules change for x or y. This is often hotfixed in a few days and back to normal.
-
+Notably `systemd` or other major base libs (`mkinitcpio`, encryption libs) can break, or some rules change for x or y. This is often hotfixed in a few days and back to normal.
 And in the end it's kind of **upstream of everything**, since different components have similar structure and do kind of compete.
 
 Insert [xkcd comic](https://imgs.xkcd.com/comics/standards_2x.png) about competing standards.
