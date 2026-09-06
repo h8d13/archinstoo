@@ -1,1 +1,0 @@
--- Cursor theme overrides. Deploy writes ~/.config/hypr/dms/cursor.lua

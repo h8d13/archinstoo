@@ -136,20 +136,7 @@ class ProfileHandler:
 	def get_desktop_profiles(self) -> list[Profile]:
 		return [p for p in self.profiles if p.is_desktop_type_profile()]
 
-	@staticmethod
-	def _dms_compositor(profiles: list[Profile]) -> str:
-		# the dms profile stores its compositor selection; the greeter runs on
-		# exactly one, prefer niri (dms's primary target) when several chosen
-		for profile in profiles:
-			for p in (profile, *profile.current_selection):
-				comp = p.custom_settings.get('dms_compositor')
-				if isinstance(comp, str):
-					return comp
-				if isinstance(comp, list) and comp:
-					return 'niri' if 'niri' in comp else comp[0]
-		return 'niri'
-
-	def install_greeter(self, install_session: Installer, greeter: GreeterType, profiles: list[Profile] | None = None) -> None:
+	def install_greeter(self, install_session: Installer, greeter: GreeterType) -> None:
 		# what each greeter pulls and runs lives on GreeterType; only the
 		# per-greeter configuration below is this function's own business
 		install_session.add_additional_packages(greeter.packages)
@@ -169,75 +156,29 @@ class ProfileHandler:
 			with path.open('w') as file:
 				file.write(filedata)
 
-		# regreet has no default config; greetd's stock config.toml runs the tty agreety greeter
-		if greeter == GreeterType.Regreet:
+		# greetd's stock config.toml runs the tty agreety greeter, so every
+		# front-end here replaces it wholesale. tuigreet reads the sessions
+		# each compositor ships and remembers the pick; regreet has no default
+		# config at all and needs the cage kiosk compositor around it
+		greetd_session = {
+			GreeterType.Tuigreet: 'tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions',
+			GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
+		}
+		if command := greetd_session.get(greeter):
 			path = install_session.target.joinpath('etc/greetd/config.toml')
-			path.write_text(
-				dedent("""\
-					[terminal]
-					vt = 1
-
-					[default_session]
-					command = "dbus-run-session cage -s -mlast -d -- regreet"
-					user = "greeter"
-				""")
-			)
-
-		# dms-greeter runs inside quickshell, launched by greetd (installed by dms-shell-<compositor>)
-		if greeter == GreeterType.GreetdDms:
-			compositor = self._dms_compositor(profiles or [])
-			dms_greeter = '/usr/share/quickshell/dms/Modules/Greetd/assets/dms-greeter'
-			command = f'{dms_greeter} --command {compositor} -p /usr/share/quickshell/dms'
-
-			# without -C the greeter generates its own hyprland config: no
-			# kb_layout (hyprland defaults to "us", ignoring the installed
-			# keymap) and, pre-1.5.4, legacy .conf syntax. Empty kb_layout
-			# defers to XKB_DEFAULT_* from /etc/environment (set_keyboard);
-			# dms-greeter appends its own start hook to -C lua configs
-			if compositor == 'hyprland':
-				greeter_conf = install_session.target.joinpath('etc/greetd/dms-hypr.lua')
-				greeter_conf.parent.mkdir(parents=True, exist_ok=True)
-				greeter_conf.write_text(
-					dedent("""\
-						hl.env("DMS_RUN_GREETER", "1")
-
-						hl.config({
-							misc = {
-								disable_hyprland_logo = true,
-							},
-							input = {
-								kb_layout = "",
-							},
-						})
-					""")
-				)
-				command += ' -C /etc/greetd/dms-hypr.lua'
-
-			path = install_session.target.joinpath('etc/greetd/config.toml')
-			path.parent.mkdir(parents=True, exist_ok=True)
 			path.write_text(
 				dedent(f"""\
 					[terminal]
 					vt = 1
 
 					[default_session]
-					user = "greeter"
 					command = "{command}"
+					user = "greeter"
 				""")
 			)
 
-			tmpfiles = install_session.target.joinpath('etc/tmpfiles.d/dms-greeter.conf')
-			tmpfiles.parent.mkdir(parents=True, exist_ok=True)
-			tmpfiles.write_text(
-				dedent("""\
-					#  Path                    Mode User    Group   Age Argument
-					d /var/cache/dms-greeter   0750 greeter greeter -
-					d /var/lib/greeter         0755 greeter greeter -
-				""")
-			)
-
-		# only these greeters run a compositor (cage/niri) as the greeter user
-		if greeter in (GreeterType.Regreet, GreeterType.GreetdDms):
+		# regreet runs the cage compositor as the greeter user
+		if greeter == GreeterType.Regreet:
 			install_session.add_to_seat_group(['greeter'])
 
 	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
@@ -283,7 +224,7 @@ class ProfileHandler:
 
 		# Install greeter if any profile supports it
 		if profile_config.greeter and profile_config.is_greeter_supported():
-			self.install_greeter(install_session, profile_config.greeter, profile_config.profiles)
+			self.install_greeter(install_session, profile_config.greeter)
 
 	def _import_profile_from_url(self, url: str) -> None:
 		# Import default_profiles from a url path

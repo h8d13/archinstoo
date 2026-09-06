@@ -1,9 +1,8 @@
-import shutil
-from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services, terminal_command
+from archinstoo.default_profiles.desktops import SeatAccess, seat_services, swap_terminal
 from archinstoo.default_profiles.wayland import WaylandProfile
+from archinstoo.lib.output import warn
 from archinstoo.lib.profile.base import GreeterType, ProfileType
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -11,27 +10,33 @@ from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 if TYPE_CHECKING:
+	from pathlib import Path
+
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.users import User
-
-
-# canonical source (embedded in the dms binary, per AvengeMedia/DankMaterialShell#2851):
-# https://github.com/AvengeMedia/DankMaterialShell/tree/master/core/internal/config/embedded
-# dms/* files mirror it verbatim (niri outputs/cursor are deployed empty upstream;
-# ours carry comment placeholders). hyprland.lua = embedded file plus the deployer's
-# env lines in the DMS_STARTUP block (core/internal/config/hyprland_lua.go)
-_ASSETS_DIR = Path(__file__).parent / 'dms_assets'
 
 
 class DmsProfile(WaylandProfile):
 	needs_terminal = True
 
-	# dms-shell-<compositor> pulls dms-shell (quickshell, dgop, greeter assets)
+	# the one file `dms setup headless` leaves a terminal in, per compositor
+	binds_paths: ClassVar[dict[str, str]] = {
+		'niri': '.config/niri/dms/binds.kdl',
+		'hyprland': '.config/hypr/dms/binds.lua',
+	}
+
+	# dms-shell-<compositor> pulls dms-shell (quickshell, dgop)
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
 		'niri': ['niri', 'dms-shell-niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
 		# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
 		'hyprland': ['hyprland', 'dms-shell-hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
 	}
+
+	# dms-shell 1.6.0 embedded the UI in the dms binary and dropped
+	# /usr/share/quickshell/dms, which is where its own greetd greeter lived;
+	# the launcher moved to a standalone AUR package. no repo greeter left to
+	# name, so fall back like the plain hyprland profile
+	_default_greeter_non_seatd = GreeterType.Sddm
 
 	def __init__(self) -> None:
 		super().__init__(
@@ -39,7 +44,6 @@ class DmsProfile(WaylandProfile):
 			ProfileType.WindowMgr,
 		)
 
-		# dms_compositor also decides the greeter compositor (dms-greeter --command)
 		self.custom_settings = {'dms_compositor': ['niri'], 'seat_access': None}
 
 	@property
@@ -77,74 +81,40 @@ class DmsProfile(WaylandProfile):
 	def services(self) -> list[str]:
 		return seat_services(self.custom_settings.get('seat_access'))
 
-	@property
-	@override
-	def default_greeter_type(self) -> GreeterType:
-		# dms ships its own greetd-based greeter; session-transparent, seatd-safe
-		return GreeterType.GreetdDms
-
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
 
 		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
 		# any session that activates the target: niri natively, hyprland via the
-		# session target below
+		# hyprland-session.target the setup below deploys
 		install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
 
-		if 'hyprland' in self.compositors:
-			# upstream's deployer writes this per-user; system-wide covers all.
-			# starting it from hyprland.lua pulls graphical-session.target up
-			# (BindsTo) even in sessions without a manager (plain "Hyprland"
-			# entry), and is a no-op under uwsm where the target already runs
-			target = install_session.target / 'etc/systemd/user/hyprland-session.target'
-			target.parent.mkdir(parents=True, exist_ok=True)
-			target.write_text(
-				'[Unit]\n'
-				'Description=Hyprland Session Target\n'
-				'BindsTo=graphical-session.target\n'
-				'Before=graphical-session.target\n'
-				'Wants=graphical-session-pre.target\n'
-				'After=graphical-session-pre.target\n'
-			)
-
+		# `dms setup headless` writes the compositor config, the dms/ overrides
+		# and (for hyprland) ~/.config/systemd/user/hyprland-session.target.
+		# it has to run as the user: everything lands under their $HOME
 		for user in users:
-			home = install_session.target / 'home' / user.username
-
 			for comp in self.compositors:
-				if comp == 'niri':
-					self._provision_niri(home)
-				else:
-					self._provision_hyprland(home)
+				install_session.arch_chroot(
+					['dms', 'setup', 'headless', '--compositor', comp, '--skip-existing'],
+					run_as=user.username,
+				)
+
+				self._repoint_terminal(install_session.target / 'home' / user.username, comp)
 
 			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
 
-	def _provision_niri(self, home: Path) -> None:
-		binds = (_ASSETS_DIR / 'niri/dms/binds.kdl').read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
+	def _repoint_terminal(self, home: Path, compositor: str) -> None:
+		# --terminal takes three of the seven terminals we offer and deploys a
+		# config for it besides, so let dms ship its own default and move the
+		# keybind afterwards
+		binds = home / self.binds_paths[compositor]
 
-		niri_dir = home / '.config/niri'
-		dms_dir = niri_dir / 'dms'
-		dms_dir.mkdir(parents=True, exist_ok=True)
+		if not binds.is_file():
+			warn(f'{binds} missing, leaving the terminal keybind to dms')
+			return
 
-		shutil.copy(_ASSETS_DIR / 'niri/niri.kdl', niri_dir / 'config.kdl')
-		# input.kdl is a seed: dms regenerates it from its settings UI
-		for name in ('colors.kdl', 'layout.kdl', 'alttab.kdl', 'outputs.kdl', 'cursor.kdl', 'input.kdl'):
-			shutil.copy(_ASSETS_DIR / 'niri/dms' / name, dms_dir / name)
-		(dms_dir / 'binds.kdl').write_text(binds)
-
-	def _provision_hyprland(self, home: Path) -> None:
-		# hyprland 0.55+ lua configs; dms.service starts via
-		# hyprland-session.target on hyprland.start
-		hypr_dir = home / '.config/hypr'
-		dms_dir = hypr_dir / 'dms'
-		dms_dir.mkdir(parents=True, exist_ok=True)
-
-		for src, dest in (('hyprland.lua', hypr_dir), ('dms/binds.lua', dms_dir)):
-			conf = (_ASSETS_DIR / 'hyprland' / src).read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
-			(dest / Path(src).name).write_text(conf)
-
-		for name in ('binds-user.lua', 'colors.lua', 'cursor.lua', 'layout.lua', 'outputs.lua', 'windowrules.lua'):
-			shutil.copy(_ASSETS_DIR / 'hyprland/dms' / name, dms_dir / name)
+		binds.write_text(swap_terminal(binds.read_text(), 'ghostty', binds))
 
 	def _select_compositors(self) -> None:
 		header = 'DankMaterialShell runs on top of a Wayland compositor' + '\n'
