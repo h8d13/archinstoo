@@ -22,11 +22,12 @@ def _session(target: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Installer, 
 	monkeypatch.setattr(installation, 'enable_service', lambda s: enabled.extend([s] if isinstance(s, str) else s), raising=False)
 	monkeypatch.setattr(installation, 'disable_service', lambda s: None, raising=False)
 	monkeypatch.setattr(installation, 'add_additional_packages', lambda pkgs: None, raising=False)
+	monkeypatch.setattr(installation, 'configure_nic', lambda nic: None, raising=False)
 	monkeypatch.setattr(Os, 'running_from_foreign', lambda: False)
 	return installation, enabled
 
 
-@pytest.mark.parametrize('nic_type', [NicType.NM, NicType.NM_IWD, NicType.IWD])
+@pytest.mark.parametrize('nic_type', [NicType.NM, NicType.NM_IWD, NicType.IWD, NicType.MANUAL])
 def test_network_types_resolve_through_resolved(nic_type: NicType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	(tmp_path / 'etc').mkdir()
 	installation, enabled = _session(tmp_path, monkeypatch)

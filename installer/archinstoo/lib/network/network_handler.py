@@ -34,24 +34,20 @@ class NetworkHandler:
 					_configure_nm_iwd(installation)
 					installation.disable_service('iwd')
 
-				# NM picks dns=systemd-resolved by itself once /etc/resolv.conf is
-				# the resolved stub (NetworkManager.conf, [main] dns), which puts
-				# every network type behind the same resolver
-				installation.enable_service('systemd-resolved')
-				installation.link_resolved_stub()
-
 			case NicType.IWD:
 				installation.add_additional_packages(network_config.type.packages)
 				_configure_iwd_standalone(installation, network_config.mac_address)
 				installation.enable_service('iwd')
 				installation.enable_service('systemd-networkd')
-				installation.enable_service('systemd-resolved')
 
 			case NicType.MANUAL:
 				for nic in network_config.nics:
 					installation.configure_nic(nic)
 				installation.enable_service('systemd-networkd')
-				installation.enable_service('systemd-resolved')
+
+		# the resolver is the same whichever of the above brought the link up;
+		# NM switches to dns=systemd-resolved on the stub symlink by itself
+		installation.use_resolved()
 
 		if network_config.dns:
 			_configure_dns(installation, network_config.dns)
@@ -62,7 +58,7 @@ class NetworkHandler:
 
 def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:
 	# resolved takes the drop-in whatever brought it up; on a foreign host
-	# link_resolved_stub() copied a resolv.conf instead of the stub symlink, so
+	# use_resolved() copied a resolv.conf instead of the stub symlink, so
 	# NetworkManager stays in its default mode and writes past it
 	if Os.running_from_foreign():
 		warn('NetworkManager will not use the DNS choice: /etc/resolv.conf is not the resolved stub')
@@ -91,8 +87,6 @@ def _configure_iwd_standalone(installation: Installer, mac: MacAddressPolicy) ->
 	networkd_dir = installation.target / 'etc/systemd/network'
 	networkd_dir.mkdir(parents=True, exist_ok=True)
 	(networkd_dir / '20-wired.network').write_text('[Match]\nType=ether\nKind=!*\n\n[Network]\nDHCP=yes\n')
-
-	installation.link_resolved_stub()
 
 
 def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacAddressPolicy) -> None:
