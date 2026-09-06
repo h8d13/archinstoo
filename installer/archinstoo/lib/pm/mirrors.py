@@ -23,7 +23,7 @@ from archinstoo.lib.pathnames import MIRRORLIST
 from archinstoo.lib.pm.config import set_parallel_downloads
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_text
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -85,46 +85,14 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		header += f'\n{"Url"}: {url}\n'
 		prompt = f'{header}\n' + 'Select signature check'
 
-		sign_chk_items = [MenuItem(s.value, value=s.value) for s in SignCheck]
-		group = MenuItemGroup(sign_chk_items, sort_items=False)
-
-		if preset is not None:
-			group.set_selected_by_value(preset.sign_check.value)
-
-		result = SelectMenu[SignCheck](
-			group,
-			header=prompt,
-			alignment=Alignment.CENTER,
-			allow_skip=False,
-		).run()
-
-		match result.type_:
-			case ResultType.Selection:
-				sign_check = SignCheck(result.get_value())
-			case _:
-				raise ValueError('Unhandled return type')
+		sign_chk_items = [MenuItem(s.value, value=s) for s in SignCheck]
+		sign_check = prompt_choice(sign_chk_items, preset.sign_check if preset else None, header=prompt, allow_skip=False)
 
 		header += f'{"Signature check"}: {sign_check.value}\n'
 		prompt = f'{header}\n' + 'Select signature option'
 
-		sign_opt_items = [MenuItem(s.value, value=s.value) for s in SignOption]
-		group = MenuItemGroup(sign_opt_items, sort_items=False)
-
-		if preset is not None:
-			group.set_selected_by_value(preset.sign_option.value)
-
-		result = SelectMenu(
-			group,
-			header=prompt,
-			alignment=Alignment.CENTER,
-			allow_skip=False,
-		).run()
-
-		match result.type_:
-			case ResultType.Selection:
-				sign_opt = SignOption(result.get_value())
-			case _:
-				raise ValueError('Unhandled return type')
+		sign_opt_items = [MenuItem(s.value, value=s) for s in SignOption]
+		sign_opt = prompt_choice(sign_opt_items, preset.sign_option if preset else None, header=prompt, allow_skip=False)
 
 		return CustomRepository(name, url, sign_check, sign_opt)
 

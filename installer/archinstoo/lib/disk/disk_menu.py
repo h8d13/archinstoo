@@ -17,10 +17,8 @@ from archinstoo.lib.models.device import (
 	SnapshotType,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.tui.prompts import prompt_choice
 
 from .conf import select_disk_config, select_lvm_config
 
@@ -190,27 +188,9 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 	def _select_btrfs_snapshots(self, preset: SnapshotConfig | None) -> SnapshotConfig | None:
 		preset_type = preset.snapshot_type if preset else None
 
-		group = MenuItemGroup.from_enum(
-			SnapshotType,
-			sort_items=True,
-			preset=preset_type,
-		)
-
-		result = SelectMenu[SnapshotType](
-			group,
-			allow_reset=True,
-			allow_skip=True,
-			frame=FrameProperties.min('Snapshot type'),
-			alignment=Alignment.CENTER,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Reset:
-				return None
-			case ResultType.Selection:
-				return SnapshotConfig(snapshot_type=result.get_value())
+		group = MenuItemGroup.from_enum(SnapshotType, sort_items=True)
+		choice = prompt_choice(group, preset_type, frame='Snapshot type', allow_reset=True)
+		return SnapshotConfig(snapshot_type=choice) if choice else None
 
 	def _prev_disk_layouts(self, item: MenuItem) -> str | None:
 		if not item.value:

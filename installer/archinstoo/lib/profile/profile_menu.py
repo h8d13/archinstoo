@@ -10,6 +10,7 @@ from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.profile.driver_select import select_driver
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_choice
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -226,7 +227,6 @@ def select_greeter(
 	if not profile or profile.is_greeter_supported():
 		items = [MenuItem(g.value, value=g) for g in GreeterType]
 		items.append(MenuItem(text='None', value=None))
-		group = MenuItemGroup(items, sort_items=True)
 
 		default: GreeterType | None = None
 		if preset is not None:
@@ -235,22 +235,7 @@ def select_greeter(
 			default_greeter = profile.default_greeter_type
 			default = default_greeter or None
 
-		group.set_default_by_value(default)
-
-		result = SelectMenu[GreeterType](
-			group,
-			allow_skip=True,
-			frame=FrameProperties.min('Greeter'),
-			alignment=Alignment.CENTER,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.item().value
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		return prompt_choice(items, preset, frame='Greeter', default=default, sort_items=True)
 
 	return None
 

@@ -15,6 +15,7 @@ from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_choice
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -187,23 +188,7 @@ def select_locale_lang(preset: str | None = None) -> str | None:
 	locale_lang = {locale.split()[0] for locale in locales}
 
 	items = [MenuItem(ll, value=ll) for ll in locale_lang]
-	group = MenuItemGroup(items, sort_items=True)
-	group.set_focus_by_value(preset)
-
-	result = SelectMenu[str](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Locale language'),
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case ResultType.Skip:
-			return preset
-		case _:
-			raise ValueError('Unhandled return type')
+	return prompt_choice(items, preset, frame='Locale language', sort_items=True)
 
 
 def select_locale_enc(sys_lang: str | None = None, preset: str | None = None) -> str | None:
@@ -212,46 +197,14 @@ def select_locale_enc(sys_lang: str | None = None, preset: str | None = None) ->
 	locale_enc = list_locale_encodings(sys_lang) if sys_lang else sorted({locale.split()[1] for locale in list_locales()})
 
 	items = [MenuItem(le, value=le) for le in locale_enc]
-	group = MenuItemGroup(items, sort_items=False)
-	group.set_focus_by_value(preset)
-
-	result = SelectMenu[str](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Locale encoding'),
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case ResultType.Skip:
-			return preset
-		case _:
-			raise ValueError('Unhandled return type')
+	return prompt_choice(items, preset, frame='Locale encoding')
 
 
 def select_console_font(preset: str | None = None) -> str | None:
 	fonts = list_console_fonts()
 
 	items = [MenuItem(f, value=f) for f in fonts]
-	group = MenuItemGroup(items, sort_items=False)
-	group.set_focus_by_value(preset)
-
-	result = SelectMenu[str](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Console font'),
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case ResultType.Skip:
-			return preset
-		case _:
-			raise ValueError('Unhandled return type')
+	return prompt_choice(items, preset, frame='Console font')
 
 
 def select_kb_layout(preset: str | None = None) -> str | None:
@@ -264,23 +217,7 @@ def select_kb_layout(preset: str | None = None) -> str | None:
 	sorted_kb_lang = sorted(kb_lang, key=lambda x: (len(x), x))
 
 	items = [MenuItem(lang, value=lang) for lang in sorted_kb_lang]
-	group = MenuItemGroup(items, sort_items=False)
-	group.set_focus_by_value(preset)
-
-	result = SelectMenu[str](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Keyboard layout'),
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case ResultType.Skip:
-			return preset
-		case _:
-			raise ValueError('Unhandled return type')
+	return prompt_choice(items, preset, frame='Keyboard layout')
 
 
 def _select_xkb_single(title: str, values: list[str], preset: str | None) -> str | None:
@@ -290,23 +227,8 @@ def _select_xkb_single(title: str, values: list[str], preset: str | None) -> str
 		return preset
 
 	items = [MenuItem('(none)', value=''), *(MenuItem(v, value=v) for v in values)]
-	group = MenuItemGroup(items, sort_items=False)
-	group.set_focus_by_value(preset or '')
-
-	result = SelectMenu[str](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min(title),
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case ResultType.Skip:
-			return preset
-		case _:
-			raise ValueError('Unhandled return type')
+	choice = prompt_choice(items, preset or '', frame=title)
+	return preset if choice is None else choice
 
 
 def select_xkb_layout(preset: str | None = None) -> str | None:

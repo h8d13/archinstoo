@@ -11,7 +11,7 @@ from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -59,27 +59,11 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 	algo = preset.algorithm
 	recomp_algo: ZramAlgorithm | None = None
 	if zram:
-		# Ask for compression algorithm
-		algo_group = MenuItemGroup.from_enum(ZramAlgorithm, sort_items=False)
-		algo_group.set_default_by_value(ZramAlgorithm.Default)
-		algo_group.set_focus_by_value(preset.algorithm)
-
-		algo_result = SelectMenu[ZramAlgorithm](
-			algo_group,
-			header='Select zram compression algorithm:' + '\n',
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match algo_result.type_:
-			case ResultType.Skip:
-				algo = preset.algorithm
-			case ResultType.Selection:
-				algo = algo_result.get_value()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
-			case _:
-				assert_never(algo_result.type_)
+		algo_group = MenuItemGroup.from_enum(ZramAlgorithm)
+		algo = (
+			prompt_choice(algo_group, preset.algorithm, header='Select zram compression algorithm:' + '\n', default=ZramAlgorithm.Default)
+			or preset.algorithm
+		)
 
 		# Ask for idle recompression algorithm (only if a specific primary algo was chosen)
 		if algo != ZramAlgorithm.Default:
@@ -168,24 +152,4 @@ def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | No
 
 	# Exclude Default since recompression needs a specific algorithm
 	recomp_items = [MenuItem(algo.value, value=algo) for algo in ZramAlgorithm if algo != ZramAlgorithm.Default]
-	recomp_group = MenuItemGroup(recomp_items, sort_items=False)
-
-	if preset:
-		recomp_group.set_focus_by_value(preset)
-
-	recomp_result = SelectMenu[ZramAlgorithm](
-		recomp_group,
-		header=prompt,
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-	).run()
-
-	match recomp_result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return recomp_result.get_value()
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')
-		case _:
-			assert_never(recomp_result.type_)
+	return prompt_choice(recomp_items, preset, header=prompt)

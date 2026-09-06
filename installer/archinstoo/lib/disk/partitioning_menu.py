@@ -17,11 +17,8 @@ from archinstoo.lib.models.device import (
 	Unit,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.tui.curses_menu import SelectMenu
-from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_dir, prompt_text, prompt_yes_no
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.tui.menu_item import MenuItem
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_dir, prompt_text, prompt_yes_no
 
 from .layouts import suggest_disk_layout
 from .subvolume_menu import SubvolumeMenu
@@ -436,21 +433,7 @@ class PartitioningList(ListManager[DiskSegment]):
 	def _prompt_partition_fs_type(self, prompt: str | None = None) -> FilesystemType:
 		fs_types = filter(lambda fs: fs != FilesystemType.CRYPTO_LUKS, FilesystemType)
 		items = [MenuItem(fs.value, value=fs) for fs in fs_types]
-		group = MenuItemGroup(items, sort_items=False)
-
-		result = SelectMenu[FilesystemType](
-			group,
-			header=prompt,
-			alignment=Alignment.CENTER,
-			frame=FrameProperties.min('Filesystem'),
-			allow_skip=False,
-		).run()
-
-		match result.type_:
-			case ResultType.Selection:
-				return result.get_value()
-			case _:
-				raise ValueError('Unhandled result type')
+		return prompt_choice(items, header=prompt, frame='Filesystem', allow_skip=False)
 
 	def _validate_value(
 		self,
