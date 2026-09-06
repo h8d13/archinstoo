@@ -2,7 +2,7 @@ import ipaddress
 from typing import assert_never, override
 
 from archinstoo.lib.menu.list_manager import ListManager
-from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, Nic, NicType
+from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, Nic, NicType
 from archinstoo.lib.network.interfaces import list_interfaces
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -211,6 +211,22 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	return DnsConfiguration(provider, over_tls)
 
 
+def _select_mac_address(preset: MacAddressPolicy) -> MacAddressPolicy:
+	items = [MenuItem(m.display_msg(), value=m) for m in MacAddressPolicy]
+	group = MenuItemGroup(items)
+	group.set_selected_by_value(preset)
+
+	result = SelectMenu[MacAddressPolicy](
+		group,
+		header='MAC address randomization' + '\n',
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min('MAC address'),
+		allow_skip=True,
+	).run()
+
+	return result.get_value() if result.type_ == ResultType.Selection else preset
+
+
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:
 	# Configure the network on the newly installed system
 	items = [MenuItem(n.display_msg(), value=n) for n in NicType]
@@ -248,4 +264,5 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 					return preset
 
 			dns = _select_dns(preset.dns if preset else None)
-			return NetworkConfiguration(config, nics, dns)
+			mac = _select_mac_address(preset.mac_address if preset else MacAddressPolicy.KEEP)
+			return NetworkConfiguration(config, nics, dns, mac)

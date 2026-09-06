@@ -31,7 +31,7 @@ from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration, FirmwareType, detect_optdeps
 from .models.locale import LocaleConfiguration
-from .models.network import NetworkConfiguration, NicType
+from .models.network import MacAddressPolicy, NetworkConfiguration, NicType
 from .models.profile import ProfileConfiguration
 from .network.network_menu import select_network
 from .output import FormattedOutput
@@ -356,6 +356,9 @@ class GlobalMenu(AbstractMenu[None]):
 			if dns := network_config.dns:
 				output += f'\nDNS: {dns.provider.display_msg()}'
 				output += ' over TLS' if dns.over_tls else ''
+
+			if network_config.mac_address is not MacAddressPolicy.KEEP:
+				output += f'\nMAC address: {network_config.mac_address.display_msg()}'
 
 			return output
 		return None

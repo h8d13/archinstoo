@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.models.network import NM_DESKTOP_EXTRA, MacAddressPolicy, NicType
 from archinstoo.lib.output import warn
 from archinstoo.lib.utils.env import Os
 
@@ -16,8 +17,6 @@ class NetworkHandler:
 		installation: Installer,
 		profile_config: ProfileConfiguration | None = None,
 	) -> None:
-		from archinstoo.lib.models.network import NM_DESKTOP_EXTRA, NicType
-
 		match network_config.type:
 			case NicType.ISO:
 				installation.copy_iso_network_config(
@@ -43,7 +42,7 @@ class NetworkHandler:
 
 			case NicType.IWD:
 				installation.add_additional_packages(network_config.type.packages)
-				_configure_iwd_standalone(installation)
+				_configure_iwd_standalone(installation, network_config.mac_address)
 				installation.enable_service('iwd')
 				installation.enable_service('systemd-networkd')
 				installation.enable_service('systemd-resolved')
@@ -56,6 +55,9 @@ class NetworkHandler:
 
 		if network_config.dns:
 			_configure_dns(installation, network_config.dns)
+
+		if network_config.mac_address is not MacAddressPolicy.KEEP:
+			_configure_mac_address(installation, network_config.type, network_config.mac_address)
 
 
 def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:
@@ -76,14 +78,36 @@ def _configure_nm_iwd(installation: Installer) -> None:
 	(nm_conf_dir / 'wifi_backend.conf').write_text('[device]\nwifi.backend=iwd\n')
 
 
-def _configure_iwd_standalone(installation: Installer) -> None:
+def _configure_iwd_standalone(installation: Installer, mac: MacAddressPolicy) -> None:
 	# iwd manages wireless only; systemd-networkd handles wired DHCP.
+	general = 'EnableNetworkConfiguration=true\n'
+	if mac is not MacAddressPolicy.KEEP:
+		general += mac.as_iwd_config()
+
 	iwd_conf_dir = installation.target / 'etc/iwd'
 	iwd_conf_dir.mkdir(parents=True, exist_ok=True)
-	(iwd_conf_dir / 'main.conf').write_text('[General]\nEnableNetworkConfiguration=true\n\n[Network]\nNameResolvingService=systemd\n')
+	(iwd_conf_dir / 'main.conf').write_text(f'[General]\n{general}\n[Network]\nNameResolvingService=systemd\n')
 
 	networkd_dir = installation.target / 'etc/systemd/network'
 	networkd_dir.mkdir(parents=True, exist_ok=True)
 	(networkd_dir / '20-wired.network').write_text('[Match]\nType=ether\nKind=!*\n\n[Network]\nDHCP=yes\n')
 
 	installation.link_resolved_stub()
+
+
+def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacAddressPolicy) -> None:
+	# NetworkManager owns the address on its paths; everywhere else udev's
+	# .link applies at bring-up (iwd's wireless knob is set with its main.conf)
+	if nic_type in (NicType.NM, NicType.NM_IWD):
+		nm_conf_dir = installation.target / 'etc/NetworkManager/conf.d'
+		nm_conf_dir.mkdir(parents=True, exist_ok=True)
+		(nm_conf_dir / 'mac_address.conf').write_text(mac.as_nm_config())
+		return
+
+	if mac is MacAddressPolicy.STABLE:
+		warn('stable MAC addresses need NetworkManager; wired links keep their hardware address')
+		return
+
+	link_dir = installation.target / 'etc/systemd/network'
+	link_dir.mkdir(parents=True, exist_ok=True)
+	(link_dir / '00-mac-address.link').write_text(mac.as_link_config())
