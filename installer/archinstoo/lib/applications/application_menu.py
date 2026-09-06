@@ -34,8 +34,9 @@ from archinstoo.lib.models.application import (
 )
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
@@ -359,44 +360,18 @@ def _enabled_text(label: str, enabled: bool) -> str:
 	return f'{label}: {"Enabled" if enabled else "Disabled"}'
 
 
-def _select_enabled(preset: bool | None, header: str) -> bool | None:
-	# the yes/no every flag category asks; None is a skip, keep the preset
-	group = MenuItemGroup.yes_no()
-	group.focus_item = MenuItem.no()
-
-	if preset is not None:
-		group.set_selected_by_value(preset)
-
-	result = SelectMenu[bool](
-		group,
-		header=header + '\n',
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.item() == MenuItem.yes()
-		case ResultType.Skip:
-			return None
-		case _:
-			raise ValueError('Unhandled result type')
-
-
 def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfiguration | None:
-	enabled = _select_enabled(preset.enabled if preset else None, 'Would you like to configure Bluetooth?')
+	enabled = prompt_yes_no('Would you like to configure Bluetooth?' + '\n', preset.enabled if preset else False)
 	return preset if enabled is None else BluetoothConfiguration(enabled)
 
 
 def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServiceConfiguration | None:
-	enabled = _select_enabled(preset.enabled if preset else None, 'Would you like to configure the print service?')
+	enabled = prompt_yes_no('Would you like to configure the print service?' + '\n', preset.enabled if preset else False)
 	return preset if enabled is None else PrintServiceConfiguration(enabled)
 
 
 def select_media_codecs(preset: MediaCodecsConfiguration | None) -> MediaCodecsConfiguration | None:
-	enabled = _select_enabled(preset.enabled if preset else None, 'Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?')
+	enabled = prompt_yes_no('Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?' + '\n', preset.enabled if preset else False)
 	return preset if enabled is None else MediaCodecsConfiguration(enabled)
 
 

@@ -1,17 +1,15 @@
 import ipaddress
 import re
-from typing import TYPE_CHECKING, assert_never, override
+from typing import assert_never, override
 
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, Nic, NicType
 from archinstoo.lib.network.interfaces import list_interfaces
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
-
-if TYPE_CHECKING:
-	from collections.abc import Callable
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 class ManualNetworkConfig(ListManager[Nic]):
@@ -102,21 +100,8 @@ class ManualNetworkConfig(ListManager[Nic]):
 			except ValueError:
 				return failure
 
-		result = EditMenu(
-			title,
-			header=header,
-			validator=validator,
-			allow_skip=allow_skip,
-			default_text=preset,
-		).input()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.text()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		text = prompt_text(title, header, preset, validator, allow_skip=allow_skip)
+		return preset if text is None else text
 
 	def _edit_iface(self, edit_nic: Nic) -> Nic:
 		iface_name = edit_nic.iface
@@ -192,11 +177,6 @@ def _valid_hostname(text: str | None) -> str | None:
 	return None
 
 
-def _edit(title: str, header: str, preset: str, validator: Callable[[str | None], str | None]) -> str | None:
-	result = EditMenu(title, header=header + '\n', validator=validator, allow_skip=True, default_text=preset or None).input()
-	return result.text() if result.type_ == ResultType.Selection else None
-
-
 def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	# system-wide resolver; None keeps whatever the link hands out
 	items = [MenuItem(p.display_msg(), value=p) for p in DnsProvider]
@@ -227,28 +207,18 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	custom = preset if preset and preset.provider is DnsProvider.CUSTOM else None
 	servers: list[str] = []
 	if provider is DnsProvider.CUSTOM:
-		text = _edit('DNS servers', 'Server addresses, space separated', ' '.join(custom.servers) if custom else '', _valid_addresses)
+		text = prompt_text('DNS servers', 'Server addresses, space separated' + '\n', ' '.join(custom.servers) if custom else None, _valid_addresses)
 		if text is None:
 			return preset
 		servers = text.split()
 
-	tls_group = MenuItemGroup.yes_no()
-	tls_group.set_selected_by_value(preset.over_tls if preset else True)
-
-	tls = SelectMenu[bool](
-		tls_group,
-		header='Encrypt lookups with DNS over TLS?' + '\n',
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		allow_skip=True,
-	).run()
-
-	over_tls = tls.item() == MenuItem.yes() if tls.type_ == ResultType.Selection else True
+	over_tls = prompt_yes_no('Encrypt lookups with DNS over TLS?' + '\n', preset.over_tls if preset else True)
+	if over_tls is None:
+		over_tls = True
 
 	tls_name = ''
 	if provider is DnsProvider.CUSTOM and over_tls:
-		name = _edit('Certificate name', 'Hostname the servers present over TLS', custom.tls_name if custom else '', _valid_hostname)
+		name = prompt_text('Certificate name', 'Hostname the servers present over TLS' + '\n', custom.tls_name if custom else None, _valid_hostname)
 		if name is None:
 			return preset
 		tls_name = name.lower()

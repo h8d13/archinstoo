@@ -22,9 +22,7 @@ from archinstoo.lib.models.device import (
 	SubvolumeModification,
 	Unit,
 )
-from archinstoo.lib.tui.curses_menu import SelectMenu
-from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.types import Alignment, Orientation
+from archinstoo.lib.tui.prompts import prompt_yes_no
 
 from .selectors import select_main_filesystem_format, select_mount_options, select_partition_table
 
@@ -138,19 +136,7 @@ def suggest_disk_layout(
 	min_size_to_allow_home_part = Size(64, Unit.GiB, sector_size)
 
 	if filesystem_type == FilesystemType.BTRFS:
-		prompt = 'Would you like to use BTRFS subvolumes with a default structure?' + '\n'
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(MenuItem.yes().value)
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			alignment=Alignment.CENTER,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			allow_skip=False,
-		).run()
-
-		using_subvolumes = result.item() == MenuItem.yes()
+		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?' + '\n', preset=True, allow_skip=False)
 		mount_options = select_mount_options()
 	else:
 		using_subvolumes = False
@@ -177,19 +163,7 @@ def suggest_disk_layout(
 	elif separate_home:
 		using_home_partition = True
 	else:
-		prompt = 'Would you like to create a separate partition for /home?' + '\n'
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(MenuItem.no().value)
-		result = SelectMenu(
-			group,
-			header=prompt,
-			orientation=Orientation.HORIZONTAL,
-			columns=2,
-			alignment=Alignment.CENTER,
-			allow_skip=False,
-		).run()
-
-		using_home_partition = result.item() == MenuItem.yes()
+		using_home_partition = prompt_yes_no('Would you like to create a separate partition for /home?' + '\n', preset=False, allow_skip=False)
 
 	# root partition starts after last boot partition
 	last_boot = boot_partitions[-1]
@@ -258,21 +232,7 @@ def suggest_lvm_layout(
 		filesystem_type = select_main_filesystem_format(advanced=advanced)
 
 	if filesystem_type == FilesystemType.BTRFS:
-		prompt = 'Would you like to use BTRFS subvolumes with a default structure?' + '\n'
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(MenuItem.yes().value)
-
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			search_enabled=False,
-			allow_skip=False,
-			orientation=Orientation.HORIZONTAL,
-			columns=2,
-			alignment=Alignment.CENTER,
-		).run()
-
-		using_subvolumes = MenuItem.yes() == result.item()
+		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?' + '\n', preset=True, allow_skip=False)
 		mount_options = select_mount_options()
 
 	if using_subvolumes:

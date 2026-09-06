@@ -21,8 +21,9 @@ from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import FormattedOutput, debug
 from archinstoo.lib.pathnames import MIRRORLIST
 from archinstoo.lib.pm.config import set_parallel_downloads
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
+from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_text
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -71,38 +72,15 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		return data
 
 	def _add_custom_repository(self, preset: CustomRepository | None = None) -> CustomRepository | None:
-		edit_result = EditMenu(
-			'Repository name',
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-			default_text=preset.name if preset else None,
-		).input()
-
-		match edit_result.type_:
-			case ResultType.Selection:
-				name = edit_result.text()
-			case ResultType.Skip:
-				return preset
-			case _:
-				raise ValueError('Unhandled return type')
+		name = prompt_text('Repository name', preset=preset.name if preset else None)
+		if name is None:
+			return preset
 
 		header = f'{"Name"}: {name}'
 
-		edit_result = EditMenu(
-			'Url',
-			header=header,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-			default_text=preset.url if preset else None,
-		).input()
-
-		match edit_result.type_:
-			case ResultType.Selection:
-				url = edit_result.text()
-			case ResultType.Skip:
-				return preset
-			case _:
-				raise ValueError('Unhandled return type')
+		url = prompt_text('Url', header, preset.url if preset else None)
+		if url is None:
+			return preset
 
 		header += f'\n{"Url"}: {url}\n'
 		prompt = f'{header}\n' + 'Select signature check'
@@ -191,23 +169,8 @@ class CustomMirrorServersList(ListManager[CustomServer]):
 		return data
 
 	def _add_custom_server(self, preset: CustomServer | None = None) -> CustomServer | None:
-		edit_result = EditMenu(
-			'Server url',
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-			default_text=preset.url if preset else None,
-		).input()
-
-		match edit_result.type_:
-			case ResultType.Selection:
-				uri = edit_result.text()
-				return CustomServer(uri)
-			case ResultType.Skip:
-				return preset
-			case _:
-				pass
-
-		return None
+		uri = prompt_text('Server url', preset=preset.url if preset else None)
+		return preset if uri is None else CustomServer(uri)
 
 
 class PMenu(AbstractSubMenu[PacmanConfiguration]):

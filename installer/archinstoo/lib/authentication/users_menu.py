@@ -3,10 +3,11 @@ from typing import override
 
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.users import Shell, SupplementaryGroup, User
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 from .password_prompt import get_password
 
@@ -112,36 +113,10 @@ class UserList(ListManager[User]):
 
 	def _get_stash_url(self) -> str | None:
 		header = f'{"Format"}: https://provider.com/user/repo#branch\n{"Branch is optional"}\n'
-		result = EditMenu(
-			'Stash URL',
-			header=header,
-			allow_skip=True,
-			validator=self._validate_stash_url,
-		).input()
-
-		match result.type_:
-			case ResultType.Skip:
-				return None
-			case ResultType.Selection:
-				return result.text() or None
-			case _:
-				return None
+		return prompt_text('Stash URL', header, validator=self._validate_stash_url) or None
 
 	def _add_user(self) -> User | None:
-		editResult = EditMenu(
-			'Username',
-			allow_skip=True,
-			validator=self._check_for_correct_username,
-		).input()
-
-		match editResult.type_:
-			case ResultType.Skip:
-				return None
-			case ResultType.Selection:
-				username = editResult.text()
-			case _:
-				raise ValueError('Unhandled result type')
-
+		username = prompt_text('Username', validator=self._check_for_correct_username)
 		if not username:
 			return None
 
@@ -155,25 +130,7 @@ class UserList(ListManager[User]):
 		header += f'{"Password"}: {password.hidden()}\n\n'
 		header += f'Should "{username}" be a superuser?\n'
 
-		group = MenuItemGroup.yes_no()
-		group.focus_item = MenuItem.yes()
-
-		result = SelectMenu[bool](
-			group,
-			header=header,
-			alignment=Alignment.CENTER,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			search_enabled=False,
-			allow_skip=False,
-		).run()
-
-		match result.type_:
-			case ResultType.Selection:
-				elev = result.item() == MenuItem.yes()
-			case _:
-				raise ValueError('Unhandled result type')
-
+		elev = prompt_yes_no(header, preset=True, allow_skip=False)
 		shell = _select_shell(elev=elev)
 
 		return User(username, password, elev, shell=shell)

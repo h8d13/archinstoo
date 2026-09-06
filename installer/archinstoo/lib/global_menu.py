@@ -9,8 +9,9 @@ from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, Orientation
+from archinstoo.lib.tui.types import Alignment
 
 from .applications.application_menu import ApplicationMenu
 from .authentication.authentication_menu import AuthenticationMenu
@@ -625,25 +626,8 @@ class GlobalMenu(AbstractMenu[None]):
 		header_text += 'Useful for building out-of-tree drivers or DKMS modules,' + '\n'
 		header_text += 'especially for non-standard kernel variants.' + '\n'
 
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(current_headers)
-
-		result = SelectMenu[bool](
-			group,
-			header=header_text,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				pass
-			case ResultType.Selection:
-				self._arch_config.kernel_headers = result.item() == MenuItem.yes()
-			case _:
-				pass
+		if (headers := prompt_yes_no(header_text, current_headers)) is not None:
+			self._arch_config.kernel_headers = headers
 
 		return selected_kernels
 

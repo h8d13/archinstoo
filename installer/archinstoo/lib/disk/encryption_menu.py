@@ -19,10 +19,11 @@ from archinstoo.lib.models.device import (
 	PartitionModification,
 )
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
@@ -158,25 +159,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		prompt = 'Embed a keyfile in initramfs so root is auto-unlocked ?' + '\n'
 		prompt += 'This avoids entering encryption password twice on boot.' + '\n'
 
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
-
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.item() == MenuItem.yes()
-			case _:
-				return preset
+		choice = prompt_yes_no(prompt, preset)
+		return preset if choice is None else choice
 
 	def _check_dep_enc_type(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
@@ -272,25 +256,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		prompt += 'PCR selection picked separately. Defaults to 0+7.' + '\n'
 		prompt += 'Passphrase keyslot stays as fallback.' + '\n'
 
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
-
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.item() == MenuItem.yes()
-			case _:
-				return preset
+		choice = prompt_yes_no(prompt, preset)
+		return preset if choice is None else choice
 
 	@override
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
@@ -652,21 +619,5 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 		except ValueError:
 			return 'Please enter a valid number'
 
-	result = EditMenu(
-		'Iteration time',
-		header=header,
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-		default_text=str(preset) if preset else str(DEFAULT_ITER_TIME),
-		validator=validate_iter_time,
-	).input()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			if not result.text():
-				return preset
-			return int(result.text())
-		case ResultType.Reset:
-			return None
+	text = prompt_text('Iteration time', header, str(preset) if preset else str(DEFAULT_ITER_TIME), validate_iter_time)
+	return int(text) if text else preset

@@ -6,8 +6,9 @@ from archinstoo.lib.models.packages import AvailablePackage, PackageGroup
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
+from archinstoo.lib.tui.types import Alignment, FrameProperties, PreviewStyle
 
 
 class PostInstallationAction(Enum):
@@ -24,46 +25,15 @@ def select_ntp(preset: bool = True) -> bool:
 		'For more information, please check the Arch wiki\n'
 	)
 
-	preset_val = MenuItem.yes() if preset else MenuItem.no()
-	group = MenuItemGroup.yes_no()
-	group.focus_item = preset_val
-
-	result = SelectMenu[bool](
-		group,
-		header=header,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return result.item() == MenuItem.yes()
-		case _:
-			raise ValueError('Unhandled return type')
+	choice = prompt_yes_no(header, preset)
+	return preset if choice is None else choice
 
 
 def select_hostname(preset: str | None = None) -> str | None:
-	result = EditMenu(
-		'Hostname',
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-		default_text=preset,
-	).input()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			hostname = result.text()
-			if len(hostname) < 1:
-				return None
-			return hostname
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')
+	hostname = prompt_text('Hostname', preset=preset)
+	if hostname is None:
+		return preset
+	return hostname or None
 
 
 def select_timezone(preset: str | None = None) -> str | None:
