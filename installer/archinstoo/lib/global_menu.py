@@ -9,7 +9,7 @@ from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment
 
@@ -459,14 +459,7 @@ class GlobalMenu(AbstractMenu[None]):
 					MenuItem(text='Load optimized defaults', value='optimized'),
 				]
 
-				result = SelectMenu[str](
-					MenuItemGroup(items, sort_items=False),
-					header='Sysctl',
-					alignment=Alignment.CENTER,
-					allow_skip=True,
-				).run()
-
-				if result.type_ == ResultType.Selection and result.get_value() == 'optimized':
+				if prompt_choice(items, header='Sysctl') == 'optimized':
 					preset = self._sysctl_optimized_defaults()
 
 			current_text = '\n'.join(preset) if preset else ''
@@ -808,28 +801,15 @@ class GlobalMenu(AbstractMenu[None]):
 		items.append(MenuItem(text='exit delete selection', value='abort_only'))
 		items.append(MenuItem(text='cancel abort', value='cancel'))
 
-		group = MenuItemGroup(items)
-		group.focus_item = group.items[0]  # Focus on first option
+		choice: str = prompt_choice(items, header='Abort the installation? \n', allow_skip=False)
 
-		result = SelectMenu[str](
-			group,
-			header='Abort the installation? \n',
-			alignment=Alignment.CENTER,
-			allow_skip=False,
-		).run()
-
-		if result.type_ == ResultType.Selection:
-			choice = result.get_value()
-
-			if choice == 'save_abort':
-				# Sync current selections to config before saving
-				self.sync_all_to_config()
-				store = ConfigStore(self._arch_config)
-				store.save()
-				raise SystemExit(0)  # User-initiated abort is not an error
-			if choice == 'abort_only':
-				ConfigStore.delete_saved_config()
-				raise SystemExit(0)  # User-initiated abort is not an error
-			# If 'cancel', just return to menu
-
-		return
+		if choice == 'save_abort':
+			# Sync current selections to config before saving
+			self.sync_all_to_config()
+			store = ConfigStore(self._arch_config)
+			store.save()
+			raise SystemExit(0)  # User-initiated abort is not an error
+		if choice == 'abort_only':
+			ConfigStore.delete_saved_config()
+			raise SystemExit(0)  # User-initiated abort is not an error
+		# If 'cancel', just return to menu

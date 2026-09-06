@@ -109,7 +109,7 @@ class ConfigStore:
 	@classmethod
 	def prompt_resume(cls) -> dict[str, Any] | None:
 		# Prompt user to resume from saved config. Returns config dict or None.
-		from .tui.result import ResultType
+		from .tui.prompts import prompt_choice
 
 		if not cls.has_saved_config():
 			return None
@@ -119,24 +119,11 @@ class ConfigStore:
 				MenuItem(text='resume from saved', value='resume'),
 				MenuItem(text='start fresh', value='fresh'),
 			]
+			choice: str = prompt_choice(items, header='Saved configuration found:' + '\n', allow_skip=False)
 
-			group = MenuItemGroup(items)
-			group.focus_item = group.items[0]
-
-			result = SelectMenu[str](
-				group,
-				header='Saved configuration found:' + '\n',
-				alignment=Alignment.CENTER,
-				allow_skip=False,
-			).run()
-
-			if result.type_ == ResultType.Selection:
-				choice = result.get_value()
-
-				if choice == 'resume':
-					return cls.load_saved_config()
-				if choice == 'fresh':
-					cls.delete_saved_config()
+			if choice == 'resume':
+				return cls.load_saved_config()
+			cls.delete_saved_config()
 
 		return None
 

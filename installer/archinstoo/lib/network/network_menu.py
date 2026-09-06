@@ -1,13 +1,13 @@
 import ipaddress
 import re
-from typing import assert_never, override
+from typing import override
 
 from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, Nic, NicType
 from archinstoo.lib.network.interfaces import list_interfaces
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -60,22 +60,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 			return None
 
 		items = [MenuItem(i, value=i) for i in available]
-		group = MenuItemGroup(items, sort_items=True)
-
-		result = SelectMenu[str](
-			group,
-			alignment=Alignment.CENTER,
-			frame=FrameProperties.min('Interfaces'),
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return None
-			case ResultType.Selection:
-				return result.get_value()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		return prompt_choice(items, frame='Interfaces', sort_items=True)
 
 	def _get_ip_address(
 		self,
@@ -110,26 +95,7 @@ class ManualNetworkConfig(ListManager[Nic]):
 
 		header = f'Select which mode to configure for "{iface_name}"' + '\n'
 		items = [MenuItem(m, value=m) for m in modes]
-		group = MenuItemGroup(items, sort_items=True)
-		group.set_default_by_value(default_mode)
-
-		result = SelectMenu[str](
-			group,
-			header=header,
-			allow_skip=False,
-			alignment=Alignment.CENTER,
-			frame=FrameProperties.min('Modes'),
-		).run()
-
-		match result.type_:
-			case ResultType.Selection:
-				mode = result.get_value()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
-			case ResultType.Skip:
-				raise ValueError('The mode menu should not be skippable')
-			case _:
-				assert_never(result.type_)
+		mode = prompt_choice(items, header=header, frame='Modes', default=default_mode, sort_items=True, allow_skip=False)
 
 		if mode == 'IP (static)':
 			header = f'Enter the IP and subnet for {iface_name} (example: 192.168.0.5/24): ' + '\n'
@@ -228,18 +194,7 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 
 def _select_mac_address(preset: MacAddressPolicy) -> MacAddressPolicy:
 	items = [MenuItem(m.display_msg(), value=m) for m in MacAddressPolicy]
-	group = MenuItemGroup(items)
-	group.set_selected_by_value(preset)
-
-	result = SelectMenu[MacAddressPolicy](
-		group,
-		header='MAC address randomization' + '\n',
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('MAC address'),
-		allow_skip=True,
-	).run()
-
-	return result.get_value() if result.type_ == ResultType.Selection else preset
+	return prompt_choice(items, preset, header='MAC address randomization' + '\n', frame='MAC address') or preset
 
 
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:

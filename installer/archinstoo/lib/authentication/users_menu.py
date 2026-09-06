@@ -5,7 +5,7 @@ from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.users import Shell, SupplementaryGroup, User
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -139,23 +139,7 @@ class UserList(ListManager[User]):
 def _select_shell(preset: Shell = Shell.BASH, elev: bool = False) -> Shell:
 	choices = [s for s in Shell if s != Shell.RBASH or not elev]
 	items = [MenuItem(s.value, value=s) for s in choices]
-	group = MenuItemGroup(items)
-	group.set_focus_by_value(preset)
-
-	result = SelectMenu[Shell](
-		group,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Shell'),
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case ResultType.Skip:
-			return preset
-		case _:
-			return Shell.BASH
+	return prompt_choice(items, preset, frame='Shell') or preset
 
 
 def _select_groups(preset: list[str] | None = None) -> list[str]:

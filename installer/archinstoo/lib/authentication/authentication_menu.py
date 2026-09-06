@@ -4,11 +4,8 @@ from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.output import FormattedOutput
-from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_yes_no
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 
 from .password_prompt import get_password
 from .users_menu import select_users
@@ -108,23 +105,7 @@ def select_root_password(_preset: str | None = None) -> Password | None:
 def select_privilege_escalation(preset: PrivilegeEscalation | None) -> PrivilegeEscalation | None:
 	items = [MenuItem(method.value, value=method) for method in PrivilegeEscalation]
 	items.append(MenuItem(text='None', value=None))
-	group = MenuItemGroup(items)
-	group.set_selected_by_value(preset)
-
-	result = SelectMenu[PrivilegeEscalation | None](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Privilege escalation'),
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.item().value
-		case ResultType.Skip:
-			return preset
-		case _:
-			return PrivilegeEscalation.Sudo
+	return prompt_choice(items, preset, frame='Privilege escalation')
 
 
 def select_lock_root_account(preset: bool) -> bool:

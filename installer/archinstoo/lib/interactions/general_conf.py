@@ -6,7 +6,7 @@ from archinstoo.lib.models.packages import AvailablePackage, PackageGroup
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, PreviewStyle
 
@@ -41,25 +41,7 @@ def select_timezone(preset: str | None = None) -> str | None:
 	timezones = list_timezones()
 
 	items = [MenuItem(tz, value=tz) for tz in timezones]
-	group = MenuItemGroup(items, sort_items=True)
-	group.set_selected_by_value(preset)
-	group.set_default_by_value(default)
-
-	result = SelectMenu[str](
-		group,
-		allow_reset=True,
-		allow_skip=True,
-		frame=FrameProperties.min('Timezone'),
-		alignment=Alignment.CENTER,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Reset:
-			return default
-		case ResultType.Selection:
-			return result.get_value()
+	return prompt_choice(items, preset, frame='Timezone', default=default, sort_items=True, allow_reset=True, reset=default)
 
 
 def select_additional_packages(preset: list[str] | None = None) -> list[str]:
@@ -233,17 +215,4 @@ def select_post_installation(elapsed_time: float | None = None) -> PostInstallat
 	header += '\nAfter reboot, remove the installation medium' + '\n'
 
 	items = [MenuItem(action.value, value=action) for action in PostInstallationAction]
-	group = MenuItemGroup(items)
-
-	result = SelectMenu[PostInstallationAction](
-		group,
-		header=header,
-		allow_skip=False,
-		alignment=Alignment.CENTER,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case _:
-			raise ValueError('Post installation action not handled')
+	return prompt_choice(items, header=header, allow_skip=False)

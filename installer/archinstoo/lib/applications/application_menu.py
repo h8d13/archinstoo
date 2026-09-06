@@ -34,7 +34,7 @@ from archinstoo.lib.models.application import (
 )
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -307,26 +307,10 @@ class DevelopmentMenu(AbstractSubMenu[DevelopmentConfiguration]):
 
 
 def select_power_management(preset: PowerManagementConfiguration | None = None) -> PowerManagementConfiguration | None:
-	group = MenuItemGroup.from_enum(PowerManagement)
-
-	if preset:
-		group.set_focus_by_value(preset.power_management)
-
-	result = SelectMenu[PowerManagement](
-		group,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('Power management'),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return PowerManagementConfiguration(power_management=result.get_value())
-		case ResultType.Reset:
-			return None
+	choice = prompt_choice(
+		MenuItemGroup.from_enum(PowerManagement), preset.power_management if preset else None, frame='Power management', allow_reset=True
+	)
+	return PowerManagementConfiguration(choice) if choice else None
 
 
 def select_cpu_scheduler(preset: CPUSchedulerConfiguration | None = None) -> CPUSchedulerConfiguration | None:
@@ -334,26 +318,9 @@ def select_cpu_scheduler(preset: CPUSchedulerConfiguration | None = None) -> CPU
 	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s not in EXPERIMENTAL_CPU_SCHEDULERS]
 	items.append(MenuItem(text='Experimental', read_only=True))
 	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s in EXPERIMENTAL_CPU_SCHEDULERS]
-	group = MenuItemGroup(items)
 
-	if preset:
-		group.set_focus_by_value(preset.scheduler)
-
-	result = SelectMenu[CPUScheduler](
-		group,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('CPU scheduler'),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return CPUSchedulerConfiguration(scheduler=result.get_value())
-		case ResultType.Reset:
-			return None
+	choice = prompt_choice(items, preset.scheduler if preset else None, frame='CPU scheduler', allow_reset=True)
+	return CPUSchedulerConfiguration(choice) if choice else None
 
 
 def _enabled_text(label: str, enabled: bool) -> str:
@@ -378,49 +345,14 @@ def select_media_codecs(preset: MediaCodecsConfiguration | None) -> MediaCodecsC
 def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration | None:
 	items = [MenuItem(a.value, value=a) for a in Audio]
 	items.append(MenuItem(text='None', value=None))
-	group = MenuItemGroup(items)
 
-	if preset:
-		group.set_focus_by_value(preset.audio)
-
-	result = SelectMenu[Audio](
-		group,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Audio'),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			audio = result.item().value
-			return AudioConfiguration(audio=audio) if audio else None
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')
+	choice = prompt_choice(items, preset.audio if preset else None, frame='Audio')
+	return AudioConfiguration(choice) if choice else None
 
 
 def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConfiguration | None:
-	group = MenuItemGroup.from_enum(Firewall)
-
-	if preset:
-		group.set_focus_by_value(preset.firewall)
-
-	result = SelectMenu[Firewall](
-		group,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('Firewall'),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return FirewallConfiguration(firewall=result.get_value())
-		case ResultType.Reset:
-			return None
+	choice = prompt_choice(MenuItemGroup.from_enum(Firewall), preset.firewall if preset else None, frame='Firewall', allow_reset=True)
+	return FirewallConfiguration(choice) if choice else None
 
 
 def select_management(preset: ManagementConfiguration | None = None) -> ManagementConfiguration | None:
@@ -453,79 +385,21 @@ def select_management(preset: ManagementConfiguration | None = None) -> Manageme
 
 
 def select_monitor(preset: MonitorConfiguration | None = None) -> MonitorConfiguration | None:
-	group = MenuItemGroup.from_enum(Monitor)
-
-	if preset:
-		group.set_focus_by_value(preset.monitor)
-
-	result = SelectMenu[Monitor](
-		group,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('Monitor'),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return MonitorConfiguration(monitor=result.get_value())
-		case ResultType.Reset:
-			return None
+	choice = prompt_choice(MenuItemGroup.from_enum(Monitor), preset.monitor if preset else None, frame='Monitor', allow_reset=True)
+	return MonitorConfiguration(choice) if choice else None
 
 
 def select_editor(preset: EditorConfiguration | None = None) -> EditorConfiguration | None:
-	group = MenuItemGroup.from_enum(Editor)
-
-	if preset:
-		group.set_focus_by_value(preset.editor)
-
 	header = 'Set an editor globally through /etc/environment?' + '\n'
-
-	result = SelectMenu[Editor](
-		group,
-		header=header,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('Editor'),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return EditorConfiguration(editor=result.get_value())
-		case ResultType.Reset:
-			return None
+	choice = prompt_choice(MenuItemGroup.from_enum(Editor), preset.editor if preset else None, header=header, frame='Editor', allow_reset=True)
+	return EditorConfiguration(choice) if choice else None
 
 
 def select_terminal(preset: TerminalConfiguration | None = None) -> TerminalConfiguration | None:
-	group = MenuItemGroup.from_enum(Terminal)
-
-	if preset:
-		group.set_focus_by_value(preset.terminal)
-
 	header = 'Set a terminal globally through /etc/environment?' + '\n'
 	header += 'Window manager profiles bind it too (foot is Wayland only)' + '\n'
-
-	result = SelectMenu[Terminal](
-		group,
-		header=header,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('Terminal'),
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return TerminalConfiguration(terminal=result.get_value())
-		case ResultType.Reset:
-			return None
+	choice = prompt_choice(MenuItemGroup.from_enum(Terminal), preset.terminal if preset else None, header=header, frame='Terminal', allow_reset=True)
+	return TerminalConfiguration(choice) if choice else None
 
 
 def select_security(preset: SecurityConfiguration | None = None) -> SecurityConfiguration | None:

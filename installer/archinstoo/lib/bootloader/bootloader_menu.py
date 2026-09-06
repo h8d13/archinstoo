@@ -4,11 +4,8 @@ from typing import override
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 
 
 class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
@@ -242,22 +239,4 @@ def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = F
 
 	items = [MenuItem(o.display_name(), value=o) for o in options]
 	items.append(MenuItem(text='None', value=None))
-	group = MenuItemGroup(items)
-	group.set_default_by_value(default)
-	group.set_focus_by_value(preset)
-
-	result = SelectMenu[Bootloader](
-		group,
-		header=header,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Bootloader'),
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return result.item().value
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')
+	return prompt_choice(items, preset, header=header, frame='Bootloader', default=default)

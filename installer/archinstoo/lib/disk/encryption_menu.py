@@ -21,7 +21,7 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_text, prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
@@ -232,24 +232,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			return preset
 
 		group = MenuHelper(data=devices).create_menu_group()
-		if preset:
-			group.set_focus_by_value(preset)
-
-		result = SelectMenu[Fido2Device](
-			group,
-			header=header,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-			allow_reset=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Reset:
-				return None
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.get_value()
+		return prompt_choice(group, preset, header=header, allow_reset=True)
 
 	def _select_tpm2_unlock(self, preset: bool) -> bool:
 		prompt = 'Bind a TPM2 keyslot to the LUKS device(s) so the disk auto-unlocks at boot ?' + '\n'
@@ -456,27 +439,8 @@ def select_encryption_type(
 	if not preset:
 		preset = options[0]
 
-	preset_value = preset.type_to_text()
-
 	items = [MenuItem(o.type_to_text(), value=o) for o in options]
-	group = MenuItemGroup(items)
-	group.set_focus_by_value(preset_value)
-
-	result = SelectMenu[EncryptionType](
-		group,
-		allow_skip=True,
-		allow_reset=True,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Encryption type'),
-	).run()
-
-	match result.type_:
-		case ResultType.Reset:
-			return None
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return result.get_value()
+	return prompt_choice(items, preset, frame='Encryption type', allow_reset=True)
 
 
 def select_encrypted_password() -> Password | None:
@@ -554,48 +518,13 @@ def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
 		preset = LuksPbkdf.Argon2id
 
 	items = [MenuItem(o.display_name(), value=o) for o in LuksPbkdf]
-	group = MenuItemGroup(items)
-	group.set_focus_by_value(preset)
-
-	result = SelectMenu[LuksPbkdf](
-		group,
-		allow_skip=True,
-		allow_reset=True,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Key derivation function'),
-	).run()
-
-	match result.type_:
-		case ResultType.Reset:
-			return None
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return result.get_value()
+	return prompt_choice(items, preset, frame='Key derivation function', allow_reset=True)
 
 
 def select_cipher(preset: EncryptionCipher | None = None) -> EncryptionCipher | None:
 	# Skip keeps preset (incl. None = cryptsetup default), Reset clears to default.
 	items = [MenuItem(c.value, value=c) for c in EncryptionCipher]
-	group = MenuItemGroup(items)
-	if preset:
-		group.set_focus_by_value(preset)
-
-	result = SelectMenu[EncryptionCipher](
-		group,
-		allow_skip=True,
-		allow_reset=True,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Encryption cipher'),
-	).run()
-
-	match result.type_:
-		case ResultType.Reset:
-			return None
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return result.get_value()
+	return prompt_choice(items, preset, frame='Encryption cipher', allow_reset=True)
 
 
 def select_iteration_time(preset: int | None = None) -> int | None:

@@ -9,6 +9,7 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_choice
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
 
@@ -70,21 +71,7 @@ def select_partition_table() -> PartitionTable:
 		MenuItem('GPT', value=PartitionTable.GPT),
 		MenuItem('MBR', value=PartitionTable.MBR),
 	]
-	group = MenuItemGroup(items, sort_items=False)
-	group.set_focus_by_value(default)
-
-	result = SelectMenu[PartitionTable](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Partition table'),
-		allow_skip=False,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case _:
-			raise ValueError('Unhandled result type')
+	return prompt_choice(items, default, frame='Partition table', allow_skip=False)
 
 
 def select_main_filesystem_format(advanced: bool = False, allow_lvm: bool = False) -> FilesystemType:
@@ -103,19 +90,7 @@ def select_main_filesystem_format(advanced: bool = False, allow_lvm: bool = Fals
 	if allow_lvm:
 		items.append(MenuItem('lvm', value=FilesystemType.LVM))
 
-	group = MenuItemGroup(items, sort_items=False)
-	result = SelectMenu[FilesystemType](
-		group,
-		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Filesystem'),
-		allow_skip=False,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.get_value()
-		case _:
-			raise ValueError('Unhandled result type')
+	return prompt_choice(items, frame='Filesystem', allow_skip=False)
 
 
 def select_mount_options() -> list[str]:
