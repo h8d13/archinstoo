@@ -46,6 +46,75 @@ class NicType(Enum):
 				return 'Manual configuration'
 
 
+class DnsProvider(Enum):
+	QUAD9 = 'quad9'
+	CLOUDFLARE = 'cloudflare'
+	GOOGLE = 'google'
+
+	@property
+	def servers(self) -> list[str]:
+		match self:
+			case DnsProvider.QUAD9:
+				return ['9.9.9.9', '149.112.112.112', '2620:fe::fe', '2620:fe::9']
+			case DnsProvider.CLOUDFLARE:
+				return ['1.1.1.1', '1.0.0.1', '2606:4700:4700::1111', '2606:4700:4700::1001']
+			case DnsProvider.GOOGLE:
+				return ['8.8.8.8', '8.8.4.4', '2001:4860:4860::8888', '2001:4860:4860::8844']
+
+	@property
+	def tls_name(self) -> str:
+		# the certificate name resolved validates a DNS-over-TLS session against
+		match self:
+			case DnsProvider.QUAD9:
+				return 'dns.quad9.net'
+			case DnsProvider.CLOUDFLARE:
+				return 'cloudflare-dns.com'
+			case DnsProvider.GOOGLE:
+				return 'dns.google'
+
+	def display_msg(self) -> str:
+		match self:
+			case DnsProvider.QUAD9:
+				return 'Quad9 (malware blocking, no logging)'
+			case DnsProvider.CLOUDFLARE:
+				return 'Cloudflare (1.1.1.1)'
+			case DnsProvider.GOOGLE:
+				return 'Google (8.8.8.8)'
+
+
+class _DnsSerialization(TypedDict):
+	provider: str
+	over_tls: bool
+
+
+@dataclass
+class DnsConfiguration:
+	provider: DnsProvider
+	over_tls: bool = True
+
+	def json(self) -> _DnsSerialization:
+		return {'provider': self.provider.value, 'over_tls': self.over_tls}
+
+	@classmethod
+	def parse_arg(cls, arg: _DnsSerialization) -> Self:
+		return cls(DnsProvider(arg['provider']), arg.get('over_tls', True))
+
+	def as_resolved_config(self) -> str:
+		# a resolved.conf.d drop-in. Domains=~. routes every lookup here ahead
+		# of the per-link servers DHCP hands out, which is what makes the pick
+		# system-wide rather than a fallback
+		# https://wiki.archlinux.org/title/Systemd-resolved#DNS_over_TLS
+		suffix = f'#{self.provider.tls_name}' if self.over_tls else ''
+		servers = ' '.join(f'{ip}{suffix}' for ip in self.provider.servers)
+
+		lines = ['[Resolve]', f'DNS={servers}']
+		if self.over_tls:
+			lines.append('DNSOverTLS=yes')
+		lines.append('Domains=~.')
+
+		return '\n'.join(lines) + '\n'
+
+
 class _NicSerialization(TypedDict):
 	iface: str | None
 	ip: str | None
@@ -120,17 +189,22 @@ class Nic:
 class _NetworkConfigurationSerialization(TypedDict):
 	type: str
 	nics: NotRequired[list[_NicSerialization]]
+	dns: NotRequired[_DnsSerialization]
 
 
 @dataclass
 class NetworkConfiguration:
 	type: NicType
 	nics: list[Nic] = field(default_factory=list)
+	# system-wide resolver, any type: every path runs systemd-resolved
+	dns: DnsConfiguration | None = None
 
 	def json(self) -> _NetworkConfigurationSerialization:
 		config: _NetworkConfigurationSerialization = {'type': self.type.value}
 		if self.nics:
 			config['nics'] = [n.json() for n in self.nics]
+		if self.dns:
+			config['dns'] = self.dns.json()
 
 		return config
 
@@ -140,19 +214,13 @@ class NetworkConfiguration:
 		if not nic_type:
 			return None
 
-		match NicType(nic_type):
-			case NicType.ISO:
-				return cls(NicType.ISO)
-			case NicType.NM:
-				return cls(NicType.NM)
-			case NicType.NM_IWD:
-				return cls(NicType.NM_IWD)
-			case NicType.IWD:
-				return cls(NicType.IWD)
-			case NicType.MANUAL:
-				nics_arg = config.get('nics', [])
-				if nics_arg:
-					nics = [Nic.parse_arg(n) for n in nics_arg]
-					return cls(NicType.MANUAL, nics)
+		nics: list[Nic] = []
+		if NicType(nic_type) == NicType.MANUAL:
+			# a manual config with no interfaces configures nothing
+			nics = [Nic.parse_arg(n) for n in config.get('nics', [])]
+			if not nics:
+				return None
 
-		return None
+		dns = DnsConfiguration.parse_arg(dns_arg) if (dns_arg := config.get('dns')) else None
+
+		return cls(NicType(nic_type), nics, dns)

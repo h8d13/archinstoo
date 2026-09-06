@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.network import NetworkConfiguration, NicType
+from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, NicType
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.utils.env import Os
 
@@ -44,3 +44,51 @@ def test_nm_iwd_keeps_its_backend_drop_in(tmp_path: Path, monkeypatch: pytest.Mo
 	NetworkHandler().install_network_config(NetworkConfiguration(NicType.NM_IWD), installation)
 
 	assert (tmp_path / 'etc/NetworkManager/conf.d/wifi_backend.conf').read_text() == '[device]\nwifi.backend=iwd\n'
+
+
+# -- DNS ---------------------------------------------------------------------
+
+QUAD9_TLS = """[Resolve]
+DNS=9.9.9.9#dns.quad9.net 149.112.112.112#dns.quad9.net 2620:fe::fe#dns.quad9.net 2620:fe::9#dns.quad9.net
+DNSOverTLS=yes
+Domains=~.
+"""
+
+
+def test_dns_over_tls_drop_in() -> None:
+	assert DnsConfiguration(DnsProvider.QUAD9).as_resolved_config() == QUAD9_TLS
+
+
+def test_dns_plain_drop_in_names_no_tls() -> None:
+	conf = DnsConfiguration(DnsProvider.CLOUDFLARE, over_tls=False).as_resolved_config()
+	assert 'DNSOverTLS' not in conf
+	assert '#' not in conf
+	assert 'Domains=~.' in conf
+
+
+@pytest.mark.parametrize('nic_type', [NicType.NM, NicType.IWD])
+def test_dns_choice_lands_in_resolved_conf_d(nic_type: NicType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	(tmp_path / 'etc').mkdir()
+	installation, _ = _session(tmp_path, monkeypatch)
+
+	NetworkHandler().install_network_config(NetworkConfiguration(nic_type, dns=DnsConfiguration(DnsProvider.QUAD9)), installation)
+
+	assert (tmp_path / 'etc/systemd/resolved.conf.d/dns.conf').read_text() == QUAD9_TLS
+
+
+def test_no_dns_choice_writes_nothing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	(tmp_path / 'etc').mkdir()
+	installation, _ = _session(tmp_path, monkeypatch)
+
+	NetworkHandler().install_network_config(NetworkConfiguration(NicType.NM), installation)
+
+	assert not (tmp_path / 'etc/systemd/resolved.conf.d').exists()
+
+
+def test_dns_round_trips_through_json() -> None:
+	config = NetworkConfiguration(NicType.NM_IWD, dns=DnsConfiguration(DnsProvider.GOOGLE, over_tls=False))
+	assert NetworkConfiguration.parse_arg(config.json()) == config
+
+	# absent stays absent, and a manual type with no interfaces is still nothing
+	assert NetworkConfiguration.parse_arg({'type': 'nm'}) == NetworkConfiguration(NicType.NM)
+	assert NetworkConfiguration.parse_arg({'type': 'manual'}) is None

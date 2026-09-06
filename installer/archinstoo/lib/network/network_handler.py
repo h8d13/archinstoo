@@ -1,8 +1,11 @@
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.output import warn
+from archinstoo.lib.utils.env import Os
+
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.network import NetworkConfiguration
+	from archinstoo.lib.models.network import DnsConfiguration, NetworkConfiguration
 	from archinstoo.lib.models.profile import ProfileConfiguration
 
 
@@ -50,6 +53,21 @@ class NetworkHandler:
 					installation.configure_nic(nic)
 				installation.enable_service('systemd-networkd')
 				installation.enable_service('systemd-resolved')
+
+		if network_config.dns:
+			_configure_dns(installation, network_config.dns)
+
+
+def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:
+	# resolved takes the drop-in whatever brought it up; on a foreign host
+	# link_resolved_stub() copied a resolv.conf instead of the stub symlink, so
+	# NetworkManager stays in its default mode and writes past it
+	if Os.running_from_foreign():
+		warn('NetworkManager will not use the DNS choice: /etc/resolv.conf is not the resolved stub')
+
+	conf_dir = installation.target / 'etc/systemd/resolved.conf.d'
+	conf_dir.mkdir(parents=True, exist_ok=True)
+	(conf_dir / 'dns.conf').write_text(dns.as_resolved_config())
 
 
 def _configure_nm_iwd(installation: Installer) -> None:
