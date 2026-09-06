@@ -26,12 +26,18 @@ _ASSETS_DIR = Path(__file__).parent / 'dms_assets'
 class DmsProfile(WaylandProfile):
 	needs_terminal = True
 
-	# dms-shell-<compositor> pulls dms-shell (quickshell, dgop, greeter assets)
+	# dms-shell-<compositor> pulls dms-shell (quickshell, dgop)
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
 		'niri': ['niri', 'dms-shell-niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
 		# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
 		'hyprland': ['hyprland', 'dms-shell-hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
 	}
+
+	# dms-shell 1.6.0 embedded the UI in the dms binary and dropped
+	# /usr/share/quickshell/dms, which is where its own greetd greeter lived;
+	# the launcher moved to a standalone AUR package. no repo greeter left to
+	# name, so fall back like the plain hyprland profile
+	_default_greeter_non_seatd = GreeterType.Sddm
 
 	def __init__(self) -> None:
 		super().__init__(
@@ -39,7 +45,6 @@ class DmsProfile(WaylandProfile):
 			ProfileType.WindowMgr,
 		)
 
-		# dms_compositor also decides the greeter compositor (dms-greeter --command)
 		self.custom_settings = {'dms_compositor': ['niri'], 'seat_access': None}
 
 	@property
@@ -76,12 +81,6 @@ class DmsProfile(WaylandProfile):
 	@override
 	def services(self) -> list[str]:
 		return seat_services(self.custom_settings.get('seat_access'))
-
-	@property
-	@override
-	def default_greeter_type(self) -> GreeterType:
-		# dms ships its own greetd-based greeter; session-transparent, seatd-safe
-		return GreeterType.GreetdDms
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:

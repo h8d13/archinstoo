@@ -307,7 +307,7 @@ sddm = ["sddm"]
 gdm = ["gdm"]
 ly = ["ly"]
 greetd = ["greetd"]
-dms-greeter = ["greetd"]
+tuigreet = ["greetd", "greetd-tuigreet"]
 regreet = ["greetd", "greetd-regreet", "cage"]
 cosmic-greeter = ["cosmic-greeter"]
 

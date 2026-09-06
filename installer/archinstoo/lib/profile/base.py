@@ -41,7 +41,7 @@ class GreeterType(Enum):
 	Gdm = 'gdm'
 	Ly = 'ly'
 	Greetd = 'greetd'
-	GreetdDms = 'dms-greeter'
+	Tuigreet = 'tuigreet'
 	Regreet = 'regreet'
 	CosmicSession = 'cosmic-greeter'
 
@@ -62,9 +62,9 @@ class GreeterType(Enum):
 				return ['ly']
 			case GreeterType.Greetd:
 				return ['greetd']
-			case GreeterType.GreetdDms:
-				# the greeter itself ships with dms-shell-<compositor>
-				return ['greetd']
+			case GreeterType.Tuigreet:
+				# tuigreet draws on the tty itself, no compositor to host it
+				return ['greetd', 'greetd-tuigreet']
 			case GreeterType.Regreet:
 				# regreet (GUI) runs inside the cage kiosk compositor
 				return ['greetd', 'greetd-regreet', 'cage']
@@ -80,7 +80,7 @@ class GreeterType(Enum):
 				return ['plasmalogin']
 			case GreeterType.Ly:
 				return ['ly@tty1']
-			case GreeterType.Regreet | GreeterType.GreetdDms:
+			case GreeterType.Tuigreet | GreeterType.Regreet:
 				return ['greetd']
 			case _:
 				return [self.value]
@@ -89,7 +89,7 @@ class GreeterType(Enum):
 	def disabled_services(self) -> list[str]:
 		# these take over vt1, so the getty that owns it has to go
 		match self:
-			case GreeterType.Ly | GreeterType.Regreet | GreeterType.GreetdDms:
+			case GreeterType.Ly | GreeterType.Tuigreet | GreeterType.Regreet:
 				return ['getty@tty1']
 			case _:
 				return []
