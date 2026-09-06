@@ -6,8 +6,9 @@ from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 from .password_prompt import get_password
 from .users_menu import select_users
@@ -127,24 +128,6 @@ def select_privilege_escalation(preset: PrivilegeEscalation | None) -> Privilege
 
 
 def select_lock_root_account(preset: bool) -> bool:
-	group = MenuItemGroup.yes_no()
-	group.focus_item = MenuItem.yes() if preset else MenuItem.no()
-
 	header = 'Lock root account? Can be undone using passwd -u root later.\n' + 'Sudo users can still edit /etc/shadow or use sudo directly.\n'
-
-	result = SelectMenu[bool](
-		group,
-		header=header,
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Selection:
-			return result.item() == MenuItem.yes()
-		case ResultType.Skip:
-			return preset
-		case _:
-			return False
+	choice = prompt_yes_no(header, preset)
+	return preset if choice is None else choice

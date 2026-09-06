@@ -5,8 +5,9 @@ from archinstoo.lib.menu.list_manager import ListManager
 from archinstoo.lib.models.users import Shell, SupplementaryGroup, User
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 from .password_prompt import get_password
 
@@ -155,25 +156,7 @@ class UserList(ListManager[User]):
 		header += f'{"Password"}: {password.hidden()}\n\n'
 		header += f'Should "{username}" be a superuser?\n'
 
-		group = MenuItemGroup.yes_no()
-		group.focus_item = MenuItem.yes()
-
-		result = SelectMenu[bool](
-			group,
-			header=header,
-			alignment=Alignment.CENTER,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			search_enabled=False,
-			allow_skip=False,
-		).run()
-
-		match result.type_:
-			case ResultType.Selection:
-				elev = result.item() == MenuItem.yes()
-			case _:
-				raise ValueError('Unhandled result type')
-
+		elev = prompt_yes_no(header, preset=True, allow_skip=False)
 		shell = _select_shell(elev=elev)
 
 		return User(username, password, elev, shell=shell)

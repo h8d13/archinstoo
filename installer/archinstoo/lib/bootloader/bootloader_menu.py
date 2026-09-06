@@ -6,8 +6,9 @@ from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
@@ -155,25 +156,8 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 	def _select_quiet(self, preset: bool) -> bool:
 		prompt = 'Add "quiet" to the kernel command line for a quieter boot?' + '\n'
 
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
-
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.item() == MenuItem.yes()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		choice = prompt_yes_no(prompt, preset)
+		return preset if choice is None else choice
 
 	def _select_serial_console(self, preset: str | None) -> str | None:
 		# pl011 UART on ARM, 16550 everywhere else
@@ -200,49 +184,14 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 	def _select_splash(self, preset: bool) -> bool:
 		prompt = 'Embed the Arch logo splash image into the unified kernel image?' + '\n'
 
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
-
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.item() == MenuItem.yes()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		choice = prompt_yes_no(prompt, preset)
+		return preset if choice is None else choice
 
 	def _select_uki(self, preset: bool) -> bool:
 		prompt = 'Would you like to use unified kernel images?' + '\n'
 
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
-
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		uki = preset
-		match result.type_:
-			case ResultType.Skip:
-				pass
-			case ResultType.Selection:
-				uki = result.item() == MenuItem.yes()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		choice = prompt_yes_no(prompt, preset)
+		uki = preset if choice is None else choice
 
 		# splash only applies to UKI: gate it on the current uki choice
 		splash_item = self._menu_item_group.find_by_key('splash')
@@ -287,25 +236,8 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			+ '\n'
 		)
 
-		group = MenuItemGroup.yes_no()
-		group.set_focus_by_value(preset)
-
-		result = SelectMenu[bool](
-			group,
-			header=prompt,
-			columns=2,
-			orientation=Orientation.HORIZONTAL,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				return result.item() == MenuItem.yes()
-			case ResultType.Reset:
-				raise ValueError('Unhandled result type')
+		choice = prompt_yes_no(prompt, preset)
+		return preset if choice is None else choice
 
 
 def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = False) -> Bootloader | None:

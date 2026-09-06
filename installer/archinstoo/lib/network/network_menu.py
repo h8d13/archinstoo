@@ -7,8 +7,9 @@ from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddr
 from archinstoo.lib.network.interfaces import list_interfaces
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -232,19 +233,9 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 			return preset
 		servers = text.split()
 
-	tls_group = MenuItemGroup.yes_no()
-	tls_group.set_selected_by_value(preset.over_tls if preset else True)
-
-	tls = SelectMenu[bool](
-		tls_group,
-		header='Encrypt lookups with DNS over TLS?' + '\n',
-		alignment=Alignment.CENTER,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		allow_skip=True,
-	).run()
-
-	over_tls = tls.item() == MenuItem.yes() if tls.type_ == ResultType.Selection else True
+	over_tls = prompt_yes_no('Encrypt lookups with DNS over TLS?' + '\n', preset.over_tls if preset else True)
+	if over_tls is None:
+		over_tls = True
 
 	tls_name = ''
 	if provider is DnsProvider.CUSTOM and over_tls:

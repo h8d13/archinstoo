@@ -11,8 +11,9 @@ from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.prompts import prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 def select_kernel(preset: list[str] | None = None) -> list[str]:
@@ -51,30 +52,9 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 	if preset is None:
 		preset = SwapConfiguration()
 
-	prompt = 'Would you like to use swap on zram?' + '\n'
-
-	group = MenuItemGroup.yes_no()
-	group.set_default_by_value(True)
-	group.set_focus_by_value(preset.zram)
-
-	result = SelectMenu[bool](
-		group,
-		header=prompt,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			zram = result.item() == MenuItem.yes()
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')
-		case _:
-			assert_never(result.type_)
+	zram = prompt_yes_no('Would you like to use swap on zram?' + '\n', preset.zram, default=True)
+	if zram is None:
+		return preset
 
 	algo = preset.algorithm
 	recomp_algo: ZramAlgorithm | None = None
@@ -106,29 +86,9 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 			recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
 
 	hib_prompt = 'Enable hibernation? Creates a disk swap file sized to RAM.' + '\n'
-
-	hib_group = MenuItemGroup.yes_no()
-	hib_group.set_default_by_value(True)
-	hib_group.set_focus_by_value(preset.hibernation)
-
-	hib_result = SelectMenu[bool](
-		hib_group,
-		header=hib_prompt,
-		columns=2,
-		orientation=Orientation.HORIZONTAL,
-		alignment=Alignment.CENTER,
-		allow_skip=True,
-	).run()
-
-	match hib_result.type_:
-		case ResultType.Skip:
-			hibernation = preset.hibernation
-		case ResultType.Selection:
-			hibernation = hib_result.item() == MenuItem.yes()
-		case ResultType.Reset:
-			raise ValueError('Unhandled result type')
-		case _:
-			assert_never(hib_result.type_)
+	hibernation = prompt_yes_no(hib_prompt, preset.hibernation, default=True)
+	if hibernation is None:
+		hibernation = preset.hibernation
 
 	return SwapConfiguration(
 		zram=zram,

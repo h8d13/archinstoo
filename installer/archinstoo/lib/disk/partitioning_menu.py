@@ -19,9 +19,9 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_dir
+from archinstoo.lib.tui.prompts import prompt_dir, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation
+from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 from .layouts import suggest_disk_layout
 from .subvolume_menu import SubvolumeMenu
@@ -576,19 +576,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		return partition
 
 	def _reset_confirmation(self) -> bool:
-		prompt = 'This will remove all newly added partitions, continue?' + '\n'
-
-		result = SelectMenu[bool](
-			MenuItemGroup.yes_no(),
-			header=prompt,
-			alignment=Alignment.CENTER,
-			orientation=Orientation.HORIZONTAL,
-			columns=2,
-			reset_warning_msg=prompt,
-			allow_skip=False,
-		).run()
-
-		return result.item() == MenuItem.yes()
+		return prompt_yes_no('This will remove all newly added partitions, continue?' + '\n', allow_skip=False)
 
 	def _suggest_partition_layout(
 		self,

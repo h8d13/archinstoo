@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal, overload
 
 from .curses_menu import EditMenu, SelectMenu
 from .menu_item import MenuItem, MenuItemGroup
@@ -6,20 +7,38 @@ from .result import ResultType
 from .types import Alignment, Orientation
 
 
-def confirm_abort() -> None:
-	prompt = 'Do you really want to abort?' + '\n'
+@overload
+def prompt_yes_no(header: str, preset: bool | None = ..., *, allow_skip: Literal[False], default: bool | None = ...) -> bool: ...
+@overload
+def prompt_yes_no(header: str, preset: bool | None = ..., *, allow_skip: Literal[True] = ..., default: bool | None = ...) -> bool | None: ...
+
+
+def prompt_yes_no(header: str, preset: bool | None = None, *, allow_skip: bool = True, default: bool | None = None) -> bool | None:
+	# the two-button question. preset is where the cursor starts, default the
+	# marked answer; None back is a skip, so the caller keeps what it had
 	group = MenuItemGroup.yes_no()
+	if default is not None:
+		group.set_default_by_value(default)
+	if preset is not None:
+		group.set_focus_by_value(preset)
 
 	result = SelectMenu[bool](
 		group,
-		header=prompt,
-		allow_skip=False,
+		header=header,
 		alignment=Alignment.CENTER,
 		columns=2,
 		orientation=Orientation.HORIZONTAL,
+		search_enabled=False,
+		allow_skip=allow_skip,
 	).run()
 
-	if result.item() == MenuItem.yes():
+	if result.type_ == ResultType.Skip:
+		return None
+	return result.item() == MenuItem.yes()
+
+
+def confirm_abort() -> None:
+	if prompt_yes_no('Do you really want to abort?' + '\n', allow_skip=False):
 		raise SystemExit(0)
 
 
