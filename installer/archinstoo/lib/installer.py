@@ -1023,9 +1023,9 @@ class Installer:
 			netconf.write(str(conf))
 
 	def link_resolved_stub(self) -> None:
-		# Point /etc/resolv.conf at systemd-resolved's stub.
-		# Required for any path that relies on resolved for DNS (ISO copy, iwd
-		# standalone). NetworkManager paths skip this since NM writes its own.
+		# Point /etc/resolv.conf at systemd-resolved's stub: every network type
+		# resolves through resolved, NetworkManager included (the symlink is
+		# what switches it to dns=systemd-resolved)
 		# https://wiki.archlinux.org/title/Systemd-resolved#DNS
 		resolv = self.target / 'etc/resolv.conf'
 		resolv.unlink(missing_ok=True)

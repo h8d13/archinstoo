@@ -32,6 +32,12 @@ class NetworkHandler:
 					_configure_nm_iwd(installation)
 					installation.disable_service('iwd')
 
+				# NM picks dns=systemd-resolved by itself once /etc/resolv.conf is
+				# the resolved stub (NetworkManager.conf, [main] dns), which puts
+				# every network type behind the same resolver
+				installation.enable_service('systemd-resolved')
+				installation.link_resolved_stub()
+
 			case NicType.IWD:
 				installation.add_additional_packages(network_config.type.packages)
 				_configure_iwd_standalone(installation)
