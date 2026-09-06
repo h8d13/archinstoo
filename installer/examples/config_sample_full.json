@@ -291,7 +291,12 @@
         }
     },
     "network_config": {
-        "type": "nm-iwd"
+        "type": "nm-iwd",
+        "dns": {
+            "provider": "quad9",
+            "over_tls": true
+        },
+        "mac_address": "random"
     },
     "timezone": "Europe/Berlin",
     "ntp": true,

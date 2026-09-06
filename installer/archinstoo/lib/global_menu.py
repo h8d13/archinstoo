@@ -31,7 +31,7 @@ from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration, FirmwareType, detect_optdeps
 from .models.locale import LocaleConfiguration
-from .models.network import NetworkConfiguration, NicType
+from .models.network import MacAddressPolicy, NetworkConfiguration, NicType
 from .models.profile import ProfileConfiguration
 from .network.network_menu import select_network
 from .output import FormattedOutput
@@ -352,6 +352,12 @@ class GlobalMenu(AbstractMenu[None]):
 				output = FormattedOutput.as_table(network_config.nics)
 			else:
 				output = f'{"Network configuration"}:\n{network_config.type.display_msg()}'
+
+			if network_config.dns:
+				output += f'\nDNS: {network_config.dns.display_msg()}'
+
+			if network_config.mac_address is not MacAddressPolicy.KEEP:
+				output += f'\nMAC address: {network_config.mac_address.display_msg()}'
 
 			return output
 		return None

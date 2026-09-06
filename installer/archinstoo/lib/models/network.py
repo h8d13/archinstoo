@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict
 
 # NetworkManager on a desktop gets its tray applet as well
@@ -44,6 +44,135 @@ class NicType(Enum):
 				return 'Use iwd standalone (no Network Manager)'
 			case NicType.MANUAL:
 				return 'Manual configuration'
+
+
+class DnsProvider(StrEnum):
+	QUAD9 = auto()
+	CLOUDFLARE = auto()
+	GOOGLE = auto()
+	# servers and certificate name come from the config instead
+	CUSTOM = auto()
+
+	@property
+	def servers(self) -> list[str]:
+		match self:
+			case DnsProvider.QUAD9:
+				return ['9.9.9.9', '149.112.112.112', '2620:fe::fe', '2620:fe::9']
+			case DnsProvider.CLOUDFLARE:
+				return ['1.1.1.1', '1.0.0.1', '2606:4700:4700::1111', '2606:4700:4700::1001']
+			case DnsProvider.GOOGLE:
+				return ['8.8.8.8', '8.8.4.4', '2001:4860:4860::8888', '2001:4860:4860::8844']
+			case DnsProvider.CUSTOM:
+				return []
+
+	@property
+	def tls_name(self) -> str:
+		# the certificate name resolved validates a DNS-over-TLS session against
+		match self:
+			case DnsProvider.QUAD9:
+				return 'dns.quad9.net'
+			case DnsProvider.CLOUDFLARE:
+				return 'cloudflare-dns.com'
+			case DnsProvider.GOOGLE:
+				return 'dns.google'
+			case DnsProvider.CUSTOM:
+				return ''
+
+	def display_msg(self) -> str:
+		if self is DnsProvider.CUSTOM:
+			return 'Custom servers'
+		return f'{self.value.capitalize()} ({self.servers[0]})'
+
+
+class _DnsSerialization(TypedDict):
+	provider: str
+	over_tls: bool
+	servers: NotRequired[list[str]]
+	tls_name: NotRequired[str]
+
+
+@dataclass
+class DnsConfiguration:
+	provider: DnsProvider
+	over_tls: bool = True
+	# custom only: the addresses, and the certificate name when over_tls
+	servers: list[str] = field(default_factory=list)
+	tls_name: str = ''
+
+	def json(self) -> _DnsSerialization:
+		config: _DnsSerialization = {'provider': self.provider.value, 'over_tls': self.over_tls}
+		if self.provider is DnsProvider.CUSTOM:
+			config['servers'] = self.servers
+			if self.over_tls:
+				config['tls_name'] = self.tls_name
+
+		return config
+
+	@classmethod
+	def parse_arg(cls, arg: _DnsSerialization) -> Self:
+		return cls(
+			DnsProvider(arg['provider']),
+			arg.get('over_tls', True),
+			list(arg.get('servers', [])),
+			arg.get('tls_name', ''),
+		)
+
+	@property
+	def effective_servers(self) -> list[str]:
+		return self.servers if self.provider is DnsProvider.CUSTOM else self.provider.servers
+
+	@property
+	def effective_tls_name(self) -> str:
+		return self.tls_name if self.provider is DnsProvider.CUSTOM else self.provider.tls_name
+
+	def display_msg(self) -> str:
+		text = ' '.join(self.servers) if self.provider is DnsProvider.CUSTOM else self.provider.display_msg()
+		return text + (' over TLS' if self.over_tls else '')
+
+	def as_resolved_config(self) -> str:
+		# Domains=~. routes every lookup here ahead of the per-link servers DHCP
+		# hands out https://wiki.archlinux.org/title/Systemd-resolved#DNS_over_TLS
+		suffix = f'#{self.effective_tls_name}' if self.over_tls else ''
+		servers = ' '.join(f'{ip}{suffix}' for ip in self.effective_servers)
+
+		lines = ['[Resolve]', f'DNS={servers}']
+		if self.over_tls:
+			lines.append('DNSOverTLS=yes')
+		lines.append('Domains=~.')
+
+		return '\n'.join(lines) + '\n'
+
+
+class MacAddressPolicy(StrEnum):
+	# keep: hardware address. stable: one address per network, so DHCP leases
+	# and captive portals still recognise the machine. random: new address per
+	# connection (per boot on the networkd paths)
+	KEEP = auto()
+	STABLE = auto()
+	RANDOM = auto()
+
+	def display_msg(self) -> str:
+		match self:
+			case MacAddressPolicy.KEEP:
+				return 'Keep the hardware address'
+			case MacAddressPolicy.STABLE:
+				return 'Stable per network (recommended)'
+			case MacAddressPolicy.RANDOM:
+				return 'Random per connection'
+
+	def as_nm_config(self) -> str:
+		# scan randomisation is already NM's default, this is the connection
+		# https://wiki.archlinux.org/title/NetworkManager#Configuring_MAC_address_randomization
+		return f'[connection]\nwifi.cloned-mac-address={self.value}\nethernet.cloned-mac-address={self.value}\n'
+
+	def as_iwd_config(self) -> str:
+		# iwd's own knob for wireless; per-network is what NM calls stable
+		mode = 'network' if self is MacAddressPolicy.STABLE else 'once'
+		return f'AddressRandomization={mode}\n'
+
+	def as_link_config(self) -> str:
+		# https://wiki.archlinux.org/title/MAC_address_spoofing#systemd-networkd
+		return '[Match]\nOriginalName=*\n\n[Link]\nMACAddressPolicy=random\n'
 
 
 class _NicSerialization(TypedDict):
@@ -120,17 +249,26 @@ class Nic:
 class _NetworkConfigurationSerialization(TypedDict):
 	type: str
 	nics: NotRequired[list[_NicSerialization]]
+	dns: NotRequired[_DnsSerialization]
+	mac_address: NotRequired[str]
 
 
 @dataclass
 class NetworkConfiguration:
 	type: NicType
 	nics: list[Nic] = field(default_factory=list)
+	# system-wide resolver, any type: every path runs systemd-resolved
+	dns: DnsConfiguration | None = None
+	mac_address: MacAddressPolicy = MacAddressPolicy.KEEP
 
 	def json(self) -> _NetworkConfigurationSerialization:
 		config: _NetworkConfigurationSerialization = {'type': self.type.value}
 		if self.nics:
 			config['nics'] = [n.json() for n in self.nics]
+		if self.dns:
+			config['dns'] = self.dns.json()
+		if self.mac_address is not MacAddressPolicy.KEEP:
+			config['mac_address'] = self.mac_address.value
 
 		return config
 
@@ -140,19 +278,14 @@ class NetworkConfiguration:
 		if not nic_type:
 			return None
 
-		match NicType(nic_type):
-			case NicType.ISO:
-				return cls(NicType.ISO)
-			case NicType.NM:
-				return cls(NicType.NM)
-			case NicType.NM_IWD:
-				return cls(NicType.NM_IWD)
-			case NicType.IWD:
-				return cls(NicType.IWD)
-			case NicType.MANUAL:
-				nics_arg = config.get('nics', [])
-				if nics_arg:
-					nics = [Nic.parse_arg(n) for n in nics_arg]
-					return cls(NicType.MANUAL, nics)
+		nics: list[Nic] = []
+		if NicType(nic_type) == NicType.MANUAL:
+			# a manual config with no interfaces configures nothing
+			nics = [Nic.parse_arg(n) for n in config.get('nics', [])]
+			if not nics:
+				return None
 
-		return None
+		dns = DnsConfiguration.parse_arg(dns_arg) if (dns_arg := config.get('dns')) else None
+		mac = MacAddressPolicy(config.get('mac_address', MacAddressPolicy.KEEP.value))
+
+		return cls(NicType(nic_type), nics, dns, mac)

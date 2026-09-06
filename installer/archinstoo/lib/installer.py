@@ -1022,11 +1022,11 @@ class Installer:
 		with (self.target / f'etc/systemd/network/10-{nic.iface}.network').open('a') as netconf:
 			netconf.write(str(conf))
 
-	def link_resolved_stub(self) -> None:
-		# Point /etc/resolv.conf at systemd-resolved's stub.
-		# Required for any path that relies on resolved for DNS (ISO copy, iwd
-		# standalone). NetworkManager paths skip this since NM writes its own.
-		# https://wiki.archlinux.org/title/Systemd-resolved#DNS
+	def use_resolved(self) -> None:
+		# every network type; the stub symlink is what switches NetworkManager
+		# to dns=systemd-resolved https://wiki.archlinux.org/title/Systemd-resolved#DNS
+		self.enable_service('systemd-resolved')
+
 		resolv = self.target / 'etc/resolv.conf'
 		resolv.unlink(missing_ok=True)
 
@@ -1077,8 +1077,6 @@ class Installer:
 					self.pacman.strap(ISO_PSK_EXTRA)
 					self.enable_service('iwd')
 
-		self.link_resolved_stub()
-
 		# Copy (if any) systemd-networkd config files
 		network_dir = LPath('/etc/systemd/network')
 		if netconfigurations := list(network_dir.glob('*')):
@@ -1093,13 +1091,13 @@ class Installer:
 				# If we haven't installed the base yet (function called pre-maturely)
 				if self._helper_flags.get('base', False) is False:
 
-					def post_install_enable_networkd_resolved() -> None:
-						self.enable_service(['systemd-networkd', 'systemd-resolved'])
+					def post_install_enable_networkd() -> None:
+						self.enable_service('systemd-networkd')
 
-					self.post_base_install.append(post_install_enable_networkd_resolved)
-				# Otherwise, we can go ahead and enable the services
+					self.post_base_install.append(post_install_enable_networkd)
+				# Otherwise, we can go ahead and enable the service
 				else:
-					self.enable_service(['systemd-networkd', 'systemd-resolved'])
+					self.enable_service('systemd-networkd')
 
 		return True
 

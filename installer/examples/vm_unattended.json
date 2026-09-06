@@ -144,7 +144,12 @@
         }
     },
     "network_config": {
-        "type": "iwd"
+        "type": "iwd",
+        "dns": {
+            "provider": "quad9",
+            "over_tls": true
+        },
+        "mac_address": "random"
     },
     "timezone": "Europe/Paris",
     "ntp": true,
