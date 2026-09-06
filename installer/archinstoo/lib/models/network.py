@@ -130,10 +130,8 @@ class DnsConfiguration:
 		return text + (' over TLS' if self.over_tls else '')
 
 	def as_resolved_config(self) -> str:
-		# a resolved.conf.d drop-in. Domains=~. routes every lookup here ahead
-		# of the per-link servers DHCP hands out, which is what makes the pick
-		# system-wide rather than a fallback
-		# https://wiki.archlinux.org/title/Systemd-resolved#DNS_over_TLS
+		# Domains=~. routes every lookup here ahead of the per-link servers DHCP
+		# hands out https://wiki.archlinux.org/title/Systemd-resolved#DNS_over_TLS
 		suffix = f'#{self.effective_tls_name}' if self.over_tls else ''
 		servers = ' '.join(f'{ip}{suffix}' for ip in self.effective_servers)
 
@@ -163,11 +161,9 @@ class MacAddressPolicy(StrEnum):
 				return 'Random per connection'
 
 	def as_nm_config(self) -> str:
-		# scan randomisation is NM's default already; cloned-mac-address is the
-		# part that carries over into the connection itself
+		# scan randomisation is already NM's default, this is the connection
 		# https://wiki.archlinux.org/title/NetworkManager#Configuring_MAC_address_randomization
-		connection = f'wifi.cloned-mac-address={self.value}\nethernet.cloned-mac-address={self.value}\n'
-		return f'[device]\nwifi.scan-rand-mac-address=yes\n\n[connection]\n{connection}'
+		return f'[connection]\nwifi.cloned-mac-address={self.value}\nethernet.cloned-mac-address={self.value}\n'
 
 	def as_iwd_config(self) -> str:
 		# iwd's own knob for wireless; per-network is what NM calls stable
@@ -175,8 +171,6 @@ class MacAddressPolicy(StrEnum):
 		return f'AddressRandomization={mode}\n'
 
 	def as_link_config(self) -> str:
-		# systemd .link for what udev brings up; there is no per-network notion
-		# here, so stable leaves wired links alone
 		# https://wiki.archlinux.org/title/MAC_address_spoofing#systemd-networkd
 		return '[Match]\nOriginalName=*\n\n[Link]\nMACAddressPolicy=random\n'
 

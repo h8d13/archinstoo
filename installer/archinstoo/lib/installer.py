@@ -1023,10 +1023,8 @@ class Installer:
 			netconf.write(str(conf))
 
 	def use_resolved(self) -> None:
-		# systemd-resolved is the resolver on every network type, NetworkManager
-		# included: the stub symlink is what switches NM to dns=systemd-resolved.
-		# One call, so no path can enable the service and forget the symlink
-		# https://wiki.archlinux.org/title/Systemd-resolved#DNS
+		# every network type; the stub symlink is what switches NetworkManager
+		# to dns=systemd-resolved https://wiki.archlinux.org/title/Systemd-resolved#DNS
 		self.enable_service('systemd-resolved')
 
 		resolv = self.target / 'etc/resolv.conf'
@@ -1097,8 +1095,7 @@ class Installer:
 						self.enable_service('systemd-networkd')
 
 					self.post_base_install.append(post_install_enable_networkd)
-				# Otherwise, we can go ahead and enable the service. resolved is
-				# the network handler's, common to every type
+				# Otherwise, we can go ahead and enable the service
 				else:
 					self.enable_service('systemd-networkd')
 

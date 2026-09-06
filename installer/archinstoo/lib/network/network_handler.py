@@ -45,8 +45,6 @@ class NetworkHandler:
 					installation.configure_nic(nic)
 				installation.enable_service('systemd-networkd')
 
-		# the resolver is the same whichever of the above brought the link up;
-		# NM switches to dns=systemd-resolved on the stub symlink by itself
 		installation.use_resolved()
 
 		if network_config.dns:
@@ -57,9 +55,8 @@ class NetworkHandler:
 
 
 def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:
-	# resolved takes the drop-in whatever brought it up; on a foreign host
-	# use_resolved() copied a resolv.conf instead of the stub symlink, so
-	# NetworkManager stays in its default mode and writes past it
+	# on a foreign host use_resolved() left a copied resolv.conf, not the stub,
+	# so NetworkManager stays in default mode and writes past resolved
 	if Os.running_from_foreign():
 		warn('NetworkManager will not use the DNS choice: /etc/resolv.conf is not the resolved stub')
 
@@ -90,8 +87,8 @@ def _configure_iwd_standalone(installation: Installer, mac: MacAddressPolicy) ->
 
 
 def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacAddressPolicy) -> None:
-	# NetworkManager owns the address on its paths; everywhere else udev's
-	# .link applies at bring-up (iwd's wireless knob is set with its main.conf)
+	# NetworkManager owns the address on its paths; elsewhere udev's .link
+	# does wired and iwd's main.conf did wireless
 	if nic_type in (NicType.NM, NicType.NM_IWD):
 		nm_conf_dir = installation.target / 'etc/NetworkManager/conf.d'
 		nm_conf_dir.mkdir(parents=True, exist_ok=True)

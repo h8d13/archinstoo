@@ -1,7 +1,5 @@
-# Every network type ends up on systemd-resolved: the three networkd paths
-# always did, and NetworkManager switches itself to dns=systemd-resolved when
-# /etc/resolv.conf is the resolved stub. That symlink and the enabled service
-# are what the DNS options build on.
+# Every network type ends up on systemd-resolved; the stub symlink and the
+# enabled service are what the DNS choice builds on.
 
 from pathlib import Path
 
