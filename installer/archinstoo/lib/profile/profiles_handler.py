@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstoo.lib.hardware import XORG_EXTRA, GfxDriver
+from archinstoo.lib.hardware import GFX_SERVICES, XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -181,12 +181,21 @@ class ProfileHandler:
 		if greeter == GreeterType.Regreet:
 			install_session.add_to_seat_group(['greeter'])
 
-	def install_gfx_driver(self, install_session: Installer, driver: GfxDriver, display_servers: set[DisplayServer]) -> None:
+	def install_gfx_driver(
+		self,
+		install_session: Installer,
+		driver: GfxDriver,
+		display_servers: set[DisplayServer],
+		custom: list[GfxPackage] | None = None,
+	) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
 
-		driver_pkgs = driver.gfx_packages(install_session.kernels)
+		if driver is GfxDriver.Custom:
+			driver_pkgs = dkms_packages(custom or [], install_session.kernels)
+		else:
+			driver_pkgs = driver.gfx_packages(install_session.kernels)
 
-		if driver.use_dkms(install_session.kernels):
+		if GfxPackage.NvidiaOpenDkms in driver_pkgs:
 			debug(f'Non-standard kernel selected, installing DKMS variant of {driver.value}')
 			headers = [f'{kernel}-headers' for kernel in install_session.kernels]
 			install_session.add_additional_packages(headers)
@@ -200,6 +209,9 @@ class ProfileHandler:
 
 		install_session.add_additional_packages(pkg_names)
 
+		if services := [unit for pkg, unit in GFX_SERVICES.items() if pkg in driver_pkgs]:
+			install_session.enable_service(services)
+
 	def install_profile_config(self, install_session: Installer, profile_config: ProfileConfiguration) -> None:
 		if not profile_config.profiles:
 			return
@@ -208,7 +220,7 @@ class ProfileHandler:
 		# Pass the aggregated display servers across all selected profiles so mixed X11+Wayland picks
 		# correctly include the X11 base packages.
 		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
-			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers)
+			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers, profile_config.gfx_packages)
 
 		# one terminal for every profile that ships a keybind rather than its own;
 		# terminal_command() is the menu pick, or the default when it was skipped

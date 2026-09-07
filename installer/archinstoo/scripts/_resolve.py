@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from archinstoo.default_profiles.desktops import DEFAULT_TERMINAL
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
-from archinstoo.lib.hardware import CpuVendor, GfxDriver, SysInfo
+from archinstoo.lib.hardware import CpuVendor, GfxDriver, GfxPackage, SysInfo
 from archinstoo.lib.models import firmware as firmware_model
 from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
@@ -139,15 +139,25 @@ def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	return [profile for tp in entries if (profile := handler.parse_profile_config(tp))]
 
 
-def _gfx_packages(gfx: str, kernels: list[str], details: list[str]) -> set[str]:
+def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], details: list[str]) -> set[str]:
 	# mirrors profiles_handler.install_gfx_driver(): the driver set, then the
 	# X11 half if any selected profile needs it
 	if gfx not in SCHEMA['gfx_drivers']:
 		return set()
 
-	# a non-standard kernel swaps the whole driver set for its DKMS build
-	dkms = SCHEMA['gfx_drivers_dkms'].get(gfx) if any('-' in k for k in kernels) else None
-	if dkms:
+	# a non-standard kernel swaps nvidia-open for its DKMS build: the whole
+	# preset set from the schema, or the one package in a hand-picked list
+	build = any('-' in k for k in kernels)
+	dkms = SCHEMA['gfx_drivers_dkms'].get(gfx) if build else None
+
+	if gfx == GfxDriver.Custom.value:
+		# names outside the pool are dropped, as ProfileConfiguration.parse_arg does
+		pkgs = set(custom) & set(_flat('gfx_custom_choices'))
+		if build and GfxPackage.NvidiaOpen.value in pkgs:
+			pkgs.remove(GfxPackage.NvidiaOpen.value)
+			pkgs.update((GfxPackage.NvidiaOpenDkms.value, GfxPackage.Dkms.value))
+			pkgs.update(f'{k}-headers' for k in kernels)
+	elif dkms:
 		pkgs = set(dkms)
 		pkgs.update(f'{k}-headers' for k in kernels)
 	else:
@@ -288,7 +298,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
-	pkgs.update(_gfx_packages(pc.get('gfx_driver', ''), kernels, details))
+	pkgs.update(_gfx_packages(pc.get('gfx_driver', ''), pc.get('gfx_packages') or [], kernels, details))
 
 	# network
 	net = config.get('network_config') or {}

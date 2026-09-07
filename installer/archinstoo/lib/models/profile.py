@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Self, TypedDict
 
-from archinstoo.lib.hardware import GfxDriver
+from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 
 if TYPE_CHECKING:
@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 class _ProfileConfigurationSerialization(TypedDict):
 	profiles: list[ProfileSerialization]
 	gfx_driver: str | None
+	gfx_packages: list[str]
 	greeter: str | None
 
 
@@ -18,6 +19,8 @@ class _ProfileConfigurationSerialization(TypedDict):
 class ProfileConfiguration:
 	profiles: list[Profile] = field(default_factory=list)
 	gfx_driver: GfxDriver | None = None
+	# only read when gfx_driver is Custom
+	gfx_packages: list[GfxPackage] = field(default_factory=list)
 	greeter: GreeterType | None = None
 
 	def has_desktop_profile(self) -> bool:
@@ -39,6 +42,7 @@ class ProfileConfiguration:
 		return {
 			'profiles': [handler.to_json(p) for p in self.profiles],
 			'gfx_driver': self.gfx_driver.value if self.gfx_driver else None,
+			'gfx_packages': [p.value for p in self.gfx_packages],
 			'greeter': self.greeter.value if self.greeter else None,
 		}
 
@@ -51,9 +55,12 @@ class ProfileConfiguration:
 
 		greeter = arg.get('greeter', None)
 		gfx_driver = arg.get('gfx_driver', None)
+		# unknown names are dropped, the same way kernels are parsed
+		gfx_packages = [GfxPackage(p) for p in arg.get('gfx_packages') or [] if p in GfxPackage._value2member_map_]
 
 		return cls(
 			profiles,
 			GfxDriver(gfx_driver) if gfx_driver else None,
+			gfx_packages,
 			GreeterType(greeter) if greeter else None,
 		)

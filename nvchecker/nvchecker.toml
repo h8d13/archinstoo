@@ -204,16 +204,25 @@ source = "pacman"
 [nvidia-open-dkms]
 source = "pacman"
 
+[nvidia-prime]
+source = "pacman"
+
 [polkit]
 source = "pacman"
 
 [seatd]
 source = "pacman"
 
+[switcheroo-control]
+source = "pacman"
+
 [vpl-gpu-rt]
 source = "pacman"
 
 [vulkan-intel]
+source = "pacman"
+
+[vulkan-mesa-layers]
 source = "pacman"
 
 [vulkan-nouveau]

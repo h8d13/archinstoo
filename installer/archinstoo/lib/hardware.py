@@ -42,9 +42,12 @@ class GfxPackage(Enum):
 	Mesa = 'mesa'  # provides libva-mesa-driver since 24.2.7
 	NvidiaOpen = 'nvidia-open'
 	NvidiaOpenDkms = 'nvidia-open-dkms'
+	NvidiaPrime = 'nvidia-prime'
+	SwitcherooControl = 'switcheroo-control'
 	VplGpuRt = 'vpl-gpu-rt'
 	LibVpl = 'libvpl'
 	VulkanIntel = 'vulkan-intel'
+	VulkanMesaLayers = 'vulkan-mesa-layers'
 	VulkanRadeon = 'vulkan-radeon'
 	VulkanNouveau = 'vulkan-nouveau'
 	VulkanSwrast = 'vulkan-swrast'
@@ -65,6 +68,7 @@ class GfxDriver(Enum):
 	MesaOpenSource = 'mesa-open-source'
 	VMSoftware = 'vm-software'
 	VMVirtio = 'vm-virtio'
+	Custom = 'custom'
 
 	def display_name(self) -> str:
 		match self:
@@ -84,6 +88,8 @@ class GfxDriver(Enum):
 				return 'VM (software rendering)'
 			case GfxDriver.VMVirtio:
 				return 'VM (virtio-gpu)'
+			case GfxDriver.Custom:
+				return 'Custom (pick packages)'
 
 	def has_dkms_variant(self) -> bool:
 		match self:
@@ -93,11 +99,12 @@ class GfxDriver(Enum):
 				return False
 
 	def use_dkms(self, kernels: list[str] | None) -> bool:
-		if not self.has_dkms_variant():
-			return False
-		return kernels is not None and any('-' in k for k in kernels)
+		return self.has_dkms_variant() and needs_dkms_build(kernels)
 
 	def packages_text(self, kernels: list[str] | None = None) -> str:
+		if self is GfxDriver.Custom:
+			return 'Packages are picked one by one in the next menu (hybrid GPUs, unlisted mixes)\n'
+
 		pkg_names = [p.value for p in self.gfx_packages(kernels)]
 		text = 'Installed packages' + ':\n'
 
@@ -109,12 +116,7 @@ class GfxDriver(Enum):
 	def gfx_packages(self, kernels: list[str] | None = None) -> list[GfxPackage]:
 		# GPU-vendor packages only. xorg-server/xorg-xinit are a display-server concern
 		# and added by the caller (profiles_handler.install_gfx_driver) when X11 is in use.
-		packages = list(GFX_PACKAGES[self])
-
-		# out-of-tree build against a non-standard kernel
-		if self.use_dkms(kernels):
-			packages = [GfxPackage.NvidiaOpenDkms if p is GfxPackage.NvidiaOpen else p for p in packages]
-			packages.append(GfxPackage.Dkms)
+		packages = dkms_packages(GFX_PACKAGES[self], kernels)
 
 		# the generic driver adds the vulkan layer for whatever GPU is present
 		if self is GfxDriver.MesaOpenSource:
@@ -124,6 +126,71 @@ class GfxDriver(Enum):
 				packages += MESA_HOST_EXTRA[CpuVendor.AuthenticAMD.value]
 
 		return packages
+
+
+def needs_dkms_build(kernels: list[str] | None) -> bool:
+	# anything but plain `linux` has no prebuilt nvidia-open module
+	return kernels is not None and any('-' in k for k in kernels)
+
+
+def dkms_packages(packages: list[GfxPackage], kernels: list[str] | None) -> list[GfxPackage]:
+	# nvidia-open is the only out-of-tree driver: a non-standard kernel swaps
+	# it for the dkms build and pulls dkms itself. Everything else is in-tree
+	if GfxPackage.NvidiaOpen not in packages or not needs_dkms_build(kernels):
+		return list(packages)
+	swapped: list[GfxPackage] = [GfxPackage.NvidiaOpenDkms if p is GfxPackage.NvidiaOpen else p for p in packages]
+	return [*swapped, GfxPackage.Dkms]
+
+
+# what the custom driver lets a user tick. dkms and its nvidia variant are
+# derived from the kernel list, xorg from the profile's display server
+GFX_CUSTOM_CHOICES: list[GfxPackage] = [
+	p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms, GfxPackage.XorgServer, GfxPackage.XorgXinit)
+]
+
+# the PRIME glue two GPUs need and one never does: switcheroo-control is what
+# desktops read to honour PrefersNonDefaultGPU, vulkan-mesa-layers what
+# DRI_PRIME needs for vulkan on the mesa half. RTD3 is default since nvidia-open 610
+GFX_HYBRID_EXTRA: list[GfxPackage] = [GfxPackage.SwitcherooControl, GfxPackage.VulkanMesaLayers]
+# ticking switcheroo-control also enables its dbus service
+GFX_SERVICES: dict[GfxPackage, str] = {GfxPackage.SwitcherooControl: 'switcheroo-control'}
+
+_PCI_VENDOR_NVIDIA = 0x10DE
+_GFX_BY_VENDOR: dict[int, GfxDriver] = {0x1002: GfxDriver.AmdOpenSource, 0x8086: GfxDriver.IntelOpenSource}
+# nvidia-open needs the GSP, so Turing on: TU102 opens at 0x1e02 and every
+# later generation numbers higher. Volta (GV100, 0x1d81) stays below
+_NVIDIA_TURING_FIRST = 0x1E00
+
+
+def detected_gfx_drivers(gpus: set[tuple[int, int]]) -> list[GfxDriver]:
+	# one preset per GPU; a hybrid yields two, which only the custom driver
+	# can hold at once
+	drivers: list[GfxDriver] = []
+	for vendor, device in sorted(gpus):
+		driver = _GFX_BY_VENDOR.get(vendor)
+		if vendor == _PCI_VENDOR_NVIDIA:
+			driver = GfxDriver.NvidiaOpenKernel if device >= _NVIDIA_TURING_FIRST else GfxDriver.NvidiaOpenSource
+		if driver and driver not in drivers:
+			drivers.append(driver)
+	return drivers
+
+
+def hybrid_gfx_packages(drivers: list[GfxDriver]) -> list[GfxPackage]:
+	if len(drivers) < 2:
+		return []
+	# prime-run only wraps the nvidia userspace; nouveau hybrids use DRI_PRIME
+	nvidia = [GfxPackage.NvidiaPrime] if GfxDriver.NvidiaOpenKernel in drivers else []
+	return GFX_HYBRID_EXTRA + nvidia
+
+
+def detected_gfx_packages(gpus: set[tuple[int, int]]) -> list[GfxPackage]:
+	# the union of the matching presets, first occurrence wins the order,
+	# then the hybrid extras when there is more than one
+	drivers = detected_gfx_drivers(gpus)
+	packages: list[GfxPackage] = []
+	for driver in drivers:
+		packages += [p for p in GFX_PACKAGES[driver] if p not in packages]
+	return packages + hybrid_gfx_packages(drivers)
 
 
 # the static half of every driver, before the DKMS and host-GPU conditionals
@@ -171,6 +238,7 @@ GFX_PACKAGES: dict[GfxDriver, list[GfxPackage]] = {
 		GfxPackage.Mesa,
 		GfxPackage.VulkanSwrast,
 	],
+	GfxDriver.Custom: [],
 	GfxDriver.VMVirtio: [
 		GfxPackage.Mesa,
 		GfxPackage.VulkanVirtio,
@@ -431,6 +499,24 @@ class _SysInfo:
 		return False
 
 	@cached_property
+	def gpu_ids(self) -> set[tuple[int, int]]:
+		# (vendor, device) of every display-class function (0x03xxxx: VGA, 3D,
+		# display). Sysfs rather than lspci text so the device id is usable
+		if not _PCI_BUS.is_dir():
+			return set()
+
+		found: set[tuple[int, int]] = set()
+		for dev in _PCI_BUS.iterdir():
+			try:
+				if not (dev / 'class').read_text().startswith('0x03'):
+					continue
+				found.add((int((dev / 'vendor').read_text(), 16), int((dev / 'device').read_text(), 16)))
+			except OSError, ValueError:
+				continue
+
+		return found
+
+	@cached_property
 	def pci_vendor_ids(self) -> set[str]:
 		return _bus_vendor_ids(_PCI_BUS, 'vendor')
 
@@ -502,6 +588,10 @@ class SysInfo:
 	@staticmethod
 	def has_thunderbolt() -> bool:
 		return _sys_info.has_thunderbolt
+
+	@staticmethod
+	def gpu_ids() -> set[tuple[int, int]]:
+		return _sys_info.gpu_ids
 
 	@staticmethod
 	def _graphics_devices() -> dict[str, str]:

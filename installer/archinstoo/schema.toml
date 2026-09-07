@@ -226,6 +226,12 @@ nvidia-open-nouveau = ["mesa", "xf86-video-nouveau", "vulkan-nouveau"]
 mesa-open-source = ["mesa"]
 vm-software = ["mesa", "vulkan-swrast"]
 vm-virtio = ["mesa", "vulkan-virtio"]
+custom = []
+
+# the pool the custom driver picks from, one package per tick; the dkms
+# swap and xorg are derived the same way as for the presets
+[gfx_custom_choices]
+packages = ["intel-media-driver", "libva-intel-driver", "libva-nvidia-driver", "mesa", "nvidia-open", "nvidia-prime", "switcheroo-control", "vpl-gpu-rt", "libvpl", "vulkan-intel", "vulkan-mesa-layers", "vulkan-radeon", "vulkan-nouveau", "vulkan-swrast", "vulkan-virtio", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau"]
 
 # what a driver installs instead when a non-standard kernel needs a build
 [gfx_drivers_dkms]

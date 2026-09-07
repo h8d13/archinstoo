@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
-	from archinstoo.lib.hardware import GfxDriver
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
+from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.menu.abstract_menu import CONFIG_KEY, AbstractSubMenu
 from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
-from archinstoo.lib.profile.driver_select import select_driver
+from archinstoo.lib.profile.driver_select import select_driver, select_gfx_packages
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice
@@ -65,6 +65,15 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 				key='gfx_driver',
 			),
 			MenuItem(
+				text='Graphics packages',
+				action=select_gfx_packages,
+				value=self._profile_config.gfx_packages,
+				preview_action=self._prev_gfx_packages,
+				enabled=self._profile_config.gfx_driver is GfxDriver.Custom,
+				dependencies=['gfx_driver'],
+				key='gfx_packages',
+			),
+			MenuItem(
 				text='Greeter',
 				action=self.select_greeter,
 				value=self._profile_config.greeter if self._profile_config.profiles and self._profile_config.is_greeter_supported() else None,
@@ -95,6 +104,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			else:
 				self._item_group.find_by_key('gfx_driver').enabled = False
 				self._item_group.find_by_key('gfx_driver').value = None
+				self._set_gfx_packages(None)
 
 			# Check if any profile supports greeter
 			supports_greeter = any(p.is_greeter_supported() for p in profiles)
@@ -112,6 +122,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 							break
 		else:
 			self._item_group.find_by_key('gfx_driver').value = None
+			self._set_gfx_packages(None)
 			self._item_group.find_by_key('greeter').value = None
 
 		customize_item = self._item_group.find_by_key(f'{CONFIG_KEY}_customize_packages')
@@ -164,7 +175,24 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 					driver = select_driver(preset=preset, kernels=self._kernels)
 					break
 
+		# custom chains straight into the package list; any other driver
+		# owns its packages and the list item goes dark
+		self._set_gfx_packages(driver)
 		return driver
+
+	def _set_gfx_packages(self, driver: GfxDriver | None) -> None:
+		item = self._item_group.find_by_key('gfx_packages')
+		item.enabled = driver is GfxDriver.Custom
+		if driver is GfxDriver.Custom:
+			item.value = select_gfx_packages(item.value)
+		else:
+			item.value = []
+
+	def _prev_gfx_packages(self, item: MenuItem) -> str | None:
+		packages: list[GfxPackage] = item.value or []
+		if not packages:
+			return 'No packages picked'
+		return 'Graphics packages' + ':\n' + ''.join(f'\t- {name}\n' for name in sorted(p.value for p in packages))
 
 	def _prev_customize_packages(self, _item: MenuItem) -> str | None:
 		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []

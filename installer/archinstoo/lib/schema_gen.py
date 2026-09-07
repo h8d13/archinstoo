@@ -28,7 +28,7 @@ from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
-from archinstoo.lib.hardware import GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
+from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
 from archinstoo.lib.models.application import (
 	Audio,
 	DevTool,
@@ -234,6 +234,11 @@ SECTIONS: tuple[Section, ...] = (
 		'gfx_drivers',
 		'added before desktops, which may depend on a virtual vulkan-something.\nlibva-mesa-driver is provided by mesa since 24.2.7',
 		lambda: {d.value: [p.value for p in GFX_PACKAGES[d]] for d in GfxDriver},
+	),
+	Section(
+		'gfx_custom_choices',
+		'the pool the custom driver picks from, one package per tick; the dkms\nswap and xorg are derived the same way as for the presets',
+		lambda: [p.value for p in GFX_CUSTOM_CHOICES],
 	),
 	Section(
 		'gfx_drivers_dkms',

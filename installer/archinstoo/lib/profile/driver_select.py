@@ -1,8 +1,41 @@
-from archinstoo.lib.hardware import GfxDriver, SysInfo
+from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GfxDriver, GfxPackage, SysInfo, detected_gfx_drivers, detected_gfx_packages
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import FrameProperties, FrameStyle, PreviewStyle
+from archinstoo.lib.tui.types import Alignment, FrameProperties, FrameStyle, PreviewStyle
+
+
+def select_gfx_packages(preset: list[GfxPackage] | None = None) -> list[GfxPackage]:
+	# the custom driver: one package per line, nothing derived. A hybrid
+	# laptop ticks nvidia-open next to vulkan-intel, which no preset offers
+	items = [MenuItem(p.value, value=p) for p in GFX_CUSTOM_CHOICES]
+	group = MenuItemGroup(items, sort_items=True)
+	# first visit starts from the presets the host's GPUs map to (both halves
+	# of a hybrid, plus its PRIME glue); a saved pick is left alone
+	gpus = SysInfo.gpu_ids()
+	group.set_selected_by_value(preset or detected_gfx_packages(gpus))
+
+	detected = ', '.join(d.display_name() for d in detected_gfx_drivers(gpus)) or 'none'
+	header = f'Detected: {detected}. Pre-ticked accordingly.\n'
+	header += 'dkms and xorg packages are added from the kernel and profile picks.\n'
+
+	result = SelectMenu[GfxPackage](
+		group,
+		header=header,
+		allow_skip=True,
+		allow_reset=True,
+		alignment=Alignment.CENTER,
+		frame=FrameProperties.min('Graphics packages'),
+		multi=True,
+	).run()
+
+	match result.type_:
+		case ResultType.Skip:
+			return list(preset or [])
+		case ResultType.Reset:
+			return []
+		case ResultType.Selection:
+			return result.get_values()
 
 
 def select_driver(

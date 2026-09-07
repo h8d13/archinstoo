@@ -688,6 +688,8 @@ class GlobalMenu(AbstractMenu[None]):
 
 			if profile_config.gfx_driver:
 				output += 'Graphics driver' + ': ' + profile_config.gfx_driver.display_name() + '\n'
+				if profile_config.gfx_packages:
+					output += '  ' + ', '.join(p.value for p in profile_config.gfx_packages) + '\n'
 
 			if profile_config.greeter:
 				output += 'Greeter' + ': ' + profile_config.greeter.value + '\n'
