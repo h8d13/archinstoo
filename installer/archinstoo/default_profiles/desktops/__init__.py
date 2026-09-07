@@ -97,4 +97,4 @@ def provision_terminal_config(
 		dest.parent.mkdir(parents=True, exist_ok=True)
 		dest.write_text(conf)
 
-		install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
+		install_session.chown_tree(user.username, f'/home/{user.username}/.config')

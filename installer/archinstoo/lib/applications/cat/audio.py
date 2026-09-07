@@ -52,8 +52,7 @@ class AudioApp:
 			service_dir = install_session.target / 'home' / user.username / '.config' / 'systemd' / 'user' / 'default.target.wants'
 			service_dir.mkdir(parents=True, exist_ok=True)
 
-			# Set ownership of the entire user catalogue
-			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}'])
+			install_session.chown_tree(user.username, f'/home/{user.username}')
 
 			# symlink in the correct pipewire systemd items
 			install_session.arch_chroot(

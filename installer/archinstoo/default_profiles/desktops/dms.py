@@ -102,7 +102,7 @@ class DmsProfile(WaylandProfile):
 
 				self._repoint_terminal(install_session.target / 'home' / user.username, comp)
 
-			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
+			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
 
 	def _repoint_terminal(self, home: Path, compositor: str) -> None:
 		# --terminal takes three of the seven terminals we offer and deploys a

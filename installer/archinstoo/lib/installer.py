@@ -949,8 +949,7 @@ class Installer:
 			if not symlink.exists():
 				symlink.symlink_to(unit_path)
 
-		# Fix ownership of .config tree
-		self.chown(f'{user}:{user}', f'/home/{user}/.config', ['-R'])
+		self.chown_tree(user, f'/home/{user}/.config')
 
 	def enable_services_from_config(self, services: list[str | UserService]) -> None:
 		from .models.service import UserService
@@ -2398,7 +2397,7 @@ class Installer:
 		try:
 			self.arch_chroot(['mkdir', '-p', stash_dir])
 			self.arch_chroot(clone_cmd)
-			self.arch_chroot(['chown', '-R', f'{username}:{username}', stash_dir])
+			self.chown_tree(username, stash_dir)
 		except CalledProcessError as err:
 			error(f'Failed to clone stash for {username}: {err}')
 
@@ -2435,14 +2434,10 @@ class Installer:
 			error(f'Failed to lock root account: {err}')
 			return False
 
-	def chown(self, owner: str, path: str, options: list[str] | None = None) -> bool:
-		options = options or []
-		try:
-			self.arch_chroot(['chown', *options, owner, path])
-			return True
-		except CalledProcessError as err:
-			debug(f'Error changing ownership of {path}: {err}')
-			return False
+	def chown_tree(self, username: str, path: str) -> None:
+		# installer writes into $HOME as root; hand the tree back before first login
+		debug(f'chown -R {username}:{username} {path}')
+		self.arch_chroot(['chown', '-R', f'{username}:{username}', path])
 
 	def set_vconsole(self, locale_config: LocaleConfiguration) -> None:
 		kb_vconsole: str = locale_config.kb_layout

@@ -99,7 +99,7 @@ class NoctaliaProfile(WaylandProfile):
 					conf = asset.read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
 					(dest_dir / asset.name).write_text(conf)
 
-			install_session.arch_chroot(['chown', '-R', f'{user.username}:{user.username}', f'/home/{user.username}/.config'])
+			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
 
 	def _select_compositors(self) -> None:
 		header = 'Noctalia runs on top of a Wayland compositor' + '\n'
