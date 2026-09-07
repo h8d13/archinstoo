@@ -49,7 +49,7 @@ def select_driver(
 	if SysInfo.has_intel_graphics():
 		header += 'Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n'
 	if SysInfo.has_nvidia_graphics():
-		header += 'Nvidia detected: for Turing+ use open-kernel, otherwise use AUR for legacy drivers.\n'
+		header += 'Nvidia detected: Turing+ use open kernel module, older GPUs use nouveau (legacy nvidia-*xx drivers are on AUR).\n'
 
 	result = SelectMenu[GfxDriver](
 		group,
