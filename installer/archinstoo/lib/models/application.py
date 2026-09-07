@@ -365,7 +365,6 @@ class ApplicationConfiguration:
 
 	@property
 	def terminal_command(self) -> str:
-		# the menu pick, or the default when the menu was skipped
 		if self.terminal_config:
 			return self.terminal_config.terminal.value
 		return DEFAULT_TERMINAL
@@ -392,3 +391,8 @@ class ApplicationConfiguration:
 
 # every field is `<Category>Configuration | None`; the class is the first arm
 ApplicationConfiguration._config_parsers = {f.name: get_args(f.type)[0] for f in fields(ApplicationConfiguration)}
+
+
+def terminal_for(app_config: ApplicationConfiguration | None) -> str:
+	# a skipped application menu still has to leave keybind-only profiles a terminal
+	return app_config.terminal_command if app_config else DEFAULT_TERMINAL

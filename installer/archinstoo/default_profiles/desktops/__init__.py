@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import DEFAULT_TERMINAL
+from archinstoo.lib.args import get_arch_config_handler
+from archinstoo.lib.models.application import terminal_for
 from archinstoo.lib.output import warn
 
 if TYPE_CHECKING:
@@ -26,11 +27,7 @@ if TYPE_CHECKING:
 # xmonad is the holdout: its terminal is compiled into XMonad/Config.hs and
 # changing it needs a ghc rebuild, so that profile keeps xterm.
 def terminal_command() -> str:
-	# lib.args -> models -> profiles is a cycle, so the import is function-local
-	from archinstoo.lib.args import get_arch_config_handler
-
-	app_config = get_arch_config_handler().config.app_config
-	return app_config.terminal_command if app_config else DEFAULT_TERMINAL
+	return terminal_for(get_arch_config_handler().config.app_config)
 
 
 def swap_terminal(text: str, hardcoded: str, source: Path) -> str:

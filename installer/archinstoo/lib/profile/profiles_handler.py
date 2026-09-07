@@ -7,7 +7,7 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.hardware import GFX_SERVICES, XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
-from archinstoo.lib.models.application import DEFAULT_TERMINAL
+from archinstoo.lib.models.application import terminal_for
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -232,8 +232,7 @@ class ProfileHandler:
 		# one terminal for every profile that ships a keybind rather than its own
 		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
 		if any(p.needs_terminal for p in selected):
-			terminal = app_config.terminal_command if app_config else DEFAULT_TERMINAL
-			install_session.add_additional_packages([terminal])
+			install_session.add_additional_packages([terminal_for(app_config)])
 
 		# Install all selected profiles AFTER
 		for profile in profile_config.profiles:
