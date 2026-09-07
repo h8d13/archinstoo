@@ -15,10 +15,10 @@ from typing import TYPE_CHECKING, Any, get_type_hints
 
 import pytest
 
-from archinstoo.default_profiles.desktops import DEFAULT_TERMINAL, SeatAccess
 from archinstoo.lib import installer, schema, schema_gen
 from archinstoo.lib.hardware import CpuVendor, GfxPackage
 from archinstoo.lib.models.application import (
+	DEFAULT_TERMINAL,
 	ApplicationConfiguration,
 	ApplicationSerialization,
 	Audio,
@@ -29,6 +29,7 @@ from archinstoo.lib.models.application import (
 from archinstoo.lib.models.firmware import FirmwareType, FirmwareVendor
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.pm import groups
+from archinstoo.lib.profile.base import SeatAccess
 from archinstoo.lib.schema import SCHEMA, SCHEMA_PATH
 from archinstoo.scripts import _resolve
 

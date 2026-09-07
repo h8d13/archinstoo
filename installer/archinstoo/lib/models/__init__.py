@@ -30,7 +30,6 @@ from .locale import LocaleConfiguration
 from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
 from .packages import LocalPackage, PackageSearch, PackageSearchResult, Repository
-from .profile import ProfileConfiguration
 from .service import UserService
 from .swap import SwapConfiguration, ZramAlgorithm
 from .users import PasswordStrength, User
@@ -73,7 +72,6 @@ __all__ = [
 	'PartitionType',
 	'PasswordStrength',
 	'PrintServiceConfiguration',
-	'ProfileConfiguration',
 	'Repository',
 	'SectorSize',
 	'Size',

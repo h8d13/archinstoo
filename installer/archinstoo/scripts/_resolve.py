@@ -9,11 +9,11 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from archinstoo.default_profiles.desktops import DEFAULT_TERMINAL
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import CpuVendor, GfxDriver, GfxPackage, SysInfo
 from archinstoo.lib.models import firmware as firmware_model
+from archinstoo.lib.models.application import DEFAULT_TERMINAL
 from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.network import NicType

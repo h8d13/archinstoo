@@ -154,7 +154,7 @@ def perform_installation(
 			installation.add_additional_packages(headers)
 
 		if profile_config := config.profile_config:
-			profile_handler.install_profile_config(installation, profile_config)
+			profile_handler.install_profile_config(installation, profile_config, config.app_config)
 
 			# Set graphical keyboard config (Xorg + Wayland) for any graphical profile
 			if profile_config.profiles and profile_config.display_servers() and locale_config:

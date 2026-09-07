@@ -33,11 +33,11 @@ from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration, FirmwareType, detect_optdeps
 from .models.locale import LocaleConfiguration
 from .models.network import MacAddressPolicy, NetworkConfiguration, NicType
-from .models.profile import ProfileConfiguration
 from .network.network_menu import select_network
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
+from .profile.config import ProfileConfiguration
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.application import ApplicationConfiguration

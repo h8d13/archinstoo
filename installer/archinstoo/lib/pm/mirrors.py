@@ -448,6 +448,19 @@ class MirrorListHandler:
 			mirrorlist = fp.read()
 			_MirrorCache.data.update(self._parse_local_mirrors(mirrorlist))
 
+	def regions_config(self, regions: list[MirrorRegion], speed_sort: bool) -> str:
+		config = ''
+
+		for region in regions:
+			sorted_stati = self.get_status_by_region(region.name, speed_sort=speed_sort)
+
+			config += f'\n\n## {region.name}\n'
+
+			for status in sorted_stati:
+				config += f'Server = {status.server_url}\n'
+
+		return config
+
 	def get_status_by_region(self, region: str, speed_sort: bool) -> list[MirrorStatusEntryV3]:
 		mappings = self._mappings()
 		region_list = mappings[region]

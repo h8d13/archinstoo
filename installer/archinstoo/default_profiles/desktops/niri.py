@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, provision_terminal_config, seat_services
+from archinstoo.default_profiles.desktops import provision_terminal_config
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import ProfileType
+from archinstoo.lib.profile.base import ProfileType, SeatAccess, seat_services
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType

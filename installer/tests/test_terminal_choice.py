@@ -7,29 +7,30 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.default_profiles.desktops import DEFAULT_TERMINAL, swap_terminal, terminal_command
+from archinstoo.default_profiles.desktops import swap_terminal, terminal_command
 from archinstoo.default_profiles.desktops.hyprland import HyprlandProfile
 from archinstoo.default_profiles.desktops.niri import NiriProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
 from archinstoo.lib import args
 from archinstoo.lib.applications.cat.terminal import TerminalApp
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.application import ApplicationConfiguration, Terminal, TerminalConfiguration
-from archinstoo.lib.models.profile import ProfileConfiguration
+from archinstoo.lib.models.application import DEFAULT_TERMINAL, ApplicationConfiguration, Terminal, TerminalConfiguration
 from archinstoo.lib.models.users import User
+from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
 
 
-def _pin_terminal(monkeypatch: pytest.MonkeyPatch, terminal: Terminal | None) -> None:
+def _pin_terminal(monkeypatch: pytest.MonkeyPatch, terminal: Terminal | None) -> ApplicationConfiguration:
 	app_config = ApplicationConfiguration()
 	if terminal is not None:
 		app_config.terminal_config = TerminalConfiguration(terminal=terminal)
 
 	handler = SimpleNamespace(config=SimpleNamespace(app_config=app_config))
 	monkeypatch.setattr(args._ArchConfigHandlerHolder, 'instance', handler)
+	return app_config
 
 
 def _session(target: Path, monkeypatch: pytest.MonkeyPatch) -> Installer:
@@ -159,13 +160,13 @@ def test_terminal_profiles_ship_no_terminal(name: str, monkeypatch: pytest.Monke
 @pytest.mark.parametrize(('pick', 'expected'), [(Terminal.GHOSTTY, 'ghostty'), (None, DEFAULT_TERMINAL)])
 def test_install_adds_the_choice_once(pick: Terminal | None, expected: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	# a skipped menu entry still has to leave those profiles with a terminal
-	_pin_terminal(monkeypatch, pick)
+	app_config = _pin_terminal(monkeypatch, pick)
 	installed: list[str] = []
 	session = _session(tmp_path, monkeypatch)
 	monkeypatch.setattr(session, 'add_additional_packages', installed.extend, raising=False)
 
 	handler = ProfileHandler()
 	sway = next(p for p in handler.profiles if p.name == 'sway')
-	handler.install_profile_config(session, ProfileConfiguration(profiles=[sway]))
+	handler.install_profile_config(session, ProfileConfiguration(profiles=[sway]), app_config)
 
 	assert installed.count(expected) == 1

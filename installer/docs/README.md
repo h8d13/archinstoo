@@ -128,7 +128,6 @@
 │   │   │   ├── mirrors
 │   │   │   ├── network
 │   │   │   ├── packages
-│   │   │   ├── profile
 │   │   │   ├── service
 │   │   │   ├── swap
 │   │   │   └── users
@@ -147,6 +146,7 @@
 │   │   │   └── packages
 │   │   ├── profile/
 │   │   │   ├── base
+│   │   │   ├── config
 │   │   │   ├── driver_select
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
@@ -193,5 +193,5 @@
     └── parted/
         └── __init__i
 
-29 directories, 162 files
+29 directories, 163 files
 ```

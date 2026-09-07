@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, ClassVar, override
 
-from archinstoo.default_profiles.desktops import SeatAccess, seat_services, swap_terminal
+from archinstoo.default_profiles.desktops import swap_terminal
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.output import warn
-from archinstoo.lib.profile.base import GreeterType, ProfileType
+from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess, seat_services
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType

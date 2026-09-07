@@ -5,8 +5,8 @@ if TYPE_CHECKING:
 
 from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.menu.abstract_menu import CONFIG_KEY, AbstractSubMenu
-from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
+from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.driver_select import select_driver, select_gfx_packages
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

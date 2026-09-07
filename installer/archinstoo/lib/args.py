@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 	from collections.abc import Callable
 
 from archinstoo._version import __version__
+from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.models.application import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
@@ -23,10 +24,10 @@ from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.locale import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
-from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.output import error, warn
+from archinstoo.lib.profile.config import ProfileConfiguration
 
 DEFAULT_SCRIPT = 'guided'
 
@@ -143,7 +144,7 @@ class ArchConfig:
 			args_config,
 			{
 				'pacman_config': PacmanConfiguration.parse_args,
-				'disk_config': DiskLayoutConfiguration.parse_arg,
+				'disk_config': lambda arg: DiskLayoutConfiguration.parse_arg(arg, DeviceHandler()),
 				'profile_config': ProfileConfiguration.parse_arg,
 				'auth_config': AuthenticationConfiguration.parse_arg,
 				'app_config': ApplicationConfiguration.parse_arg,

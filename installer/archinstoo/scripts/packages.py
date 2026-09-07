@@ -63,7 +63,7 @@ def perform_installation(
 
 		# Profile (desktop environment, etc.)
 		if profile_config := config.profile_config:
-			profile_handler.install_profile_config(installation, profile_config)
+			profile_handler.install_profile_config(installation, profile_config, config.app_config)
 
 			# Post-install profile hooks; no auth config here, so provision
 			# targets whoever is driving the install (see invoking_user)

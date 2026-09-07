@@ -7,6 +7,7 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.hardware import GFX_SERVICES, XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
+from archinstoo.lib.models.application import DEFAULT_TERMINAL
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -15,7 +16,8 @@ if TYPE_CHECKING:
 	from types import ModuleType
 
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.profile import ProfileConfiguration
+	from archinstoo.lib.models.application import ApplicationConfiguration
+	from archinstoo.lib.profile.config import ProfileConfiguration
 
 
 class ProfileSerialization(TypedDict):
@@ -212,7 +214,12 @@ class ProfileHandler:
 		if services := [unit for pkg, unit in GFX_SERVICES.items() if pkg in driver_pkgs]:
 			install_session.enable_service(services)
 
-	def install_profile_config(self, install_session: Installer, profile_config: ProfileConfiguration) -> None:
+	def install_profile_config(
+		self,
+		install_session: Installer,
+		profile_config: ProfileConfiguration,
+		app_config: ApplicationConfiguration | None,
+	) -> None:
 		if not profile_config.profiles:
 			return
 
@@ -222,13 +229,11 @@ class ProfileHandler:
 		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
 			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers, profile_config.gfx_packages)
 
-		# one terminal for every profile that ships a keybind rather than its own;
-		# terminal_command() is the menu pick, or the default when it was skipped
+		# one terminal for every profile that ships a keybind rather than its own
 		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
 		if any(p.needs_terminal for p in selected):
-			from archinstoo.default_profiles.desktops import terminal_command
-
-			install_session.add_additional_packages([terminal_command()])
+			terminal = app_config.terminal_command if app_config else DEFAULT_TERMINAL
+			install_session.add_additional_packages([terminal])
 
 		# Install all selected profiles AFTER
 		for profile in profile_config.profiles:

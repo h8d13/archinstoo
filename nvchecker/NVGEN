@@ -61,7 +61,7 @@ PKG_ENUMS = (
 	(PKG / 'lib' / 'models' / 'firmware.py', 'FirmwareVendor', ('',)),
 	(PKG / 'lib' / 'hardware.py', 'GfxPackage', ('',)),
 	(PKG / 'lib' / 'hardware.py', 'CpuVendor', ('-ucode',)),
-	(PKG / 'default_profiles' / 'desktops' / '__init__.py', 'SeatAccess', ('',)),
+	(PKG / 'lib' / 'profile' / 'base.py', 'SeatAccess', ('',)),
 )
 
 
@@ -137,7 +137,7 @@ def extract_schema_packages(schema: dict, groups: dict[str, set[str]]) -> set[st
 
 	for item in schema_mod.package_names(schema):
 		name = item.lower()
-		pkgs.update(groups[name] if name in groups else {name})
+		pkgs.update(groups.get(name, {name}))
 
 	return pkgs
 

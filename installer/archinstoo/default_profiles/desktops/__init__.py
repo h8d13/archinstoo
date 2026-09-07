@@ -1,6 +1,6 @@
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.models.application import DEFAULT_TERMINAL
 from archinstoo.lib.output import warn
 
 if TYPE_CHECKING:
@@ -8,33 +8,6 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.users import User
-
-DEFAULT_TERMINAL = 'alacritty'
-
-
-class SeatAccess(StrEnum):
-	# value is the package to install, label is the mechanism it provides.
-	# polkit grants no seat access on its own: the real choice is
-	# systemd-logind or seatd. Arch builds logind with polkit support, so
-	# logind needs polkit at runtime for its permission checks (pacman only
-	# lists it as an optdep of systemd, the requirement is functional).
-	# https://github.com/archlinux/archinstall/issues/3467
-	#
-	# StrEnum so the saved string compares equal to the member: the menus
-	# hand custom_settings['seat_access'] straight to set_default_by_value.
-	seatd = 'seatd'
-	logind = 'polkit'
-
-	@property
-	def label(self) -> str:
-		return 'systemd-logind' if self is SeatAccess.logind else self.value
-
-
-def seat_services(pref: object) -> list[str]:
-	# per the issue above, only seatd needs its service enabled. logind is
-	# already up as part of systemd, and polkit is D-Bus activated with no
-	# [Install] section, so enabling it exits 0 and does nothing.
-	return [SeatAccess.seatd.value] if pref == SeatAccess.seatd.value else []
 
 
 # One terminal choice for every profile that needs one. The user picks it in
@@ -57,11 +30,7 @@ def terminal_command() -> str:
 	from archinstoo.lib.args import get_arch_config_handler
 
 	app_config = get_arch_config_handler().config.app_config
-
-	if app_config and app_config.terminal_config:
-		return app_config.terminal_config.terminal.value
-
-	return DEFAULT_TERMINAL
+	return app_config.terminal_command if app_config else DEFAULT_TERMINAL
 
 
 def swap_terminal(text: str, hardcoded: str, source: Path) -> str:

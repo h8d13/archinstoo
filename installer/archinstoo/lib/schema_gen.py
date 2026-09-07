@@ -17,7 +17,6 @@ import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from archinstoo.default_profiles.desktops import SeatAccess
 from archinstoo.lib import installer
 from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
@@ -47,7 +46,7 @@ from archinstoo.lib.models.device import FilesystemType, SnapshotType
 from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.users import Shell
-from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType
+from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType, SeatAccess
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
 

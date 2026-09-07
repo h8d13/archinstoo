@@ -7,7 +7,7 @@ from archinstoo.lib.utils.env import Os
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.network import DnsConfiguration, NetworkConfiguration
-	from archinstoo.lib.models.profile import ProfileConfiguration
+	from archinstoo.lib.profile.config import ProfileConfiguration
 
 
 class NetworkHandler:

@@ -364,25 +364,6 @@ class PacmanConfiguration:
 
 		return config.strip()
 
-	def regions_config(self, speed_sort: bool = True) -> str:
-		from archinstoo.lib.pm.mirrors import MirrorListHandler
-
-		handler = MirrorListHandler()
-		config = ''
-
-		for mirror_region in self.mirror_regions:
-			sorted_stati = handler.get_status_by_region(
-				mirror_region.name,
-				speed_sort=speed_sort,
-			)
-
-			config += f'\n\n## {mirror_region.name}\n'
-
-			for status in sorted_stati:
-				config += f'Server = {status.server_url}\n'
-
-		return config
-
 	def repositories_config(self, existing: str = '') -> str:
 		config = ''
 

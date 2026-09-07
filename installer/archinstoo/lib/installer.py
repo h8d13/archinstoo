@@ -48,6 +48,7 @@ from .models.users import User
 from .output import debug, error, info, log, logger, warn
 from .pm import Pacman
 from .pm.config import PacmanConfig
+from .pm.mirrors import MirrorListHandler
 from .utils.env import Os
 
 if TYPE_CHECKING:
@@ -804,7 +805,7 @@ class Installer:
 				fp.write(repos_config)
 
 		# Speed test only for the live system, target reuses the same order
-		regions_config = pacman_configuration.regions_config(speed_sort=not on_target)
+		regions_config = MirrorListHandler().regions_config(pacman_configuration.mirror_regions, speed_sort=not on_target)
 		if regions_config:
 			debug(f'Mirrorlist:\n{regions_config}')
 			mirrorlist_path.write_text(regions_config)

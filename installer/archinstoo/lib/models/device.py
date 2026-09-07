@@ -149,12 +149,8 @@ class DiskLayoutConfiguration:
 	def parse_arg(
 		cls,
 		disk_config: _DiskLayoutConfigurationSerialization,
-		device_handler: DeviceHandler | None = None,
+		device_handler: DeviceHandler,
 	) -> Self | None:
-		from archinstoo.lib.disk.device_handler import DeviceHandler
-
-		handler = device_handler or DeviceHandler()
-
 		device_modifications: list[DeviceModification] = []
 		config_type = disk_config.get('config_type', None)
 
@@ -172,7 +168,7 @@ class DiskLayoutConfiguration:
 
 			path = Path(str(mountpoint))
 
-			mods = handler.detect_pre_mounted_mods(path)
+			mods = device_handler.detect_pre_mounted_mods(path)
 			device_modifications.extend(mods)
 
 			config.mountpoint = path
@@ -185,7 +181,7 @@ class DiskLayoutConfiguration:
 			if not device_path:
 				continue
 
-			device = handler.get_device(device_path)
+			device = device_handler.get_device(device_path)
 
 			if not device:
 				continue
@@ -254,7 +250,7 @@ class DiskLayoutConfiguration:
 
 			last = create_partitions[-1]
 			total_size = dev_mod.device.device_info.total_size
-			if dev_mod.using_gpt(handler.partition_table):
+			if dev_mod.using_gpt(device_handler.partition_table):
 				if last.end > total_size.gpt_end():
 					raise ValueError('Partition overlaps backup GPT header')
 			elif last.end > total_size.align():

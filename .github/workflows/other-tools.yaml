@@ -11,7 +11,6 @@ jobs:
                 python-version: '3.14'
             - run: pip install import-linter
             - name: Check for circular imports (SCC) Syblings Check
-              continue-on-error: true
               working-directory: installer
               run: lint-imports
     zizmor:

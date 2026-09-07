@@ -146,6 +146,9 @@ class Terminal(StrEnum):
 		return [self.value]
 
 
+DEFAULT_TERMINAL = Terminal.ALACRITTY.value
+
+
 class TerminalConfigSerialization(TypedDict):
 	terminal: str
 
@@ -359,6 +362,13 @@ class ApplicationConfiguration:
 
 	# category -> its class, read off the fields below the class body
 	_config_parsers: ClassVar[dict[str, type]]
+
+	@property
+	def terminal_command(self) -> str:
+		# the menu pick, or the default when the menu was skipped
+		if self.terminal_config:
+			return self.terminal_config.terminal.value
+		return DEFAULT_TERMINAL
 
 	@classmethod
 	def parse_arg(

@@ -9,10 +9,10 @@ from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models import Bootloader
 from archinstoo.lib.models.locale import LocaleConfiguration
-from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 
@@ -59,7 +59,7 @@ def perform_installation(
 		installation.add_additional_packages(['nano', 'wget', 'git'])
 
 		profile_config = ProfileConfiguration([MinimalProfile()])
-		profile_handler.install_profile_config(installation, profile_config)
+		profile_handler.install_profile_config(installation, profile_config, config.app_config)
 
 		user = User('devel', Password(plaintext='devel'), False)
 		installation.create_users(user)

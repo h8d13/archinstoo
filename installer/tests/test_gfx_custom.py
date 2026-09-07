@@ -17,8 +17,8 @@ from archinstoo.lib.hardware import (
 	dkms_packages,
 	hybrid_gfx_packages,
 )
-from archinstoo.lib.models.profile import ProfileConfiguration
 from archinstoo.lib.profile.base import DisplayServer
+from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.scripts import _resolve
 
