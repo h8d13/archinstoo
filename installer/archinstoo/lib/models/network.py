@@ -172,7 +172,15 @@ class MacAddressPolicy(StrEnum):
 
 	def as_link_config(self) -> str:
 		# https://wiki.archlinux.org/title/MAC_address_spoofing#systemd-networkd
-		return '[Match]\nOriginalName=*\n\n[Link]\nMACAddressPolicy=random\n'
+		# a .link matching every interface replaces 99-default.link outright, so
+		# it has to carry the naming policies too or the NIC stays eth0 and a
+		# manual Name=enp0s2 match never applies
+		return (
+			'[Match]\nOriginalName=*\n\n[Link]\n'
+			'NamePolicy=keep kernel database onboard slot path\n'
+			'AlternativeNamesPolicy=database onboard slot path mac\n'
+			'MACAddressPolicy=random\n'
+		)
 
 
 class _NicSerialization(TypedDict):

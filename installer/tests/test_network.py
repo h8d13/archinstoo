@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, NicType
+from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, NicType
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.utils.env import Os
 
@@ -91,3 +91,29 @@ def test_dns_round_trips_through_json() -> None:
 	# absent stays absent, and a manual type with no interfaces is still nothing
 	assert NetworkConfiguration.parse_arg({'type': 'nm'}) == NetworkConfiguration(NicType.NM)
 	assert NetworkConfiguration.parse_arg({'type': 'manual'}) is None
+
+
+@pytest.mark.parametrize('nic_type', [NicType.IWD, NicType.MANUAL])
+def test_random_mac_link_keeps_predictable_names(nic_type: NicType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# the .link matches every interface and sorts before 99-default.link, so
+	# it replaces it: without the naming policies the NIC boots as eth0 and a
+	# manual Name=enp0s2 match never applies (seen on the VM, 2026-09-07)
+	(tmp_path / 'etc').mkdir()
+	installation, _ = _session(tmp_path, monkeypatch)
+
+	config = NetworkConfiguration(nic_type, mac_address=MacAddressPolicy.RANDOM)
+	NetworkHandler().install_network_config(config, installation)
+
+	link = (tmp_path / 'etc/systemd/network/00-mac-address.link').read_text()
+	assert 'NamePolicy=keep kernel database onboard slot path' in link
+	assert 'AlternativeNamesPolicy=database onboard slot path mac' in link
+	assert 'MACAddressPolicy=random' in link
+
+
+def test_stable_mac_without_nm_writes_no_link(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	(tmp_path / 'etc').mkdir()
+	installation, _ = _session(tmp_path, monkeypatch)
+
+	NetworkHandler().install_network_config(NetworkConfiguration(NicType.MANUAL, mac_address=MacAddressPolicy.STABLE), installation)
+
+	assert not (tmp_path / 'etc/systemd/network/00-mac-address.link').exists()
