@@ -69,12 +69,10 @@ class FormattedOutput:
 			for key, width in column_width.items():
 				value = record.get(key, '')
 
-				# keep cells single-line: consumers (menu_helper) count one row per record
-				text = str(value).replace('\n', ' ')
 				if isinstance(value, (int, float)) or (isinstance(value, str) and value.isnumeric()):
-					obj_data.append(unicode_rjust(text, width))
+					obj_data.append(unicode_rjust(str(value), width))
 				else:
-					obj_data.append(unicode_ljust(text, width))
+					obj_data.append(unicode_ljust(str(value), width))
 
 			output += ' | '.join(obj_data) + '\n'
 
