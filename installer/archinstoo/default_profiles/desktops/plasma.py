@@ -20,6 +20,7 @@ class PlasmaProfile(WaylandProfile):
 			'dolphin',
 			'ark',
 			'bluedevil',
+			'plasma-thunderbolt',
 		]
 
 	@property

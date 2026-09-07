@@ -237,6 +237,9 @@
         "bluetooth_config": {
             "enabled": true
         },
+        "thunderbolt_config": {
+            "enabled": true
+        },
         "audio_config": {
             "audio": "pipewire"
         },

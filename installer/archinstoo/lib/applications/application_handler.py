@@ -14,6 +14,7 @@ from .cat.power_management import PowerManagementApp
 from .cat.print_service import PrintServiceApp
 from .cat.security import SecurityApp
 from .cat.terminal import TerminalApp
+from .cat.thunderbolt import ThunderboltApp
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -28,6 +29,9 @@ class ApplicationHandler:
 	def install_applications(self, install_session: Installer, app_config: ApplicationConfiguration, users: list[User] | None = None) -> None:
 		if app_config.bluetooth_config and app_config.bluetooth_config.enabled:
 			BluetoothApp().install(install_session)
+
+		if app_config.thunderbolt_config and app_config.thunderbolt_config.enabled:
+			ThunderboltApp().install(install_session)
 
 		if app_config.audio_config:
 			AudioApp().install(

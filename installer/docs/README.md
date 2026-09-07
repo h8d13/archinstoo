@@ -71,7 +71,8 @@
 │   │   │       ├── power_management
 │   │   │       ├── print_service
 │   │   │       ├── security
-│   │   │       └── terminal
+│   │   │       ├── terminal
+│   │   │       └── thunderbolt
 │   │   ├── args
 │   │   ├── authentication/
 │   │   │   ├── authentication_menu

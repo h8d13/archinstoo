@@ -31,6 +31,7 @@ from archinstoo.lib.models.application import (
 	SecurityConfiguration,
 	Terminal,
 	TerminalConfiguration,
+	ThunderboltConfiguration,
 )
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -74,6 +75,14 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				value=self._app_config.bluetooth_config,
 				preview_action=self._prev_bluetooth,
 				key='bluetooth_config',
+			),
+			MenuItem(
+				text='Thunderbolt',
+				action=select_thunderbolt,
+				value=self._app_config.thunderbolt_config,
+				preview_action=self._prev_thunderbolt,
+				enabled=SysInfo.has_thunderbolt(),
+				key='thunderbolt_config',
 			),
 			MenuItem(
 				text='Audio',
@@ -175,6 +184,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: BluetoothConfiguration = item.value
 			return _enabled_text('Bluetooth', config.enabled)
+		return None
+
+	def _prev_thunderbolt(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: ThunderboltConfiguration = item.value
+			return _enabled_text('Thunderbolt', config.enabled)
 		return None
 
 	def _prev_audio(self, item: MenuItem) -> str | None:
@@ -330,6 +345,16 @@ def _enabled_text(label: str, enabled: bool) -> str:
 def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfiguration | None:
 	enabled = prompt_yes_no('Would you like to configure Bluetooth?' + '\n', preset.enabled if preset else False)
 	return preset if enabled is None else BluetoothConfiguration(enabled)
+
+
+def select_thunderbolt(preset: ThunderboltConfiguration | None) -> ThunderboltConfiguration | None:
+	enabled = prompt_yes_no(
+		'Would you like to configure Thunderbolt device authorization (bolt)?\n'
+		'New devices are auto-enrolled when the desktop asks or IOMMU DMA protection is on,\n'
+		'otherwise once with: boltctl enroll --policy auto <uuid>\n',
+		preset.enabled if preset else False,
+	)
+	return preset if enabled is None else ThunderboltConfiguration(enabled)
 
 
 def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServiceConfiguration | None:

@@ -338,6 +338,12 @@ class _SysInfo:
 		return False
 
 	@cached_property
+	def has_thunderbolt(self) -> bool:
+		# one domainN per host controller bound by the thunderbolt driver
+		# (USB4 hosts register on the same bus); disabled in firmware = absent
+		return any(Path('/sys/bus/thunderbolt/devices').glob('domain*'))
+
+	@cached_property
 	def cpu_info(self) -> dict[str, str]:
 		# Returns system cpu information
 		cpu_info_path = Path('/proc/cpuinfo')
@@ -492,6 +498,10 @@ class SysInfo:
 	@staticmethod
 	def has_battery() -> bool:
 		return _sys_info.has_battery
+
+	@staticmethod
+	def has_thunderbolt() -> bool:
+		return _sys_info.has_thunderbolt
 
 	@staticmethod
 	def _graphics_devices() -> dict[str, str]:

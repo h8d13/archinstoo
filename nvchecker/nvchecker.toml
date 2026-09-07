@@ -294,6 +294,9 @@ source = "pacman"
 [bluez-utils]
 source = "pacman"
 
+[bolt]
+source = "pacman"
+
 [bottom]
 source = "pacman"
 
@@ -1126,6 +1129,9 @@ source = "pacman"
 source = "pacman"
 
 [plasma-pa]
+source = "pacman"
+
+[plasma-thunderbolt]
 source = "pacman"
 
 [pluma]

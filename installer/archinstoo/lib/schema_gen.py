@@ -27,6 +27,7 @@ from archinstoo.lib.applications.cat.media_codecs import MediaCodecsApp
 from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
+from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.hardware import GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
 from archinstoo.lib.models.application import (
 	Audio,
@@ -137,6 +138,12 @@ SECTIONS: tuple[Section, ...] = (
 	Section('shells', 'bash is default and rbash is bash restricted, so neither needs a package', lambda: {s.value: s.packages for s in Shell}),
 	# -- applications, in ApplicationHandler.install_applications() order --
 	Section('bluetooth', '', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled')),
+	Section(
+		'thunderbolt',
+		'only shown with a thunderbolt/usb4 host controller; boltd is dbus\nactivated, no service to enable',
+		lambda: ThunderboltApp().packages,
+		pick=('thunderbolt_config', 'enabled'),
+	),
 	Section(
 		'audio',
 		'',

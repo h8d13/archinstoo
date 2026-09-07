@@ -51,6 +51,10 @@ class BluetoothConfigSerialization(TypedDict):
 	enabled: bool
 
 
+class ThunderboltConfigSerialization(TypedDict):
+	enabled: bool
+
+
 class Audio(StrEnum):
 	PIPEWIRE = auto()
 	PULSEAUDIO = auto()
@@ -201,6 +205,7 @@ class DevelopmentConfigSerialization(TypedDict):
 
 class ApplicationSerialization(TypedDict):
 	bluetooth_config: NotRequired[BluetoothConfigSerialization]
+	thunderbolt_config: NotRequired[ThunderboltConfigSerialization]
 	audio_config: NotRequired[AudioConfigSerialization]
 	power_management_config: NotRequired[PowerManagementConfigSerialization]
 	cpu_scheduler_config: NotRequired[CPUSchedulerConfigSerialization]
@@ -244,6 +249,11 @@ class AudioConfiguration(_Category):
 
 @dataclass
 class BluetoothConfiguration(_Category):
+	enabled: bool
+
+
+@dataclass
+class ThunderboltConfiguration(_Category):
 	enabled: bool
 
 
@@ -333,6 +343,7 @@ class DevelopmentConfiguration:
 @dataclass
 class ApplicationConfiguration:
 	bluetooth_config: BluetoothConfiguration | None = None
+	thunderbolt_config: ThunderboltConfiguration | None = None
 	audio_config: AudioConfiguration | None = None
 	power_management_config: PowerManagementConfiguration | None = None
 	cpu_scheduler_config: CPUSchedulerConfiguration | None = None

@@ -24,6 +24,7 @@ from archinstoo.lib.models.application import (
 	PrintServiceConfiguration,
 	Security,
 	SecurityConfiguration,
+	ThunderboltConfiguration,
 )
 from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
@@ -162,6 +163,7 @@ def test_config_file_parsing(
 		script='test_script',
 		app_config=ApplicationConfiguration(
 			bluetooth_config=BluetoothConfiguration(enabled=True),
+			thunderbolt_config=ThunderboltConfiguration(enabled=True),
 			audio_config=AudioConfiguration(audio=Audio.PIPEWIRE),
 			print_service_config=PrintServiceConfiguration(enabled=True),
 			firewall_config=FirewallConfiguration(firewall=Firewall.UFW),

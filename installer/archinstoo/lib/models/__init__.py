@@ -1,4 +1,4 @@
-from .application import ApplicationConfiguration, Audio, AudioConfiguration, BluetoothConfiguration, PrintServiceConfiguration
+from .application import ApplicationConfiguration, Audio, AudioConfiguration, BluetoothConfiguration, PrintServiceConfiguration, ThunderboltConfiguration
 from .bootloader import Bootloader
 from .device import (
 	BDevice,
@@ -79,6 +79,7 @@ __all__ = [
 	'Size',
 	'SubvolumeModification',
 	'SwapConfiguration',
+	'ThunderboltConfiguration',
 	'Unit',
 	'User',
 	'UserService',

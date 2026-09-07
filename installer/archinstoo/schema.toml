@@ -79,6 +79,11 @@ rbash = []
 [bluetooth]
 packages = ["bluez", "bluez-utils"]
 
+# only shown with a thunderbolt/usb4 host controller; boltd is dbus
+# activated, no service to enable
+[thunderbolt]
+packages = ["bolt"]
+
 [audio]
 pipewire = ["pipewire", "pipewire-alsa", "pipewire-jack", "pipewire-pulse", "gst-plugin-pipewire", "libpulse", "wireplumber", "rtkit"]
 pulseaudio = ["pulseaudio"]
@@ -263,7 +268,7 @@ lxqt = ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "gnu-free-fonts", "
 mate = ["mate", "mate-extra"]
 niri = ["niri", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"]
 noctalia = ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "noctalia", "inter-font", "ttf-jetbrains-mono-nerd"]
-kde-plasma = ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "bluedevil"]
+kde-plasma = ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "bluedevil", "plasma-thunderbolt"]
 qtile = ["qtile"]
 river = ["xdg-desktop-portal-wlr", "river"]
 sway = ["sway", "swaybg", "swaylock", "swayidle", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "xorg-xwayland"]
