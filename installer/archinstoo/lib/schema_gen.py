@@ -84,7 +84,6 @@ def _one_to_one(enum: type[StrEnum]) -> Table:
 @dataclass(frozen=True)
 class Section:
 	key: str
-	doc: str
 	value: Callable[[], Value]
 	# the call in perform_installation that straps this section, by method or
 	# function name. sections sharing one keep their order below, which is the
@@ -103,10 +102,9 @@ class Section:
 
 
 SECTIONS: tuple[Section, ...] = (
-	Section('base', '', lambda: installer.__base_packages__, site='Installer'),
+	Section('base', lambda: installer.__base_packages__, site='Installer'),
 	Section(
 		'firmware',
-		'`vendor` reads the saved config, `full` adds optdeps matched to host PCI/USB IDs',
 		lambda: {
 			FirmwareType.FULL.value: FULL_FIRMWARE,
 			FirmwareType.MINIMAL.value: [],
@@ -116,72 +114,61 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'accessibility',
-		'carried over when the live ISO had them active',
 		lambda: installer.__accessibility_packages__,
 		site='Installer',
 	),
-	Section('lvm', '', lambda: installer.__lvm_packages__, site='minimal_installation'),
+	Section('lvm', lambda: installer.__lvm_packages__, site='minimal_installation'),
 	Section(
 		'filesystem_tools',
-		'e2fsprogs and dosfstools are in base',
 		lambda: {fs.value: [pkg] for fs in FilesystemType if (pkg := fs.installation_pkg)},
 		site='minimal_installation',
 	),
 	Section(
 		'bcachefs_extra',
-		'dkms: every kernel also pulls its -headers',
 		lambda: installer.__bcachefs_packages__,
 		site='minimal_installation',
 	),
 	Section(
 		'fido2',
-		'sd-encrypt needs it present at initramfs build; never in a saved config',
 		lambda: installer.__fido2_packages__,
 		site='minimal_installation',
 	),
 	Section(
 		'microcode',
-		'none in a VM',
 		lambda: {v.value: [ucode.stem] for v in CpuVendor if (ucode := v.get_ucode())},
 		site='minimal_installation',
 	),
-	Section('ter_fonts', 'a `ter-` console font', lambda: installer.__ter_font_packages__, site='minimal_installation'),
+	Section('ter_fonts', lambda: installer.__ter_font_packages__, site='minimal_installation'),
 	Section(
 		'swap',
-		'a hibernation swapfile needs nothing past base',
 		lambda: {'zram': installer.__zram_packages__},
 		site='setup_swap',
 	),
 	Section(
 		'privilege_escalation',
-		'run0 is systemd, only needs polkit',
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
 		site='create_users',
 	),
-	Section('stash', '', lambda: installer.__stash_packages__, site='create_users'),
+	Section('stash', lambda: installer.__stash_packages__, site='create_users'),
 	Section(
 		'shells',
-		'bash and rbash ship with base',
 		lambda: {s.value: s.packages for s in Shell},
 		site='ShellApp',
 	),
-	Section('bluetooth', '', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled'), site='install_applications'),
+	Section('bluetooth', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled'), site='install_applications'),
 	Section(
 		'thunderbolt',
-		'only offered with a thunderbolt/usb4 controller',
 		lambda: ThunderboltApp().packages,
 		pick=('thunderbolt_config', 'enabled'),
 		site='install_applications',
 	),
 	Section(
 		'audio_firmware',
-		'by host driver, with either server',
 		lambda: {'sof': AudioApp().sof_packages, 'alsa': AudioApp().alsa_packages},
 		site='install_applications',
 	),
 	Section(
 		'audio',
-		'',
 		lambda: {
 			Audio.PIPEWIRE.value: AudioApp().pipewire_packages,
 			Audio.PULSEAUDIO.value: AudioApp().pulseaudio_packages,
@@ -191,14 +178,12 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'media_codecs',
-		'the codec half of eos-base-group',
 		lambda: MediaCodecsApp().packages,
 		pick=('media_codecs_config', 'enabled'),
 		site='install_applications',
 	),
 	Section(
 		'power_management',
-		'laptops only',
 		lambda: {
 			PowerManagement.PPD.value: PowerManagementApp().ppd_packages,
 			PowerManagement.TUNED.value: PowerManagementApp().tuned_packages,
@@ -208,21 +193,18 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'cpu_scheduler',
-		'one set; the choice picks which scx binary scx_loader starts',
 		lambda: CPUSchedulerApp().packages,
 		pick=('cpu_scheduler_config', 'scheduler'),
 		site='install_applications',
 	),
 	Section(
 		'printing',
-		'cups drivers render through ghostscript',
 		lambda: PrintServiceApp().packages,
 		pick=('print_service_config', 'enabled'),
 		site='install_applications',
 	),
 	Section(
 		'firewalls',
-		'',
 		lambda: {
 			Firewall.UFW.value: FirewallApp().ufw_packages,
 			Firewall.FWD.value: FirewallApp().fwd_packages,
@@ -230,25 +212,22 @@ SECTIONS: tuple[Section, ...] = (
 		pick=('firewall_config', 'firewall'),
 		site='install_applications',
 	),
-	Section('management', '', lambda: _one_to_one(Management), pick=('management_config', 'tools'), site='install_applications'),
-	Section('monitors', '', lambda: _one_to_one(Monitor), pick=('monitor_config', 'monitor'), site='install_applications'),
+	Section('management', lambda: _one_to_one(Management), pick=('management_config', 'tools'), site='install_applications'),
+	Section('monitors', lambda: _one_to_one(Monitor), pick=('monitor_config', 'monitor'), site='install_applications'),
 	Section(
 		'editors',
-		'EDITOR lands in /etc/environment',
 		lambda: {e.value: e.packages for e in Editor},
 		pick=('editor_config', 'editor'),
 		site='install_applications',
 	),
 	Section(
 		'terminals',
-		'one choice, shared by terminal_profiles; TERMINAL lands in /etc/environment',
 		lambda: {t.value: t.packages for t in Terminal},
 		pick=('terminal_config', 'terminal'),
 		site='install_applications',
 	),
 	Section(
 		'security',
-		'',
 		lambda: {
 			Security.APPARMOR.value: SecurityApp().apparmor_packages,
 			Security.FIREJAIL.value: SecurityApp().firejail_packages,
@@ -258,117 +237,99 @@ SECTIONS: tuple[Section, ...] = (
 		pick=('security_config', 'tools'),
 		site='install_applications',
 	),
-	Section('languages', '', lambda: _one_to_one(Language), pick=('development_config', 'language_config', 'tools'), site='install_applications'),
-	Section('devtools', '', lambda: _one_to_one(DevTool), pick=('development_config', 'devtool_config', 'tools'), site='install_applications'),
-	Section('snapshots', '', lambda: {s.value: s.packages for s in SnapshotType}, site='setup_btrfs_snapshot'),
-	Section('grub_extra', 'grub with either snapshot tool', lambda: installer.__grub_snapshot_packages__, site='setup_btrfs_snapshot'),
+	Section('languages', lambda: _one_to_one(Language), pick=('development_config', 'language_config', 'tools'), site='install_applications'),
+	Section('devtools', lambda: _one_to_one(DevTool), pick=('development_config', 'devtool_config', 'tools'), site='install_applications'),
+	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='setup_btrfs_snapshot'),
+	Section('grub_extra', lambda: installer.__grub_snapshot_packages__, site='setup_btrfs_snapshot'),
 	Section(
 		'bootloaders',
-		'the UEFI set; refind writes its own entry',
 		lambda: {b.value: b.packages() for b in Bootloader},
 		site='add_bootloader',
 	),
 	Section(
 		'bootloaders_bios',
-		'no EFI entry to write; absent here means UEFI only',
 		lambda: {b.value: b.packages(uefi=False) for b in Bootloader if b.has_bios_support()},
 		site='add_bootloader',
 	),
 	Section(
 		'network_iso_extra',
-		'iwd reads the PSKs carried over from the ISO',
 		lambda: ISO_PSK_EXTRA,
 		site='install_network_config',
 	),
 	Section(
 		'network',
-		'iso and manual use systemd-networkd/resolved from base',
 		lambda: {n.value: n.packages for n in NicType},
 		site='install_network_config',
 	),
 	Section(
 		'network_desktop_extra',
-		'NetworkManager tray applet, desktop profiles',
 		lambda: NM_DESKTOP_EXTRA,
 		site='install_network_config',
 	),
 	Section(
 		'gfx_drivers',
-		'before desktops: vulkan-driver is virtual',
 		lambda: {d.value: [p.value for p in GFX_PACKAGES[d]] for d in GfxDriver},
 		site='install_profile_config',
 	),
 	Section(
 		'gfx_custom_choices',
-		"the custom driver's pool; dkms swap and xorg derived as for presets",
 		lambda: [p.value for p in GFX_CUSTOM_CHOICES],
 		site='install_profile_config',
 	),
 	Section(
 		'gfx_drivers_dkms',
-		'swapped in on a kernel that needs a dkms build',
 		lambda: {d.value: [p.value for p in d.gfx_packages(_DKMS_KERNEL)] for d in GfxDriver if d.has_dkms_variant()},
 		site='install_profile_config',
 	),
 	Section(
 		'gfx_mesa_extra',
-		'vulkan layer for the host GPU',
 		lambda: {vendor: [p.value for p in pkgs] for vendor, pkgs in MESA_HOST_EXTRA.items()},
 		site='install_profile_config',
 	),
 	Section(
 		'xorg_extra',
-		'the X11 half, keyed on DisplayServer not the driver',
 		lambda: [p.value for p in XORG_EXTRA],
 		site='install_profile_config',
 	),
 	Section(
 		'xorg_profiles',
-		'profiles that pull xorg_extra',
 		lambda: [p.name for p in _leaves() if DisplayServer.X11 in p.display_servers()],
 		list_key='profiles',
 		site='install_profile_config',
 	),
 	Section(
 		'terminal_profiles',
-		'ship a keybind, no terminal: get the shared choice or the default',
 		lambda: [p.name for p in _leaves() if p.needs_terminal],
 		list_key='profiles',
 		site='install_profile_config',
 	),
 	Section(
 		'profile_base',
-		'with any top-level profile',
 		lambda: {p.name: p.packages for p in ProfileHandler().profiles if p.profile_type in (ProfileType.Desktop, ProfileType.Server)},
 		site='install_profile_config',
 	),
 	Section(
 		'profiles',
-		'a terminal_profiles entry gets its terminal from the shared choice',
 		lambda: {p.name: p.packages for p in _leaves()},
 		site='install_profile_config',
 	),
 	Section(
 		'compositors',
-		'niri is baked into the entry above; <name>_compositor custom_setting swaps it',
 		lambda: {p.name: p.compositor_packages for p in _leaves() if p.compositor_packages},
 		site='install_profile_config',
 	),
 	Section(
 		'seat_access',
-		'per-profile custom_setting; the value is the package',
 		lambda: {s.name: [s.value] for s in SeatAccess},
 		site='install_profile_config',
 	),
 	Section(
 		'greeters',
-		'each desktop names a default; null is always available',
 		lambda: {g.value: g.packages for g in GreeterType},
 		site='install_profile_config',
 	),
 	Section(
 		'aur_bootstrap',
-		'AUR packages are in no repo, nothing can size them',
 		lambda: installer.__aur_bootstrap_packages__,
 		site='run_grimoire_installation',
 	),
@@ -388,7 +349,7 @@ _HEADER = """\
 # silently nest under it. A section that is one flat list holds it under
 # `packages`, or `profiles` where the names are profiles rather than packages.
 #
-# To change what a section holds, change the codepath named above it, then:
+# To change what a section holds, change the code under the banner above it, then:
 #
 #     python -m archinstoo --script schema
 """
@@ -402,10 +363,6 @@ def _key(name: str) -> str:
 
 def _list(values: list[str]) -> str:
 	return '[' + ', '.join(json.dumps(v) for v in values) + ']'
-
-
-def _comment(doc: str) -> list[str]:
-	return [f'# {line}' if line else '#' for line in doc.splitlines()] if doc else []
 
 
 def _tables(section: Section) -> list[tuple[str, Table]]:
@@ -470,7 +427,6 @@ def render() -> str:
 		if section.site != site:
 			site = section.site
 			lines.append(f'# -- {site} --')
-		lines += _comment(section.doc)
 		for header, table in _tables(section):
 			lines.append(f'[{header}]')
 			lines += [f'{_key(name)} = {_list(pkgs)}' for name, pkgs in table.items()]

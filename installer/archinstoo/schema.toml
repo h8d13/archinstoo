@@ -10,7 +10,7 @@
 # silently nest under it. A section that is one flat list holds it under
 # `packages`, or `profiles` where the names are profiles rather than packages.
 #
-# To change what a section holds, change the codepath named above it, then:
+# To change what a section holds, change the code under the banner above it, then:
 #
 #     python -m archinstoo --script schema
 
@@ -18,13 +18,11 @@
 [base]
 packages = ["base", "mkinitcpio"]
 
-# `vendor` reads the saved config, `full` adds optdeps matched to host PCI/USB IDs
 [firmware]
 full = ["linux-firmware"]
 minimal = []
 vendor = []
 
-# carried over when the live ISO had them active
 [accessibility]
 packages = ["brltty", "espeakup", "alsa-utils"]
 
@@ -32,37 +30,30 @@ packages = ["brltty", "espeakup", "alsa-utils"]
 [lvm]
 packages = ["lvm2"]
 
-# e2fsprogs and dosfstools are in base
 [filesystem_tools]
 bcachefs = ["bcachefs-tools"]
 btrfs = ["btrfs-progs"]
 f2fs = ["f2fs-tools"]
 xfs = ["xfsprogs"]
 
-# dkms: every kernel also pulls its -headers
 [bcachefs_extra]
 packages = ["bcachefs-dkms"]
 
-# sd-encrypt needs it present at initramfs build; never in a saved config
 [fido2]
 packages = ["libfido2"]
 
-# none in a VM
 [microcode]
 amd = ["amd-ucode"]
 intel = ["intel-ucode"]
 
-# a `ter-` console font
 [ter_fonts]
 packages = ["terminus-font"]
 
 # -- setup_swap --
-# a hibernation swapfile needs nothing past base
 [swap]
 zram = ["zram-generator"]
 
 # -- create_users --
-# run0 is systemd, only needs polkit
 [privilege_escalation]
 sudo = ["sudo"]
 doas = ["opendoas"]
@@ -72,7 +63,6 @@ run0 = ["polkit"]
 packages = ["git"]
 
 # -- ShellApp --
-# bash and rbash ship with base
 [shells]
 bash = []
 zsh = ["zsh"]
@@ -83,11 +73,9 @@ rbash = []
 [bluetooth]
 packages = ["bluez", "bluez-utils"]
 
-# only offered with a thunderbolt/usb4 controller
 [thunderbolt]
 packages = ["bolt"]
 
-# by host driver, with either server
 [audio_firmware]
 sof = ["sof-firmware"]
 alsa = ["alsa-firmware"]
@@ -96,20 +84,16 @@ alsa = ["alsa-firmware"]
 pipewire = ["pipewire", "pipewire-alsa", "pipewire-jack", "pipewire-pulse", "gst-plugin-pipewire", "libpulse", "wireplumber", "rtkit"]
 pulseaudio = ["pulseaudio"]
 
-# the codec half of eos-base-group
 [media_codecs]
 packages = ["gst-libav", "gst-plugins-bad", "gst-plugins-ugly", "gst-plugin-pipewire", "libdvdcss", "libopenraw"]
 
-# laptops only
 [power_management]
 power-profiles-daemon = ["power-profiles-daemon"]
 tuned = ["tuned", "tuned-ppd"]
 
-# one set; the choice picks which scx binary scx_loader starts
 [cpu_scheduler]
 packages = ["scx-scheds", "scx-tools"]
 
-# cups drivers render through ghostscript
 [printing]
 packages = ["cups", "system-config-printer", "cups-pk-helper", "ghostscript"]
 
@@ -132,7 +116,6 @@ htop = ["htop"]
 btop = ["btop"]
 bottom = ["bottom"]
 
-# EDITOR lands in /etc/environment
 [editors]
 vi = ["ex-vi-compat"]
 nano = ["nano"]
@@ -141,7 +124,6 @@ vim = ["vim"]
 neovim = ["neovim"]
 emacs = ["emacs"]
 
-# one choice, shared by terminal_profiles; TERMINAL lands in /etc/environment
 [terminals]
 alacritty = ["alacritty"]
 foot = ["foot"]
@@ -188,12 +170,10 @@ valgrind = ["valgrind"]
 snapper = ["snapper"]
 timeshift = ["timeshift", "cronie"]
 
-# grub with either snapshot tool
 [grub_extra]
 packages = ["grub-btrfs", "inotify-tools"]
 
 # -- add_bootloader --
-# the UEFI set; refind writes its own entry
 [bootloaders]
 systemd-boot = ["efibootmgr"]
 grub = ["grub", "efibootmgr"]
@@ -201,17 +181,14 @@ efistub = ["efibootmgr"]
 limine = ["limine", "efibootmgr"]
 refind = ["refind"]
 
-# no EFI entry to write; absent here means UEFI only
 [bootloaders_bios]
 grub = ["grub"]
 limine = ["limine"]
 
 # -- install_network_config --
-# iwd reads the PSKs carried over from the ISO
 [network_iso_extra]
 packages = ["iwd"]
 
-# iso and manual use systemd-networkd/resolved from base
 [network]
 iso = []
 nm = ["networkmanager", "wpa_supplicant"]
@@ -219,12 +196,10 @@ nm-iwd = ["networkmanager", "iwd"]
 iwd = ["iwd"]
 manual = []
 
-# NetworkManager tray applet, desktop profiles
 [network_desktop_extra]
 packages = ["network-manager-applet"]
 
 # -- install_profile_config --
-# before desktops: vulkan-driver is virtual
 [gfx_drivers]
 all-open-source = ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-intel-driver", "intel-media-driver", "vpl-gpu-rt", "libvpl", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"]
 amd-open-source = ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "vulkan-radeon"]
@@ -236,37 +211,29 @@ vm-software = ["mesa", "vulkan-swrast"]
 vm-virtio = ["mesa", "vulkan-virtio"]
 custom = []
 
-# the custom driver's pool; dkms swap and xorg derived as for presets
 [gfx_custom_choices]
 packages = ["intel-media-driver", "libva-intel-driver", "libva-nvidia-driver", "mesa", "nvidia-open", "nvidia-prime", "switcheroo-control", "vpl-gpu-rt", "libvpl", "vulkan-intel", "vulkan-mesa-layers", "vulkan-radeon", "vulkan-nouveau", "vulkan-swrast", "vulkan-virtio", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau"]
 
-# swapped in on a kernel that needs a dkms build
 [gfx_drivers_dkms]
 nvidia-open-kernel = ["nvidia-open-dkms", "libva-nvidia-driver", "dkms"]
 
-# vulkan layer for the host GPU
 [gfx_mesa_extra]
 intel = ["vulkan-intel"]
 amd = ["vulkan-radeon"]
 
-# the X11 half, keyed on DisplayServer not the driver
 [xorg_extra]
 packages = ["xorg-server", "xorg-xinit"]
 
-# profiles that pull xorg_extra
 [xorg_profiles]
 profiles = ["awesome", "bspwm", "cinnamon", "deepin", "enlightenment", "i3-wm", "lxqt", "mate", "qtile", "xfce4", "xmonad"]
 
-# ship a keybind, no terminal: get the shared choice or the default
 [terminal_profiles]
 profiles = ["awesome", "dms", "hyprland", "i3-wm", "labwc", "niri", "noctalia", "qtile", "river", "sway"]
 
-# with any top-level profile
 [profile_base]
 desktop = ["smartmontools", "xdg-utils"]
 server = ["smartmontools"]
 
-# a terminal_profiles entry gets its terminal from the shared choice
 [profiles]
 awesome = ["xorg-server", "awesome", "xorg-xinit", "xorg-xrandr", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"]
 bspwm = ["bspwm", "sxhkd", "dmenu", "xdo", "rxvt-unicode"]
@@ -302,7 +269,6 @@ sshd = ["openssh"]
 tailscale = ["tailscale"]
 tomcat = ["tomcat10"]
 
-# niri is baked into the entry above; <name>_compositor custom_setting swaps it
 [compositors.dms]
 niri = ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland"]
 hyprland = ["hyprland", "dms-shell-hyprland", "xdg-desktop-portal-hyprland", "uwsm"]
@@ -313,12 +279,10 @@ hyprland = ["hyprland", "xdg-desktop-portal-hyprland", "uwsm"]
 sway = ["sway", "xdg-desktop-portal-wlr", "xorg-xwayland"]
 labwc = ["labwc", "xdg-desktop-portal-wlr", "xorg-xwayland"]
 
-# per-profile custom_setting; the value is the package
 [seat_access]
 seatd = ["seatd"]
 logind = ["polkit"]
 
-# each desktop names a default; null is always available
 [greeters]
 lightdm-gtk-greeter = ["lightdm", "lightdm-gtk-greeter"]
 lightdm-slick-greeter = ["lightdm", "lightdm-slick-greeter"]
@@ -332,6 +296,5 @@ regreet = ["greetd", "greetd-regreet", "cage"]
 cosmic-greeter = ["cosmic-greeter"]
 
 # -- run_grimoire_installation --
-# AUR packages are in no repo, nothing can size them
 [aur_bootstrap]
 packages = ["base-devel", "git"]
