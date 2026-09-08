@@ -1,6 +1,13 @@
 name: Build archinstoo
 
-on: [ push ]
+on:
+  push:
+    # docs-only pushes, docs.yaml covers those
+    paths-ignore:
+      - '**.md'
+      - mkdocs.yaml
+      - .github/overrides/**
+      - .github/docs-requirements.txt
 
 permissions: {}
 
