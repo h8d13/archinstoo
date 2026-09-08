@@ -291,4 +291,4 @@ cosmic-greeter = ["cosmic-greeter"]
 
 # -- run_grimoire_installation --
 [aur_bootstrap]
-packages = ["base-devel", "git"]
+packages = ["git", "archlinux-keyring", "autoconf", "automake", "binutils", "bison", "debugedit", "fakeroot", "file", "findutils", "flex", "gawk", "gcc", "gettext", "grep", "groff", "gzip", "libtool", "m4", "make", "pacman", "patch", "pkgconf", "sed", "texinfo", "which"]

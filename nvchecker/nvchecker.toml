@@ -57,7 +57,25 @@ source = "pacman"
 [python]
 source = "pacman"
 
+[python-build]
+source = "pacman"
+
+[python-installer]
+source = "pacman"
+
+[python-pylint]
+source = "pacman"
+
 [python-pyparted]
+source = "pacman"
+
+[python-pytest]
+source = "pacman"
+
+[python-setuptools]
+source = "pacman"
+
+[python-wheel]
 source = "pacman"
 
 [systemd]
@@ -270,6 +288,9 @@ source = "pacman"
 [apparmor]
 source = "pacman"
 
+[archlinux-keyring]
+source = "pacman"
+
 [ark]
 source = "pacman"
 
@@ -277,6 +298,12 @@ source = "pacman"
 source = "pacman"
 
 [audit]
+source = "pacman"
+
+[autoconf]
+source = "pacman"
+
+[automake]
 source = "pacman"
 
 [awesome]
@@ -292,6 +319,12 @@ source = "pacman"
 source = "pacman"
 
 [bcachefs-tools]
+source = "pacman"
+
+[binutils]
+source = "pacman"
+
+[bison]
 source = "pacman"
 
 [bluedevil]
@@ -481,6 +514,9 @@ source = "pacman"
 source = "pacman"
 
 [ddm]
+source = "pacman"
+
+[debugedit]
 source = "pacman"
 
 [deepin-account-faces]
@@ -684,7 +720,16 @@ source = "pacman"
 [fail2ban]
 source = "pacman"
 
+[fakeroot]
+source = "pacman"
+
 [feh]
+source = "pacman"
+
+[file]
+source = "pacman"
+
+[findutils]
 source = "pacman"
 
 [firejail]
@@ -696,6 +741,9 @@ source = "pacman"
 [fish]
 source = "pacman"
 
+[flex]
+source = "pacman"
+
 [foot]
 source = "pacman"
 
@@ -705,10 +753,19 @@ source = "pacman"
 [garcon]
 source = "pacman"
 
+[gawk]
+source = "pacman"
+
+[gcc]
+source = "pacman"
+
 [gdb]
 source = "pacman"
 
 [gdm]
+source = "pacman"
+
+[gettext]
 source = "pacman"
 
 [ghostscript]
@@ -756,7 +813,13 @@ source = "pacman"
 [greetd-tuigreet]
 source = "pacman"
 
+[grep]
+source = "pacman"
+
 [grim]
+source = "pacman"
+
+[groff]
 source = "pacman"
 
 [grub]
@@ -781,6 +844,9 @@ source = "pacman"
 source = "pacman"
 
 [gvfs-smb]
+source = "pacman"
+
+[gzip]
 source = "pacman"
 
 [htop]
@@ -853,6 +919,9 @@ source = "pacman"
 source = "pacman"
 
 [libpulse]
+source = "pacman"
+
+[libtool]
 source = "pacman"
 
 [lightdm]
@@ -940,6 +1009,9 @@ source = "pacman"
 source = "pacman"
 
 [ly]
+source = "pacman"
+
+[m4]
 source = "pacman"
 
 [make]
@@ -1107,6 +1179,9 @@ source = "pacman"
 [parole]
 source = "pacman"
 
+[patch]
+source = "pacman"
+
 [pavucontrol]
 source = "pacman"
 
@@ -1129,6 +1204,9 @@ source = "pacman"
 source = "pacman"
 
 [pipewire-pulse]
+source = "pacman"
+
+[pkgconf]
 source = "pacman"
 
 [plasma-desktop]
@@ -1206,6 +1284,9 @@ source = "pacman"
 [sddm]
 source = "pacman"
 
+[sed]
+source = "pacman"
+
 [slock]
 source = "pacman"
 
@@ -1252,6 +1333,9 @@ source = "pacman"
 source = "pacman"
 
 [terminus-font]
+source = "pacman"
+
+[texinfo]
 source = "pacman"
 
 [thunar]
@@ -1312,6 +1396,9 @@ source = "pacman"
 source = "pacman"
 
 [wget]
+source = "pacman"
+
+[which]
 source = "pacman"
 
 [wireplumber]

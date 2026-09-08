@@ -162,7 +162,7 @@ def select_aur_packages(preset: list[str] | None = None) -> list[str]:
 		preset = []
 
 	base_header = 'Enter AUR package names separated by commas' + '\n'
-	base_header += 'base-devel, git and kernel-headers will be installed automatically' + '\n'
+	base_header += 'git and the makepkg toolchain (base-devel minus sudo) will be installed automatically' + '\n'
 
 	error_msg = ''
 	current_text = ', '.join(preset) if preset else ''
