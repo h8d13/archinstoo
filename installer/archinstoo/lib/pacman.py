@@ -1,6 +1,7 @@
 import contextlib
 import os
 import signal
+import sys
 import threading
 import time
 from pathlib import Path
@@ -72,11 +73,17 @@ def reset_conf() -> bool:
 		return False
 
 
+# SysCommand runs under a pty, so pacman draws progress bars even
+# unattended: hundreds of redraw lines per package in a --silent log.
+# argv peek at import: _prepare() syncs before argparse (same as --offline),
+# and pass_args_to_subscript() strips parsed flags from sys.argv afterwards.
+_QUIET_FLAGS = ' --noprogressbar' if '--silent' in sys.argv else ''
+
+
 class Pacman:
-	def __init__(self, target: Path, silent: bool = False) -> None:
+	def __init__(self, target: Path) -> None:
 		self.synced = False
 		self.target = target
-		self.silent = silent
 
 	@staticmethod
 	def run(args: str, default_cmd: str = 'pacman', peek_output: bool = False) -> SysCommand:
@@ -95,6 +102,9 @@ class Pacman:
 			if time.monotonic() - started > (60 * 10):
 				error('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstoo.')
 				raise SystemExit(1)
+
+		if default_cmd == 'pacman':
+			args += _QUIET_FLAGS
 
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)
 
@@ -169,11 +179,7 @@ class Pacman:
 
 		info(f'Installing packages: {packages}')
 
-		# SysCommand runs under a pty, so pacman draws progress bars even
-		# unattended: hundreds of redraw lines per package in a --silent log.
-		flags = '--noconfirm --needed'
-		if self.silent:
-			flags += ' --noprogressbar'
+		flags = '--noconfirm --needed' + _QUIET_FLAGS
 
 		if self.target == Path('/'):
 			# Live mode: install directly on the running system
