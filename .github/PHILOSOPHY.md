@@ -20,7 +20,7 @@ There is a true power in reproducible/modular automation as such, which surfaces
 And the "manual" enjoyer, might even take taste to reading through some of the source: since they will find direct references to both the holy Wiki and reports from other users.
 
 A human doing a manual install just shrugs and retries, but a script hitting the same weird hang every run forces you to dig until you find the root cause.
-Because correct scripting is unforgiving, reproducible.
+Because correct scripting is unforgiving, reproducible. It also doubles it's usefulness by being documentation as code.
 
 > “Every good work of software starts by scratching a developer’s personal itch.”
 > ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
