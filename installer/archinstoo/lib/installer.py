@@ -165,7 +165,7 @@ class Installer:
 		self._disable_fstrim = False
 		self._layout_teardown_required = False
 
-		self.pacman = Pacman(self.target)
+		self.pacman = Pacman(self.target, silent=self._args.silent)
 
 	@property
 	def handler(self) -> ArchConfigHandler | None:

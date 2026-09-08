@@ -1,5 +1,5 @@
 on: [ push ]
-name: Alpine host minimal install
+name: Alpine minimal
 permissions: {}
 jobs:
     # Same path as distros/README.md: foreign host bootstraps pacman from

@@ -73,9 +73,10 @@ def reset_conf() -> bool:
 
 
 class Pacman:
-	def __init__(self, target: Path) -> None:
+	def __init__(self, target: Path, silent: bool = False) -> None:
 		self.synced = False
 		self.target = target
+		self.silent = silent
 
 	@staticmethod
 	def run(args: str, default_cmd: str = 'pacman', peek_output: bool = False) -> SysCommand:
@@ -168,16 +169,22 @@ class Pacman:
 
 		info(f'Installing packages: {packages}')
 
+		# SysCommand runs under a pty, so pacman draws progress bars even
+		# unattended: hundreds of redraw lines per package in a --silent log.
+		flags = '--noconfirm --needed'
+		if self.silent:
+			flags += ' --noprogressbar'
+
 		if self.target == Path('/'):
 			# Live mode: install directly on the running system
-			cmd = f'pacman -S {" ".join(packages)} --noconfirm --needed'
+			cmd = f'pacman -S {" ".join(packages)} {flags}'
 			bail = f'Package installation failed. See {logger.path} or above message for error details'
 		else:
 			# no -K: that builds an empty target keyring and re-signs every arch
 			# key from scratch (slow, entropy-bound, storms gpg on fresh hosts).
 			# keyring_init() already populated the host keyring, so let pacstrap
 			# copy it into the target (its default when -K/-G are absent).
-			cmd = f'pacstrap -C {PACMAN_CONF} {self.target} {" ".join(packages)} --noconfirm --needed'
+			cmd = f'pacstrap -C {PACMAN_CONF} {self.target} {" ".join(packages)} {flags}'
 			bail = f'Pacstrap failed. See {logger.path} or above message for error details'
 
 		# Only chrooted installs run package scriptlets; live mode (target '/')
