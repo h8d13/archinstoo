@@ -17,7 +17,7 @@ And you are done !
 
 ### iGPU + dGPU
 
-See this page[HYBRID_GFX](https://github.com/h8d13/archinstoo/blob/master/.github/HYBRID_GFX.md)
+See this page [HYBRID_GFX](https://github.com/h8d13/archinstoo/blob/master/.github/HYBRID_GFX.md)
 
 ## Recent cards
 

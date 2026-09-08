@@ -74,6 +74,7 @@ nav:
       - Headless / servers: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
       - nVIDIA new / old: NVIDIA.md
+      - Hybrid GFX: HYBRID_GFX.md
       - CachyOS kernels: CACHY_KERNELS.md
       - AUR / out-of-tree: OUT_OF_TREE.md
       - Dependency chains: DEP_CHAINS.md
