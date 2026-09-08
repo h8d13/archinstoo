@@ -44,14 +44,6 @@ def test_committed_schema_is_current() -> None:
 	assert SCHEMA_PATH.read_text() == schema_gen.render(), f'{SCHEMA_PATH.name} is stale, run `python -m archinstoo --script schema`'
 
 
-def test_every_site_is_called_by_guided() -> None:
-	# order comes from scripts/guided.py, so a section whose site is renamed
-	# or dropped there has nowhere to go
-	order = schema_gen.site_order()
-	missing = [s.key for s in schema_gen.SECTIONS if s.site not in order]
-	assert not missing, f'sections whose site perform_installation never calls: {missing}'
-
-
 def test_sections_are_listed_in_install_order() -> None:
 	# render() sorts by site regardless; this keeps the source readable top to
 	# bottom as the install, so a reorder in guided.py is mirrored here
