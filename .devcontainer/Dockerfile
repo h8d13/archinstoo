@@ -6,10 +6,10 @@ RUN pacman-key --init \
 	&& pacman --noconfirm -Syu
 
 # runtime deps from the release PKGBUILD, linters are pinned by pre-commit itself
-# pkgconf gcc parted: pylint hook builds pyparted in its venv
+# python-pylint: pylint hook is language: system
 COPY PKGBUILD /tmp/PKGBUILD
 RUN . /tmp/PKGBUILD \
 	&& pacman --noconfirm -S --needed "${depends[@]}" \
-		pre-commit python-pytest pkgconf gcc parted \
+		pre-commit python-pytest python-pylint \
 	&& pacman --noconfirm -Scc \
 	&& rm /tmp/PKGBUILD
