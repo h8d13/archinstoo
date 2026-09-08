@@ -10,7 +10,37 @@ permissions:
   contents: write
 
 jobs:
+  # paths: fires on any PKGBUILD edit (comments, deps), only release on a bump
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      bumped: ${{ steps.bump.outputs.bumped }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compare pkgver/pkgrel against previous master
+        id: bump
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # unknown before (first push, force push): release
+          if git fetch --depth=1 origin "$BEFORE"; then
+            git show "$BEFORE:PKGBUILD" > /tmp/PKGBUILD.before
+          else
+            : > /tmp/PKGBUILD.before
+          fi
+          grep -E '^pkg(ver|rel)=' /tmp/PKGBUILD.before > /tmp/ver.before || true
+          grep -E '^pkg(ver|rel)=' PKGBUILD > /tmp/ver.after
+          if cmp -s /tmp/ver.before /tmp/ver.after; then
+            echo "bumped=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "bumped=true" >> "$GITHUB_OUTPUT"
+          fi
+          cat /tmp/ver.before /tmp/ver.after
+
   release:
+    needs: check
+    if: needs.check.outputs.bumped == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
