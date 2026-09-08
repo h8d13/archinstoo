@@ -30,7 +30,7 @@ depends=(
 )
 # base-devel tools are assumed for dev
 # note: dev tools are usually handled through pre-commit
-# pkgconf gcc parted are needed for for PCH.
+# python-pylint: PCH runs the system pylint.
 makedepends=(
 	'python-build'
 	'python-installer'

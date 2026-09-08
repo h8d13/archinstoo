@@ -79,7 +79,10 @@ You can also use tools directly locally or in IDE extensions.
 
 Can be consulted within [PCH](https://github.com/h8d13/archinstoo/blob/master/.pre-commit-config.yaml)
 
-Pre-commit requires: `pkgconf` and `gcc` as well as `parted` on the host.
+Pre-commit requires `python-pylint` on the host: the pylint hook runs the system one
+(pacman `python-pyparted` is already importable there). Other hooks pin their own venvs.
+
+No host deps at all: open the repo in the [devcontainer](https://github.com/h8d13/archinstoo/tree/master/.devcontainer), docker is enough.
 
 ## Coding convention
 
