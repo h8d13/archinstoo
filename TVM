@@ -40,6 +40,10 @@
 #                       NVRAM. The installed disk must carry a BIOS-capable
 #                       bootloader (grub with a bios_grub partition).
 #   A2_DEV_ISO          explicit ISO path (skips discovery)
+#   A2_UKI              path to a live UKI (isos/UKIMOD output, isos/a/archinstoo.efi).
+#                       Boots it via -kernel in place of an ISO: no cdrom, no
+#                       kernel extraction, its baked cmdline already has ttyS0.
+#                       Disk handling per mode is unchanged. OVMF only.
 #   A2_RAM, A2_CPUS     VM resources (default 4G, 4)
 #   A2_DISK_SIZE        new disk size (default 64G)
 #   A2_DISPLAY_BACKEND  qemu -display value (default 'gtk,zoom-to-fit=off')
@@ -65,6 +69,7 @@ CAPTURE_LOG="$PROJECT_DIR/.dev-capture.log"
 MON_SOCK="$PROJECT_DIR/.dev-monitor.sock"
 PIDFILE="$PROJECT_DIR/.dev-vm.pid"
 A2_SERIAL="${A2_SERIAL:-off}"
+A2_UKI="${A2_UKI:-}"
 A2_BIOS="${A2_BIOS:-off}"
 A2_DISK_SIZE="${A2_DISK_SIZE:-64G}"
 A2_RAM="${A2_RAM:-4G}"
@@ -121,7 +126,7 @@ check_host_deps() {
 	if [ ${#missing[@]} -gt 0 ]; then
 		err "missing host commands: ${missing[*]} (install qemu-base)"
 	fi
-	if [ "$A2_SERIAL" = "on" ]; then
+	if [ "$A2_SERIAL" = "on" ] && [ -z "$A2_UKI" ]; then
 		command -v bsdtar >/dev/null 2>&1 ||
 			err "A2_SERIAL=on needs bsdtar to read the ISO (install libarchive)"
 	fi
@@ -179,6 +184,16 @@ require_iso() {
 	printf '%s\n' "$iso"
 }
 
+# ISO by default, a UKI when asked for: both are "boot media" to the modes
+require_media() {
+	if [ -n "$A2_UKI" ]; then
+		[ -f "$A2_UKI" ] || err "A2_UKI=$A2_UKI not found (build one with isos/UKIMOD)"
+		[ "$A2_BIOS" != "on" ] || err "A2_UKI needs OVMF, unset A2_BIOS"
+		return
+	fi
+	require_iso >/dev/null
+}
+
 case "$ARG" in
 -h | --help | help)
 	sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
@@ -203,7 +218,7 @@ keep | k)
 	ensure_no_running_vm
 	probe_ovmf
 	[ -f "$DISK" ] || err "Disk missing, run without args first"
-	require_iso >/dev/null
+	require_media
 	BOOT_ORDER="d"
 	ATTACH_ISO=true
 	;;
@@ -211,7 +226,7 @@ default)
 	check_host_deps
 	ensure_no_running_vm
 	probe_ovmf
-	require_iso >/dev/null
+	require_media
 	rm -f "$DISK"
 	qemu-img create -f qcow2 "$DISK" "$A2_DISK_SIZE"
 	BOOT_ORDER="d"
@@ -287,7 +302,9 @@ if [ "$A2_BIOS" != "on" ]; then
 	)
 fi
 
-if [ "$ATTACH_ISO" = "true" ]; then
+if [ "$ATTACH_ISO" = "true" ] && [ -n "$A2_UKI" ]; then
+	QEMU_ARGS+=(-kernel "$A2_UKI")
+elif [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"
 	QEMU_ARGS+=(-cdrom "$ISO")
 	if [ "$A2_SERIAL" = "on" ]; then

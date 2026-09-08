@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# DHCP on any wired nic, resolved for DNS
+cp /usr/lib/systemd/network/89-ethernet.network.example \
+	/etc/systemd/network/89-ethernet.network
+systemctl enable systemd-networkd systemd-resolved
+
+# live pacman must be able to pacstrap the target
+pacman-key --init
+pacman-key --populate archlinux
