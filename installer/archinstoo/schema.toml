@@ -26,7 +26,7 @@ vendor = []
 [accessibility]
 packages = ["brltty", "espeakup", "alsa-utils"]
 
-# -- minimal_installation --
+# -- installation.minimal_installation --
 [lvm]
 packages = ["lvm2"]
 
@@ -49,11 +49,11 @@ intel = ["intel-ucode"]
 [ter_fonts]
 packages = ["terminus-font"]
 
-# -- setup_swap --
+# -- installation.setup_swap --
 [swap]
 zram = ["zram-generator"]
 
-# -- create_users --
+# -- installation.create_users --
 [privilege_escalation]
 sudo = ["sudo"]
 doas = ["opendoas"]
@@ -62,14 +62,14 @@ run0 = ["polkit"]
 [stash]
 packages = ["git"]
 
-# -- ShellApp --
+# -- ShellApp().install --
 [shells]
 bash = []
 zsh = ["zsh"]
 fish = ["fish"]
 rbash = []
 
-# -- install_applications --
+# -- application_handler.install_applications --
 [bluetooth]
 packages = ["bluez", "bluez-utils"]
 
@@ -165,7 +165,7 @@ strace = ["strace"]
 ltrace = ["ltrace"]
 valgrind = ["valgrind"]
 
-# -- setup_btrfs_snapshot --
+# -- installation.setup_btrfs_snapshot --
 [snapshots]
 snapper = ["snapper"]
 timeshift = ["timeshift", "cronie"]
@@ -173,7 +173,7 @@ timeshift = ["timeshift", "cronie"]
 [grub_extra]
 packages = ["grub-btrfs", "inotify-tools"]
 
-# -- add_bootloader --
+# -- installation.add_bootloader --
 [bootloaders]
 systemd-boot = ["efibootmgr"]
 grub = ["grub", "efibootmgr"]
@@ -185,7 +185,7 @@ refind = ["refind"]
 grub = ["grub"]
 limine = ["limine"]
 
-# -- install_network_config --
+# -- network_handler.install_network_config --
 [network_iso_extra]
 packages = ["iwd"]
 
@@ -199,7 +199,7 @@ manual = []
 [network_desktop_extra]
 packages = ["network-manager-applet"]
 
-# -- install_profile_config --
+# -- profile_handler.install_profile_config --
 [gfx_drivers]
 all-open-source = ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau", "libva-intel-driver", "intel-media-driver", "vpl-gpu-rt", "libvpl", "vulkan-radeon", "vulkan-intel", "vulkan-nouveau"]
 amd-open-source = ["mesa", "xf86-video-amdgpu", "xf86-video-ati", "vulkan-radeon"]

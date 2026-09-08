@@ -85,9 +85,9 @@ def _one_to_one(enum: type[StrEnum]) -> Table:
 class Section:
 	key: str
 	value: Callable[[], Value]
-	# the call in perform_installation that straps this section, by method or
-	# function name. sections sharing one keep their order below, which is the
-	# order inside that method (minimal_installation, install_applications)
+	# the call in perform_installation that straps this section, as written
+	# there. sections sharing one keep their order below, which is the order
+	# inside that method (minimal_installation, install_applications)
 	site: str
 	# where a saved config keeps the choice this section answers, as a key path
 	# under app_config. _resolve walks these instead of naming each category
@@ -113,55 +113,55 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: installer.__accessibility_packages__,
 		site='Installer',
 	),
-	Section('lvm', lambda: installer.__lvm_packages__, site='minimal_installation'),
+	Section('lvm', lambda: installer.__lvm_packages__, site='installation.minimal_installation'),
 	Section(
 		'filesystem_tools',
 		lambda: {fs.value: [pkg] for fs in FilesystemType if (pkg := fs.installation_pkg)},
-		site='minimal_installation',
+		site='installation.minimal_installation',
 	),
 	Section(
 		'bcachefs_extra',
 		lambda: installer.__bcachefs_packages__,
-		site='minimal_installation',
+		site='installation.minimal_installation',
 	),
 	Section(
 		'fido2',
 		lambda: installer.__fido2_packages__,
-		site='minimal_installation',
+		site='installation.minimal_installation',
 	),
 	Section(
 		'microcode',
 		lambda: {v.value: [ucode.stem] for v in CpuVendor if (ucode := v.get_ucode())},
-		site='minimal_installation',
+		site='installation.minimal_installation',
 	),
-	Section('ter_fonts', lambda: installer.__ter_font_packages__, site='minimal_installation'),
+	Section('ter_fonts', lambda: installer.__ter_font_packages__, site='installation.minimal_installation'),
 	Section(
 		'swap',
 		lambda: {'zram': installer.__zram_packages__},
-		site='setup_swap',
+		site='installation.setup_swap',
 	),
 	Section(
 		'privilege_escalation',
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
-		site='create_users',
+		site='installation.create_users',
 	),
-	Section('stash', lambda: installer.__stash_packages__, site='create_users'),
+	Section('stash', lambda: installer.__stash_packages__, site='installation.create_users'),
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
-		site='ShellApp',
+		site='ShellApp().install',
 	),
-	Section('bluetooth', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled'), site='install_applications'),
+	Section('bluetooth', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled'), site='application_handler.install_applications'),
 	Section(
 		'thunderbolt',
 		lambda: ThunderboltApp().packages,
 		pick=('thunderbolt_config', 'enabled'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'audio_firmware',
 		lambda: {'sof': AudioApp().sof_packages, 'alsa': AudioApp().alsa_packages},
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'audio',
@@ -170,13 +170,13 @@ SECTIONS: tuple[Section, ...] = (
 			Audio.PULSEAUDIO.value: AudioApp().pulseaudio_packages,
 		},
 		pick=('audio_config', 'audio'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'media_codecs',
 		lambda: MediaCodecsApp().packages,
 		pick=('media_codecs_config', 'enabled'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'power_management',
@@ -185,19 +185,19 @@ SECTIONS: tuple[Section, ...] = (
 			PowerManagement.TUNED.value: PowerManagementApp().tuned_packages,
 		},
 		pick=('power_management_config', 'power_management'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'cpu_scheduler',
 		lambda: CPUSchedulerApp().packages,
 		pick=('cpu_scheduler_config', 'scheduler'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'printing',
 		lambda: PrintServiceApp().packages,
 		pick=('print_service_config', 'enabled'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'firewalls',
@@ -206,21 +206,21 @@ SECTIONS: tuple[Section, ...] = (
 			Firewall.FWD.value: FirewallApp().fwd_packages,
 		},
 		pick=('firewall_config', 'firewall'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
-	Section('management', lambda: _one_to_one(Management), pick=('management_config', 'tools'), site='install_applications'),
-	Section('monitors', lambda: _one_to_one(Monitor), pick=('monitor_config', 'monitor'), site='install_applications'),
+	Section('management', lambda: _one_to_one(Management), pick=('management_config', 'tools'), site='application_handler.install_applications'),
+	Section('monitors', lambda: _one_to_one(Monitor), pick=('monitor_config', 'monitor'), site='application_handler.install_applications'),
 	Section(
 		'editors',
 		lambda: {e.value: e.packages for e in Editor},
 		pick=('editor_config', 'editor'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'terminals',
 		lambda: {t.value: t.packages for t in Terminal},
 		pick=('terminal_config', 'terminal'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
 	Section(
 		'security',
@@ -231,86 +231,96 @@ SECTIONS: tuple[Section, ...] = (
 			**{s.value: [s.value] for s in Security if s not in (Security.APPARMOR, Security.FIREJAIL, Security.BUBBLEWRAP)},
 		},
 		pick=('security_config', 'tools'),
-		site='install_applications',
+		site='application_handler.install_applications',
 	),
-	Section('languages', lambda: _one_to_one(Language), pick=('development_config', 'language_config', 'tools'), site='install_applications'),
-	Section('devtools', lambda: _one_to_one(DevTool), pick=('development_config', 'devtool_config', 'tools'), site='install_applications'),
-	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='setup_btrfs_snapshot'),
-	Section('grub_extra', lambda: installer.__grub_snapshot_packages__, site='setup_btrfs_snapshot'),
+	Section(
+		'languages',
+		lambda: _one_to_one(Language),
+		pick=('development_config', 'language_config', 'tools'),
+		site='application_handler.install_applications',
+	),
+	Section(
+		'devtools',
+		lambda: _one_to_one(DevTool),
+		pick=('development_config', 'devtool_config', 'tools'),
+		site='application_handler.install_applications',
+	),
+	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='installation.setup_btrfs_snapshot'),
+	Section('grub_extra', lambda: installer.__grub_snapshot_packages__, site='installation.setup_btrfs_snapshot'),
 	Section(
 		'bootloaders',
 		lambda: {b.value: b.packages() for b in Bootloader},
-		site='add_bootloader',
+		site='installation.add_bootloader',
 	),
 	Section(
 		'bootloaders_bios',
 		lambda: {b.value: b.packages(uefi=False) for b in Bootloader if b.has_bios_support()},
-		site='add_bootloader',
+		site='installation.add_bootloader',
 	),
 	Section(
 		'network_iso_extra',
 		lambda: ISO_PSK_EXTRA,
-		site='install_network_config',
+		site='network_handler.install_network_config',
 	),
 	Section(
 		'network',
 		lambda: {n.value: n.packages for n in NicType},
-		site='install_network_config',
+		site='network_handler.install_network_config',
 	),
 	Section(
 		'network_desktop_extra',
 		lambda: NM_DESKTOP_EXTRA,
-		site='install_network_config',
+		site='network_handler.install_network_config',
 	),
 	Section(
 		'gfx_drivers',
 		lambda: {d.value: [p.value for p in GFX_PACKAGES[d]] for d in GfxDriver},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'gfx_custom_choices',
 		lambda: [p.value for p in GFX_CUSTOM_CHOICES],
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'gfx_drivers_dkms',
 		lambda: {d.value: [p.value for p in d.gfx_packages(_DKMS_KERNEL)] for d in GfxDriver if d.has_dkms_variant()},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'gfx_mesa_extra',
 		lambda: {vendor: [p.value for p in pkgs] for vendor, pkgs in MESA_HOST_EXTRA.items()},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'xorg_extra',
 		lambda: [p.value for p in XORG_EXTRA],
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'profile_base',
 		lambda: {p.name: p.packages for p in ProfileHandler().profiles if p.profile_type in (ProfileType.Desktop, ProfileType.Server)},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'profiles',
 		lambda: {p.name: p.packages for p in _leaves()},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'compositors',
 		lambda: {p.name: p.compositor_packages for p in _leaves() if p.compositor_packages},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'seat_access',
 		lambda: {s.name: [s.value] for s in SeatAccess},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'greeters',
 		lambda: {g.value: g.packages for g in GreeterType},
-		site='install_profile_config',
+		site='profile_handler.install_profile_config',
 	),
 	Section(
 		'aur_bootstrap',
@@ -371,16 +381,15 @@ _GUIDED = Path(__file__).parents[1] / 'scripts' / 'guided.py'
 
 
 class _Calls(ast.NodeVisitor):
-	# every call in perform_installation, in source order, by the name called:
-	# the method for `x.f()`, the function or class for `f()`
+	# every call in perform_installation, in source order, as the callee is
+	# written: `installation.setup_swap`, `ShellApp().install`, `Installer`
 	def __init__(self) -> None:
 		self.order: list[str] = []
 
 	@override
 	def visit_Call(self, node: ast.Call) -> None:
-		func = node.func
-		name = func.attr if isinstance(func, ast.Attribute) else getattr(func, 'id', None)
-		if name and name not in self.order:
+		name = ast.unparse(node.func)
+		if name not in self.order:
 			self.order.append(name)
 		self.generic_visit(node)
 
