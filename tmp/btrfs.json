@@ -1,0 +1,148 @@
+{
+  "bug_report_url": "https://github.com/h8d13/archinstoo",
+  "script": "guided",
+  "locale_config": {
+    "kb_layout": "us",
+    "sys_lang": "en_US.UTF-8",
+    "sys_enc": "UTF-8",
+    "console_font": "default8x16"
+  },
+  "bootloader_config": {
+    "bootloader": "grub",
+    "uki": false,
+    "removable": false,
+    "serial_console": "ttyS0,115200"
+  },
+  "disk_config": {
+    "config_type": "default-layout",
+    "device_modifications": [
+      {
+        "device": "/dev/vda",
+        "wipe": true,
+        "partitions": [
+          {
+            "obj_id": "aaaaaaaa-0000-4000-8000-000000000003",
+            "status": "create",
+            "type": "primary",
+            "start": {
+              "value": 1,
+              "unit": "MiB",
+              "sector_size": {
+                "value": 512,
+                "unit": "B"
+              }
+            },
+            "size": {
+              "value": 1024,
+              "unit": "MiB",
+              "sector_size": {
+                "value": 512,
+                "unit": "B"
+              }
+            },
+            "fs_type": "fat32",
+            "mountpoint": "/efi",
+            "mount_options": [],
+            "flags": [
+              "boot",
+              "esp"
+            ],
+            "dev_path": null,
+            "btrfs": []
+          },
+          {
+            "obj_id": "aaaaaaaa-0000-4000-8000-000000000001",
+            "status": "create",
+            "type": "primary",
+            "start": {
+              "value": 1025,
+              "unit": "MiB",
+              "sector_size": {
+                "value": 512,
+                "unit": "B"
+              }
+            },
+            "size": {
+              "value": 31700,
+              "unit": "MiB",
+              "sector_size": {
+                "value": 512,
+                "unit": "B"
+              }
+            },
+            "fs_type": "btrfs",
+            "mountpoint": null,
+            "mount_options": [
+              "noatime",
+              "compress=zstd:1"
+            ],
+            "flags": [],
+            "dev_path": null,
+            "btrfs": [
+              {
+                "name": "@",
+                "mountpoint": "/"
+              },
+              {
+                "name": "@home",
+                "mountpoint": "/home"
+              },
+              {
+                "name": "@log",
+                "mountpoint": "/var/log"
+              },
+              {
+                "name": "@pkg",
+                "mountpoint": "/var/cache/pacman/pkg"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "lvm_config": null,
+    "btrfs_options": {
+      "snapshot_config": {
+        "type": "snapper"
+      }
+    }
+  },
+  "swap": {
+    "zram": false
+  },
+  "kernels": [
+    "linux"
+  ],
+  "kernel_headers": false,
+  "firmware": {
+    "firmware_type": "minimal"
+  },
+  "profile_config": {
+    "profiles": [
+      {
+        "main": "minimal",
+        "details": [],
+        "custom_settings": {}
+      }
+    ],
+    "gfx_driver": null,
+    "greeter": null
+  },
+  "hostname": "vm-btrfs",
+  "auth_config": {
+    "root_enc_password": "$y$j9T$MwtZyQq3j0eAFWDc.pUI81$EJV4rEfwgL5nLw6gExfvxLqSuC0ee.W0903kmeZY8C/",
+    "lock_root_account": false,
+    "privilege_escalation": "sudo",
+    "users": []
+  },
+  "network_config": {
+    "type": "iso"
+  },
+  "timezone": "UTC",
+  "ntp": true,
+  "packages": [],
+  "aur_packages": [],
+  "services": [],
+  "sysctl": [],
+  "custom_commands": []
+}
