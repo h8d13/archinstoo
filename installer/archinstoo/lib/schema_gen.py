@@ -170,7 +170,7 @@ SECTIONS: tuple[Section, ...] = (
 	Section('bluetooth', '', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled'), site='install_applications'),
 	Section(
 		'thunderbolt',
-		'only shown with a thunderbolt/usb4 host controller; boltd is dbus\nactivated, no service to enable',
+		'only shown with a thunderbolt/usb4 host controller',
 		lambda: ThunderboltApp().packages,
 		pick=('thunderbolt_config', 'enabled'),
 		site='install_applications',
@@ -371,10 +371,6 @@ SECTIONS: tuple[Section, ...] = (
 	),
 )
 
-
-# ---------------------------------------------------------------------------
-# Rendering
-# ---------------------------------------------------------------------------
 
 _HEADER = """\
 # schema.toml - generated, do not edit.

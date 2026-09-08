@@ -90,8 +90,7 @@ rbash = []
 [bluetooth]
 packages = ["bluez", "bluez-utils"]
 
-# only shown with a thunderbolt/usb4 host controller; boltd is dbus
-# activated, no service to enable
+# only shown with a thunderbolt/usb4 host controller
 [thunderbolt]
 packages = ["bolt"]
 
