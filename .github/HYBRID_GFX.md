@@ -4,7 +4,6 @@ Many laptops seem to have an integrated graphics card + dedicated.
 For this case: certain utilites are added through the `Custom` option in `Graphics driver`
 
 You would still need to known if the iGPU is `amd` or `intel` in the common cases.
-Detection can be seen in
 
 Defaults install: `switcheroo-control` and `vulkan-mesa-layers`.
 
