@@ -27,6 +27,10 @@
 #   A2_SERIAL           'on' boots headless with the console on ttyS0 and
 #                       detaches (no window, no stdio monitor). Composes with
 #                       every mode above. Drive it with ./TSER (login/run).
+#                       With A2_GL=on the virgl window stays: sockets still
+#                       detach, so a real session is on screen while the
+#                       guest is driven over serial (./TSER type/keys for the
+#                       greeter, screendump via mon).
 #                       ISO modes direct-boot the ISO's own kernel via -kernel so
 #                       console=ttyS0 can be forced; OVMF still boots it EFI-stub,
 #                       so the guest keeps a real UEFI environment. Needs bsdtar.
@@ -99,6 +103,14 @@ probe_ovmf() {
 		fi
 	done
 	err "OVMF firmware not found. Install 'edk2-ovmf' or similar on your distro."
+}
+
+# virgl needs both ends: GL-capable device AND gl=on on the display.
+# -device help skips unloaded modules; probe with device-specific help instead.
+ensure_virgl() {
+	if qemu-system-x86_64 -device virtio-vga-gl,help 2>&1 | grep -q "not found"; then
+		err "virtio-vga-gl not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} and qemu-ui-opengl)"
+	fi
 }
 
 check_host_deps() {
@@ -224,8 +236,13 @@ if [ "$A2_SERIAL" = "on" ]; then
 	# output redirected to /dev/ttyS1 is the only byte-exact transcript
 	# (./TSER capture). ttyS0 stays the interactive end.
 	rm -f "$SERIAL_SOCK" "$MON_SOCK" "$SERIAL_LOG" "$CAPTURE_LOG"
-	CONSOLE_ARGS=(
-		-display none
+	if [ "$A2_GL" = "on" ]; then
+		ensure_virgl
+		CONSOLE_ARGS=(-device virtio-vga-gl -display "$A2_DISPLAY_BACKEND,gl=on")
+	else
+		CONSOLE_ARGS=(-display none)
+	fi
+	CONSOLE_ARGS+=(
 		-chardev "socket,id=ser0,path=$SERIAL_SOCK,server=on,wait=off,logfile=$SERIAL_LOG,logappend=on"
 		-serial chardev:ser0
 		-chardev "file,id=cap0,path=$CAPTURE_LOG"
@@ -235,12 +252,8 @@ if [ "$A2_SERIAL" = "on" ]; then
 		-daemonize
 	)
 else
-	# virgl needs both ends: GL-capable device AND gl=on on the display.
-	# -device help skips unloaded modules; probe with device-specific help instead.
 	if [ "$A2_GL" = "on" ]; then
-		if qemu-system-x86_64 -device virtio-vga-gl,help 2>&1 | grep -q "not found"; then
-			err "virtio-vga-gl not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} and qemu-ui-opengl)"
-		fi
+		ensure_virgl
 		CONSOLE_ARGS=(-device virtio-vga-gl -display "$A2_DISPLAY_BACKEND,gl=on")
 	else
 		CONSOLE_ARGS=(-vga "$A2_VGA" -display "$A2_DISPLAY_BACKEND")

@@ -20,6 +20,8 @@
 #   ./TSER capture CMD [-t SEC]   same, but via ttyS1: exact bytes, safe to
 #                                 pipe into jq/diff
 #   ./TSER keys KEY [KEY ...]     monitor sendkey (bootloader menus: up/ret)
+#   ./TSER type TEXT              TEXT + Enter as sendkeys: greeter or VT
+#                                 login when the guest has no serial getty
 #   ./TSER mon CMD                raw HMP monitor command
 #   ./TSER status                 is the VM alive, how big is the log
 #   ./TSER quit                   kill the VM
@@ -149,8 +151,9 @@ def monitor_cmd(cmd: str, timeout: float = 5.0) -> str:
 			if not chunk:
 				break
 			out += chunk
-			# HMP prompt back means the command is done
-			if out.rstrip().endswith(b'(qemu)'):
+			# the banner already ends in a prompt; the second one is
+			# the command's, hanging up before it lands drops the command
+			if out.count(b'(qemu)') >= 2:
 				break
 		return clean(out)
 
@@ -269,6 +272,65 @@ def cmd_keys(args: argparse.Namespace) -> None:
 		print(monitor_cmd(f'sendkey {key}'), end='')
 
 
+# sendkey names for the ASCII that shows up in logins and shell lines
+SHIFTED = {
+	'!': '1',
+	'@': '2',
+	'#': '3',
+	'$': '4',
+	'%': '5',
+	'^': '6',
+	'&': '7',
+	'*': '8',
+	'(': '9',
+	')': '0',
+	'_': 'minus',
+	'+': 'equal',
+	'~': 'grave_accent',
+	':': 'semicolon',
+	'"': 'apostrophe',
+	'<': 'comma',
+	'>': 'dot',
+	'?': 'slash',
+	'|': 'backslash',
+	'{': 'bracket_left',
+	'}': 'bracket_right',
+}
+PLAIN = {
+	' ': 'spc',
+	'-': 'minus',
+	'=': 'equal',
+	'.': 'dot',
+	'/': 'slash',
+	',': 'comma',
+	';': 'semicolon',
+	"'": 'apostrophe',
+	'`': 'grave_accent',
+	'\\': 'backslash',
+	'[': 'bracket_left',
+	']': 'bracket_right',
+	'\n': 'ret',
+	'\t': 'tab',
+}
+
+
+def keyname(char: str) -> str:
+	if char.isascii() and char.isalnum():
+		return f'shift-{char.lower()}' if char.isupper() else char
+	if char in SHIFTED:
+		return f'shift-{SHIFTED[char]}'
+	if char in PLAIN:
+		return PLAIN[char]
+	die(f'no sendkey name for {char!r}')
+
+
+def cmd_type(args: argparse.Namespace) -> None:
+	for char in args.text + '\n':
+		monitor_cmd(f'sendkey {keyname(char)}')
+		# the guest's key repeat window; faster and consecutive letters merge
+		time.sleep(0.05)
+
+
 def cmd_mon(args: argparse.Namespace) -> None:
 	print(monitor_cmd(' '.join(args.cmd)), end='')
 
@@ -326,6 +388,10 @@ def main() -> None:
 	p = sub.add_parser('keys')
 	p.add_argument('keys', nargs='+')
 	p.set_defaults(func=cmd_keys)
+
+	p = sub.add_parser('type')
+	p.add_argument('text')
+	p.set_defaults(func=cmd_type)
 
 	p = sub.add_parser('mon')
 	p.add_argument('cmd', nargs='+')
