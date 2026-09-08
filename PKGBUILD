@@ -15,7 +15,8 @@ arch=(any)
 url="https://github.com/h8d13/archinstoo"
 license=(GPL-3.0-only)
 #internals first
-depends=(
+depends=
+(
 	'python-pyparted'
 	'python'
 	'arch-install-scripts' #For pacstrap, genfstab, chroot
@@ -30,8 +31,8 @@ depends=(
 )
 # base-devel tools are assumed for dev
 # note: dev tools are usually handled through pre-commit
-# python-pylint: PCH runs the system pylint.
-makedepends=(
+makedepends=
+(
 	'python-build'
 	'python-installer'
 	'python-pylint'
@@ -45,8 +46,8 @@ makedepends=(
 # also because they are expected on ISO
 # in a 'stable' state of release
 # you should obviously feel free to only select the ones you need
-
-optdepends=(
+optdepends=
+(
 	'btrfs-progs'    #For btrfs filesystem support
 	'dosfstools'     #For FAT/EFI filesystem support
 	'e2fsprogs'      #For ext4 filesystem support
@@ -62,7 +63,6 @@ optdepends=(
 	'qemu-base'      #For testing all of the above
 )
 # qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
-
 provides=(archinstoo)
 replaces=(archinstoo)
 source=()
