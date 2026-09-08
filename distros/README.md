@@ -16,6 +16,8 @@ Can be found bellow:
 
 For alpine ISOs: https://alpinelinux.org/downloads/ (See "Standard" ~400mb)
 
+CI runs the Alpine path end to end (`ALP` -> loop disk -> `guided --silent` with `ci_minimal.json`): `.github/workflows/alpine.yaml`
+
 ---
 
 Missing X? > Fetch from Y or fallback to Z (usually trying to keep in line with upstream sources).

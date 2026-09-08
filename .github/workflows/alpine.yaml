@@ -1,0 +1,45 @@
+on: [ push ]
+name: Alpine host minimal install
+permissions: {}
+jobs:
+    # Same path as distros/README.md: foreign host bootstraps pacman from
+    # apk, archinstoo pacstraps a real Arch target. No bootloader: the
+    # container has no EFI vars, the disk is a loop file, nothing boots it.
+    minimal:
+        runs-on: ubuntu-latest
+        container:
+            image: alpine:edge
+            options: --privileged
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                persist-credentials: false
+            - name: Prepare alpine (distros/ALP)
+              run: sh distros/ALP
+            - name: Loop disk
+              run: |
+                # docker /dev is a static tmpfs: partition nodes (loopNpM) never
+                # show up on it. devtmpfs tracks the kernel, so swap it in.
+                mount -t devtmpfs none /dev
+                truncate -s 8G /tmp/disk.img
+                loopdev=$(losetup -f --show /tmp/disk.img)
+                echo "LOOPDEV=${loopdev#/dev/}" >> "$GITHUB_ENV"
+                sed "s|/dev/LOOPDEV|$loopdev|" distros/ci_minimal.json > /tmp/ci.json
+            - name: Install (guided --silent)
+              run: sh RUN --script guided --config /tmp/ci.json --silent --debug
+            - name: Verify target
+              # installer tears the layout down on exit, mount it back
+              run: |
+                mount "/dev/${LOOPDEV}p2" /mnt
+                mount "/dev/${LOOPDEV}p1" /mnt/boot
+                cat /mnt/etc/hostname /mnt/etc/fstab
+                ls /mnt/boot
+                arch-chroot /mnt pacman -Q base linux
+            - name: Log
+              if: always()
+              run: cat /root/.local/state/archinstoo/install.log
+            - name: Teardown
+              if: always()
+              run: |
+                umount -R /mnt || true
+                losetup -d "/dev/$LOOPDEV" || true

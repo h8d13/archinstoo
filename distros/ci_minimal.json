@@ -1,0 +1,115 @@
+{
+    "bug_report_url": "https://github.com/h8d13/archinstoo",
+    "script": "guided",
+    "locale_config": {
+        "kb_layout": "us",
+        "sys_lang": "en_US.UTF-8",
+        "sys_enc": "UTF-8",
+        "console_font": "default8x16"
+    },
+    "disk_config": {
+        "config_type": "default-layout",
+        "device_modifications": [
+            {
+                "device": "/dev/LOOPDEV",
+                "wipe": true,
+                "partitions": [
+                    {
+                        "obj_id": "aaaaaaaa-0000-4000-8000-000000000001",
+                        "status": "create",
+                        "type": "primary",
+                        "start": {
+                            "value": 1,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "size": {
+                            "value": 512,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "fs_type": "fat32",
+                        "mountpoint": "/boot",
+                        "mount_options": [],
+                        "flags": [
+                            "boot",
+                            "esp"
+                        ],
+                        "dev_path": null,
+                        "btrfs": []
+                    },
+                    {
+                        "obj_id": "aaaaaaaa-0000-4000-8000-000000000002",
+                        "status": "create",
+                        "type": "primary",
+                        "start": {
+                            "value": 513,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "size": {
+                            "value": 7600,
+                            "unit": "MiB",
+                            "sector_size": {
+                                "value": 512,
+                                "unit": "B"
+                            }
+                        },
+                        "fs_type": "ext4",
+                        "mountpoint": "/",
+                        "mount_options": [],
+                        "flags": [],
+                        "dev_path": null,
+                        "btrfs": []
+                    }
+                ]
+            }
+        ],
+        "lvm_config": null,
+        "btrfs_options": null
+    },
+    "swap": {
+        "zram": false
+    },
+    "kernels": [
+        "linux"
+    ],
+    "kernel_headers": false,
+    "firmware": {
+        "firmware_type": "minimal"
+    },
+    "profile_config": {
+        "profiles": [
+            {
+                "main": "minimal",
+                "details": [],
+                "custom_settings": {}
+            }
+        ],
+        "gfx_driver": null,
+        "greeter": null
+    },
+    "hostname": "ci-alpine",
+    "auth_config": {
+        "root_enc_password": "$y$j9T$MwtZyQq3j0eAFWDc.pUI81$EJV4rEfwgL5nLw6gExfvxLqSuC0ee.W0903kmeZY8C/",
+        "lock_root_account": false,
+        "privilege_escalation": "sudo",
+        "users": []
+    },
+    "timezone": "UTC",
+    "ntp": true,
+    "packages": [],
+    "aur_packages": [],
+    "services": [],
+    "sysctl": [],
+    "custom_commands": []
+}
