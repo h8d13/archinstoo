@@ -262,6 +262,7 @@ _USB_BUS = Path('/sys/bus/usb/devices')
 _ACPI_BUS = Path('/sys/bus/acpi/devices')
 _FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
+_PROC_FILESYSTEMS = Path('/proc/filesystems')
 
 
 def _run_splitlines(cmd: list[str]) -> list[str]:
@@ -572,6 +573,16 @@ class SysInfo:
 			except OSError:
 				continue
 		return False
+
+	@staticmethod
+	def has_bcachefs() -> bool:
+		# out of tree since 6.18: the stock ISO cannot format or mount it, only
+		# a medium built with A2_BCACHEFS=1 registers the filesystem
+		try:
+			text = _PROC_FILESYSTEMS.read_text()
+		except OSError:
+			return False
+		return any(line.split()[-1] == 'bcachefs' for line in text.splitlines() if line.strip())
 
 	@staticmethod
 	def _bitness() -> int | None:

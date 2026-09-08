@@ -1,3 +1,4 @@
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.device import (
 	BDevice,
@@ -83,7 +84,9 @@ def select_main_filesystem_format(advanced: bool = False, allow_lvm: bool = Fals
 	]
 
 	if advanced:
-		items.append(MenuItem('bcachefs', value=FilesystemType.BCACHEFS))
+		# only when the running kernel registers it, see SysInfo.has_bcachefs
+		if SysInfo.has_bcachefs():
+			items.append(MenuItem('bcachefs', value=FilesystemType.BCACHEFS))
 		items.append(MenuItem('ntfs', value=FilesystemType.NTFS))
 
 	# LVM marks the data partition a PV, so no throwaway root fs is asked before the LVM step
