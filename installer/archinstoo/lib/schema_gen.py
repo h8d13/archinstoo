@@ -48,7 +48,7 @@ from archinstoo.lib.models.device import FilesystemType, SnapshotType
 from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.users import Shell
-from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType, SeatAccess
+from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
 
@@ -89,10 +89,6 @@ class Section:
 	# function name. sections sharing one keep their order below, which is the
 	# order inside that method (minimal_installation, install_applications)
 	site: str
-	# key a flat list renders under, since every section has to be a table (see
-	# _HEADER). `profiles` marks names rather than packages, so version tracking
-	# can skip them
-	list_key: str = 'packages'
 	# where a saved config keeps the choice this section answers, as a key path
 	# under app_config. _resolve walks these instead of naming each category
 	# again: a flag or a name takes a flat section whole, a name indexes a
@@ -292,18 +288,6 @@ SECTIONS: tuple[Section, ...] = (
 		site='install_profile_config',
 	),
 	Section(
-		'xorg_profiles',
-		lambda: [p.name for p in _leaves() if DisplayServer.X11 in p.display_servers()],
-		list_key='profiles',
-		site='install_profile_config',
-	),
-	Section(
-		'terminal_profiles',
-		lambda: [p.name for p in _leaves() if p.needs_terminal],
-		list_key='profiles',
-		site='install_profile_config',
-	),
-	Section(
 		'profile_base',
 		lambda: {p.name: p.packages for p in ProfileHandler().profiles if p.profile_type in (ProfileType.Desktop, ProfileType.Server)},
 		site='install_profile_config',
@@ -347,7 +331,7 @@ _HEADER = """\
 # scripts/guided.py:perform_installation. Every section is a table so
 # that order survives: a top-level `key = [...]` after the first [header] would
 # silently nest under it. A section that is one flat list holds it under
-# `packages`, or `profiles` where the names are profiles rather than packages.
+# `packages`.
 #
 # To change what a section holds, change the code under the banner above it, then:
 #
@@ -366,11 +350,11 @@ def _list(values: list[str]) -> str:
 
 
 def _tables(section: Section) -> list[tuple[str, Table]]:
-	# (header, table) pairs. a flat list becomes one table under list_key; a
+	# (header, table) pairs. a flat list becomes one table under `packages`; a
 	# nested value (compositors) becomes one [section.name] table per profile
 	value = section.value()
 	if isinstance(value, list):
-		return [(_key(section.key), {section.list_key: value})]
+		return [(_key(section.key), {'packages': value})]
 
 	flat: Table = {}
 	nested: list[tuple[str, Table]] = []

@@ -301,15 +301,6 @@ def test_nvgen_toml_tracks_code_packages() -> None:
 	assert not missing, f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'
 
 
-def test_nvgen_does_not_track_profile_names_as_packages() -> None:
-	# `profiles` entries name profiles, not packages; version tracking has to
-	# skip them or nvchecker looks up things that are not in any repo
-	nvgen = _load_nvgen()
-	names = nvgen.extract_schema_packages(SCHEMA, {})
-	profile_only = {p for p in SCHEMA['xorg_profiles']['profiles'] if p not in schema.package_names(SCHEMA)}
-	assert not (names & profile_only), f'NVGEN would track profile names: {sorted(names & profile_only)}'
-
-
 def test_nvgen_shares_the_installer_modules() -> None:
 	# NVGEN path-loads lib/schema.py and lib/pm/groups.py rather than keeping
 	# its own loader and group expansion; those copies are what drifted before.

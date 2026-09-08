@@ -18,6 +18,7 @@ from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.pm.groups import expand
+from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.utils.env import Os
 
@@ -127,6 +128,16 @@ def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	return prof_pkgs
 
 
+def _named_profiles(names: list[str]) -> list[Profile]:
+	# the selected detail profiles as the installer sees them, for what a
+	# name alone cannot say: display server, whether a terminal is shipped
+	if not names:
+		return []
+	from archinstoo.lib.profile.profiles_handler import ProfileHandler
+
+	return [p for p in ProfileHandler().profiles if p.name in names]
+
+
 def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	# custom 'path' profiles are code, not schema entries; load them the same
 	# way the installer does so their packages and desktop-typing count too
@@ -172,7 +183,7 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], details: list
 		elif SysInfo.has_amd_graphics():
 			pkgs.update(mesa_extra[CpuVendor.AuthenticAMD.value])
 
-	if set(details) & set(SCHEMA['xorg_profiles']['profiles']):
+	if any(DisplayServer.X11 in p.display_servers() for p in _named_profiles(details)):
 		pkgs.update(_flat('xorg_extra'))
 
 	return pkgs
@@ -190,8 +201,8 @@ def _pick(app: dict[str, Any], section: Section) -> set[str]:
 
 	table: dict[str, list[str]] = SCHEMA[section.key]
 
-	if section.list_key in table:
-		return set(table[section.list_key]) if value else set()
+	if 'packages' in table:
+		return set(table['packages']) if value else set()
 	if isinstance(value, list):
 		return {p for name in value if name in table for p in table[name]}
 	return set(table.get(value, []))
@@ -215,11 +226,11 @@ def _application_packages(app: dict[str, Any], details: list[str]) -> set[str]:
 		if SysInfo.requires_alsa_fw():
 			pkgs.update(audio_fw['alsa'])
 
-	# one terminal, shared by every profile in terminal_profiles. a skipped
-	# menu entry leaves those profiles on the default, which
+	# one terminal, shared by every profile that ships a keybind and no
+	# terminal. a skipped menu entry leaves those on the default, which
 	# install_profile_config() installs instead
 	terminal = (app.get('terminal_config') or {}).get('terminal', '')
-	if terminal not in SCHEMA['terminals'] and set(details) & set(SCHEMA['terminal_profiles']['profiles']):
+	if terminal not in SCHEMA['terminals'] and any(p.needs_terminal for p in _named_profiles(details)):
 		pkgs.update(SCHEMA['terminals'][DEFAULT_TERMINAL])
 
 	return pkgs

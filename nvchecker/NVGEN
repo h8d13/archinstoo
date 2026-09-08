@@ -130,9 +130,8 @@ def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 
 
 def extract_schema_packages(schema: dict, groups: dict[str, set[str]]) -> set[str]:
-	# schema_mod.package_names() knows which entries are packages and which name
-	# profiles. meta-packages that are really pacman groups (gnome, xfce4, ...)
-	# expand to their members so each member gets version-tracked individually.
+	# meta-packages that are really pacman groups (gnome, xfce4, ...) expand to
+	# their members so each member gets version-tracked individually.
 	pkgs: set[str] = set()
 
 	for item in schema_mod.package_names(schema):

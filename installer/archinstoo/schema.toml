@@ -8,7 +8,7 @@
 # scripts/guided.py:perform_installation. Every section is a table so
 # that order survives: a top-level `key = [...]` after the first [header] would
 # silently nest under it. A section that is one flat list holds it under
-# `packages`, or `profiles` where the names are profiles rather than packages.
+# `packages`.
 #
 # To change what a section holds, change the code under the banner above it, then:
 #
@@ -223,12 +223,6 @@ amd = ["vulkan-radeon"]
 
 [xorg_extra]
 packages = ["xorg-server", "xorg-xinit"]
-
-[xorg_profiles]
-profiles = ["awesome", "bspwm", "cinnamon", "deepin", "enlightenment", "i3-wm", "lxqt", "mate", "qtile", "xfce4", "xmonad"]
-
-[terminal_profiles]
-profiles = ["awesome", "dms", "hyprland", "i3-wm", "labwc", "niri", "noctalia", "qtile", "river", "sway"]
 
 [profile_base]
 desktop = ["smartmontools", "xdg-utils"]
