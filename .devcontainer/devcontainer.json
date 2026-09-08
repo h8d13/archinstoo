@@ -1,0 +1,13 @@
+{
+	"name": "archinstoo",
+	"build": { "dockerfile": "Dockerfile", "context": "../installer" },
+	"remoteUser": "root",
+	// installer needs root and loop devices for ./RUN, drop for editing only
+	"privileged": true,
+	"postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && pip install --break-system-packages -e ./installer[dev] && pre-commit install",
+	"customizations": {
+		"vscode": {
+			"extensions": ["ms-python.python", "charliermarsh.ruff"]
+		}
+	}
+}
