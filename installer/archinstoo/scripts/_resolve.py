@@ -244,8 +244,9 @@ def collect(config: dict[str, Any]) -> set[str]:
 	# bootloader
 	bl = config.get('bootloader_config') or {}
 	bl_name = bl.get('bootloader', '')
-	if bl_name in SCHEMA['bootloaders']:
-		pkgs.update(SCHEMA['bootloaders'][bl_name])
+	bl_table = SCHEMA['bootloaders'] if SysInfo.has_uefi() else SCHEMA['bootloaders_bios']
+	if bl_name in bl_table:
+		pkgs.update(bl_table[bl_name])
 
 	# user packages
 	for p in config.get('packages', []) or []:

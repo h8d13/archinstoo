@@ -271,6 +271,18 @@ SECTIONS: tuple[Section, ...] = (
 		site='add_bootloader',
 	),
 	Section(
+		'bootloaders_bios',
+		'what the two that can boot BIOS install there instead: no EFI entry to write',
+		lambda: {b.value: b.packages(uefi=False) for b in Bootloader if b.has_bios_support()},
+		site='add_bootloader',
+	),
+	Section(
+		'network_iso_extra',
+		'the ISO config carries iwd PSKs over, and the target needs iwd to read them',
+		lambda: ISO_PSK_EXTRA,
+		site='install_network_config',
+	),
+	Section(
 		'network',
 		'iso and manual configure systemd-networkd/resolved, both part of base',
 		lambda: {n.value: n.packages for n in NicType},
@@ -280,12 +292,6 @@ SECTIONS: tuple[Section, ...] = (
 		'network_desktop_extra',
 		'NetworkManager on a desktop profile also gets its tray applet',
 		lambda: NM_DESKTOP_EXTRA,
-		site='install_network_config',
-	),
-	Section(
-		'network_iso_extra',
-		'the ISO config carries iwd PSKs over, and the target needs iwd to read them',
-		lambda: ISO_PSK_EXTRA,
 		site='install_network_config',
 	),
 	Section(

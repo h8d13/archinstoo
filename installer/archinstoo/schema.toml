@@ -211,7 +211,16 @@ efistub = ["efibootmgr"]
 limine = ["limine", "efibootmgr"]
 refind = ["refind"]
 
+# what the two that can boot BIOS install there instead: no EFI entry to write
+[bootloaders_bios]
+grub = ["grub"]
+limine = ["limine"]
+
 # -- install_network_config --
+# the ISO config carries iwd PSKs over, and the target needs iwd to read them
+[network_iso_extra]
+packages = ["iwd"]
+
 # iso and manual configure systemd-networkd/resolved, both part of base
 [network]
 iso = []
@@ -223,10 +232,6 @@ manual = []
 # NetworkManager on a desktop profile also gets its tray applet
 [network_desktop_extra]
 packages = ["network-manager-applet"]
-
-# the ISO config carries iwd PSKs over, and the target needs iwd to read them
-[network_iso_extra]
-packages = ["iwd"]
 
 # -- install_profile_config --
 # added before desktops, which may depend on a virtual vulkan-something.

@@ -48,6 +48,14 @@ class Bootloader(Enum):
 			case _:
 				return False
 
+	def has_bios_support(self) -> bool:
+		# the rest are EFI applications, or the kernel booted as one
+		match self:
+			case Bootloader.Grub | Bootloader.Limine:
+				return True
+			case _:
+				return False
+
 	def json(self) -> str:
 		return self.value
 
