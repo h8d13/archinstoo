@@ -63,14 +63,14 @@ repos:
       pass_filenames: false
       files: ^installer/
       fail_fast: true
-  - repo: https://github.com/pycqa/pylint
-    rev: v4.0.8
-    hooks:
+    # system pylint (pacman python-pylint): pyparted is already importable there,
+    # a hook venv would have to compile it (pkgconf gcc parted)
     - id: pylint
+      name: pylint
+      entry: pylint
+      language: system
       args: ['--rcfile=installer/pyproject.toml', 'installer/archinstoo']
       pass_filenames: false
       files: ^installer/
-      additional_dependencies:
-        - pyparted>=3.13.0
       fail_fast: true
       require_serial: true

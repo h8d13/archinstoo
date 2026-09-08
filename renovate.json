@@ -8,6 +8,22 @@
   "pre-commit": {
     "enabled": true
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track runtime Python deps via Arch Linux repos instead of PyPI",
+      "managerFilePatterns": [
+        "**/pyproject.toml"
+      ],
+      "matchStrings": [
+        "\"(?<depName>pyparted)>=(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "arch/python-{{{depName}}}",
+      "datasourceTemplate": "repology",
+      "versioningTemplate": "loose",
+      "extractVersionTemplate": "^(?<version>.+)-\\d+$"
+    }
+  ],
   "packageRules": [
     {
       "matchDepTypes": [
@@ -21,6 +37,16 @@
         "pre-commit/mirrors-mypy",
         "astral-sh/ruff-pre-commit"
       ]
+    },
+    {
+      "description": "Disable PyPI updates for runtime deps tracked via Arch repos",
+      "matchDatasources": [
+        "pypi"
+      ],
+      "matchPackageNames": [
+        "pyparted"
+      ],
+      "enabled": false
     }
   ]
 }
