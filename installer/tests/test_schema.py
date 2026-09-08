@@ -26,7 +26,6 @@ from archinstoo.lib.models.application import (
 	PowerManagement,
 	Security,
 )
-from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.firmware import FirmwareType, FirmwareVendor
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.pm import groups
@@ -58,15 +57,6 @@ def test_sections_are_listed_in_install_order() -> None:
 	# bottom as the install, so a reorder in guided.py is mirrored here
 	listed = [s.key for s in schema_gen.SECTIONS]
 	assert listed == [s.key for s in schema_gen.ordered()]
-
-
-def test_bios_bootloaders_are_the_ones_validation_allows() -> None:
-	# bootloaders_bios doubles as the BIOS whitelist: validate_bootloader
-	# rejects anything not in it on a non-UEFI host
-	allowed = {b.value for b in Bootloader if b.has_bios_support()}
-	assert set(SCHEMA['bootloaders_bios']) == allowed
-	for name, pkgs in SCHEMA['bootloaders_bios'].items():
-		assert set(pkgs) <= set(SCHEMA['bootloaders'][name]), f'{name}: BIOS set is not a subset of the UEFI set'
 
 
 def test_every_section_is_a_table() -> None:

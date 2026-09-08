@@ -230,7 +230,7 @@ def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = F
 	header = None
 
 	if not uefi:
-		options += [Bootloader.Grub, Bootloader.Limine]
+		options += [b for b in Bootloader if b.has_bios_support()]
 		header = 'UEFI is not detected and some options are disabled'
 	else:
 		options += list(Bootloader)
