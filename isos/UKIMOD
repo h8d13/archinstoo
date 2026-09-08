@@ -19,4 +19,5 @@ mkdir -p "$MKOSI_DIR/mkosi.conf.d"
 	printf '\t%s\n' "${depends[@]}"
 } >"$MKOSI_DIR/mkosi.conf.d/10-depends.conf"
 
-exec mkosi -C "$MKOSI_DIR" "${@:-build}"
+# --force: overwrite isos/a/archinstoo.efi, incremental cache keeps it quick
+exec mkosi -C "$MKOSI_DIR" --force "${@:-build}"
