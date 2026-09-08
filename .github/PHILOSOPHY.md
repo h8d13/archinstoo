@@ -25,8 +25,8 @@ Because correct scripting is unforgiving, reproducible. It also doubles it's use
 > “Every good work of software starts by scratching a developer’s personal itch.”
 > ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
 
-I would like to extend this quote by saying that: any private tinkering, digging and understanding something is what even enables "real work". Every repassage provides deeper meaning.
-And better implementations.
+I'd like to extend this quote: private tinkering with, digging into, and understanding something is what enables "real work" in the first place. Every pass yields deeper meaning, and better implementations. 
+Yet there's a beautiful irony here: however much I add to this doc, the **end result** is the only thing that predicates actual motivation.
 
 This "draft state" is the work, before anyone is watching or stakes to exist.
 Someone's dead-end, or disagreement, or random forum post might actually be exactly what another person needs.
