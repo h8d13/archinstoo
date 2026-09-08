@@ -1377,6 +1377,10 @@ class Installer:
 		# ceil MemTotal (kB) to GiB: the image must fit even on a full RAM
 		size = size_gib or -(-SysInfo.mem_total() // 2**20)
 		fs_type = SysCommand(['findmnt', '-no', 'FSTYPE', str(self.target)]).decode().strip()
+		if fs_type == 'bcachefs':
+			# mkswap --file succeeds but swapon returns EINVAL: the kernel
+			# side has no swap file support. zram still covers swap
+			raise DiskError('bcachefs cannot host a swap file, hibernation skipped')
 		info(f'Setting up {size}GiB swap file on {fs_type}')
 
 		if fs_type == 'btrfs':

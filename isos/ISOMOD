@@ -39,17 +39,17 @@ fi
 # Defaults that differ by mode
 if [ "$A2_LIVE" = "1" ]; then
 	A2_COW_SIZE="${A2_COW_SIZE:-2G}"
-	ISO_NAME_TAG="EVOQUUS_LIVE"
+	ISO_NAME_TAG="ARCHINSTOO_LIVE"
 	ISO_LABEL_TAG="mod_archlinux_live"
 	LOG_TAG="z_isomod_live"
 elif [ "$A2_MINIMAL" = "1" ]; then
 	# No A2_COW_SIZE default: keep archiso's stock 256M (skip the bump below)
-	ISO_NAME_TAG="EVOQUUS_MIN"
+	ISO_NAME_TAG="ARCHINSTOO_MIN"
 	ISO_LABEL_TAG="mod_archlinux_min"
 	LOG_TAG="z_isomod_min"
 else
 	A2_COW_SIZE="${A2_COW_SIZE:-1G}"
-	ISO_NAME_TAG="EVOQUUS_DEF"
+	ISO_NAME_TAG="ARCHINSTOO_DEF"
 	ISO_LABEL_TAG="mod_archlinux"
 	LOG_TAG="z_isomod_def"
 fi
@@ -416,9 +416,9 @@ mkdir -p "$WORK_DIR"
 
 # Will prompt to build
 if [ "$A2_SILENT_MODE" = "1" ]; then
-	"$A2_ELEV" taskset -c 0-$((THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$A2_PROFILE_DIR" >/dev/null 2>&1 || error_exit "mkarchiso failed"
+	"$A2_ELEV" taskset -c 0-$((A2_THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$A2_PROFILE_DIR" >/dev/null 2>&1 || error_exit "mkarchiso failed"
 else
-	"$A2_ELEV" taskset -c 0-$((THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$A2_PROFILE_DIR" || error_exit "mkarchiso failed"
+	"$A2_ELEV" taskset -c 0-$((A2_THREADS - 1)) mkarchiso -v -w "$WORK_DIR" -o "$OUTPUT_DIR" -L "$ISO_LABEL" "$A2_PROFILE_DIR" || error_exit "mkarchiso failed"
 fi
 
 echo ""
