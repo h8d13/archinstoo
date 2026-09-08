@@ -44,6 +44,13 @@ def test_committed_schema_is_current() -> None:
 	assert SCHEMA_PATH.read_text() == schema_gen.render(), f'{SCHEMA_PATH.name} is stale, run `python -m archinstoo --script schema`'
 
 
+def test_sections_are_listed_in_install_order() -> None:
+	# render() sorts by site regardless; this keeps the source readable top to
+	# bottom as the install, so a reorder in guided.py is mirrored here
+	listed = [s.key for s in schema_gen.SECTIONS]
+	assert listed == [s.key for s in schema_gen.ordered()]
+
+
 def test_every_section_is_a_table() -> None:
 	# a top-level `key = [...]` written after the first [header] silently nests
 	# under it, which is why the generator emits tables only
@@ -127,8 +134,8 @@ def test_resolve_defaults_the_terminal_for_terminal_profiles() -> None:
 	# a skipped terminal entry still installs the default for a profile that
 	# ships a keybind; a profile that does not gets nothing
 	default = set(SCHEMA['terminals'][DEFAULT_TERMINAL])
-	assert _resolve._application_packages({}, ['sway']) == default
-	assert _resolve._application_packages({}, ['gnome']) == set()
+	assert _resolve._application_packages({}, _resolve._named_profiles(['sway'])) == default
+	assert _resolve._application_packages({}, _resolve._named_profiles(['gnome'])) == set()
 
 
 # -- reverse cover -----------------------------------------------------------
@@ -274,15 +281,6 @@ def test_nvgen_toml_tracks_code_packages() -> None:
 	tracked = set(tomllib.loads(toml_path.read_text())) - {'__config__'}
 	missing = sorted(nvgen.code_packages() - tracked)
 	assert not missing, f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'
-
-
-def test_nvgen_does_not_track_profile_names_as_packages() -> None:
-	# `profiles` entries name profiles, not packages; version tracking has to
-	# skip them or nvchecker looks up things that are not in any repo
-	nvgen = _load_nvgen()
-	names = nvgen.extract_schema_packages(SCHEMA, {})
-	profile_only = {p for p in SCHEMA['xorg_profiles']['profiles'] if p not in schema.package_names(SCHEMA)}
-	assert not (names & profile_only), f'NVGEN would track profile names: {sorted(names & profile_only)}'
 
 
 def test_nvgen_shares_the_installer_modules() -> None:

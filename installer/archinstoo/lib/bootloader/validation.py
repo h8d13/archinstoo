@@ -82,7 +82,7 @@ def validate_bootloader(
 		if not boot_partition.is_xbootldr():
 			errors.append('A separate /boot for systemd-boot must be marked XBOOTLDR')
 
-	if bootloader in (Bootloader.Systemd, Bootloader.Efistub, Bootloader.Refind) and not SysInfo.has_uefi():
+	if not bootloader.has_bios_support() and not SysInfo.has_uefi():
 		errors.append(f'{bootloader.display_name()} requires a UEFI system')
 
 	# Firmware reads the kernel directly from the boot partition, which must be FAT.

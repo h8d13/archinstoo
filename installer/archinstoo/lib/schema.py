@@ -10,9 +10,6 @@ from typing import Any
 
 SCHEMA_PATH = Path(__file__).parent.parent / 'schema.toml'
 
-# an entry under this name holds profile names, not packages
-PROFILE_KEY = 'profiles'
-
 
 def load(path: Path = SCHEMA_PATH) -> dict[str, Any]:
 	with path.open('rb') as f:
@@ -25,9 +22,7 @@ def package_names(schema: dict[str, Any]) -> set[str]:
 	names: set[str] = set()
 
 	for section in schema.values():
-		for name, values in section.items():
-			if name == PROFILE_KEY:
-				continue
+		for values in section.values():
 			# a nested section (compositors) is one table per profile
 			for pkgs in values.values() if isinstance(values, dict) else [values]:
 				names.update(pkgs)
