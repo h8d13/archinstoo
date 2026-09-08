@@ -11,11 +11,11 @@ After install, do not forget to **remove or change boot orders** in motherboard 
 This is usually f2, f10, f12 or DEL or other combinations depending on manufacturers.
 
 Do check that you are using your best hub/USB keys (usually blue USBs are for 3.x+ or even better in USB-C)
-If install speed matters to you (Current best 1m55)
+If install speed matters to you.
 
 ## More tips in the menu
 
-Take your time, **installing is fast**, make sure you went through everything you need.
+Take your time, **installing is fast**, make sure you went through everything you might need.
 
 > [!TIP]
 > Looking up your motherboard model, CPU/GPU, memory, disks, etc... Can often save you lots of headaches.
@@ -49,7 +49,7 @@ You can add Google fonts for extended language support and setup multiple keyboa
 noto-fonts-cjk         # Chinese, Japanese, Korean
 noto-fonts-extra       # Full extended symbols
 ```
-In additional packages section.
+In `Additional packages` section.
 
 ## Maintaining your system
 
