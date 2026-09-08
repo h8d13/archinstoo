@@ -110,25 +110,9 @@ Core changes you can perform in [`installer.py`](https://github.com/h8d13/archin
 
 A `man` page is also available `man -l installer/docs/archinstoo.1`
 
-### Use cases
+### Use cases / Docs
 
-See [Headless](https://github.com/h8d13/archinstoo/blob/master/.github/HEADLESS.md) for example server install to play minecraft/run tailscale nodes.
-
-See [Multi-Boot](https://github.com/h8d13/archinstoo/blob/master/.github/MULTI_BOOT.md) for example to boot multiple OSes.
-
-See [Out-of-Tree](https://github.com/h8d13/archinstoo/blob/master/.github/OUT_OF_TREE.md) for example install on unsupported hardware. (Older nVIDIA, Realtek, ...)
-
-See [Security](https://github.com/h8d13/archinstoo/blob/master/.github/SECURITY.md) for hardening installs/best practices.
-
-### More advanced
-
-See [Build-ISOs](https://github.com/h8d13/archinstoo/blob/master/.github/BUILD_ISOS.md) to create your own install mediums.
-
-See [Distros](https://github.com/h8d13/archinstoo/tree/master/distros) for installing from different distros.
-
-See [ARM-Support](https://github.com/h8d13/archinstoo/blob/master/architecture/README.md) for example install on Raspi 5-b.
-
-See [Cachy-Kernels](https://github.com/h8d13/archinstoo/blob/master/.github/CACHY_KERNELS.md) for swapping to their kernels post-install.
+See the full documentation on [mkdocs](h8d13.github.io/archinstoo/) generated from this repo.
 
 ### Testing
 
