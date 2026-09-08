@@ -176,6 +176,12 @@ SECTIONS: tuple[Section, ...] = (
 		site='install_applications',
 	),
 	Section(
+		'audio_firmware',
+		'added ahead of either audio server when the matching driver is loaded',
+		lambda: {'sof': AudioApp().sof_packages, 'alsa': AudioApp().alsa_packages},
+		site='install_applications',
+	),
+	Section(
 		'audio',
 		'',
 		lambda: {
@@ -183,12 +189,6 @@ SECTIONS: tuple[Section, ...] = (
 			Audio.PULSEAUDIO.value: AudioApp().pulseaudio_packages,
 		},
 		pick=('audio_config', 'audio'),
-		site='install_applications',
-	),
-	Section(
-		'audio_firmware',
-		'added with either audio server when the matching driver is loaded',
-		lambda: {'sof': AudioApp().sof_packages, 'alsa': AudioApp().alsa_packages},
 		site='install_applications',
 	),
 	Section(
@@ -326,6 +326,15 @@ SECTIONS: tuple[Section, ...] = (
 		site='install_profile_config',
 	),
 	Section(
+		'terminal_profiles',
+		'ship a keybind rather than a terminal. install_profile_config() installs\n'
+		'the choice once for these ahead of the profiles, or the default when the\n'
+		'menu was skipped',
+		lambda: [p.name for p in _leaves() if p.needs_terminal],
+		list_key='profiles',
+		site='install_profile_config',
+	),
+	Section(
 		'profile_base',
 		'always installed alongside a top-level profile',
 		lambda: {p.name: p.packages for p in ProfileHandler().profiles if p.profile_type in (ProfileType.Desktop, ProfileType.Server)},
@@ -335,13 +344,6 @@ SECTIONS: tuple[Section, ...] = (
 		'profiles',
 		'every desktop, window manager and server profile. one listed in\nterminal_profiles has none here: that comes from the shared choice',
 		lambda: {p.name: p.packages for p in _leaves()},
-		site='install_profile_config',
-	),
-	Section(
-		'terminal_profiles',
-		'ship a keybind rather than a terminal. install_profile_config() installs\nthe choice once for these, or the default when the menu was skipped',
-		lambda: [p.name for p in _leaves() if p.needs_terminal],
-		list_key='profiles',
 		site='install_profile_config',
 	),
 	Section(

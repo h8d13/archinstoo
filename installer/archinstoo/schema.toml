@@ -94,14 +94,14 @@ packages = ["bluez", "bluez-utils"]
 [thunderbolt]
 packages = ["bolt"]
 
-[audio]
-pipewire = ["pipewire", "pipewire-alsa", "pipewire-jack", "pipewire-pulse", "gst-plugin-pipewire", "libpulse", "wireplumber", "rtkit"]
-pulseaudio = ["pulseaudio"]
-
-# added with either audio server when the matching driver is loaded
+# added ahead of either audio server when the matching driver is loaded
 [audio_firmware]
 sof = ["sof-firmware"]
 alsa = ["alsa-firmware"]
+
+[audio]
+pipewire = ["pipewire", "pipewire-alsa", "pipewire-jack", "pipewire-pulse", "gst-plugin-pipewire", "libpulse", "wireplumber", "rtkit"]
+pulseaudio = ["pulseaudio"]
 
 # the codec half of eos-base-group; gstreamer core, base, good and ffmpeg
 # come in as deps
@@ -264,6 +264,12 @@ packages = ["xorg-server", "xorg-xinit"]
 [xorg_profiles]
 profiles = ["awesome", "bspwm", "cinnamon", "deepin", "enlightenment", "i3-wm", "lxqt", "mate", "qtile", "xfce4", "xmonad"]
 
+# ship a keybind rather than a terminal. install_profile_config() installs
+# the choice once for these ahead of the profiles, or the default when the
+# menu was skipped
+[terminal_profiles]
+profiles = ["awesome", "dms", "hyprland", "i3-wm", "labwc", "niri", "noctalia", "qtile", "river", "sway"]
+
 # always installed alongside a top-level profile
 [profile_base]
 desktop = ["smartmontools", "xdg-utils"]
@@ -305,11 +311,6 @@ postgresql = ["postgresql"]
 sshd = ["openssh"]
 tailscale = ["tailscale"]
 tomcat = ["tomcat10"]
-
-# ship a keybind rather than a terminal. install_profile_config() installs
-# the choice once for these, or the default when the menu was skipped
-[terminal_profiles]
-profiles = ["awesome", "dms", "hyprland", "i3-wm", "labwc", "niri", "noctalia", "qtile", "river", "sway"]
 
 # profiles that run on a compositor of the user's choosing. their entry
 # above bakes in the niri default, a <name>_compositor custom_setting swaps it
