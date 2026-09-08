@@ -20,7 +20,11 @@ jobs:
               run: |
                 # docker /dev is a static tmpfs: partition nodes (loopNpM) never
                 # show up on it. devtmpfs tracks the kernel, so swap it in.
+                # The swap shadows docker's pts/shm submounts; SysCommand runs
+                # everything under a pty, so bring devpts back.
                 mount -t devtmpfs none /dev
+                mount -t devpts devpts /dev/pts
+                mount -t tmpfs shm /dev/shm
                 truncate -s 8G /tmp/disk.img
                 loopdev=$(losetup -f --show /tmp/disk.img)
                 echo "LOOPDEV=${loopdev#/dev/}" >> "$GITHUB_ENV"
@@ -37,7 +41,7 @@ jobs:
                 arch-chroot /mnt pacman -Q base linux
             - name: Log
               if: always()
-              run: cat /root/.local/state/archinstoo/install.log
+              run: cat "$HOME/.local/state/archinstoo/install.log"
             - name: Teardown
               if: always()
               run: |
