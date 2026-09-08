@@ -129,8 +129,8 @@ def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 
 
 def _named_profiles(names: list[str]) -> list[Profile]:
-	# the selected detail profiles as the installer sees them, for what a
-	# name alone cannot say: display server, whether a terminal is shipped
+	# built-in profiles by name, for what a name alone cannot say: display
+	# server, whether a terminal is shipped
 	if not names:
 		return []
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
@@ -150,7 +150,7 @@ def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	return [profile for tp in entries if (profile := handler.parse_profile_config(tp))]
 
 
-def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], details: list[str]) -> set[str]:
+def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], selected: list[Profile]) -> set[str]:
 	# mirrors profiles_handler.install_gfx_driver(): the driver set, then the
 	# X11 half if any selected profile needs it
 	if gfx not in SCHEMA['gfx_drivers']:
@@ -183,7 +183,7 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], details: list
 		elif SysInfo.has_amd_graphics():
 			pkgs.update(mesa_extra[CpuVendor.AuthenticAMD.value])
 
-	if any(DisplayServer.X11 in p.display_servers() for p in _named_profiles(details)):
+	if any(DisplayServer.X11 in p.display_servers() for p in selected):
 		pkgs.update(_flat('xorg_extra'))
 
 	return pkgs
@@ -208,7 +208,7 @@ def _pick(app: dict[str, Any], section: Section) -> set[str]:
 	return set(table.get(value, []))
 
 
-def _application_packages(app: dict[str, Any], details: list[str]) -> set[str]:
+def _application_packages(app: dict[str, Any], selected: list[Profile]) -> set[str]:
 	# every app_config category is a section with a pick; what follows is the
 	# part a pick alone cannot say. schema_gen drags the installer in, so it
 	# stays a function-local import like installer above
@@ -230,7 +230,7 @@ def _application_packages(app: dict[str, Any], details: list[str]) -> set[str]:
 	# terminal. a skipped menu entry leaves those on the default, which
 	# install_profile_config() installs instead
 	terminal = (app.get('terminal_config') or {}).get('terminal', '')
-	if terminal not in SCHEMA['terminals'] and any(p.needs_terminal for p in _named_profiles(details)):
+	if terminal not in SCHEMA['terminals'] and any(p.needs_terminal for p in selected):
 		pkgs.update(SCHEMA['terminals'][DEFAULT_TERMINAL])
 
 	return pkgs
@@ -303,6 +303,12 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	has_desktop = 'desktop' in mains or any(p.is_desktop_profile() for p in custom_profiles)
 
+	# every profile the install will see, as install_profile_config() does:
+	# tops and details by name, path profiles with their selections
+	selected = _named_profiles([*mains, *details])
+	for profile in custom_profiles:
+		selected += [profile, *profile.current_selection]
+
 	main = next(iter(mains), '')
 
 	# greeter
@@ -310,7 +316,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
-	pkgs.update(_gfx_packages(pc.get('gfx_driver', ''), pc.get('gfx_packages') or [], kernels, details))
+	pkgs.update(_gfx_packages(pc.get('gfx_driver', ''), pc.get('gfx_packages') or [], kernels, selected))
 
 	# network
 	net = config.get('network_config') or {}
@@ -329,7 +335,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
-	pkgs.update(_application_packages(config.get('app_config') or {}, details))
+	pkgs.update(_application_packages(config.get('app_config') or {}, selected))
 
 	# shells (per-user in auth_config)
 	users = auth.get('users', []) or []

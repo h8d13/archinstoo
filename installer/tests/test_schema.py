@@ -134,8 +134,8 @@ def test_resolve_defaults_the_terminal_for_terminal_profiles() -> None:
 	# a skipped terminal entry still installs the default for a profile that
 	# ships a keybind; a profile that does not gets nothing
 	default = set(SCHEMA['terminals'][DEFAULT_TERMINAL])
-	assert _resolve._application_packages({}, ['sway']) == default
-	assert _resolve._application_packages({}, ['gnome']) == set()
+	assert _resolve._application_packages({}, _resolve._named_profiles(['sway'])) == default
+	assert _resolve._application_packages({}, _resolve._named_profiles(['gnome'])) == set()
 
 
 # -- reverse cover -----------------------------------------------------------

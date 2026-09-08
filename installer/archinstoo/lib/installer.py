@@ -1591,9 +1591,6 @@ class Installer:
 
 		self.pacman.strap(Bootloader.Systemd.packages())
 
-		if not SysInfo.has_uefi():
-			raise HardwareIncompatibilityError
-
 		if not efi_partition:
 			raise ValueError('Could not detect EFI system partition')
 		if not efi_partition.mountpoint:
@@ -1950,9 +1947,6 @@ class Installer:
 
 		self.pacman.strap(Bootloader.Efistub.packages())
 
-		if not SysInfo.has_uefi():
-			raise HardwareIncompatibilityError
-
 		# TODO: Ideally we would want to check if another config
 		# points towards the same disk and/or partition.
 		# And in which case we should do some clean up.
@@ -2020,9 +2014,6 @@ class Installer:
 		debug('Installing rEFInd bootloader')
 
 		self.pacman.strap(Bootloader.Refind.packages())
-
-		if not SysInfo.has_uefi():
-			raise HardwareIncompatibilityError
 
 		info(f'rEFInd boot partition: {boot_partition.dev_path}')
 
@@ -2203,6 +2194,9 @@ class Installer:
 			raise ValueError(f'Could not detect root at mountpoint {self.target}')
 
 		info(f'Adding bootloader {bootloader.display_name()} to {boot_partition.dev_path}', step=True)
+
+		if not SysInfo.has_uefi() and not bootloader.has_bios_support():
+			raise HardwareIncompatibilityError
 
 		# validate removable bootloader option
 		if removable:

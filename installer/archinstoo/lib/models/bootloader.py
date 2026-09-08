@@ -39,7 +39,7 @@ class Bootloader(Enum):
 				return [self.value]
 			case _:
 				# systemd-boot ships with systemd, efistub is a kernel feature
-				return [EFIBOOTMGR]
+				return [EFIBOOTMGR] if uefi else []
 
 	def has_removable_support(self) -> bool:
 		match self:
