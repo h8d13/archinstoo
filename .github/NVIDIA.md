@@ -17,9 +17,7 @@ And you are done !
 
 ### iGPU + dGPU
 
-> [!TIP]
-> If you are using a laptop with integrated + dedicated:
-> Use `nvidia-prime` or equivalent. [Wiki PRIME](https://wiki.archlinux.org/title/PRIME)
+See this page[HYBRID_GFX](https://github.com/h8d13/archinstoo/blob/master/.github/HYBRID_GFX.md)
 
 ## Recent cards
 
