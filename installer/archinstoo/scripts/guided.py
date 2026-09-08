@@ -121,6 +121,17 @@ def perform_installation(
 			users = config.auth_config.users if config.auth_config else None
 			application_handler.install_applications(installation, app_config, users)
 
+		# before the bootloader: grub-btrfs ships /etc/grub.d/41_snapshots-btrfs,
+		# and grub-mkconfig only runs once, so the snapshots submenu is
+		# in grub.cfg from the first boot (and in every rolled-back grub.cfg)
+		if disk_config.has_default_btrfs_vols():
+			btrfs_options = disk_config.btrfs_options
+			snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
+			snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
+			if snapshot_type:
+				bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
+				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
+
 		if config.bootloader_config and config.bootloader_config.bootloader is not None:
 			installation.add_bootloader(
 				config.bootloader_config.bootloader,
@@ -130,14 +141,6 @@ def perform_installation(
 				config.bootloader_config.splash,
 				config.bootloader_config.serial_console,
 			)
-
-		if disk_config.has_default_btrfs_vols():
-			btrfs_options = disk_config.btrfs_options
-			snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
-			snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
-			if snapshot_type:
-				bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
-				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
 
 		# If user selected to copy the current ISO network configuration
 		# Perform a copy of the config
