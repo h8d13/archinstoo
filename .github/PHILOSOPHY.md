@@ -43,7 +43,7 @@ This is a powerful idea because it would allow for standards to **compete in bet
 Providing choice should always be a priority, this makes for why, arch is arch.
 And `archinstoo` in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
 
-This is also to illustrate that for example a feature that only 1% of users actually use, should not be given priorities over modular architecture.
+For example a feature that only 1% of users actually use, should not be given priorities over modular architecture.
 
 A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities.
 Regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
