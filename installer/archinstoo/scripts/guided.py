@@ -1,4 +1,3 @@
-import contextlib
 import subprocess
 import time
 from typing import TYPE_CHECKING
@@ -212,6 +211,7 @@ def perform_installation(
 			with Tui():
 				elapsed_time = time.monotonic() - start_time
 				action = select_post_installation(elapsed_time)
+			info(f'Installation completed in {elapsed_time:.0f}s')
 
 		# Persist install log + saved config to /etc/archinstoo.d after the menu so the
 		# log captures everything up to the action. subprocess.run('reboot'/'poweroff')
@@ -222,12 +222,18 @@ def perform_installation(
 			case PostInstallationAction.EXIT:
 				pass
 			case PostInstallationAction.REBOOT:
-				subprocess.run(['reboot'], check=False)  # noqa: S607 - systemd shutdown shim from $PATH
+				info('Rebooting...')
+				if rc := subprocess.run(['reboot'], check=False).returncode:  # noqa: S607 - systemd shutdown shim from $PATH
+					error(f'reboot exited {rc}')
 			case PostInstallationAction.POWEROFF:
-				subprocess.run(['poweroff'], check=False)  # noqa: S607 - systemd shutdown shim from $PATH
+				info('Powering off...')
+				if rc := subprocess.run(['poweroff'], check=False).returncode:  # noqa: S607 - systemd shutdown shim from $PATH
+					error(f'poweroff exited {rc}')
 			case PostInstallationAction.CHROOT:
-				with contextlib.suppress(Exception):
+				try:
 					installation.drop_to_shell()
+				except Exception as e:
+					error(f'Could not drop to shell: {e}')
 
 
 def _validate_silent(config: ArchConfig) -> None:

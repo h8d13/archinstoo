@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.models.network import NM_DESKTOP_EXTRA, MacAddressPolicy, NicType
-from archinstoo.lib.output import warn
+from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
@@ -17,6 +17,7 @@ class NetworkHandler:
 		installation: Installer,
 		profile_config: ProfileConfiguration | None = None,
 	) -> None:
+		info('Writing network configuration...')
 		match network_config.type:
 			case NicType.ISO:
 				installation.copy_iso_network_config(
@@ -63,12 +64,14 @@ def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:
 	conf_dir = installation.target / 'etc/systemd/resolved.conf.d'
 	conf_dir.mkdir(parents=True, exist_ok=True)
 	(conf_dir / 'dns.conf').write_text(dns.as_resolved_config())
+	debug(f'Wrote {conf_dir / "dns.conf"}')
 
 
 def _configure_nm_iwd(installation: Installer) -> None:
 	nm_conf_dir = installation.target / 'etc/NetworkManager/conf.d'
 	nm_conf_dir.mkdir(parents=True, exist_ok=True)
 	(nm_conf_dir / 'wifi_backend.conf').write_text('[device]\nwifi.backend=iwd\n')
+	debug(f'Wrote {nm_conf_dir / "wifi_backend.conf"}')
 
 
 def _configure_iwd_standalone(installation: Installer, mac: MacAddressPolicy) -> None:
@@ -80,10 +83,12 @@ def _configure_iwd_standalone(installation: Installer, mac: MacAddressPolicy) ->
 	iwd_conf_dir = installation.target / 'etc/iwd'
 	iwd_conf_dir.mkdir(parents=True, exist_ok=True)
 	(iwd_conf_dir / 'main.conf').write_text(f'[General]\n{general}\n[Network]\nNameResolvingService=systemd\n')
+	debug(f'Wrote {iwd_conf_dir / "main.conf"}')
 
 	networkd_dir = installation.target / 'etc/systemd/network'
 	networkd_dir.mkdir(parents=True, exist_ok=True)
 	(networkd_dir / '20-wired.network').write_text('[Match]\nType=ether\nKind=!*\n\n[Network]\nDHCP=yes\n')
+	debug(f'Wrote {networkd_dir / "20-wired.network"}')
 
 
 def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacAddressPolicy) -> None:
@@ -93,6 +98,7 @@ def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacA
 		nm_conf_dir = installation.target / 'etc/NetworkManager/conf.d'
 		nm_conf_dir.mkdir(parents=True, exist_ok=True)
 		(nm_conf_dir / 'mac_address.conf').write_text(mac.as_nm_config())
+		debug(f'Wrote {nm_conf_dir / "mac_address.conf"}')
 		return
 
 	if mac is MacAddressPolicy.STABLE:
@@ -102,3 +108,4 @@ def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacA
 	link_dir = installation.target / 'etc/systemd/network'
 	link_dir.mkdir(parents=True, exist_ok=True)
 	(link_dir / '00-mac-address.link').write_text(mac.as_link_config())
+	debug(f'Wrote {link_dir / "00-mac-address.link"}')

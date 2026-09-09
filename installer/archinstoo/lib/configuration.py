@@ -105,6 +105,7 @@ class ConfigStore:
 		config_file = cls._saved_config_path()
 		if config_file.exists():
 			config_file.unlink()
+			info(f'Deleted saved configuration {config_file}')
 
 	@classmethod
 	def prompt_resume(cls) -> dict[str, Any] | None:

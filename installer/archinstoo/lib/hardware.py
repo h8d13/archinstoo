@@ -504,6 +504,7 @@ class _SysInfo:
 		# (vendor, device) of every display-class function (0x03xxxx: VGA, 3D,
 		# display). Sysfs rather than lspci text so the device id is usable
 		if not _PCI_BUS.is_dir():
+			debug('No PCI bus in sysfs; GPU detection unavailable')
 			return set()
 
 		found: set[tuple[int, int]] = set()
@@ -543,6 +544,7 @@ class _SysInfo:
 			files += _firmware_files(declared, _FIRMWARE_ROOT)
 
 		if not files:
+			debug(f'No firmware files declared by {len(modules)} bound modules')
 			return []
 
 		# raw owners: sof-firmware and the nvidia driver tree live under there
@@ -629,6 +631,7 @@ class SysInfo:
 	def firmware_owners() -> list[str]:
 		# virtio ships no blobs, and the scan costs a modinfo per bound driver
 		if SysInfo.is_vm():
+			debug('VM detected: skipping firmware owner scan')
 			return []
 		return _sys_info.firmware_owners
 

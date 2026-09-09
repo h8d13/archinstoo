@@ -18,7 +18,7 @@ from archinstoo.lib.models.mirrors import (
 	SignOption,
 )
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.output import FormattedOutput, debug
+from archinstoo.lib.output import FormattedOutput, debug, warn
 from archinstoo.lib.pathnames import MIRRORLIST
 from archinstoo.lib.pm.config import set_parallel_downloads
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
@@ -446,7 +446,14 @@ class MirrorListHandler:
 	def load_local_mirrors(self) -> None:
 		with self._local_mirrorlist.open('r') as fp:
 			mirrorlist = fp.read()
-			_MirrorCache.data.update(self._parse_local_mirrors(mirrorlist))
+			parsed = self._parse_local_mirrors(mirrorlist)
+			_MirrorCache.data.update(parsed)
+
+		count = sum(len(v) for v in parsed.values())
+		if count == 0:
+			warn(f'No mirrors found in {self._local_mirrorlist}')
+		else:
+			debug(f'Loaded {count} mirrors in {len(parsed)} regions from {self._local_mirrorlist}')
 
 	def regions_config(self, regions: list[MirrorRegion], speed_sort: bool) -> str:
 		config = ''

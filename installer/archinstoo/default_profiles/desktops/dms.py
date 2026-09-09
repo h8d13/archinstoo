@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import swap_terminal
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.output import warn
+from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess, seat_services
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -51,7 +51,10 @@ class DmsProfile(WaylandProfile):
 		comp = self.custom_settings.get('dms_compositor')
 		if isinstance(comp, str):  # tolerate single value in hand-written configs
 			return [comp]
-		return comp if isinstance(comp, list) and comp else ['niri']
+		if isinstance(comp, list) and comp:
+			return comp
+		warn(f'Unusable dms_compositor setting {comp!r}, defaulting to niri')
+		return ['niri']
 
 	@property
 	@override
@@ -60,6 +63,9 @@ class DmsProfile(WaylandProfile):
 		seat = self.custom_settings.get('seat_access')
 		if isinstance(seat, str):
 			additional = [seat]
+
+		if unknown := [c for c in self.compositors if c not in self.compositor_packages]:
+			debug(f'Unknown dms_compositor {unknown}, valid: {list(self.compositor_packages)}')
 
 		compositor_pkgs = [p for comp in self.compositors for p in self.compositor_packages[comp]]
 
@@ -88,6 +94,7 @@ class DmsProfile(WaylandProfile):
 		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
 		# any session that activates the target: niri natively, hyprland via the
 		# hyprland-session.target the setup below deploys
+		info('Enabling dms.service globally for all users')
 		install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
 
 		# `dms setup headless` writes the compositor config, the dms/ overrides
@@ -95,6 +102,7 @@ class DmsProfile(WaylandProfile):
 		# it has to run as the user: everything lands under their $HOME
 		for user in users:
 			for comp in self.compositors:
+				info(f'Running dms setup for {user.username} ({comp})')
 				install_session.arch_chroot(
 					['dms', 'setup', 'headless', '--compositor', comp, '--skip-existing'],
 					run_as=user.username,

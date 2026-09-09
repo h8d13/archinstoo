@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict, override
 
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.output import debug
+from archinstoo.lib.output import debug, warn
 from archinstoo.lib.utils.net import DownloadTimer, ping
 
 
@@ -22,6 +22,7 @@ def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime 
 	try:
 		return datetime.datetime.fromisoformat(value)
 	except ValueError, AttributeError:
+		debug(f'Unparseable mirror timestamp {value!r}, ignoring')
 		return None
 
 
@@ -391,6 +392,7 @@ class PacmanConfiguration:
 
 		# backwards compatibility with the new custom_repository
 		if 'custom_mirrors' in args:
+			warn("'custom_mirrors' is deprecated, use 'custom_repositories'")
 			config.custom_repositories = CustomRepository.parse_args(args['custom_mirrors'])
 		if 'custom_repositories' in args:
 			config.custom_repositories = CustomRepository.parse_args(args['custom_repositories'])

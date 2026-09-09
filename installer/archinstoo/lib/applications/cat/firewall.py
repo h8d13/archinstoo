@@ -46,7 +46,12 @@ class FirewallApp:
 				install_session.enable_service(self.ufw_services)
 				# write default conf file to enabled
 				ufw_conf = install_session.target / 'etc/ufw/ufw.conf'
-				ufw_conf.write_text(ufw_conf.read_text().replace('ENABLED=no', 'ENABLED=yes'))
+				content = ufw_conf.read_text()
+				if 'ENABLED=no' not in content:
+					warn(f'{ufw_conf}: ENABLED=no not found, ufw left disabled')
+				else:
+					debug(f'Setting ENABLED=yes in {ufw_conf}')
+				ufw_conf.write_text(content.replace('ENABLED=no', 'ENABLED=yes'))
 
 			case Firewall.FWD:
 				install_session.add_additional_packages(self.fwd_packages)

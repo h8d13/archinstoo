@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.application import Audio, AudioConfiguration
-from archinstoo.lib.output import debug
+from archinstoo.lib.output import debug, warn
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -45,6 +45,7 @@ class AudioApp:
 		users: list[User] | None = None,
 	) -> None:
 		if users is None:
+			warn('No users defined, skipping pipewire user service activation')
 			return
 
 		for user in users:
@@ -55,6 +56,7 @@ class AudioApp:
 			install_session.chown_tree(user.username, f'/home/{user.username}')
 
 			# symlink in the correct pipewire systemd items
+			debug(f'Linking pipewire-pulse user units for {user.username}')
 			install_session.arch_chroot(
 				[
 					'ln',

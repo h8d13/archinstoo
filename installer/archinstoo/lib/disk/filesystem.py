@@ -228,8 +228,10 @@ class FilesystemHandler:
 				debug(f'vg: {vg.name}, vol: {lv.name}, offset: {offset}')
 				self._device_handler.lvm_vol_create(vg.name, lv, offset)
 
+				attempt = 0
 				while True:
-					debug('Fetching LVM volume info')
+					attempt += 1
+					debug(f'Waiting for LVM volume {lv.name} (attempt {attempt})')
 					if lvm_vol_info(lv.name) is not None:
 						break
 

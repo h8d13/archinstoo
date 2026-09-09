@@ -7,7 +7,7 @@ from compression.zstd import ZstdFile
 from pathlib import Path
 from typing import NamedTuple
 
-from archinstoo.lib.output import info
+from archinstoo.lib.output import debug, info
 from archinstoo.lib.pacman import Pacman
 from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF
 from archinstoo.lib.utils.net import download_file_from_url, fetch_data_from_url
@@ -116,6 +116,7 @@ def keyring_init() -> None:
 	src = _sources()
 
 	if (_KEYRING_DIR / f'{src.keyring}.gpg').exists() and _TRUSTDB.exists():
+		debug(f'{src.keyring} keyring and trustdb present, skipping keyring bootstrap')
 		return
 
 	url = _latest_keyring_url(src.keyring_mirror, src.keyring_pkg)

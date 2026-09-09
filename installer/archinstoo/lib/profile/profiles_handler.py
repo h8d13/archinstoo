@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.hardware import GFX_SERVICES, XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.models.application import terminal_for
-from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
 
@@ -70,6 +70,7 @@ class ProfileHandler:
 				custom_profiles = self._process_profile_file(local_path)
 				self.remove_custom_profiles(custom_profiles)
 				self.add_custom_profiles(custom_profiles)
+				info(f'Loaded {len(custom_profiles)} custom profile(s) from {local_path}')
 			else:
 				self._import_profile_from_url(url_path)
 
@@ -141,6 +142,7 @@ class ProfileHandler:
 	def install_greeter(self, install_session: Installer, greeter: GreeterType) -> None:
 		# what each greeter pulls and runs lives on GreeterType; only the
 		# per-greeter configuration below is this function's own business
+		info(f'Installing greeter {greeter.value}', step=True)
 		install_session.add_additional_packages(greeter.packages)
 		install_session.enable_service(greeter.services)
 
@@ -150,8 +152,12 @@ class ProfileHandler:
 		# slick-greeter requires a config change
 		if greeter == GreeterType.LightdmSlick:
 			path = install_session.target.joinpath('etc/lightdm/lightdm.conf')
+			debug(f'Setting greeter-session in {path}')
 			with path.open() as file:
 				filedata = file.read()
+
+			if '#greeter-session=example-gtk-gnome' not in filedata:
+				warn(f'{path}: greeter-session marker not found, slick-greeter not activated')
 
 			filedata = filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter')
 
@@ -167,6 +173,7 @@ class ProfileHandler:
 			GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
 		}
 		if command := greetd_session.get(greeter):
+			info(f'Writing greetd session config: {command}')
 			path = install_session.target.joinpath('etc/greetd/config.toml')
 			path.write_text(
 				dedent(f"""\
@@ -181,6 +188,7 @@ class ProfileHandler:
 
 		# regreet runs the cage compositor as the greeter user
 		if greeter == GreeterType.Regreet:
+			debug('Adding greeter user to seat group for regreet')
 			install_session.add_to_seat_group(['greeter'])
 
 	def install_gfx_driver(
@@ -221,13 +229,17 @@ class ProfileHandler:
 		app_config: ApplicationConfiguration | None,
 	) -> None:
 		if not profile_config.profiles:
+			debug('No profiles selected, skipping profile installation')
 			return
 
 		# Install gfx driver first as some desktops might need to satisfy deps (vulkan-driver virtual group).
 		# Pass the aggregated display servers across all selected profiles so mixed X11+Wayland picks
 		# correctly include the X11 base packages.
-		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
-			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers, profile_config.gfx_packages)
+		if gfx_driver := profile_config.gfx_driver:
+			if display_servers := profile_config.display_servers():
+				self.install_gfx_driver(install_session, gfx_driver, display_servers, profile_config.gfx_packages)
+			else:
+				warn(f'gfx driver {gfx_driver.value} requested but no profile declares a display server, driver not installed')
 
 		# one terminal for every profile that ships a keybind rather than its own
 		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
@@ -239,8 +251,11 @@ class ProfileHandler:
 			profile.install(install_session)
 
 		# Install greeter if any profile supports it
-		if profile_config.greeter and profile_config.is_greeter_supported():
-			self.install_greeter(install_session, profile_config.greeter)
+		if profile_config.greeter:
+			if profile_config.is_greeter_supported():
+				self.install_greeter(install_session, profile_config.greeter)
+			else:
+				warn(f'Greeter {profile_config.greeter.value} requested but no selected profile supports one, skipping')
 
 	def _import_profile_from_url(self, url: str) -> None:
 		# Import default_profiles from a url path
@@ -254,6 +269,7 @@ class ProfileHandler:
 			profiles = self._process_profile_file(filepath)
 			self.remove_custom_profiles(profiles)
 			self.add_custom_profiles(profiles)
+			info(f'Loaded {len(profiles)} custom profile(s) from {url}')
 		except ValueError:
 			err = f'Unable to fetch profile from specified url: {url}'
 			error(err)

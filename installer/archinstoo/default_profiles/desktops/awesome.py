@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, override
 
 from archinstoo.default_profiles.desktops import swap_terminal
 from archinstoo.default_profiles.xorg import XorgProfile
+from archinstoo.lib.output import debug, warn
 from archinstoo.lib.profile.base import ProfileType
 
 if TYPE_CHECKING:
@@ -36,6 +37,10 @@ class AwesomeProfile(XorgProfile):
 
 		# TODO: Copy a full configuration to ~/.config/awesome/rc.lua instead.
 		rc_lua_path = install_session.target / 'etc/xdg/awesome/rc.lua'
+		if not rc_lua_path.exists():
+			warn(f'{rc_lua_path} missing, leaving awesome config as shipped')
+			return
+
 		with rc_lua_path.open() as fh:
 			awesome_lua = fh.read()
 
@@ -46,11 +51,17 @@ class AwesomeProfile(XorgProfile):
 		with rc_lua_path.open('w') as fh:
 			fh.write(awesome_lua)
 
+		debug(f'Rewrote {rc_lua_path}')
+
 		# TODO: Configure the right-click-menu to contain the above packages that were installed. (as a user config)
 
 		# TODO: check if we selected a greeter,
 		# but for now, awesome is intended to run without one.
 		xinitrc_path = install_session.target / 'etc/X11/xinit/xinitrc'
+		if not xinitrc_path.exists():
+			warn(f'{xinitrc_path} missing, leaving xinitrc as shipped')
+			return
+
 		with xinitrc_path.open() as xinitrc:
 			xinitrc_data = xinitrc.read()
 
@@ -67,3 +78,5 @@ class AwesomeProfile(XorgProfile):
 
 		with xinitrc_path.open('w') as xinitrc:
 			xinitrc.write(xinitrc_data)
+
+		debug(f'Rewrote {xinitrc_path} to exec awesome')

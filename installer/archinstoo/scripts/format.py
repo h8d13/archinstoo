@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from archinstoo import debug, error
+from archinstoo import debug, error, info
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
 from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.disk.device_handler import DeviceHandler
@@ -48,12 +48,14 @@ def perform_installation(
 	) as installation:
 		# Mount all the drives to the desired mountpoint
 		# This *can* be done outside of the installation, but the installer can deal with it.
+		info('Mounting the formatted layout...')
 		installation.mount_ordered_layout()
 
 		# to generate a fstab directory holder. Avoids an error on exit and at the same time checks the procedure
 		target = Path(f'{mountpoint}/etc/fstab')
 		if not target.parent.exists():
 			target.parent.mkdir(parents=True)
+			debug(f'Created {target.parent} to anchor fstab')
 
 	# For support reasons, we'll log the disk layout post installation (crash or no crash)
 	debug(f'Disk states after installing:\n{disk_layouts()}')

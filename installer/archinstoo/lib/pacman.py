@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from .exceptions import RequirementError
 from .general import SysCommand
-from .output import error, info, logger, warn
+from .output import debug, error, info, logger, warn
 from .pathnames import PACMAN_CONF
 from .utils.env import Os
 
@@ -115,8 +115,11 @@ class Pacman:
 			info('Reinitializing pacman keyring...')
 			with contextlib.suppress(Exception):
 				SysCommand('killall gpg-agent', peek_output=True)
-			with contextlib.suppress(Exception):
+			try:
+				debug('Removing /etc/pacman.d/gnupg before keyring re-init')
 				SysCommand('rm -rf /etc/pacman.d/gnupg', peek_output=True)
+			except Exception as e:
+				warn(f'Could not remove gnupg dir: {e}')
 			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('-Sy archlinux-keyring --noconfirm', peek_output=True)

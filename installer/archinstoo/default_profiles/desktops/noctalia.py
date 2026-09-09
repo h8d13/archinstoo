@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
+from archinstoo.lib.output import debug, warn
 from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess, seat_services
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -55,7 +56,10 @@ class NoctaliaProfile(WaylandProfile):
 		comp = self.custom_settings.get('noctalia_compositor')
 		if isinstance(comp, str):  # tolerate single value in hand-written configs
 			return [comp]
-		return comp if isinstance(comp, list) and comp else ['niri']
+		if isinstance(comp, list) and comp:
+			return comp
+		warn(f'Unusable noctalia_compositor setting {comp!r}, defaulting to niri')
+		return ['niri']
 
 	@property
 	@override
@@ -97,7 +101,9 @@ class NoctaliaProfile(WaylandProfile):
 
 				for asset in sorted((_ASSETS_DIR / comp).iterdir()):
 					conf = asset.read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
-					(dest_dir / asset.name).write_text(conf)
+					dest = dest_dir / asset.name
+					debug(f'Writing {dest} for {user.username}')
+					dest.write_text(conf)
 
 			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
 

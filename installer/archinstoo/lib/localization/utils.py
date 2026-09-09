@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import RequirementError, ServiceException, SysCallError
 from archinstoo.lib.general import SysCommand
-from archinstoo.lib.output import error
+from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.utils.env import Os
 from archinstoo.lib.utils.net import fetch_data_from_url
 
@@ -24,15 +24,18 @@ def list_keyboard_languages() -> list[str]:
 		).decode()
 		if out.strip():
 			return out.splitlines()
-	except SysCallError, RequirementError:
+	except (SysCallError, RequirementError) as e:
 		# SysCallError: localectl present but failed. RequirementError: no
 		# localectl at all (non-systemd host). Either way scan kbd data.
-		pass
+		debug(f'localectl list-keymaps unavailable ({e}), scanning kbd data')
 
 	# localectl reads compiled-in FHS keymap dirs that don't exist on e.g.
 	# NixOS; scan local kbd data, then fall back to the upstream kbd tree when
 	# the host ships no kbd keymaps at all (alpine, foreign hosts)
-	return _scan_keymaps() or _fetch_kbd_keymaps()
+	if names := _scan_keymaps():
+		return names
+	debug('No local kbd keymaps, fetching the upstream kbd tree')
+	return _fetch_kbd_keymaps()
 
 
 def _scan_keymaps() -> list[str]:
@@ -58,7 +61,8 @@ def _fetch_kbd_tree_names(prefix: str) -> list[str]:
 	# return the basename of every file under <prefix> in the kbd git tree
 	try:
 		tree = json.loads(fetch_data_from_url(_KBD_TREE_URL)).get('tree', [])
-	except ValueError:
+	except ValueError as e:
+		debug(f'Fetch failed for {_KBD_TREE_URL}: {e}')
 		return []
 
 	return [entry['path'].rsplit('/', 1)[-1] for entry in tree if entry.get('type') == 'blob' and entry.get('path', '').startswith(prefix)]
@@ -102,7 +106,8 @@ def _fetch_glibc_supported() -> list[str]:
 	# space-separated "<locale> <charset>" form the menu expects
 	try:
 		text = fetch_data_from_url(_GLIBC_SUPPORTED_URL)
-	except ValueError:
+	except ValueError as e:
+		debug(f'Fetch failed for {_GLIBC_SUPPORTED_URL}: {e}')
 		return []
 
 	locales = []
@@ -124,7 +129,10 @@ def list_locales() -> list[str]:
 
 	# non-glibc host (musl/alpine): no SUPPORTED on disk, pull the canonical
 	# list glibc ships upstream so the target (Arch/glibc) choices are accurate
-	return _fetch_glibc_supported() or _MIN_LOCALES
+	if locales := _fetch_glibc_supported():
+		return locales
+	warn('Could not fetch the glibc locale list, offering en_US.UTF-8 only')
+	return _MIN_LOCALES
 
 
 def split_locale_name(sys_lang: str) -> tuple[str, str, str]:
@@ -194,12 +202,18 @@ def _fetch_x11_registry() -> ET.Element | None:
 	# (non-systemd hosts: alpine, foreign hosts, ...)
 	try:
 		text = fetch_data_from_url(_X11_BASE_XML_URL)
-	except ValueError:
+	except ValueError as e:
+		warn(f'Could not fetch the xkeyboard-config registry: {e}')
 		return None
 	try:
 		return ET.fromstring(text)  # noqa: S314 - trusted xkeyboard-config source over https
-	except ET.ParseError:
+	except ET.ParseError as e:
+		warn(f'Could not parse the xkeyboard-config registry: {e}')
 		return None
+
+
+def _debug_x11_fallback(what: str, err: Exception) -> None:
+	debug(f'localectl x11 {what} unavailable ({err}), using the upstream registry')
 
 
 def _fetch_x11_names(xpath: str) -> list[str]:
@@ -213,9 +227,9 @@ def list_x11_keyboard_languages() -> list[str]:
 	try:
 		if out := _localectl_keymap('list-x11-keymap-layouts'):
 			return out
-	except SysCallError, RequirementError:
+	except (SysCallError, RequirementError) as e:
 		# no localectl (non-systemd host) or it failed; fetch from upstream
-		pass
+		_debug_x11_fallback('layouts', e)
 	return _fetch_x11_names('./layoutList/layout/configItem/name')
 
 
@@ -223,8 +237,8 @@ def list_x11_keyboard_models() -> list[str]:
 	try:
 		if out := _localectl_keymap('list-x11-keymap-models'):
 			return out
-	except SysCallError, RequirementError:
-		pass
+	except (SysCallError, RequirementError) as e:
+		_debug_x11_fallback('models', e)
 	return _fetch_x11_names('./modelList/model/configItem/name')
 
 
@@ -232,8 +246,8 @@ def list_x11_keyboard_options() -> list[str]:
 	try:
 		if out := _localectl_keymap('list-x11-keymap-options'):
 			return out
-	except SysCallError, RequirementError:
-		pass
+	except (SysCallError, RequirementError) as e:
+		_debug_x11_fallback('options', e)
 	return _fetch_x11_names('./optionList/group/option/configItem/name')
 
 
@@ -244,8 +258,8 @@ def list_x11_keyboard_variants(layout: str) -> list[str]:
 	try:
 		if out := _localectl_keymap(f'list-x11-keymap-variants {layout}'):
 			return out
-	except SysCallError, RequirementError:
-		pass
+	except (SysCallError, RequirementError) as e:
+		_debug_x11_fallback('variants', e)
 	return _fetch_x11_variants(layout)
 
 
@@ -275,7 +289,8 @@ def get_kb_layout() -> str:
 			.decode()
 			.splitlines()
 		)
-	except Exception:
+	except Exception as e:
+		debug(f'localectl status failed, no host keymap detected: {e}')
 		return ''
 
 	vcline = ''
@@ -288,6 +303,7 @@ def get_kb_layout() -> str:
 
 	layout = vcline.split(': ')[1]
 	if not verify_keyboard_layout(layout):
+		debug(f'Host keymap {layout} not in the keymap list, ignoring')
 		return ''
 
 	return layout
@@ -351,10 +367,10 @@ def list_timezones() -> list[str]:
 		).decode()
 		if out.strip():
 			return out.splitlines()
-	except SysCallError, RequirementError:
+	except (SysCallError, RequirementError) as e:
 		# RequirementError: no timedatectl (non-systemd host). SysCallError:
 		# present but failed. Read the tz db off disk in both cases.
-		pass
+		debug(f'timedatectl unavailable ({e}), reading the tz db off disk')
 
 	# timedatectl talks to systemd-timedated over dbus; on a host with no
 	# running timedated the call blocks until the dbus activation timeout

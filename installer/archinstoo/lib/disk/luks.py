@@ -1,4 +1,3 @@
-import contextlib
 import secrets
 import shlex
 import string
@@ -158,8 +157,10 @@ class Luks2:
 			raise ValueError('mapper name missing')
 
 		# Ensure dm-crypt target is loaded before attempting to open
-		with contextlib.suppress(Exception):
+		try:
 			SysCommand(['modprobe', 'dm-crypt'])
+		except Exception:
+			debug('modprobe dm-crypt failed, attempting open anyway')
 
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
 

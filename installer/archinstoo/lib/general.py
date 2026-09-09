@@ -403,6 +403,10 @@ class SysCommand:
 		return None
 
 
+# paths already reported unwritable: every SysCommand would repeat it otherwise
+_append_log_failed: set[Path] = set()
+
+
 def _append_log(file: str, content: str) -> None:
 	path = logger.directory / file
 
@@ -414,9 +418,10 @@ def _append_log(file: str, content: str) -> None:
 
 		if change_perm:
 			path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
-	except PermissionError, FileNotFoundError:
-		# If the file does not exist, ignore the error
-		pass
+	except (PermissionError, FileNotFoundError) as err:
+		if path not in _append_log_failed:
+			_append_log_failed.add(path)
+			debug(f'Could not append to {path}: {err}')
 
 
 def _cmd_history(cmd: list[str]) -> None:

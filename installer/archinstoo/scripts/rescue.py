@@ -405,9 +405,9 @@ def rescue() -> None:
 	# Use arch-chroot directly
 	try:
 		SysCommand(['arch-chroot', str(mount_point)], peek_output=True)
-	except SysCallError:
+	except SysCallError as e:
 		# Non-zero exit is normal when user types 'exit'
-		pass
+		debug(f'arch-chroot exited non-zero (normal on exit): {e}')
 	except KeyboardInterrupt:
 		info('\nChroot interrupted.')
 

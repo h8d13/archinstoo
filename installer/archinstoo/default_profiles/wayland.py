@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, override
 
+from archinstoo.lib.output import debug
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile, ProfileType
 
 if TYPE_CHECKING:
@@ -25,7 +26,9 @@ class WaylandProfile(Profile):
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		if self.custom_settings.get('seat_access') == 'seatd':
-			install_session.add_to_seat_group([user.username for user in users])
+			usernames = [user.username for user in users]
+			debug(f'Adding {usernames} to seat group')
+			install_session.add_to_seat_group(usernames)
 
 	@property
 	@override
@@ -34,6 +37,7 @@ class WaylandProfile(Profile):
 		# so a seatd-based compositor (sway/niri/etc.) can't take over the GPU.
 		# TTY/session-transparent greeters (ly, greetd, cosmic-greeter) don't.
 		if self.custom_settings.get('seat_access') == 'seatd':
+			debug(f'{self.name}: seatd selected, using Ly instead of {self._default_greeter_non_seatd.value}')
 			return GreeterType.Ly
 		return self._default_greeter_non_seatd
 

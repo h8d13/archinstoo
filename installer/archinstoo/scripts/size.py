@@ -9,7 +9,7 @@ import json
 import sys
 from pathlib import Path
 
-from archinstoo.lib.exceptions import RequirementError
+from archinstoo.lib.exceptions import RequirementError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import SectorSize, Size, Unit
 from archinstoo.scripts._resolve import _requirements, collect, resolve_deps
@@ -31,7 +31,10 @@ def package_sizes(pkgs: set[str]) -> tuple[int, int, list[tuple[str, int, int]],
 	#   (total_download, total_install, [(name, download, install)] largest-first, missing)
 	found: dict[str, tuple[int, int]] = {}
 
-	output = SysCommand("expac -S '%k:%m:%n' " + ' '.join(sorted(pkgs)))
+	try:
+		output = SysCommand("expac -S '%k:%m:%n' " + ' '.join(sorted(pkgs)))
+	except SysCallError as e:
+		sys.exit(f'error: expac query failed: {e}')
 	for line in output:
 		parts = line.decode().rstrip().split(':', 2)
 		if len(parts) != 3:

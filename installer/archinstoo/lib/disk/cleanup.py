@@ -1,4 +1,3 @@
-from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -10,7 +9,7 @@ from archinstoo.lib.models.device import (
 	EncryptionType,
 	FilesystemType,
 )
-from archinstoo.lib.output import info, warn
+from archinstoo.lib.output import debug, info, warn
 
 from .luks import Luks2
 
@@ -21,8 +20,10 @@ if TYPE_CHECKING:
 def swapoff_path(path: Path | None) -> None:
 	if path is None:
 		return
-	with suppress(SysCallError, DiskError):
+	try:
 		SysCommand(['swapoff', str(path)])
+	except (SysCallError, DiskError) as e:
+		debug(f'swapoff {path} failed, continuing: {e}')
 
 
 def swapoff_layout(disk_config: DiskLayoutConfiguration) -> None:
