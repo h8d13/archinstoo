@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import swap_terminal
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.output import warn
+from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess, seat_services
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -48,10 +48,14 @@ class DmsProfile(WaylandProfile):
 
 	@property
 	def compositors(self) -> list[str]:
+		# consumers index compositor_packages/binds_paths by these: drop unknowns
+		return [c for c in self._requested_compositors() if c in self.compositor_packages] or ['niri']
+
+	def _requested_compositors(self) -> list[str]:
 		comp = self.custom_settings.get('dms_compositor')
 		if isinstance(comp, str):  # tolerate single value in hand-written configs
 			return [comp]
-		return comp if isinstance(comp, list) and comp else ['niri']
+		return comp if isinstance(comp, list) else []
 
 	@property
 	@override
@@ -85,9 +89,16 @@ class DmsProfile(WaylandProfile):
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
 
+		requested = self._requested_compositors()
+		if dropped := [c for c in requested if c not in self.compositor_packages]:
+			warn(f'Ignoring unknown dms_compositor {dropped}, valid: {list(self.compositor_packages)}')
+		elif not requested:
+			debug(f'No dms_compositor set, using {self.compositors}')
+
 		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
 		# any session that activates the target: niri natively, hyprland via the
 		# hyprland-session.target the setup below deploys
+		debug('Enabling dms.service globally for all users')
 		install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
 
 		# `dms setup headless` writes the compositor config, the dms/ overrides
@@ -95,6 +106,7 @@ class DmsProfile(WaylandProfile):
 		# it has to run as the user: everything lands under their $HOME
 		for user in users:
 			for comp in self.compositors:
+				info(f'Running dms setup for {user.username} ({comp})')
 				install_session.arch_chroot(
 					['dms', 'setup', 'headless', '--compositor', comp, '--skip-existing'],
 					run_as=user.username,

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, assert_never
 
 from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
 from archinstoo.lib.models.packages import Repository
+from archinstoo.lib.output import debug, info
 from archinstoo.lib.pathnames import PACMAN_CONF
 from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.result import ResultType
@@ -18,6 +19,7 @@ _HOST_CONF_BACKUP = PACMAN_CONF.with_name(f'{PACMAN_CONF.name}.archinstoo.bak')
 
 def _restore_host_conf() -> None:
 	if _HOST_CONF_BACKUP.exists():
+		debug(f'Restoring host {PACMAN_CONF} from {_HOST_CONF_BACKUP}')
 		_HOST_CONF_BACKUP.copy(PACMAN_CONF, preserve_metadata=True)
 		_HOST_CONF_BACKUP.unlink()
 
@@ -28,10 +30,12 @@ def guard_host_conf() -> None:
 	# No-op on the ISO where /etc/pacman.conf is discarded on reboot, and on a foreign host
 	# where pm/bootstrap.py writes the conf on purpose (before this runs) to get repos at all.
 	if not (Os.running_from_host() and Os.running_from_arch()):
+		debug('Not an Arch host install: skipping pacman.conf snapshot')
 		return
 
 	_restore_host_conf()
 	PACMAN_CONF.copy(_HOST_CONF_BACKUP, preserve_metadata=True)
+	debug(f'Snapshotted host pacman.conf to {_HOST_CONF_BACKUP}')
 	atexit.register(_restore_host_conf)
 
 
@@ -68,6 +72,7 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 		case _:
 			assert_never(result.type_)
 
+	debug(f'Setting ParallelDownloads = {downloads}')
 	with PACMAN_CONF.open() as f:
 		pacman_conf = f.read().split('\n')
 
@@ -185,6 +190,11 @@ class PacmanConfig:
 				content.append(f'\n[{custom.name}]\n')
 				content.append(f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n')
 				content.append(f'Server = {custom.url}\n')
+
+		if repos_to_enable:
+			info(f'Enabling repositories {", ".join(repos_to_enable)} in {PACMAN_CONF}')
+		for custom in self._custom_repositories:
+			debug(f'Custom repository [{custom.name}] -> {custom.url}')
 
 		# Host conf is snapshotted and restored on exit by guard_host_conf(); just write.
 		with PACMAN_CONF.open('w') as f:

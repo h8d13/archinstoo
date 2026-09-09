@@ -71,6 +71,7 @@ def perform_installation(
 		if locale_config:
 			installation.set_vconsole(locale_config)
 			# Skip set_locale in live mode - system locale already configured
+			info('Live mode: keeping the running system locale, only vconsole is applied')
 
 		if config.hostname:
 			installation.set_hostname(config.hostname)

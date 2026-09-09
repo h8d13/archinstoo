@@ -232,10 +232,13 @@ class Installer:
 			os.sync()
 
 			if not (missing_steps := self.post_install_check()):
+				# live/packages install onto the running system: the changes are
+				# already in effect, there is nothing to reboot into
+				closing = 'Changes are live on the running system.' if self.target == Path('/') else 'You may reboot when ready.'
 				msg = (
 					'Installation completed without any errors.\n'
 					f'Log files available at {logger.directory} and in target {ARTIFACTS_STORE}.\n'
-					'You may reboot when ready.\n'
+					f'{closing}\n'
 				)
 				log(msg, fg='green')
 
@@ -503,15 +506,14 @@ class Installer:
 
 	def _mount_partition(self, part_mod: PartitionModification) -> None:
 		if not part_mod.dev_path:
+			debug(f'Partition {part_mod.mountpoint or part_mod.fs_type} has no device path, skipping mount')
 			return
 
 		# subvolumes carry their own mountpoints and win over the partition's, which
 		# a manual layout can still set: mounting that would put the install on the
 		# top-level subvolume and leave every subvolume created but unused
 		if part_mod.fs_type == FilesystemType.BTRFS and part_mod.btrfs_subvols:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
+			if self._has_mountable_subvols(part_mod.dev_path, part_mod.btrfs_subvols):
 				self._mount_btrfs_subvol(
 					part_mod.dev_path,
 					part_mod.btrfs_subvols,
@@ -531,20 +533,15 @@ class Installer:
 			target = self.target / volume.relative_mountpoint
 			mount(volume.dev_path, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
-		if volume.fs_type == FilesystemType.BTRFS and volume.dev_path:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in volume.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
-				self._mount_btrfs_subvol(volume.dev_path, volume.btrfs_subvols, volume.mount_options)
+		if volume.fs_type == FilesystemType.BTRFS and volume.dev_path and self._has_mountable_subvols(volume.dev_path, volume.btrfs_subvols):
+			self._mount_btrfs_subvol(volume.dev_path, volume.btrfs_subvols, volume.mount_options)
 
 	def _mount_luks_partition(self, part_mod: PartitionModification, luks_handler: Luks2) -> None:
 		if not luks_handler.mapper_dev:
 			return
 
 		if part_mod.fs_type == FilesystemType.BTRFS and part_mod.btrfs_subvols:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
+			if self._has_mountable_subvols(luks_handler.mapper_dev, part_mod.btrfs_subvols):
 				self._mount_btrfs_subvol(luks_handler.mapper_dev, part_mod.btrfs_subvols, part_mod.mount_options)
 		elif part_mod.is_swap():
 			swapon(luks_handler.mapper_dev)
@@ -557,15 +554,23 @@ class Installer:
 			mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
-		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and luks_handler.mapper_dev:
-			target = self.target / volume.relative_mountpoint
-			mount(luks_handler.mapper_dev, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+		mapper = luks_handler.mapper_dev
 
-		if volume.fs_type == FilesystemType.BTRFS and luks_handler.mapper_dev:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in volume.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
-				self._mount_btrfs_subvol(luks_handler.mapper_dev, volume.btrfs_subvols, volume.mount_options)
+		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and mapper:
+			target = self.target / volume.relative_mountpoint
+			mount(mapper, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+
+		if volume.fs_type == FilesystemType.BTRFS and mapper and self._has_mountable_subvols(mapper, volume.btrfs_subvols):
+			self._mount_btrfs_subvol(mapper, volume.btrfs_subvols, volume.mount_options)
+
+	def _has_mountable_subvols(self, dev_path: Path, subvolumes: list[SubvolumeModification]) -> bool:
+		# only subvolumes with a mountpoint get mounted, and the partition must
+		# not stand in for them: an empty set means nothing lands here
+		if any(sv.mountpoint is not None for sv in subvolumes):
+			return True
+
+		warn(f'{dev_path}: no btrfs subvolume with a mountpoint, nothing mounted there')
+		return False
 
 	def _mount_btrfs_subvol(
 		self,
@@ -709,6 +714,7 @@ class Installer:
 			devices.extend(v.safe_dev_path for v in self._disk_encryption.lvm_volumes)
 
 		if not devices:
+			warn('TPM2 enrollment skipped: no encrypted devices in this layout')
 			return
 
 		pcrs = self._disk_encryption.tpm2_pcrs or '0+7'
@@ -761,6 +767,7 @@ class Installer:
 			devices.extend(v.safe_dev_path for v in self._disk_encryption.lvm_volumes)
 
 		if not devices:
+			warn('FIDO2 enrollment skipped: no encrypted devices in this layout')
 			return
 
 		# Stash the existing passphrase as a transient unlock keyfile under the standard
@@ -873,6 +880,7 @@ class Installer:
 
 	def set_hostname(self, hostname: str) -> None:
 		(self.target / 'etc/hostname').write_text(hostname + '\n')
+		debug(f'Wrote hostname {hostname}')
 
 	def set_locale(self, locale_config: LocaleConfiguration) -> bool:
 		# the menu keeps language and encoding apart; locale.gen names them
@@ -905,10 +913,12 @@ class Installer:
 		# alias (locarchive.c), so LANG=en_IL.UTF-8 resolves and UTF-8 stays
 		# visible to tools sniffing LANG (tmux et al.)
 		(self.target / 'etc/locale.conf').write_text(f'LANG={lang}.{encoding}{modifier}\n')
+		info(f'Set locale LANG={lang}.{encoding}{modifier}')
 		return True
 
 	def set_timezone(self, zone: str) -> bool:
 		if not zone:
+			debug('No timezone configured, leaving target default')
 			return True
 		if not len(zone):
 			return True  # Redundant
@@ -918,6 +928,7 @@ class Installer:
 		if (self.target / 'usr/share/zoneinfo' / zone).exists():
 			(self.target / 'etc' / 'localtime').unlink(missing_ok=True)
 			self.arch_chroot(['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime'])
+			info(f'Set timezone to {zone}')
 			return True
 
 		warn(f'Time zone {zone} does not exist, continuing with system default')
@@ -1050,6 +1061,7 @@ class Installer:
 
 		with (self.target / f'etc/systemd/network/10-{nic.iface}.network').open('a') as netconf:
 			netconf.write(str(conf))
+		info(f'Wrote network config for {nic.iface}')
 
 	def use_resolved(self) -> None:
 		# every network type; the stub symlink is what switches NetworkManager
@@ -1066,11 +1078,13 @@ class Installer:
 			host_resolv = Path('/etc/resolv.conf')
 			if host_resolv.is_file():  # follows symlink, False if dangling
 				resolv.write_text(host_resolv.read_text())
+				debug(f'Copied host {host_resolv} to target (foreign host)')
 			else:
 				debug('No host /etc/resolv.conf to copy, leaving target unset')
 			return
 
 		resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
+		debug(f'Linked {resolv} to systemd-resolved stub')
 
 	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
 		# Live mode targets the running system: configs already in place,
@@ -1081,6 +1095,7 @@ class Installer:
 		# Copy (if any) iwd password and config files
 		iwd_dir = LPath('/var/lib/iwd')
 		if psk_files := list(iwd_dir.glob('*.psk')):
+			info(f'Copying {len(psk_files)} iwd profile(s) to target')
 			if not on_host:
 				iwd_target = self.target / iwd_dir.relative_to_root()
 				iwd_target.mkdir(parents=True, exist_ok=True)
@@ -1109,6 +1124,7 @@ class Installer:
 		# Copy (if any) systemd-networkd config files
 		network_dir = LPath('/etc/systemd/network')
 		if netconfigurations := list(network_dir.glob('*')):
+			info(f'Copying {len(netconfigurations)} systemd-networkd config(s) to target')
 			if not on_host:
 				network_target = self.target / network_dir.relative_to_root()
 				network_target.mkdir(parents=True, exist_ok=True)
@@ -1128,6 +1144,9 @@ class Installer:
 				else:
 					self.enable_service('systemd-networkd')
 
+		if not psk_files and not netconfigurations:
+			debug('No iwd profiles or systemd-networkd configs found on ISO')
+
 		return True
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
@@ -1141,10 +1160,14 @@ class Installer:
 			mkinit.truncate()
 			mkinit.write(content)
 
+		debug(f'mkinitcpio.conf HOOKS=({" ".join(self._hooks)}) MODULES=({" ".join(self._modules)}) FILES=({" ".join(self._files)})')
+		info('Building initramfs...', step=True)
+
 		try:
 			self.arch_chroot(f'mkinitcpio {" ".join(flags)}', peek_output=True)
 			return True
 		except SysCallError as e:
+			warn(f'mkinitcpio failed: {e}')
 			if e.worker_log:
 				log(e.worker_log.decode())
 			return False
@@ -1175,16 +1198,20 @@ class Installer:
 
 		if fs_type == FilesystemType.BCACHEFS:
 			if 'bcachefs' not in self._modules:
+				debug('Adding bcachefs module to initramfs')
 				self._modules.append('bcachefs')
 			if 'bcachefs' not in self._hooks and 'block' in self._hooks:
+				debug('Inserting bcachefs hook after block')
 				self._hooks.insert(self._hooks.index('block') + 1, 'bcachefs')
 
 		# There is not yet an fsck tool for NTFS. If it's being used for the root filesystem, the hook should be removed.
 		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self._hooks:
+			debug('Removing fsck hook: no fsck tool for ntfs3 root')
 			self._hooks.remove('fsck')
 
 	def _prepare_encrypt(self, before: str = 'filesystems') -> None:
 		if 'sd-encrypt' not in self._hooks:
+			debug(f'Inserting sd-encrypt hook before {before}')
 			self._hooks.insert(self._hooks.index(before), 'sd-encrypt')
 
 	def minimal_installation(
@@ -1202,6 +1229,7 @@ class Installer:
 
 		if self._disk_config.lvm_config:
 			self.add_additional_packages(__lvm_packages__)
+			debug(f'Inserting {LVM} hook before filesystems')
 			self._hooks.insert(self._hooks.index('filesystems') - 1, LVM)
 
 			for vg in self._disk_config.lvm_config.vol_groups:
@@ -1228,6 +1256,7 @@ class Installer:
 
 		if ucode := self._get_microcode():
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)
+			debug(f'Adding microcode package {ucode.stem}')
 			self._base_packages.append(ucode.stem)
 		else:
 			debug('Archinstoo will not install any ucode.')
@@ -1612,6 +1641,7 @@ class Installer:
 			name = entry_name.format(kernel=kernel)
 			entry_conf = entries_dir / name
 			entry_conf.write_text(entry_template.format(kernel=kernel))
+			debug(f'Wrote {entry_conf}')
 
 	def _add_systemd_bootloader(
 		self,
@@ -1649,8 +1679,9 @@ class Installer:
 
 		try:
 			_bootctl_install('--variables=yes')
-		except SysCallError:
+		except SysCallError as err:
 			# retry leaving the EFI variables untouched (e.g. vars not writable)
+			warn(f'bootctl could not write EFI variables ({err}), retrying with --variables=no')
 			_bootctl_install('--variables=no')
 
 		# Loader configuration is stored in ESP/loader:
@@ -1686,6 +1717,7 @@ class Installer:
 					loader_data[index] = line.removeprefix('#')
 
 		loader_conf.write_text('\n'.join(loader_data) + '\n')
+		debug(f'Wrote {loader_conf}')
 
 		self._helper_flags['bootloader'] = 'systemd'
 
@@ -1786,6 +1818,7 @@ class Installer:
 				uki_file.write_text(content)
 				uki_file.add_exec()
 				linux_file.remove_exec()
+				debug('Enabled 15_uki and disabled 10_linux in /etc/grub.d')
 			except OSError:
 				error('Failed to enable UKI menu entries')
 		else:
@@ -1936,6 +1969,7 @@ class Installer:
 
 		hook_path = hooks_dir / '99-limine.hook'
 		hook_path.write_text(hook_contents)
+		debug(f'Wrote pacman hook {hook_path}')
 
 		kernel_params = ' '.join(self._get_kernel_params(root))
 		config_contents = 'timeout: 5\n'
@@ -1967,6 +2001,7 @@ class Installer:
 				config_contents += '\n'.join(f'    {it}' for it in entry) + '\n'
 
 		config_path.write_text(config_contents)
+		debug(f'Wrote {config_path}')
 
 		self._helper_flags['bootloader'] = 'limine'
 
@@ -2017,6 +2052,7 @@ class Installer:
 
 		for kernel in self.kernels:
 			# Setup the firmware entry
+			info(f'Creating EFI boot entry for {kernel}')
 			cmd = [arg.format(kernel=kernel) for arg in cmd_template]
 			SysCommand(cmd)
 
@@ -2090,6 +2126,7 @@ class Installer:
 			config_contents.append(entry)
 
 		config_path.write_text('\n'.join(config_contents) + '\n')
+		debug(f'Wrote {config_path}')
 
 		hook_contents = textwrap.dedent(
 			"""\
@@ -2111,6 +2148,7 @@ class Installer:
 
 		hook_path = hooks_dir / '99-refind.hook'
 		hook_path.write_text(hook_contents)
+		debug(f'Wrote pacman hook {hook_path}')
 
 		self._helper_flags['bootloader'] = 'refind'
 
@@ -2121,13 +2159,17 @@ class Installer:
 		keep_standalone_initramfs: bool = False,
 		splash: bool = False,
 	) -> None:
+		info('Configuring UKI images...', step=True)
+
 		if not efi_partition or not efi_partition.mountpoint:
 			raise ValueError(f'Could not detect ESP at mountpoint {self.target}')
 
 		# Set up kernel command line
-		with (self.target / 'etc/kernel/cmdline').open('w') as cmdline:
+		cmdline_path = self.target / 'etc/kernel/cmdline'
+		with cmdline_path.open('w') as cmdline:
 			kernel_parameters = self._get_kernel_params(root)
 			cmdline.write(' '.join(kernel_parameters) + '\n')
+		debug(f'Wrote {cmdline_path}')
 
 		diff_mountpoint = None
 
@@ -2153,6 +2195,7 @@ class Installer:
 				flags=re.MULTILINE,
 			)
 			(osrelease_dir / kernel).write_text(kernel_osrelease)
+			debug(f'Wrote {osrelease_dir / kernel}')
 
 			preset = self.target / 'etc/mkinitcpio.d' / (kernel + '.preset')
 			config = preset.read_text().splitlines(True)
@@ -2164,6 +2207,7 @@ class Installer:
 						continue
 					image = self.target / m.group(2)
 					image.unlink(missing_ok=True)
+					debug(f'Removed standalone initramfs {image}')
 					config[index] = '#' + m.group(1)
 				elif m := uki_re.match(line):
 					if diff_mountpoint:
@@ -2184,6 +2228,7 @@ class Installer:
 					config[index] = f'{pm.group(1)}({" ".join(repr(t) for t in tokens)})\n'
 
 			preset.write_text(''.join(config))
+			debug(f'Updated preset {preset}')
 
 		# Directory for the UKIs
 		uki_dir = self.target / efi_partition.relative_mountpoint / 'EFI/Linux'
@@ -2208,10 +2253,10 @@ class Installer:
 		self.enroll_fido2()
 
 		if quiet and 'quiet' not in self._kernel_params:
-			self._kernel_params.append('quiet')
+			self.add_kernel_param('quiet')
 
 		if serial_console and (param := f'console={serial_console}') not in self._kernel_params:
-			self._kernel_params.append(param)
+			self.add_kernel_param(param)
 
 		efi_partition = self._get_efi_partition()
 		boot_partition = self._get_boot_partition()
@@ -2279,6 +2324,7 @@ class Installer:
 	def add_kernel_param(self, params: str | list[str]) -> None:
 		if isinstance(params, str):
 			params = [params]
+		debug(f'Adding kernel param(s): {params}')
 		self._kernel_params.extend(params)
 
 	def enable_sudo(self, user: User, group: bool = False) -> None:
@@ -2317,8 +2363,10 @@ class Installer:
 	def add_to_seat_group(self, usernames: list[str]) -> None:
 		group_lines = self.target.joinpath('etc/group').read_text().splitlines()
 		if not any(line.startswith('seat:') for line in group_lines):
+			debug('No seat group on target (seatd not installed), skipping seat membership')
 			return
 		for name in usernames:
+			debug(f'Adding {name} to seat group')
 			self.arch_chroot(['usermod', '-a', '-G', 'seat', name])
 
 	def enable_doas(self, user: User) -> None:
@@ -2362,15 +2410,18 @@ class Installer:
 		}.get(privilege_escalation)
 
 		if auth_binary is None:
+			debug(f'{privilege_escalation.value} uses makepkg default PACMAN_AUTH, nothing to set')
 			return
 
 		makepkg_conf = self.target / 'etc/makepkg.conf'
 		if not makepkg_conf.exists():
+			warn(f'{makepkg_conf} missing, PACMAN_AUTH not set for {auth_binary}')
 			return
 
 		content = makepkg_conf.read_text()
 		content = content.replace('#PACMAN_AUTH=()', f'PACMAN_AUTH=({auth_binary})')
 		makepkg_conf.write_text(content)
+		debug(f'Set PACMAN_AUTH=({auth_binary}) in makepkg.conf')
 
 	def _create_user(
 		self,
@@ -2395,6 +2446,7 @@ class Installer:
 		self.set_user_password(user)
 
 		for group in user.groups:
+			debug(f'Adding {user.username} to group {group}')
 			self.arch_chroot(['gpasswd', '-a', user.username, group])
 
 		if user.elev:
@@ -2492,6 +2544,7 @@ class Installer:
 
 		fresh = {k: v for k, v in env_vars.items() if k not in defined}
 		if not fresh:
+			debug(f'Env vars already defined, not overwriting: {sorted(env_vars)}')
 			return
 
 		env_path.write_text(existing + ''.join(f'{k}={v}\n' for k, v in fresh.items()))
@@ -2618,6 +2671,7 @@ def run_grimoire_installation(
 	grimoire_dest = installation.target / 'usr/local/bin/grimoire'
 	grimoire_src.copy(grimoire_dest, preserve_metadata=True)
 	grimoire_dest.chmod(0o755)
+	debug(f'Installed grimoire helper to {grimoire_dest}')
 
 	priv_esc = auth_config.privilege_escalation
 	aur_rule = None

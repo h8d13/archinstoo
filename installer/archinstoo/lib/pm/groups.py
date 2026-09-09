@@ -6,6 +6,7 @@
 # `archinstoo.lib` import breaks that load (tests/test_schema.py pins it).
 
 import subprocess
+import sys
 
 
 def parse(text: str) -> dict[str, set[str]]:
@@ -26,6 +27,7 @@ def sync() -> dict[str, set[str]]:
 	# pacman would never install.
 	proc = subprocess.run(['pacman', '-Sgg'], capture_output=True, text=True, check=False)  # noqa: S607 - pacman from $PATH
 	if proc.returncode != 0:
+		print(f'warning: pacman -Sgg failed: {proc.stderr.strip()}', file=sys.stderr)
 		return {}
 	return parse(proc.stdout)
 

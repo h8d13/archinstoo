@@ -1,6 +1,8 @@
 from enum import Enum, StrEnum, auto
 from typing import TYPE_CHECKING, ClassVar, Self
 
+from archinstoo.lib.output import debug
+
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.users import User
@@ -157,6 +159,9 @@ class Profile:
 
 	def effective_packages(self) -> list[str]:
 		excluded = set(self.custom_settings.get('excluded_packages') or [])
+		if excluded:
+			matched = excluded & set(self.packages)
+			debug(f'{self.name}: excluding {sorted(matched)}; unmatched: {sorted(excluded - matched)}')
 		return [p for p in self.packages if p not in excluded]
 
 	@property

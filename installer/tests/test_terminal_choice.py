@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.default_profiles.desktops import swap_terminal, terminal_command
+from archinstoo.default_profiles.desktops.awesome import AwesomeProfile
 from archinstoo.default_profiles.desktops.hyprland import HyprlandProfile
 from archinstoo.default_profiles.desktops.niri import NiriProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
@@ -139,6 +140,63 @@ def test_niri_survives_a_missing_shipped_config(tmp_path: Path, monkeypatch: pyt
 
 	NiriProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
 
+	assert not (tmp_path / 'home/ada/.config').exists()
+
+
+# verbatim from xorg-xinit 1.4.4-1: what startx falls back to with no
+# ~/.xinitrc. The profile installs none of it and no longer edits it
+_STOCK_XINITRC = """\
+xclock="xclock"
+xterm="xterm"
+twm="twm"
+
+"$twm" &
+"$xclock" -geometry 50x50-1+1 &
+exec "$xterm" -geometry 80x66+0+0 -name login
+"""
+
+
+def _awesome_target(tmp_path: Path) -> Path:
+	xinitrc = tmp_path / 'etc/X11/xinit/xinitrc'
+	xinitrc.parent.mkdir(parents=True)
+	xinitrc.write_text(_STOCK_XINITRC)
+
+	rc_lua = tmp_path / 'etc/xdg/awesome/rc.lua'
+	rc_lua.parent.mkdir(parents=True)
+	rc_lua.write_text('terminal = "xterm"\n')
+
+	return xinitrc
+
+
+def test_awesome_starts_from_a_user_xinitrc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# no greeter in this profile, so startx is the way in and ~/.xinitrc wins
+	# over the packaged session
+	_pin_terminal(monkeypatch, Terminal.FOOT)
+	shipped = _awesome_target(tmp_path)
+
+	AwesomeProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	assert (tmp_path / 'home/ada/.xinitrc').read_text() == 'exec awesome\n'
+	assert shipped.read_text() == _STOCK_XINITRC, 'the packaged xinitrc must be left alone'
+
+
+def test_awesome_repoints_the_terminal_in_the_user_rc_lua(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	_pin_terminal(monkeypatch, Terminal.FOOT)
+	_awesome_target(tmp_path)
+
+	AwesomeProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	assert (tmp_path / 'home/ada/.config/awesome/rc.lua').read_text() == 'terminal = "foot"\n'
+	assert (tmp_path / 'etc/xdg/awesome/rc.lua').read_text() == 'terminal = "xterm"\n'
+
+
+def test_awesome_still_starts_without_a_shipped_rc_lua(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# rc.lua only carries the terminal; losing it must not cost the exec line
+	_pin_terminal(monkeypatch, Terminal.FOOT)
+
+	AwesomeProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	assert (tmp_path / 'home/ada/.xinitrc').read_text() == 'exec awesome\n'
 	assert not (tmp_path / 'home/ada/.config').exists()
 
 

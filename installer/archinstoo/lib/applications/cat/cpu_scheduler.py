@@ -34,6 +34,8 @@ class CPUSchedulerApp:
 		# as userspace BPF so no initramfs/mkinitcpio involvement
 		config_dir = install_session.target / 'etc/scx_loader'
 		config_dir.mkdir(parents=True, exist_ok=True)
-		(config_dir / 'config.toml').write_text(f'default_sched = "{cpu_scheduler_config.scheduler.value}"\ndefault_mode = "Auto"\n')
+		config_path = config_dir / 'config.toml'
+		config_path.write_text(f'default_sched = "{cpu_scheduler_config.scheduler.value}"\ndefault_mode = "Auto"\n')
+		debug(f'Wrote {config_path}')
 
 		install_session.enable_service(self.services)

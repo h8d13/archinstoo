@@ -152,8 +152,12 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 	try:
 		Pacman.run(f'-T {" ".join(depends)}')
 	except SysCallError as err:
+		debug(f'pacman -T exited non-zero: {err}')
 		out = err.worker_log.decode('utf-8', errors='ignore')
-		return [line.strip() for line in out.splitlines() if line.strip() in depends]
+		missing = [line.strip() for line in out.splitlines() if line.strip() in depends]
+		if not missing:
+			warn('pacman -T failed but named no missing package, assuming deps satisfied')
+		return missing
 
 	return []
 
@@ -185,14 +189,14 @@ def _arch_bootstrap(no_disk: bool) -> int:
 		# refresh python last then re-exec to load new libraries
 		Pacman.run('-S --needed --noconfirm python', peek_output=True)
 		Os.set_env('A2_DEPS_FETCHED', '1')
-	except Exception:
-		debug('Failed to fetch deps.')
+	except Exception as e:
+		error(f'Failed to fetch deps: {e}')
 		return 1
 	info('Reloading python...')
 	try:
 		reload_python()
-	except Exception:
-		info('Failed to reload python.')
+	except Exception as e:
+		error(f'Failed to reload python: {e}')
 		return 1
 
 	return 0
@@ -201,9 +205,11 @@ def _arch_bootstrap(no_disk: bool) -> int:
 def _check_online() -> int:
 	try:
 		ping('1.1.1.1')
+		debug('Network reachable')
 		return 0
 	except OSError as ex:
 		if 'Network is unreachable' in str(ex):
+			error('No network connectivity (ping 1.1.1.1 failed)')
 			info('Use iwctl/nmcli to connect manually.')
 			return 1
 		raise
@@ -361,6 +367,8 @@ def run_as_a_module() -> int:
 
 	handler = get_arch_config_handler()
 	script = handler.get_script()
+	source = handler.args.config or handler.args.config_url or 'menu'
+	info(f'Script: {script} silent={handler.args.silent} config={source}')
 
 	# handle rootless scripts early
 	if is_rootless:
@@ -397,6 +405,7 @@ def run_as_a_module() -> int:
 	finally:
 		if handler.args.clean:
 			# note this deletes all logs too
+			info(f'--clean: removing {logger.directory}')
 			clean_logs()
 		# note this removes any __pycache__ if possible
 		clean_cache('.')

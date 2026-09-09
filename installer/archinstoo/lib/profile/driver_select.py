@@ -1,4 +1,5 @@
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GfxDriver, GfxPackage, SysInfo, detected_gfx_drivers, detected_gfx_packages
+from archinstoo.lib.output import debug
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -50,6 +51,7 @@ def select_driver(
 	if not options:
 		if SysInfo.arch() != 'x86_64':
 			# On ARM only mesa-based drivers are available
+			debug(f'arch={SysInfo.arch()}, restricting gfx driver options to mesa')
 			options = [GfxDriver.MesaOpenSource]
 		else:
 			options = list(GfxDriver)

@@ -7,9 +7,9 @@ from compression.zstd import ZstdFile
 from pathlib import Path
 from typing import NamedTuple
 
-from archinstoo.lib.output import info
+from archinstoo.lib.output import debug, info
 from archinstoo.lib.pacman import Pacman
-from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF
+from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF, PACMAN_GNUPG
 from archinstoo.lib.utils.net import download_file_from_url, fetch_data_from_url
 
 # Sources we pull from when the host isn't Arch and ships pacman but no config.
@@ -25,13 +25,13 @@ _ARM_PACMAN_CONF_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs
 _ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
 _ARM_KEYRING_MIRROR = 'http://mirror.archlinuxarm.org/{arch}/core/'
 
-_TRUSTDB = Path('/etc/pacman.d/gnupg/trustdb.gpg')
+_TRUSTDB = PACMAN_GNUPG / 'trustdb.gpg'
 _KEYRING_DIR = Path('/usr/share/pacman/keyrings')
 
 # pacman expects these to exist; a bare host that only ships the binary won't
 # have them, so we create them up front before writing any config.
 _PACMAN_DIRS = (
-	Path('/etc/pacman.d/gnupg'),
+	PACMAN_GNUPG,
 	Path('/etc/pacman.d/hooks'),
 	Path('/var/lib/pacman'),
 	Path('/var/cache/pacman/pkg'),
@@ -116,6 +116,7 @@ def keyring_init() -> None:
 	src = _sources()
 
 	if (_KEYRING_DIR / f'{src.keyring}.gpg').exists() and _TRUSTDB.exists():
+		debug(f'{src.keyring} keyring and trustdb present, skipping keyring bootstrap')
 		return
 
 	url = _latest_keyring_url(src.keyring_mirror, src.keyring_pkg)

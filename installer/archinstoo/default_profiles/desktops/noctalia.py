@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import terminal_command
 from archinstoo.default_profiles.wayland import WaylandProfile
+from archinstoo.lib.output import debug, warn
 from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess, seat_services
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -52,10 +53,15 @@ class NoctaliaProfile(WaylandProfile):
 
 	@property
 	def compositors(self) -> list[str]:
+		# consumers index compositor_packages/_COMPOSITOR_CONFIG_DIRS by these:
+		# drop unknowns
+		return [c for c in self._requested_compositors() if c in self.compositor_packages] or ['niri']
+
+	def _requested_compositors(self) -> list[str]:
 		comp = self.custom_settings.get('noctalia_compositor')
 		if isinstance(comp, str):  # tolerate single value in hand-written configs
 			return [comp]
-		return comp if isinstance(comp, list) and comp else ['niri']
+		return comp if isinstance(comp, list) else []
 
 	@property
 	@override
@@ -86,6 +92,12 @@ class NoctaliaProfile(WaylandProfile):
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
 
+		requested = self._requested_compositors()
+		if dropped := [c for c in requested if c not in self.compositor_packages]:
+			warn(f'Ignoring unknown noctalia_compositor {dropped}, valid: {list(self.compositor_packages)}')
+		elif not requested:
+			debug(f'No noctalia_compositor set, using {self.compositors}')
+
 		# noctalia starts via the compositor's autostart hook; only the
 		# compositor config is provisioned, the shell configures itself
 		for user in users:
@@ -97,7 +109,9 @@ class NoctaliaProfile(WaylandProfile):
 
 				for asset in sorted((_ASSETS_DIR / comp).iterdir()):
 					conf = asset.read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
-					(dest_dir / asset.name).write_text(conf)
+					dest = dest_dir / asset.name
+					debug(f'Writing {dest} for {user.username}')
+					dest.write_text(conf)
 
 			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
 

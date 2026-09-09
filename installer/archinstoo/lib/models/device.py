@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.output import debug
+from archinstoo.lib.output import debug, warn
 
 # libparted PED_PARTITION_* values, re-exported verbatim by pyparted.
 # Inlined (stable C ABI) so models never need pyparted at import time:
@@ -179,11 +179,13 @@ class DiskLayoutConfiguration:
 			device_path = Path(entry['device']) if entry.get('device', None) else None
 
 			if not device_path:
+				warn('Skipping disk config entry without a device path')
 				continue
 
 			device = device_handler.get_device(device_path)
 
 			if not device:
+				warn(f'Skipping disk config entry: device {device_path} not found on this system')
 				continue
 
 			table = entry.get('partition_table')
@@ -1463,6 +1465,7 @@ class BtrfsOptions:
 			snapshot_config = SnapshotConfig.parse_args(snapshot_args)
 			return cls(snapshot_config)
 
+		debug('btrfs_options has no snapshot_config, snapshots disabled')
 		return None
 
 

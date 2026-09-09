@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Self, TypedDict
 
 from archinstoo.lib.hardware import GfxDriver, GfxPackage
+from archinstoo.lib.output import warn
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 
 if TYPE_CHECKING:
@@ -58,9 +59,20 @@ class ProfileConfiguration:
 		# unknown names are dropped, the same way kernels are parsed
 		gfx_packages = [GfxPackage(p) for p in arg.get('gfx_packages') or [] if p in GfxPackage._value2member_map_]
 
-		return cls(
+		config = cls(
 			profiles,
 			GfxDriver(gfx_driver) if gfx_driver else None,
 			gfx_packages,
 			GreeterType(greeter) if greeter else None,
 		)
+
+		# the menu gates both of these on the selection; a hand-written config
+		# does not, and install_profile_config would drop them without a word
+		# after pacstrap had already run
+		if config.greeter and not config.is_greeter_supported():
+			warn(f'Greeter {config.greeter.value} in the config: no selected profile supports one, it will be skipped')
+
+		if config.gfx_driver and not config.display_servers():
+			warn(f'Gfx driver {config.gfx_driver.value} in the config: no selected profile declares a display server, it will be skipped')
+
+		return config

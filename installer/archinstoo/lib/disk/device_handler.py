@@ -1,4 +1,3 @@
-import contextlib
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -433,7 +432,7 @@ class DeviceHandler:
 						debug(f'Force removing dm device: {dm_name}')
 						SysCommand(f'dmsetup remove --force {dm_name}')
 			except SysCallError:
-				pass
+				debug(f'Could not force-remove dm devices for VG {vg_name}')
 
 	def lvm_deactivate_vgs_on_device(self, device: BDevice) -> None:
 		# Deactivate any LVM VGs using partitions on this device.
@@ -721,6 +720,7 @@ class DeviceHandler:
 			requires_delete = modification.wipe is False
 			self._setup_partition(part_mod, modification.device, disk, requires_delete=requires_delete)
 
+		info(f'Committing partition table to {modification.device_path}')
 		disk.commit()
 
 		# Wait for kernel to process partition table changes
@@ -734,8 +734,11 @@ class DeviceHandler:
 
 		# Remove any remaining dm devices on this device
 		for dm_name in self.dm_names_on_device(modification.device.device_info.path):
-			with contextlib.suppress(SysCallError):
+			debug(f'Force removing dm device: {dm_name}')
+			try:
 				SysCommand(f'dmsetup remove --force {dm_name}')
+			except SysCallError:
+				debug(f'dmsetup remove failed: {dm_name}')
 
 		# Sync after dm cleanup
 		self.udev_sync()
@@ -813,6 +816,7 @@ class DeviceHandler:
 		# Wipe a device (partition or otherwise) of meta-data, be it file system, LVM, etc.
 		# @param dev_path:	Device path of the partition to be wiped.
 		# @type dev_path:		str
+		debug(f'Zeroing first 1024 bytes of {dev_path}')
 		with dev_path.open('wb') as p:
 			p.write(bytearray(1024))
 

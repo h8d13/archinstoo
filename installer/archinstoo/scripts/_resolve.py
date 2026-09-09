@@ -6,6 +6,7 @@
 # import it without side effects.
 
 import re
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -411,6 +412,7 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 
 	pkgs = sorted(explicit)
 	total = len(pkgs)
+	unresolved: list[str] = []
 
 	for i, pkg in enumerate(pkgs, 1):
 		deps: set[str] = set()
@@ -425,7 +427,9 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 				if name := _clean_dep(rest):
 					deps.add(name)
 		except Exception:
+			# counted as a leaf: the estimate below is a lower bound
 			deps.add(pkg)
+			unresolved.append(pkg)
 
 		resolved.update(deps)
 		if target and pkg != target and target in deps:
@@ -434,4 +438,6 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 		print(f'\r  {i}/{total} | resolved: {len(resolved)}', end='', flush=True)
 
 	print()
+	if unresolved:
+		print(f'  {len(unresolved)} package(s) could not be resolved, sizes are a lower bound: {" ".join(unresolved)}', file=sys.stderr)
 	return resolved, roots_for_target

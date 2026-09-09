@@ -1,3 +1,4 @@
+import time
 from typing import TYPE_CHECKING
 
 from archinstoo.default_profiles.minimal import MinimalProfile
@@ -6,6 +7,7 @@ from archinstoo.lib.configuration import ConfigStore
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.disk.filesystem import FilesystemHandler
+from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models import Bootloader
 from archinstoo.lib.models.locale import LocaleConfiguration
@@ -35,6 +37,9 @@ def perform_installation(
 	disk_config = config.disk_config
 	mountpoint = disk_config.mountpoint or mountpoint
 
+	start_time = time.monotonic()
+	info('Starting minimal installation...')
+
 	with Installer(
 		mountpoint,
 		disk_config,
@@ -63,6 +68,14 @@ def perform_installation(
 
 		user = User('devel', Password(plaintext='devel'), False)
 		installation.create_users(user)
+
+		# gpt-auto finds root and the ESP by partition type, so this installs
+		# and boots without one: everything else (mkinitcpio and the bootloader
+		# writing to a mounted /boot, rescue, swap) expects the real thing
+		installation.genfstab()
+
+	debug(f'Disk states after installing:\n{disk_layouts()}')
+	info(f'Minimal installation completed in {time.monotonic() - start_time:.0f}s')
 
 	# Once this is done, we output some useful information to the user
 	# And the installation is complete.

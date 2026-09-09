@@ -1,5 +1,6 @@
 import contextlib
 import os
+import shutil
 import signal
 import sys
 import threading
@@ -9,8 +10,8 @@ from typing import TYPE_CHECKING
 
 from .exceptions import RequirementError
 from .general import SysCommand
-from .output import error, info, logger, warn
-from .pathnames import PACMAN_CONF
+from .output import debug, error, info, logger, warn
+from .pathnames import PACMAN_CONF, PACMAN_GNUPG
 from .utils.env import Os
 
 if TYPE_CHECKING:
@@ -115,8 +116,12 @@ class Pacman:
 			info('Reinitializing pacman keyring...')
 			with contextlib.suppress(Exception):
 				SysCommand('killall gpg-agent', peek_output=True)
-			with contextlib.suppress(Exception):
-				SysCommand('rm -rf /etc/pacman.d/gnupg', peek_output=True)
+			if PACMAN_GNUPG.exists():
+				debug(f'Removing {PACMAN_GNUPG} before keyring re-init')
+				try:
+					shutil.rmtree(PACMAN_GNUPG)
+				except OSError as e:
+					warn(f'Could not remove {PACMAN_GNUPG}: {e}')
 			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
 			Pacman.run('-Sy archlinux-keyring --noconfirm', peek_output=True)

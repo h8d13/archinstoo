@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.output import info
+
 from .cat.audio import AudioApp
 from .cat.bluetooth import BluetoothApp
 from .cat.cpu_scheduler import CPUSchedulerApp
@@ -27,6 +29,8 @@ class ApplicationHandler:
 		pass
 
 	def install_applications(self, install_session: Installer, app_config: ApplicationConfiguration, users: list[User] | None = None) -> None:
+		info('Installing applications', step=True)
+
 		if app_config.bluetooth_config and app_config.bluetooth_config.enabled:
 			BluetoothApp().install(install_session)
 

@@ -10,9 +10,11 @@
 # unattended config can be filled in without hand-editing JSON around a
 # pasted hash.
 #
+# The config is positional here: the main parser owns --config.
+#
 # Usage: python -m archinstoo --script passwd [--stdin]
-#        python -m archinstoo --script passwd --config CONFIG --root
-#        python -m archinstoo --script passwd --config CONFIG --user NAME
+#        python -m archinstoo --script passwd CONFIG --root
+#        python -m archinstoo --script passwd CONFIG --user NAME
 
 import argparse
 import json

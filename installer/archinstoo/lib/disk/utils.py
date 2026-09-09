@@ -165,6 +165,7 @@ def umount(mountpoint: Path | str, recursive: bool = False) -> None:
 	lsblk_info = get_lsblk_info(mountpoint)
 
 	if not lsblk_info.mountpoints:
+		debug(f'{mountpoint} has no mountpoints, nothing to unmount')
 		return
 
 	debug(f'Partition {mountpoint} is currently mounted at: {[str(m) for m in lsblk_info.mountpoints]}')

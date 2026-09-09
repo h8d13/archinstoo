@@ -22,6 +22,7 @@ def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime 
 	try:
 		return datetime.datetime.fromisoformat(value)
 	except ValueError, AttributeError:
+		debug(f'Unparseable mirror timestamp {value!r}, ignoring')
 		return None
 
 
@@ -389,9 +390,6 @@ class PacmanConfiguration:
 		if args.get('custom_servers'):
 			config.custom_servers = CustomServer.parse_args(args['custom_servers'])
 
-		# backwards compatibility with the new custom_repository
-		if 'custom_mirrors' in args:
-			config.custom_repositories = CustomRepository.parse_args(args['custom_mirrors'])
 		if 'custom_repositories' in args:
 			config.custom_repositories = CustomRepository.parse_args(args['custom_repositories'])
 

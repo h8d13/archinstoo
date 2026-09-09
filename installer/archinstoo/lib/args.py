@@ -26,7 +26,7 @@ from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
-from archinstoo.lib.output import error, warn
+from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.profile.config import ProfileConfiguration
 
 DEFAULT_SCRIPT = 'guided'
@@ -36,12 +36,16 @@ def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) ->
 	for key, attr in mapping.items():
 		if value := config.get(key):
 			setattr(obj, attr, value)
+		elif key in config:
+			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
 
 
 def _set_parsed(obj: object, config: dict[str, Any], mapping: dict[str, Callable[[Any], object]]) -> None:
 	for key, parser in mapping.items():
 		if value := config.get(key):
 			setattr(obj, key, parser(value))
+		elif key in config:
+			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
 
 
 @dataclass

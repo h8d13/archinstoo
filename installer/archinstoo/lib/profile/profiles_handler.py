@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.hardware import GFX_SERVICES, XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.models.application import terminal_for
-from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
 
@@ -70,6 +70,7 @@ class ProfileHandler:
 				custom_profiles = self._process_profile_file(local_path)
 				self.remove_custom_profiles(custom_profiles)
 				self.add_custom_profiles(custom_profiles)
+				info(f'Loaded {len(custom_profiles)} custom profile(s) from {local_path}')
 			else:
 				self._import_profile_from_url(url_path)
 
@@ -141,6 +142,7 @@ class ProfileHandler:
 	def install_greeter(self, install_session: Installer, greeter: GreeterType) -> None:
 		# what each greeter pulls and runs lives on GreeterType; only the
 		# per-greeter configuration below is this function's own business
+		info(f'Installing greeter {greeter.value}', step=True)
 		install_session.add_additional_packages(greeter.packages)
 		install_session.enable_service(greeter.services)
 
@@ -150,13 +152,13 @@ class ProfileHandler:
 		# slick-greeter requires a config change
 		if greeter == GreeterType.LightdmSlick:
 			path = install_session.target.joinpath('etc/lightdm/lightdm.conf')
-			with path.open() as file:
-				filedata = file.read()
+			filedata = path.read_text()
 
-			filedata = filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter')
-
-			with path.open('w') as file:
-				file.write(filedata)
+			if '#greeter-session=example-gtk-gnome' not in filedata:
+				warn(f'{path}: greeter-session marker not found, slick-greeter not activated')
+			else:
+				debug(f'Setting greeter-session in {path}')
+				path.write_text(filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter'))
 
 		# greetd's stock config.toml runs the tty agreety greeter, so every
 		# front-end here replaces it wholesale. tuigreet reads the sessions
@@ -167,6 +169,7 @@ class ProfileHandler:
 			GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
 		}
 		if command := greetd_session.get(greeter):
+			debug(f'Writing greetd session config: {command}')
 			path = install_session.target.joinpath('etc/greetd/config.toml')
 			path.write_text(
 				dedent(f"""\
@@ -181,6 +184,7 @@ class ProfileHandler:
 
 		# regreet runs the cage compositor as the greeter user
 		if greeter == GreeterType.Regreet:
+			debug('Adding greeter user to seat group for regreet')
 			install_session.add_to_seat_group(['greeter'])
 
 	def install_gfx_driver(
@@ -221,6 +225,7 @@ class ProfileHandler:
 		app_config: ApplicationConfiguration | None,
 	) -> None:
 		if not profile_config.profiles:
+			debug('No profiles selected, skipping profile installation')
 			return
 
 		# Install gfx driver first as some desktops might need to satisfy deps (vulkan-driver virtual group).
@@ -254,6 +259,7 @@ class ProfileHandler:
 			profiles = self._process_profile_file(filepath)
 			self.remove_custom_profiles(profiles)
 			self.add_custom_profiles(profiles)
+			info(f'Loaded {len(profiles)} custom profile(s) from {url}')
 		except ValueError:
 			err = f'Unable to fetch profile from specified url: {url}'
 			error(err)
@@ -286,21 +292,8 @@ class ProfileHandler:
 			error(err)
 			raise SystemExit(1)
 
-	def _is_legacy(self, file: Path) -> bool:
-		# Check if the provided profile file contains a
-		# legacy profile definition
-		with file.open() as fp:
-			for line in fp:
-				if '__packages__' in line:
-					return True
-		return False
-
 	def _process_profile_file(self, file: Path) -> list[Profile]:
 		# Process a file for profile definitions
-		if self._is_legacy(file):
-			info(f'Cannot import {file} because it is no longer supported, please use the new profile format')
-			return []
-
 		if not file.is_file():
 			info(f'Cannot find profile file {file}')
 			return []

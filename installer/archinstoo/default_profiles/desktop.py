@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Self, override
 
-from archinstoo.lib.output import info
+from archinstoo.lib.output import debug, info
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType, SelectResult
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -39,7 +39,10 @@ class DesktopProfile(Profile):
 				combined_greeters[profile.default_greeter_type] += 1
 
 		if len(combined_greeters) >= 1:
-			return next(iter(combined_greeters))
+			chosen = next(iter(combined_greeters))
+			if len(combined_greeters) > 1:
+				debug(f'Multiple default greeters {[g.value for g in combined_greeters]}, using {chosen.value}')
+			return chosen
 
 		return None
 

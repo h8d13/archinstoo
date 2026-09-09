@@ -19,6 +19,13 @@
 #                                 exit with the guest's return code
 #   ./TSER capture CMD [-t SEC]   same, but via ttyS1: exact bytes, safe to
 #                                 pipe into jq/diff
+#   ./TSER push SRC [DEST]        copy a host file or directory into the
+#                                 guest over http (a directory arrives as a
+#                                 tree, DEST defaults to /root/<name>)
+#   ./TSER ctrl KEY [KEY ...]     raw bytes on ttyS0: ctrl-<letter>, esc,
+#                                 ret, tab, space, up/down/left/right.
+#                                 Steers a curses menu, interrupts a
+#                                 running script, ends a chrooted shell
 #   ./TSER keys KEY [KEY ...]     monitor sendkey (bootloader menus: up/ret)
 #   ./TSER type TEXT              TEXT + Enter as sendkeys: greeter or VT
 #                                 login when the guest has no serial getty
@@ -45,9 +52,15 @@
 import argparse
 import os
 import re
+import shutil
 import socket
 import sys
+import tarfile
+import tempfile
+import threading
 import time
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import NoReturn
 
@@ -114,15 +127,16 @@ def vm_pid() -> int | None:
 	return pid
 
 
-def serial_write(data: bytes) -> None:
+def serial_write(data: bytes, kill_line: bool = True) -> None:
 	if not SERIAL.exists():
 		die(f'{SERIAL} missing, is the VM running? (A2_SERIAL=on ./TVM)')
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.connect(str(SERIAL))
 		# ^U first: anything the guest left half-typed (zsh refusing to run
 		# a missing binary, an aborted paste) would otherwise get this
-		# command appended to it, and neither line would ever execute
-		payload = b'\x15' + data
+		# command appended to it, and neither line would ever execute.
+		# Raw keys skip it: ^U is itself input to whatever is reading.
+		payload = b'\x15' + data if kill_line else data
 		# Pace it. The emulated 16550 takes 16 bytes at a time, so a big
 		# write is always partial, and QEMU's retry re-sends a byte it
 		# already delivered ('git' arriving as 'gitt'). Small writes with a
@@ -198,25 +212,29 @@ def wait_idle(timeout: float) -> bool:
 		time.sleep(0.25)
 
 
-def cmd_run(args: argparse.Namespace) -> NoReturn:
+def marked_run(cmd: str, timeout: float) -> tuple[str, int | None]:
 	# marker carries the exit status back out of the guest; the log
 	# offset makes it unique per invocation without needing state
-	if not wait_idle(args.timeout):
-		die(f'guest still busy after {args.timeout}s, see ./TSER read')
+	if not wait_idle(timeout):
+		die(f'guest still busy after {timeout}s, see ./TSER read')
 	offset = log_size()
 	marker = f'TSER{offset}'
-	serial_write(f'{args.cmd}; echo {marker}rc=$?\n'.encode())
+	serial_write(f'{cmd}; echo {marker}rc=$?\n'.encode())
 	# 'rc=$?' in the echoed command line can't match 'rc=<digits>'
 	# same duplication can inflate a nonzero status ('1' -> '11'); zero
 	# survives it ('00' is still 0), so pass/fail stays trustworthy
-	text, match = wait_for(fuzzy(marker) + r'rc=(\d+)', args.timeout, offset)
-	lines = text.splitlines()
+	text, match = wait_for(fuzzy(marker) + r'rc=(\d+)', timeout, offset)
 	# drop the shell's echo of what we typed and grml zsh's prompt padding
-	body = [ln for ln in lines if marker not in ln and not PROMPT.fullmatch(ln.rstrip())]
-	print('\n'.join(body).strip())
-	if not match:
+	body = [ln for ln in text.splitlines() if marker not in ln and not PROMPT.fullmatch(ln.rstrip())]
+	return '\n'.join(body).strip(), (int(match.group(1)) if match else None)
+
+
+def cmd_run(args: argparse.Namespace) -> NoReturn:
+	body, rc = marked_run(args.cmd, args.timeout)
+	print(body)
+	if rc is None:
 		die(f'timeout after {args.timeout}s running {args.cmd!r}')
-	sys.exit(int(match.group(1)))
+	sys.exit(rc)
 
 
 def cmd_capture(args: argparse.Namespace) -> NoReturn:
@@ -265,6 +283,83 @@ def cmd_login(args: argparse.Namespace) -> None:
 	serial_write(b'[ -n "$ZSH_VERSION" ] && unsetopt correct\n')
 	time.sleep(0.5)
 	print('logged in as root')
+
+
+def cmd_push(args: argparse.Namespace) -> None:
+	# qemu's user networking maps the host's loopback to 10.0.2.2 in the
+	# guest, so a server bound to 127.0.0.1 is reachable there and nowhere
+	# else on the network. Beats typing a payload in over a 16550.
+	src = Path(args.src).expanduser().resolve()
+	if not src.exists():
+		die(f'{src} does not exist')
+
+	dest = args.dest or f'/root/{src.name}'
+
+	with tempfile.TemporaryDirectory() as tmp:
+		root = Path(tmp)
+
+		if src.is_dir():
+			name = f'{src.name}.tar.gz'
+			with tarfile.open(root / name, 'w:gz') as tar:
+				tar.add(src, arcname='.')
+		else:
+			name = src.name
+			shutil.copy2(src, root / name)
+
+		server = ThreadingHTTPServer(('127.0.0.1', 0), partial(SimpleHTTPRequestHandler, directory=str(root)))
+		port = server.server_address[1]
+		threading.Thread(target=server.serve_forever, daemon=True).start()
+
+		url = f'http://10.0.2.2:{port}/{name}'
+		if src.is_dir():
+			fetch = f'mkdir -p {dest} && curl -sSf {url} | tar -xzf - -C {dest}'
+		else:
+			fetch = f'curl -sSf -o {dest} {url}'
+
+		try:
+			body, rc = marked_run(fetch, args.timeout)
+		finally:
+			server.shutdown()
+
+	if body:
+		print(body)
+	if rc is None:
+		die(f'timeout after {args.timeout}s pushing {src}')
+	if rc != 0:
+		die(f'guest fetch failed (rc {rc}): {fetch}')
+	print(f'{src} -> {dest}')
+
+
+# ttyS0 carries these as bytes, and `send` cannot: it kills the line first
+# and ends with a newline. A curses menu wants ESC and arrows, a running
+# script wants ^C, a chrooted shell wants ^D.
+RAW_KEYS = {
+	'esc': b'\x1b',
+	'ret': b'\r',
+	'tab': b'\t',
+	'space': b' ',
+	'up': b'\x1b[A',
+	'down': b'\x1b[B',
+	'right': b'\x1b[C',
+	'left': b'\x1b[D',
+}
+
+
+def raw_key(key: str) -> bytes:
+	if raw := RAW_KEYS.get(key):
+		return raw
+	# ctrl-<letter> is that letter's position in the alphabet
+	letter = key.removeprefix('ctrl-')
+	if key.startswith('ctrl-') and len(letter) == 1 and letter.isalpha():
+		return bytes([ord(letter.lower()) - ord('a') + 1])
+	die(f'unknown key {key!r}: ctrl-<letter> or one of {", ".join(RAW_KEYS)}')
+
+
+def cmd_ctrl(args: argparse.Namespace) -> None:
+	for key in args.keys:
+		serial_write(raw_key(key), kill_line=False)
+		# whatever is reading has to act on it before the next one lands
+		time.sleep(args.delay)
 
 
 def cmd_keys(args: argparse.Namespace) -> None:
@@ -384,6 +479,17 @@ def main() -> None:
 	p.add_argument('-p', '--password', default='')
 	p.add_argument('-t', '--timeout', type=float, default=180)
 	p.set_defaults(func=cmd_login)
+
+	p = sub.add_parser('push')
+	p.add_argument('src')
+	p.add_argument('dest', nargs='?')
+	p.add_argument('-t', '--timeout', type=float, default=300)
+	p.set_defaults(func=cmd_push)
+
+	p = sub.add_parser('ctrl')
+	p.add_argument('keys', nargs='+')
+	p.add_argument('-d', '--delay', type=float, default=0.5)
+	p.set_defaults(func=cmd_ctrl)
 
 	p = sub.add_parser('keys')
 	p.add_argument('keys', nargs='+')

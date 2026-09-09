@@ -87,10 +87,6 @@ def perform_installation(
 
 def packages() -> None:
 	handler = get_arch_config_handler()
-	config = handler.config
-
-	# Set script name
-	config.script = 'packages'
 
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
