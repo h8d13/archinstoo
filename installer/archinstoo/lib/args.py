@@ -37,7 +37,7 @@ def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) ->
 		if value := config.get(key):
 			setattr(obj, attr, value)
 		elif key in config:
-			debug(f'Ignoring empty config key {key!r}')
+			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
 
 
 def _set_parsed(obj: object, config: dict[str, Any], mapping: dict[str, Callable[[Any], object]]) -> None:
@@ -45,7 +45,7 @@ def _set_parsed(obj: object, config: dict[str, Any], mapping: dict[str, Callable
 		if value := config.get(key):
 			setattr(obj, key, parser(value))
 		elif key in config:
-			debug(f'Ignoring empty config key {key!r}')
+			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
 
 
 @dataclass

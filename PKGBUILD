@@ -54,7 +54,8 @@ optdepends=(
 	'xfsprogs'       #For XFS filesystem support
 	'cryptsetup'     #For LUKS encryption support
 	'lvm2'           #For LVM FS layout support
-	'pacman-contrib' #For count size and other utilities
+	'pacman-contrib' #For count and other utilities
+	'expac'          #For size extraction of alpm DB
 	'tree'           #For docs project tree output
 	'nvchecker'      #For bumping versions auto
 	'archiso'        #For creating your own ISOs

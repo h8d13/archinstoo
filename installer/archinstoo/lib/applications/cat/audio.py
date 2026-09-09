@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.application import Audio, AudioConfiguration
-from archinstoo.lib.output import debug, warn
+from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -45,7 +45,8 @@ class AudioApp:
 		users: list[User] | None = None,
 	) -> None:
 		if users is None:
-			warn('No users defined, skipping pipewire user service activation')
+			# the packages script installs onto a running system and passes none
+			debug('No users defined, skipping pipewire user service activation')
 			return
 
 		for user in users:

@@ -510,16 +510,12 @@ class Installer:
 		# a manual layout can still set: mounting that would put the install on the
 		# top-level subvolume and leave every subvolume created but unused
 		if part_mod.fs_type == FilesystemType.BTRFS and part_mod.btrfs_subvols:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
+			if self._has_mountable_subvols(part_mod.dev_path, part_mod.btrfs_subvols):
 				self._mount_btrfs_subvol(
 					part_mod.dev_path,
 					part_mod.btrfs_subvols,
 					part_mod.mount_options,
 				)
-			else:
-				warn(f'{part_mod.dev_path}: btrfs subvolumes defined but none have a mountpoint, partition not mounted')
 		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
@@ -534,20 +530,15 @@ class Installer:
 			target = self.target / volume.relative_mountpoint
 			mount(volume.dev_path, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
 
-		if volume.fs_type == FilesystemType.BTRFS and volume.dev_path:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in volume.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
-				self._mount_btrfs_subvol(volume.dev_path, volume.btrfs_subvols, volume.mount_options)
+		if volume.fs_type == FilesystemType.BTRFS and volume.dev_path and self._has_mountable_subvols(volume.dev_path, volume.btrfs_subvols):
+			self._mount_btrfs_subvol(volume.dev_path, volume.btrfs_subvols, volume.mount_options)
 
 	def _mount_luks_partition(self, part_mod: PartitionModification, luks_handler: Luks2) -> None:
 		if not luks_handler.mapper_dev:
 			return
 
 		if part_mod.fs_type == FilesystemType.BTRFS and part_mod.btrfs_subvols:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in part_mod.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
+			if self._has_mountable_subvols(luks_handler.mapper_dev, part_mod.btrfs_subvols):
 				self._mount_btrfs_subvol(luks_handler.mapper_dev, part_mod.btrfs_subvols, part_mod.mount_options)
 		elif part_mod.is_swap():
 			swapon(luks_handler.mapper_dev)
@@ -560,15 +551,24 @@ class Installer:
 			mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
-		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and luks_handler.mapper_dev:
-			target = self.target / volume.relative_mountpoint
-			mount(luks_handler.mapper_dev, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+		mapper = luks_handler.mapper_dev
 
-		if volume.fs_type == FilesystemType.BTRFS and luks_handler.mapper_dev:
-			# Only mount BTRFS subvolumes that have mountpoints specified
-			subvols_with_mountpoints = [sv for sv in volume.btrfs_subvols if sv.mountpoint is not None]
-			if subvols_with_mountpoints:
-				self._mount_btrfs_subvol(luks_handler.mapper_dev, volume.btrfs_subvols, volume.mount_options)
+		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and mapper:
+			target = self.target / volume.relative_mountpoint
+			mount(mapper, target, mount_fs=volume.fs_type.fs_type_mount, options=volume.mount_options)
+
+		if volume.fs_type == FilesystemType.BTRFS and mapper and self._has_mountable_subvols(mapper, volume.btrfs_subvols):
+			self._mount_btrfs_subvol(mapper, volume.btrfs_subvols, volume.mount_options)
+
+	def _has_mountable_subvols(self, dev_path: Path, subvolumes: list[SubvolumeModification]) -> bool:
+		# only subvolumes carrying a mountpoint are ever mounted, and the
+		# partition itself must not stand in for them: an empty set means
+		# nothing lands here at all, which is worth saying out loud
+		if any(sv.mountpoint is not None for sv in subvolumes):
+			return True
+
+		warn(f'{dev_path}: no btrfs subvolume with a mountpoint, nothing mounted there')
+		return False
 
 	def _mount_btrfs_subvol(
 		self,

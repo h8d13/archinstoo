@@ -421,7 +421,9 @@ def _append_log(file: str, content: str) -> None:
 	except (PermissionError, FileNotFoundError) as err:
 		if path not in _append_log_failed:
 			_append_log_failed.add(path)
-			debug(f'Could not append to {path}: {err}')
+			# the log dir is what just failed: reporting it must not raise
+			with contextlib.suppress(OSError):
+				debug(f'Could not append to {path}: {err}')
 
 
 def _cmd_history(cmd: list[str]) -> None:

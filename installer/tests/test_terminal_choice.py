@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.default_profiles.desktops import swap_terminal, terminal_command
+from archinstoo.default_profiles.desktops.awesome import AwesomeProfile
 from archinstoo.default_profiles.desktops.hyprland import HyprlandProfile
 from archinstoo.default_profiles.desktops.niri import NiriProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
@@ -140,6 +141,33 @@ def test_niri_survives_a_missing_shipped_config(tmp_path: Path, monkeypatch: pyt
 	NiriProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
 
 	assert not (tmp_path / 'home/ada/.config').exists()
+
+
+def test_awesome_writes_xinitrc_without_rc_lua(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# rc.lua only carries the terminal; xinitrc is what starts awesome (no
+	# greeter in this profile), so a missing rc.lua must not cost the exec line
+	_pin_terminal(monkeypatch, Terminal.FOOT)
+	xinitrc = tmp_path / 'etc/X11/xinit/xinitrc'
+	xinitrc.parent.mkdir(parents=True)
+	xinitrc.write_text('twm &\nxclock -geometry 50x50 &\nexec xterm -geometry 80x66\n')
+
+	AwesomeProfile().install(_session(tmp_path, monkeypatch))
+
+	written = xinitrc.read_text()
+	assert written.endswith('exec awesome\n')
+	assert '# exec xterm -geometry 80x66' in written
+	assert '# twm &' in written
+
+
+def test_awesome_swaps_the_rc_lua_terminal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	_pin_terminal(monkeypatch, Terminal.FOOT)
+	rc_lua = tmp_path / 'etc/xdg/awesome/rc.lua'
+	rc_lua.parent.mkdir(parents=True)
+	rc_lua.write_text('terminal = "xterm"\n')
+
+	AwesomeProfile().install(_session(tmp_path, monkeypatch))
+
+	assert rc_lua.read_text() == 'terminal = "foot"\n'
 
 
 _TERMINAL_PROFILES = ('i3-wm', 'qtile', 'labwc', 'river', 'sway', 'hyprland', 'niri', 'awesome', 'dms', 'noctalia')

@@ -152,17 +152,13 @@ class ProfileHandler:
 		# slick-greeter requires a config change
 		if greeter == GreeterType.LightdmSlick:
 			path = install_session.target.joinpath('etc/lightdm/lightdm.conf')
-			debug(f'Setting greeter-session in {path}')
-			with path.open() as file:
-				filedata = file.read()
+			filedata = path.read_text()
 
 			if '#greeter-session=example-gtk-gnome' not in filedata:
 				warn(f'{path}: greeter-session marker not found, slick-greeter not activated')
-
-			filedata = filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter')
-
-			with path.open('w') as file:
-				file.write(filedata)
+			else:
+				debug(f'Setting greeter-session in {path}')
+				path.write_text(filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter'))
 
 		# greetd's stock config.toml runs the tty agreety greeter, so every
 		# front-end here replaces it wholesale. tuigreet reads the sessions

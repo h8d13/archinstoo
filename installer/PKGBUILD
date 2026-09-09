@@ -23,6 +23,7 @@ depends=(
 	'kbd'                  #For keyboard layout configuration
 	'libxcrypt'
 	'pacman'
+	'expac'
 	'git'         #cloning stashes
 	'btrfs-progs' #btrfs filesystem support
 	'dosfstools'  #FAT EFI filesystem support

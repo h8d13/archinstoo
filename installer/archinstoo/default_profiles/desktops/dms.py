@@ -48,13 +48,15 @@ class DmsProfile(WaylandProfile):
 
 	@property
 	def compositors(self) -> list[str]:
+		# every consumer indexes compositor_packages/binds_paths by these, so a
+		# hand-written config naming something unknown is dropped here, once
+		return [c for c in self._requested_compositors() if c in self.compositor_packages] or ['niri']
+
+	def _requested_compositors(self) -> list[str]:
 		comp = self.custom_settings.get('dms_compositor')
 		if isinstance(comp, str):  # tolerate single value in hand-written configs
 			return [comp]
-		if isinstance(comp, list) and comp:
-			return comp
-		warn(f'Unusable dms_compositor setting {comp!r}, defaulting to niri')
-		return ['niri']
+		return comp if isinstance(comp, list) else []
 
 	@property
 	@override
@@ -63,9 +65,6 @@ class DmsProfile(WaylandProfile):
 		seat = self.custom_settings.get('seat_access')
 		if isinstance(seat, str):
 			additional = [seat]
-
-		if unknown := [c for c in self.compositors if c not in self.compositor_packages]:
-			debug(f'Unknown dms_compositor {unknown}, valid: {list(self.compositor_packages)}')
 
 		compositor_pkgs = [p for comp in self.compositors for p in self.compositor_packages[comp]]
 
@@ -90,6 +89,12 @@ class DmsProfile(WaylandProfile):
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
+
+		requested = self._requested_compositors()
+		if dropped := [c for c in requested if c not in self.compositor_packages]:
+			warn(f'Ignoring unknown dms_compositor {dropped}, valid: {list(self.compositor_packages)}')
+		elif not requested:
+			debug(f'No dms_compositor set, using {self.compositors}')
 
 		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
 		# any session that activates the target: niri natively, hyprland via the

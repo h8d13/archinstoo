@@ -205,13 +205,13 @@ def perform_installation(
 			# nobody to pick an action, and rebooting here would cut the
 			# caller off mid-script: leave the system up and let it decide
 			elapsed_time = time.monotonic() - start_time
-			info(f'Installation completed in {elapsed_time:.0f}s')
 			action = PostInstallationAction.EXIT
 		else:
 			with Tui():
 				elapsed_time = time.monotonic() - start_time
 				action = select_post_installation(elapsed_time)
-			info(f'Installation completed in {elapsed_time:.0f}s')
+
+		info(f'Installation completed in {elapsed_time:.0f}s')
 
 		# Persist install log + saved config to /etc/archinstoo.d after the menu so the
 		# log captures everything up to the action. subprocess.run('reboot'/'poweroff')

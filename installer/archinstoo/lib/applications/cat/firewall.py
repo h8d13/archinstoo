@@ -48,10 +48,10 @@ class FirewallApp:
 				ufw_conf = install_session.target / 'etc/ufw/ufw.conf'
 				content = ufw_conf.read_text()
 				if 'ENABLED=no' not in content:
-					warn(f'{ufw_conf}: ENABLED=no not found, ufw left disabled')
+					warn(f'{ufw_conf}: no ENABLED=no line, leaving the file as shipped')
 				else:
 					debug(f'Setting ENABLED=yes in {ufw_conf}')
-				ufw_conf.write_text(content.replace('ENABLED=no', 'ENABLED=yes'))
+					ufw_conf.write_text(content.replace('ENABLED=no', 'ENABLED=yes'))
 
 			case Firewall.FWD:
 				install_session.add_additional_packages(self.fwd_packages)

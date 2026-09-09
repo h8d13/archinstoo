@@ -53,13 +53,15 @@ class NoctaliaProfile(WaylandProfile):
 
 	@property
 	def compositors(self) -> list[str]:
+		# every consumer indexes compositor_packages/_COMPOSITOR_CONFIG_DIRS by
+		# these, so a config naming something unknown is dropped here, once
+		return [c for c in self._requested_compositors() if c in self.compositor_packages] or ['niri']
+
+	def _requested_compositors(self) -> list[str]:
 		comp = self.custom_settings.get('noctalia_compositor')
 		if isinstance(comp, str):  # tolerate single value in hand-written configs
 			return [comp]
-		if isinstance(comp, list) and comp:
-			return comp
-		warn(f'Unusable noctalia_compositor setting {comp!r}, defaulting to niri')
-		return ['niri']
+		return comp if isinstance(comp, list) else []
 
 	@property
 	@override
@@ -89,6 +91,12 @@ class NoctaliaProfile(WaylandProfile):
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
+
+		requested = self._requested_compositors()
+		if dropped := [c for c in requested if c not in self.compositor_packages]:
+			warn(f'Ignoring unknown noctalia_compositor {dropped}, valid: {list(self.compositor_packages)}')
+		elif not requested:
+			debug(f'No noctalia_compositor set, using {self.compositors}')
 
 		# noctalia starts via the compositor's autostart hook; only the
 		# compositor config is provisioned, the shell configures itself

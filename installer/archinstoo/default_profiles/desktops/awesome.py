@@ -35,48 +35,38 @@ class AwesomeProfile(XorgProfile):
 	def install(self, install_session: Installer) -> None:
 		super().install(install_session)
 
-		# TODO: Copy a full configuration to ~/.config/awesome/rc.lua instead.
+		# two independent files: a missing rc.lua must not cost the xinitrc
+		# rewrite, which is what starts awesome (this profile ships no greeter)
+		self._swap_rc_lua_terminal(install_session)
+		self._exec_awesome_from_xinitrc(install_session)
+
+	# TODO: Copy a full configuration to ~/.config/awesome/rc.lua instead.
+	# TODO: Configure the right-click-menu to contain the above packages that were installed. (as a user config)
+	def _swap_rc_lua_terminal(self, install_session: Installer) -> None:
 		rc_lua_path = install_session.target / 'etc/xdg/awesome/rc.lua'
 		if not rc_lua_path.exists():
 			warn(f'{rc_lua_path} missing, leaving awesome config as shipped')
 			return
 
-		with rc_lua_path.open() as fh:
-			awesome_lua = fh.read()
-
 		# rc.lua hardcodes `terminal = "xterm"`, and everything else in it
 		# (menu entries, menubar.utils.terminal) reads that one variable
-		awesome_lua = swap_terminal(awesome_lua, 'xterm', rc_lua_path)
-
-		with rc_lua_path.open('w') as fh:
-			fh.write(awesome_lua)
-
+		rc_lua_path.write_text(swap_terminal(rc_lua_path.read_text(), 'xterm', rc_lua_path))
 		debug(f'Rewrote {rc_lua_path}')
 
-		# TODO: Configure the right-click-menu to contain the above packages that were installed. (as a user config)
-
-		# TODO: check if we selected a greeter,
-		# but for now, awesome is intended to run without one.
+	# TODO: check if we selected a greeter,
+	# but for now, awesome is intended to run without one.
+	def _exec_awesome_from_xinitrc(self, install_session: Installer) -> None:
 		xinitrc_path = install_session.target / 'etc/X11/xinit/xinitrc'
 		if not xinitrc_path.exists():
 			warn(f'{xinitrc_path} missing, leaving xinitrc as shipped')
 			return
 
-		with xinitrc_path.open() as xinitrc:
-			xinitrc_data = xinitrc.read()
+		xinitrc_data = xinitrc_path.read_text()
 
+		# one pass per line: a line matching twice would get commented twice
 		for line in xinitrc_data.split('\n'):
-			if 'twm &' in line:
-				xinitrc_data = xinitrc_data.replace(line, f'# {line}')
-			if 'xclock' in line:
-				xinitrc_data = xinitrc_data.replace(line, f'# {line}')
-			if 'xterm' in line:
+			if 'twm &' in line or 'xclock' in line or 'xterm' in line:
 				xinitrc_data = xinitrc_data.replace(line, f'# {line}')
 
-		xinitrc_data += '\n'
-		xinitrc_data += 'exec awesome\n'
-
-		with xinitrc_path.open('w') as xinitrc:
-			xinitrc.write(xinitrc_data)
-
+		xinitrc_path.write_text(xinitrc_data + '\nexec awesome\n')
 		debug(f'Rewrote {xinitrc_path} to exec awesome')
