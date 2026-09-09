@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from archinstoo import debug, error, info
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
-from archinstoo.lib.configuration import ConfigStore
+from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
@@ -11,7 +11,7 @@ from archinstoo.lib.installer import Installer
 from archinstoo.lib.tui import Tui
 
 
-def show_menu(config: ArchConfig) -> None:
+def show_menu(config: ArchConfig, _args: Arguments) -> None:
 	with Tui():
 		global_menu = GlobalMenu(config)
 		global_menu.disable_all()
@@ -46,6 +46,10 @@ def perform_installation(
 		handler=handler,
 		device_handler=device_handler,
 	) as installation:
+		# format mode stops at a mounted layout: there is no base step to miss,
+		# so claim it rather than let the exit summary report it as skipped
+		installation.set_helper_flag('base', True)
+
 		# Mount all the drives to the desired mountpoint
 		# This *can* be done outside of the installation, but the installer can deal with it.
 		info('Mounting the formatted layout...')
@@ -61,28 +65,21 @@ def perform_installation(
 	debug(f'Disk states after installing:\n{disk_layouts()}')
 
 
+def _validate_silent(config: ArchConfig) -> None:
+	if not config.disk_config:
+		error('--silent needs disk_config in the config, nothing to format')
+		raise SystemExit(1)
+
+
 def format_disk() -> None:
 	handler = get_arch_config_handler()
-	config = handler.config
 	args = handler.args
 
 	# Create handler instance once at the entry point and pass it through
 	device_handler = DeviceHandler()
 
-	while True:
-		show_menu(config)
-
-		store = ConfigStore(config)
-		store.write_debug()
-		store.save()
-
-		if args.dry_run:
-			raise SystemExit(0)
-
-		with Tui():
-			if store.confirm_config():
-				break
-			debug('Installation aborted')
+	# same resolve/confirm path as guided, so --silent works here too
+	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
 
 	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)

@@ -1,4 +1,5 @@
 import contextlib
+import subprocess
 from getpass import getpass
 from pathlib import Path
 
@@ -102,6 +103,25 @@ def mount_partition(partition: LsblkInfo, mount_point: Path) -> bool:
 		return False
 
 
+# fstab names a device by tag as often as by path, and genfstab -U writes
+# nothing but tags. udev keeps a symlink farm for each one, so resolving
+# here costs no blkid call
+_FSTAB_TAG_DIRS = {
+	'UUID': 'by-uuid',
+	'PARTUUID': 'by-partuuid',
+	'LABEL': 'by-label',
+	'PARTLABEL': 'by-partlabel',
+	'ID': 'by-id',
+}
+
+
+def fstab_device(spec: str) -> Path:
+	tag, _, value = spec.partition('=')
+	if by_dir := _FSTAB_TAG_DIRS.get(tag):
+		return Path('/dev/disk') / by_dir / value
+	return Path(spec)
+
+
 def mount_additional_filesystems(mount_point: Path) -> None:
 	fstab_path = mount_point / 'etc' / 'fstab'
 
@@ -137,7 +157,7 @@ def mount_additional_filesystems(mount_point: Path) -> None:
 				target_path = mount_point / mountpoint.lstrip('/')
 
 				try:
-					mount(Path(device), target_path, create_target_mountpoint=True)
+					mount(fstab_device(device), target_path, create_target_mountpoint=True)
 					info(f'Mounted {device} to {target_path}')
 				except DiskError, SysCallError:
 					warn(f'Could not mount {device} to {target_path}, skipping...')
@@ -402,12 +422,14 @@ def rescue() -> None:
 	info('Note: arch-chroot will automatically mount /dev, /proc, /sys, and handle DNS.')
 	info('Type "exit" to leave the chroot and return to the live environment.')
 
-	# Use arch-chroot directly
+	# inherit this console rather than run under SysCommand's pty: that one
+	# captures output but never feeds our stdin back in, so the shell would
+	# sit there taking no input (same call shape as Installer.drop_to_shell)
 	try:
-		SysCommand(['arch-chroot', str(mount_point)], peek_output=True)
-	except SysCallError as e:
-		# Non-zero exit is normal when user types 'exit'
-		debug(f'arch-chroot exited non-zero (normal on exit): {e}')
+		proc = subprocess.run(['arch-chroot', str(mount_point)], check=False)  # noqa: S603,S607 - fixed argv, arch-chroot from $PATH
+		if proc.returncode:
+			# non-zero is normal: it carries out whatever the user last ran
+			debug(f'arch-chroot exited {proc.returncode}')
 	except KeyboardInterrupt:
 		info('\nChroot interrupted.')
 

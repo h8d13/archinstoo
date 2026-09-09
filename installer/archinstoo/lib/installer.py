@@ -232,10 +232,13 @@ class Installer:
 			os.sync()
 
 			if not (missing_steps := self.post_install_check()):
+				# live/packages install onto the running system: the changes are
+				# already in effect, there is nothing to reboot into
+				closing = 'Changes are live on the running system.' if self.target == Path('/') else 'You may reboot when ready.'
 				msg = (
 					'Installation completed without any errors.\n'
 					f'Log files available at {logger.directory} and in target {ARTIFACTS_STORE}.\n'
-					'You may reboot when ready.\n'
+					f'{closing}\n'
 				)
 				log(msg, fg='green')
 

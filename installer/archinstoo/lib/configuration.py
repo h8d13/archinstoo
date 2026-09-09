@@ -31,6 +31,13 @@ class ConfigStore:
 		return logger.directory / cls._USER_CONFIG_FILENAME
 
 	def user_config_to_json(self) -> str:
+		from .args import get_arch_config_handler
+
+		# stamp what is running, not what a loaded config claimed: the label
+		# is how a replay knows which script produced the file, and every
+		# script saves through here
+		self._config.script = get_arch_config_handler().get_script()
+
 		out = self._config.safe_json()
 		return json.dumps(out, indent=4, cls=JSON)  # Note remove the sort so that we keep "menu order"
 

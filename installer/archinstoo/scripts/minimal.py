@@ -69,6 +69,11 @@ def perform_installation(
 		user = User('devel', Password(plaintext='devel'), False)
 		installation.create_users(user)
 
+		# gpt-auto finds root and the ESP by partition type, so this installs
+		# and boots without one: everything else (mkinitcpio and the bootloader
+		# writing to a mounted /boot, rescue, swap) expects the real thing
+		installation.genfstab()
+
 	debug(f'Disk states after installing:\n{disk_layouts()}')
 	info(f'Minimal installation completed in {time.monotonic() - start_time:.0f}s')
 
