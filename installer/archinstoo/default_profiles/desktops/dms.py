@@ -98,7 +98,7 @@ class DmsProfile(WaylandProfile):
 		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
 		# any session that activates the target: niri natively, hyprland via the
 		# hyprland-session.target the setup below deploys
-		info('Enabling dms.service globally for all users')
+		debug('Enabling dms.service globally for all users')
 		install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
 
 		# `dms setup headless` writes the compositor config, the dms/ overrides

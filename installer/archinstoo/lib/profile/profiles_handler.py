@@ -169,7 +169,7 @@ class ProfileHandler:
 			GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
 		}
 		if command := greetd_session.get(greeter):
-			info(f'Writing greetd session config: {command}')
+			debug(f'Writing greetd session config: {command}')
 			path = install_session.target.joinpath('etc/greetd/config.toml')
 			path.write_text(
 				dedent(f"""\
