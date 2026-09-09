@@ -48,8 +48,7 @@ class DmsProfile(WaylandProfile):
 
 	@property
 	def compositors(self) -> list[str]:
-		# every consumer indexes compositor_packages/binds_paths by these, so a
-		# hand-written config naming something unknown is dropped here, once
+		# consumers index compositor_packages/binds_paths by these: drop unknowns
 		return [c for c in self._requested_compositors() if c in self.compositor_packages] or ['niri']
 
 	def _requested_compositors(self) -> list[str]:

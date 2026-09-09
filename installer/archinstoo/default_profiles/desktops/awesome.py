@@ -36,9 +36,8 @@ class AwesomeProfile(XorgProfile):
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
-		# awesome reads ~/.config/awesome/rc.lua before the packaged copy, and
-		# that copy hardcodes `terminal = "xterm"`: everything else in it (menu
-		# entries, menubar.utils.terminal) reads that one variable
+		# rc.lua hardcodes `terminal = "xterm"` and everything else reads that
+		# variable; awesome prefers the ~/.config copy over the packaged one
 		provision_terminal_config(
 			install_session,
 			users,
@@ -49,12 +48,9 @@ class AwesomeProfile(XorgProfile):
 
 		# TODO: check if we selected a greeter,
 		# but for now, awesome is intended to run without one.
-		#
-		# startx runs ~/.xinitrc when there is one and the packaged
-		# /etc/X11/xinit/xinitrc (twm, xclock and three xterms, none of which
-		# this profile installs) when there is not. Owning the per-user file
-		# leaves the packaged one alone: no rewrite to keep in sync with
-		# upstream, and no .pacnew on the next xorg-xinit release
+
+		# startx prefers ~/.xinitrc over the packaged /etc/X11/xinit/xinitrc,
+		# whose twm/xclock/xterm session this profile installs none of
 		for user in users:
 			xinitrc = install_session.target / 'home' / user.username / '.xinitrc'
 			xinitrc.parent.mkdir(parents=True, exist_ok=True)

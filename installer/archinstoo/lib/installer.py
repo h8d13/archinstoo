@@ -561,9 +561,8 @@ class Installer:
 			self._mount_btrfs_subvol(mapper, volume.btrfs_subvols, volume.mount_options)
 
 	def _has_mountable_subvols(self, dev_path: Path, subvolumes: list[SubvolumeModification]) -> bool:
-		# only subvolumes carrying a mountpoint are ever mounted, and the
-		# partition itself must not stand in for them: an empty set means
-		# nothing lands here at all, which is worth saying out loud
+		# only subvolumes with a mountpoint get mounted, and the partition must
+		# not stand in for them: an empty set means nothing lands here
 		if any(sv.mountpoint is not None for sv in subvolumes):
 			return True
 

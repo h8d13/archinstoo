@@ -143,9 +143,8 @@ def test_niri_survives_a_missing_shipped_config(tmp_path: Path, monkeypatch: pyt
 	assert not (tmp_path / 'home/ada/.config').exists()
 
 
-# verbatim from xorg-xinit 1.4.4-1: the packaged session startx falls back
-# to when the user has no ~/.xinitrc. None of what it launches is installed
-# by this profile, and the profile no longer edits it
+# verbatim from xorg-xinit 1.4.4-1: what startx falls back to with no
+# ~/.xinitrc. The profile installs none of it and no longer edits it
 _STOCK_XINITRC = """\
 xclock="xclock"
 xterm="xterm"

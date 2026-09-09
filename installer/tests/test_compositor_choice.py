@@ -1,6 +1,5 @@
-# dms/noctalia take their compositor from the menu or from a hand-written
-# config, and every consumer (packages, provision, binds/config paths) indexes
-# a dict by it. These lock the filtering that keeps an unknown name harmless.
+# dms/noctalia take their compositor from the menu or a hand-written config,
+# and every consumer indexes a dict by it. These lock the filtering.
 
 import pytest
 
@@ -20,7 +19,6 @@ def test_unusable_setting_leaves_a_runnable_compositor(
 	profile = profile_cls()
 	profile.custom_settings[key] = setting
 
-	# something has to run, and only names the packages map knows survive:
 	# compositor_packages[comp] is an unguarded lookup on every consumer
 	assert profile.compositors
 	assert set(profile.compositors) <= set(profile.compositor_packages)

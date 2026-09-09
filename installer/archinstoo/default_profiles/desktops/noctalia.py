@@ -53,8 +53,8 @@ class NoctaliaProfile(WaylandProfile):
 
 	@property
 	def compositors(self) -> list[str]:
-		# every consumer indexes compositor_packages/_COMPOSITOR_CONFIG_DIRS by
-		# these, so a config naming something unknown is dropped here, once
+		# consumers index compositor_packages/_COMPOSITOR_CONFIG_DIRS by these:
+		# drop unknowns
 		return [c for c in self._requested_compositors() if c in self.compositor_packages] or ['niri']
 
 	def _requested_compositors(self) -> list[str]:
