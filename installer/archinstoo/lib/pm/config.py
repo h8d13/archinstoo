@@ -108,14 +108,17 @@ if TYPE_CHECKING:
 
 class PacmanConfig:
 	def __init__(self, target: Path | None) -> None:
-		self._config_remote_path: Path | None = None
-
-		if target:
-			self._config_remote_path = target / PACMAN_CONF.relative_to_root()
+		# reads and writes go to the conf this instance was built for: the
+		# live one, or the stock conf pacstrap installed in the target. The
+		# two are never copied over each other, so the installed system
+		# reflects the configuration and not the ISO that ran the installer
+		self._target = target
+		self._conf_path = target / PACMAN_CONF.relative_to_root() if target else PACMAN_CONF
 
 		self._repositories: list[Repository] = []
 		self._custom_repositories: list[CustomRepository] = []
 		self._misc_options: list[str] = []
+		self._parallel_downloads: int | None = None
 
 	def enable(self, repo: Repository | list[Repository]) -> None:
 		if not isinstance(repo, list):
@@ -130,8 +133,11 @@ class PacmanConfig:
 		# Enable misc options like Color, ILoveCandy, VerbosePkgLists
 		self._misc_options = options
 
+	def set_downloads(self, downloads: int | None) -> None:
+		self._parallel_downloads = downloads
+
 	def apply(self) -> None:
-		if not self._repositories and not self._custom_repositories and not self._misc_options:
+		if not self._repositories and not self._custom_repositories and not self._misc_options and not self._parallel_downloads:
 			return
 
 		repos_to_enable = []
@@ -141,7 +147,7 @@ class PacmanConfig:
 			else:
 				repos_to_enable.append(repo.value)
 
-		content = PACMAN_CONF.read_text().splitlines(keepends=True)
+		content = self._conf_path.read_text().splitlines(keepends=True)
 		options_found: set[str] = set()
 		last_opt_row = 0
 
@@ -154,6 +160,9 @@ class PacmanConfig:
 					if line.lstrip().startswith('#'):
 						content[row] = re.sub(r'^#\s*', '', line)
 					break
+
+			if self._parallel_downloads and re.match(r'^#?\s*ParallelDownloads\b', line):
+				content[row] = f'ParallelDownloads = {self._parallel_downloads}\n'
 
 			# Check if this is a commented repository section that needs to be enabled
 			match = re.match(r'^#\s*\[(.*)\]', line)
@@ -178,6 +187,12 @@ class PacmanConfig:
 			if f'[{custom.name}]' in content_str:
 				continue
 			if custom.url.startswith('file://'):
+				if self._target:
+					# an ISO-local cache is gone after reboot, it only ever
+					# belonged to the conf doing the installing
+					debug(f'Skipping file:// repository [{custom.name}] for the target')
+					continue
+
 				# Insert before [core] to give priority (mirrors ISOMOD_CACHE behaviour)
 				insert_at = core_idx if core_idx is not None else len(content)
 				content[insert_at:insert_at] = [
@@ -192,33 +207,27 @@ class PacmanConfig:
 				content.append(f'Server = {custom.url}\n')
 
 		if repos_to_enable:
-			info(f'Enabling repositories {", ".join(repos_to_enable)} in {PACMAN_CONF}')
+			info(f'Enabling repositories {", ".join(repos_to_enable)} in {self._conf_path}')
 		for custom in self._custom_repositories:
 			debug(f'Custom repository [{custom.name}] -> {custom.url}')
 
 		# Host conf is snapshotted and restored on exit by guard_host_conf(); just write.
-		with PACMAN_CONF.open('w') as f:
+		with self._conf_path.open('w') as f:
 			f.writelines(content)
 
-	def persist(self) -> None:
-		has_changes = self._repositories or self._custom_repositories or self._misc_options
-		if has_changes and self._config_remote_path and not PACMAN_CONF.samefile(self._config_remote_path):
-			content = PACMAN_CONF.read_text()
-			content = re.sub(r'\n\[[^\]]+\]\nSigLevel = [^\n]+\nServer = file://[^\n]+\n', '', content)
-			self._config_remote_path.write_text(content)
-
 	@classmethod
-	def apply_config(cls, config: PacmanConfiguration) -> None:
-		# Apply a PacmanConfiguration to the live system.
-		if not config.optional_repositories and not config.custom_repositories and not config.pacman_options:
-			return
-		pacman = cls(None)
+	def apply_config(cls, config: PacmanConfiguration, target: Path | None = None) -> None:
+		# Render a PacmanConfiguration into a conf: the live one before
+		# pacstrap so it resolves from the chosen repos, the target's own
+		# once pacstrap has installed one there.
+		pacman = cls(target)
 		if config.optional_repositories:
 			pacman.enable(config.optional_repositories)
 		if config.custom_repositories:
 			pacman.enable_custom(config.custom_repositories)
 		if config.pacman_options:
 			pacman.enable_options(config.pacman_options)
+		pacman.set_downloads(config.parallel_downloads)
 		pacman.apply()
 
 	@classmethod

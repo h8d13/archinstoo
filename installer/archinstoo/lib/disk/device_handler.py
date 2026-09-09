@@ -596,7 +596,7 @@ class DeviceHandler:
 			debug(f'Unable to determine new uuid: {path}\n{lsblk_info}')
 			raise DiskError(f'Unable to determine new uuid: {path}')
 
-		debug(f'partition information found: {lsblk_info.to_json()}')
+		debug(f'partition information found for {path}: {lsblk_info.to_json()}')
 
 		return lsblk_info
 

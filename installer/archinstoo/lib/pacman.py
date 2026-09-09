@@ -104,7 +104,10 @@ class Pacman:
 				error('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstoo.')
 				raise SystemExit(1)
 
-		if default_cmd == 'pacman':
+		# -T and the -Q family draw no progress bar and reject the flag with
+		# 'invalid option', which under --silent turned every dependency
+		# check into a failed call
+		if default_cmd == 'pacman' and not args.startswith(('-T', '-Q')):
 			args += _QUIET_FLAGS
 
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)

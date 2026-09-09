@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+pacman-key --init
+if [ -d /root/archinstoo ]; then
+	git -C /root/archinstoo pull
+else
+	git clone https://github.com/h8d13/archinstoo /root/archinstoo
+fi
+cd /root/archinstoo/installer
+exec python -m archinstoo --debug "$@"

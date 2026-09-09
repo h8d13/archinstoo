@@ -68,7 +68,7 @@ import textwrap
 import traceback
 from typing import TYPE_CHECKING
 
-from ._version import __version__
+from ._version import __gitstat__, __pkgver__, __version__
 from .lib import Pacman, output
 from .lib.checkpoints import _run_script, clean_cache, clean_logs
 from .lib.exceptions import SysCallError
@@ -132,6 +132,11 @@ NO_DISK_SCRIPTS = {'live', 'packages'}
 
 
 def _log_env_info() -> None:
+	# install.log is appended to, so consecutive runs land in one file and
+	# read as duplicated output. Open each one with a line that says which
+	# run it is
+	info(f'=== archinstoo {__pkgver__} ({__gitstat__}) ===')
+
 	# log which mode we are using
 	info(f'Python path: {sys.executable} is_venv={is_venv()}')
 
@@ -152,11 +157,13 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 	try:
 		Pacman.run(f'-T {" ".join(depends)}')
 	except SysCallError as err:
-		debug(f'pacman -T exited non-zero: {err}')
+		# -T exits 127 when it has names to report; anything else is the call
+		# itself failing, and nothing can be concluded about the deps
+		debug(f'pacman -T exited {err.exit_code}: {err}')
 		out = err.worker_log.decode('utf-8', errors='ignore')
 		missing = [line.strip() for line in out.splitlines() if line.strip() in depends]
 		if not missing:
-			warn('pacman -T failed but named no missing package, assuming deps satisfied')
+			warn(f'pacman -T exited {err.exit_code} naming no missing package, assuming deps satisfied')
 		return missing
 
 	return []

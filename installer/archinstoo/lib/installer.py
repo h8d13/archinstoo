@@ -32,7 +32,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
-from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST, PACMAN_CONF
+from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
 from archinstoo.lib.tui.curses_menu import Tui
 
 from .disk.luks import Luks2, unlock_luks2_dev
@@ -827,18 +827,11 @@ class Installer:
 		# :param on_target: bool
 		info('Setting mirrors on ' + ('target' if on_target else 'live system' + '...'))
 
-		if on_target:
-			mirrorlist_path = self.target / MIRRORLIST.relative_to_root()
-			pacman_conf_path = self.target / PACMAN_CONF.relative_to_root()
-		else:
-			mirrorlist_path = MIRRORLIST
-			pacman_conf_path = PACMAN_CONF
+		mirrorlist_path = self.target / MIRRORLIST.relative_to_root() if on_target else MIRRORLIST
 
-		existing_content = pacman_conf_path.read_text()
-		if repos_config := pacman_configuration.repositories_config(existing_content):
-			debug(f'Pacman config: {repos_config}')
-			with pacman_conf_path.open('a') as fp:
-				fp.write(repos_config)
+		# repos, custom repos, misc options and ParallelDownloads all land in
+		# the conf for this side of the install
+		PacmanConfig.apply_config(pacman_configuration, self.target if on_target else None)
 
 		# Speed test only for the live system, target reuses the same order
 		regions_config = MirrorListHandler().regions_config(pacman_configuration.mirror_regions, speed_sort=not on_target)
@@ -851,13 +844,6 @@ class Installer:
 
 			content = mirrorlist_path.read_text()
 			mirrorlist_path.write_text(f'{custom_servers}\n\n{content}')
-
-		# Persist pacman options (Color, ILoveCandy, etc.) to target
-		if on_target and pacman_configuration.pacman_options:
-			debug(f'Pacman options: {pacman_configuration.pacman_options}')
-			target_config = PacmanConfig(self.target)
-			target_config.enable_options(pacman_configuration.pacman_options)
-			target_config.persist()
 
 	def genfstab(self, flags: str = '-pU') -> None:
 		fstab_path = self.target / 'etc' / 'fstab'
@@ -1263,10 +1249,11 @@ class Installer:
 
 		debug(f'Optional repositories: {optional_repositories}')
 
-		# This action takes place on the host system as pacstrap copies over package repository lists.
-		pacman_conf = PacmanConfig(self.target)
-		pacman_conf.enable(optional_repositories)
-		pacman_conf.apply()
+		# pacstrap resolves packages through the live conf, so the repos have
+		# to be enabled there before it runs
+		live_conf = PacmanConfig(None)
+		live_conf.enable(optional_repositories)
+		live_conf.apply()
 
 		if locale_config:
 			self.set_vconsole(locale_config)
@@ -1276,7 +1263,10 @@ class Installer:
 		self.pacman.strap(list(dict.fromkeys(self._base_packages)))
 		self._helper_flags['base-strapped'] = True
 
-		pacman_conf.persist()
+		# same repos again, on the stock conf pacstrap just installed
+		target_conf = PacmanConfig(self.target)
+		target_conf.enable(optional_repositories)
+		target_conf.apply()
 
 		# Periodic TRIM may improve the performance and longevity of SSDs whilst
 		# having no adverse effect on other devices. Most distributions enable

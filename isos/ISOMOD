@@ -351,33 +351,11 @@ sed -i '/^file_permissions=(/a\  ["/usr/local/bin/archinstoo"]="0:0:755"' "$A2_P
 echo "Adding archinstoo command..."
 mkdir -p "$A2_PROFILE_DIR/airootfs/usr/local/bin"
 if [ "$A2_LIVE" = "1" ]; then
-	cat >"$A2_PROFILE_DIR/airootfs/usr/local/bin/archinstoo" <<'CMDEOF'
-#!/bin/bash
-set -e
-sudo pacman-key --init
-if [ -d "$HOME/archinstoo" ]; then
-    git -C "$HOME/archinstoo" pull
+	A2_CMD_SRC="$SCRIPT_DIR/assets/archinstoo-live"
 else
-    git clone https://github.com/h8d13/archinstoo "$HOME/archinstoo"
+	A2_CMD_SRC="$SCRIPT_DIR/assets/archinstoo-root"
 fi
-cd "$HOME/archinstoo/installer"
-exec sudo python -m archinstoo --debug "$@"
-CMDEOF
-else
-	cat >"$A2_PROFILE_DIR/airootfs/usr/local/bin/archinstoo" <<'CMDEOF'
-#!/bin/bash
-set -e
-pacman-key --init
-if [ -d /root/archinstoo ]; then
-    git -C /root/archinstoo pull
-else
-    git clone https://github.com/h8d13/archinstoo /root/archinstoo
-fi
-cd /root/archinstoo/installer
-exec python -m archinstoo --debug "$@"
-CMDEOF
-fi
-chmod +x "$A2_PROFILE_DIR/airootfs/usr/local/bin/archinstoo"
+install -m 755 "$A2_CMD_SRC" "$A2_PROFILE_DIR/airootfs/usr/local/bin/archinstoo"
 
 echo "Styling pacman.conf (Color + ILoveCandy)..."
 # Ensure pacman.conf exists in airootfs/etc
