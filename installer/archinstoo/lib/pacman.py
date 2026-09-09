@@ -194,10 +194,10 @@ class Pacman:
 			cmd = f'pacman -S {" ".join(packages)} {flags}'
 			bail = f'Package installation failed. See {logger.path} or above message for error details'
 		else:
-			# no -K: that builds an empty target keyring and re-signs every arch
-			# key from scratch (slow, entropy-bound, storms gpg on fresh hosts).
-			# keyring_init() already populated the host keyring, so let pacstrap
-			# copy it into the target (its default when -K/-G are absent).
+			# no -K: that inits an empty target keyring (RSA-4096 master key gen,
+			# then archlinux-keyring's post_install lsigns every trusted key from
+			# scratch). pacstrap already verified packages with the host keyring,
+			# so let it copy that one in (its default when -K/-G are absent).
 			cmd = f'pacstrap -C {PACMAN_CONF} {self.target} {" ".join(packages)} {flags}'
 			bail = f'Pacstrap failed. See {logger.path} or above message for error details'
 
