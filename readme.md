@@ -136,7 +136,7 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 > For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
 > For **non-dev** see [`installer/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD) uses the repo without its top part from git.
 
-But we recommend using it from latest git `master` instead. Since fixes are often time critical and the "moving target" nature of arch systems.
+But it is recommended to use latest from git `master` instead.
 
 See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [arch-wiki](https://wiki.archlinux.org/title/Main_page).
 
