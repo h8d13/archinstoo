@@ -24,7 +24,11 @@ For the lazy ones: `./DEV -h2t` or with optionals `./DEV -h2t -o`
 > Do also note that the ISO has limited `cow_space`, running any form of `-Syu` or updating packages can trigger space errors/or read-only hook issues/or partial updates,
 and needs to be rebuilt with more space for certain breaking updates. Usually build a `1GB` ISO to test dev builds (vs the original `256M`). 
 
-Can also do this by running `mount -o remount,size=1G /run/archiso/cowspace` on the ISO directly.
+Can also do this by running on the ISO directly:
+
+```shell
+mount -o remount,size=1G /run/archiso/cowspace
+``` 
 
 > See [`ISOs`](./BUILD_ISOS.md) to create custom ones directly.
 
