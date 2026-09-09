@@ -6,4 +6,5 @@ from archinstoo.lib.linux_path import LPath
 ARCHISO_MOUNTPOINT: Final = Path('/run/archiso/airootfs')
 MIRRORLIST: Final = LPath('/etc/pacman.d/mirrorlist')
 PACMAN_CONF: Final = LPath('/etc/pacman.conf')
+PACMAN_GNUPG: Final = LPath('/etc/pacman.d/gnupg')
 ARTIFACTS_STORE: Final = LPath('/etc/archinstoo.d')

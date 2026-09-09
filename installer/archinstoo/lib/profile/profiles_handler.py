@@ -231,11 +231,8 @@ class ProfileHandler:
 		# Install gfx driver first as some desktops might need to satisfy deps (vulkan-driver virtual group).
 		# Pass the aggregated display servers across all selected profiles so mixed X11+Wayland picks
 		# correctly include the X11 base packages.
-		if gfx_driver := profile_config.gfx_driver:
-			if display_servers := profile_config.display_servers():
-				self.install_gfx_driver(install_session, gfx_driver, display_servers, profile_config.gfx_packages)
-			else:
-				warn(f'gfx driver {gfx_driver.value} requested but no profile declares a display server, driver not installed')
+		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
+			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers, profile_config.gfx_packages)
 
 		# one terminal for every profile that ships a keybind rather than its own
 		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
@@ -247,11 +244,8 @@ class ProfileHandler:
 			profile.install(install_session)
 
 		# Install greeter if any profile supports it
-		if profile_config.greeter:
-			if profile_config.is_greeter_supported():
-				self.install_greeter(install_session, profile_config.greeter)
-			else:
-				warn(f'Greeter {profile_config.greeter.value} requested but no selected profile supports one, skipping')
+		if profile_config.greeter and profile_config.is_greeter_supported():
+			self.install_greeter(install_session, profile_config.greeter)
 
 	def _import_profile_from_url(self, url: str) -> None:
 		# Import default_profiles from a url path
