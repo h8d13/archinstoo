@@ -102,6 +102,7 @@ Arch is rolling: every package is built against the current libs.
 Syncing the db (`-Sy`) then installing anything without also upgrading (`-u`)
 pulls in a package linked against sonames the rest of your system does not have yet.
 Result: random binaries fail with `error while loading shared libraries`.
+[Partial upgrades are unsupported](https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported).
 
 ```shell
 # avoid
@@ -112,29 +113,20 @@ sudo pacman -S <pkg>        # ...install later, same problem
 sudo pacman -Syu <pkg>
 ```
 
-> [!WARNING]
-> Same applies to `-Syy` (only forces the db re-download), `-Syuw` and `IgnorePkg`.
-> Do not chain `-Syu && -S <pkg>` either: declining the upgrade prompt leaves the db synced,
-> so the second command becomes the partial upgrade.
+Same applies to `-Syy` (only forces the db re-download), `-Syuw` and `IgnorePkg`.
+Do not chain `-Syu && -S <pkg>` either: declining the upgrade prompt leaves the db synced,
+so the second command becomes the partial upgrade.
 
 > [!TIP]
 > To peek at pending updates without touching the db, use `checkupdates` (`pacman-contrib`): it syncs into a temp copy.
 
-> [!NOTE]
-> [System maintenance#Partial upgrades are unsupported](https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported)
-
 ### Kernel upgrades
 
 The kernel package owns `/usr/lib/modules/<version>/`. Upgrading swaps that dir for the new version,
-so modules for the **running** kernel are gone.
-
-> [!WARNING]
-> Anything not already loaded fails until reboot: new USB devices, fs types, `tun`/`wireguard`, bridges (docker), etc...
-> Check `checkupdates` for `linux*` and reboot after upgrading.
+so modules for the **running** kernel are gone. Anything not already loaded fails until reboot:
+new USB devices, fs types, `tun`/`wireguard`, bridges (docker), etc...
+Check `checkupdates` for `linux*` and [reboot after upgrading](https://wiki.archlinux.org/title/System_maintenance#Restart_or_reboot_after_upgrades).
 
 > [!TIP]
 > [`kernel-modules-hook`](https://archlinux.org/packages/extra/any/kernel-modules-hook/) (`extra`)
 > keeps the old dir around until reboot. Install, then `systemctl enable linux-modules-cleanup`.
-
-> [!NOTE]
-> [System maintenance#Restart or reboot after upgrades](https://wiki.archlinux.org/title/System_maintenance#Restart_or_reboot_after_upgrades)
