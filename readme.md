@@ -112,7 +112,7 @@ A `man` page is also available `man -l installer/docs/archinstoo.1`
 
 ### Use cases / Docs
 
-See the full documentation on [mkdocs](h8d13.github.io/archinstoo/) generated from this repo.
+See the full documentation on [mkdocs](https://h8d13.github.io/archinstoo/) generated from this repo.
 
 ### Testing
 
