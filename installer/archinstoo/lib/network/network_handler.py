@@ -99,6 +99,15 @@ def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacA
 		nm_conf_dir.mkdir(parents=True, exist_ok=True)
 		(nm_conf_dir / 'mac_address.conf').write_text(mac.as_nm_config())
 		debug(f'Wrote {nm_conf_dir / "mac_address.conf"}')
+
+		if nic_type is NicType.NM_IWD:
+			# NM's iwd device never applies cloned-mac-address (no
+			# hw_addr_set_cloned in nm-device-iwd.c), so wireless takes
+			# iwd's own knob; the NM drop-in still covers ethernet
+			iwd_conf_dir = installation.target / 'etc/iwd'
+			iwd_conf_dir.mkdir(parents=True, exist_ok=True)
+			(iwd_conf_dir / 'main.conf').write_text(f'[General]\n{mac.as_iwd_config()}')
+			debug(f'Wrote {iwd_conf_dir / "main.conf"}')
 		return
 
 	if mac is MacAddressPolicy.STABLE:

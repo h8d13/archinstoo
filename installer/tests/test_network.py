@@ -110,6 +110,20 @@ def test_random_mac_link_keeps_predictable_names(nic_type: NicType, tmp_path: Pa
 	assert 'MACAddressPolicy=random' in link
 
 
+@pytest.mark.parametrize(('mac', 'mode'), [(MacAddressPolicy.STABLE, 'network'), (MacAddressPolicy.RANDOM, 'once')])
+def test_nm_iwd_mac_lands_in_iwd_conf(mac: MacAddressPolicy, mode: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# NM's iwd backend ignores cloned-mac-address for wireless, so the choice
+	# has to reach /etc/iwd/main.conf as well as the NM drop-in
+	(tmp_path / 'etc').mkdir()
+	installation, _ = _session(tmp_path, monkeypatch)
+
+	NetworkHandler().install_network_config(NetworkConfiguration(NicType.NM_IWD, mac_address=mac), installation)
+
+	assert (tmp_path / 'etc/iwd/main.conf').read_text() == f'[General]\nAddressRandomization={mode}\n'
+	assert f'wifi.cloned-mac-address={mac.value}' in (tmp_path / 'etc/NetworkManager/conf.d/mac_address.conf').read_text()
+	assert not (tmp_path / 'etc/systemd/network/00-mac-address.link').exists()
+
+
 def test_stable_mac_without_nm_writes_no_link(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	(tmp_path / 'etc').mkdir()
 	installation, _ = _session(tmp_path, monkeypatch)
