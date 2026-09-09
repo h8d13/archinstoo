@@ -298,21 +298,8 @@ class ProfileHandler:
 			error(err)
 			raise SystemExit(1)
 
-	def _is_legacy(self, file: Path) -> bool:
-		# Check if the provided profile file contains a
-		# legacy profile definition
-		with file.open() as fp:
-			for line in fp:
-				if '__packages__' in line:
-					return True
-		return False
-
 	def _process_profile_file(self, file: Path) -> list[Profile]:
 		# Process a file for profile definitions
-		if self._is_legacy(file):
-			info(f'Cannot import {file} because it is no longer supported, please use the new profile format')
-			return []
-
 		if not file.is_file():
 			info(f'Cannot find profile file {file}')
 			return []

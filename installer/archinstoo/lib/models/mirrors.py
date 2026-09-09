@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict, override
 
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.output import debug, warn
+from archinstoo.lib.output import debug
 from archinstoo.lib.utils.net import DownloadTimer, ping
 
 
@@ -390,10 +390,6 @@ class PacmanConfiguration:
 		if args.get('custom_servers'):
 			config.custom_servers = CustomServer.parse_args(args['custom_servers'])
 
-		# backwards compatibility with the new custom_repository
-		if 'custom_mirrors' in args:
-			warn("'custom_mirrors' is deprecated, use 'custom_repositories'")
-			config.custom_repositories = CustomRepository.parse_args(args['custom_mirrors'])
 		if 'custom_repositories' in args:
 			config.custom_repositories = CustomRepository.parse_args(args['custom_repositories'])
 
