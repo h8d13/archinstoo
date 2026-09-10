@@ -483,6 +483,7 @@ def _cmd_output_flush() -> None:
 def run(
 	cmd: list[str],
 	input_data: bytes | None = None,
+	env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[bytes]:
 	_cmd_history(cmd)
 
@@ -492,6 +493,7 @@ def run(
 			input=input_data,
 			capture_output=True,
 			check=True,
+			env={**os.environ, **env} if env else None,
 		)
 	except subprocess.CalledProcessError as err:
 		# normalize to the SysCommand path's type so handlers written

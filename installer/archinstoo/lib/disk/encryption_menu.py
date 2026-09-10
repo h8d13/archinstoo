@@ -141,6 +141,14 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='tpm2_pcrs',
 			),
 			MenuItem(
+				text='TPM2 PIN',
+				action=self._select_tpm2_pin,
+				value=self._enc_config.tpm2_pin,
+				dependencies=[self._check_dep_tpm2_pcrs],
+				preview_action=self._preview,
+				key='tpm2_pin',
+			),
+			MenuItem(
 				text='FIDO2 auto unlock',
 				action=self._select_fido2_device,
 				value=self._enc_config.fido2_device,
@@ -234,6 +242,10 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		group = MenuHelper(data=devices).create_menu_group()
 		return prompt_choice(group, preset, header=header, allow_reset=True)
 
+	def _select_tpm2_pin(self, preset: Password | None) -> Password | None:
+		header = 'PIN asked at boot on top of the PCR binding (leave blank for none)' + '\n'
+		return get_password(text='TPM2 PIN', header=header, allow_skip=True, preset=preset.plaintext if preset else None)
+
 	def _select_tpm2_unlock(self, preset: bool) -> bool:
 		prompt = 'Bind a TPM2 keyslot to the LUKS device(s) so the disk auto-unlocks at boot ?' + '\n'
 		prompt += 'PCR selection picked separately. Defaults to 0+7.' + '\n'
@@ -256,6 +268,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		auto_unlock_root: bool = self._item_group.find_by_key('auto_unlock_root').value or False
 		tpm2_unlock: bool = self._item_group.find_by_key('tpm2_unlock').value or False
 		tpm2_pcrs: str = self._item_group.find_by_key('tpm2_pcrs').value or '0+7'
+		tpm2_pin: Password | None = self._item_group.find_by_key('tpm2_pin').value
 		fido2_device: Fido2Device | None = self._item_group.find_by_key('fido2_device').value
 
 		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
@@ -279,6 +292,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				auto_unlock_root=auto_unlock_root,
 				tpm2_unlock=tpm2_unlock,
 				tpm2_pcrs=tpm2_pcrs,
+				tpm2_pin=tpm2_pin,
 				fido2_device=fido2_device,
 			)
 
@@ -316,6 +330,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if (tpm2_pcrs := self._prev_tpm2_pcrs()) is not None:
 			output += f'\n{tpm2_pcrs}'
+
+		if (tpm2_pin := self._prev_tpm2_pin()) is not None:
+			output += f'\n{tpm2_pin}'
 
 		if (fido2 := self._prev_fido2_device()) is not None:
 			output += f'\n{fido2}'
@@ -415,6 +432,12 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			return None
 		pcrs = self._item_group.find_by_key('tpm2_pcrs').value or '0+7'
 		return f'{"TPM2 PCRs"}: {pcrs}'
+
+	def _prev_tpm2_pin(self) -> str | None:
+		if not self._item_group.find_by_key('tpm2_unlock').value:
+			return None
+		pin: Password | None = self._item_group.find_by_key('tpm2_pin').value
+		return f'TPM2 PIN: {pin.hidden() if pin else "none"}'
 
 	def _prev_fido2_device(self) -> str | None:
 		enc_type = self._item_group.find_by_key('encryption_type').value

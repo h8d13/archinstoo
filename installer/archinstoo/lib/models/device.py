@@ -1577,6 +1577,7 @@ class _DiskEncryptionSerialization(TypedDict):
 	auto_unlock_root: NotRequired[bool]
 	tpm2_unlock: NotRequired[bool]
 	tpm2_pcrs: NotRequired[str]
+	tpm2_pin: NotRequired[str]  # parse-only, like encryption_password
 
 
 @dataclass
@@ -1591,6 +1592,7 @@ class DiskEncryption:
 	auto_unlock_root: bool = False
 	tpm2_unlock: bool = False
 	tpm2_pcrs: str = '0+7'
+	tpm2_pin: Password | None = None  # https://github.com/archlinux/archinstall/issues/1584
 	fido2_device: Fido2Device | None = None
 
 	def __post_init__(self) -> None:
@@ -1667,6 +1669,7 @@ class DiskEncryption:
 			auto_unlock_root=arg.get('auto_unlock_root', False),
 			tpm2_unlock=arg.get('tpm2_unlock', False),
 			tpm2_pcrs=arg.get('tpm2_pcrs', '0+7'),
+			tpm2_pin=Password(plaintext=pin) if (pin := arg.get('tpm2_pin')) else None,
 		)
 
 

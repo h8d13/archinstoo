@@ -737,8 +737,13 @@ class Installer:
 			key_in_target.write_bytes(password.plaintext.encode())
 			key_in_target.chmod(0o400)
 
+			pin = self._disk_encryption.tpm2_pin
+			# the PIN requirement lands in the LUKS2 token, systemd-cryptsetup prompts on its own
+			pin_args = ['--tpm2-with-pin=yes'] if pin else []
+			pin_env = {'NEWPIN': pin.plaintext} if pin else None
+
 			for dev in devices:
-				info(f'Enrolling TPM2 keyslot for {dev} bound to PCR {pcrs}')
+				info(f'Enrolling TPM2 keyslot for {dev} bound to PCR {pcrs}{" with PIN" if pin else ""}')
 				try:
 					self.arch_chroot(
 						[
@@ -746,8 +751,10 @@ class Installer:
 							f'--unlock-key-file={key_in_chroot}',
 							'--tpm2-device=auto',
 							f'--tpm2-pcrs={pcrs}',
+							*pin_args,
 							str(dev),
-						]
+						],
+						env=pin_env,
 					)
 				except SysCallError as e:
 					stderr = e.stderr.decode(errors='replace').strip() if e.stderr else ''
@@ -1030,13 +1037,14 @@ class Installer:
 		cmd: str | list[str],
 		run_as: str | None = None,
 		peek_output: bool = False,
+		env: dict[str, str] | None = None,
 	) -> SysCommand | subprocess.CompletedProcess[bytes]:
 		# argv list form avoids argv/shell-injection when arguments come from user or config input.
 		if isinstance(cmd, list):
 			if run_as:
 				cmd = ['su', '-', run_as, '-c', shlex.join(cmd)]
 			argv = cmd if self.target == Path('/') else [*self._arch_chroot_prefix, *cmd]
-			return run(argv)
+			return run(argv, env=env)  # env: secrets (NEWPIN) stay off argv and out of cmd_history
 
 		if run_as:
 			cmd = f'su - {run_as} -c {shlex.quote(cmd)}'
