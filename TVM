@@ -52,6 +52,7 @@
 #                       Overrides A2_VGA. niri/DMS have no software fallback, black-screen
 #                       without this. Needs the full module chain (vga-gl alone won't load):
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
+#   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
 
 set -euo pipefail
@@ -315,6 +316,12 @@ elif [ "$ATTACH_ISO" = "true" ]; then
 			-append "$(cat "$BOOT_DIR/cmdline") console=ttyS0,115200"
 		)
 	fi
+fi
+
+# raw qemu args, word-split: an extra disk with a serial, a second NIC, ...
+if [ -n "${A2_QEMU_EXTRA:-}" ]; then
+	read -ra EXTRA_ARGS <<<"$A2_QEMU_EXTRA"
+	QEMU_ARGS+=("${EXTRA_ARGS[@]}")
 fi
 
 if [ "$A2_SERIAL" = "on" ]; then

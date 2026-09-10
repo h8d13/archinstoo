@@ -152,7 +152,7 @@ class DeviceHandler:
 				debug(f'Unable to get disk from {device.path}: {err}')
 				continue
 
-			device_info = _DeviceInfo.from_disk(disk)
+			device_info = _DeviceInfo.from_disk(disk, serial=dev_lsblk_info.serial)
 			partition_infos = []
 
 			for partition in disk.partitions:

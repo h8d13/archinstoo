@@ -189,6 +189,15 @@ class DiskLayoutConfiguration:
 				warn(f'Skipping disk config entry: device {device_path} not found on this system')
 				continue
 
+			# /dev/nvme0n1 is whatever enumerated first today; the saved serial is the disk
+			# https://github.com/archlinux/archinstall/issues/2488
+			saved_serial = entry.get('serial')
+			live_serial = device.device_info.serial
+			if saved_serial and saved_serial != live_serial:
+				raise ValueError(
+					f'{device_path} is serial {live_serial or "unknown"}, this config was saved for {saved_serial}: refusing to touch it'
+				)
+
 			table = entry.get('partition_table')
 			device_modification = DeviceModification(
 				wipe=entry.get('wipe', False),
@@ -661,6 +670,7 @@ class _DeviceInfo:
 	sector_size: SectorSize
 	read_only: bool
 	dirty: bool
+	serial: str | None = None  # udev ID_SERIAL via lsblk, empty on serial-less virtio
 
 	def table_data(self) -> dict[str, str | int | bool]:
 		total_free_space = sum(region.get_length(unit=Unit.MiB) for region in self.free_space_regions)
@@ -675,7 +685,7 @@ class _DeviceInfo:
 		}
 
 	@classmethod
-	def from_disk(cls, disk: Disk) -> Self:
+	def from_disk(cls, disk: Disk, serial: str | None = None) -> Self:
 		import parted
 
 		device = disk.device
@@ -699,6 +709,7 @@ class _DeviceInfo:
 			free_space_regions=free_space,
 			read_only=device.readOnly,
 			dirty=device.dirty,
+			serial=serial,
 		)
 
 
@@ -1476,6 +1487,7 @@ class _DeviceModificationSerialization(TypedDict):
 	wipe: bool
 	# 'gpt' | 'msdos'; absent means host default (GPT on UEFI, MBR on BIOS)
 	partition_table: NotRequired[str]
+	serial: NotRequired[str]
 	partitions: list[_PartitionModificationSerialization]
 
 
@@ -1521,6 +1533,8 @@ class DeviceModification:
 		}
 		if self.partition_table:
 			config['partition_table'] = self.partition_table.value
+		if self.device.device_info.serial:
+			config['serial'] = self.device.device_info.serial
 		return config
 
 
@@ -1680,6 +1694,7 @@ class LsblkInfo:
 	mountpoints: list[Path]
 	fsroots: list[Path]
 	children: list[LsblkInfo] = field(default_factory=list)
+	serial: str | None = None
 
 	@classmethod
 	def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -1718,6 +1733,7 @@ class LsblkInfo:
 			mountpoints=mountpoints,
 			fsroots=fsroots,
 			children=children,
+			serial=data.get('serial'),
 		)
 
 	def to_json(self) -> str:
@@ -1747,6 +1763,7 @@ class LsblkInfo:
 			'mountpoints': [str(m) for m in self.mountpoints],
 			'fsroots': [str(f) for f in self.fsroots],
 			'children': [c._to_dict() for c in self.children],
+			'serial': self.serial,
 		}
 
 	@classmethod
@@ -1774,4 +1791,5 @@ class LsblkInfo:
 			'mountpoint',
 			'mountpoints',
 			'fsroots',
+			'serial',
 		]
