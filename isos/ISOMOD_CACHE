@@ -42,7 +42,9 @@ if [ -z "$packages" ]; then
 fi
 
 # Create local repo directory in airootfs
-REPO_DIR="$A2_PROFILE_DIR/airootfs/root/local_packages"
+# not under /root: pacman 7 fetches as the unprivileged `alpm` user (DownloadUser in
+# pacman.conf) and /root is 0750, which leaves the repo unreadable on the ISO
+REPO_DIR="$A2_PROFILE_DIR/airootfs/srv/local_packages"
 mkdir -p "$REPO_DIR"
 
 echo "Downloading packages with dependencies: $packages"
@@ -84,6 +86,7 @@ done
 echo "Creating repository database..."
 if [ -n "$(ls -A "$REPO_DIR"/*.pkg.tar.zst 2>/dev/null)" ]; then
 	repo-add "$REPO_DIR/local_repo.db.tar.gz" "$REPO_DIR"/*.pkg.tar.zst >/dev/null 2>&1
+	chmod -R a+rX "$REPO_DIR"
 else
 	echo "No packages found to add to repository"
 	exit 0
@@ -101,7 +104,7 @@ awk '
         print "# Local repository for pre-cached packages"
         print "[local_repo]"
         print "SigLevel = Optional TrustAll"
-        print "Server = file:///root/local_packages"
+        print "Server = file:///srv/local_packages"
         print ""
         inserted=1
     }
