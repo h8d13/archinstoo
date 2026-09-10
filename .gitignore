@@ -65,3 +65,6 @@ archinstall/
 partstoob/
 /isos/mkosi/mkosi.conf.d/
 /isos/mkosi/mkosi.cache/
+
+# upstream archinstall issues dump (fetched, not tracked)
+/upstream-issues/

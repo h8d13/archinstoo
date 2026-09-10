@@ -26,6 +26,9 @@ from archinstoo.lib.tui.prompts import prompt_yes_no
 
 from .selectors import select_main_filesystem_format, select_mount_options, select_partition_table
 
+# https://github.com/archlinux/archinstall/issues/4769
+BOOT_PARTITION_SIZE_GIB = 2
+
 
 def _boot_partition(
 	sector_size: SectorSize,
@@ -49,7 +52,7 @@ def _boot_partition(
 				status=ModificationStatus.CREATE,
 				type=PartitionType.PRIMARY,
 				start=start,
-				length=Size(1, Unit.GiB, sector_size),
+				length=Size(BOOT_PARTITION_SIZE_GIB, Unit.GiB, sector_size),
 				mountpoint=mountpoint,
 				fs_type=FilesystemType.FAT32,
 				flags=[PartitionFlag.ESP],
@@ -79,7 +82,7 @@ def _boot_partition(
 				status=ModificationStatus.CREATE,
 				type=PartitionType.PRIMARY,
 				start=start,
-				length=Size(1, Unit.GiB, sector_size),
+				length=Size(BOOT_PARTITION_SIZE_GIB, Unit.GiB, sector_size),
 				mountpoint=Path('/boot'),
 				fs_type=boot_fs,
 				flags=[PartitionFlag.BOOT],
