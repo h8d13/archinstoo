@@ -149,7 +149,8 @@ def test_set_locale_non_utf8_fully_qualified(tmp_path: Path, monkeypatch: pytest
 
 	assert locale_conf == 'LANG=en_US.ISO-8859-1\n'
 	assert 'en_US ISO-8859-1' in locale_gen
-	assert '#en_US.UTF-8 UTF-8' in locale_gen
+	# the UTF-8 sibling is the always-on fallback now, not collateral
+	assert '#en_US.UTF-8 UTF-8' not in locale_gen
 
 
 def _use_disk_supported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -286,3 +287,19 @@ def test_set_locale_unknown_entry_fails(tmp_path: Path, monkeypatch: pytest.Monk
 
 	assert not installation.set_locale(LocaleConfiguration('us', 'xx_XX', 'UTF-8'))
 	assert not (tmp_path / 'etc/locale.conf').exists()
+
+
+# https://github.com/archlinux/archinstall/issues/3764: en_US.UTF-8 is the
+# fallback tools hardcode, so it gets generated alongside any other choice
+def test_set_locale_generates_en_us_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_GB', 'UTF-8', monkeypatch)
+	assert locale_conf == 'LANG=en_GB.UTF-8\n'
+	assert '\nen_GB.UTF-8 UTF-8' in '\n' + locale_gen
+	assert '\nen_US.UTF-8 UTF-8' in '\n' + locale_gen
+	assert '#en_US ISO-8859-1' in locale_gen
+
+
+def test_set_locale_en_us_only_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	_, locale_gen = _run_set_locale(tmp_path, 'en_US', 'UTF-8', monkeypatch)
+	assert locale_gen.count('en_US.UTF-8 UTF-8') == 1
+	assert '#en_US.UTF-8' not in locale_gen

@@ -124,6 +124,15 @@ __stash_packages__ = ['git']
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
 
 
+def _uncomment_locale(lines: list[str], sys_lang: str, sys_enc: str) -> bool:
+	entry_re = locale_entry_re(sys_lang, sys_enc)
+	for index, line in enumerate(lines):
+		if entry_re.fullmatch(line.removeprefix('#').strip()):
+			lines[index] = line.removeprefix('#')
+			return True
+	return False
+
+
 class Installer:
 	def __init__(
 		self,
@@ -876,16 +885,13 @@ class Installer:
 		locale_gen = self.target / 'etc/locale.gen'
 		locale_gen_lines = locale_gen.read_text().splitlines(True)
 
-		entry_re = locale_entry_re(locale_config.sys_lang, locale_config.sys_enc)
-
-		for index, line in enumerate(locale_gen_lines):
-			if line.startswith('#') and entry_re.fullmatch(line.removeprefix('#').strip()):
-				locale_gen_lines[index] = line.removeprefix('#')
-				locale_gen.write_text(''.join(locale_gen_lines))
-				break
-		else:
+		if not _uncomment_locale(locale_gen_lines, locale_config.sys_lang, locale_config.sys_enc):
 			error(f"Invalid locale: language '{locale_config.sys_lang}', encoding '{locale_config.sys_enc}'")
 			return False
+		# tools hardcoding LC_ALL=en_US.UTF-8 warn on every non-US system otherwise
+		# https://github.com/archlinux/archinstall/issues/3764
+		_uncomment_locale(locale_gen_lines, 'en_US.UTF-8', 'UTF-8')
+		locale_gen.write_text(''.join(locale_gen_lines))
 
 		try:
 			self.arch_chroot('locale-gen')
