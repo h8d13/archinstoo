@@ -2221,8 +2221,9 @@ class Installer:
 		if efi_partition.mountpoint != Path('/efi'):
 			diff_mountpoint = str(efi_partition.mountpoint)
 
-		image_re = re.compile(r'(.+_image="/([^"]+).+\n)')
-		uki_re = re.compile(r'#((.+_uki=")/[^/]+(.+\n))')
+		# default_* only: PRESETS stays ('default'), the fallback lines are left as shipped
+		image_re = re.compile(r'(default_image="/([^"]+).+\n)')
+		uki_re = re.compile(r'#((default_uki=")/[^/]+(.+\n))')
 		presets_re = re.compile(r'^(PRESETS=)\((.*)\)\s*$')
 
 		# Per-kernel os-release so GRUB UKI entries show the kernel variant
