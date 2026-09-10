@@ -70,6 +70,7 @@ nav:
       - Newcomers: NEWB_CORNER.md
       - JSON file / logs: CONFIG.md
       - Config schema: SCHEMA.md
+      - Maintenance: MAINTENANCE.md
   - Cases:
       - Headless / servers: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
