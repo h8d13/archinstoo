@@ -1766,7 +1766,15 @@ class Installer:
 			try:
 				SysCommand(command, peek_output=True, silent=True)
 			except SysCallError as err:
-				raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}') from err
+				if removable or 'efibootmgr' not in str(err):
+					raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}') from err
+				# firmware refused the NVRAM entry (full, read-only): EFI/BOOT needs none
+				# https://github.com/archlinux/archinstall/issues/3976
+				warn(f'grub-install could not register a boot entry, installing as removable instead: {err}')
+				try:
+					SysCommand([*command, '--removable'], peek_output=True, silent=True)
+				except SysCallError as err2:
+					raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err2}') from err2
 		else:
 			info(f'GRUB boot partition: {boot_partition.dev_path}')
 
@@ -1914,8 +1922,12 @@ class Installer:
 						' --unicode'
 						' --verbose',
 					)
-				except Exception as err:
-					raise ValueError(f'SysCommand for efibootmgr failed: {err}') from err
+				except SysCallError as err:
+					# same firmware failure as grub: EFI/BOOT/BOOT*.EFI boots without an entry
+					# https://github.com/archlinux/archinstall/issues/3990
+					warn(f'efibootmgr could not register Limine, installing as removable instead: {err}')
+					self._add_limine_bootloader(boot_partition, efi_partition, root, uki_enabled, removable=True)
+					return
 		else:
 			boot_limine_path = self.target / 'boot' / 'limine'
 			boot_limine_path.mkdir(parents=True, exist_ok=True)
@@ -2043,7 +2055,17 @@ class Installer:
 			# Setup the firmware entry
 			info(f'Creating EFI boot entry for {kernel}')
 			cmd = [arg.format(kernel=kernel) for arg in cmd_template]
-			SysCommand(cmd)
+			try:
+				SysCommand(cmd)
+			except SysCallError as err:
+				if not uki_enabled:
+					raise DiskError(f'efibootmgr could not register {kernel} and a plain kernel has no removable fallback: {err}') from err
+				esp = self.target / boot_partition.relative_mountpoint
+				fallback = esp / 'EFI/BOOT' / ('BOOTAA64.EFI' if platform.machine() == 'aarch64' else 'BOOTX64.EFI')
+				fallback.parent.mkdir(parents=True, exist_ok=True)
+				shutil.copy2(esp / 'EFI/Linux' / f'arch-{kernel}.efi', fallback)
+				warn(f'efibootmgr could not register {kernel}, copied its UKI to {fallback.relative_to(self.target)} instead: {err}')
+				break
 
 		self._helper_flags['bootloader'] = 'efistub'
 
