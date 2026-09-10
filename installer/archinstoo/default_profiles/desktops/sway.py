@@ -44,6 +44,8 @@ class SwayProfile(WaylandProfile):
 			'pavucontrol',
 			'xorg-xwayland',
 			*additional,
+			'xdg-desktop-portal-gtk',  # sway-portals.conf: gtk default, wlr for screencast; sway pulls neither
+			'xdg-desktop-portal-wlr',
 		]
 
 	@property

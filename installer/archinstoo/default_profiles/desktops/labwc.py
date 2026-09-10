@@ -30,6 +30,7 @@ class LabwcProfile(WaylandProfile):
 		return [
 			'labwc',
 			*additional,
+			'xdg-desktop-portal-wlr',  # labwc-portals.conf: default=wlr; labwc pulls no backend
 		]
 
 	@property
