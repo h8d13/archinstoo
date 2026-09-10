@@ -67,6 +67,15 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
 
 
+def luks_child_mount(lsblk_info: LsblkInfo, base_mountpoint: Path) -> LsblkInfo | None:
+	# lsblk hangs fs and mountpoint on the dm-crypt child, the partition shows none
+	# https://github.com/archlinux/archinstall/issues/4182
+	for child in lsblk_info.children:
+		if child.type == 'crypt' and any(m.is_relative_to(base_mountpoint) for m in child.mountpoints):
+			return child
+	return None
+
+
 def _normalize_lsblk_fstype(lsblk_info: LsblkInfo) -> str:
 	# lsblk names two filesystems differently from parted and the enum.
 	# Compare lowercased, return the original: the enum spells crypto_LUKS
@@ -750,24 +759,61 @@ class DeviceHandler:
 				self.wipefs(part_mod.dev_path)
 				self.udev_sync()
 
+	@staticmethod
+	def _rebase(mountpoint: Path, base_mountpoint: Path) -> Path:
+		return mountpoint.root / mountpoint.relative_to(base_mountpoint)
+
+	def _pre_mounted_part(self, part_info: _PartitionInfo, base_mountpoint: Path) -> PartitionModification | None:
+		mountpoint = next((m for m in part_info.mountpoints if m.is_relative_to(base_mountpoint)), None)
+
+		if mountpoint is not None:
+			part_mod = PartitionModification.from_existing_partition(part_info)
+			if part_mod.mountpoint:
+				part_mod.mountpoint = self._rebase(mountpoint, base_mountpoint)
+			else:
+				for subvol in part_mod.btrfs_subvols:
+					if sm := subvol.mountpoint:
+						subvol.mountpoint = self._rebase(sm, base_mountpoint)
+			return part_mod
+
+		if part_info.fs_type != FilesystemType.CRYPTO_LUKS:
+			return None
+
+		child = luks_child_mount(get_lsblk_info(part_info.path), base_mountpoint)
+		if child is None:
+			return None
+
+		part_mod = PartitionModification.from_existing_partition(part_info)
+		part_mod.luks_mapper = child.name  # uuid stays the container's: rd.luks.name= wants that one
+		try:
+			part_mod.fs_type = FilesystemType(_normalize_lsblk_fstype(child))
+		except ValueError:
+			debug(f'Unsupported filesystem inside {child.path}: {child.fstype}')
+			return None
+
+		if part_mod.fs_type == FilesystemType.BTRFS:
+			subvol_infos = self.get_btrfs_info(child.path, child)
+			part_mod.btrfs_subvols = [SubvolumeModification.from_existing_subvol_info(i) for i in subvol_infos]
+			for subvol in part_mod.btrfs_subvols:
+				if sm := subvol.mountpoint:
+					subvol.mountpoint = self._rebase(sm, base_mountpoint)
+		else:
+			mounted = next(m for m in child.mountpoints if m.is_relative_to(base_mountpoint))
+			part_mod.mountpoint = self._rebase(mounted, base_mountpoint)
+
+		debug(f'Pre-mounted LUKS {part_info.path} via {child.path}: {part_mod.fs_type} at {part_mod.mountpoint}')
+		return part_mod
+
 	def detect_pre_mounted_mods(self, base_mountpoint: Path) -> list[DeviceModification]:
 		part_mods: dict[Path, list[PartitionModification]] = {}
 
 		for device in self.devices:
 			for part_info in device.partition_infos:
-				for mountpoint in part_info.mountpoints:
-					if mountpoint.is_relative_to(base_mountpoint):
-						path = Path(part_info.disk.device.path)
-						part_mods.setdefault(path, [])
-						part_mod = PartitionModification.from_existing_partition(part_info)
-						if part_mod.mountpoint:
-							part_mod.mountpoint = mountpoint.root / mountpoint.relative_to(base_mountpoint)
-						else:
-							for subvol in part_mod.btrfs_subvols:
-								if sm := subvol.mountpoint:
-									subvol.mountpoint = sm.root / sm.relative_to(base_mountpoint)
-						part_mods[path].append(part_mod)
-						break
+				part_mod = self._pre_mounted_part(part_info, base_mountpoint)
+				if part_mod is None:
+					continue
+				path = Path(part_info.disk.device.path)
+				part_mods.setdefault(path, []).append(part_mod)
 
 		device_mods: list[DeviceModification] = []
 		for device_path, mods in part_mods.items():

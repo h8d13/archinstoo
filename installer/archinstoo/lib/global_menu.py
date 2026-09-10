@@ -403,7 +403,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _validate_disk_config(self, disk_config: DiskLayoutConfiguration) -> bool:
 		if (enc := disk_config.disk_encryption) and enc.encryption_type != EncryptionType.NO_ENCRYPTION:
-			return enc.encryption_password is not None
+			return enc.encryption_password is not None or enc.is_pre_mounted()
 		return True
 
 	def _prev_applications(self, item: MenuItem) -> str | None:

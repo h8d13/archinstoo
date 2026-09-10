@@ -627,7 +627,7 @@ class Installer:
 
 			if gen_enc_file and not part_mod.is_root():
 				debug(f'Creating key-file: {part_mod.dev_path}')
-				if root_is_encrypted:
+				if root_is_encrypted and not part_mod.luks_mapper:  # pre-opened: no passphrase to derive from
 					# GRUB has limited memory for argon2 decryption;
 					# constrain the keyfile slot too so GRUB can handle it
 					is_boot = part_mod.is_boot()
@@ -641,8 +641,7 @@ class Installer:
 						pbkdf=self._disk_encryption.pbkdf,
 					)
 				else:
-					# Root is unencrypted don't write a keyfile to plaintext disk;
-					# use a crypttab entry so systemd prompts for a passphrase instead.
+					# unencrypted root (keyfile would sit in plaintext) or pre-opened: prompt via crypttab
 					luks_handler.create_crypttab_entry(self.target)
 
 			if self._disk_encryption.auto_unlock_root and part_mod.is_root():

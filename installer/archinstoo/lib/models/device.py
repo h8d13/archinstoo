@@ -170,6 +170,7 @@ class DiskLayoutConfiguration:
 
 			mods = device_handler.detect_pre_mounted_mods(path)
 			device_modifications.extend(mods)
+			config.disk_encryption = DiskEncryption.from_pre_mounted(mods)
 
 			config.mountpoint = path
 
@@ -979,6 +980,7 @@ class PartitionModification:
 	partn: int | None = None
 	partuuid: str | None = None
 	uuid: str | None = None
+	luks_mapper: str | None = None  # pre-mount: user-opened container, fs_type/mountpoint are the child's
 
 	# str, not UUID: config restores this from json as a string, and __hash__
 	# reads it raw, so mixing the two hashes one identity into two buckets
@@ -1587,6 +1589,15 @@ class DiskEncryption:
 	def _is_root_encrypted(self) -> bool:
 		# Check if root partition/volume is in the encrypted set.
 		return any(p.mountpoint == Path('/') for p in self.partitions) or any(v.mountpoint == Path('/') for v in self.lvm_volumes)
+
+	@classmethod
+	def from_pre_mounted(cls, mods: list[DeviceModification]) -> Self | None:
+		parts = [p for m in mods for p in m.partitions if p.luks_mapper]
+		# no password on purpose: sd-encrypt/crypttab prompt at boot
+		return cls(EncryptionType.LUKS, partitions=parts) if parts else None
+
+	def is_pre_mounted(self) -> bool:
+		return bool(self.partitions) and all(p.luks_mapper for p in self.partitions)
 
 	def should_generate_encryption_file(self, dev: PartitionModification | LvmVolume) -> bool:
 		# Don't generate keyfiles on unencrypted root - they'd be exposed

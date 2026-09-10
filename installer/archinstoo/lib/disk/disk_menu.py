@@ -168,7 +168,8 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		if disk_config != preset:
 			# carry an inline-defined lvm_config (fs=lvm in the default flow) into the peer item; else reset
 			self._menu_item_group.find_by_key('lvm_config').value = disk_config.lvm_config if disk_config else None
-			self._menu_item_group.find_by_key('disk_encryption').value = None
+			enc = disk_config.disk_encryption if disk_config and disk_config.config_type == DiskLayoutType.Pre_mount else None  # detected, keep
+			self._menu_item_group.find_by_key('disk_encryption').value = enc
 
 		return disk_config
 

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.models.device import (
 	BDevice,
 	DeviceModification,
+	DiskEncryption,
 	DiskLayoutConfiguration,
 	DiskLayoutType,
 	FilesystemType,
@@ -101,6 +102,7 @@ def select_disk_config(
 					config_type=DiskLayoutType.Pre_mount,
 					device_modifications=mods,
 					mountpoint=path,
+					disk_encryption=DiskEncryption.from_pre_mounted(mods),
 				)
 
 			preset_device = preset.device_modifications[0].device if preset and preset.device_modifications else None
