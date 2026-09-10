@@ -2006,44 +2006,48 @@ class Installer:
 		else:
 			entry = ['protocol: linux', f'path: {path_root}:/vmlinuz-$k', 'cmdline: $cmdline', f'module_path: {path_root}:/initramfs-$k.img']
 		conf = Path('/') / config_path.relative_to(self.target)
-		script = [
-			'#!/bin/sh',
-			'# archinstoo: limine kernel entries, regenerated on kernel changes (hand edits do not survive)',
-			'set -e',
-			f'conf={shlex.quote(str(conf))}',
-			f'cmdline={shlex.quote(" ".join(kernel_params))}',
-			'{',
-			"\tprintf 'timeout: 5\\n'",
-			'\t# name order, not module-dir (version) order: plain linux stays the default entry',
-			'\tfor k in $(cat /usr/lib/modules/*/pkgbase | sort -u); do',
-			'\t\tprintf \'\\n/Arch Linux (%s)\\n\' "$k"',
-			*(f'\t\tprintf \'    %s\\n\' "{it}"' for it in entry),
-			'\tdone',
-			'} > "$conf"',
-			'',
-		]
+		# entry lines substituted after dedent: they carry their own indent
+		entries = '\n'.join(f'\t\tprintf \'    %s\\n\' "{it}"' for it in entry)
+		script = textwrap.dedent(
+			f"""\
+			#!/bin/sh
+			# archinstoo: limine kernel entries, regenerated on kernel changes (hand edits do not survive)
+			set -e
+			conf={shlex.quote(str(conf))}
+			cmdline={shlex.quote(' '.join(kernel_params))}
+			{{
+				printf 'timeout: 5\\n'
+				# name order, not module-dir (version) order: plain linux stays the default entry
+				for k in $(cat /usr/lib/modules/*/pkgbase | sort -u); do
+					printf '\\n/Arch Linux (%s)\\n' "$k"
+			@ENTRIES@
+				done
+			}} > "$conf"
+			"""
+		).replace('@ENTRIES@', entries)
 		script_path = self.target / 'etc/archinstoo.d/limine-entries.sh'
 		script_path.parent.mkdir(parents=True, exist_ok=True)
-		script_path.write_text('\n'.join(script))
+		script_path.write_text(script)
 		script_path.chmod(0o755)
 
-		hook = [
-			'[Trigger]',
-			'Type = Path',
-			'Operation = Install',
-			'Operation = Upgrade',
-			'Operation = Remove',
-			'Target = usr/lib/modules/*/pkgbase',
-			'',
-			'[Action]',
-			'Description = Updating Limine kernel entries...',
-			'When = PostTransaction',
-			'Exec = /etc/archinstoo.d/limine-entries.sh',
-			'',
-		]
+		hook = textwrap.dedent(
+			"""\
+			[Trigger]
+			Type = Path
+			Operation = Install
+			Operation = Upgrade
+			Operation = Remove
+			Target = usr/lib/modules/*/pkgbase
+
+			[Action]
+			Description = Updating Limine kernel entries...
+			When = PostTransaction
+			Exec = /etc/archinstoo.d/limine-entries.sh
+			"""
+		)
 		hooks_dir = self.target / 'etc/pacman.d/hooks'
 		hooks_dir.mkdir(parents=True, exist_ok=True)
-		(hooks_dir / '91-limine-entries.hook').write_text('\n'.join(hook))
+		(hooks_dir / '91-limine-entries.hook').write_text(hook)
 
 		self.arch_chroot('/etc/archinstoo.d/limine-entries.sh')
 		debug(f'Wrote {config_path} via limine-entries.sh')
@@ -2308,42 +2312,45 @@ class Installer:
 		]
 		if not keep_standalone_initramfs:
 			seds.append('"s|^default_image=|#default_image=|"')
-		script = [
-			'#!/bin/sh',
-			'# archinstoo: UKI preset + os-release for kernels installed after the fact',
-			'set -e',
-			'while read -r pkgbase_path; do',
-			'\tpkgbase=$(cat "/$pkgbase_path")',
-			'\tpreset="/etc/mkinitcpio.d/$pkgbase.preset"',
-			'\t[ -e "$preset" ] && continue',
-			'\tmkdir -p /etc/os-release.d',
-			'\tosrel="/etc/os-release.d/$pkgbase"',
-			'\t[ -e "$osrel" ] || sed "s/^PRETTY_NAME=.*/PRETTY_NAME=\\"Arch Linux ($pkgbase)\\"/" /etc/os-release > "$osrel"',
-			'\tsed ' + ' '.join(f'-e {e}' for e in seds) + ' /usr/share/mkinitcpio/hook.preset > "$preset"',
-			'done',
-			'',
-		]
+		sed_args = ' '.join(f'-e {e}' for e in seds)
+		script = textwrap.dedent(
+			f"""\
+			#!/bin/sh
+			# archinstoo: UKI preset + os-release for kernels installed after the fact
+			set -e
+			while read -r pkgbase_path; do
+				pkgbase=$(cat "/$pkgbase_path")
+				preset="/etc/mkinitcpio.d/$pkgbase.preset"
+				[ -e "$preset" ] && continue
+				mkdir -p /etc/os-release.d
+				osrel="/etc/os-release.d/$pkgbase"
+				[ -e "$osrel" ] || sed "s/^PRETTY_NAME=.*/PRETTY_NAME=\\"Arch Linux ($pkgbase)\\"/" /etc/os-release > "$osrel"
+				sed {sed_args} /usr/share/mkinitcpio/hook.preset > "$preset"
+			done
+			"""
+		)
 		script_path = self.target / 'etc/archinstoo.d/uki-preset.sh'
 		script_path.parent.mkdir(parents=True, exist_ok=True)
-		script_path.write_text('\n'.join(script))
+		script_path.write_text(script)
 		script_path.chmod(0o755)
 
-		hook = [
-			'[Trigger]',
-			'Type = Path',
-			'Operation = Install',
-			'Target = usr/lib/modules/*/pkgbase',
-			'',
-			'[Action]',
-			'Description = Creating UKI preset for new kernel...',
-			'When = PostTransaction',
-			'Exec = /etc/archinstoo.d/uki-preset.sh',
-			'NeedsTargets',
-			'',
-		]
+		hook = textwrap.dedent(
+			"""\
+			[Trigger]
+			Type = Path
+			Operation = Install
+			Target = usr/lib/modules/*/pkgbase
+
+			[Action]
+			Description = Creating UKI preset for new kernel...
+			When = PostTransaction
+			Exec = /etc/archinstoo.d/uki-preset.sh
+			NeedsTargets
+			"""
+		)
 		hooks_dir = self.target / 'etc/pacman.d/hooks'
 		hooks_dir.mkdir(parents=True, exist_ok=True)
-		(hooks_dir / '89-uki-preset.hook').write_text('\n'.join(hook))
+		(hooks_dir / '89-uki-preset.hook').write_text(hook)
 		debug(f'Wrote {script_path} and pacman hook 89-uki-preset.hook')
 
 	def add_bootloader(
