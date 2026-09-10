@@ -670,7 +670,7 @@ class _DeviceInfo:
 	sector_size: SectorSize
 	read_only: bool
 	dirty: bool
-	serial: str | None = None  # udev ID_SERIAL via lsblk, empty on serial-less virtio
+	serial: str | None = None  # udev ID_SERIAL via lsblk; nvme0n1 vs nvme1n1 flips between boots, this does not
 
 	def table_data(self) -> dict[str, str | int | bool]:
 		total_free_space = sum(region.get_length(unit=Unit.MiB) for region in self.free_space_regions)
