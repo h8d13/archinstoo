@@ -86,6 +86,18 @@ __ter_font_packages__ = ['terminus-font']
 # grub integration for either snapshot tool
 __grub_snapshot_packages__ = ['grub-btrfs', 'inotify-tools']
 __zram_packages__ = ['zram-generator']
+
+# guest integration per systemd-detect-virt name: packages, then the services they ship
+# https://github.com/archlinux/archinstall/issues/1476
+__vm_guest__: dict[str, tuple[list[str], list[str]]] = {
+	# both static units, udev starts them when their virtio-serial port shows up:
+	# guest-agent for host control, spice-vdagent for clipboard/resolution on a SPICE display
+	'kvm': (['qemu-guest-agent', 'spice-vdagent'], []),
+	'qemu': (['qemu-guest-agent', 'spice-vdagent'], []),
+	'vmware': (['open-vm-tools'], ['vmtoolsd', 'vmware-vmblock-fuse']),
+	'oracle': (['virtualbox-guest-utils'], ['vboxservice']),
+	'microsoft': (['hyperv'], ['hv_fcopy_daemon', 'hv_kvp_daemon', 'hv_vss_daemon']),
+}
 # what grimoire needs on the target before it can build anything from the AUR.
 # base-devel spelled out (its member list minus sudo) so a doas install does
 # not drag sudo in as a side effect of wanting a toolchain
@@ -1384,6 +1396,15 @@ class Installer:
 				# hibernation is an enhancement, not worth aborting a
 				# finished-installing system over (cf. allow_ssh)
 				warn(f'Failed to set up hibernation swap file: {err}')
+
+	def setup_vm_guest(self) -> None:
+		if not (guest := __vm_guest__.get(SysInfo.hypervisor())):
+			return
+		packages, services = guest
+		info(f'Installing {SysInfo.hypervisor()} guest integration: {", ".join(packages)}')
+		self.pacman.strap(packages)
+		if services:
+			self.enable_service(services)
 
 	def _setup_zram(self, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
 		info('Setting up swap on zram')

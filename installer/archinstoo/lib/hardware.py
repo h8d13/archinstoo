@@ -462,6 +462,15 @@ class _SysInfo:
 		return cards
 
 	@cached_property
+	def hypervisor(self) -> str:
+		# systemd-detect-virt's name (kvm, qemu, vmware, oracle, microsoft, ...), '' on bare metal
+		try:
+			name = b''.join(SysCommand('systemd-detect-virt')).decode().strip().lower()
+		except SysCallError, RequirementError:
+			return ''
+		return '' if name == 'none' else name
+
+	@cached_property
 	def is_vm(self) -> bool:
 		# Forks systemd-detect-virt, and gates the firmware scan, microcode and
 		# the gfx driver list. A host does not become a VM mid-run
@@ -668,6 +677,10 @@ class SysInfo:
 	@staticmethod
 	def is_vm() -> bool:
 		return _sys_info.is_vm
+
+	@staticmethod
+	def hypervisor() -> str:
+		return _sys_info.hypervisor
 
 	@staticmethod
 	def requires_sof_fw() -> bool:

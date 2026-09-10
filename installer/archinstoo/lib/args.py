@@ -83,6 +83,7 @@ class ArchConfig:
 	kernel_headers: bool = False
 	firmware: FirmwareConfiguration = field(default_factory=FirmwareConfiguration.default)
 	ntp: bool = True
+	vm_guest: bool = True  # hypervisor guest tools when installing inside a VM
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
 	timezone: str | None = None
@@ -110,6 +111,7 @@ class ArchConfig:
 			'network_config': self.network_config.json() if self.network_config else None,
 			'timezone': self.timezone,
 			'ntp': self.ntp,
+			'vm_guest': self.vm_guest,
 			'packages': self.packages,
 			'aur_packages': self.aur_packages,
 			'services': [s.json() if isinstance(s, UserService) else s for s in self.services],
@@ -169,6 +171,7 @@ class ArchConfig:
 		if firmware := args_config.get('firmware'):
 			arch_config.firmware = FirmwareConfiguration.parse_arg(firmware)
 		arch_config.ntp = args_config.get('ntp', True)
+		arch_config.vm_guest = args_config.get('vm_guest', True)
 
 		return arch_config
 

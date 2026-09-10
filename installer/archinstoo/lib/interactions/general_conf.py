@@ -1,6 +1,7 @@
 import threading
 from enum import Enum
 
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.localization.utils import list_timezones
 from archinstoo.lib.models.packages import AvailablePackage, PackageGroup
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
@@ -16,6 +17,12 @@ class PostInstallationAction(Enum):
 	REBOOT = 'reboot system'
 	POWEROFF = 'poweroff system'
 	CHROOT = 'chroot into install'
+
+
+def select_vm_guest(preset: bool = True) -> bool:
+	header = f'Install {SysInfo.hypervisor()} guest tools (agent, clipboard/time sync, shared folders)?\n'
+	choice = prompt_yes_no(header, preset)
+	return preset if choice is None else choice
 
 
 def select_ntp(preset: bool = True) -> bool:

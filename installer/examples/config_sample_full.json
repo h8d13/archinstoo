@@ -303,6 +303,7 @@
     },
     "timezone": "Europe/Berlin",
     "ntp": true,
+    "vm_guest": true,
     "packages": [
         "syncthing",
         "chromium"
@@ -313,7 +314,11 @@
     "sysctl": [],
     "services": [
         "sshd",
-        {"unit": "syncthing.service", "user": "myuser", "linger": true}
+        {
+            "unit": "syncthing.service",
+            "user": "myuser",
+            "linger": true
+        }
     ],
     "custom_commands": [
         "#arch-chroot via bash tmp files # lines are ignored",
