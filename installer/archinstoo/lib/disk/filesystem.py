@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.models.device import (
 	BOOT_ITER_TIME,
 	BOOT_PBKDF_MEMORY,
+	DeviceModification,
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	DiskLayoutType,
@@ -13,6 +14,7 @@ from archinstoo.lib.models.device import (
 	LvmConfiguration,
 	LvmVolume,
 	LvmVolumeGroup,
+	ModificationStatus,
 	PartitionModification,
 	SectorSize,
 	Size,
@@ -29,6 +31,26 @@ if TYPE_CHECKING:
 	from pathlib import Path
 
 	from .luks import Luks2
+
+
+_CHANGE_LABEL = {ModificationStatus.CREATE: 'create', ModificationStatus.MODIFY: 'format', ModificationStatus.DELETE: 'delete'}
+
+
+def pending_changes(device_mods: list[DeviceModification]) -> list[str]:
+	# "Starting device modifications" read as a whole-disk wipe to people keeping Windows
+	# on the same SSD; spell out what is touched https://github.com/archlinux/archinstall/issues/2334
+	lines = ['Pending disk changes:']
+	for mod in device_mods:
+		if mod.wipe:
+			lines.append(f'  wipe    {mod.device_path} (every partition on it)')
+			continue
+		for part in mod.partitions:
+			if part.status == ModificationStatus.EXIST:
+				continue
+			target = part.dev_path or f'{mod.device_path} +{part.length.format_highest()}'
+			fs = part.fs_type.value if part.fs_type else ''
+			lines.append(f'  {_CHANGE_LABEL[part.status]:<8}{target} {fs} {part.mountpoint or ""}'.rstrip())
+	return lines
 
 
 class FilesystemHandler:
@@ -60,7 +82,7 @@ class FilesystemHandler:
 			return
 
 		if show_countdown:
-			self._final_warning()
+			self._final_warning(active_mods)
 
 		# Setup the blockdevice, filesystem (and optionally encryption).
 		# Once that's done, we'll hand over to perform_installation()
@@ -373,11 +395,12 @@ class FilesystemHandler:
 				Size(256, Unit.MiB, SectorSize.default()),
 			)
 
-	def _final_warning(self) -> bool:
+	def _final_warning(self, device_mods: list[DeviceModification]) -> bool:
 		# Issue a final warning before we continue with something un-revertable.
 		# We count down from 5 to 0.
+		Tui.print('\n'.join(pending_changes(device_mods)) + '\n', row=0, clear_screen=True)
 		out = 'Starting device modifications in '
-		Tui.print(out, row=0, endl='', clear_screen=True)
+		Tui.print(out, row=0, endl='')
 
 		try:
 			countdown = '\n5...4...3...2...1\n'
