@@ -72,6 +72,10 @@ class MediaCodecsConfigSerialization(TypedDict):
 	enabled: bool
 
 
+class FlatpakConfigSerialization(TypedDict):
+	enabled: bool
+
+
 class Firewall(StrEnum):
 	UFW = auto()
 	FWD = 'firewalld'
@@ -214,6 +218,7 @@ class ApplicationSerialization(TypedDict):
 	cpu_scheduler_config: NotRequired[CPUSchedulerConfigSerialization]
 	print_service_config: NotRequired[PrintServiceConfigSerialization]
 	media_codecs_config: NotRequired[MediaCodecsConfigSerialization]
+	flatpak_config: NotRequired[FlatpakConfigSerialization]
 	firewall_config: NotRequired[FirewallConfigSerialization]
 	management_config: NotRequired[ManagementConfigSerialization]
 	monitor_config: NotRequired[MonitorConfigSerialization]
@@ -277,6 +282,11 @@ class PrintServiceConfiguration(_Category):
 
 @dataclass
 class MediaCodecsConfiguration(_Category):
+	enabled: bool
+
+
+@dataclass
+class FlatpakConfiguration(_Category):
 	enabled: bool
 
 
@@ -352,6 +362,7 @@ class ApplicationConfiguration:
 	cpu_scheduler_config: CPUSchedulerConfiguration | None = None
 	print_service_config: PrintServiceConfiguration | None = None
 	media_codecs_config: MediaCodecsConfiguration | None = None
+	flatpak_config: FlatpakConfiguration | None = None
 	firewall_config: FirewallConfiguration | None = None
 	management_config: ManagementConfiguration | None = None
 	monitor_config: MonitorConfiguration | None = None

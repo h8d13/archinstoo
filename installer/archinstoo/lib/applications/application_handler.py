@@ -8,6 +8,7 @@ from .cat.cpu_scheduler import CPUSchedulerApp
 from .cat.devtools import DevToolsApp
 from .cat.editor import EditorApp
 from .cat.firewall import FirewallApp
+from .cat.flatpak import FlatpakApp
 from .cat.languages import LanguagesApp
 from .cat.management import ManagementApp
 from .cat.media_codecs import MediaCodecsApp
@@ -46,6 +47,9 @@ class ApplicationHandler:
 
 		if app_config.media_codecs_config and app_config.media_codecs_config.enabled:
 			MediaCodecsApp().install(install_session)
+
+		if app_config.flatpak_config and app_config.flatpak_config.enabled:
+			FlatpakApp().install(install_session)
 
 		if app_config.power_management_config:
 			PowerManagementApp().install(

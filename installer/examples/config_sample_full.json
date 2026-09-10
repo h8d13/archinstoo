@@ -246,6 +246,9 @@
         "media_codecs_config": {
             "enabled": true
         },
+        "flatpak_config": {
+            "enabled": true
+        },
         "power_management_config": {
             "power_management": "power-profiles-daemon"
         },
@@ -313,7 +316,11 @@
     "sysctl": [],
     "services": [
         "sshd",
-        {"unit": "syncthing.service", "user": "myuser", "linger": true}
+        {
+            "unit": "syncthing.service",
+            "user": "myuser",
+            "linger": true
+        }
     ],
     "custom_commands": [
         "#arch-chroot via bash tmp files # lines are ignored",

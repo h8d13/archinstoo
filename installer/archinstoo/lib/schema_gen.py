@@ -24,6 +24,7 @@ from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
 from archinstoo.lib.applications.cat.cpu_scheduler import CPUSchedulerApp
 from archinstoo.lib.applications.cat.firewall import FirewallApp
+from archinstoo.lib.applications.cat.flatpak import FlatpakApp
 from archinstoo.lib.applications.cat.media_codecs import MediaCodecsApp
 from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
@@ -176,6 +177,12 @@ SECTIONS: tuple[Section, ...] = (
 		'media_codecs',
 		lambda: MediaCodecsApp().packages,
 		pick=('media_codecs_config', 'enabled'),
+		site='application_handler.install_applications',
+	),
+	Section(
+		'flatpak',
+		lambda: FlatpakApp().packages,
+		pick=('flatpak_config', 'enabled'),
 		site='application_handler.install_applications',
 	),
 	Section(

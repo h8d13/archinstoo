@@ -30,6 +30,9 @@ source = "pacman"
 [e2fsprogs]
 source = "pacman"
 
+[expac]
+source = "pacman"
+
 [f2fs-tools]
 source = "pacman"
 
@@ -741,6 +744,9 @@ source = "pacman"
 [fish]
 source = "pacman"
 
+[flatpak]
+source = "pacman"
+
 [flex]
 source = "pacman"
 
@@ -1431,10 +1437,16 @@ source = "pacman"
 [xdg-desktop-portal-hyprland]
 source = "pacman"
 
+[xdg-desktop-portal-kde]
+source = "pacman"
+
 [xdg-desktop-portal-lxqt]
 source = "pacman"
 
 [xdg-desktop-portal-wlr]
+source = "pacman"
+
+[xdg-desktop-portal-xapp]
 source = "pacman"
 
 [xdg-user-dirs]

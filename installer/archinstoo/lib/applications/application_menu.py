@@ -17,6 +17,7 @@ from archinstoo.lib.models.application import (
 	EditorConfiguration,
 	Firewall,
 	FirewallConfiguration,
+	FlatpakConfiguration,
 	Language,
 	LanguageConfiguration,
 	Management,
@@ -101,6 +102,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				action=select_media_codecs,
 				preview_action=self._prev_media_codecs,
 				key='media_codecs_config',
+			),
+			MenuItem(
+				text='Flatpak',
+				action=select_flatpak,
+				preview_action=self._prev_flatpak,
+				key='flatpak_config',
 			),
 			MenuItem(
 				text='Power management',
@@ -208,6 +215,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: MediaCodecsConfiguration = item.value
 			return _enabled_text('Media codecs', config.enabled)
+		return None
+
+	def _prev_flatpak(self, item: MenuItem) -> str | None:
+		if item.value is not None:
+			config: FlatpakConfiguration = item.value
+			return _enabled_text('Flatpak', config.enabled)
 		return None
 
 	def _prev_firewall(self, item: MenuItem) -> str | None:
@@ -360,6 +373,11 @@ def select_thunderbolt(preset: ThunderboltConfiguration | None) -> ThunderboltCo
 def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServiceConfiguration | None:
 	enabled = prompt_yes_no('Would you like to configure the print service?' + '\n', preset.enabled if preset else False)
 	return preset if enabled is None else PrintServiceConfiguration(enabled)
+
+
+def select_flatpak(preset: FlatpakConfiguration | None) -> FlatpakConfiguration | None:
+	enabled = prompt_yes_no('Install flatpak with the flathub remote and a portal fallback?' + '\n', preset.enabled if preset else False)
+	return preset if enabled is None else FlatpakConfiguration(enabled)
 
 
 def select_media_codecs(preset: MediaCodecsConfiguration | None) -> MediaCodecsConfiguration | None:

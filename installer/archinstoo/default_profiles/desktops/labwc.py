@@ -1,4 +1,4 @@
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import ProfileType, SeatAccess, seat_services
@@ -6,6 +6,9 @@ from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
+
+if TYPE_CHECKING:
+	from archinstoo.lib.installer import Installer
 
 
 class LabwcProfile(WaylandProfile):
@@ -32,6 +35,21 @@ class LabwcProfile(WaylandProfile):
 			*additional,
 			'xdg-desktop-portal-wlr',  # labwc-portals.conf: default=wlr; labwc pulls no backend
 		]
+
+	@override
+	def install(self, install_session: Installer) -> None:
+		super().install(install_session)
+
+		# xdg-desktop-portal-wlr only starts once the systemd user session knows the
+		# compositor; sway ships a drop-in for this, labwc leaves it to autostart
+		autostart = install_session.target / 'etc/xdg/labwc/autostart'
+		autostart.parent.mkdir(parents=True, exist_ok=True)
+		line = 'systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP && '
+		line += 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP\n'
+		existing = autostart.read_text() if autostart.is_file() else ''
+		if 'import-environment' not in existing:
+			autostart.write_text(existing + line)
+			autostart.chmod(0o755)
 
 	@property
 	@override
