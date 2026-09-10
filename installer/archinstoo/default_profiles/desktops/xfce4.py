@@ -17,6 +17,7 @@ class Xfce4Profile(XorgProfile):
 			'pavucontrol',
 			'gvfs',
 			'xarchiver',
+			'xdg-desktop-portal-gtk',  # flatpak/file-chooser portal, nothing in the xfce4 group pulls one
 		]
 
 	@property

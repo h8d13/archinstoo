@@ -14,6 +14,7 @@ class MateProfile(XorgProfile):
 		return [
 			'mate',
 			'mate-extra',
+			'xdg-desktop-portal-gtk',  # mate-portals.conf names gtk, nothing in the mate groups pulls it
 		]
 
 	@property
