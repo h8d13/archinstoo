@@ -67,6 +67,18 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
 
 
+# mounts the running system cannot lose; wiping /home still deserves a warning, not a refusal
+_HOST_MOUNTPOINTS = frozenset(Path(p) for p in ('/', '/usr', '/var', '/boot', '/efi', '/boot/efi'))
+
+
+def host_mounts(lsblk_info: LsblkInfo) -> list[Path]:
+	# https://github.com/archlinux/archinstall/issues/4275
+	held = [m for m in lsblk_info.mountpoints if m in _HOST_MOUNTPOINTS]
+	for child in lsblk_info.children:  # mappers/LVs hold the mount, not the partition
+		held += host_mounts(child)
+	return held
+
+
 def luks_child_mount(lsblk_info: LsblkInfo, base_mountpoint: Path) -> LsblkInfo | None:
 	# lsblk hangs fs and mountpoint on the dm-crypt child, the partition shows none
 	# https://github.com/archlinux/archinstall/issues/4182
@@ -686,6 +698,9 @@ class DeviceHandler:
 			luks_handler.lock()
 
 	def umount_all_existing(self, device_path: Path) -> None:
+		if held := host_mounts(get_lsblk_info(device_path)):
+			raise DiskError(f'{device_path} carries the running system ({", ".join(map(str, held))}), refusing to unmount it')
+
 		debug(f'Unmounting all existing partitions: {device_path}')
 
 		existing_partitions = self._devices[device_path].partition_infos
