@@ -25,6 +25,7 @@ from .interactions.general_conf import (
 	select_hostname,
 	select_ntp,
 	select_timezone,
+	select_vm_guest,
 )
 from .interactions.system_conf import select_firmware, select_kernel, select_swap
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
@@ -189,6 +190,14 @@ class GlobalMenu(AbstractMenu[None]):
 				value=True,
 				preview_action=self._prev_ntp,
 				key='ntp',
+			),
+			MenuItem(
+				text='VM guest tools',
+				action=select_vm_guest,
+				value=True,
+				preview_action=self._prev_vm_guest,
+				dependencies=[SysInfo.is_vm],
+				key='vm_guest',
 			),
 			MenuItem(
 				text='Additional packages',
@@ -420,6 +429,11 @@ class GlobalMenu(AbstractMenu[None]):
 		if item.value:
 			return f'{"Timezone"}: {item.value}'
 		return None
+
+	def _prev_vm_guest(self, item: MenuItem) -> str | None:
+		if item.value is None:
+			return None
+		return f'Guest tools ({SysInfo.hypervisor() or "no hypervisor"}): {"Enabled" if item.value else "Disabled"}'
 
 	def _prev_ntp(self, item: MenuItem) -> str | None:
 		if item.value is not None:

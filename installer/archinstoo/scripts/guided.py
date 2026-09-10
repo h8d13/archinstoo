@@ -104,6 +104,9 @@ def perform_installation(
 		if config.swap and config.swap.enabled:
 			installation.setup_swap(config.swap)
 
+		if config.vm_guest:
+			installation.setup_vm_guest()
+
 		if config.sysctl:
 			installation.setup_sysctl(config.sysctl)
 

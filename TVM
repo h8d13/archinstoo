@@ -53,6 +53,11 @@
 #                       without this. Needs the full module chain (vga-gl alone won't load):
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
+#   A2_SPICE            'on' adds a SPICE server on 127.0.0.1:$A2_SPICE_PORT (default 5930)
+#                       plus the vdagent channel, so spice-vdagent in the guest has
+#                       something to talk to (clipboard, resolution, mouse). Connect with
+#                       remote-viewer spice://127.0.0.1:5930 (virt-viewer). Needs
+#                       qemu-ui-spice-core + qemu-chardev-spice on the host.
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
 
 set -euo pipefail
@@ -79,6 +84,8 @@ A2_DISPLAY_BACKEND="${A2_DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
 A2_VGA="${A2_VGA:-std}"
 A2_GL="${A2_GL:-off}"
 A2_AUDIO_BACKEND="${A2_AUDIO_BACKEND:-pipewire}"
+A2_SPICE="${A2_SPICE:-off}"
+A2_SPICE_PORT="${A2_SPICE_PORT:-5930}"
 ARG="${1:-default}"
 
 OVMF_CODE=""
@@ -316,6 +323,25 @@ elif [ "$ATTACH_ISO" = "true" ]; then
 			-append "$(cat "$BOOT_DIR/cmdline") console=ttyS0,115200"
 		)
 	fi
+fi
+
+# SPICE server + vdagent virtio port: what the installed spice-vdagent binds to
+if [ "$A2_SPICE" = "on" ]; then
+	# -chardev help lists built-ins only, the spice chardev is a module: probe the option
+	# group. Captured, not piped: grep -q closing the pipe early trips pipefail.
+	spice_help="$(qemu-system-x86_64 -spice help 2>&1 || true)"
+	case "$spice_help" in
+	*"spice options"*) ;;
+	*) err "qemu has no SPICE support (install qemu-ui-spice-core and qemu-chardev-spice)" ;;
+	esac
+	# shellcheck disable=SC2054 # commas are qemu option syntax
+	QEMU_ARGS+=(
+		-spice "port=$A2_SPICE_PORT,addr=127.0.0.1,disable-ticketing=on"
+		-device virtio-serial
+		-chardev spicevmc,id=vdagent,name=vdagent
+		-device virtserialport,chardev=vdagent,name=com.redhat.spice.0
+	)
+	echo "SPICE on spice://127.0.0.1:$A2_SPICE_PORT (remote-viewer)"
 fi
 
 # raw qemu args, word-split: an extra disk with a serial, a second NIC, ...
