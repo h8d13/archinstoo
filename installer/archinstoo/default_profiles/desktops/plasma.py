@@ -21,6 +21,8 @@ class PlasmaProfile(WaylandProfile):
 			'ark',
 			'bluedevil',
 			'plasma-thunderbolt',
+			# portal backend: flatpak, screen share, wayland-era file pickers https://github.com/archlinux/archinstall/issues/1629
+			'xdg-desktop-portal-kde',
 		]
 
 	@property
