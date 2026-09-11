@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Final
 if TYPE_CHECKING:
 	from archinstoo.lib.models.swap import SwapConfiguration
 
-# Sysctl load defaults option
 # Update as settings get merged into shipped defaults
 # (10-arch.conf, 50-default.conf, or CONFIG_ in /proc/config.gz)
 #
