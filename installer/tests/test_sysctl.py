@@ -1,10 +1,7 @@
-# the optimized sysctl preset is what a user loads in the menu and what a
-# conformance/bench harness compares the booted guest against, so the list
-# has to stay well-formed and the zram block has to track the zram choice
 from archinstoo.lib.models.swap import SwapConfiguration
-from archinstoo.lib.models.sysctl import sysctl_defaults, sysctl_entries
+from archinstoo.lib.models.sysctl import ZRAM_DEFAULTS, sysctl_defaults, sysctl_entries
 
-ZRAM_KEYS = {'vm.swappiness', 'vm.watermark_boost_factor', 'vm.watermark_scale_factor', 'vm.page-cluster'}
+ZRAM_KEYS = sysctl_entries(ZRAM_DEFAULTS).keys()
 
 
 def test_zram_block_follows_zram_not_swap_enabled() -> None:

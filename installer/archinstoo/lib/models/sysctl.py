@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.swap import SwapConfiguration
@@ -7,11 +7,8 @@ if TYPE_CHECKING:
 # Update as settings get merged into shipped defaults
 # (10-arch.conf, 50-default.conf, or CONFIG_ in /proc/config.gz)
 #
-# Zram (only with zram swap; swappiness 180 is wrong for a disk-backed swap)
-#   swappiness = 180: zram is ~RAM speed, swap eagerly
-#   watermark_boost_factor = 0 / watermark_scale_factor = 125: reclaim earlier, smoother
-#   page-cluster = 0: no readahead, zram has no seek cost
-#     ref: docs.kernel.org/admin-guide/blockdev/zram.html#optimizing
+# Zram block: docs.kernel.org/admin-guide/blockdev/zram.html#optimizing,
+#   zram only, swappiness 180 is wrong for a disk-backed swap file
 #
 # Network performance
 #   rmem_max/wmem_max = 16M: raise socket buffer ceiling from ~208K for 1G+ links
@@ -45,16 +42,15 @@ if TYPE_CHECKING:
 #   dirty_ratio = 15: reduce worst-case write stall (default 20)
 #   dirty_background_ratio = 5: earlier background flush, smoother IO (default 10)
 
-ZRAM_DEFAULTS: list[str] = [
+ZRAM_DEFAULTS: Final = [
 	'# Zram tuning',
 	'vm.swappiness = 180',
 	'vm.watermark_boost_factor = 0',
 	'vm.watermark_scale_factor = 125',
 	'vm.page-cluster = 0',
-	'',
 ]
 
-BASE_DEFAULTS: list[str] = [
+BASE_DEFAULTS: Final = [
 	'# Network performance',
 	'net.core.rmem_max = 16777216',
 	'net.core.wmem_max = 16777216',
@@ -83,14 +79,12 @@ BASE_DEFAULTS: list[str] = [
 
 
 def sysctl_defaults(swap: SwapConfiguration | None) -> list[str]:
-	lines: list[str] = []
 	if swap and swap.zram:
-		lines += ZRAM_DEFAULTS
-	lines += BASE_DEFAULTS
-	return lines
+		return [*ZRAM_DEFAULTS, '', *BASE_DEFAULTS]
+	return list(BASE_DEFAULTS)
 
 
-# 'key = value' pairs, comments and blank lines are what sysctl.d(5) accepts
+# sysctl.d(5) shape: 'key = value', comments and blanks skipped
 def sysctl_entries(lines: list[str]) -> dict[str, str]:
 	entries: dict[str, str] = {}
 	for line in lines:
