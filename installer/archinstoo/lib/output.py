@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 	from _typeshed import DataclassInstance
 
+from .linux_path import LPath
 from .utils.unicode import unicode_ljust, unicode_rjust
 
 
@@ -157,6 +158,31 @@ class Logger:
 # See: https://github.com/archlinux/archinstall/issues/4149
 logger = Logger()
 log_level = logging.INFO
+
+# where the run log and config land on the target for post-install debugging
+ARTIFACTS_STORE = LPath('/etc/archinstoo.d')
+
+
+def sync_artifacts(target: Path) -> None:
+	# Copy the run log and saved user config into the target so they survive reboot
+	# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for post-install debugging.
+	try:
+		dest_dir = target / ARTIFACTS_STORE.relative_to_root()
+		dest_dir.mkdir(mode=0o755, exist_ok=True)
+
+		ts = datetime.now(tz=UTC).strftime('%Y-%m-%dT%H-%M')
+		artifacts = [
+			(logger.path, f'{ts}_install.log'),
+			(logger.directory / 'user_configuration.json', f'{ts}_config.json'),
+		]
+
+		for src, dst_name in artifacts:
+			if src.exists():
+				dst = dest_dir / dst_name
+				src.copy(dst, preserve_metadata=True)
+				dst.chmod(0o640)
+	except Exception as e:
+		warn(f'Failed to sync install artifacts to target: {e}')
 
 
 def _supports_color() -> bool:

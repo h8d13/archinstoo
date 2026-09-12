@@ -21,7 +21,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.output import debug, error, info, sync_artifacts
 from archinstoo.lib.pm.aur import run_grimoire_installation
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.systemd import accessibility_tools_in_use
@@ -219,7 +219,7 @@ def perform_installation(
 		# Persist install log + saved config to /etc/archinstoo.d after the menu so the
 		# log captures everything up to the action. subprocess.run('reboot'/'poweroff')
 		# kills the process before __exit__ runs, so syncing here is the last chance.
-		installation.sync_artifacts_to_target()
+		sync_artifacts(installation.target)
 
 		match action:
 			case PostInstallationAction.EXIT:

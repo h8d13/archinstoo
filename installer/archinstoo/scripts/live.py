@@ -11,7 +11,7 @@ from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.users import User, invoking_user
 from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.output import debug, info
+from archinstoo.lib.output import debug, info, sync_artifacts
 from archinstoo.lib.pm.aur import run_grimoire_installation
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.systemd import accessibility_tools_in_use
@@ -179,7 +179,7 @@ def perform_installation(
 
 		# target is /, so this lands in /etc/archinstoo.d directly; without it
 		# the __exit__ success message would claim artifacts that don't exist
-		installation.sync_artifacts_to_target()
+		sync_artifacts(installation.target)
 
 		elapsed_time = time.monotonic() - start_time
 		info(f'Live configuration completed in {elapsed_time:.1f}s')

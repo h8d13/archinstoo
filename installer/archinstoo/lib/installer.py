@@ -1,5 +1,4 @@
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
@@ -19,7 +18,6 @@ from archinstoo.lib.kernel.initramfs import Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
 from archinstoo.lib.kernel.sysctl import write_sysctl
 from archinstoo.lib.kernel.zram import setup_zram
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.localization import configure
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
@@ -32,7 +30,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.output import debug, error, info, log, logger, warn
+from archinstoo.lib.output import ARTIFACTS_STORE, debug, error, info, log, logger, warn
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
 
@@ -55,9 +53,6 @@ if TYPE_CHECKING:
 # hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
 # UKI presets, both of which assume mkinitcpio is present in the chroot.
 __base_packages__ = ['base', 'mkinitcpio']
-
-# where the run log and config land on the target for post-install debugging
-ARTIFACTS_STORE = LPath('/etc/archinstoo.d')
 
 # Package sets minimal_installation() and the steps after it add conditionally.
 # Named rather than inlined so schema_gen can read the same list the installer
@@ -191,27 +186,6 @@ class Installer:
 				self._teardown_target()
 			except Exception as err:
 				warn(f'Failed to teardown installation target: {err}')
-
-	def sync_artifacts_to_target(self) -> None:
-		# Copy the run log and saved user config into the target so they survive reboot
-		# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for post-install debugging.
-		try:
-			dest_dir = self.target / ARTIFACTS_STORE.relative_to_root()
-			dest_dir.mkdir(mode=0o755, exist_ok=True)
-
-			ts = datetime.now(tz=UTC).strftime('%Y-%m-%dT%H-%M')
-			artifacts = [
-				(logger.path, f'{ts}_install.log'),
-				(logger.directory / 'user_configuration.json', f'{ts}_config.json'),
-			]
-
-			for src, dst_name in artifacts:
-				if src.exists():
-					dst = dest_dir / dst_name
-					src.copy(dst, preserve_metadata=True)
-					dst.chmod(0o640)
-		except Exception as e:
-			warn(f'Failed to sync install artifacts to target: {e}')
 
 	def _teardown_target(self) -> None:
 		if not self._layout_teardown_required:
