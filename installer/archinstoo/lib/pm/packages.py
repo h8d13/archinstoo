@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from archinstoo.lib.models.packages import AvailablePackage
 from archinstoo.lib.output import debug
-from archinstoo.lib.pacman import Pacman
+from archinstoo.lib.pm.pacman import Pacman
 
 
 def _create_package_stub(repo: str, name: str, version: str) -> AvailablePackage:

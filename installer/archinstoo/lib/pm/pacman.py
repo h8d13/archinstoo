@@ -8,11 +8,11 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .exceptions import RequirementError
-from .general import SysCommand
-from .output import debug, error, info, logger, warn
-from .pathnames import PACMAN_CONF, PACMAN_GNUPG
-from .utils.env import Os
+from archinstoo.lib.exceptions import RequirementError
+from archinstoo.lib.general import SysCommand
+from archinstoo.lib.output import debug, error, info, logger, warn
+from archinstoo.lib.pathnames import PACMAN_CONF, PACMAN_GNUPG
+from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -63,7 +63,7 @@ def reset_conf() -> bool:
 	try:
 		default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
 		info('Fetching default pacman.conf from upstream...')
-		from .utils.net import fetch_data_from_url
+		from archinstoo.lib.utils.net import fetch_data_from_url
 
 		conf_data = fetch_data_from_url(default_pm_conf)
 		Path('/etc/pacman.conf').write_text(conf_data)

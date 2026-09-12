@@ -69,13 +69,14 @@ import traceback
 from typing import TYPE_CHECKING
 
 from ._version import __gitstat__, __pkgver__, __version__
-from .lib import Pacman, output
+from .lib import output
 from .lib.checkpoints import _run_script, clean_cache, clean_logs
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.models.firmware import detect_optdeps, detect_splits
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.bootstrap import keyring_init, pacman_conf
+from .lib.pm.pacman import Pacman
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info, reload_python
 from .lib.utils.net import ping
