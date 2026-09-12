@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.localization.utils import locale_encoding, split_locale_name, uncomment_locale
-from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.output import debug, error, info, warn
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -106,3 +106,21 @@ def set_keyboard(installation: Installer, locale_config: LocaleConfiguration) ->
 	installation.set_environment(env_vars)
 
 	return True
+
+
+def set_timezone(installation: Installer, zone: str) -> bool:
+	if not zone:
+		debug('No timezone configured, leaving target default')
+		return True
+
+	# Validate against the target's tzdata, not the host's: the symlink
+	# resolves inside the chroot, and a host may lack FHS zoneinfo (NixOS).
+	if (installation.target / 'usr/share/zoneinfo' / zone).exists():
+		(installation.target / 'etc' / 'localtime').unlink(missing_ok=True)
+		installation.arch_chroot(['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime'])
+		info(f'Set timezone to {zone}')
+		return True
+
+	warn(f'Time zone {zone} does not exist, continuing with system default')
+
+	return False

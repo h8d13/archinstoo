@@ -254,21 +254,7 @@ class Installer:
 		debug(f'Wrote hostname {hostname}')
 
 	def set_timezone(self, zone: str) -> bool:
-		if not zone:
-			debug('No timezone configured, leaving target default')
-			return True
-
-		# Validate against the target's tzdata, not the host's: the symlink
-		# resolves inside the chroot, and a host may lack FHS zoneinfo (NixOS).
-		if (self.target / 'usr/share/zoneinfo' / zone).exists():
-			(self.target / 'etc' / 'localtime').unlink(missing_ok=True)
-			self.arch_chroot(['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime'])
-			info(f'Set timezone to {zone}')
-			return True
-
-		warn(f'Time zone {zone} does not exist, continuing with system default')
-
-		return False
+		return configure.set_timezone(self, zone)
 
 	def activate_time_synchronization(self) -> None:
 		info('Activating systemd-timesyncd for time synchronization using Arch Linux and ntp.org NTP servers')
