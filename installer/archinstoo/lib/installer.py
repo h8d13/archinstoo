@@ -1,5 +1,4 @@
 import os
-import re
 import shlex
 import subprocess
 from datetime import UTC, datetime
@@ -19,6 +18,7 @@ from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, RequirementError, SysCallError
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.initramfs import Initramfs
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.localization import configure
 from archinstoo.lib.models.authentication import PrivilegeEscalation
@@ -122,24 +122,7 @@ class Installer:
 
 		self.post_base_install: list[Callable[[], None]] = []
 
-		self._modules: list[str] = []
-		self._binaries: list[str] = []
-		self._files: list[str] = []
-
-		# sd-encrypt is inserted by _prepare_encrypt() when disk encryption is configured
-		self._hooks: list[str] = [
-			'base',
-			'systemd',
-			'autodetect',
-			'microcode',
-			'modconf',
-			'kms',
-			'keyboard',
-			'sd-vconsole',
-			'block',
-			'filesystems',
-			'fsck',
-		]
+		self.initramfs = Initramfs()
 		self._kernel_params: list[str] = []
 		self._fstab_entries: list[str] = []
 
@@ -255,7 +238,7 @@ class Installer:
 
 	def generate_key_files(self) -> None:
 		info(f'Generating key files for {self._disk_encryption.encryption_type.value}...')
-		self._files.extend(KeyFileGenerator(self.target, self._disk_encryption).generate())
+		self.initramfs.files.extend(KeyFileGenerator(self.target, self._disk_encryption).generate())
 
 	def post_install_check(self) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
@@ -394,27 +377,7 @@ class Installer:
 		subprocess.check_call(f'arch-chroot {self.target}', shell=True)  # noqa: S602
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
-		with (self.target / 'etc/mkinitcpio.conf').open('r+') as mkinit:
-			content = mkinit.read()
-			content = re.sub(r'\nMODULES=(.*)', f'\nMODULES=({" ".join(self._modules)})', content)
-			content = re.sub(r'\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self._binaries)})', content)
-			content = re.sub(r'\nFILES=(.*)', f'\nFILES=({" ".join(self._files)})', content)
-			content = re.sub(r'\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self._hooks)})', content)
-			mkinit.seek(0)
-			mkinit.truncate()
-			mkinit.write(content)
-
-		debug(f'mkinitcpio.conf HOOKS=({" ".join(self._hooks)}) MODULES=({" ".join(self._modules)}) FILES=({" ".join(self._files)})')
-		info('Building initramfs...', step=True)
-
-		try:
-			self.arch_chroot(f'mkinitcpio {" ".join(flags)}', peek_output=True)
-			return True
-		except SysCallError as e:
-			warn(f'mkinitcpio failed: {e}')
-			if e.worker_log:
-				log(e.worker_log.decode())
-			return False
+		return self.initramfs.build(self, flags)
 
 	def _get_microcode(self) -> Path | None:
 		if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
@@ -441,22 +404,22 @@ class Installer:
 			self._disable_fstrim = True
 
 		if fs_type == FilesystemType.BCACHEFS:
-			if 'bcachefs' not in self._modules:
+			if 'bcachefs' not in self.initramfs.modules:
 				debug('Adding bcachefs module to initramfs')
-				self._modules.append('bcachefs')
-			if 'bcachefs' not in self._hooks and 'block' in self._hooks:
+				self.initramfs.modules.append('bcachefs')
+			if 'bcachefs' not in self.initramfs.hooks and 'block' in self.initramfs.hooks:
 				debug('Inserting bcachefs hook after block')
-				self._hooks.insert(self._hooks.index('block') + 1, 'bcachefs')
+				self.initramfs.hooks.insert(self.initramfs.hooks.index('block') + 1, 'bcachefs')
 
 		# There is not yet an fsck tool for NTFS. If it's being used for the root filesystem, the hook should be removed.
-		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self._hooks:
+		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self.initramfs.hooks:
 			debug('Removing fsck hook: no fsck tool for ntfs3 root')
-			self._hooks.remove('fsck')
+			self.initramfs.hooks.remove('fsck')
 
 	def _prepare_encrypt(self, before: str = 'filesystems') -> None:
-		if 'sd-encrypt' not in self._hooks:
+		if 'sd-encrypt' not in self.initramfs.hooks:
 			debug(f'Inserting sd-encrypt hook before {before}')
-			self._hooks.insert(self._hooks.index(before), 'sd-encrypt')
+			self.initramfs.hooks.insert(self.initramfs.hooks.index(before), 'sd-encrypt')
 
 	def minimal_installation(
 		self,
@@ -474,7 +437,7 @@ class Installer:
 		if self._disk_config.lvm_config:
 			self.add_additional_packages(__lvm_packages__)
 			debug(f'Inserting {LVM} hook before filesystems')
-			self._hooks.insert(self._hooks.index('filesystems') - 1, LVM)
+			self.initramfs.hooks.insert(self.initramfs.hooks.index('filesystems') - 1, LVM)
 
 			for vg in self._disk_config.lvm_config.vol_groups:
 				for vol in vg.volumes:
