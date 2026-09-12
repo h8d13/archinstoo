@@ -20,7 +20,8 @@ from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, S
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.kernel.initramfs import Initramfs
-from archinstoo.lib.kernel.swap import setup_swapfile, setup_zram
+from archinstoo.lib.kernel.swap import setup_swapfile
+from archinstoo.lib.kernel.zram import setup_zram
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.localization import configure
 from archinstoo.lib.models.authentication import PrivilegeEscalation

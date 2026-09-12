@@ -33,7 +33,7 @@ from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.authentication import stash
 from archinstoo.lib.disk import snapshots
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
-from archinstoo.lib.kernel import swap
+from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.application import (
 	Audio,
 	DevTool,
@@ -142,7 +142,7 @@ SECTIONS: tuple[Section, ...] = (
 	Section('ter_fonts', lambda: installer.__ter_font_packages__, site='installation.minimal_installation'),
 	Section(
 		'swap',
-		lambda: {'zram': swap.__zram_packages__},
+		lambda: {'zram': zram.__zram_packages__},
 		site='installation.setup_swap',
 	),
 	Section(
