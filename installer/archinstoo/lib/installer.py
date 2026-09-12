@@ -5,9 +5,10 @@ import shutil
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import CalledProcessError, CompletedProcess
+from subprocess import CompletedProcess
 from typing import TYPE_CHECKING, Self
 
+from archinstoo.lib.authentication import accounts
 from archinstoo.lib.bootloader.install import BootloaderInstaller, configure_grub_btrfsd
 from archinstoo.lib.disk.cleanup import teardown_layout
 from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
@@ -31,7 +32,6 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.network import ISO_PSK_EXTRA
-from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug, error, info, log, logger, warn
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
 from archinstoo.lib.pm import Pacman
@@ -52,6 +52,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.packages import Repository
 	from archinstoo.lib.models.service import UserService
 	from archinstoo.lib.models.swap import SwapConfiguration
+	from archinstoo.lib.models.users import User
 
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
 # mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
@@ -75,8 +76,6 @@ __fido2_packages__ = ['libfido2']
 __ter_font_packages__ = ['terminus-font']
 # grub integration for either snapshot tool
 __grub_snapshot_packages__ = ['grub-btrfs', 'inotify-tools']
-# cloning a user stash
-__stash_packages__ = ['git']
 
 # Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
@@ -906,192 +905,21 @@ class Installer:
 		debug(f'Adding kernel param(s): {params}')
 		self._kernel_params.extend(params)
 
-	def enable_sudo(self, user: User, group: bool = False) -> None:
-		info(f'Enabling sudo permissions for {user.username}')
-
-		sudoers_dir = self.target / 'etc/sudoers.d'
-
-		# Creates directory if not exists
-		if not sudoers_dir.exists():
-			sudoers_dir.mkdir(parents=True)
-			# Guarantees sudoer confs directory recommended perms
-			sudoers_dir.chmod(0o440)
-			# Appends a reference to the sudoers file, because if we are here sudoers.d did not exist yet
-			with (self.target / 'etc/sudoers').open('a') as sudoers:
-				sudoers.write('@includedir /etc/sudoers.d\n')
-
-		# We count how many files are there already so we know which number to prefix the file with
-		num_of_rules_already = len(list(sudoers_dir.iterdir()))
-		file_num_str = f'{num_of_rules_already:02d}'  # We want 00_user1, 01_user2, etc
-
-		# Guarantees that username str does not contain invalid characters for a linux file name:
-		# \ / : * ? " < > |
-		safe_username_file_name = re.sub(r'(\\|\/|:|\*|\?|"|<|>|\|)', '', user.username)
-
-		rule_file = sudoers_dir / f'{file_num_str}_{safe_username_file_name}'
-
-		with rule_file.open('a') as sudoers:
-			sudoers.write(f'{"%" if group else ""}{user.username} ALL=(ALL) ALL\n')
-
-		# Guarantees sudoer conf file recommended perms
-		rule_file.chmod(0o440)
-
-	# under seatd, compositors need seat membership to reach /run/seatd.sock (DRM/input).
-	# group exists only when the seatd package landed (sysusers); skip otherwise so
-	# usermod can't abort the install on logind/polkit systems.
-	def add_to_seat_group(self, usernames: list[str]) -> None:
-		group_lines = self.target.joinpath('etc/group').read_text().splitlines()
-		if not any(line.startswith('seat:') for line in group_lines):
-			debug('No seat group on target (seatd not installed), skipping seat membership')
-			return
-		for name in usernames:
-			debug(f'Adding {name} to seat group')
-			self.arch_chroot(['usermod', '-a', '-G', 'seat', name])
-
-	def enable_doas(self, user: User) -> None:
-		info(f'Enabling doas permissions for {user.username}')
-
-		doas_conf = self.target / 'etc/doas.conf'
-
-		with doas_conf.open('a') as doas:
-			doas.write(f'permit {user.username} as root\n')
-
-		# doas.conf must be owned by root and not writable by others
-		doas_conf.chmod(0o644)
-
 	def create_users(
 		self,
 		users: User | list[User],
 		privilege_escalation: PrivilegeEscalation | None = PrivilegeEscalation.Sudo,
 	) -> None:
-		if not isinstance(users, list):
-			users = [users]
+		accounts.create_users(self, users, privilege_escalation)
 
-		info(f'Creating {len(users)} user account(s): {", ".join(u.username for u in users)}', step=True)
-
-		# Install the privilege escalation package
-		if privilege_escalation is not None and User.any_elevated(users):
-			self.pacman.strap(privilege_escalation.packages())
-
-		self._configure_makepkg(privilege_escalation)
-
-		for user in users:
-			self._create_user(user, privilege_escalation)
-
-	def _configure_makepkg(self, privilege_escalation: PrivilegeEscalation | None) -> None:
-		# makepkg tries sudo then su by default, only doas/run0 need an override
-		if privilege_escalation is None:
-			return
-
-		auth_binary = {
-			PrivilegeEscalation.Doas: 'doas',
-			PrivilegeEscalation.Run0: 'run0',
-		}.get(privilege_escalation)
-
-		if auth_binary is None:
-			debug(f'{privilege_escalation.value} uses makepkg default PACMAN_AUTH, nothing to set')
-			return
-
-		makepkg_conf = self.target / 'etc/makepkg.conf'
-		if not makepkg_conf.exists():
-			warn(f'{makepkg_conf} missing, PACMAN_AUTH not set for {auth_binary}')
-			return
-
-		content = makepkg_conf.read_text()
-		content = content.replace('#PACMAN_AUTH=()', f'PACMAN_AUTH=({auth_binary})')
-		makepkg_conf.write_text(content)
-		debug(f'Set PACMAN_AUTH=({auth_binary}) in makepkg.conf')
-
-	def _create_user(
-		self,
-		user: User,
-		privilege_escalation: PrivilegeEscalation | None = PrivilegeEscalation.Sudo,
-	) -> None:
-		info(f'Creating user {user.username}')
-
-		cmd = ['useradd', '-m']
-
-		if user.elev:
-			cmd += ['-G', 'wheel']
-
-		cmd.append(user.username)
-
-		try:
-			self.arch_chroot(cmd)
-		except CalledProcessError:
-			# user may already exist (e.g. installing onto running system)
-			info(f'User {user.username} already exists, skipping creation')
-
-		self.set_user_password(user)
-
-		for group in user.groups:
-			debug(f'Adding {user.username} to group {group}')
-			self.arch_chroot(['gpasswd', '-a', user.username, group])
-
-		if user.elev:
-			match privilege_escalation:
-				case PrivilegeEscalation.Sudo:
-					self.enable_sudo(user)
-				case PrivilegeEscalation.Doas:
-					self.enable_doas(user)
-				case PrivilegeEscalation.Run0 | None:
-					pass  # run0/su via wheel group - no extra config needed
-
-		for stash_url in user.stash_urls:
-			self._clone_user_stash(user.username, stash_url)
-
-	def _clone_user_stash(self, username: str, stash_url: str) -> None:
-		info(f'Cloning {stash_url} for {username}')
-
-		self.add_additional_packages(__stash_packages__)
-
-		url, _, branch = stash_url.partition('#')
-		repo_name = url.rstrip('/').split('/')[-1].removesuffix('.git')
-		stash_dir = f'/home/{username}/.stash'
-		clone_cmd = ['git', 'clone', '--depth', '1']
-		if branch:
-			clone_cmd += ['-b', branch]
-		clone_cmd += [url, f'{stash_dir}/{repo_name}']
-
-		try:
-			self.arch_chroot(['mkdir', '-p', stash_dir])
-			self.arch_chroot(clone_cmd)
-			self.chown_tree(username, stash_dir)
-		except CalledProcessError as err:
-			error(f'Failed to clone stash for {username}: {err}')
+	def add_to_seat_group(self, usernames: list[str]) -> None:
+		accounts.add_to_seat_group(self, usernames)
 
 	def set_user_password(self, user: User) -> bool:
-		info(f'Setting password for {user.username}')
-
-		if not user.password:
-			debug('User password not set')
-			return False
-
-		enc_password = user.password.enc_password
-
-		if not enc_password:
-			debug('User password is empty')
-			return False
-
-		input_data = f'{user.username}:{enc_password}'.encode()
-		cmd = [*self.arch_chroot_prefix, 'chpasswd', '--encrypted']
-
-		try:
-			run(cmd, input_data=input_data)
-			return True
-		except CalledProcessError as err:
-			debug(f'Error setting user password: {err}')
-			return False
+		return accounts.set_user_password(self, user)
 
 	def lock_root_account(self) -> bool:
-		info('Locking root account')
-
-		try:
-			self.arch_chroot('passwd -l root')
-			return True
-		except SysCallError as err:
-			error(f'Failed to lock root account: {err}')
-			return False
+		return accounts.lock_root_account(self)
 
 	def chown_tree(self, username: str, path: str) -> None:
 		# installer writes into $HOME as root; hand the tree back before first login

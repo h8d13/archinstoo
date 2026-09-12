@@ -30,6 +30,7 @@ from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
+from archinstoo.lib.authentication import accounts
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
 from archinstoo.lib.models.application import (
 	Audio,
@@ -147,7 +148,7 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
 		site='installation.create_users',
 	),
-	Section('stash', lambda: installer.__stash_packages__, site='installation.create_users'),
+	Section('stash', lambda: accounts.__stash_packages__, site='installation.create_users'),
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
