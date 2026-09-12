@@ -33,10 +33,9 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.output import debug, error, info, log, logger, warn
-from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
-from archinstoo.lib.pm import Pacman
+from archinstoo.lib.pathnames import ARTIFACTS_STORE
+from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
-from archinstoo.lib.pm.mirrors import MirrorListHandler
 from archinstoo.lib.swap import setup_swapfile, setup_zram
 from archinstoo.lib.utils.env import Os
 
@@ -243,37 +242,8 @@ class Installer:
 	def post_install_check(self) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
 
-	def set_mirrors(
-		self,
-		pacman_configuration: PacmanConfiguration,
-		on_target: bool = False,
-	) -> None:
-		# Set the mirror configuration for the installation.
-		#
-		# :param pacman_configuration: The pacman configuration to use.
-		# :type pacman_configuration: PacmanConfiguration
-		#
-		# :on_target: Whether to set the mirrors on the target system or the live system.
-		# :param on_target: bool
-		info('Setting mirrors on ' + ('target' if on_target else 'live system' + '...'))
-
-		mirrorlist_path = self.target / MIRRORLIST.relative_to_root() if on_target else MIRRORLIST
-
-		# repos, custom repos, misc options and ParallelDownloads all land in
-		# the conf for this side of the install
-		PacmanConfig.apply_config(pacman_configuration, self.target if on_target else None)
-
-		# Speed test only for the live system, target reuses the same order
-		regions_config = MirrorListHandler().regions_config(pacman_configuration.mirror_regions, speed_sort=not on_target)
-		if regions_config:
-			debug(f'Mirrorlist:\n{regions_config}')
-			mirrorlist_path.write_text(regions_config)
-
-		if custom_servers := pacman_configuration.custom_servers_config():
-			debug(f'Custom servers:\n{custom_servers}')
-
-			content = mirrorlist_path.read_text()
-			mirrorlist_path.write_text(f'{custom_servers}\n\n{content}')
+	def set_mirrors(self, pacman_configuration: PacmanConfiguration, on_target: bool = False) -> None:
+		mirrors.set_mirrors(self, pacman_configuration, on_target)
 
 	def genfstab(self, flags: str = '-pU') -> None:
 		fstab_path = self.target / 'etc' / 'fstab'

@@ -18,9 +18,9 @@ from archinstoo.lib.models.mirrors import (
 	SignOption,
 )
 from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.output import FormattedOutput, debug, warn
+from archinstoo.lib.output import FormattedOutput, debug, info, warn
 from archinstoo.lib.pathnames import MIRRORLIST
-from archinstoo.lib.pm.config import set_parallel_downloads
+from archinstoo.lib.pm.config import PacmanConfig, set_parallel_downloads
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text
@@ -30,6 +30,8 @@ from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
 	from pathlib import Path
+
+	from archinstoo.lib.installer import Installer
 
 
 class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
@@ -149,8 +151,6 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 		if preset:
 			self._mirror_config = preset
 		else:
-			from archinstoo.lib.pm.config import PacmanConfig
-
 			self._mirror_config = PacmanConfiguration(custom_repositories=PacmanConfig.get_existing_custom_repos())
 
 		self._mirror_handler = MirrorListHandler()
@@ -572,3 +572,36 @@ class MirrorListHandler:
 				mirror_list[current_region].append(mirror_entry)
 
 		return mirror_list
+
+
+def set_mirrors(
+	installation: Installer,
+	pacman_configuration: PacmanConfiguration,
+	on_target: bool = False,
+) -> None:
+	# Set the mirror configuration for the installation.
+	#
+	# :param pacman_configuration: The pacman configuration to use.
+	# :type pacman_configuration: PacmanConfiguration
+	#
+	# :on_target: Whether to set the mirrors on the target system or the live system.
+	# :param on_target: bool
+	info('Setting mirrors on ' + ('target' if on_target else 'live system' + '...'))
+
+	mirrorlist_path = installation.target / MIRRORLIST.relative_to_root() if on_target else MIRRORLIST
+
+	# repos, custom repos, misc options and ParallelDownloads all land in
+	# the conf for this side of the install
+	PacmanConfig.apply_config(pacman_configuration, installation.target if on_target else None)
+
+	# Speed test only for the live system, target reuses the same order
+	regions_config = MirrorListHandler().regions_config(pacman_configuration.mirror_regions, speed_sort=not on_target)
+	if regions_config:
+		debug(f'Mirrorlist:\n{regions_config}')
+		mirrorlist_path.write_text(regions_config)
+
+	if custom_servers := pacman_configuration.custom_servers_config():
+		debug(f'Custom servers:\n{custom_servers}')
+
+		content = mirrorlist_path.read_text()
+		mirrorlist_path.write_text(f'{custom_servers}\n\n{content}')
