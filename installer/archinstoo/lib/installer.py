@@ -12,9 +12,16 @@ from typing import TYPE_CHECKING, Self
 
 from archinstoo.lib.disk.cleanup import teardown_layout
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.disk.luks import Luks2, unlock_luks2_dev
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path, mount, swapon
+from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceError, SysCallError
+from archinstoo.lib.general import SysCommand, run
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.linux_path import LPath
+from archinstoo.lib.localization.utils import locale_encoding, locale_entry_re, split_locale_name
+from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
+from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	BOOT_ITER_TIME,
 	BOOT_PBKDF_MEMORY,
@@ -30,37 +37,27 @@ from archinstoo.lib.models.device import (
 	has_separate_boot,
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
+from archinstoo.lib.models.kernel import DEFAULT_KERNEL
+from archinstoo.lib.models.network import ISO_PSK_EXTRA
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
+from archinstoo.lib.models.users import User
+from archinstoo.lib.output import debug, error, info, log, logger, warn
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
-from archinstoo.lib.tui.curses_menu import Tui
-
-from .disk.luks import Luks2, unlock_luks2_dev
-from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceError, SysCallError
-from .general import SysCommand, run
-from .hardware import SysInfo
-from .localization.utils import locale_encoding, locale_entry_re, split_locale_name
-from .models.authentication import AuthenticationConfiguration, PrivilegeEscalation
-from .models.bootloader import Bootloader
-from .models.kernel import DEFAULT_KERNEL
-from .models.network import ISO_PSK_EXTRA
-from .models.users import User
-from .output import debug, error, info, log, logger, warn
-from .pm import Pacman
-from .pm.config import PacmanConfig
-from .pm.mirrors import MirrorListHandler
-from .utils.env import Os
+from archinstoo.lib.pm import Pacman
+from archinstoo.lib.pm.config import PacmanConfig
+from archinstoo.lib.pm.mirrors import MirrorListHandler
+from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
 	from types import TracebackType
 
+	from archinstoo.lib.args import ArchConfigHandler
+	from archinstoo.lib.models.locale import LocaleConfiguration
+	from archinstoo.lib.models.mirrors import PacmanConfiguration
+	from archinstoo.lib.models.network import Nic
 	from archinstoo.lib.models.packages import Repository
-
-	from .args import ArchConfigHandler
-	from .models.locale import LocaleConfiguration
-	from .models.mirrors import PacmanConfiguration
-	from .models.network import Nic
-	from .models.service import UserService
+	from archinstoo.lib.models.service import UserService
 
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
 # mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
@@ -146,7 +143,7 @@ class Installer:
 	) -> None:
 		# `Installer()` is the wrapper for most basic installation steps.
 		# It also wraps :py:func:`~archinstoo.Installer.pacstrap` among other things.
-		from .args import Arguments
+		from archinstoo.lib.args import Arguments
 
 		self._handler = handler
 		# lazy: constructing DeviceHandler scans disks and needs pyparted,
@@ -230,8 +227,8 @@ class Installer:
 
 			if exc_type is not None:
 				error(str(exc_value))
-				Tui.print(str(f'[!] A log file has been created here: {logger.path}'))
-				Tui.print(f'Please submit this issue (and file) to {self._bug_report_url}/issues')
+				info(f'[!] A log file has been created here: {logger.path}')
+				info(f'Please submit this issue (and file) to {self._bug_report_url}/issues')
 
 				# Return None to propagate the exception
 				return None
@@ -917,8 +914,6 @@ class Installer:
 		if not zone:
 			debug('No timezone configured, leaving target default')
 			return True
-		if not len(zone):
-			return True  # Redundant
 
 		# Validate against the target's tzdata, not the host's: the symlink
 		# resolves inside the chroot, and a host may lack FHS zoneinfo (NixOS).
@@ -990,7 +985,7 @@ class Installer:
 		self.chown_tree(user, f'/home/{user}/.config')
 
 	def enable_services_from_config(self, services: list[str | UserService]) -> None:
-		from .models.service import UserService
+		from archinstoo.lib.models.service import UserService
 
 		system_services = [s for s in services if isinstance(s, str)]
 		user_services = [s for s in services if isinstance(s, UserService)]
@@ -1037,7 +1032,7 @@ class Installer:
 		run_as: str | None = None,
 		peek_output: bool = False,
 		env: dict[str, str] | None = None,
-	) -> SysCommand | subprocess.CompletedProcess[bytes]:
+	) -> SysCommand | CompletedProcess[bytes]:
 		# argv list form avoids argv/shell-injection when arguments come from user or config input.
 		if isinstance(cmd, list):
 			if run_as:
@@ -1574,8 +1569,6 @@ class Installer:
 		id_root: bool = True,
 		partuuid: bool = True,
 	) -> list[str]:
-		kernel_parameters = []
-
 		kernel_parameters = (
 			self._get_kernel_params_lvm(root) if isinstance(root, LvmVolume) else self._get_kernel_params_partition(root, id_root, partuuid)
 		)
@@ -2120,7 +2113,7 @@ class Installer:
 		if not boot_on_root:
 			# kernels sit at the top of the ESP or a separate /boot partition
 			return '\\'
-		subvols = getattr(root, 'btrfs_subvols', None)
+		subvols = root.btrfs_subvols
 		if subvols:
 			root_subvol = next((sv for sv in subvols if sv.is_root()), None)
 			if root_subvol:
