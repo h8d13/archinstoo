@@ -24,7 +24,7 @@ try:
 except ModuleNotFoundError:
 	_HAS_PARTED = False
 
-from archinstoo.lib.exceptions import DiskError, RequirementError, SysCallError, UnknownFilesystemFormat
+from archinstoo.lib.exceptions import DiskError, RequirementError, SysCallError, UnknownFilesystemFormatError
 from archinstoo.lib.general import SysCommand, SysCommandWorker
 from archinstoo.lib.models.device import (
 	DEFAULT_ITER_TIME,
@@ -340,7 +340,7 @@ class DeviceHandler:
 			case FilesystemType.LINUX_SWAP:
 				command = 'mkswap'
 			case _:
-				raise UnknownFilesystemFormat(f'Filetype "{fs_type.value}" is not supported')
+				raise UnknownFilesystemFormatError(f'Filetype "{fs_type.value}" is not supported')
 
 		if not command:
 			command = f'mkfs.{mkfs_type}'

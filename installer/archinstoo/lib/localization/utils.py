@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.exceptions import RequirementError, ServiceException, SysCallError
+from archinstoo.lib.exceptions import RequirementError, ServiceError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.utils.env import Os
@@ -323,7 +323,7 @@ def set_kb_layout(locale: str) -> bool:
 		try:
 			SysCommand(f'localectl set-keymap {locale}')
 		except SysCallError as err:
-			raise ServiceException(f"Unable to set locale '{locale}' for console: {err}") from err
+			raise ServiceError(f"Unable to set locale '{locale}' for console: {err}") from err
 
 		return True
 

@@ -10,7 +10,7 @@ class DiskError(Exception):
 	pass
 
 
-class UnknownFilesystemFormat(Exception):
+class UnknownFilesystemFormatError(Exception):
 	pass
 
 
@@ -43,10 +43,10 @@ class HardwareIncompatibilityError(Exception):
 	pass
 
 
-class ServiceException(Exception):
+class ServiceError(Exception):
 	pass
 
 
-class DownloadTimeout(Exception):
+class DownloadTimeoutError(Exception):
 	# Stub from installer/archinstoo/lib/utils/net.py
 	pass

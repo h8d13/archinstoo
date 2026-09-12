@@ -27,15 +27,15 @@ class Result[ValueT]:
 
 	def item(self) -> MenuItem:
 		if not isinstance(self._item, MenuItem):
-			raise RuntimeError(f'Result._item is {type(self._item).__name__}, expected MenuItem')
+			raise TypeError(f'Result._item is {type(self._item).__name__}, expected MenuItem')
 		return self._item
 
 	def items(self) -> list[MenuItem]:
 		if not isinstance(self._item, list):
-			raise RuntimeError(f'Result._item is {type(self._item).__name__}, expected list')
+			raise TypeError(f'Result._item is {type(self._item).__name__}, expected list')
 		return self._item
 
 	def text(self) -> str:
 		if not isinstance(self._item, str):
-			raise RuntimeError(f'Result._item is {type(self._item).__name__}, expected str')
+			raise TypeError(f'Result._item is {type(self._item).__name__}, expected str')
 		return self._item

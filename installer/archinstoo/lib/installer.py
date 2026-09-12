@@ -35,7 +35,7 @@ from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
 from archinstoo.lib.tui.curses_menu import Tui
 
 from .disk.luks import Luks2, unlock_luks2_dev
-from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceException, SysCallError
+from .exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceError, SysCallError
 from .general import SysCommand, run
 from .hardware import SysInfo
 from .localization.utils import locale_encoding, locale_entry_re, split_locale_name
@@ -965,7 +965,7 @@ class Installer:
 			try:
 				self._systemctl_target('enable', service)
 			except SysCallError as err:
-				raise ServiceException(f'Unable to start service {service}: {err}') from err
+				raise ServiceError(f'Unable to start service {service}: {err}') from err
 
 	def enable_linger(self, user: str) -> None:
 		linger_dir = self.target / 'var/lib/systemd/linger'
@@ -1013,7 +1013,7 @@ class Installer:
 			try:
 				self._systemctl_target('disable', service)
 			except SysCallError as err:
-				raise ServiceException(f'Unable to disable service {service}: {err}') from err
+				raise ServiceError(f'Unable to disable service {service}: {err}') from err
 
 	@property
 	def _arch_chroot_prefix(self) -> list[str]:

@@ -11,7 +11,7 @@ from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
-from archinstoo.lib.exceptions import DownloadTimeout
+from archinstoo.lib.exceptions import DownloadTimeoutError
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -66,7 +66,7 @@ class DownloadTimer:
 	def __init__(self, timeout: int = 5) -> None:
 		# Args:
 		# timeout:
-		# The download timeout in seconds. The DownloadTimeout exception
+		# The download timeout in seconds. The DownloadTimeoutError exception
 		# will be raised in the context after this many seconds.
 		self.time: float | None = None
 		self.start_time: float | None = None
@@ -75,8 +75,8 @@ class DownloadTimer:
 		self.previous_timer: int | None = None
 
 	def raise_timeout(self, _signl: int, _frame: FrameType | None) -> None:
-		# Raise the DownloadTimeout with time
-		raise DownloadTimeout(f'Download timed out after {self.timeout} second(s).')
+		# Raise the DownloadTimeoutError with time
+		raise DownloadTimeoutError(f'Download timed out after {self.timeout} second(s).')
 
 	def __enter__(self) -> Self:
 		if self.timeout > 0:

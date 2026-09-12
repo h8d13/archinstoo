@@ -399,7 +399,7 @@ class Size:
 
 	def __post_init__(self) -> None:
 		if not isinstance(self.sector_size, SectorSize):
-			raise ValueError('sector size must be of type SectorSize')
+			raise TypeError('sector size must be of type SectorSize')
 
 	def json(self) -> _SizeSerialization:
 		return {
