@@ -29,9 +29,8 @@ class SwapConfiguration:
 	# zram only
 	algorithm: ZramAlgorithm = ZramAlgorithm.Default
 	recomp_algorithm: ZramAlgorithm | None = None
-	# disk-backed swap file, the hibernation image target; on by default so
-	# hibernation works out of the box (upstream archinstall #994)
-	hibernation: bool = True
+	# disk-backed swap file, the hibernation image target; off by default
+	hibernation: bool = False
 	# 0 sizes the file to RAM so the image always fits
 	size_gib: int = 0
 
@@ -46,6 +45,6 @@ class SwapConfiguration:
 			zram=arg.get('zram', True),
 			algorithm=ZramAlgorithm(arg.get('algorithm', ZramAlgorithm.Default.value)),
 			recomp_algorithm=ZramAlgorithm(recomp) if recomp else None,
-			hibernation=arg.get('hibernation', True),
+			hibernation=arg.get('hibernation', False),
 			size_gib=arg.get('size_gib', 0),
 		)

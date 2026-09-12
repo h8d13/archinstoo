@@ -70,7 +70,7 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 			recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
 
 	hib_prompt = 'Enable hibernation? Creates a disk swap file sized to RAM.' + '\n'
-	hibernation = prompt_yes_no(hib_prompt, preset.hibernation, default=True)
+	hibernation = prompt_yes_no(hib_prompt, preset.hibernation, default=False)
 	if hibernation is None:
 		hibernation = preset.hibernation
 
