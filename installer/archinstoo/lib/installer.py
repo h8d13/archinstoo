@@ -92,7 +92,7 @@ class Installer:
 		# neither wanted for no-disk-ops runs (live)
 		self._device_handler = device_handler
 		self._args = handler.args if handler else Arguments()
-		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/h8d13/archinstoo/issues'
+		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/h8d13/archinstoo'
 
 		self._base_packages = list(base_packages or __base_packages__)
 		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
