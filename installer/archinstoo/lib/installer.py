@@ -1,13 +1,13 @@
 import os
 import re
 import shlex
-import shutil
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING, Self
 
+from archinstoo.lib import systemd
 from archinstoo.lib.authentication import accounts
 from archinstoo.lib.bootloader.install import BootloaderInstaller
 from archinstoo.lib.disk import snapshots
@@ -16,7 +16,7 @@ from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mount import LayoutMounter
-from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceError, SysCallError
+from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, RequirementError, SysCallError
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.linux_path import LPath
@@ -38,7 +38,6 @@ from archinstoo.lib.pm import Pacman
 from archinstoo.lib.pm.config import PacmanConfig
 from archinstoo.lib.pm.mirrors import MirrorListHandler
 from archinstoo.lib.swap import setup_swapfile, setup_zram
-from archinstoo.lib.systemd import accessibility_tools_in_use, wait_iso_services
 from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
@@ -118,7 +117,7 @@ class Installer:
 			self._base_packages.append(kernel)
 
 		# If using accessibility tools in the live environment, append those to the packages list
-		if accessibility_tools_in_use():
+		if systemd.accessibility_tools_in_use():
 			self._base_packages.extend(__accessibility_packages__)
 
 		self.post_base_install: list[Callable[[], None]] = []
@@ -247,7 +246,7 @@ class Installer:
 		self._layout_teardown_required = False
 
 	def sanity_check(self) -> None:
-		wait_iso_services(self._args.skip_ntp, self._args.skip_wkd)
+		systemd.wait_iso_services(self._args.skip_ntp, self._args.skip_wkd)
 
 	def mount_ordered_layout(self) -> None:
 		info(f'Mounting ordered layout at {self.target} (encryption: {self._disk_encryption.encryption_type.value})', step=True)
@@ -346,75 +345,14 @@ class Installer:
 		# fstrim is owned by util-linux, a dependency of both base and systemd.
 		self.enable_service('fstrim.timer')
 
-	def _systemctl_target(self, action: str, service: str) -> None:
-		# host systemctl drives the target offline via --root=. A non-systemd
-		# host (alpine, ...) has no systemctl binary, so run the target's own
-		# systemctl inside the chroot instead. enable/disable only write unit
-		# symlinks, so they work without a running pid1 in the chroot.
-		if shutil.which('systemctl'):
-			SysCommand(f'systemctl --root={self.target} {action} {service}')
-		else:
-			self.arch_chroot(f'systemctl {action} {service}')
-
 	def enable_service(self, services: str | list[str]) -> None:
-		if isinstance(services, str):
-			services = [services]
+		systemd.enable_service(self, services)
 
-		for service in services:
-			info(f'Enabling service {service}')
-
-			try:
-				self._systemctl_target('enable', service)
-			except SysCallError as err:
-				raise ServiceError(f'Unable to start service {service}: {err}') from err
-
-	def enable_linger(self, user: str) -> None:
-		linger_dir = self.target / 'var/lib/systemd/linger'
-		linger_dir.mkdir(parents=True, exist_ok=True)
-		(linger_dir / user).touch()
-		info(f'Enabled linger for user {user}')
-
-	def enable_user_service(self, user: str, services: str | list[str]) -> None:
-		if isinstance(services, str):
-			services = [services]
-
-		wants_dir = self.target / f'home/{user}/.config/systemd/user/default.target.wants'
-		wants_dir.mkdir(parents=True, exist_ok=True)
-
-		for service in services:
-			info(f'Enabling user service {service} for {user}')
-			unit_path = Path(f'/usr/lib/systemd/user/{service}')
-			symlink = wants_dir / service
-			if not symlink.exists():
-				symlink.symlink_to(unit_path)
-
-		self.chown_tree(user, f'/home/{user}/.config')
+	def disable_service(self, services: str | list[str]) -> None:
+		systemd.disable_service(self, services)
 
 	def enable_services_from_config(self, services: list[str | UserService]) -> None:
-		from archinstoo.lib.models.service import UserService
-
-		system_services = [s for s in services if isinstance(s, str)]
-		user_services = [s for s in services if isinstance(s, UserService)]
-
-		if system_services:
-			self.enable_service(system_services)
-
-		for us in user_services:
-			self.enable_user_service(us.user, us.unit)
-			if us.linger:
-				self.enable_linger(us.user)
-
-	def disable_service(self, services_disable: str | list[str]) -> None:
-		if isinstance(services_disable, str):
-			services_disable = [services_disable]
-
-		for service in services_disable:
-			info(f'Disabling service {service}')
-
-			try:
-				self._systemctl_target('disable', service)
-			except SysCallError as err:
-				raise ServiceError(f'Unable to disable service {service}: {err}') from err
+		systemd.enable_services_from_config(self, services)
 
 	@property
 	def arch_chroot_prefix(self) -> list[str]:
