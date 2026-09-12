@@ -22,7 +22,7 @@ import sys
 from getpass import getpass
 from pathlib import Path
 
-from archinstoo.lib.crypt import crypt_yescrypt
+from archinstoo.lib.authentication.crypt import crypt_yescrypt
 
 
 def _read_password(from_stdin: bool) -> str:
