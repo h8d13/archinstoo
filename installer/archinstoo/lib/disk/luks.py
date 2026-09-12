@@ -138,9 +138,9 @@ class Luks2:
 
 		try:
 			return SysCommand(command).decode()
-		except SysCallError as err:
+		except SysCallError:
 			info(f'Unable to get UUID for Luks device: {self.luks_dev_path}')
-			raise err
+			raise
 
 	def is_unlocked(self) -> bool:
 		return (mapper_dev := self.mapper_dev) is not None and mapper_dev.is_symlink()

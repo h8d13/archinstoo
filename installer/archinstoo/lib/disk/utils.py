@@ -50,7 +50,7 @@ def _fetch_lsblk_info(
 		if dev_path:
 			raise DiskError(f'Failed to read disk "{dev_path}" with lsblk') from err
 
-		raise err
+		raise
 
 	return LsblkOutput.from_json(result.stdout.decode())
 

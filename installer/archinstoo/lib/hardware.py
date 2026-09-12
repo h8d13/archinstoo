@@ -98,9 +98,6 @@ class GfxDriver(Enum):
 			case _:
 				return False
 
-	def use_dkms(self, kernels: list[str] | None) -> bool:
-		return self.has_dkms_variant() and needs_dkms_build(kernels)
-
 	def packages_text(self, kernels: list[str] | None = None) -> str:
 		if self is GfxDriver.Custom:
 			return 'Packages are picked one by one in the next menu (hybrid GPUs, unlisted mixes)\n'

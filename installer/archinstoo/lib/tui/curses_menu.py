@@ -429,8 +429,6 @@ class Viewport(AbstractViewport):
 		cur_pos: int = 0,  # pylint: disable=unused-argument  # keyword-called; part of viewport signature
 		scroll_pos: int | None = None,
 	) -> None:
-		# self._state = self._get_viewport_state(lines, cur_pos, scroll_pos)
-		# visible_entries = self._adjust_entries_row(self._state.displayed_entries)
 		visible_entries = entries
 
 		if self._frame:

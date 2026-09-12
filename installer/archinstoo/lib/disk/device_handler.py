@@ -237,12 +237,6 @@ class DeviceHandler:
 	def get_device(self, path: Path) -> BDevice | None:
 		return self._devices.get(path, None)
 
-	def find_partition(self, path: Path) -> _PartitionInfo | None:
-		for device in self._devices.values():
-			if (part := next(filter(lambda x: str(x.path) == str(path), device.partition_infos), None)) is not None:
-				return part
-		return None
-
 	def get_unique_path_for_device(self, dev_path: Path) -> Path | None:
 		paths = Path('/dev/disk/by-id').glob('*')
 		linked_targets = {p.resolve(): p for p in paths}

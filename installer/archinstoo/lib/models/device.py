@@ -981,15 +981,12 @@ class PartitionModification:
 	uuid: str | None = None
 	luks_mapper: str | None = None  # pre-mount: user-opened container, fs_type/mountpoint are the child's
 
-	# str, not UUID: config restores this from json as a string, and __hash__
-	# reads it raw, so mixing the two hashes one identity into two buckets
-	_obj_id: str = field(init=False)
+	# per-instance identity for __hash__ and dict keys. str, not UUID: config
+	# restores this from json as a string, and __hash__ reads it raw, so
+	# mixing the two hashes one identity into two buckets
+	_obj_id: str = field(init=False, default_factory=lambda: str(uuid.uuid4()))
 
 	def __post_init__(self) -> None:
-		# needed to use the object as a dictionary key due to hash func
-		if not hasattr(self, '_obj_id'):
-			self._obj_id = str(uuid.uuid4())
-
 		if self.is_exists_or_modify() and not self.dev_path:
 			raise ValueError('If partition marked as existing a path must be set')
 
@@ -1006,9 +1003,7 @@ class PartitionModification:
 
 	@property
 	def obj_id(self) -> str:
-		if hasattr(self, '_obj_id'):
-			return self._obj_id
-		return ''
+		return self._obj_id
 
 	@property
 	def safe_dev_path(self) -> Path:
@@ -1161,16 +1156,12 @@ class LvmLayoutType(Enum):
 	Default = 'default'
 	NoHome = 'no_home'
 
-	# Manual = 'manual_lvm'
-
 	def display_msg(self) -> str:
 		match self:
 			case LvmLayoutType.Default:
 				return 'Default layout'
 			case LvmLayoutType.NoHome:
 				return 'Root only'
-			# case LvmLayoutType.Manual:
-			# 	return str(_('Manual configuration'))
 
 		raise ValueError(f'Unknown type: {self}')
 
@@ -1231,12 +1222,8 @@ class LvmVolume:
 	# mapper device path /dev/<vg>/<vol>
 	dev_path: Path | None = None
 
-	_obj_id: str = field(init=False)
-
-	def __post_init__(self) -> None:
-		# needed to use the object as a dictionary key due to hash func
-		if not hasattr(self, '_obj_id'):
-			self._obj_id = str(uuid.uuid4())
+	# per-instance identity for __hash__ and dict keys, see PartitionModification
+	_obj_id: str = field(init=False, default_factory=lambda: str(uuid.uuid4()))
 
 	@override
 	def __hash__(self) -> int:
@@ -1244,9 +1231,7 @@ class LvmVolume:
 
 	@property
 	def obj_id(self) -> str:
-		if hasattr(self, '_obj_id'):
-			return self._obj_id
-		return ''
+		return self._obj_id
 
 	@property
 	def mapper_name(self) -> str | None:

@@ -158,7 +158,6 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		has_separate_boot = any(p.is_boot() for mod in modifications for p in mod.partitions)
 		allow_auto_unlock = self._allow_auto_unlock and has_efi and not has_separate_boot
 		# we also check that UKI is disabled in menu logic (or the keyfile would be exposed too)
-		# allow_auto_unlock = is_grub and not uki_enabled
 
 		return DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset, allow_auto_unlock=allow_auto_unlock).run()
 
