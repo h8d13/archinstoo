@@ -36,11 +36,7 @@
 # Example:
 #   ./TSER run 'pacman -Sy --noconfirm git'
 #   ./TSER run 'git clone --depth 1 <url>/archinstoo /root/archinstoo'
-# craft a config, reference found in repo
-#   ./TSER send 'python -m archinstoo --script passwd vm.json --root'
-# prompts twice, no echo
-#   ./TSER send 'python -m archinstoo --script passwd vm.json --user vm'
-# creates the entry if absent
+# craft a config, reference found in repo (credentials go in as crypt hashes)
 #   ./TSER send 'python3 -B -m archinstoo --script guided \
 #       --config examples/vm_unattended.json --silent --advanced --debug'
 # examples/vm_unattended.json ships root and user 'vm' both with password
@@ -311,10 +307,7 @@ def cmd_push(args: argparse.Namespace) -> None:
 		threading.Thread(target=server.serve_forever, daemon=True).start()
 
 		url = f'http://10.0.2.2:{port}/{name}'
-		if src.is_dir():
-			fetch = f'mkdir -p {dest} && curl -sSf {url} | tar -xzf - -C {dest}'
-		else:
-			fetch = f'curl -sSf -o {dest} {url}'
+		fetch = f'mkdir -p {dest} && curl -sSf {url} | tar -xzf - -C {dest}' if src.is_dir() else f'curl -sSf -o {dest} {url}'
 
 		try:
 			body, rc = marked_run(fetch, args.timeout)

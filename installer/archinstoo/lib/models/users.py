@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
-from archinstoo.lib.crypt import crypt_yescrypt
 from archinstoo.lib.utils.env import Os
 
 
@@ -118,14 +117,14 @@ class UserSerialization(TypedDict):
 
 
 class Password:
+	# one secret, two forms: the menu hands over plaintext, a config the hash.
+	# Hashing happens where the hash is consumed (chpasswd), so LUKS
+	# passphrases and PINs never pay for a yescrypt they do not use
 	def __init__(
 		self,
 		plaintext: str = '',
 		enc_password: str | None = None,
 	) -> None:
-		if plaintext:
-			enc_password = crypt_yescrypt(plaintext)
-
 		if not plaintext and not enc_password:
 			raise ValueError('Either plaintext or enc_password must be provided')
 
@@ -140,11 +139,11 @@ class Password:
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Password):
 			return NotImplemented
-		return self.enc_password == other.enc_password
+		return (self._plaintext, self.enc_password) == (other._plaintext, other.enc_password)
 
 	@override
 	def __hash__(self) -> int:
-		return hash(self.enc_password)
+		return hash((self._plaintext, self.enc_password))
 
 	def hidden(self) -> str:
 		if self._plaintext:

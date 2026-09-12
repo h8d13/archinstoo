@@ -78,6 +78,7 @@
 │   │   ├── authentication/
 │   │   │   ├── accounts
 │   │   │   ├── authentication_menu
+│   │   │   ├── crypt
 │   │   │   ├── password_prompt
 │   │   │   ├── shell
 │   │   │   ├── stash
@@ -88,7 +89,6 @@
 │   │   │   └── validation
 │   │   ├── checkpoints
 │   │   ├── configuration
-│   │   ├── crypt
 │   │   ├── disk/
 │   │   │   ├── cleanup
 │   │   │   ├── conf
@@ -193,7 +193,6 @@
 │   │   ├── minimal
 │   │   ├── mirror
 │   │   ├── packages
-│   │   ├── passwd
 │   │   ├── rescue
 │   │   ├── _resolve
 │   │   ├── schema
@@ -211,5 +210,5 @@
     └── parted/
         └── __init__i
 
-30 directories, 180 files
+30 directories, 179 files
 ```

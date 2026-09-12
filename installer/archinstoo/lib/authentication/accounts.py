@@ -2,6 +2,7 @@ import re
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.authentication.crypt import hash_password
 from archinstoo.lib.authentication.stash import clone_user_stash
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import run
@@ -160,12 +161,7 @@ def set_user_password(installation: Installer, user: User) -> bool:
 		debug('User password not set')
 		return False
 
-	enc_password = user.password.enc_password
-
-	if not enc_password:
-		debug('User password is empty')
-		return False
-
+	enc_password = hash_password(user.password)
 	input_data = f'{user.username}:{enc_password}'.encode()
 	cmd = [*installation.arch_chroot_prefix, 'chpasswd', '--encrypted']
 
