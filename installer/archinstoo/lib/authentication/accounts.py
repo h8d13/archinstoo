@@ -2,12 +2,12 @@ import re
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.authentication.stash import clone_user_stash
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import run
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug, error, info, warn
-from archinstoo.lib.stash import clone_user_stash
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
