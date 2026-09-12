@@ -1624,6 +1624,17 @@ class DiskEncryption:
 			return dev in self.partitions and dev.mountpoint != Path('/')
 		return dev in self.lvm_volumes and dev.mountpoint != Path('/')
 
+	def encrypted_dev_paths(self) -> list[Path]:
+		# the LUKS containers a keyslot is added to: partitions for LUKS and
+		# LVM-on-LUKS, the volumes for LUKS-on-LVM
+		match self.encryption_type:
+			case EncryptionType.LUKS | EncryptionType.LVM_ON_LUKS:
+				return [p.safe_dev_path for p in self.partitions]
+			case EncryptionType.LUKS_ON_LVM:
+				return [v.safe_dev_path for v in self.lvm_volumes]
+			case EncryptionType.NO_ENCRYPTION:
+				return []
+
 	@classmethod
 	def validate_enc(
 		cls,

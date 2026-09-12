@@ -4,13 +4,13 @@ import shlex
 import shutil
 import subprocess
 import textwrap
-import time
 from datetime import UTC, datetime
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
 from typing import TYPE_CHECKING, Self
 
 from archinstoo.lib.disk.cleanup import teardown_layout
+from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.luks import Luks2, unlock_luks2_dev
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_pvseg_info, lvm_vol_change
@@ -46,6 +46,7 @@ from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
 from archinstoo.lib.pm import Pacman
 from archinstoo.lib.pm.config import PacmanConfig
 from archinstoo.lib.pm.mirrors import MirrorListHandler
+from archinstoo.lib.systemd import accessibility_tools_in_use, wait_iso_services
 from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
@@ -297,75 +298,8 @@ class Installer:
 		)
 		self._layout_teardown_required = False
 
-	def _verify_service_stop(self) -> None:
-		# Check for essential services statuses based on
-		# architecture and parse results for prints
-		# https://github.com/archlinux/archinstall/issues/3688
-		# be more descriptive about status in code + what user sees
-		if Os.running_from_host():
-			# NTP/keyring-wkd-sync are live-ISO startup units: archiso boots
-			# with an untrusted RTC and an empty trustdb and starts both. An
-			# installed host runs whatever it runs; an idle timesyncd there
-			# (networkd reporting offline, chrony instead, nothing) is not a
-			# sign the clock is wrong, and pacman fails loudly if it is.
-			debug('Running from host, skipping ISO service-stop checks')
-			return
-
-		if not self._args.skip_ntp:
-			info('Waiting for NTP time synchronization...')
-
-			# a stalled timesyncd (no route, blocked UDP 123) would otherwise
-			# hold the install forever; keyring and TLS still work with a
-			# roughly right RTC, so give up after a minute and say so
-			started_wait = time.monotonic()
-			notified = False
-			synced = False
-			while time.monotonic() - started_wait < 60:
-				if not notified and time.monotonic() - started_wait > 5:
-					notified = True
-					warn('NTP sync taking longer than expected, still waiting...')
-
-				time_val = SysCommand('timedatectl show --property=NTPSynchronized --value').decode()
-				if time_val and time_val.strip() == 'yes':
-					synced = True
-					break
-				time.sleep(1)
-
-			if synced:
-				info('NTP time synchronization completed')
-			else:
-				warn('NTP did not sync within 60 seconds, continuing anyway (or use --skip-ntp)')
-		else:
-			info('Skipping NTP time sync (may cause issues if system time is incorrect)')
-
-		if not self._args.skip_wkd and SysInfo.arch() == 'x86_64':
-			info('Waiting for Arch Linux keyring sync...')
-			# same bound as NTP: a timer that never fires or a sync that never
-			# returns (no route to the WKD host) must not hold the install
-			deadline = time.monotonic() + 60
-			timer = 'archlinux-keyring-wkd-sync.timer'
-			service = 'archlinux-keyring-wkd-sync.service'
-			# Wait for the timer to kick in
-			while self._service_started(timer) is None and time.monotonic() < deadline:
-				time.sleep(1)
-
-			# Wait for the service to enter a finished state
-			keyring_state = self._service_state(service)
-			while keyring_state not in ('dead', 'failed', 'exited') and time.monotonic() < deadline:
-				time.sleep(1)
-				keyring_state = self._service_state(service)
-
-			if keyring_state == 'failed':
-				warn('Arch Linux keyring sync failed')
-			elif keyring_state not in ('dead', 'exited'):
-				warn('Keyring sync did not finish within 60 seconds, continuing anyway (or use --skip-wkd)')
-			else:
-				info('Arch Linux keyring sync completed')
-		else:
-			info('Skipping keyring sync (--skip-wkd or non-x86_64 architecture)')
-
 	def sanity_check(self) -> None:
-		self._verify_service_stop()
+		wait_iso_services(self._args.skip_ntp, self._args.skip_wkd)
 
 	def mount_ordered_layout(self) -> None:
 		info(f'Mounting ordered layout at {self.target} (encryption: {self._disk_encryption.encryption_type.value})', step=True)
@@ -699,127 +633,6 @@ class Installer:
 
 		if kf_path not in self._files:
 			self._files.append(kf_path)
-
-	def enroll_tpm2(self) -> None:
-		# Add a TPM2 keyslot to every encrypted device using systemd-cryptenroll.
-		# Existing passphrase keyslot remains as fallback. Checks tpm2 availability.
-		if not self._disk_encryption.tpm2_unlock:
-			return
-		if self._disk_encryption.encryption_type == EncryptionType.NO_ENCRYPTION:
-			return
-		if not (password := self._disk_encryption.encryption_password):
-			warn('TPM2 enrollment skipped: no encryption password available')
-			return
-
-		devices: list[Path] = []
-		if self._disk_encryption.encryption_type in (EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS):
-			devices.extend(p.safe_dev_path for p in self._disk_encryption.partitions)
-		elif self._disk_encryption.encryption_type == EncryptionType.LUKS_ON_LVM:
-			devices.extend(v.safe_dev_path for v in self._disk_encryption.lvm_volumes)
-
-		if not devices:
-			warn('TPM2 enrollment skipped: no encrypted devices in this layout')
-			return
-
-		pcrs = self._disk_encryption.tpm2_pcrs or '0+7'
-
-		# Stash the existing passphrase as a transient unlock keyfile under the standard
-		# LUKS keyfile dir (same convention as _create_root_keyfile).
-		key_in_chroot = '/etc/cryptsetup-keys.d/.tpm2-bootstrap.key'
-		key_in_target = self.target / key_in_chroot.lstrip('/')
-		key_in_target.parent.mkdir(parents=True, exist_ok=True)
-
-		try:
-			key_in_target.write_bytes(password.plaintext.encode())
-			key_in_target.chmod(0o400)
-
-			pin = self._disk_encryption.tpm2_pin
-			# the PIN requirement lands in the LUKS2 token, systemd-cryptsetup prompts on its own
-			pin_args = ['--tpm2-with-pin=yes'] if pin else []
-			pin_env = {'NEWPIN': pin.plaintext} if pin else None
-
-			for dev in devices:
-				info(f'Enrolling TPM2 keyslot for {dev} bound to PCR {pcrs}{" with PIN" if pin else ""}')
-				try:
-					self.arch_chroot(
-						[
-							'systemd-cryptenroll',
-							f'--unlock-key-file={key_in_chroot}',
-							'--tpm2-device=auto',
-							f'--tpm2-pcrs={pcrs}',
-							*pin_args,
-							str(dev),
-						],
-						env=pin_env,
-					)
-				except SysCallError as e:
-					stderr = e.stderr.decode(errors='replace').strip() if e.stderr else ''
-					stdout = e.stdout.decode(errors='replace').strip() if e.stdout else ''
-					warn(f'TPM2 enrollment failed for {dev} (exit {e.returncode}): {stderr or stdout or e}')
-		finally:
-			if key_in_target.exists():
-				key_in_target.unlink()
-
-	def enroll_fido2(self) -> None:
-		# Add a FIDO2 keyslot to every encrypted device using systemd-cryptenroll.
-		# Existing passphrase keyslot remains as fallback.
-		if not (token := self._disk_encryption.fido2_device):
-			return
-		if self._disk_encryption.encryption_type == EncryptionType.NO_ENCRYPTION:
-			return
-		if not (password := self._disk_encryption.encryption_password):
-			warn('FIDO2 enrollment skipped: no encryption password available')
-			return
-
-		devices: list[Path] = []
-		if self._disk_encryption.encryption_type in (EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS):
-			devices.extend(p.safe_dev_path for p in self._disk_encryption.partitions)
-		elif self._disk_encryption.encryption_type == EncryptionType.LUKS_ON_LVM:
-			devices.extend(v.safe_dev_path for v in self._disk_encryption.lvm_volumes)
-
-		if not devices:
-			warn('FIDO2 enrollment skipped: no encrypted devices in this layout')
-			return
-
-		# Stash the existing passphrase as a transient unlock keyfile under the standard
-		# LUKS keyfile dir (same convention as _create_root_keyfile).
-		key_in_target = self.target / 'etc/cryptsetup-keys.d/.fido2-bootstrap.key'
-		key_in_target.parent.mkdir(parents=True, exist_ok=True)
-
-		try:
-			key_in_target.write_bytes(password.plaintext.encode())
-			key_in_target.chmod(0o400)
-
-			# inherited by cryptenroll below: keep PIN/touch prompts plain text
-			os.environ['SYSTEMD_EMOJI'] = '0'
-
-			info(f'FIDO2 token: {token.path} ({token.manufacturer} {token.product})')
-			# Touch/PIN prompts are easy to miss in the install output;
-			# block until the user is watching before systemd-cryptenroll starts.
-			input('Are you ready to enroll your token? Press Enter to continue...')
-
-			for dev in devices:
-				info(f'Enrolling FIDO2 keyslot for {dev}')
-				info('Touch the token when it blinks; a PIN prompt may appear first')
-				try:
-					# stdio stays inherited: the PIN/touch prompts are interactive
-					subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
-						[  # noqa: S607 - systemd-cryptenroll from $PATH on the live ISO
-							'systemd-cryptenroll',
-							f'--unlock-key-file={key_in_target}',
-							f'--fido2-device={token.path}',
-							str(dev),
-						],
-						check=True,
-					)
-				except CalledProcessError as e:
-					# stdio is inherited, cryptenroll's own error is already on screen
-					warn(f'FIDO2 enrollment failed for {dev} (exit {e.returncode})')
-				except FileNotFoundError as e:
-					warn(f'FIDO2 enrollment failed for {dev}: {e}')
-		finally:
-			if key_in_target.exists():
-				key_in_target.unlink()
 
 	def post_install_check(self) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
@@ -2334,8 +2147,8 @@ class Installer:
 	) -> None:
 		# Run before bootloader install so kernel cmdline reflects rd.luks.options
 		# (tpm2-device/fido2-device) but is extensively gated and a no-op if not present/selected
-		self.enroll_tpm2()
-		self.enroll_fido2()
+		enroll_tpm2(self.target, self._disk_encryption, self.arch_chroot)
+		enroll_fido2(self.target, self._disk_encryption)
 
 		if quiet and 'quiet' not in self._kernel_params:
 			self.add_kernel_param('quiet')
@@ -2680,59 +2493,6 @@ class Installer:
 		self.set_environment(env_vars)
 
 		return True
-
-	def _service_started(self, service_name: str) -> str | None:
-		if not shutil.which('systemctl'):
-			# non-systemd host has no unit to have started
-			return None
-
-		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
-			service_name += '.service'  # Just to be safe
-
-		last_execution_time = (
-			SysCommand(
-				f'systemctl show --property=ActiveEnterTimestamp --no-pager {service_name}',
-				environment_vars={'SYSTEMD_COLORS': '0'},
-			)
-			.decode()
-			.removeprefix('ActiveEnterTimestamp=')
-		)
-
-		if not last_execution_time:
-			return None
-
-		return last_execution_time
-
-	def _service_state(self, service_name: str) -> str:
-		if not shutil.which('systemctl'):
-			# non-systemd host: nothing to poll, report inert so waits exit
-			return 'dead'
-
-		if Path(service_name).suffix not in ('.service', '.target', '.timer'):
-			service_name += '.service'  # Just to be safe
-
-		return SysCommand(
-			f'systemctl show --no-pager -p SubState --value {service_name}',
-			environment_vars={'SYSTEMD_COLORS': '0'},
-		).decode()
-
-
-def accessibility_tools_in_use() -> bool:
-	# espeakup is a live-ISO accessibility unit; a non-systemd host has neither
-	# the binary nor the unit, so report not-in-use instead of crashing
-	if not shutil.which('systemctl'):
-		return False
-
-	try:
-		SysCommand(
-			'systemctl is-active --quiet espeakup.service',
-			environment_vars={'SYSTEMD_COLORS': '0'},
-		)
-	except SysCallError:
-		# nonzero: unit inactive, or absent on this host
-		return False
-
-	return True
 
 
 def run_grimoire_installation(

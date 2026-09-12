@@ -12,7 +12,7 @@ from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
+from archinstoo.lib.installer import Installer, run_custom_user_commands, run_grimoire_installation
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstoo.lib.models.device import (
 	DiskLayoutType,
@@ -22,6 +22,7 @@ from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.tui import Tui
 
 if TYPE_CHECKING:

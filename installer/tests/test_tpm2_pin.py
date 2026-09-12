@@ -5,7 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from archinstoo.lib.installer import Installer
+from archinstoo.lib.disk.cryptenroll import enroll_tpm2
 from archinstoo.lib.models.device import (
 	DiskEncryption,
 	EncryptionType,
@@ -34,9 +34,7 @@ def _root() -> PartitionModification:
 
 def _enroll(tmp_path: Path, pin: Password | None) -> list[tuple[list[str], dict[str, str] | None]]:
 	calls: list[tuple[list[str], dict[str, str] | None]] = []
-	inst = Installer.__new__(Installer)
-	inst.target = tmp_path
-	inst._disk_encryption = DiskEncryption(
+	enc = DiskEncryption(
 		EncryptionType.LUKS,
 		encryption_password=Password(plaintext='hunter2'),
 		partitions=[_root()],
@@ -47,8 +45,7 @@ def _enroll(tmp_path: Path, pin: Password | None) -> list[tuple[list[str], dict[
 	def fake_chroot(cmd: list[str], run_as: str | None = None, peek_output: bool = False, env: dict[str, str] | None = None) -> None:
 		calls.append((cmd, env))
 
-	inst.arch_chroot = fake_chroot  # type: ignore[method-assign, assignment]
-	inst.enroll_tpm2()
+	enroll_tpm2(tmp_path, enc, fake_chroot)
 	return calls
 
 
