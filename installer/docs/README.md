@@ -80,6 +80,7 @@
 │   │   │   ├── authentication_menu
 │   │   │   ├── password_prompt
 │   │   │   ├── shell
+│   │   │   ├── stash
 │   │   │   └── users_menu
 │   │   ├── bootloader/
 │   │   │   ├── bootloader_menu
@@ -107,6 +108,7 @@
 │   │   │   ├── selectors
 │   │   │   ├── snapshots
 │   │   │   ├── subvolume_menu
+│   │   │   ├── swap
 │   │   │   └── utils
 │   │   ├── exceptions
 │   │   ├── general
@@ -120,8 +122,8 @@
 │   │   │   └── system_conf
 │   │   ├── linux_path
 │   │   ├── localization/
-│   │   │   ├── configure
-│   │   │   └── utils
+│   │   │   ├── catalog
+│   │   │   └── configure
 │   │   ├── menu/
 │   │   │   ├── abstract_menu
 │   │   │   ├── list_manager
@@ -147,7 +149,6 @@
 │   │   │   ├── network_handler
 │   │   │   └── network_menu
 │   │   ├── output
-│   │   ├── pacman
 │   │   ├── pathnames
 │   │   ├── pm/
 │   │   │   ├── aur
@@ -155,7 +156,8 @@
 │   │   │   ├── config
 │   │   │   ├── groups
 │   │   │   ├── mirrors
-│   │   │   └── packages
+│   │   │   ├── packages
+│   │   │   └── pacman
 │   │   ├── profile/
 │   │   │   ├── base
 │   │   │   ├── config
@@ -164,8 +166,6 @@
 │   │   │   └── profiles_handler
 │   │   ├── schema_gen
 │   │   ├── schema
-│   │   ├── stash
-│   │   ├── swap
 │   │   ├── systemd
 │   │   ├── tui/
 │   │   │   ├── content_editor
