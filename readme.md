@@ -94,7 +94,6 @@ Available options:
               [*] requires root
     count
     mirror
-    passwd
     size
     format    [*]
     guided    [*] < DEFAULT
