@@ -198,16 +198,20 @@ class SysCommandWorker:
 
 	def peak(self, output: str | bytes) -> bool:
 		if self.peek_output:
-			if isinstance(output, bytes):
-				try:
-					output = output.decode('UTF-8')
-				except UnicodeDecodeError:
-					return False
-
-			_cmd_output(output)
+			if isinstance(output, str):
+				output = output.encode('UTF-8')
+			# the pty makes the child think it has a terminal, so pacman-key
+			# colours and pacman hides the cursor; only a real terminal wants
+			# those bytes, a log (CI, redirect, cmd_output.txt) wants the text
+			plain = clear_vt100_escape_codes(output)
+			try:
+				text = (output if sys.stdout.isatty() else plain).decode('UTF-8')
+				_cmd_output(plain.decode('UTF-8'))
+			except UnicodeDecodeError:
+				return False
 
 			if not self.silent:
-				sys.stdout.write(output)
+				sys.stdout.write(text)
 				sys.stdout.flush()
 
 		return True
@@ -473,7 +477,6 @@ _cmd_output_log = _CmdOutputLog()
 
 
 def _cmd_output(output: str) -> None:
-	# clean here, not in peak(): stdout still wants the raw colored stream
 	_cmd_output_log.write(output)
 
 
