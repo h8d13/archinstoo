@@ -49,6 +49,7 @@ from archinstoo.lib.models.device import FilesystemType, SnapshotType
 from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.users import Shell
+from archinstoo.lib.pm import aur
 from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
@@ -331,7 +332,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'aur_bootstrap',
-		lambda: installer.__aur_bootstrap_packages__,
+		lambda: aur.__aur_bootstrap_packages__,
 		site='run_grimoire_installation',
 	),
 )

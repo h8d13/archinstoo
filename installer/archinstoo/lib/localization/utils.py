@@ -165,6 +165,15 @@ def locale_entry_re(sys_lang: str, sys_enc: str) -> re.Pattern[str]:
 	return re.compile(rf'{re.escape(lang)}(\.{re.escape(enc)})?{re.escape(modifier)} {re.escape(enc)}')
 
 
+def uncomment_locale(lines: list[str], sys_lang: str, sys_enc: str) -> bool:
+	entry_re = locale_entry_re(sys_lang, sys_enc)
+	for index, line in enumerate(lines):
+		if entry_re.fullmatch(line.removeprefix('#').strip()):
+			lines[index] = line.removeprefix('#')
+			return True
+	return False
+
+
 def list_locale_encodings(sys_lang: str) -> list[str]:
 	# encodings are language-scoped the way xkb variants are layout-scoped:
 	# only ~870 of the ~15000 language x encoding pairs name a real locale, and

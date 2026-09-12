@@ -989,6 +989,31 @@ def has_separate_boot(
 	return efi_partition is not None and boot_partition is not efi_partition
 
 
+# same set systemd mounts boot media with: partition_pick_mount_options in
+# src/shared/dissect-image.c. FAT has no on-disk perms, hence the masks
+def harden_boot_options(part_mod: PartitionModification, options: list[str]) -> list[str]:
+	if not (part_mod.is_efi() or part_mod.is_xbootldr() or part_mod.is_boot()):
+		return options
+
+	boot_opts = [BootMountOption.dev, BootMountOption.suid, BootMountOption.exec]
+
+	# by designator, not fs type: a plain /boot keeps symlinks, UKI layouts use them
+	if part_mod.is_efi() or part_mod.is_xbootldr():
+		boot_opts.append(BootMountOption.symfollow)
+
+	if part_mod.fs_type == FilesystemType.FAT32:
+		boot_opts += [BootMountOption.fmask, BootMountOption.dmask]
+
+	for opt in boot_opts:
+		# mount takes the last occurrence, so appending over an option the
+		# config already sets ('exec', 'fmask=0022') would override it
+		if any(o in (opt.name, opt.value) or o.startswith(f'{opt.name}=') for o in options):
+			continue
+		options.append(opt.value)
+
+	return options
+
+
 @dataclass
 class PartitionModification:
 	status: ModificationStatus

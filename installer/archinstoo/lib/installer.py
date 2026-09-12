@@ -19,13 +19,12 @@ from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, R
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.linux_path import LPath
-from archinstoo.lib.localization.utils import locale_encoding, locale_entry_re, split_locale_name
-from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
+from archinstoo.lib.localization.utils import locale_encoding, split_locale_name, uncomment_locale
+from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	BOOT_ITER_TIME,
 	BOOT_PBKDF_MEMORY,
-	BootMountOption,
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	EncryptionType,
@@ -34,6 +33,7 @@ from archinstoo.lib.models.device import (
 	PartitionModification,
 	SnapshotType,
 	SubvolumeModification,
+	harden_boot_options,
 	has_separate_boot,
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
@@ -83,51 +83,11 @@ __ter_font_packages__ = ['terminus-font']
 # grub integration for either snapshot tool
 __grub_snapshot_packages__ = ['grub-btrfs', 'inotify-tools']
 __zram_packages__ = ['zram-generator']
-# what grimoire needs on the target before it can build anything from the AUR.
-# base-devel spelled out (its member list minus sudo) so a doas install does
-# not drag sudo in as a side effect of wanting a toolchain
-__aur_bootstrap_packages__ = [
-	'git',
-	'archlinux-keyring',
-	'autoconf',
-	'automake',
-	'binutils',
-	'bison',
-	'debugedit',
-	'fakeroot',
-	'file',
-	'findutils',
-	'flex',
-	'gawk',
-	'gcc',
-	'gettext',
-	'grep',
-	'groff',
-	'gzip',
-	'libtool',
-	'm4',
-	'make',
-	'pacman',
-	'patch',
-	'pkgconf',
-	'sed',
-	'texinfo',
-	'which',
-]
 # cloning a user stash
 __stash_packages__ = ['git']
 
 # Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
-
-
-def _uncomment_locale(lines: list[str], sys_lang: str, sys_enc: str) -> bool:
-	entry_re = locale_entry_re(sys_lang, sys_enc)
-	for index, line in enumerate(lines):
-		if entry_re.fullmatch(line.removeprefix('#').strip()):
-			lines[index] = line.removeprefix('#')
-			return True
-	return False
 
 
 class Installer:
@@ -418,31 +378,7 @@ class Installer:
 			if vol.mapper_name and vol.dev_path
 		}
 
-	# same set systemd mounts boot media with: partition_pick_mount_options in
 	# src/shared/dissect-image.c. FAT has no on-disk perms, hence the masks
-	@staticmethod
-	def _harden_boot_options(part_mod: PartitionModification, options: list[str]) -> list[str]:
-		if not (part_mod.is_efi() or part_mod.is_xbootldr() or part_mod.is_boot()):
-			return options
-
-		boot_opts = [BootMountOption.dev, BootMountOption.suid, BootMountOption.exec]
-
-		# by designator, not fs type: a plain /boot keeps symlinks, UKI layouts use them
-		if part_mod.is_efi() or part_mod.is_xbootldr():
-			boot_opts.append(BootMountOption.symfollow)
-
-		if part_mod.fs_type == FilesystemType.FAT32:
-			boot_opts += [BootMountOption.fmask, BootMountOption.dmask]
-
-		for opt in boot_opts:
-			# mount takes the last occurrence, so appending over an option the
-			# config already sets ('exec', 'fmask=0022') would override it
-			if any(o in (opt.name, opt.value) or o.startswith(f'{opt.name}=') for o in options):
-				continue
-			options.append(opt.value)
-
-		return options
-
 	def _mount_partition(self, part_mod: PartitionModification) -> None:
 		if not part_mod.dev_path:
 			debug(f'Partition {part_mod.mountpoint or part_mod.fs_type} has no device path, skipping mount')
@@ -461,7 +397,7 @@ class Installer:
 		elif part_mod.mountpoint:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
-			options = self._harden_boot_options(part_mod, list(part_mod.mount_options))
+			options = harden_boot_options(part_mod, list(part_mod.mount_options))
 
 			mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
 		elif part_mod.is_swap():
@@ -489,7 +425,7 @@ class Installer:
 			target = self.target / part_mod.relative_mountpoint
 			mount_fs = part_mod.fs_type.fs_type_mount if part_mod.fs_type else None
 			# encrypted /boot (GRUB) needs the same hardening as a plain one
-			options = self._harden_boot_options(part_mod, list(part_mod.mount_options))
+			options = harden_boot_options(part_mod, list(part_mod.mount_options))
 			mount(luks_handler.mapper_dev, target, mount_fs=mount_fs, options=options)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
@@ -701,12 +637,12 @@ class Installer:
 		locale_gen = self.target / 'etc/locale.gen'
 		locale_gen_lines = locale_gen.read_text().splitlines(True)
 
-		if not _uncomment_locale(locale_gen_lines, locale_config.sys_lang, locale_config.sys_enc):
+		if not uncomment_locale(locale_gen_lines, locale_config.sys_lang, locale_config.sys_enc):
 			error(f"Invalid locale: language '{locale_config.sys_lang}', encoding '{locale_config.sys_enc}'")
 			return False
 		# tools hardcoding LC_ALL=en_US.UTF-8 warn on every non-US system otherwise
 		# https://github.com/archlinux/archinstall/issues/3764
-		_uncomment_locale(locale_gen_lines, 'en_US.UTF-8', 'UTF-8')
+		uncomment_locale(locale_gen_lines, 'en_US.UTF-8', 'UTF-8')
 		locale_gen.write_text(''.join(locale_gen_lines))
 
 		try:
@@ -2495,75 +2431,6 @@ class Installer:
 		return True
 
 
-def run_grimoire_installation(
-	packages: list[str],
-	installation: Installer,
-	auth_config: AuthenticationConfiguration | None = None,
-) -> None:
-	if not auth_config:
-		warn('No auth config provided, skipping AUR packages')
-		return
-
-	build_user = next((u for u in auth_config.users if u.elev), None)
-
-	if not build_user:
-		warn('No elevated user found, skipping AUR packages')
-		return
-
-	installation.add_additional_packages(__aur_bootstrap_packages__)
-
-	grimoire_src = Path(__file__).parent / 'grimoire.py'
-	grimoire_dest = installation.target / 'usr/local/bin/grimoire'
-	grimoire_src.copy(grimoire_dest, preserve_metadata=True)
-	grimoire_dest.chmod(0o755)
-	debug(f'Installed grimoire helper to {grimoire_dest}')
-
-	priv_esc = auth_config.privilege_escalation
-	aur_rule = None
-
-	try:
-		if priv_esc == PrivilegeEscalation.Doas:
-			doas_conf = installation.target / 'etc/doas.conf'
-			aur_rule = doas_conf
-			if not doas_conf.exists():
-				doas_conf.write_text('')
-			# doas matches cmd against argv[0] as typed: grimoire runs `doas
-			# pacman`, makepkg -i runs `doas /usr/bin/pacman` (PACMAN_PATH),
-			# so both spellings need a rule
-			debug(f'Adding temporary doas rules for AUR build: permit nopass {build_user.username} as root cmd pacman')
-			with doas_conf.open('a') as doas:
-				for cmd in ('pacman', '/usr/bin/pacman'):
-					doas.write(f'permit nopass {build_user.username} as root cmd {cmd}\n')
-			doas_conf.chmod(0o644)
-		else:
-			sudoers_dir = installation.target / 'etc/sudoers.d'
-			aur_rule = sudoers_dir / '99-aur-build'
-			aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
-			aur_rule.chmod(0o440)
-
-		for pkg in packages:
-			info(f'Installing AUR package: {pkg}')
-			try:
-				installation.arch_chroot(
-					f'grimoire --no-color install --repo AUR {shlex.quote(pkg)} --noconfirm',
-					run_as=build_user.username,
-					peek_output=True,
-				)
-			except SysCallError as e:
-				warn(f'AUR package "{pkg}" failed: {e}')
-	finally:
-		if priv_esc == PrivilegeEscalation.Doas and aur_rule is not None and aur_rule.exists():
-			debug(f'Removing temporary doas rule for {build_user.username}')
-			with aur_rule.open('r') as f:
-				lines = f.readlines()
-			with aur_rule.open('w') as f:
-				for line in lines:
-					if f'permit nopass {build_user.username} as root' not in line:
-						f.write(line)
-		elif priv_esc != PrivilegeEscalation.Doas and aur_rule is not None:
-			aur_rule.unlink(missing_ok=True)
-
-
 def run_custom_user_commands(commands: list[str], installation: Installer) -> None:
 	for index, command in enumerate(commands):
 		script_path = LPath(f'/var/tmp/user-command.{index}.sh')  # noqa: S108 - path inside install target, not host /tmp
@@ -2574,7 +2441,7 @@ def run_custom_user_commands(commands: list[str], installation: Installer) -> No
 		chroot_path.write_text(command)
 
 		try:
-			SysCommand(f'{" ".join(installation._arch_chroot_prefix)} bash {script_path}')
+			installation.arch_chroot(f'bash {script_path}')
 		except SysCallError as e:
 			warn(f'Custom command "{command}" failed: {e}')
 		finally:
