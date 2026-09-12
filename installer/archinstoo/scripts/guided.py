@@ -175,10 +175,10 @@ def perform_installation(
 			installation.add_additional_packages(config.packages)
 
 		if config.ntp:
-			installation.activate_time_synchronization()
+			installation.enable_service('systemd-timesyncd')
 
 		if accessibility_tools_in_use():
-			installation.enable_espeakup()
+			installation.enable_service('espeakup')
 
 		if config.auth_config and config.auth_config.root_enc_password:
 			root_user = User('root', config.auth_config.root_enc_password, False)

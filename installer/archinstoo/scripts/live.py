@@ -143,11 +143,11 @@ def perform_installation(
 
 		# NTP
 		if config.ntp:
-			installation.activate_time_synchronization()
+			installation.enable_service('systemd-timesyncd')
 
 		# Accessibility
 		if accessibility_tools_in_use():
-			installation.enable_espeakup()
+			installation.enable_service('espeakup')
 
 		# Root password
 		if config.auth_config and config.auth_config.root_enc_password:

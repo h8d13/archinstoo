@@ -226,19 +226,6 @@ class Installer:
 	def set_timezone(self, zone: str) -> bool:
 		return configure.set_timezone(self, zone)
 
-	def activate_time_synchronization(self) -> None:
-		info('Activating systemd-timesyncd for time synchronization using Arch Linux and ntp.org NTP servers')
-		self.enable_service('systemd-timesyncd')
-
-	def enable_espeakup(self) -> None:
-		info('Enabling espeakup.service for speech synthesis (accessibility)')
-		self.enable_service('espeakup')
-
-	def enable_periodic_trim(self) -> None:
-		info('Enabling periodic TRIM')
-		# fstrim is owned by util-linux, a dependency of both base and systemd.
-		self.enable_service('fstrim.timer')
-
 	def enable_service(self, services: str | list[str]) -> None:
 		systemd.enable_service(self, services)
 
@@ -358,7 +345,8 @@ class Installer:
 		# https://github.com/archlinux/archinstall/issues/1837
 		# https://github.com/archlinux/archinstall/issues/1841
 		if not self._disable_fstrim:
-			self.enable_periodic_trim()
+			# fstrim is owned by util-linux, a dependency of both base and systemd.
+			self.enable_service('fstrim.timer')
 
 		if hostname:
 			self.set_hostname(hostname)
