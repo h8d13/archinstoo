@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from functools import cached_property
-from typing import Self, TypedDict, override
+from typing import Self, TypedDict
 
 
 class PackageSearchResultSerialization(TypedDict):
@@ -85,24 +85,6 @@ class PackageSearchResult:
 	def from_json(cls, data: PackageSearchResultSerialization) -> Self:
 		return cls(**data)
 
-	@property
-	def pkg_version(self) -> str:
-		return self.pkgver
-
-	@override
-	def __eq__(self, other: object) -> bool:
-		if not isinstance(other, PackageSearchResult):
-			return NotImplemented
-
-		return self.pkg_version == other.pkg_version
-
-	@override
-	def __hash__(self) -> int:
-		return hash(self.pkg_version)
-
-	def __lt__(self, other: PackageSearchResult) -> bool:
-		return self.pkg_version < other.pkg_version
-
 
 @dataclass
 class PackageSearch:
@@ -136,20 +118,6 @@ class LocalPackage:
 	url: str
 	licenses: str
 	groups: str
-
-	@override
-	def __eq__(self, other: object) -> bool:
-		if not isinstance(other, LocalPackage):
-			return NotImplemented
-
-		return self.version == other.version
-
-	@override
-	def __hash__(self) -> int:
-		return hash(self.version)
-
-	def __lt__(self, other: LocalPackage) -> bool:
-		return self.version < other.version
 
 
 @dataclass

@@ -1,5 +1,4 @@
 import os
-import platform
 import re
 import shlex
 import shutil
@@ -1758,7 +1757,7 @@ class Installer:
 
 			info(f'GRUB EFI partition: {efi_partition.dev_path}')
 
-			if platform.machine() == 'aarch64':
+			if SysInfo.arch() == 'aarch64':
 				# grub names its EFI target arm64, not aarch64
 				grub_target = 'arm64-efi'
 			elif SysInfo._bitness() == 64:
@@ -1888,7 +1887,7 @@ class Installer:
 			parent_dev_path = get_parent_device_path(efi_partition.safe_dev_path)
 
 			# limine ships arch-specific default EFI binaries; 64-bit one last
-			efi_binaries: tuple[str, ...] = ('BOOTAA64.EFI',) if platform.machine() == 'aarch64' else ('BOOTIA32.EFI', 'BOOTX64.EFI')
+			efi_binaries: tuple[str, ...] = ('BOOTAA64.EFI',) if SysInfo.arch() == 'aarch64' else ('BOOTIA32.EFI', 'BOOTX64.EFI')
 
 			try:
 				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'

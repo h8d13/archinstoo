@@ -3,6 +3,7 @@ import math
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
+from functools import total_ordering
 from itertools import zip_longest
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
@@ -210,12 +211,9 @@ class DiskLayoutConfiguration:
 			for partition in entry.get('partitions', []):
 				flags = [flag for f in partition.get('flags', []) if (flag := PartitionFlag.from_string(f))]
 
-				raw_fs_type = partition.get('fs_type')
-				fs_type = FilesystemType(raw_fs_type) if raw_fs_type else None
-
 				device_partition = PartitionModification(
 					status=ModificationStatus(partition['status']),
-					fs_type=fs_type,
+					fs_type=FilesystemType(fs_type) if (fs_type := partition.get('fs_type')) else None,
 					start=Size.parse_args(partition['start']),
 					length=Size.parse_args(partition['size']),
 					mount_options=partition.get('mount_options', []),
@@ -390,7 +388,10 @@ class _SizeSerialization(TypedDict):
 	sector_size: _SectorSizeSerialization
 
 
-@dataclass
+# frozen: instances are hashed by normalized byte count, mutation would break
+# the set/dict contract. total_ordering derives the rest from __lt__ + __eq__
+@total_ordering
+@dataclass(frozen=True)
 class Size:
 	value: int
 	unit: Unit
@@ -520,9 +521,6 @@ class Size:
 	def __lt__(self, other: Size) -> bool:
 		return self._normalize() < other._normalize()
 
-	def __le__(self, other: Size) -> bool:
-		return self._normalize() <= other._normalize()
-
 	@override
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Size):
@@ -534,19 +532,6 @@ class Size:
 	@override
 	def __hash__(self) -> int:
 		return hash(self._normalize())
-
-	@override
-	def __ne__(self, other: object) -> bool:
-		if not isinstance(other, Size):
-			return NotImplemented
-
-		return self._normalize() != other._normalize()
-
-	def __gt__(self, other: Size) -> bool:
-		return self._normalize() > other._normalize()
-
-	def __ge__(self, other: Size) -> bool:
-		return self._normalize() >= other._normalize()
 
 
 class BtrfsMountOption(Enum):

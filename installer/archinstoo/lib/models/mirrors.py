@@ -6,7 +6,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, NotRequired, Self, TypedDict, override
+from typing import Any, NotRequired, Self, TypedDict
 
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug
@@ -208,20 +208,11 @@ class MirrorStatusListV3:
 @dataclass
 class MirrorRegion:
 	name: str
-	urls: list[str]
+	# identity is the region name, urls are payload
+	urls: list[str] = field(compare=False)
 
 	def json(self) -> dict[str, list[str]]:
 		return {self.name: self.urls}
-
-	@override
-	def __eq__(self, other: object) -> bool:
-		if not isinstance(other, MirrorRegion):
-			return NotImplemented
-		return self.name == other.name
-
-	@override
-	def __hash__(self) -> int:
-		return hash(self.name)
 
 
 class SignCheck(Enum):
