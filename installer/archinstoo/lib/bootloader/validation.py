@@ -1,6 +1,6 @@
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstoo.lib.models.device import DiskLayoutConfiguration, PartitionFlag, PartitionModification, PartitionTable, has_separate_boot
+from archinstoo.lib.models.device import DiskLayoutConfiguration, PartitionFlag, PartitionTable, has_separate_boot
 
 
 def validate_bootloader(
@@ -20,20 +20,9 @@ def validate_bootloader(
 	if disk_config is None:
 		return ['No disk layout selected']
 
-	root_partition: PartitionModification | None = None
-	boot_partition: PartitionModification | None = None
-	efi_partition: PartitionModification | None = None
-
-	for layout in disk_config.device_modifications:
-		if root_partition := layout.get_root_partition():
-			break
-	for layout in disk_config.device_modifications:
-		if boot_partition := layout.get_boot_partition():
-			break
-	if uefi:
-		for layout in disk_config.device_modifications:
-			if efi_partition := layout.get_efi_partition():
-				break
+	root_partition = disk_config.get_root_partition()
+	boot_partition = disk_config.get_boot_partition()
+	efi_partition = disk_config.get_efi_partition() if uefi else None
 
 	if root_partition is None:
 		errors.append('Root partition not found')

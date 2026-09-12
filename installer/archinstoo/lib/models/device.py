@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
 if TYPE_CHECKING:
 	import builtins
+	from collections.abc import Callable
 
 	from parted import Disk, Geometry, Partition
 
@@ -286,6 +287,32 @@ class DiskLayoutConfiguration:
 					return True
 
 		return False
+
+	# layout-wide lookups, first match across devices: the installer and the
+	# bootloader pre-flight want the same answer and used to loop separately
+	def get_efi_partition(self) -> PartitionModification | None:
+		return self._first_partition(DeviceModification.get_efi_partition)
+
+	def get_boot_partition(self) -> PartitionModification | None:
+		return self._first_partition(DeviceModification.get_boot_partition)
+
+	def get_root_partition(self) -> PartitionModification | None:
+		return self._first_partition(DeviceModification.get_root_partition)
+
+	def get_root(self) -> PartitionModification | LvmVolume | None:
+		# an LVM root is a volume, the partitions under it are PVs
+		if self.lvm_config:
+			return self.lvm_config.get_root_volume()
+		return self.get_root_partition()
+
+	def _first_partition(
+		self,
+		pick: Callable[[DeviceModification], PartitionModification | None],
+	) -> PartitionModification | None:
+		for mod in self.device_modifications:
+			if partition := pick(mod):
+				return partition
+		return None
 
 
 class PartitionTable(Enum):

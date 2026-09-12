@@ -1450,26 +1450,6 @@ class Installer:
 		conf = sysctl_dir / '99-archinstoo.conf'
 		conf.write_text('\n'.join(entries) + '\n')
 
-	def _get_efi_partition(self) -> PartitionModification | None:
-		for layout in self._disk_config.device_modifications:
-			if partition := layout.get_efi_partition():
-				return partition
-		return None
-
-	def _get_boot_partition(self) -> PartitionModification | None:
-		for layout in self._disk_config.device_modifications:
-			if boot := layout.get_boot_partition():
-				return boot
-		return None
-
-	def _get_root(self) -> PartitionModification | LvmVolume | None:
-		if self._disk_config.lvm_config:
-			return self._disk_config.lvm_config.get_root_volume()
-		for mod in self._disk_config.device_modifications:
-			if root := mod.get_root_partition():
-				return root
-		return None
-
 	def _configure_grub_btrfsd(self, snapshot_type: SnapshotType) -> None:
 		if snapshot_type == SnapshotType.Timeshift:
 			snapshot_path = '--timeshift-auto'
@@ -2363,9 +2343,9 @@ class Installer:
 		if serial_console and (param := f'console={serial_console}') not in self._kernel_params:
 			self.add_kernel_param(param)
 
-		efi_partition = self._get_efi_partition()
-		boot_partition = self._get_boot_partition()
-		root = self._get_root()
+		efi_partition = self._disk_config.get_efi_partition()
+		boot_partition = self._disk_config.get_boot_partition()
+		root = self._disk_config.get_root()
 
 		if boot_partition is None:
 			if SysInfo.has_uefi() and efi_partition is not None:
