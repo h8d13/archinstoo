@@ -13,9 +13,10 @@ from archinstoo.lib.disk import snapshots
 from archinstoo.lib.disk.cleanup import teardown_layout
 from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.disk.fstab import write_fstab
 from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mount import LayoutMounter
-from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, RequirementError, SysCallError
+from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.initramfs import Initramfs
@@ -246,23 +247,7 @@ class Installer:
 		mirrors.set_mirrors(self, pacman_configuration, on_target)
 
 	def genfstab(self, flags: str = '-pU') -> None:
-		fstab_path = self.target / 'etc' / 'fstab'
-		info(f'Generating {fstab_path}', step=True)
-		try:
-			gen_fstab = SysCommand(f'genfstab {flags} -f {self.target} {self.target}').output()
-		except SysCallError as err:
-			raise RequirementError(
-				f'Could not generate fstab, strapping in packages most likely failed (disk out of space?)\n Error: {err}'
-			) from err
-
-		with fstab_path.open('ab') as fp:
-			fp.write(gen_fstab)
-
-		if not fstab_path.is_file():
-			raise RequirementError('Could not create fstab file')
-
-		with fstab_path.open('a') as fp:
-			fp.writelines(f'{entry}\n' for entry in self._fstab_entries)
+		write_fstab(self.target, self._fstab_entries, flags)
 
 	def set_hostname(self, hostname: str) -> None:
 		(self.target / 'etc/hostname').write_text(hostname + '\n')
