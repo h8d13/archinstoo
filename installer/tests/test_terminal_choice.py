@@ -19,6 +19,7 @@ from archinstoo.lib.models.application import DEFAULT_TERMINAL, ApplicationConfi
 from archinstoo.lib.models.users import User
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.lib.sysconfig import write_environment
 
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
@@ -68,13 +69,12 @@ def test_swap_terminal_leaves_an_unknown_config_alone(monkeypatch: pytest.Monkey
 	assert swap_terminal('set $term wezterm\n', 'alacritty', Path('rc')) == 'set $term wezterm\n'
 
 
-def test_set_environment_appends_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_write_environment_appends_once(tmp_path: Path) -> None:
 	(tmp_path / 'etc').mkdir()
 	(tmp_path / 'etc/environment').write_text('EDITOR=nano\n')
-	installation = _session(tmp_path, monkeypatch)
 
-	installation.set_environment({'TERMINAL': 'foot'})
-	installation.set_environment({'TERMINAL': 'kitty', 'LANG': 'C'})
+	write_environment(tmp_path, {'TERMINAL': 'foot'})
+	write_environment(tmp_path, {'TERMINAL': 'kitty', 'LANG': 'C'})
 
 	assert (tmp_path / 'etc/environment').read_text() == 'EDITOR=nano\nTERMINAL=foot\nLANG=C\n'
 
