@@ -21,6 +21,7 @@ from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.kernel.initramfs import Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
+from archinstoo.lib.kernel.sysctl import write_sysctl
 from archinstoo.lib.kernel.zram import setup_zram
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.localization import configure
@@ -475,15 +476,7 @@ class Installer:
 				self._kernel_params.extend(kernel_params)
 
 	def setup_sysctl(self, entries: list[str]) -> None:
-		if not entries:
-			return
-
-		info('Writing sysctl configuration')
-		sysctl_dir = self.target / 'etc/sysctl.d'
-		sysctl_dir.mkdir(parents=True, exist_ok=True)
-
-		conf = sysctl_dir / '99-archinstoo.conf'
-		conf.write_text('\n'.join(entries) + '\n')
+		write_sysctl(self.target, entries)
 
 	def add_bootloader(
 		self,
