@@ -90,13 +90,6 @@ module = "archinstoo.lib.grimoire"
 # tracked in its own repo
 ignore_errors = true
 
-[[tool.mypy.overrides]]
-module = [
-    "_pytest.*",
-    "pytest",
-]
-ignore_missing_imports = true
-
 [tool.importlinter]
 root_package = "archinstoo"
 include_external_packages = false
@@ -132,12 +125,12 @@ max-line-length = 160
 
 [tool.pylint."messages control"]
 disable = [
-    "C",
-    "R",
-    "broad-exception-caught",
-    "fixme",
-    "protected-access",
-    "unspecified-encoding",
+    "C",                       # ruff covers style
+    "R",                       # ruff covers refactors
+    "broad-exception-caught",  # 25 sites, all log-and-continue boundaries
+    "fixme",                   # TODOs are tracked in-code on purpose
+    "protected-access",        # SysInfo._bitness & co are package-internal
+    "unspecified-encoding",    # PEP 686: utf-8 is the default from 3.15
 ]
 
 [tool.pylint.refactoring]
@@ -225,14 +218,16 @@ ignore = [
     "W191",     # tab-indentation
 
     # deliberate architecture
-    "PLC0415",  # import-outside-top-level: models/ -> hardware, disk breaks cycles
+    "PLC0415",  # import-outside-top-level: models/ -> hardware, disk breaks
+                # cycles; the rest defer optional/slow imports (parted, pty, tui)
     "RUF067",   # non-empty-init-module: __init__ holds the dep tables and main()
 
     # deliberate idiom
-    "PLW1641",  # eq-without-hash: the dataclasses are mutable, unhashable is correct.
-                # models/users.py Password hand-rolls __eq__, so it is genuinely
-                # unhashable: revisit if anything ever needs to hash one.
-    "PLW2901",  # redefined-loop-name: every site is `line = line.strip()` normalization
+    "PLW1641",  # eq-without-hash: all 5 sites (Size, MirrorRegion, LocalPackage,
+                # PackageSearchResult, Password) hand-roll __eq__ on mutable data,
+                # unhashable is correct: revisit if anything ever needs to hash one.
+    "PLW2901",  # redefined-loop-name: every site normalizes the loop var in place
+                # (`line = line.strip()`, `key = key.replace(...)`)
     "SIM108",   # if-else-block-instead-of-if-exp: installer.py would nest 3 ternaries
 ]
 
@@ -246,7 +241,6 @@ known-first-party = ["archinstoo"]
 "typing.cast".msg = "avoid cast(); annotate the binding or validate at the boundary (add # noqa: TID251 with a reason if truly needed)"
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["E402"] # init hacks are standard.
 "**/NVGEN" = [
     "S603",   # dev tooling runs fixed local commands, not untrusted input
     "S607",   # nvchecker/pacman helpers resolved from $PATH by design
