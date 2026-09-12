@@ -20,7 +20,7 @@ from archinstoo.lib.models.device import (
 	PartitionModification,
 	has_separate_boot,
 )
-from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.output import TARGET_STATE_DIR, debug, error, info, warn
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -619,13 +619,13 @@ class BootloaderInstaller:
 			}} > "$conf"
 			"""
 		).replace('@ENTRIES@', entries)
-		script_path = self.target / 'etc/archinstoo.d/limine-entries.sh'
+		script_path = self.target / TARGET_STATE_DIR.relative_to_root() / 'limine-entries.sh'
 		script_path.parent.mkdir(parents=True, exist_ok=True)
 		script_path.write_text(script)
 		script_path.chmod(0o755)
 
 		hook = textwrap.dedent(
-			"""\
+			f"""\
 			[Trigger]
 			Type = Path
 			Operation = Install
@@ -636,14 +636,14 @@ class BootloaderInstaller:
 			[Action]
 			Description = Updating Limine kernel entries...
 			When = PostTransaction
-			Exec = /etc/archinstoo.d/limine-entries.sh
+			Exec = {TARGET_STATE_DIR}/limine-entries.sh
 			"""
 		)
 		hooks_dir = self.target / 'etc/pacman.d/hooks'
 		hooks_dir.mkdir(parents=True, exist_ok=True)
 		(hooks_dir / '91-limine-entries.hook').write_text(hook)
 
-		self._inst.arch_chroot('/etc/archinstoo.d/limine-entries.sh')
+		self._inst.arch_chroot(str(TARGET_STATE_DIR / 'limine-entries.sh'))
 		debug(f'Wrote {config_path} via limine-entries.sh')
 
 	def _add_efistub_bootloader(
@@ -904,13 +904,13 @@ class BootloaderInstaller:
 			done
 			"""
 		)
-		script_path = self.target / 'etc/archinstoo.d/uki-preset.sh'
+		script_path = self.target / TARGET_STATE_DIR.relative_to_root() / 'uki-preset.sh'
 		script_path.parent.mkdir(parents=True, exist_ok=True)
 		script_path.write_text(script)
 		script_path.chmod(0o755)
 
 		hook = textwrap.dedent(
-			"""\
+			f"""\
 			[Trigger]
 			Type = Path
 			Operation = Install
@@ -919,7 +919,7 @@ class BootloaderInstaller:
 			[Action]
 			Description = Creating UKI preset for new kernel...
 			When = PostTransaction
-			Exec = /etc/archinstoo.d/uki-preset.sh
+			Exec = {TARGET_STATE_DIR}/uki-preset.sh
 			NeedsTargets
 			"""
 		)

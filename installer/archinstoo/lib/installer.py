@@ -30,7 +30,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.output import ARTIFACTS_STORE, debug, error, info, log, logger, warn
+from archinstoo.lib.output import TARGET_STATE_DIR, debug, error, info, log, logger, warn
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
 
@@ -165,7 +165,7 @@ class Installer:
 				closing = 'Changes are live on the running system.' if self.target == Path('/') else 'You may reboot when ready.'
 				msg = (
 					'Installation completed without any errors.\n'
-					f'Log files available at {logger.directory} and in target {ARTIFACTS_STORE}.\n'
+					f'Log files available at {logger.directory} and in target {TARGET_STATE_DIR}.\n'
 					f'{closing}\n'
 				)
 				log(msg, fg='green')
