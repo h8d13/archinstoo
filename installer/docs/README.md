@@ -108,18 +108,21 @@
 │   │   │   ├── selectors
 │   │   │   ├── snapshots
 │   │   │   ├── subvolume_menu
-│   │   │   ├── swap
 │   │   │   └── utils
 │   │   ├── exceptions
 │   │   ├── general
 │   │   ├── global_menu
 │   │   ├── grimoire*
 │   │   ├── hardware
-│   │   ├── initramfs
 │   │   ├── installer
 │   │   ├── interactions/
 │   │   │   ├── general_conf
 │   │   │   └── system_conf
+│   │   ├── kernel/
+│   │   │   ├── initramfs
+│   │   │   ├── swap
+│   │   │   ├── sysctl
+│   │   │   └── zram
 │   │   ├── linux_path
 │   │   ├── localization/
 │   │   │   ├── catalog
@@ -208,5 +211,5 @@
     └── parted/
         └── __init__i
 
-29 directories, 178 files
+30 directories, 180 files
 ```
