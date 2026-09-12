@@ -5,6 +5,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.disk.luks import KEYFILE_DIR
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.models.device import DiskEncryption, EncryptionType
 from archinstoo.lib.output import info, warn
@@ -16,8 +17,6 @@ if TYPE_CHECKING:
 # which stays as the fallback. Both need the existing passphrase to unlock the
 # slot they extend, handed over as a transient keyfile under the standard LUKS
 # keyfile dir (same convention as the root auto-unlock keyfile).
-
-KEYFILE_DIR = Path('/etc/cryptsetup-keys.d')
 
 
 @contextmanager

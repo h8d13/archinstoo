@@ -1,8 +1,7 @@
 import os
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.disk.cryptenroll import KEYFILE_DIR
-from archinstoo.lib.disk.luks import Luks2
+from archinstoo.lib.disk.luks import KEYFILE_DIR, Luks2
 from archinstoo.lib.models.device import BOOT_ITER_TIME, BOOT_PBKDF_MEMORY, DiskEncryption, EncryptionType
 from archinstoo.lib.output import debug
 
