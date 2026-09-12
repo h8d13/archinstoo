@@ -21,6 +21,7 @@ from archinstoo.lib.models.network import NicType
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
+from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
@@ -71,10 +72,6 @@ def _host_packages() -> set[str]:
 	# what the installer reads off the running system rather than the config;
 	# count and size run on that same host, so the detection carries over
 	pkgs: set[str] = set()
-
-	# installer.py:accessibility_tools_in_use, imported late: it lives in
-	# installer.py, which drags in pyparted and the rest of the runtime
-	from archinstoo.lib.installer import accessibility_tools_in_use
 
 	if accessibility_tools_in_use():
 		pkgs.update(_flat('accessibility'))

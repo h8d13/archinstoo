@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
 if TYPE_CHECKING:
 	import builtins
+	from collections.abc import Callable
 
 	from parted import Disk, Geometry, Partition
 
@@ -286,6 +287,39 @@ class DiskLayoutConfiguration:
 					return True
 
 		return False
+
+	def btrfs_snapshot_type(self) -> SnapshotType | None:
+		# snapper/timeshift only fit the default btrfs layout, anything else has no snapshot config
+		if not self.has_default_btrfs_vols():
+			return None
+		snapshot_config = self.btrfs_options.snapshot_config if self.btrfs_options else None
+		return snapshot_config.snapshot_type if snapshot_config else None
+
+	# layout-wide lookups, first match across devices, shared by the installer
+	# and the bootloader pre-flight
+	def get_efi_partition(self) -> PartitionModification | None:
+		return self._first_partition(DeviceModification.get_efi_partition)
+
+	def get_boot_partition(self) -> PartitionModification | None:
+		return self._first_partition(DeviceModification.get_boot_partition)
+
+	def get_root_partition(self) -> PartitionModification | None:
+		return self._first_partition(DeviceModification.get_root_partition)
+
+	def get_root(self) -> PartitionModification | LvmVolume | None:
+		# an LVM root is a volume, the partitions under it are PVs
+		if self.lvm_config:
+			return self.lvm_config.get_root_volume()
+		return self.get_root_partition()
+
+	def _first_partition(
+		self,
+		pick: Callable[[DeviceModification], PartitionModification | None],
+	) -> PartitionModification | None:
+		for mod in self.device_modifications:
+			if partition := pick(mod):
+				return partition
+		return None
 
 
 class PartitionTable(Enum):
@@ -809,20 +843,20 @@ class BDevice:
 class PartitionType(StrEnum):
 	BOOT = auto()
 	PRIMARY = auto()
-	_UNKNOWN = 'unknown'
+	UNKNOWN = 'unknown'
 
 	@classmethod
 	def get_type_from_code(cls, code: int) -> PartitionType:
 		if code == _PED_PARTITION_NORMAL:
 			return cls.PRIMARY
 		debug(f'Partition code not supported: {code}')
-		return cls._UNKNOWN
+		return cls.UNKNOWN
 
 	def get_partition_code(self) -> int:
 		if self == PartitionType.BOOT:
 			return _PED_PARTITION_BOOT
 
-		# _UNKNOWN included: it reaches parted as a partition type, and None
+		# UNKNOWN included: it reaches parted as a partition type, and None
 		# is not one. A normal partition is the right fallback.
 		return _PED_PARTITION_NORMAL
 
@@ -960,6 +994,31 @@ def has_separate_boot(
 	# the dataclass __eq__. Comparing dev_path instead reads tidier but is
 	# wrong before partitioning, where every dev_path is still None.
 	return efi_partition is not None and boot_partition is not efi_partition
+
+
+# same set systemd mounts boot media with: partition_pick_mount_options in
+# src/shared/dissect-image.c. FAT has no on-disk perms, hence the masks
+def harden_boot_options(part_mod: PartitionModification, options: list[str]) -> list[str]:
+	if not (part_mod.is_efi() or part_mod.is_xbootldr() or part_mod.is_boot()):
+		return options
+
+	boot_opts = [BootMountOption.dev, BootMountOption.suid, BootMountOption.exec]
+
+	# by designator, not fs type: a plain /boot keeps symlinks, UKI layouts use them
+	if part_mod.is_efi() or part_mod.is_xbootldr():
+		boot_opts.append(BootMountOption.symfollow)
+
+	if part_mod.fs_type == FilesystemType.FAT32:
+		boot_opts += [BootMountOption.fmask, BootMountOption.dmask]
+
+	for opt in boot_opts:
+		# mount takes the last occurrence, so appending over an option the
+		# config already sets ('exec', 'fmask=0022') would override it
+		if any(o in (opt.name, opt.value) or o.startswith(f'{opt.name}=') for o in options):
+			continue
+		options.append(opt.value)
+
+	return options
 
 
 @dataclass
@@ -1597,6 +1656,17 @@ class DiskEncryption:
 			return dev in self.partitions and dev.mountpoint != Path('/')
 		return dev in self.lvm_volumes and dev.mountpoint != Path('/')
 
+	def encrypted_dev_paths(self) -> list[Path]:
+		# the LUKS containers a keyslot is added to: partitions for LUKS and
+		# LVM-on-LUKS, the volumes for LUKS-on-LVM
+		match self.encryption_type:
+			case EncryptionType.LUKS | EncryptionType.LVM_ON_LUKS:
+				return [p.safe_dev_path for p in self.partitions]
+			case EncryptionType.LUKS_ON_LVM:
+				return [v.safe_dev_path for v in self.lvm_volumes]
+			case EncryptionType.NO_ENCRYPTION:
+				return []
+
 	@classmethod
 	def validate_enc(
 		cls,
@@ -1713,9 +1783,9 @@ class LsblkInfo:
 		)
 
 	def to_json(self) -> str:
-		return json.dumps(self._to_dict(), indent=4)
+		return json.dumps(self.to_dict(), indent=4)
 
-	def _to_dict(self) -> dict[str, Any]:
+	def to_dict(self) -> dict[str, Any]:
 		return {
 			'name': self.name,
 			'path': str(self.path),
@@ -1738,7 +1808,7 @@ class LsblkInfo:
 			'mountpoint': str(self.mountpoint) if self.mountpoint else None,
 			'mountpoints': [str(m) for m in self.mountpoints],
 			'fsroots': [str(f) for f in self.fsroots],
-			'children': [c._to_dict() for c in self.children],
+			'children': [c.to_dict() for c in self.children],
 			'serial': self.serial,
 		}
 

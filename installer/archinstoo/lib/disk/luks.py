@@ -17,6 +17,10 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.models.users import Password
 
+# where sd-encrypt looks for <mapper>.key at boot; every keyfile writer
+# (auto-unlock slot, cryptenroll bootstrap) lands under it
+KEYFILE_DIR = Path('/etc/cryptsetup-keys.d')
+
 
 def generate_password(length: int = 64) -> str:
 	haystack = string.printable  # digits, ascii_letters, punctuation (!"#$[] etc) and whitespace
@@ -230,7 +234,7 @@ class Luks2:
 
 		# Once we store the key as ../xyzloop.key systemd-cryptsetup can
 		# automatically load this key if we name the device to "xyzloop"
-		kf_path = Path(f'/etc/cryptsetup-keys.d/{self.mapper_name}.key')
+		kf_path = KEYFILE_DIR / f'{self.mapper_name}.key'
 		key_file = target_path / kf_path.relative_to(kf_path.root)
 		crypttab_path = target_path / 'etc/crypttab'
 

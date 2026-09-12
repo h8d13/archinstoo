@@ -296,6 +296,11 @@ class SysCommandWorker:
 
 		return True
 
+	@property
+	def trace_log(self) -> bytes:
+		# everything the child wrote so far, raw
+		return self._trace_log
+
 	def decode(self, encoding: str = 'UTF-8') -> str:
 		return self._trace_log.decode(encoding)
 
@@ -338,9 +343,9 @@ class SysCommand:
 			raise KeyError('SysCommand() does not have an active session.')
 		if type(key) is slice:
 			start = key.start or 0
-			end = key.stop or len(self.session._trace_log)
+			end = key.stop or len(self.session.trace_log)
 
-			return self.session._trace_log[start:end]
+			return self.session.trace_log[start:end]
 		raise ValueError("SysCommand() doesn't have key & value pairs, only slices, SysCommand('ls')[:10] as an example.")
 
 	@override
@@ -377,7 +382,7 @@ class SysCommand:
 		if not self.session:
 			raise ValueError('No session available to decode')
 
-		val = self.session._trace_log.decode(encoding, errors=errors)
+		val = self.session.trace_log.decode(encoding, errors=errors)
 
 		if strip:
 			return val.strip()
@@ -388,9 +393,9 @@ class SysCommand:
 			raise ValueError('No session available')
 
 		if remove_cr:
-			return self.session._trace_log.replace(b'\r\n', b'\n')
+			return self.session.trace_log.replace(b'\r\n', b'\n')
 
-		return self.session._trace_log
+		return self.session.trace_log
 
 	@property
 	def exit_code(self) -> int | None:

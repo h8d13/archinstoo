@@ -154,11 +154,24 @@ over a `MenuItemGroup` of `MenuItem`s
 
 ## Edit an existing install step
 
-Built-in steps are methods on `Installer`
+`Installer`
 ([installer.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py))
-called in order from `perform_installation`. Edit the method, not the
-caller, unless reordering. Primitives reused inside any step / app /
-profile:
+orchestrates: `perform_installation` calls its methods in order, and each
+method is a thin entry into the module that does the work. Edit the module,
+keep the entry, unless reordering.
+
+| Step | Lives in |
+|---|---|
+| mount layout, key files, TPM2/FIDO2 enrollment, fstab, snapshots | `disk/` (`mount`, `keyfiles`, `cryptenroll`, `fstab`, `snapshots`) |
+| initramfs, swap file, zram, sysctl | `kernel/` |
+| bootloaders, UKI, kernel cmdline | `bootloader/install.py` |
+| users, sudo/doas, stash clone | `authentication/accounts.py`, `authentication/stash.py` |
+| locale, vconsole, keyboard, timezone | `localization/configure.py` |
+| services (enable/disable, user units, linger) | `systemd.py` |
+| mirrors, AUR bootstrap | `pm/mirrors.py`, `pm/aur.py` |
+| ISO network copy, nic files, resolved | `network/network_handler.py` |
+
+Primitives reused inside any step / app / profile (on `Installer`):
 
 - `add_additional_packages(pkgs)`, `enable_service(name|list)`.
 - `arch_chroot(cmd, run_as=None)`: run argv list in the target.

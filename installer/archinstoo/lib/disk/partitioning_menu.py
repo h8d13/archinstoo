@@ -53,7 +53,7 @@ class DiskSegment:
 
 		part_mod = PartitionModification(
 			status=ModificationStatus.CREATE,
-			type=PartitionType._UNKNOWN,
+			type=PartitionType.UNKNOWN,
 			start=self.segment.start,
 			length=self.segment.length,
 		)

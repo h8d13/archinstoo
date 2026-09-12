@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from archinstoo.lib.installer import Installer
+from archinstoo.lib.bootloader.install import refind_kernel_dir
 from archinstoo.lib.models.device import (
 	FilesystemType,
 	ModificationStatus,
@@ -128,10 +128,10 @@ def _btrfs_root(subvols: list[tuple[str, str]] | None) -> PartitionModification:
 	],
 )
 def test_refind_kernel_dir(boot_on_root: bool, subvols: list[tuple[str, str]] | None, expected: str) -> None:
-	assert Installer._refind_kernel_dir(_btrfs_root(subvols), boot_on_root=boot_on_root) == expected
+	assert refind_kernel_dir(_btrfs_root(subvols), boot_on_root=boot_on_root) == expected
 
 
 def test_refind_initrd_matches_installed_system() -> None:
 	# byte-for-byte what a real refind + ESP-at-/efi + btrfs install wrote
-	kernel_dir = Installer._refind_kernel_dir(_btrfs_root(DEFAULT_SUBVOLS), boot_on_root=True)
+	kernel_dir = refind_kernel_dir(_btrfs_root(DEFAULT_SUBVOLS), boot_on_root=True)
 	assert f'initrd={kernel_dir}initramfs-linux.img' == 'initrd=@\\boot\\initramfs-linux.img'

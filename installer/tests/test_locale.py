@@ -9,7 +9,7 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.localization import utils as loc_utils
+from archinstoo.lib.localization import catalog
 from archinstoo.lib.menu import locale_menu
 from archinstoo.lib.models.locale import LocaleConfiguration
 
@@ -156,13 +156,13 @@ def test_set_locale_non_utf8_fully_qualified(tmp_path: Path, monkeypatch: pytest
 def _use_disk_supported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	supported = tmp_path / 'SUPPORTED'
 	supported.write_text(_DISK_SUPPORTED)
-	monkeypatch.setattr(loc_utils, '_SUPPORTED_PATH', supported)
+	monkeypatch.setattr(catalog, '_SUPPORTED_PATH', supported)
 
 
 def _use_upstream_supported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, text: str = _GLIBC_SUPPORTED) -> None:
 	# no glibc copy on disk (musl/alpine host), answer the fetch instead
-	monkeypatch.setattr(loc_utils, '_SUPPORTED_PATH', tmp_path / 'absent')
-	monkeypatch.setattr(loc_utils, 'fetch_data_from_url', lambda url, **kw: text)
+	monkeypatch.setattr(catalog, '_SUPPORTED_PATH', tmp_path / 'absent')
+	monkeypatch.setattr(catalog, 'fetch_data_from_url', lambda url, **kw: text)
 
 
 def test_list_locales_from_disk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -170,31 +170,31 @@ def test_list_locales_from_disk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
 
 	# C.UTF-8 is compiled into glibc and absent from locale.gen, so it must not
 	# reach the menu even though SUPPORTED lists it
-	assert loc_utils.list_locales() == _EXPECTED_LOCALES
+	assert catalog.list_locales() == _EXPECTED_LOCALES
 
 
 def test_list_locales_fetch_matches_disk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	_use_upstream_supported(tmp_path, monkeypatch)
 
 	# "<locale>/<charset> \" converts to the same form the disk copy uses
-	assert loc_utils.list_locales() == _EXPECTED_LOCALES
+	assert catalog.list_locales() == _EXPECTED_LOCALES
 
 
 def test_list_locales_offline_falls_back_to_minimum(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	def _no_network(url: str, **kwargs: object) -> str:
 		raise ValueError(f'Unable to fetch data from url: {url}')
 
-	monkeypatch.setattr(loc_utils, '_SUPPORTED_PATH', tmp_path / 'absent')
-	monkeypatch.setattr(loc_utils, 'fetch_data_from_url', _no_network)
+	monkeypatch.setattr(catalog, '_SUPPORTED_PATH', tmp_path / 'absent')
+	monkeypatch.setattr(catalog, 'fetch_data_from_url', _no_network)
 
-	assert loc_utils.list_locales() == loc_utils._MIN_LOCALES
+	assert catalog.list_locales() == catalog._MIN_LOCALES
 
 
 def test_offered_locales_have_a_locale_gen_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	# every locale the menu offers must uncomment a line in the target's
 	# locale.gen; a builtin like C.UTF-8 leaking through fails here
 	_use_upstream_supported(tmp_path, monkeypatch)
-	offered = loc_utils.list_locales() + loc_utils._MIN_LOCALES
+	offered = catalog.list_locales() + catalog._MIN_LOCALES
 	locale_gen = ''.join(f'#{entry}  \n' for entry in offered)
 
 	for index, entry in enumerate(offered):
@@ -208,13 +208,13 @@ def test_encodings_are_scoped_to_the_language(tmp_path: Path, monkeypatch: pytes
 
 	# a language with two charsets offers both, UTF-8 first so a language
 	# switch lands on it
-	assert loc_utils.list_locale_encodings('de_DE') == ['UTF-8', 'ISO-8859-1']
+	assert catalog.list_locale_encodings('de_DE') == ['UTF-8', 'ISO-8859-1']
 	# ...and one with no UTF-8 entry offers only what it has
-	assert loc_utils.list_locale_encodings('de_DE@euro') == ['ISO-8859-15']
-	assert loc_utils.list_locale_encodings('ca_AD') == ['UTF-8', 'ISO-8859-15']
+	assert catalog.list_locale_encodings('de_DE@euro') == ['ISO-8859-15']
+	assert catalog.list_locale_encodings('ca_AD') == ['UTF-8', 'ISO-8859-15']
 	# a name that spells its own codeset leaves nothing to choose
-	assert loc_utils.list_locale_encodings('en_GB.UTF-8') == ['UTF-8']
-	assert loc_utils.list_locale_encodings('en_IL') == ['UTF-8']
+	assert catalog.list_locale_encodings('en_GB.UTF-8') == ['UTF-8']
+	assert catalog.list_locale_encodings('en_IL') == ['UTF-8']
 
 
 def test_every_scoped_pair_resolves(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -222,11 +222,11 @@ def test_every_scoped_pair_resolves(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 	# they can produce names a locale.gen entry. Unscoped, only 866 of the
 	# 15030 pairs the two menus could form did.
 	_use_disk_supported(tmp_path, monkeypatch)
-	langs = [locale.split()[0] for locale in loc_utils.list_locales()]
+	langs = [locale.split()[0] for locale in catalog.list_locales()]
 
 	index = 0
 	for sys_lang in langs:
-		for sys_enc in loc_utils.list_locale_encodings(sys_lang):
+		for sys_enc in catalog.list_locale_encodings(sys_lang):
 			index += 1
 			locale_conf, _ = _run_set_locale(tmp_path / f'root{index}', sys_lang, sys_enc, monkeypatch)
 			assert locale_conf.startswith('LANG=')

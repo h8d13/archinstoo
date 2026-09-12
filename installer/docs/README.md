@@ -64,6 +64,7 @@
 │   │   │       ├── devtools
 │   │   │       ├── editor
 │   │   │       ├── firewall
+│   │   │       ├── flatpak
 │   │   │       ├── languages
 │   │   │       ├── management
 │   │   │       ├── media_codecs
@@ -75,12 +76,15 @@
 │   │   │       └── thunderbolt
 │   │   ├── args
 │   │   ├── authentication/
+│   │   │   ├── accounts
 │   │   │   ├── authentication_menu
 │   │   │   ├── password_prompt
 │   │   │   ├── shell
+│   │   │   ├── stash
 │   │   │   └── users_menu
 │   │   ├── bootloader/
 │   │   │   ├── bootloader_menu
+│   │   │   ├── install
 │   │   │   └── validation
 │   │   ├── checkpoints
 │   │   ├── configuration
@@ -88,16 +92,21 @@
 │   │   ├── disk/
 │   │   │   ├── cleanup
 │   │   │   ├── conf
+│   │   │   ├── cryptenroll
 │   │   │   ├── device_handler
 │   │   │   ├── disk_menu
 │   │   │   ├── encryption_menu
 │   │   │   ├── fido
 │   │   │   ├── filesystem
+│   │   │   ├── fstab
+│   │   │   ├── keyfiles
 │   │   │   ├── layouts
 │   │   │   ├── luks
 │   │   │   ├── lvm
+│   │   │   ├── mount
 │   │   │   ├── partitioning_menu
 │   │   │   ├── selectors
+│   │   │   ├── snapshots
 │   │   │   ├── subvolume_menu
 │   │   │   └── utils
 │   │   ├── exceptions
@@ -109,9 +118,15 @@
 │   │   ├── interactions/
 │   │   │   ├── general_conf
 │   │   │   └── system_conf
+│   │   ├── kernel/
+│   │   │   ├── initramfs
+│   │   │   ├── swap
+│   │   │   ├── sysctl
+│   │   │   └── zram
 │   │   ├── linux_path
 │   │   ├── localization/
-│   │   │   └── utils
+│   │   │   ├── catalog
+│   │   │   └── configure
 │   │   ├── menu/
 │   │   │   ├── abstract_menu
 │   │   │   ├── list_manager
@@ -130,20 +145,22 @@
 │   │   │   ├── packages
 │   │   │   ├── service
 │   │   │   ├── swap
+│   │   │   ├── sysctl
 │   │   │   └── users
 │   │   ├── network/
 │   │   │   ├── interfaces
 │   │   │   ├── network_handler
 │   │   │   └── network_menu
 │   │   ├── output
-│   │   ├── pacman
 │   │   ├── pathnames
 │   │   ├── pm/
+│   │   │   ├── aur
 │   │   │   ├── bootstrap
 │   │   │   ├── config
 │   │   │   ├── groups
 │   │   │   ├── mirrors
-│   │   │   └── packages
+│   │   │   ├── packages
+│   │   │   └── pacman
 │   │   ├── profile/
 │   │   │   ├── base
 │   │   │   ├── config
@@ -152,6 +169,7 @@
 │   │   │   └── profiles_handler
 │   │   ├── schema_gen
 │   │   ├── schema
+│   │   ├── systemd
 │   │   ├── tui/
 │   │   │   ├── content_editor
 │   │   │   ├── curses_menu
@@ -193,5 +211,5 @@
     └── parted/
         └── __init__i
 
-29 directories, 163 files
+30 directories, 180 files
 ```

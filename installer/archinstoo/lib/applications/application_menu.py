@@ -63,6 +63,10 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			allow_reset=True,
 		)
 
+	def preview_lines(self) -> list[str]:
+		# every category preview, off the config this menu was handed
+		return [text for entry in self._item_group.items if entry.preview_action and (text := entry.preview_action(entry))]
+
 	@override
 	def run(self, additional_title: str | None = None) -> ApplicationConfiguration:
 		super().run(additional_title=additional_title)

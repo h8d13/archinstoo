@@ -30,7 +30,10 @@ from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
+from archinstoo.lib.authentication import stash
+from archinstoo.lib.disk import snapshots
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
+from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.application import (
 	Audio,
 	DevTool,
@@ -49,6 +52,7 @@ from archinstoo.lib.models.device import FilesystemType, SnapshotType
 from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.users import Shell
+from archinstoo.lib.pm import aur
 from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
@@ -138,7 +142,7 @@ SECTIONS: tuple[Section, ...] = (
 	Section('ter_fonts', lambda: installer.__ter_font_packages__, site='installation.minimal_installation'),
 	Section(
 		'swap',
-		lambda: {'zram': installer.__zram_packages__},
+		lambda: {'zram': zram.__zram_packages__},
 		site='installation.setup_swap',
 	),
 	Section(
@@ -146,7 +150,7 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
 		site='installation.create_users',
 	),
-	Section('stash', lambda: installer.__stash_packages__, site='installation.create_users'),
+	Section('stash', lambda: stash.__stash_packages__, site='installation.create_users'),
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
@@ -253,7 +257,7 @@ SECTIONS: tuple[Section, ...] = (
 		site='application_handler.install_applications',
 	),
 	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='installation.setup_btrfs_snapshot'),
-	Section('grub_extra', lambda: installer.__grub_snapshot_packages__, site='installation.setup_btrfs_snapshot'),
+	Section('grub_extra', lambda: snapshots.__grub_snapshot_packages__, site='installation.setup_btrfs_snapshot'),
 	Section(
 		'bootloaders',
 		lambda: {b.value: b.packages() for b in Bootloader},
@@ -331,7 +335,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'aur_bootstrap',
-		lambda: installer.__aur_bootstrap_packages__,
+		lambda: aur.__aur_bootstrap_packages__,
 		site='run_grimoire_installation',
 	),
 )

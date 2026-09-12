@@ -230,6 +230,11 @@ class MenuItemGroup:
 			return ' (default)'
 		return ''
 
+	@property
+	def all_items(self) -> list[MenuItem]:
+		# unfiltered: config sync must reach the items a search pattern hides
+		return self._menu_items
+
 	@cached_property
 	def items(self) -> list[MenuItem]:
 		pattern = self._filter_pattern.lower()

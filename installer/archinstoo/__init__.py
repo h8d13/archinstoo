@@ -69,13 +69,14 @@ import traceback
 from typing import TYPE_CHECKING
 
 from ._version import __gitstat__, __pkgver__, __version__
-from .lib import Pacman, output
+from .lib import output
 from .lib.checkpoints import _run_script, clean_cache, clean_logs
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.models.firmware import detect_optdeps, detect_splits
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.bootstrap import keyring_init, pacman_conf
+from .lib.pm.pacman import Pacman
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info, reload_python
 from .lib.utils.net import ping
@@ -263,12 +264,12 @@ def _prepare() -> int:
 
 
 def _log_sys_info(args: Arguments) -> None:
-	bitness = SysInfo._bitness()
+	bitness = SysInfo.bitness()
 	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
 	debug(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
 	debug(f'Memory statistics: {SysInfo.mem_total()} kB total installed')
-	debug(f'Graphics devices detected: {SysInfo._graphics_devices().keys()}')
+	debug(f'Graphics devices detected: {SysInfo.graphics_devices().keys()}')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 	debug(f'Firmware optional deps matched: {detect_optdeps()}')
 	debug(f'Firmware splits detected: {detect_splits()}')

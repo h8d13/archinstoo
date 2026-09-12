@@ -21,7 +21,7 @@ class LsblkOutput:
 		return cls(blockdevices=devices)
 
 	def to_json(self) -> str:
-		return json.dumps({'blockdevices': [d._to_dict() for d in self.blockdevices]}, indent=4)
+		return json.dumps({'blockdevices': [d.to_dict() for d in self.blockdevices]}, indent=4)
 
 
 def _fetch_lsblk_info(

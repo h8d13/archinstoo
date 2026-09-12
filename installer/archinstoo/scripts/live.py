@@ -6,12 +6,14 @@ from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_ar
 from archinstoo.lib.authentication.shell import ShellApp
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.global_menu import GlobalMenu
-from archinstoo.lib.installer import Installer, accessibility_tools_in_use, run_custom_user_commands, run_grimoire_installation
+from archinstoo.lib.installer import Installer, run_custom_user_commands
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.users import User, invoking_user
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, info
+from archinstoo.lib.pm.aur import run_grimoire_installation
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.tui import Tui
 
 
