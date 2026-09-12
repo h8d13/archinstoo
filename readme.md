@@ -106,8 +106,7 @@ Available options:
 
 The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/installer)
 
-Install steps are ordered in [`installer.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py) and implemented in the package named for the area (`disk/`, `kernel/`, `bootloader/`, `authentication/`, `localization/`, `pm/`, `network/`); search/find/replace is your friend.
-
+Install steps are ordered in [`installer.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py) here search/find/replace is your friend.
 A `man` page is also available `man -l installer/docs/archinstoo.1`
 
 ### Use cases / Docs
