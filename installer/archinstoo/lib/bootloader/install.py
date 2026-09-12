@@ -55,6 +55,17 @@ def configure_grub_btrfsd(target: Path, snapshot_type: SnapshotType) -> None:
 	override_conf.chmod(0o644)
 
 
+def luks_uuid_from_mapper_dev(mapper_dev_path: Path) -> str:
+	# rd.luks.name= wants the container UUID, lsblk reversed from the mapper
+	# device lands on it as the first parent
+	lsblk_info = get_lsblk_info(mapper_dev_path, reverse=True, full_dev_path=True)
+
+	if not lsblk_info.children or not lsblk_info.children[0].uuid:
+		raise ValueError('Unable to determine UUID of luks superblock')
+
+	return lsblk_info.children[0].uuid
+
+
 def refind_kernel_dir(root: PartitionModification | LvmVolume, *, boot_on_root: bool) -> str:
 	# Directory holding vmlinuz/initramfs in refind's backslash form,
 	# relative to the volume refind addresses. On a btrfs root nothing
@@ -134,14 +145,6 @@ class BootloaderInstaller:
 				# non-fatal: stub falls back to firmware RNG, service reseeds on boot
 				warn(f'Could not seed bootloader random seed: {err}')
 
-	def _get_luks_uuid_from_mapper_dev(self, mapper_dev_path: Path) -> str:
-		lsblk_info = get_lsblk_info(mapper_dev_path, reverse=True, full_dev_path=True)
-
-		if not lsblk_info.children or not lsblk_info.children[0].uuid:
-			raise ValueError('Unable to determine UUID of luks superblock')
-
-		return lsblk_info.children[0].uuid
-
 	def _get_kernel_params_partition(
 		self,
 		root_partition: PartitionModification,
@@ -182,12 +185,12 @@ class BootloaderInstaller:
 				if not pv_seg_info:
 					raise ValueError(f'Unable to determine PV segment info for {lvm.vg_name}/{lvm.name}')
 
-				uuid = self._get_luks_uuid_from_mapper_dev(pv_seg_info.pv_name)
+				uuid = luks_uuid_from_mapper_dev(pv_seg_info.pv_name)
 
 				debug(f'LvmOnLuks, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'rd.luks.name={uuid}=cryptlvm root={lvm.safe_dev_path}')
 			case EncryptionType.LUKS_ON_LVM:
-				uuid = self._get_luks_uuid_from_mapper_dev(lvm.mapper_path)
+				uuid = luks_uuid_from_mapper_dev(lvm.mapper_path)
 
 				debug(f'LuksOnLvm, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'rd.luks.name={uuid}=root root=/dev/mapper/root')
