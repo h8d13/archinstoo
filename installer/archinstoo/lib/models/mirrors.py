@@ -125,10 +125,7 @@ class MirrorStatusEntryV3:
 			from archinstoo.lib.hardware import SysInfo
 
 			arch = SysInfo.arch()
-			if arch == 'x86_64':
-				test_db = f'{self.url}core/os/{arch}/core.db'
-			else:
-				test_db = f'{self.url}{arch}/core/core.db'
+			test_db = f'{self.url}core/os/{arch}/core.db' if arch == 'x86_64' else f'{self.url}{arch}/core/core.db'
 
 			retry = 0
 			while retry < self._speedtest_retries and self._speed is None:
@@ -221,6 +218,10 @@ class MirrorRegion:
 		if not isinstance(other, MirrorRegion):
 			return NotImplemented
 		return self.name == other.name
+
+	@override
+	def __hash__(self) -> int:
+		return hash(self.name)
 
 
 class SignCheck(Enum):

@@ -133,9 +133,7 @@ def mount_additional_filesystems(mount_point: Path) -> None:
 
 	try:
 		with fstab_path.open() as f:
-			for line in f:
-				line = line.strip()
-
+			for line in map(str.strip, f):
 				# Skip comments and empty lines
 				if not line or line.startswith('#'):
 					continue

@@ -142,6 +142,10 @@ class Password:
 			return NotImplemented
 		return self.enc_password == other.enc_password
 
+	@override
+	def __hash__(self) -> int:
+		return hash(self.enc_password)
+
 	def hidden(self) -> str:
 		if self._plaintext:
 			return '*' * len(self._plaintext)

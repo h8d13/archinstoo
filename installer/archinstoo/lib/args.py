@@ -354,9 +354,8 @@ class ArchConfigHandler:
 
 	def _cleanup_config(self, config: Namespace | dict[str, Any]) -> dict[str, Any]:
 		clean_args = {}
-		for key, val in config.items():
-			if isinstance(val, dict):
-				val = self._cleanup_config(val)
+		for key, raw in config.items():
+			val = self._cleanup_config(raw) if isinstance(raw, dict) else raw
 
 			if val is not None:
 				clean_args[key] = val

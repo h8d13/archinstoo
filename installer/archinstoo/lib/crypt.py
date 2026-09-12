@@ -61,9 +61,7 @@ def _search_login_defs(key: str) -> str | None:
 		return None
 
 	defs = LOGIN_DEFS.read_text()
-	for line in defs.split('\n'):
-		line = line.strip()
-
+	for line in map(str.strip, defs.split('\n')):
 		if line.startswith('#'):
 			continue
 

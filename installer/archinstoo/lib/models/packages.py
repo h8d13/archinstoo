@@ -96,6 +96,10 @@ class PackageSearchResult:
 
 		return self.pkg_version == other.pkg_version
 
+	@override
+	def __hash__(self) -> int:
+		return hash(self.pkg_version)
+
 	def __lt__(self, other: PackageSearchResult) -> bool:
 		return self.pkg_version < other.pkg_version
 
@@ -140,6 +144,10 @@ class LocalPackage:
 
 		return self.version == other.version
 
+	@override
+	def __hash__(self) -> int:
+		return hash(self.version)
+
 	def __lt__(self, other: LocalPackage) -> bool:
 		return self.version < other.version
 
@@ -172,9 +180,8 @@ class AvailablePackage:
 	def info(self) -> str:
 		output = ''
 		for key, value in asdict(self).items():
-			key = key.replace('_', ' ').capitalize()
-			key = key.ljust(self.longest_key)
-			output += f'{key} : {value}\n'
+			label = key.replace('_', ' ').capitalize().ljust(self.longest_key)
+			output += f'{label} : {value}\n'
 
 		return output
 

@@ -222,13 +222,6 @@ ignore = [
                 # cycles; the rest defer optional/slow imports (parted, pty, tui)
     "RUF067",   # non-empty-init-module: __init__ holds the dep tables and main()
 
-    # deliberate idiom
-    "PLW1641",  # eq-without-hash: all 5 sites (Size, MirrorRegion, LocalPackage,
-                # PackageSearchResult, Password) hand-roll __eq__ on mutable data,
-                # unhashable is correct: revisit if anything ever needs to hash one.
-    "PLW2901",  # redefined-loop-name: every site normalizes the loop var in place
-                # (`line = line.strip()`, `key = key.replace(...)`)
-    "SIM108",   # if-else-block-instead-of-if-exp: installer.py would nest 3 ternaries
 ]
 
 [tool.ruff.lint.mccabe]

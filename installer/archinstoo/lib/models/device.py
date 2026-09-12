@@ -210,10 +210,8 @@ class DiskLayoutConfiguration:
 			for partition in entry.get('partitions', []):
 				flags = [flag for f in partition.get('flags', []) if (flag := PartitionFlag.from_string(f))]
 
-				if fs_type := partition.get('fs_type'):
-					fs_type = FilesystemType(fs_type)
-				else:
-					fs_type = None
+				raw_fs_type = partition.get('fs_type')
+				fs_type = FilesystemType(raw_fs_type) if raw_fs_type else None
 
 				device_partition = PartitionModification(
 					status=ModificationStatus(partition['status']),
@@ -531,6 +529,11 @@ class Size:
 			return NotImplemented
 
 		return self._normalize() == other._normalize()
+
+	# same key as __eq__: 1 GiB and 1024 MiB hash alike
+	@override
+	def __hash__(self) -> int:
+		return hash(self._normalize())
 
 	@override
 	def __ne__(self, other: object) -> bool:

@@ -124,10 +124,8 @@ class SysCommandWorker:
 	def __iter__(self, *args: str, **kwargs: dict[str, Any]) -> Iterator[bytes]:
 		last_line = self._trace_log.rfind(b'\n')
 		lines = filter(None, self._trace_log[self._trace_log_pos : last_line].splitlines())
-		for line in lines:
-			if self.remove_vt100_escape_codes_from_lines:
-				line = clear_vt100_escape_codes(line)
-
+		for raw in lines:
+			line = clear_vt100_escape_codes(raw) if self.remove_vt100_escape_codes_from_lines else raw
 			yield line + b'\n'
 
 		self._trace_log_pos = last_line

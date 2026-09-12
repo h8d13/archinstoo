@@ -57,8 +57,7 @@ class FormattedOutput:
 		output = ''
 		key_list = []
 		for key, width in column_width.items():
-			key = key.replace('_', ' ')
-			key_list.append(unicode_ljust(key, width))
+			key_list.append(unicode_ljust(key.replace('_', ' '), width))
 
 		output += ' | '.join(key_list) + '\n'
 		output += '-' * len(output) + '\n'

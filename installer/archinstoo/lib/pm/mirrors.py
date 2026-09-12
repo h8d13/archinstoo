@@ -531,9 +531,7 @@ class MirrorListHandler:
 		current_region = ''
 		has_countries = any(entry.strip().startswith('### ') for entry in lines)
 
-		for line in lines:
-			line = line.strip()
-
+		for line in map(str.strip, lines):
 			# ### Country (ARM mirrorlist format)
 			if line.startswith('### '):
 				current_region = line.removeprefix('### ').strip()
