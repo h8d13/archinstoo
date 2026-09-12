@@ -2104,7 +2104,7 @@ class Installer:
 				if not uki_enabled:
 					raise DiskError(f'efibootmgr could not register {kernel} and a plain kernel has no removable fallback: {err}') from err
 				esp = self.target / boot_partition.relative_mountpoint
-				fallback = esp / 'EFI/BOOT' / ('BOOTAA64.EFI' if platform.machine() == 'aarch64' else 'BOOTX64.EFI')
+				fallback = esp / 'EFI/BOOT' / ('BOOTAA64.EFI' if SysInfo.arch() == 'aarch64' else 'BOOTX64.EFI')
 				fallback.parent.mkdir(parents=True, exist_ok=True)
 				shutil.copy2(esp / 'EFI/Linux' / f'arch-{kernel}.efi', fallback)
 				warn(f'efibootmgr could not register {kernel}, copied its UKI to {fallback.relative_to(self.target)} instead: {err}')
