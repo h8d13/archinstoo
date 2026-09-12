@@ -37,8 +37,11 @@ class Initramfs:
 		]
 
 	def add_lvm(self) -> None:
+		# after block so the volume group's device is online before lvm2
+		# activates it; add_encrypt(before=LVM) then slots sd-encrypt in
+		# between, the order the wiki gives for LVM on LUKS
 		debug(f'Inserting {LVM} hook before filesystems')
-		self.hooks.insert(self.hooks.index('filesystems') - 1, LVM)
+		self.hooks.insert(self.hooks.index('filesystems'), LVM)
 
 	def add_encrypt(self, before: str = 'filesystems') -> None:
 		if 'sd-encrypt' not in self.hooks:

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.kernel.initramfs import Initramfs
+from archinstoo.lib.kernel.initramfs import LVM, Initramfs
 from archinstoo.lib.models.device import FilesystemType
 
 
@@ -52,3 +52,16 @@ def test_ntfs3_data_partition_keeps_fsck(tmp_path: Path) -> None:
 	installation._prepare_fs_type(FilesystemType.NTFS, Path('/data'))
 
 	assert 'fsck' in installation.initramfs.hooks
+
+
+def test_lvm_hook_sits_between_block_and_filesystems() -> None:
+	# https://wiki.archlinux.org/title/Dm-crypt/Encrypting_an_entire_system#Configuring_mkinitcpio_3
+	# block sd-encrypt lvm2 filesystems: the volume group needs its
+	# device online before lvm2 can activate it
+	initramfs = Initramfs()
+	initramfs.add_lvm()
+	initramfs.add_encrypt(before=LVM)
+
+	assert initramfs.hooks.index('block') < initramfs.hooks.index('sd-encrypt')
+	assert initramfs.hooks.index('sd-encrypt') < initramfs.hooks.index(LVM)
+	assert initramfs.hooks.index(LVM) < initramfs.hooks.index('filesystems')
