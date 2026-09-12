@@ -64,6 +64,7 @@
 │   │   │       ├── devtools
 │   │   │       ├── editor
 │   │   │       ├── firewall
+│   │   │       ├── flatpak
 │   │   │       ├── languages
 │   │   │       ├── management
 │   │   │       ├── media_codecs
@@ -75,12 +76,14 @@
 │   │   │       └── thunderbolt
 │   │   ├── args
 │   │   ├── authentication/
+│   │   │   ├── accounts
 │   │   │   ├── authentication_menu
 │   │   │   ├── password_prompt
 │   │   │   ├── shell
 │   │   │   └── users_menu
 │   │   ├── bootloader/
 │   │   │   ├── bootloader_menu
+│   │   │   ├── install
 │   │   │   └── validation
 │   │   ├── checkpoints
 │   │   ├── configuration
@@ -88,16 +91,21 @@
 │   │   ├── disk/
 │   │   │   ├── cleanup
 │   │   │   ├── conf
+│   │   │   ├── cryptenroll
 │   │   │   ├── device_handler
 │   │   │   ├── disk_menu
 │   │   │   ├── encryption_menu
 │   │   │   ├── fido
 │   │   │   ├── filesystem
+│   │   │   ├── fstab
+│   │   │   ├── keyfiles
 │   │   │   ├── layouts
 │   │   │   ├── luks
 │   │   │   ├── lvm
+│   │   │   ├── mount
 │   │   │   ├── partitioning_menu
 │   │   │   ├── selectors
+│   │   │   ├── snapshots
 │   │   │   ├── subvolume_menu
 │   │   │   └── utils
 │   │   ├── exceptions
@@ -105,12 +113,14 @@
 │   │   ├── global_menu
 │   │   ├── grimoire*
 │   │   ├── hardware
+│   │   ├── initramfs
 │   │   ├── installer
 │   │   ├── interactions/
 │   │   │   ├── general_conf
 │   │   │   └── system_conf
 │   │   ├── linux_path
 │   │   ├── localization/
+│   │   │   ├── configure
 │   │   │   └── utils
 │   │   ├── menu/
 │   │   │   ├── abstract_menu
@@ -130,6 +140,7 @@
 │   │   │   ├── packages
 │   │   │   ├── service
 │   │   │   ├── swap
+│   │   │   ├── sysctl
 │   │   │   └── users
 │   │   ├── network/
 │   │   │   ├── interfaces
@@ -139,6 +150,7 @@
 │   │   ├── pacman
 │   │   ├── pathnames
 │   │   ├── pm/
+│   │   │   ├── aur
 │   │   │   ├── bootstrap
 │   │   │   ├── config
 │   │   │   ├── groups
@@ -152,6 +164,9 @@
 │   │   │   └── profiles_handler
 │   │   ├── schema_gen
 │   │   ├── schema
+│   │   ├── stash
+│   │   ├── swap
+│   │   ├── systemd
 │   │   ├── tui/
 │   │   │   ├── content_editor
 │   │   │   ├── curses_menu
@@ -193,5 +208,5 @@
     └── parted/
         └── __init__i
 
-29 directories, 163 files
+29 directories, 178 files
 ```
