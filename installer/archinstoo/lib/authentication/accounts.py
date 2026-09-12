@@ -7,12 +7,10 @@ from archinstoo.lib.general import run
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.stash import clone_user_stash
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-
-# cloning a user stash
-__stash_packages__ = ['git']
 
 
 def _enable_sudo(installation: Installer, user: User, group: bool = False) -> None:
@@ -152,28 +150,7 @@ def _create_user(
 				pass  # run0/su via wheel group - no extra config needed
 
 	for stash_url in user.stash_urls:
-		_clone_user_stash(installation, user.username, stash_url)
-
-
-def _clone_user_stash(installation: Installer, username: str, stash_url: str) -> None:
-	info(f'Cloning {stash_url} for {username}')
-
-	installation.add_additional_packages(__stash_packages__)
-
-	url, _, branch = stash_url.partition('#')
-	repo_name = url.rstrip('/').split('/')[-1].removesuffix('.git')
-	stash_dir = f'/home/{username}/.stash'
-	clone_cmd = ['git', 'clone', '--depth', '1']
-	if branch:
-		clone_cmd += ['-b', branch]
-	clone_cmd += [url, f'{stash_dir}/{repo_name}']
-
-	try:
-		installation.arch_chroot(['mkdir', '-p', stash_dir])
-		installation.arch_chroot(clone_cmd)
-		installation.chown_tree(username, stash_dir)
-	except CalledProcessError as err:
-		error(f'Failed to clone stash for {username}: {err}')
+		clone_user_stash(installation, user.username, stash_url)
 
 
 def set_user_password(installation: Installer, user: User) -> bool:
