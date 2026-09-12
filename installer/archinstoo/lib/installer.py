@@ -1,12 +1,9 @@
 import os
-import shlex
-import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
-from subprocess import CompletedProcess
 from typing import TYPE_CHECKING, Self
 
-from archinstoo.lib import systemd
+from archinstoo.lib import chroot, systemd
 from archinstoo.lib.authentication import accounts
 from archinstoo.lib.bootloader.install import BootloaderInstaller
 from archinstoo.lib.disk import snapshots
@@ -17,7 +14,6 @@ from archinstoo.lib.disk.fstab import write_fstab
 from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
-from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.kernel.initramfs import Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
@@ -39,12 +35,13 @@ from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.output import debug, error, info, log, logger, warn
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
-from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
+	from subprocess import CompletedProcess
 	from types import TracebackType
 
 	from archinstoo.lib.args import ArchConfigHandler
+	from archinstoo.lib.general import SysCommand
 	from archinstoo.lib.models.locale import LocaleConfiguration
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
 	from archinstoo.lib.models.packages import Repository
@@ -279,22 +276,6 @@ class Installer:
 	def enable_services_from_config(self, services: list[str | UserService]) -> None:
 		systemd.enable_services_from_config(self, services)
 
-	@property
-	def arch_chroot_prefix(self) -> list[str]:
-		# `arch-chroot -S` runs the chroot through systemd-run, which a foreign
-		# host (Debian, ...) has no running systemd to provide; drop -S there so
-		# it falls back to plain chroot(8).
-		prefix = ['arch-chroot']
-		if not Os.running_from_foreign():
-			prefix.append('-S')
-		prefix.append(str(self.target))
-		return prefix
-
-	def run_command(self, cmd: str, peek_output: bool = False) -> SysCommand:
-		if self.target == Path('/'):
-			return SysCommand(cmd, peek_output=peek_output)
-		return SysCommand(f'{" ".join(self.arch_chroot_prefix)} {cmd}', peek_output=peek_output)
-
 	def arch_chroot(
 		self,
 		cmd: str | list[str],
@@ -302,21 +283,7 @@ class Installer:
 		peek_output: bool = False,
 		env: dict[str, str] | None = None,
 	) -> SysCommand | CompletedProcess[bytes]:
-		# argv list form avoids argv/shell-injection when arguments come from user or config input.
-		if isinstance(cmd, list):
-			if run_as:
-				cmd = ['su', '-', run_as, '-c', shlex.join(cmd)]
-			argv = cmd if self.target == Path('/') else [*self.arch_chroot_prefix, *cmd]
-			return run(argv, env=env)  # env: secrets (NEWPIN) stay off argv and out of cmd_history
-
-		if run_as:
-			cmd = f'su - {run_as} -c {shlex.quote(cmd)}'
-
-		return self.run_command(cmd, peek_output=peek_output)
-
-	def drop_to_shell(self) -> None:
-		# shell=True is intentional: gives the user a real interactive shell session.
-		subprocess.check_call(f'arch-chroot {self.target}', shell=True)  # noqa: S602
+		return chroot.arch_chroot(self.target, cmd, run_as, peek_output, env)
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		return self.initramfs.build(self, flags)
@@ -568,9 +535,7 @@ class Installer:
 		return accounts.lock_root_account(self)
 
 	def chown_tree(self, username: str, path: str) -> None:
-		# installer writes into $HOME as root; hand the tree back before first login
-		debug(f'chown -R {username}:{username} {path}')
-		self.arch_chroot(['chown', '-R', f'{username}:{username}', path])
+		chroot.chown_tree(self, username, path)
 
 	def set_locale(self, locale_config: LocaleConfiguration) -> bool:
 		return configure.set_locale(self, locale_config)
@@ -597,20 +562,3 @@ class Installer:
 
 		env_path.write_text(existing + ''.join(f'{k}={v}\n' for k, v in fresh.items()))
 		info(f'Wrote {", ".join(fresh)} to {env_path}')
-
-
-def run_custom_user_commands(commands: list[str], installation: Installer) -> None:
-	for index, command in enumerate(commands):
-		script_path = LPath(f'/var/tmp/user-command.{index}.sh')  # noqa: S108 - path inside install target, not host /tmp
-		chroot_path = installation.target / script_path.relative_to_root()
-
-		# Do not throw error instead warn
-		info(f'Executing custom command "{command}" ...')
-		chroot_path.write_text(command)
-
-		try:
-			installation.arch_chroot(f'bash {script_path}')
-		except SysCallError as e:
-			warn(f'Custom command "{command}" failed: {e}')
-		finally:
-			chroot_path.unlink()

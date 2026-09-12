@@ -5,6 +5,7 @@ import textwrap
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.chroot import chroot_prefix
 from archinstoo.lib.disk.lvm import lvm_pvseg_info
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path
 from archinstoo.lib.exceptions import DiskError, SysCallError
@@ -346,7 +347,7 @@ class BootloaderInstaller:
 		info(f'GRUB boot partition: {boot_partition.dev_path}')
 
 		command = [
-			*self._inst.arch_chroot_prefix,
+			*chroot_prefix(self.target),
 			'grub-install',
 			'--debug',
 		]

@@ -1,6 +1,7 @@
 import textwrap
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.chroot import chroot_prefix
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.bootloader import Bootloader
@@ -38,7 +39,7 @@ def setup_btrfs_snapshot(
 				continue
 
 			command = [
-				*installation.arch_chroot_prefix,
+				*chroot_prefix(installation.target),
 				'snapper',
 				'--no-dbus',
 				'-c',

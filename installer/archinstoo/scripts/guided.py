@@ -6,13 +6,14 @@ from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
 from archinstoo.lib.bootloader.validation import validate_bootloader
+from archinstoo.lib.chroot import drop_to_shell, run_custom_user_commands
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.installer import Installer, run_custom_user_commands
+from archinstoo.lib.installer import Installer
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstoo.lib.models.device import (
 	DiskLayoutType,
@@ -197,7 +198,7 @@ def perform_installation(
 
 		# If the user provided custom commands to be run post-installation
 		if args.advanced and (cc := config.custom_commands):
-			run_custom_user_commands(cc, installation)
+			run_custom_user_commands(installation, cc)
 
 		installation.genfstab()
 
@@ -233,7 +234,7 @@ def perform_installation(
 					error(f'poweroff exited {rc}')
 			case PostInstallationAction.CHROOT:
 				try:
-					installation.drop_to_shell()
+					drop_to_shell(installation.target)
 				except Exception as e:
 					error(f'Could not drop to shell: {e}')
 

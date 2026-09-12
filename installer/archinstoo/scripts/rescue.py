@@ -1,9 +1,9 @@
 import contextlib
-import subprocess
 from getpass import getpass
 from pathlib import Path
 
 from archinstoo.lib.args import get_arch_config_handler
+from archinstoo.lib.chroot import drop_to_shell
 from archinstoo.lib.disk.luks import Luks2
 from archinstoo.lib.disk.utils import get_all_lsblk_info, get_lsblk_by_mountpoint, mount
 from archinstoo.lib.exceptions import DiskError, SysCallError
@@ -420,14 +420,8 @@ def rescue() -> None:
 	info('Note: arch-chroot will automatically mount /dev, /proc, /sys, and handle DNS.')
 	info('Type "exit" to leave the chroot and return to the live environment.')
 
-	# inherit this console rather than run under SysCommand's pty: that one
-	# captures output but never feeds our stdin back in, so the shell would
-	# sit there taking no input (same call shape as Installer.drop_to_shell)
 	try:
-		proc = subprocess.run(['arch-chroot', str(mount_point)], check=False)  # noqa: S603,S607 - fixed argv, arch-chroot from $PATH
-		if proc.returncode:
-			# non-zero is normal: it carries out whatever the user last ran
-			debug(f'arch-chroot exited {proc.returncode}')
+		drop_to_shell(mount_point)
 	except KeyboardInterrupt:
 		info('\nChroot interrupted.')
 

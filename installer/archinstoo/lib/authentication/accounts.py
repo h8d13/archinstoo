@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.authentication.crypt import hash_password
 from archinstoo.lib.authentication.stash import clone_user_stash
+from archinstoo.lib.chroot import chroot_prefix
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import run
 from archinstoo.lib.models.authentication import PrivilegeEscalation
@@ -163,7 +164,7 @@ def set_user_password(installation: Installer, user: User) -> bool:
 
 	enc_password = hash_password(user.password)
 	input_data = f'{user.username}:{enc_password}'.encode()
-	cmd = [*installation.arch_chroot_prefix, 'chpasswd', '--encrypted']
+	cmd = [*chroot_prefix(installation.target), 'chpasswd', '--encrypted']
 
 	try:
 		run(cmd, input_data=input_data)

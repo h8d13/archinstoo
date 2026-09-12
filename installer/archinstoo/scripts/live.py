@@ -4,9 +4,10 @@ from pathlib import Path
 from archinstoo.lib.applications.application_handler import ApplicationHandler
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
+from archinstoo.lib.chroot import run_custom_user_commands
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.global_menu import GlobalMenu
-from archinstoo.lib.installer import Installer, run_custom_user_commands
+from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.users import User, invoking_user
 from archinstoo.lib.network.network_handler import NetworkHandler
@@ -172,7 +173,7 @@ def perform_installation(
 
 		# Custom commands
 		if args.advanced and (cc := config.custom_commands):
-			run_custom_user_commands(cc, installation)
+			run_custom_user_commands(installation, cc)
 
 		# No genfstab we're on a running system
 
