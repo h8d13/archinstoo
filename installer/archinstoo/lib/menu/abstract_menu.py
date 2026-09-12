@@ -47,14 +47,14 @@ class AbstractMenu[ValueT]:
 		self.sync_all_to_config()
 
 	def _sync_from_config(self) -> None:
-		for item in self._menu_item_group._menu_items:
+		for item in self._menu_item_group.all_items:
 			if item.key is not None and not item.key.startswith(CONFIG_KEY):
 				config_value = getattr(self._config, item.key)
 				if config_value is not None:
 					item.value = config_value
 
 	def _reset_items(self) -> None:
-		for item in self._menu_item_group._menu_items:
+		for item in self._menu_item_group.all_items:
 			if item.key and not item.key.startswith(CONFIG_KEY):
 				if isinstance(item.value, (list, dict)):
 					item.value = type(item.value)()
@@ -62,7 +62,7 @@ class AbstractMenu[ValueT]:
 					item.value = None
 
 	def sync_all_to_config(self) -> None:
-		for item in self._menu_item_group._menu_items:
+		for item in self._menu_item_group.all_items:
 			if item.key:
 				setattr(self._config, item.key, item.value)
 

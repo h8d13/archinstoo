@@ -55,7 +55,7 @@ def configure_grub_btrfsd(target: Path, snapshot_type: SnapshotType) -> None:
 	override_conf.chmod(0o644)
 
 
-def luks_uuid_from_mapper_dev(mapper_dev_path: Path) -> str:
+def _luks_uuid_from_mapper_dev(mapper_dev_path: Path) -> str:
 	# rd.luks.name= wants the container UUID, lsblk reversed from the mapper
 	# device lands on it as the first parent
 	lsblk_info = get_lsblk_info(mapper_dev_path, reverse=True, full_dev_path=True)
@@ -185,12 +185,12 @@ class BootloaderInstaller:
 				if not pv_seg_info:
 					raise ValueError(f'Unable to determine PV segment info for {lvm.vg_name}/{lvm.name}')
 
-				uuid = luks_uuid_from_mapper_dev(pv_seg_info.pv_name)
+				uuid = _luks_uuid_from_mapper_dev(pv_seg_info.pv_name)
 
 				debug(f'LvmOnLuks, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'rd.luks.name={uuid}=cryptlvm root={lvm.safe_dev_path}')
 			case EncryptionType.LUKS_ON_LVM:
-				uuid = luks_uuid_from_mapper_dev(lvm.mapper_path)
+				uuid = _luks_uuid_from_mapper_dev(lvm.mapper_path)
 
 				debug(f'LuksOnLvm, encrypted root partition, identifying by UUID: {uuid}')
 				kernel_parameters.append(f'rd.luks.name={uuid}=root root=/dev/mapper/root')
@@ -390,7 +390,7 @@ class BootloaderInstaller:
 			if SysInfo.arch() == 'aarch64':
 				# grub names its EFI target arm64, not aarch64
 				grub_target = 'arm64-efi'
-			elif SysInfo._bitness() == 64:
+			elif SysInfo.bitness() == 64:
 				grub_target = 'x86_64-efi'
 			else:
 				# https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface
@@ -539,7 +539,7 @@ class BootloaderInstaller:
 				try:
 					# see https://wiki.archlinux.org/title/Arch_boot_process
 					# mixed mode booting (32bit UEFI on x86_64 CPU)
-					efi_bitness = SysInfo._bitness()
+					efi_bitness = SysInfo.bitness()
 				except Exception as err:
 					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}') from err
 

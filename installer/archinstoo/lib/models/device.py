@@ -836,20 +836,20 @@ class BDevice:
 class PartitionType(StrEnum):
 	BOOT = auto()
 	PRIMARY = auto()
-	_UNKNOWN = 'unknown'
+	UNKNOWN = 'unknown'
 
 	@classmethod
 	def get_type_from_code(cls, code: int) -> PartitionType:
 		if code == _PED_PARTITION_NORMAL:
 			return cls.PRIMARY
 		debug(f'Partition code not supported: {code}')
-		return cls._UNKNOWN
+		return cls.UNKNOWN
 
 	def get_partition_code(self) -> int:
 		if self == PartitionType.BOOT:
 			return _PED_PARTITION_BOOT
 
-		# _UNKNOWN included: it reaches parted as a partition type, and None
+		# UNKNOWN included: it reaches parted as a partition type, and None
 		# is not one. A normal partition is the right fallback.
 		return _PED_PARTITION_NORMAL
 
@@ -1776,9 +1776,9 @@ class LsblkInfo:
 		)
 
 	def to_json(self) -> str:
-		return json.dumps(self._to_dict(), indent=4)
+		return json.dumps(self.to_dict(), indent=4)
 
-	def _to_dict(self) -> dict[str, Any]:
+	def to_dict(self) -> dict[str, Any]:
 		return {
 			'name': self.name,
 			'path': str(self.path),
@@ -1801,7 +1801,7 @@ class LsblkInfo:
 			'mountpoint': str(self.mountpoint) if self.mountpoint else None,
 			'mountpoints': [str(m) for m in self.mountpoints],
 			'fsroots': [str(f) for f in self.fsroots],
-			'children': [c._to_dict() for c in self.children],
+			'children': [c.to_dict() for c in self.children],
 			'serial': self.serial,
 		}
 

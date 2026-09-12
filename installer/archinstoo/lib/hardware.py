@@ -584,7 +584,7 @@ class SysInfo:
 		return any(line.split()[-1] == 'bcachefs' for line in text.splitlines() if line.strip())
 
 	@staticmethod
-	def _bitness() -> int | None:
+	def bitness() -> int | None:
 		return _sys_info.efi_bitness
 
 	@staticmethod
@@ -604,7 +604,7 @@ class SysInfo:
 		return _sys_info.gpu_ids
 
 	@staticmethod
-	def _graphics_devices() -> dict[str, str]:
+	def graphics_devices() -> dict[str, str]:
 		return _sys_info.graphics_devices
 
 	@staticmethod

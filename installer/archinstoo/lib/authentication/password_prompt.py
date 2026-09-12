@@ -52,7 +52,7 @@ def get_password(
 			hide_input=True,
 		).input()
 
-		if password._plaintext == result.text():
+		if password.plaintext == result.text():
 			return password
 
 		failure = 'The confirmation password did not match, please try again'

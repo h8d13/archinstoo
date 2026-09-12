@@ -286,7 +286,7 @@ class GlobalMenu(AbstractMenu[None]):
 		]
 
 		mode_group = MenuItemGroup(mode_items, sort_items=False)
-		mode_group.set_focus_by_value(Tui._mode)
+		mode_group.set_focus_by_value(Tui.mode())
 
 		mode_result = SelectMenu[str](
 			mode_group,
@@ -309,7 +309,7 @@ class GlobalMenu(AbstractMenu[None]):
 		]
 
 		accent_group = MenuItemGroup(accent_items, sort_items=False)
-		accent_group.set_focus_by_value(Tui._accent)
+		accent_group.set_focus_by_value(Tui.accent())
 
 		accent_result = SelectMenu[str](
 			accent_group,
@@ -321,16 +321,12 @@ class GlobalMenu(AbstractMenu[None]):
 		if accent_result.type_ == ResultType.Selection and (accent := accent_result.get_value()):
 			Tui.set_accent(accent)
 
-		# Apply theme changes
-		if t := Tui._t:
-			t._set_up_colors()
-			t.screen.clear()
-			t.screen.refresh()
+		Tui.apply_theme()
 
 		return preset
 
 	def _prev_theme(self, _item: MenuItem) -> str | None:
-		return f'Theme: {Tui._mode.capitalize()} / {Tui._accent.capitalize()}'
+		return f'Theme: {Tui.mode().capitalize()} / {Tui.accent().capitalize()}'
 
 	def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
 		return ApplicationMenu(preset, advanced=self._advanced).run()
@@ -414,7 +410,7 @@ class GlobalMenu(AbstractMenu[None]):
 		# the application menu already previews every category off the config
 		# it is handed; read those rather than naming each category again here
 		menu = ApplicationMenu(item.value, advanced=True)
-		lines = [text for entry in menu._item_group.items if entry.preview_action and (text := entry.preview_action(entry))]
+		lines = menu.preview_lines()
 		return '\n'.join(lines) + '\n' if lines else None
 
 	def _prev_tz(self, item: MenuItem) -> str | None:

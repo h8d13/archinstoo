@@ -1491,6 +1491,24 @@ class Tui:
 	def set_accent(cls, accent: str) -> None:
 		cls._accent = accent
 
+	@classmethod
+	def mode(cls) -> str:
+		return cls._mode
+
+	@classmethod
+	def accent(cls) -> str:
+		return cls._accent
+
+	@classmethod
+	def apply_theme(cls) -> None:
+		# repaint a live screen with the current mode/accent; before init there
+		# is nothing to repaint, init builds the palette from them itself
+		if cls._t is None:
+			return
+		cls._t._set_up_colors()
+		cls._t.screen.clear()
+		cls._t.screen.refresh()
+
 	def _set_up_colors(self) -> None:
 		theme = _build_theme(Tui._mode, Tui._accent)
 		# Get background color from NORMAL style
