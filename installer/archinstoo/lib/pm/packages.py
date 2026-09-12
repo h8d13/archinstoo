@@ -1,7 +1,7 @@
 from dataclasses import fields
 from functools import lru_cache
 
-from archinstoo.lib.models.packages import AvailablePackage, LocalPackage
+from archinstoo.lib.models.packages import AvailablePackage
 from archinstoo.lib.output import debug
 from archinstoo.lib.pacman import Pacman
 
@@ -41,7 +41,7 @@ def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] 
 			current_package.append(dec_line)
 
 			if dec_line.startswith('Validated') and current_package:
-				detailed = _parse_package_output(current_package, AvailablePackage)
+				detailed = _parse_package_output(current_package)
 				# Find matching package and update it
 				for p in to_enrich:
 					if p.name == detailed.name:
@@ -83,12 +83,9 @@ def _normalize_key_name(key: str) -> str:
 	return key.strip().lower().replace(' ', '_')
 
 
-def _parse_package_output[PackageType: (AvailablePackage, LocalPackage)](
-	package_meta: list[str],
-	cls: type[PackageType],
-) -> PackageType:
+def _parse_package_output(package_meta: list[str]) -> AvailablePackage:
 	package: dict[str, str] = {}
-	valid_fields = {f.name for f in fields(cls)}
+	valid_fields = {f.name for f in fields(AvailablePackage)}
 	current_key: str | None = None
 
 	for line in package_meta:
@@ -108,4 +105,4 @@ def _parse_package_output[PackageType: (AvailablePackage, LocalPackage)](
 			else:
 				current_key = None
 
-	return cls(**package)
+	return AvailablePackage(**package)

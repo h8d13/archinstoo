@@ -1,5 +1,4 @@
 import json
-import platform
 import re
 import tarfile
 import tempfile
@@ -7,6 +6,7 @@ from compression.zstd import ZstdFile
 from pathlib import Path
 from typing import NamedTuple
 
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug, info
 from archinstoo.lib.pacman import Pacman
 from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF, PACMAN_GNUPG
@@ -47,9 +47,8 @@ class _Sources(NamedTuple):
 
 def _sources() -> _Sources:
 	# Single branch for the whole bootstrap: another arch means one more entry
-	# here, not conditionals scattered down the file. platform, not SysInfo:
-	# this runs before the lib's deps are bootstrapped.
-	arch = platform.machine()
+	# here, not conditionals scattered down the file.
+	arch = SysInfo.arch()
 	if arch == 'x86_64':
 		return _Sources(_PACMAN_CONF_URL, _KEYRING_MIRROR, 'archlinux-keyring', 'archlinux')
 	return _Sources(_ARM_PACMAN_CONF_URL, _ARM_KEYRING_MIRROR.format(arch=arch), 'archlinuxarm-keyring', 'archlinuxarm')
@@ -63,7 +62,7 @@ def _has_repos() -> bool:
 
 
 def _build_mirrorlist() -> str:
-	if platform.machine() != 'x86_64':
+	if SysInfo.arch() != 'x86_64':
 		# No mirror-status API off x86_64; the packaged mirrorlist already ships
 		# its geo-balanced server uncommented, so take it verbatim.
 		info(f'Fetching mirrorlist from {_ARM_MIRRORLIST_URL}...')
@@ -95,7 +94,7 @@ def pacman_conf() -> None:
 	conf = re.sub(r'^DownloadUser\s*=.*\n', '', conf, flags=re.MULTILINE)
 	# Packaging templates leave Architecture = @CARCH@ for build time to fill;
 	# no-op on a conf that ships already substituted.
-	conf = conf.replace('@CARCH@', platform.machine())
+	conf = conf.replace('@CARCH@', SysInfo.arch())
 	PACMAN_CONF.write_text(conf)
 
 

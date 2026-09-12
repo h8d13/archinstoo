@@ -1,45 +1,7 @@
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from functools import cached_property
-from typing import Self, TypedDict
-
-
-class PackageSearchResultSerialization(TypedDict):
-	pkgname: str
-	pkgbase: str
-	repo: str
-	arch: str
-	pkgver: str
-	pkgrel: str
-	epoch: int
-	pkgdesc: str
-	url: str
-	filename: str
-	compressed_size: int
-	installed_size: int
-	build_date: str
-	last_update: str
-	flag_date: str | None
-	maintainers: list[str]
-	packager: str
-	groups: list[str]
-	licenses: list[str]
-	conflicts: list[str]
-	provides: list[str]
-	replaces: list[str]
-	depends: list[str]
-	optdepends: list[str]
-	makedepends: list[str]
-	checkdepends: list[str]
-
-
-class PackageSearchSerialization(TypedDict):
-	version: int
-	limit: int
-	valid: bool
-	num_pages: int
-	page: int
-	results: list[PackageSearchResultSerialization]
+from typing import Self
 
 
 class Repository(Enum):
@@ -50,74 +12,6 @@ class Repository(Enum):
 	MultilibTesting = 'multilib-testing'
 	CoreTesting = 'core-testing'
 	ExtraTesting = 'extra-testing'
-
-
-@dataclass
-class PackageSearchResult:
-	pkgname: str
-	pkgbase: str
-	repo: str
-	arch: str
-	pkgver: str
-	pkgrel: str
-	epoch: int
-	pkgdesc: str
-	url: str
-	filename: str
-	compressed_size: int
-	installed_size: int
-	build_date: str
-	last_update: str
-	flag_date: str | None
-	maintainers: list[str]
-	packager: str
-	groups: list[str]
-	licenses: list[str]
-	conflicts: list[str]
-	provides: list[str]
-	replaces: list[str]
-	depends: list[str]
-	optdepends: list[str]
-	makedepends: list[str]
-	checkdepends: list[str]
-
-	@classmethod
-	def from_json(cls, data: PackageSearchResultSerialization) -> Self:
-		return cls(**data)
-
-
-@dataclass
-class PackageSearch:
-	version: int
-	limit: int
-	valid: bool
-	num_pages: int
-	page: int
-	results: list[PackageSearchResult]
-
-	@classmethod
-	def from_json(cls, data: PackageSearchSerialization) -> Self:
-		results = [PackageSearchResult.from_json(r) for r in data['results']]
-
-		return cls(
-			version=data['version'],
-			limit=data['limit'],
-			valid=data['valid'],
-			num_pages=data['num_pages'],
-			page=data['page'],
-			results=results,
-		)
-
-
-@dataclass
-class LocalPackage:
-	name: str
-	version: str
-	description: str
-	architecture: str
-	url: str
-	licenses: str
-	groups: str
 
 
 @dataclass

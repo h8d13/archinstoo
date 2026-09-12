@@ -29,7 +29,7 @@ from .kernel import DEFAULT_KERNEL, Kernel
 from .locale import LocaleConfiguration
 from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
-from .packages import LocalPackage, PackageSearch, PackageSearchResult, Repository
+from .packages import Repository
 from .service import UserService
 from .swap import SwapConfiguration, ZramAlgorithm
 from .users import PasswordStrength, User
@@ -51,7 +51,6 @@ __all__ = [
 	'EncryptionType',
 	'FilesystemType',
 	'Kernel',
-	'LocalPackage',
 	'LocaleConfiguration',
 	'LsblkInfo',
 	'LvmConfiguration',
@@ -63,8 +62,6 @@ __all__ = [
 	'NetworkConfiguration',
 	'Nic',
 	'NicType',
-	'PackageSearch',
-	'PackageSearchResult',
 	'PacmanConfiguration',
 	'PartitionFlag',
 	'PartitionModification',
