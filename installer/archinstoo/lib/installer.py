@@ -32,7 +32,6 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.models.network import ISO_PSK_EXTRA
 from archinstoo.lib.output import debug, error, info, log, logger, warn
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
 from archinstoo.lib.pm import Pacman
@@ -49,7 +48,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.args import ArchConfigHandler
 	from archinstoo.lib.models.locale import LocaleConfiguration
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
-	from archinstoo.lib.models.network import Nic
 	from archinstoo.lib.models.packages import Repository
 	from archinstoo.lib.models.service import UserService
 	from archinstoo.lib.models.swap import SwapConfiguration
@@ -456,99 +454,6 @@ class Installer:
 	def drop_to_shell(self) -> None:
 		# shell=True is intentional: gives the user a real interactive shell session.
 		subprocess.check_call(f'arch-chroot {self.target}', shell=True)  # noqa: S602
-
-	def configure_nic(self, nic: Nic) -> None:
-		conf = nic.as_systemd_config()
-
-		with (self.target / f'etc/systemd/network/10-{nic.iface}.network').open('a') as netconf:
-			netconf.write(str(conf))
-		info(f'Wrote network config for {nic.iface}')
-
-	def use_resolved(self) -> None:
-		# every network type; the stub symlink is what switches NetworkManager
-		# to dns=systemd-resolved https://wiki.archlinux.org/title/Systemd-resolved#DNS
-		self.enable_service('systemd-resolved')
-
-		resolv = self.target / 'etc/resolv.conf'
-		resolv.unlink(missing_ok=True)
-
-		# the stub only resolves once systemd-resolved runs on the target. From a
-		# foreign (non-systemd) host that flow isn't guaranteed, so copy the
-		# host's working resolv.conf content instead of a dangling symlink.
-		if Os.running_from_foreign():
-			host_resolv = Path('/etc/resolv.conf')
-			if host_resolv.is_file():  # follows symlink, False if dangling
-				resolv.write_text(host_resolv.read_text())
-				debug(f'Copied host {host_resolv} to target (foreign host)')
-			else:
-				debug('No host /etc/resolv.conf to copy, leaving target unset')
-			return
-
-		resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
-		debug(f'Linked {resolv} to systemd-resolved stub')
-
-	def copy_iso_network_config(self, enable_services: bool = False) -> bool:
-		# Live mode targets the running system: configs already in place,
-		# copying a path onto itself raises OSError (Errno 22). Skip the
-		# copies, keep service enablement.
-		on_host = self.target == Path('/')
-
-		# Copy (if any) iwd password and config files
-		iwd_dir = LPath('/var/lib/iwd')
-		if psk_files := list(iwd_dir.glob('*.psk')):
-			info(f'Copying {len(psk_files)} iwd profile(s) to target')
-			if not on_host:
-				iwd_target = self.target / iwd_dir.relative_to_root()
-				iwd_target.mkdir(parents=True, exist_ok=True)
-
-				for psk in psk_files:
-					psk.copy(iwd_target / psk.name, preserve_metadata=True)
-
-			if enable_services:
-				# If we haven't installed the base yet (function called pre-maturely)
-				if self._helper_flags.get('base', False) is False:
-					self._base_packages.extend(ISO_PSK_EXTRA)
-
-					# This function will be called after minimal_installation()
-					# as a hook for post-installs. This hook is only needed if
-					# base is not installed yet.
-					def post_install_enable_iwd_service() -> None:
-						self.enable_service('iwd')
-
-					self.post_base_install.append(post_install_enable_iwd_service)
-				# Otherwise, we can go ahead and add the required package
-				# and enable it's service:
-				else:
-					self.pacman.strap(ISO_PSK_EXTRA)
-					self.enable_service('iwd')
-
-		# Copy (if any) systemd-networkd config files
-		network_dir = LPath('/etc/systemd/network')
-		if netconfigurations := list(network_dir.glob('*')):
-			info(f'Copying {len(netconfigurations)} systemd-networkd config(s) to target')
-			if not on_host:
-				network_target = self.target / network_dir.relative_to_root()
-				network_target.mkdir(parents=True, exist_ok=True)
-
-				for netconf_file in netconfigurations:
-					netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
-
-			if enable_services:
-				# If we haven't installed the base yet (function called pre-maturely)
-				if self._helper_flags.get('base', False) is False:
-
-					def post_install_enable_networkd() -> None:
-						self.enable_service('systemd-networkd')
-
-					self.post_base_install.append(post_install_enable_networkd)
-				# Otherwise, we can go ahead and enable the service
-				else:
-					self.enable_service('systemd-networkd')
-
-		if not psk_files and not netconfigurations:
-			debug('No iwd profiles or systemd-networkd configs found on ISO')
-
-		return True
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		with (self.target / 'etc/mkinitcpio.conf').open('r+') as mkinit:

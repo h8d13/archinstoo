@@ -1,12 +1,14 @@
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.network import NM_DESKTOP_EXTRA, MacAddressPolicy, NicType
+from archinstoo.lib.linux_path import LPath
+from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, MacAddressPolicy, NicType
 from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.network import DnsConfiguration, NetworkConfiguration
+	from archinstoo.lib.models.network import DnsConfiguration, NetworkConfiguration, Nic
 	from archinstoo.lib.profile.config import ProfileConfiguration
 
 
@@ -20,9 +22,7 @@ class NetworkHandler:
 		info('Writing network configuration...')
 		match network_config.type:
 			case NicType.ISO:
-				installation.copy_iso_network_config(
-					enable_services=True,
-				)
+				_copy_iso_network_config(installation, enable_services=True)
 			case NicType.NM | NicType.NM_IWD:
 				installation.add_additional_packages(network_config.type.packages)
 
@@ -43,10 +43,10 @@ class NetworkHandler:
 
 			case NicType.MANUAL:
 				for nic in network_config.nics:
-					installation.configure_nic(nic)
+					_configure_nic(installation, nic)
 				installation.enable_service('systemd-networkd')
 
-		installation.use_resolved()
+		_use_resolved(installation)
 
 		if network_config.dns:
 			_configure_dns(installation, network_config.dns)
@@ -118,3 +118,75 @@ def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacA
 	link_dir.mkdir(parents=True, exist_ok=True)
 	(link_dir / '00-mac-address.link').write_text(mac.as_link_config())
 	debug(f'Wrote {link_dir / "00-mac-address.link"}')
+
+
+def _copy_iso_network_config(installation: Installer, enable_services: bool = False) -> None:
+	# Live mode targets the running system: configs already in place,
+	# copying a path onto itself raises OSError (Errno 22). Skip the
+	# copies, keep service enablement.
+	on_host = installation.target == Path('/')
+
+	# Copy (if any) iwd password and config files
+	iwd_dir = LPath('/var/lib/iwd')
+	if psk_files := list(iwd_dir.glob('*.psk')):
+		info(f'Copying {len(psk_files)} iwd profile(s) to target')
+		if not on_host:
+			iwd_target = installation.target / iwd_dir.relative_to_root()
+			iwd_target.mkdir(parents=True, exist_ok=True)
+
+			for psk in psk_files:
+				psk.copy(iwd_target / psk.name, preserve_metadata=True)
+
+		if enable_services:
+			# every script runs this after minimal_installation, the target takes packages
+			installation.add_additional_packages(ISO_PSK_EXTRA)
+			installation.enable_service('iwd')
+
+	# Copy (if any) systemd-networkd config files
+	network_dir = LPath('/etc/systemd/network')
+	if netconfigurations := list(network_dir.glob('*')):
+		info(f'Copying {len(netconfigurations)} systemd-networkd config(s) to target')
+		if not on_host:
+			network_target = installation.target / network_dir.relative_to_root()
+			network_target.mkdir(parents=True, exist_ok=True)
+
+			for netconf_file in netconfigurations:
+				netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
+
+		if enable_services:
+			installation.enable_service('systemd-networkd')
+
+	if not psk_files and not netconfigurations:
+		debug('No iwd profiles or systemd-networkd configs found on ISO')
+
+
+def _configure_nic(installation: Installer, nic: Nic) -> None:
+	conf = nic.as_systemd_config()
+
+	with (installation.target / f'etc/systemd/network/10-{nic.iface}.network').open('a') as netconf:
+		netconf.write(str(conf))
+	info(f'Wrote network config for {nic.iface}')
+
+
+def _use_resolved(installation: Installer) -> None:
+	# every network type; the stub symlink is what switches NetworkManager
+	# to dns=systemd-resolved https://wiki.archlinux.org/title/Systemd-resolved#DNS
+	installation.enable_service('systemd-resolved')
+
+	resolv = installation.target / 'etc/resolv.conf'
+	resolv.unlink(missing_ok=True)
+
+	# the stub only resolves once systemd-resolved runs on the target. From a
+	# foreign (non-systemd) host that flow isn't guaranteed, so copy the
+	# host's working resolv.conf content instead of a dangling symlink.
+	if Os.running_from_foreign():
+		host_resolv = Path('/etc/resolv.conf')
+		if host_resolv.is_file():  # follows symlink, False if dangling
+			resolv.write_text(host_resolv.read_text())
+			debug(f'Copied host {host_resolv} to target (foreign host)')
+		else:
+			debug('No host /etc/resolv.conf to copy, leaving target unset')
+		return
+
+	resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
+	debug(f'Linked {resolv} to systemd-resolved stub')
