@@ -2,8 +2,12 @@ import ctypes
 import secrets
 from ctypes.util import find_library
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.output import debug
+
+if TYPE_CHECKING:
+	from archinstoo.lib.models.users import Password
 
 
 def _load_libcrypt() -> ctypes.CDLL:
@@ -141,3 +145,8 @@ def crypt_yescrypt(plaintext: str) -> str:
 		raise ValueError('crypt() failed for both yescrypt and SHA-512')
 
 	return sha512
+
+
+def hash_password(password: Password) -> str:
+	# a config already carries the hash, the menu only the plaintext
+	return password.enc_password or crypt_yescrypt(password.plaintext)
