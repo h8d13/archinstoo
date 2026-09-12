@@ -14,7 +14,7 @@ from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.kernel.initramfs import Initramfs
+from archinstoo.lib.kernel.initramfs import LVM, Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
 from archinstoo.lib.kernel.sysctl import write_sysctl
 from archinstoo.lib.kernel.zram import setup_zram
@@ -57,7 +57,6 @@ __base_packages__ = ['base', 'mkinitcpio']
 # Package sets minimal_installation() and the steps after it add conditionally.
 # Named rather than inlined so schema_gen can read the same list the installer
 # straps, instead of a transcription of it.
-LVM = 'lvm2'  # package and mkinitcpio hook share the name
 __lvm_packages__ = [LVM]
 # out-of-tree module, built per kernel: every selected kernel also pulls -headers
 __bcachefs_packages__ = ['bcachefs-dkms']
@@ -281,22 +280,10 @@ class Installer:
 			self._disable_fstrim = True
 
 		if fs_type == FilesystemType.BCACHEFS:
-			if 'bcachefs' not in self.initramfs.modules:
-				debug('Adding bcachefs module to initramfs')
-				self.initramfs.modules.append('bcachefs')
-			if 'bcachefs' not in self.initramfs.hooks and 'block' in self.initramfs.hooks:
-				debug('Inserting bcachefs hook after block')
-				self.initramfs.hooks.insert(self.initramfs.hooks.index('block') + 1, 'bcachefs')
+			self.initramfs.add_bcachefs()
 
-		# There is not yet an fsck tool for NTFS. If it's being used for the root filesystem, the hook should be removed.
-		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target and 'fsck' in self.initramfs.hooks:
-			debug('Removing fsck hook: no fsck tool for ntfs3 root')
-			self.initramfs.hooks.remove('fsck')
-
-	def _prepare_encrypt(self, before: str = 'filesystems') -> None:
-		if 'sd-encrypt' not in self.initramfs.hooks:
-			debug(f'Inserting sd-encrypt hook before {before}')
-			self.initramfs.hooks.insert(self.initramfs.hooks.index(before), 'sd-encrypt')
+		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target:
+			self.initramfs.drop_fsck()
 
 	def minimal_installation(
 		self,
@@ -313,8 +300,7 @@ class Installer:
 
 		if self._disk_config.lvm_config:
 			self.add_additional_packages(__lvm_packages__)
-			debug(f'Inserting {LVM} hook before filesystems')
-			self.initramfs.hooks.insert(self.initramfs.hooks.index('filesystems') - 1, LVM)
+			self.initramfs.add_lvm()
 
 			for vg in self._disk_config.lvm_config.vol_groups:
 				for vol in vg.volumes:
@@ -323,7 +309,7 @@ class Installer:
 
 			types = (EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM)
 			if self._disk_encryption.encryption_type in types:
-				self._prepare_encrypt(LVM)
+				self.initramfs.add_encrypt(before=LVM)
 		else:
 			for mod in self._disk_config.device_modifications:
 				for part in mod.partitions:
@@ -333,7 +319,7 @@ class Installer:
 					self._prepare_fs_type(part.fs_type, part.mountpoint)
 
 					if part in self._disk_encryption.partitions:
-						self._prepare_encrypt()
+						self.initramfs.add_encrypt()
 
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(__fido2_packages__)
