@@ -1,4 +1,4 @@
-from .utils import (
+from .catalog import (
 	list_keyboard_languages,
 	list_locale_encodings,
 	list_locales,

@@ -1,7 +1,7 @@
 import threading
 from enum import Enum
 
-from archinstoo.lib.localization.utils import list_timezones
+from archinstoo.lib.localization.catalog import list_timezones
 from archinstoo.lib.models.packages import AvailablePackage, PackageGroup
 from archinstoo.lib.pm import enrich_package_info, list_available_packages
 from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui

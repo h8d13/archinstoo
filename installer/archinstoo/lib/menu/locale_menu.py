@@ -1,6 +1,6 @@
 from typing import override
 
-from archinstoo.lib.localization.utils import (
+from archinstoo.lib.localization.catalog import (
 	list_console_fonts,
 	list_keyboard_languages,
 	list_locale_encodings,

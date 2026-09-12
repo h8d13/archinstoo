@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.localization.utils import locale_encoding, split_locale_name, uncomment_locale
+from archinstoo.lib.localization.catalog import locale_encoding, split_locale_name, uncomment_locale
 from archinstoo.lib.output import debug, error, info, warn
 
 if TYPE_CHECKING:
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.locale import LocaleConfiguration
 
 # writes the target's locale, console and graphical keyboard files; the
-# listings and validation the menus use live in utils.py
+# listings and validation the menus use live in catalog.py
 
 
 def set_locale(installation: Installer, locale_config: LocaleConfiguration) -> bool:
