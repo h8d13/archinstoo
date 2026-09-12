@@ -288,6 +288,13 @@ class DiskLayoutConfiguration:
 
 		return False
 
+	def btrfs_snapshot_type(self) -> SnapshotType | None:
+		# snapper/timeshift only fit the default btrfs layout, anything else has no snapshot config
+		if not self.has_default_btrfs_vols():
+			return None
+		snapshot_config = self.btrfs_options.snapshot_config if self.btrfs_options else None
+		return snapshot_config.snapshot_type if snapshot_config else None
+
 	# layout-wide lookups, first match across devices: the installer and the
 	# bootloader pre-flight want the same answer and used to loop separately
 	def get_efi_partition(self) -> PartitionModification | None:

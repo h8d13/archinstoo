@@ -30,6 +30,7 @@ from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
+from archinstoo.lib.disk import snapshots
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
 from archinstoo.lib.models.application import (
 	Audio,
@@ -254,7 +255,7 @@ SECTIONS: tuple[Section, ...] = (
 		site='application_handler.install_applications',
 	),
 	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='installation.setup_btrfs_snapshot'),
-	Section('grub_extra', lambda: installer.__grub_snapshot_packages__, site='installation.setup_btrfs_snapshot'),
+	Section('grub_extra', lambda: snapshots.__grub_snapshot_packages__, site='installation.setup_btrfs_snapshot'),
 	Section(
 		'bootloaders',
 		lambda: {b.value: b.packages() for b in Bootloader},

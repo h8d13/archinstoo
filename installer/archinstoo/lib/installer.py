@@ -9,7 +9,8 @@ from subprocess import CompletedProcess
 from typing import TYPE_CHECKING, Self
 
 from archinstoo.lib.authentication import accounts
-from archinstoo.lib.bootloader.install import BootloaderInstaller, configure_grub_btrfsd
+from archinstoo.lib.bootloader.install import BootloaderInstaller
+from archinstoo.lib.disk import snapshots
 from archinstoo.lib.disk.cleanup import teardown_layout
 from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
 from archinstoo.lib.disk.device_handler import DeviceHandler
@@ -74,8 +75,6 @@ __fido2_packages__ = ['libfido2']
 # fonts that are in the ISO but wont be on target unless requested before base,
 # otherwise mkinitcpio will be screaming at you
 __ter_font_packages__ = ['terminus-font']
-# grub integration for either snapshot tool
-__grub_snapshot_packages__ = ['grub-btrfs', 'inotify-tools']
 
 # Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
@@ -719,63 +718,8 @@ class Installer:
 			info(f'Running post-installation hook: {function}')
 			function()
 
-	def _btrfs_snapshot_type(self) -> SnapshotType | None:
-		if not self._disk_config.has_default_btrfs_vols():
-			return None
-		btrfs_options = self._disk_config.btrfs_options
-		snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
-		return snapshot_config.snapshot_type if snapshot_config else None
-
-	def setup_btrfs_snapshot(
-		self,
-		snapshot_type: SnapshotType,
-		bootloader: Bootloader | None = None,
-	) -> None:
-		if snapshot_type == SnapshotType.Snapper:
-			debug('Setting up Btrfs snapper')
-			self.pacman.strap(snapshot_type.packages)
-
-			snapper: dict[str, str] = {
-				'root': '/',
-				'home': '/home',
-			}
-
-			for config_name, mountpoint in snapper.items():
-				# snapper create-config makes its own .snapshots subvolume and errors if one exists
-				# (e.g. a manual layout that pre-created it); skip rather than abort the whole install
-				if (self.target / mountpoint.lstrip('/') / '.snapshots').exists():
-					info(f'snapper: .snapshots already present at {mountpoint}, skipping create-config')
-					continue
-
-				command = [
-					*self.arch_chroot_prefix,
-					'snapper',
-					'--no-dbus',
-					'-c',
-					config_name,
-					'create-config',
-					mountpoint,
-				]
-
-				try:
-					SysCommand(command, peek_output=True)
-				except SysCallError as err:
-					raise DiskError(f'Could not setup Btrfs snapper: {err}') from err
-
-			self.enable_service('snapper-timeline.timer')
-			self.enable_service('snapper-cleanup.timer')
-
-		elif snapshot_type == SnapshotType.Timeshift:
-			debug('Setting up Btrfs timeshift')
-
-			self.pacman.strap(snapshot_type.packages)
-			self.enable_service('cronie')
-
-		if bootloader and bootloader == Bootloader.Grub:
-			debug('Setting up grub integration for either')
-			self.pacman.strap(__grub_snapshot_packages__)
-			configure_grub_btrfsd(self.target, snapshot_type)
-			self.enable_service('grub-btrfsd')
+	def setup_btrfs_snapshot(self, snapshot_type: SnapshotType, bootloader: Bootloader | None = None) -> None:
+		snapshots.setup_btrfs_snapshot(self, snapshot_type, bootloader)
 
 	def setup_swap(self, config: SwapConfiguration) -> None:
 		if config.zram:
@@ -851,7 +795,7 @@ class Installer:
 				removable = False
 
 		# grub-btrfs cannot consume a UKI for snapshot entries; keep standalone initramfs alongside.
-		keep_standalone = uki_enabled and bootloader == Bootloader.Grub and self._btrfs_snapshot_type() is not None
+		keep_standalone = uki_enabled and bootloader == Bootloader.Grub and self._disk_config.btrfs_snapshot_type() is not None
 
 		BootloaderInstaller(self, self._disk_encryption, self._kernel_params, self._zram_enabled).install(
 			bootloader,

@@ -17,42 +17,12 @@ from archinstoo.lib.models.device import (
 	EncryptionType,
 	LvmVolume,
 	PartitionModification,
-	SnapshotType,
 	has_separate_boot,
 )
 from archinstoo.lib.output import debug, error, info, warn
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-
-
-def configure_grub_btrfsd(target: Path, snapshot_type: SnapshotType) -> None:
-	if snapshot_type == SnapshotType.Timeshift:
-		snapshot_path = '--timeshift-auto'
-	elif snapshot_type == SnapshotType.Snapper:
-		snapshot_path = '/.snapshots'
-	else:
-		raise ValueError('Unsupported snapshot type')
-
-	debug(f'Configuring grub-btrfsd service for {snapshot_type} at {snapshot_path}')
-
-	# Works for either snapper or ts just adapting default paths above
-	# https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#id-1.14.3
-	systemd_dir = target / 'etc/systemd/system/grub-btrfsd.service.d'
-	systemd_dir.mkdir(parents=True, exist_ok=True)
-
-	override_conf = systemd_dir / 'override.conf'
-
-	config_content = textwrap.dedent(
-		"""
-		[Service]
-		ExecStart=
-		ExecStart=/usr/bin/grub-btrfsd --syslog {snapshot_path}
-		"""
-	).format(snapshot_path=snapshot_path)
-
-	override_conf.write_text(config_content)
-	override_conf.chmod(0o644)
 
 
 def _luks_uuid_from_mapper_dev(mapper_dev_path: Path) -> str:
