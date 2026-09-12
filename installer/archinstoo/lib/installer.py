@@ -282,7 +282,7 @@ class Installer:
 		if fs_type == FilesystemType.BCACHEFS:
 			self.initramfs.add_bcachefs()
 
-		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == self.target:
+		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == Path('/'):
 			self.initramfs.drop_fsck()
 
 	def minimal_installation(
