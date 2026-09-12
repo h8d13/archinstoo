@@ -639,6 +639,14 @@ class SysInfo:
 		return None
 
 	@staticmethod
+	def ucode() -> Path | None:
+		# a VM gets its microcode from the hypervisor, the image would only
+		# be dead weight in /boot
+		if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
+			return vendor.get_ucode()
+		return None
+
+	@staticmethod
 	def cpu_model() -> str | None:
 		return _sys_info.cpu_info.get('model name', None)
 
