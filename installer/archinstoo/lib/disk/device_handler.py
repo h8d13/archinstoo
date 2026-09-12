@@ -50,7 +50,6 @@ from archinstoo.lib.models.device import (
 	_PartitionInfo,
 )
 from archinstoo.lib.output import debug, error, info
-from archinstoo.lib.pathnames import ARCHISO_MOUNTPOINT
 
 from .luks import Luks2, unlock_luks2_dev
 from .utils import (
@@ -143,7 +142,7 @@ class DeviceHandler:
 				continue
 
 			# exclude archiso loop device
-			if dev_lsblk_info.mountpoint == ARCHISO_MOUNTPOINT:
+			if dev_lsblk_info.mountpoint == Path('/run/archiso/airootfs'):
 				continue
 
 			try:

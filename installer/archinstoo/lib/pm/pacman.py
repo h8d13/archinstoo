@@ -3,15 +3,20 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
+from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, error, info, logger, warn
-from archinstoo.lib.pathnames import PACMAN_CONF, PACMAN_GNUPG
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+
+# pacman's own files on the running system; under a target, relative_to_root()
+PACMAN_CONF: Final = LPath('/etc/pacman.conf')
+PACMAN_GNUPG: Final = LPath('/etc/pacman.d/gnupg')
+MIRRORLIST: Final = LPath('/etc/pacman.d/mirrorlist')
 
 
 # Helpers for exceptions

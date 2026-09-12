@@ -37,7 +37,6 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.output import debug, error, info, log, logger, warn
-from archinstoo.lib.pathnames import ARTIFACTS_STORE
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
 from archinstoo.lib.utils.env import Os
@@ -59,6 +58,9 @@ if TYPE_CHECKING:
 # hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
 # UKI presets, both of which assume mkinitcpio is present in the chroot.
 __base_packages__ = ['base', 'mkinitcpio']
+
+# where the run log and config land on the target for post-install debugging
+ARTIFACTS_STORE = LPath('/etc/archinstoo.d')
 
 # Package sets minimal_installation() and the steps after it add conditionally.
 # Named rather than inlined so schema_gen can read the same list the installer

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, assert_never
 from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug, info
-from archinstoo.lib.pathnames import PACMAN_CONF
+from archinstoo.lib.pm.pacman import PACMAN_CONF
 from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.utils.env import Os

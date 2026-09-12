@@ -152,7 +152,6 @@
 │   │   │   ├── network_handler
 │   │   │   └── network_menu
 │   │   ├── output
-│   │   ├── pathnames
 │   │   ├── pm/
 │   │   │   ├── aur
 │   │   │   ├── bootstrap
@@ -210,5 +209,5 @@
     └── parted/
         └── __init__i
 
-30 directories, 179 files
+30 directories, 178 files
 ```

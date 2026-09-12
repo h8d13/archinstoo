@@ -8,8 +8,7 @@ from typing import NamedTuple
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug, info
-from archinstoo.lib.pathnames import MIRRORLIST, PACMAN_CONF, PACMAN_GNUPG
-from archinstoo.lib.pm.pacman import Pacman
+from archinstoo.lib.pm.pacman import MIRRORLIST, PACMAN_CONF, PACMAN_GNUPG, Pacman
 from archinstoo.lib.utils.net import download_file_from_url, fetch_data_from_url
 
 # Sources we pull from when the host isn't Arch and ships pacman but no config.

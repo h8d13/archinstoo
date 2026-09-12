@@ -19,8 +19,8 @@ from archinstoo.lib.models.mirrors import (
 )
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import FormattedOutput, debug, info, warn
-from archinstoo.lib.pathnames import MIRRORLIST
 from archinstoo.lib.pm.config import PacmanConfig, set_parallel_downloads
+from archinstoo.lib.pm.pacman import MIRRORLIST
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text
