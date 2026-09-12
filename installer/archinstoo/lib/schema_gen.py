@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from archinstoo.lib import installer
+from archinstoo.lib import installer, swap
 from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
 from archinstoo.lib.applications.cat.cpu_scheduler import CPUSchedulerApp
@@ -139,7 +139,7 @@ SECTIONS: tuple[Section, ...] = (
 	Section('ter_fonts', lambda: installer.__ter_font_packages__, site='installation.minimal_installation'),
 	Section(
 		'swap',
-		lambda: {'zram': installer.__zram_packages__},
+		lambda: {'zram': swap.__zram_packages__},
 		site='installation.setup_swap',
 	),
 	Section(

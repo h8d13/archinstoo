@@ -31,13 +31,13 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.network import ISO_PSK_EXTRA
-from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
 from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug, error, info, log, logger, warn
 from archinstoo.lib.pathnames import ARTIFACTS_STORE, MIRRORLIST
 from archinstoo.lib.pm import Pacman
 from archinstoo.lib.pm.config import PacmanConfig
 from archinstoo.lib.pm.mirrors import MirrorListHandler
+from archinstoo.lib.swap import setup_swapfile, setup_zram
 from archinstoo.lib.systemd import accessibility_tools_in_use, wait_iso_services
 from archinstoo.lib.utils.env import Os
 
@@ -51,6 +51,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.network import Nic
 	from archinstoo.lib.models.packages import Repository
 	from archinstoo.lib.models.service import UserService
+	from archinstoo.lib.models.swap import SwapConfiguration
 
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
 # mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
@@ -74,7 +75,6 @@ __fido2_packages__ = ['libfido2']
 __ter_font_packages__ = ['terminus-font']
 # grub integration for either snapshot tool
 __grub_snapshot_packages__ = ['grub-btrfs', 'inotify-tools']
-__zram_packages__ = ['zram-generator']
 # cloning a user stash
 __stash_packages__ = ['git']
 
@@ -811,74 +811,18 @@ class Installer:
 
 	def setup_swap(self, config: SwapConfiguration) -> None:
 		if config.zram:
-			self._setup_zram(config.algorithm, config.recomp_algorithm)
+			setup_zram(self, config.algorithm, config.recomp_algorithm)
+			self._zram_enabled = True
 		if config.hibernation:
 			try:
-				self._setup_swapfile(config.size_gib)
+				fstab_entry, kernel_params = setup_swapfile(self, config.size_gib)
 			except (SysCallError, DiskError) as err:
 				# hibernation is an enhancement, not worth aborting a
 				# finished-installing system over (cf. allow_ssh)
 				warn(f'Failed to set up hibernation swap file: {err}')
-
-	def _setup_zram(self, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
-		info('Setting up swap on zram')
-		self.pacman.strap(__zram_packages__)
-
-		with (self.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
-			zram_conf.write('[zram0]\n')
-			zram_conf.write('zram-size = ram / 2\n')
-			if algo != ZramAlgorithm.Default:
-				comp_line = algo.value
-				if recomp_algo:
-					comp_line += f' {recomp_algo.value} (type=idle)'
-				zram_conf.write(f'compression-algorithm = {comp_line}\n')
-
-		self.enable_service('systemd-zram-setup@zram0')
-
-		self._zram_enabled = True
-
-	# No resume hook (the systemd initramfs hook ships it) and no kernel
-	# params on UEFI (systemd-sleep records the HibernateLocation EFI var);
-	# only BIOS needs resume=/resume_offset=.
-	def _setup_swapfile(self, size_gib: int) -> None:
-		# ceil MemTotal (kB) to GiB: the image must fit even on a full RAM
-		size = size_gib or -(-SysInfo.mem_total() // 2**20)
-		fs_type = SysCommand(['findmnt', '-no', 'FSTYPE', str(self.target)]).decode().strip()
-		if fs_type == 'bcachefs':
-			# mkswap --file succeeds but swapon returns EINVAL: the kernel
-			# side has no swap file support. zram still covers swap
-			raise DiskError('bcachefs cannot host a swap file, hibernation skipped')
-		info(f'Setting up {size}GiB swap file on {fs_type}')
-
-		if fs_type == 'btrfs':
-			# nested subvolume: snapshots of the parent don't recurse into
-			# it, so root snapshots keep working with the swapfile in place
-			swapfile = '/swap/swapfile'
-			self.arch_chroot(['btrfs', 'subvolume', 'create', '/swap'])
-			self.arch_chroot(['btrfs', 'filesystem', 'mkswapfile', '--size', f'{size}g', '--uuid', 'clear', swapfile])
-		else:
-			swapfile = '/swapfile'
-			self.arch_chroot(['mkswap', '-U', 'clear', '--size', f'{size}G', '--file', swapfile])
-
-		self._fstab_entries.append(f'{swapfile}\tnone\tswap\tdefaults\t0\t0')
-
-		if not SysInfo.has_uefi():
-			fs_uuid = SysCommand(['findmnt', '-no', 'UUID', str(self.target)]).decode().strip()
-			if fs_type == 'btrfs':
-				result = self.arch_chroot(['btrfs', 'inspect-internal', 'map-swapfile', '-r', swapfile])
-				offset = result.stdout.decode().strip() if isinstance(result, CompletedProcess) else str(result).strip()
 			else:
-				# the kernel wants the offset in PAGE_SIZE units, filefrag's
-				# default unit is the fs block size; page size is an arch
-				# property (arm64 kernels ship 4k/16k/64k), not always 4096
-				page_size = os.sysconf('SC_PAGE_SIZE')
-				result = self.arch_chroot(['filefrag', f'-b{page_size}', '-v', swapfile])
-				out = result.stdout.decode() if isinstance(result, CompletedProcess) else str(result)
-				match = re.search(r'^\s*0:\s+\d+\.\.\s*\d+:\s+(\d+)', out, re.MULTILINE)
-				if not match:
-					raise DiskError(f'Could not determine swap file offset from filefrag:\n{out}')
-				offset = match.group(1)
-			self._kernel_params.extend([f'resume=UUID={fs_uuid}', f'resume_offset={offset}'])
+				self._fstab_entries.append(fstab_entry)
+				self._kernel_params.extend(kernel_params)
 
 	def setup_sysctl(self, entries: list[str]) -> None:
 		if not entries:
