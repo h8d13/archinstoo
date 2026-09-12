@@ -7,7 +7,7 @@ import pytest
 
 from archinstoo.lib import hardware
 from archinstoo.lib import installer as installer_mod
-from archinstoo.lib import swap as swap_mod
+from archinstoo.lib.disk import swap as swap_mod
 from archinstoo.lib.exceptions import DiskError
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.swap import SwapConfiguration

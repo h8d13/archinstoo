@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from archinstoo.lib import installer, swap
+from archinstoo.lib import installer
 from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
 from archinstoo.lib.applications.cat.cpu_scheduler import CPUSchedulerApp
@@ -31,7 +31,7 @@ from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.authentication import stash
-from archinstoo.lib.disk import snapshots
+from archinstoo.lib.disk import snapshots, swap
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
 from archinstoo.lib.models.application import (
 	Audio,
