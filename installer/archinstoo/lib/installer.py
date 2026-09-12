@@ -41,7 +41,6 @@ from archinstoo.lib.swap import setup_swapfile, setup_zram
 from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
-	from collections.abc import Callable
 	from types import TracebackType
 
 	from archinstoo.lib.args import ArchConfigHandler
@@ -55,8 +54,8 @@ if TYPE_CHECKING:
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
 # mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
 # pacman picks the first initramfs provider from the host's pacman.conf, which on non-Arch
-# hosts (EndeavourOS prefers dracut, etc.) breaks the installer's mkinitcpio() and
-# _config_uki() methods that assume mkinitcpio is present in the chroot.
+# hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
+# UKI presets, both of which assume mkinitcpio is present in the chroot.
 __base_packages__ = ['base', 'mkinitcpio']
 
 # Package sets minimal_installation() and the steps after it add conditionally.
@@ -89,8 +88,8 @@ class Installer:
 		handler: ArchConfigHandler | None = None,
 		device_handler: DeviceHandler | None = None,
 	) -> None:
-		# `Installer()` is the wrapper for most basic installation steps.
-		# It also wraps :py:func:`~archinstoo.Installer.pacstrap` among other things.
+		# orchestrates the steps the scripts call in order; the work itself
+		# lives in disk/, pm/, bootloader/, localization/ and friends
 		from archinstoo.lib.args import Arguments
 
 		self._handler = handler
@@ -119,8 +118,6 @@ class Installer:
 		# If using accessibility tools in the live environment, append those to the packages list
 		if systemd.accessibility_tools_in_use():
 			self._base_packages.extend(__accessibility_packages__)
-
-		self.post_base_install: list[Callable[[], None]] = []
 
 		self.initramfs = Initramfs()
 		self._kernel_params: list[str] = []
@@ -423,8 +420,6 @@ class Installer:
 				self._base_packages.extend(__ter_font_packages__)
 
 		self.pacman.strap(list(dict.fromkeys(self._base_packages)))
-		self._helper_flags['base-strapped'] = True
-
 		# same repos again, on the stock conf pacstrap just installed
 		target_conf = PacmanConfig(self.target)
 		target_conf.enable(optional_repositories)
@@ -459,11 +454,6 @@ class Installer:
 			error('Error generating initramfs (continuing anyway)')
 
 		self._helper_flags['base'] = True
-
-		# Run registered post-install hooks
-		for function in self.post_base_install:
-			info(f'Running post-installation hook: {function}')
-			function()
 
 	def setup_btrfs_snapshot(self, snapshot_type: SnapshotType, bootloader: Bootloader | None = None) -> None:
 		snapshots.setup_btrfs_snapshot(self, snapshot_type, bootloader)

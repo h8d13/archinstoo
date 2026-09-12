@@ -579,13 +579,8 @@ def set_mirrors(
 	pacman_configuration: PacmanConfiguration,
 	on_target: bool = False,
 ) -> None:
-	# Set the mirror configuration for the installation.
-	#
-	# :param pacman_configuration: The pacman configuration to use.
-	# :type pacman_configuration: PacmanConfiguration
-	#
-	# :on_target: Whether to set the mirrors on the target system or the live system.
-	# :param on_target: bool
+	# same conf and mirrorlist twice: once on the live system for pacstrap,
+	# once on the target so the installed pacman starts from the same choices
 	info('Setting mirrors on ' + ('target' if on_target else 'live system' + '...'))
 
 	mirrorlist_path = installation.target / MIRRORLIST.relative_to_root() if on_target else MIRRORLIST
