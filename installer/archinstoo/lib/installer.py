@@ -12,7 +12,7 @@ from archinstoo.lib.bootloader.install import BootloaderInstaller, configure_gru
 from archinstoo.lib.disk.cleanup import teardown_layout
 from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
 from archinstoo.lib.disk.device_handler import DeviceHandler
-from archinstoo.lib.disk.luks import Luks2
+from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, RequirementError, ServiceError, SysCallError
 from archinstoo.lib.general import SysCommand, run
@@ -22,8 +22,6 @@ from archinstoo.lib.localization.utils import locale_encoding, split_locale_name
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
-	BOOT_ITER_TIME,
-	BOOT_PBKDF_MEMORY,
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	EncryptionType,
@@ -262,110 +260,7 @@ class Installer:
 
 	def generate_key_files(self) -> None:
 		info(f'Generating key files for {self._disk_encryption.encryption_type.value}...')
-		match self._disk_encryption.encryption_type:
-			case EncryptionType.LUKS:
-				self._generate_key_files_partitions()
-			case EncryptionType.LUKS_ON_LVM:
-				self._generate_key_file_lvm_volumes()
-			case EncryptionType.NO_ENCRYPTION:
-				pass
-			case EncryptionType.LVM_ON_LUKS:
-				# LvmOnLuks: the LUKS container holds an LVM PV, root is a volume inside it.
-				# The partition itself isn't "root", so _generate_key_files_partitions
-				# can't detect it via is_root(). Handle it directly here.
-				if self._disk_encryption.auto_unlock_root:
-					for part_mod in self._disk_encryption.partitions:
-						if part_mod.is_boot() or part_mod.is_efi():
-							continue
-						luks_handler = Luks2(
-							part_mod.safe_dev_path,
-							mapper_name=part_mod.mapper_name,
-							password=self._disk_encryption.encryption_password,
-						)
-						self._create_root_keyfile(luks_handler, mapper_name='cryptlvm')
-						break
-
-	def _generate_key_files_partitions(self) -> None:
-		root_is_encrypted = any(p.is_root() for p in self._disk_encryption.partitions)
-
-		for part_mod in self._disk_encryption.partitions:
-			gen_enc_file = self._disk_encryption.should_generate_encryption_file(part_mod)
-
-			luks_handler = Luks2(
-				part_mod.safe_dev_path,
-				mapper_name=part_mod.mapper_name,
-				password=self._disk_encryption.encryption_password,
-			)
-
-			if gen_enc_file and not part_mod.is_root():
-				debug(f'Creating key-file: {part_mod.dev_path}')
-				if root_is_encrypted and not part_mod.luks_mapper:  # pre-opened: no passphrase to derive from
-					# GRUB has limited memory for argon2 decryption;
-					# constrain the keyfile slot too so GRUB can handle it
-					is_boot = part_mod.is_boot()
-					uses_argon2 = self._disk_encryption.pbkdf.is_argon2
-					pbkdf_memory = BOOT_PBKDF_MEMORY if is_boot and uses_argon2 else None
-					iter_time = BOOT_ITER_TIME if is_boot else self._disk_encryption.iter_time
-					luks_handler.create_keyfile(
-						self.target,
-						pbkdf_memory=pbkdf_memory,
-						iter_time=iter_time,
-						pbkdf=self._disk_encryption.pbkdf,
-					)
-				else:
-					# unencrypted root (keyfile would sit in plaintext) or pre-opened: prompt via crypttab
-					luks_handler.create_crypttab_entry(self.target)
-
-			if self._disk_encryption.auto_unlock_root and part_mod.is_root():
-				self._create_root_keyfile(luks_handler)
-
-	def _generate_key_file_lvm_volumes(self) -> None:
-		root_is_encrypted = any(v.is_root() for v in self._disk_encryption.lvm_volumes)
-
-		for vol in self._disk_encryption.lvm_volumes:
-			gen_enc_file = self._disk_encryption.should_generate_encryption_file(vol)
-
-			luks_handler = Luks2(
-				vol.safe_dev_path,
-				mapper_name=vol.mapper_name,
-				password=self._disk_encryption.encryption_password,
-			)
-
-			if gen_enc_file and not vol.is_root():
-				debug(f'Creating key-file: {vol.dev_path}')
-				if root_is_encrypted:
-					luks_handler.create_keyfile(
-						self.target,
-						iter_time=self._disk_encryption.iter_time,
-						pbkdf=self._disk_encryption.pbkdf,
-					)
-				else:
-					luks_handler.create_crypttab_entry(self.target)
-
-			if self._disk_encryption.auto_unlock_root and vol.is_root():
-				self._create_root_keyfile(luks_handler)
-
-	def _create_root_keyfile(self, luks_handler: Luks2, mapper_name: str = 'root') -> None:
-		# sd-encrypt standard path and add it as a LUKS
-		# key slot so the volume can be auto-unlocked from the initramfs.
-		# sd-encrypt auto-detects keys at /etc/cryptsetup-keys.d/<name>.key.
-		kf_path = f'/etc/cryptsetup-keys.d/{mapper_name}.key'
-		keyfile = self.target / kf_path.lstrip('/')
-
-		debug(f'Creating key-file: {keyfile}')
-		keyfile.parent.mkdir(parents=True, exist_ok=True)
-		keyfile.write_bytes(os.urandom(2048))
-		keyfile.chmod(0o000)
-
-		# initramfs unlocks this slot on the host CPU, user's iter_time applies
-		luks_handler.add_key(
-			keyfile,
-			iter_time=self._disk_encryption.iter_time,
-			pbkdf=self._disk_encryption.pbkdf,
-		)
-
-		if kf_path not in self._files:
-			self._files.append(kf_path)
+		self._files.extend(KeyFileGenerator(self.target, self._disk_encryption).generate())
 
 	def post_install_check(self) -> list[str]:
 		return [step for step, flag in self._helper_flags.items() if flag is False]
