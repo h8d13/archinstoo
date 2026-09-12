@@ -6,8 +6,7 @@ from archinstoo.lib.output import error, info
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 
-# a user's dotfiles repo, cloned into ~/.stash at install time. Its own
-# concern: accounts creates the user, this hands the home over populated
+# a user's dotfiles repo, cloned into ~/.stash right after useradd
 # cloning a user stash
 __stash_packages__ = ['git']
 

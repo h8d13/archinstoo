@@ -90,8 +90,8 @@ class Installer:
 		handler: ArchConfigHandler | None = None,
 		device_handler: DeviceHandler | None = None,
 	) -> None:
-		# orchestrates the steps the scripts call in order; the work itself
-		# lives in disk/, pm/, bootloader/, localization/ and friends
+		# orders the steps the scripts call; each step is a thin entry into the
+		# package named for its area
 		from archinstoo.lib.args import Arguments
 
 		self._handler = handler

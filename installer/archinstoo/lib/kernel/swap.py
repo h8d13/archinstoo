@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 # params on UEFI (systemd-sleep records the HibernateLocation EFI var);
 # only BIOS needs resume=/resume_offset=.
 def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[str]]:
-	# returns the fstab line and the resume= params BIOS boots need
 	# ceil MemTotal (kB) to GiB: the image must fit even on a full RAM
 	size = size_gib or -(-SysInfo.mem_total() // 2**20)
 	fs_type = SysCommand(['findmnt', '-no', 'FSTYPE', str(installation.target)]).decode().strip()

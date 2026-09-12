@@ -295,8 +295,8 @@ class DiskLayoutConfiguration:
 		snapshot_config = self.btrfs_options.snapshot_config if self.btrfs_options else None
 		return snapshot_config.snapshot_type if snapshot_config else None
 
-	# layout-wide lookups, first match across devices: the installer and the
-	# bootloader pre-flight want the same answer and used to loop separately
+	# layout-wide lookups, first match across devices, shared by the installer
+	# and the bootloader pre-flight
 	def get_efi_partition(self) -> PartitionModification | None:
 		return self._first_partition(DeviceModification.get_efi_partition)
 
