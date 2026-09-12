@@ -5,6 +5,8 @@
 ### Get an overview
 
 Best places are probably `args.py` and `scripts/` themselves. Then `installer.py`
+for the order of steps, and the package named for the area (`disk/`, `kernel/`,
+`bootloader/`, `authentication/`, `localization/`, `pm/`, `network/`) for how a step works.
 
 ### Code standards
 
