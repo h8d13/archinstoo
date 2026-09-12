@@ -16,11 +16,11 @@ from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.fstab import write_fstab
 from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mount import LayoutMounter
-from archinstoo.lib.disk.swap import setup_swapfile, setup_zram
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.kernel.initramfs import Initramfs
+from archinstoo.lib.kernel.swap import setup_swapfile, setup_zram
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.localization import configure
 from archinstoo.lib.models.authentication import PrivilegeEscalation

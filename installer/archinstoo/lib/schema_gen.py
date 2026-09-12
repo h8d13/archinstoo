@@ -31,8 +31,9 @@ from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.authentication import stash
-from archinstoo.lib.disk import snapshots, swap
+from archinstoo.lib.disk import snapshots
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
+from archinstoo.lib.kernel import swap
 from archinstoo.lib.models.application import (
 	Audio,
 	DevTool,
