@@ -14,9 +14,9 @@ An operating system installer (and tools) for [archlinux](https://archlinux.org)
 
 ### 0. Keymap
 
-On the ISO, you can `loadkeys <somekblayout>`
+Select a layout: `loadkeys <somekblayout>`
 
-You can also check available ones:
+Can also check available ones:
 
 `localectl list-keymaps` otherwise defaults to `us`.
 
