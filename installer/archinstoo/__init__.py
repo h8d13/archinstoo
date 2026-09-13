@@ -91,11 +91,11 @@ base_depends = (
 	'coreutils',  	        # Basic utilities
 	'util-linux',  	        # For partition utilities
 	'pciutils',  	        # For PCI device detection
-	'kbd',  	            # For keyboard layout configuration
+	'kbd',  	        # For keyboard layout configuration
 	'libxcrypt',
 	'pacman',
-	'git',  	            # Cloning stashes
-    'arch-install-scripts', # For pacstrap, genfstab, chroot
+	'git',  	        # Cloning stashes
+	'arch-install-scripts', # For pacstrap, genfstab, chroot
 )
 disk_depends = (
 	'python-pyparted',
@@ -106,7 +106,7 @@ disk_depends = (
 	'ntfsprogs',  		# NTFS filesystem support
 	'xfsprogs',  		# XFS filesystem support
 	'cryptsetup',  		# LUKS encryption support
-	'lvm2',  		    # LVM layout support
+	'lvm2',  		# LVM layout support
 )  # together they mirror the inner PKGBUILD -python is reloaded last
 # fmt: on
 
