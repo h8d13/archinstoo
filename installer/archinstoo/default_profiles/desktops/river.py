@@ -35,6 +35,11 @@ class RiverProfile(WaylandProfile):
 		return [
 			'xdg-desktop-portal-wlr',
 			'river-classic',
+			# the shipped init binds the media keys to these three; eject is
+			# util-linux. nothing else in it spawns a program besides the terminal
+			'pamixer',
+			'playerctl',
+			'brightnessctl',
 			*additional,
 		]
 

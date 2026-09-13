@@ -1182,6 +1182,9 @@ source = "pacman"
 [pam-u2f]
 source = "pacman"
 
+[pamixer]
+source = "pacman"
+
 [papirus-icon-theme]
 source = "pacman"
 
@@ -1228,6 +1231,9 @@ source = "pacman"
 source = "pacman"
 
 [plasma-thunderbolt]
+source = "pacman"
+
+[playerctl]
 source = "pacman"
 
 [pluma]
