@@ -49,9 +49,11 @@ def provision_terminal_config(
 	shipped: Path,
 	config_path: str,
 	hardcoded: str,
+	executable: bool = False,
 ) -> None:
 	# hyprland and niri both copy their shipped default into ~/.config on first
-	# run, so the repointed copy has to be there before that happens
+	# run, so the repointed copy has to be there before that happens. river
+	# never copies: no init means no bindings and no layout, a black screen
 	if not shipped.is_file():
 		warn(f'{shipped} missing, leaving the config to first run')
 		return
@@ -62,5 +64,8 @@ def provision_terminal_config(
 		dest = install_session.target / 'home' / user.username / '.config' / config_path
 		dest.parent.mkdir(parents=True, exist_ok=True)
 		dest.write_text(conf)
+		if executable:
+			# river runs init as a program, a 0644 copy is silently skipped
+			dest.chmod(0o755)
 
 		install_session.chown_tree(user.username, f'/home/{user.username}/.config')

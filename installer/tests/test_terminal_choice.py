@@ -11,6 +11,7 @@ from archinstoo.default_profiles.desktops import swap_terminal, terminal_command
 from archinstoo.default_profiles.desktops.awesome import AwesomeProfile
 from archinstoo.default_profiles.desktops.hyprland import HyprlandProfile
 from archinstoo.default_profiles.desktops.niri import NiriProfile
+from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
 from archinstoo.lib import args
 from archinstoo.lib.applications.cat.terminal import TerminalApp
@@ -141,6 +142,32 @@ def test_niri_survives_a_missing_shipped_config(tmp_path: Path, monkeypatch: pyt
 	NiriProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
 
 	assert not (tmp_path / 'home/ada/.config').exists()
+
+
+def test_river_writes_an_executable_user_init(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# river runs init as a program and has no /etc fallback: a missing or
+	# non-executable copy is a black screen with no bindings
+	_pin_terminal(monkeypatch, Terminal.KITTY)
+	shipped = tmp_path / 'usr/share/river-classic/example/init'
+	shipped.parent.mkdir(parents=True)
+	shipped.write_text('#!/bin/sh\nriverctl map normal Super+Shift Return spawn foot\n')
+	(tmp_path / 'home/ada').mkdir(parents=True)
+
+	RiverProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	init = tmp_path / 'home/ada/.config/river/init'
+	assert init.read_text() == '#!/bin/sh\nriverctl map normal Super+Shift Return spawn kitty\n'
+	assert init.stat().st_mode & 0o111, 'river skips a non-executable init'
+	assert shipped.read_text() == '#!/bin/sh\nriverctl map normal Super+Shift Return spawn foot\n'
+
+
+def test_river_installs_classic_not_the_rewrite() -> None:
+	# extra/river is the 0.4 compositor without a window manager and none is
+	# packaged; river-classic is the line that runs standalone
+	packages = RiverProfile().packages
+
+	assert 'river-classic' in packages
+	assert 'river' not in packages
 
 
 # verbatim from xorg-xinit 1.4.4-1: what startx falls back to with no

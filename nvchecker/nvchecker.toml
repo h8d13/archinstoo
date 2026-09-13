@@ -294,6 +294,9 @@ source = "pacman"
 [archlinux-keyring]
 source = "pacman"
 
+[archports-keyring]
+source = "pacman"
+
 [ark]
 source = "pacman"
 
@@ -1263,7 +1266,7 @@ source = "pacman"
 [ristretto]
 source = "pacman"
 
-[river]
+[river-classic]
 source = "pacman"
 
 [rtkit]
@@ -1450,9 +1453,6 @@ source = "pacman"
 source = "pacman"
 
 [xdg-user-dirs]
-source = "pacman"
-
-[xdg-user-dirs-gtk]
 source = "pacman"
 
 [xdg-utils]

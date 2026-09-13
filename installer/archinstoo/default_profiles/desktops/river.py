@@ -1,11 +1,16 @@
-from typing import override
+from typing import TYPE_CHECKING, override
 
+from archinstoo.default_profiles.desktops import provision_terminal_config
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.profile.base import ProfileType, SeatAccess, seat_services
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
+
+if TYPE_CHECKING:
+	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.users import User
 
 
 class RiverProfile(WaylandProfile):
@@ -24,9 +29,12 @@ class RiverProfile(WaylandProfile):
 		if isinstance(seat, str):
 			additional = [seat]
 
+		# `river` in extra is the 0.4 rewrite: compositor only, the window
+		# manager is a separate client and none is packaged. river-classic
+		# is the 0.3 line with riverctl/rivertile, the one that runs standalone
 		return [
 			'xdg-desktop-portal-wlr',
-			'river',
+			'river-classic',
 			*additional,
 		]
 
@@ -34,6 +42,21 @@ class RiverProfile(WaylandProfile):
 	@override
 	def services(self) -> list[str]:
 		return seat_services(self.custom_settings.get('seat_access'))
+
+	@override
+	def provision(self, install_session: Installer, users: list[User]) -> None:
+		super().provision(install_session, users)
+
+		# river reads ~/.config/river/init and nothing else (no /etc fallback).
+		# the example binds Super+Shift+Return to a hardcoded foot
+		provision_terminal_config(
+			install_session,
+			users,
+			install_session.target / 'usr/share/river-classic/example/init',
+			'river/init',
+			'foot',
+			executable=True,
+		)
 
 	def _select_seat_access(self) -> None:
 		# need to activate seat service and add to seat group
