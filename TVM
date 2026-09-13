@@ -11,7 +11,7 @@
 # Host artifacts (created in repo root, git-ignored):
 #   .dev-disk.qcow2     VM disk image (qemu-img)
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
-#   A2_SERIAL=on only:
+#   A2_SERIAL=1 only:
 #   .dev-boot/          kernel + initramfs pulled out of the ISO
 #   .dev-serial.sock    guest ttyS0, .dev-serial.log its full transcript
 #   .dev-capture.log    guest ttyS1, byte-exact (./TSER capture)
@@ -24,10 +24,10 @@
 #   ./TVM clean  | c - remove disk and NVRAM (ISOs untouched)
 #   ./TVM help   | h - show this help
 # Env overrides:
-#   A2_SERIAL           'on' boots headless with the console on ttyS0 and
+#   A2_SERIAL           '1' boots headless with the console on ttyS0 and
 #                       detaches (no window, no stdio monitor). Composes with
 #                       every mode above. Drive it with ./TSER (login/run).
-#                       With A2_GL=on the virgl window stays: sockets still
+#                       With A2_GL=1 the virgl window stays: sockets still
 #                       detach, so a real session is on screen while the
 #                       guest is driven over serial (./TSER type/keys for the
 #                       greeter, screendump via mon).
@@ -36,7 +36,7 @@
 #                       so the guest keeps a real UEFI environment. Needs bsdtar.
 #                       'boot' mode has no such hook: the installed system only
 #                       talks to ttyS0 if its own cmdline says console=ttyS0.
-#   A2_BIOS             'on' boots SeaBIOS instead of OVMF: no pflash, no
+#   A2_BIOS             '1' boots SeaBIOS instead of OVMF: no pflash, no
 #                       NVRAM. The installed disk must carry a BIOS-capable
 #                       bootloader (grub with a bios_grub partition).
 #   A2_DEV_ISO          explicit ISO path (skips discovery)
@@ -48,7 +48,7 @@
 #   A2_DISK_SIZE        new disk size (default 64G)
 #   A2_DISPLAY_BACKEND  qemu -display value (default 'gtk,zoom-to-fit=off')
 #   A2_VGA              qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
-#   A2_GL               'on' swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
+#   A2_GL               '1' swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
 #                       Overrides A2_VGA. niri/DMS have no software fallback, black-screen
 #                       without this. Needs the full module chain (vga-gl alone won't load):
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
@@ -69,15 +69,15 @@ SERIAL_LOG="$PROJECT_DIR/.dev-serial.log"
 CAPTURE_LOG="$PROJECT_DIR/.dev-capture.log"
 MON_SOCK="$PROJECT_DIR/.dev-monitor.sock"
 PIDFILE="$PROJECT_DIR/.dev-vm.pid"
-A2_SERIAL="${A2_SERIAL:-off}"
+A2_SERIAL="${A2_SERIAL:-0}"
 A2_UKI="${A2_UKI:-}"
-A2_BIOS="${A2_BIOS:-off}"
+A2_BIOS="${A2_BIOS:-0}"
 A2_DISK_SIZE="${A2_DISK_SIZE:-64G}"
 A2_RAM="${A2_RAM:-4G}"
 A2_CPUS="${A2_CPUS:-4}"
 A2_DISPLAY_BACKEND="${A2_DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
 A2_VGA="${A2_VGA:-std}"
-A2_GL="${A2_GL:-off}"
+A2_GL="${A2_GL:-0}"
 A2_AUDIO_BACKEND="${A2_AUDIO_BACKEND:-pipewire}"
 ARG="${1:-default}"
 
@@ -90,7 +90,7 @@ err() {
 }
 
 probe_ovmf() {
-	[ "$A2_BIOS" = "on" ] && return 0
+	[ "$A2_BIOS" = "1" ] && return 0
 	local pairs=(
 		"/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd"
 		"/usr/share/edk2-ovmf/x64/OVMF_CODE.fd:/usr/share/edk2-ovmf/x64/OVMF_VARS.fd"
@@ -127,9 +127,9 @@ check_host_deps() {
 	if [ ${#missing[@]} -gt 0 ]; then
 		err "missing host commands: ${missing[*]} (install qemu-base)"
 	fi
-	if [ "$A2_SERIAL" = "on" ] && [ -z "$A2_UKI" ]; then
+	if [ "$A2_SERIAL" = "1" ] && [ -z "$A2_UKI" ]; then
 		command -v bsdtar >/dev/null 2>&1 ||
-			err "A2_SERIAL=on needs bsdtar to read the ISO (install libarchive)"
+			err "A2_SERIAL=1 needs bsdtar to read the ISO (install libarchive)"
 	fi
 }
 
@@ -189,7 +189,7 @@ require_iso() {
 require_media() {
 	if [ -n "$A2_UKI" ]; then
 		[ -f "$A2_UKI" ] || err "A2_UKI=$A2_UKI not found (build one with isos/UKIMOD)"
-		[ "$A2_BIOS" != "on" ] || err "A2_UKI needs OVMF, unset A2_BIOS"
+		[ "$A2_BIOS" != "1" ] || err "A2_UKI needs OVMF, unset A2_BIOS"
 		return
 	fi
 	require_iso >/dev/null
@@ -238,12 +238,12 @@ default)
 	;;
 esac
 
-if [ "$A2_BIOS" != "on" ]; then
+if [ "$A2_BIOS" != "1" ]; then
 	[ -f "$OVMF_VARS" ] || cp "$OVMF_VARS_ORIG" "$OVMF_VARS"
 fi
 
 # shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
-if [ "$A2_SERIAL" = "on" ]; then
+if [ "$A2_SERIAL" = "1" ]; then
 	# Headless and detached: the console is a unix socket with a logfile, so
 	# ./TSER can connect, act and exit instead of holding a session open.
 	# Audio is dropped, no session to play into.
@@ -252,7 +252,7 @@ if [ "$A2_SERIAL" = "on" ]; then
 	# output redirected to /dev/ttyS1 is the only byte-exact transcript
 	# (./TSER capture). ttyS0 stays the interactive end.
 	rm -f "$SERIAL_SOCK" "$MON_SOCK" "$SERIAL_LOG" "$CAPTURE_LOG"
-	if [ "$A2_GL" = "on" ]; then
+	if [ "$A2_GL" = "1" ]; then
 		ensure_virgl
 		CONSOLE_ARGS=(-device virtio-vga-gl -display "$A2_DISPLAY_BACKEND,gl=on")
 	else
@@ -268,7 +268,7 @@ if [ "$A2_SERIAL" = "on" ]; then
 		-daemonize
 	)
 else
-	if [ "$A2_GL" = "on" ]; then
+	if [ "$A2_GL" = "1" ]; then
 		ensure_virgl
 		CONSOLE_ARGS=(-device virtio-vga-gl -display "$A2_DISPLAY_BACKEND,gl=on")
 	else
@@ -296,7 +296,7 @@ QEMU_ARGS=(
 	-boot "order=$BOOT_ORDER"
 )
 
-if [ "$A2_BIOS" != "on" ]; then
+if [ "$A2_BIOS" != "1" ]; then
 	QEMU_ARGS+=(
 		-drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
 		-drive "if=pflash,format=raw,file=$OVMF_VARS"
@@ -308,7 +308,7 @@ if [ "$ATTACH_ISO" = "true" ] && [ -n "$A2_UKI" ]; then
 elif [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"
 	QEMU_ARGS+=(-cdrom "$ISO")
-	if [ "$A2_SERIAL" = "on" ]; then
+	if [ "$A2_SERIAL" = "1" ]; then
 		extract_iso_kernel "$ISO"
 		QEMU_ARGS+=(
 			-kernel "$BOOT_DIR/vmlinuz-linux"
@@ -324,7 +324,7 @@ if [ -n "${A2_QEMU_EXTRA:-}" ]; then
 	QEMU_ARGS+=("${EXTRA_ARGS[@]}")
 fi
 
-if [ "$A2_SERIAL" = "on" ]; then
+if [ "$A2_SERIAL" = "1" ]; then
 	qemu-system-x86_64 "${QEMU_ARGS[@]}"
 	echo "VM detached, pid $(cat "$PIDFILE")"
 	echo "drive it: ./TSER login && ./TSER run 'ls /'"
