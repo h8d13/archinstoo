@@ -8,10 +8,10 @@ from archinstoo.lib.chroot import run_custom_user_commands
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
+from archinstoo.lib.models.device import DiskLayoutConfiguration
 from archinstoo.lib.models.users import User, invoking_user
 from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.output import debug, info, sync_artifacts
+from archinstoo.lib.output import debug, info
 from archinstoo.lib.pm.aur import run_grimoire_installation
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.systemd import accessibility_tools_in_use
@@ -39,8 +39,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 
 
 def perform_installation(
-	config: ArchConfig,
-	args: Arguments,
 	handler: ArchConfigHandler,
 	profile_handler: ProfileHandler,
 	application_handler: ApplicationHandler,
@@ -48,27 +46,21 @@ def perform_installation(
 ) -> None:
 	# Configures the currently running system.
 	# Uses pacman -S instead of pacstrap, no disk ops, no bootloader, no kernel.
+	config = handler.config
+	args = handler.args
+	locale_config = config.locale_config
+
 	start_time = time.monotonic()
 	info('Starting live configuration...')
 
-	# Dummy disk config no actual disk operations
-	disk_config = DiskLayoutConfiguration(
-		config_type=DiskLayoutType.Pre_mount,
-		device_modifications=[],
-		mountpoint=Path('/'),
-	)
-
-	locale_config = config.locale_config
-
 	with Installer(
 		Path('/'),
-		disk_config,
+		DiskLayoutConfiguration.running_system(),
 		kernels=config.kernels,
 		handler=handler,
 	) as installation:
-		# Mark base and bootloader as done we're on a running system
+		# base is already there, we're on a running system
 		installation.set_helper_flag('base', True)
-		installation.set_helper_flag('bootloader', 'live')
 
 		# Configure system basics
 		if locale_config:
@@ -133,8 +125,19 @@ def perform_installation(
 			if profile_config.profiles and profile_config.display_servers() and locale_config:
 				installation.set_keyboard(locale_config)
 
+		# Post-install profile hooks, same slot as guided: right after the
+		# profile lands, before AUR builds that may need the groups provision
+		# adds. No configured users means whoever is driving the install
+		if (profile_config := config.profile_config) and profile_config.profiles:
+			users = config.auth_config.users if config.auth_config else []
+			if not users and (user := invoking_user()):
+				users = [user]
+			for profile in profile_config.profiles:
+				profile.post_install(installation)
+				profile.provision(installation, users)
+
 		# Additional packages
-		if config.packages and config.packages[0]:
+		if config.packages:
 			installation.add_additional_packages(config.packages)
 
 		# AUR packages
@@ -157,16 +160,6 @@ def perform_installation(
 			if config.auth_config.lock_root_account:
 				installation.lock_root_account()
 
-		# Post-install profile hooks; auth skipped means no configured users,
-		# fall back to whoever is driving the install (see invoking_user)
-		if (profile_config := config.profile_config) and profile_config.profiles:
-			users = config.auth_config.users if config.auth_config else []
-			if not users and (user := invoking_user()):
-				users = [user]
-			for profile in profile_config.profiles:
-				profile.post_install(installation)
-				profile.provision(installation, users)
-
 		# Services
 		if services := config.services:
 			installation.enable_services_from_config(services)
@@ -177,26 +170,19 @@ def perform_installation(
 
 		# No genfstab we're on a running system
 
-		# target is /, so this lands in /etc/archinstoo.d directly; without it
-		# the __exit__ success message would claim artifacts that don't exist
-		sync_artifacts(installation.target)
-
 		elapsed_time = time.monotonic() - start_time
 		info(f'Live configuration completed in {elapsed_time:.1f}s')
 
 
 def live() -> None:
 	handler = get_arch_config_handler()
-	args = handler.args
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
 	network_handler = NetworkHandler()
 
-	config = resolve_config(handler, show_menu)
+	resolve_config(handler, show_menu)
 
 	perform_installation(
-		config,
-		args,
 		handler,
 		profile_handler,
 		application_handler,

@@ -2,11 +2,11 @@ import time
 from pathlib import Path
 
 from archinstoo.lib.applications.application_handler import ApplicationHandler
-from archinstoo.lib.args import ArchConfig, Arguments, get_arch_config_handler
+from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
+from archinstoo.lib.models.device import DiskLayoutConfiguration
 from archinstoo.lib.models.users import invoking_user
 from archinstoo.lib.output import info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
@@ -32,30 +32,25 @@ def show_menu(config: ArchConfig, _args: Arguments) -> None:
 
 
 def perform_installation(
-	config: ArchConfig,
+	handler: ArchConfigHandler,
 	profile_handler: ProfileHandler,
 	application_handler: ApplicationHandler,
 ) -> None:
 	# Installs profiles, applications, and packages on the running system.
 	# No disk ops, no bootloader, no kernel, no users.
+	config = handler.config
+
 	start_time = time.monotonic()
 	info('Starting package installation...')
 
-	# Dummy disk config no actual disk operations
-	disk_config = DiskLayoutConfiguration(
-		config_type=DiskLayoutType.Pre_mount,
-		device_modifications=[],
-		mountpoint=Path('/'),
-	)
-
 	with Installer(
 		Path('/'),
-		disk_config,
+		DiskLayoutConfiguration.running_system(),
 		kernels=[],
+		handler=handler,
 	) as installation:
-		# Mark base and bootloader as done we're on a running system
+		# base is already there, we're on a running system
 		installation.set_helper_flag('base', True)
-		installation.set_helper_flag('bootloader', 'packages')
 
 		# Applications
 		if app_config := config.app_config:
@@ -74,7 +69,7 @@ def perform_installation(
 					profile.provision(installation, users)
 
 		# Additional packages
-		if config.packages and config.packages[0]:
+		if config.packages:
 			installation.add_additional_packages(config.packages)
 
 		# Services
@@ -91,10 +86,10 @@ def packages() -> None:
 	profile_handler = ProfileHandler()
 	application_handler = ApplicationHandler()
 
-	config = resolve_config(handler, show_menu)
+	resolve_config(handler, show_menu)
 
 	perform_installation(
-		config,
+		handler,
 		profile_handler,
 		application_handler,
 	)

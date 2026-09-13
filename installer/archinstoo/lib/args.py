@@ -139,6 +139,9 @@ class ArchConfig:
 			},
 		)
 
+		# a hand-written "packages": [""] reached pacman as an empty name
+		arch_config.packages = [p for p in arch_config.packages if p]
+
 		# Parse services: strings stay as-is, dicts become UserService
 		if raw_services := args_config.get('services'):
 			arch_config.services = [UserService.parse_arg(s) if isinstance(s, dict) else s for s in raw_services]

@@ -55,10 +55,10 @@ def clean_cache(root_dir: str) -> None:
 		info(f'Done. {len(deleted)} cache folder(s) deleted.')
 
 
-def report_outcome(target: Path, steps: dict[str, str | bool | None]) -> None:
+def report_outcome(target: Path, steps: dict[str, bool]) -> None:
 	# the steps a script left unreached. A crash never gets here: the top
 	# level prints the traceback, bug report url and log path for those
-	missing = [step for step, flag in steps.items() if flag is False]
+	missing = [step for step, done in steps.items() if not done]
 	if missing:
 		warn('Some required steps were not reached before leaving the installer:')
 		for step in missing:

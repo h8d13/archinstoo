@@ -30,7 +30,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.output import debug, error, info, sync_artifacts, warn
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
 
@@ -103,10 +103,12 @@ class Installer:
 		self._disk_encryption = disk_config.disk_encryption or DiskEncryption(EncryptionType.NO_ENCRYPTION)
 		self.target: Path = target
 
-		self._helper_flags: dict[str, str | bool | None] = {
+		# steps report_outcome names as missed on a clean exit. bootloader is
+		# not here: a flow may legitimately have none (skip_boot, live)
+		self._helper_flags: dict[str, bool] = {
 			'base': False,
-			'bootloader': None,
 		}
+		self._artifacts_synced = False
 
 		for kernel in self.kernels:
 			self._base_packages.append(kernel)
@@ -135,8 +137,19 @@ class Installer:
 			self._device_handler = DeviceHandler()
 		return self._device_handler
 
-	def set_helper_flag(self, key: str, value: str | bool | None) -> None:
+	def set_helper_flag(self, key: str, value: bool) -> None:
+		# flows that never run a step (format stops at mount, live/packages
+		# are on a booted system) claim it so the exit summary stays true
 		self._helper_flags[key] = value
+
+	def sync_artifacts(self) -> None:
+		# log + saved config into the target's /etc/archinstoo.d. __exit__ does
+		# it on a clean exit; guided calls it first because reboot/poweroff
+		# kill the process before __exit__ runs
+		if self._artifacts_synced:
+			return
+		sync_artifacts(self.target)
+		self._artifacts_synced = True
 
 	def __enter__(self) -> Self:
 		return self
@@ -148,6 +161,7 @@ class Installer:
 			if exc_type is None:
 				info('Syncing the system...')
 				os.sync()
+				self.sync_artifacts()
 				checkpoints.report_outcome(self.target, self._helper_flags)
 		finally:
 			try:
@@ -421,7 +435,6 @@ class Installer:
 			splash=splash,
 			keep_standalone_initramfs=keep_standalone,
 		)
-		self._helper_flags['bootloader'] = bootloader.value
 
 	def add_additional_packages(self, packages: str | list[str]) -> None:
 		return self.pacman.strap(packages)

@@ -18,17 +18,16 @@ def _capture(monkeypatch: pytest.MonkeyPatch) -> tuple[list[str], list[str]]:
 def test_unreached_steps_are_named(monkeypatch: pytest.MonkeyPatch) -> None:
 	warned, logged = _capture(monkeypatch)
 
-	checkpoints.report_outcome(Path('/mnt'), {'base': True, 'bootloader': False})
+	checkpoints.report_outcome(Path('/mnt'), {'base': False})
 
-	assert ' - bootloader' in warned
+	assert ' - base' in warned
 	assert not logged
 
 
-def test_scripts_without_a_bootloader_step_still_pass(monkeypatch: pytest.MonkeyPatch) -> None:
-	# None is "not applicable", only an explicit False is a missed step
+def test_all_steps_reached_suggests_a_reboot(monkeypatch: pytest.MonkeyPatch) -> None:
 	warned, logged = _capture(monkeypatch)
 
-	checkpoints.report_outcome(Path('/mnt'), {'base': True, 'bootloader': None})
+	checkpoints.report_outcome(Path('/mnt'), {'base': True})
 
 	assert not warned
 	assert 'You may reboot when ready.' in logged[0]
@@ -37,6 +36,6 @@ def test_scripts_without_a_bootloader_step_still_pass(monkeypatch: pytest.Monkey
 def test_live_target_does_not_suggest_a_reboot(monkeypatch: pytest.MonkeyPatch) -> None:
 	_, logged = _capture(monkeypatch)
 
-	checkpoints.report_outcome(Path('/'), {'base': True, 'bootloader': 'live'})
+	checkpoints.report_outcome(Path('/'), {'base': True})
 
 	assert 'Changes are live on the running system.' in logged[0]

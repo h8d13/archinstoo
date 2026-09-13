@@ -1,9 +1,8 @@
 import time
-from typing import TYPE_CHECKING
 
 from archinstoo.default_profiles.minimal import MinimalProfile
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, get_arch_config_handler
-from archinstoo.lib.configuration import ConfigStore
+from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.disk.filesystem import FilesystemHandler
@@ -18,24 +17,39 @@ from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 
-if TYPE_CHECKING:
-	from pathlib import Path
+
+def show_menu(config: ArchConfig, _args: Arguments) -> None:
+	# only the disk layout is asked, everything else is fixed below
+	with Tui():
+		disk_config = DiskLayoutConfigurationMenu(config.disk_config).run()
+
+	if disk_config is None:
+		info('Installation cancelled.')
+		raise SystemExit(0)
+
+	config.disk_config = disk_config
+
+
+def _validate_silent(config: ArchConfig) -> None:
+	if not config.disk_config:
+		error('--silent needs disk_config in the config, nothing to install to')
+		raise SystemExit(1)
 
 
 def perform_installation(
-	mountpoint: Path,
-	config: ArchConfig,
 	handler: ArchConfigHandler,
 	device_handler: DeviceHandler,
 	profile_handler: ProfileHandler,
 	network_handler: NetworkHandler,
 ) -> None:
+	config = handler.config
+
 	if not config.disk_config:
 		error('No disk configuration provided')
 		return
 
 	disk_config = config.disk_config
-	mountpoint = disk_config.mountpoint or mountpoint
+	mountpoint = disk_config.mountpoint or handler.args.mountpoint
 
 	start_time = time.monotonic()
 	info('Starting minimal installation...')
@@ -86,40 +100,20 @@ def perform_installation(
 
 def _minimal() -> None:
 	handler = get_arch_config_handler()
-	config = handler.config
-	args = handler.args
 
 	# Create handler instances once at the entry point and pass them through
 	device_handler = DeviceHandler()
 	profile_handler = ProfileHandler()
 	network_handler = NetworkHandler()
 
-	with Tui():
-		disk_config = DiskLayoutConfigurationMenu(disk_layout_config=None).run()
+	# same resolve/save/confirm path as guided, so --silent and --dry-run work
+	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
 
-	if disk_config is None:
-		info('Installation cancelled.')
-		return None
-
-	config.disk_config = disk_config
-	store = ConfigStore(config)
-	store.write_debug()
-	store.save()
-
-	if args.dry_run:
-		raise SystemExit(0)
-
-	with Tui():
-		if not store.confirm_config():
-			debug('Installation aborted')
-			return _minimal()
-
-	if (disk_config := config.disk_config) is not None:
+	if disk_config := config.disk_config:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(args.mountpoint, config, handler, device_handler, profile_handler, network_handler)
-	return None
+	perform_installation(handler, device_handler, profile_handler, network_handler)
 
 
 _minimal()

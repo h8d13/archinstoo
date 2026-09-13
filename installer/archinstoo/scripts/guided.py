@@ -3,7 +3,7 @@ import time
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.applications.application_handler import ApplicationHandler
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstoo.lib.args import ArchConfig, Arguments, get_arch_config_handler
 from archinstoo.lib.authentication.shell import ShellApp
 from archinstoo.lib.bootloader.validation import validate_bootloader
 from archinstoo.lib.chroot import drop_to_shell, run_custom_user_commands
@@ -21,14 +21,14 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.output import debug, error, info, sync_artifacts
+from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.pm.aur import run_grimoire_installation
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.tui import Tui
 
 if TYPE_CHECKING:
-	from pathlib import Path
+	from archinstoo.lib.args import ArchConfigHandler
 
 
 def show_menu(config: ArchConfig, args: Arguments) -> None:
@@ -43,9 +43,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 
 
 def perform_installation(
-	mountpoint: Path,
-	config: ArchConfig,
-	args: Arguments,
 	handler: ArchConfigHandler,
 	device_handler: DeviceHandler,
 	profile_handler: ProfileHandler,
@@ -55,6 +52,9 @@ def perform_installation(
 	# Performs the installation steps on a block device.
 	# Only requirement is that the block devices are
 	# formatted and setup prior to entering this function.
+	config = handler.config
+	args = handler.args
+
 	start_time = time.monotonic()
 	info('Starting installation...')
 
@@ -66,7 +66,7 @@ def perform_installation(
 	run_mkinitcpio = not config.bootloader_config or not config.bootloader_config.uki
 	locale_config = config.locale_config
 	optional_repositories = config.pacman_config.optional_repositories if config.pacman_config else []
-	mountpoint = disk_config.mountpoint or mountpoint
+	mountpoint = disk_config.mountpoint or args.mountpoint
 
 	with Installer(
 		mountpoint,
@@ -171,7 +171,7 @@ def perform_installation(
 				profile.post_install(installation)
 				profile.provision(installation, users)
 
-		if config.packages and config.packages[0]:
+		if config.packages:
 			installation.add_additional_packages(config.packages)
 
 		if config.ntp:
@@ -216,10 +216,9 @@ def perform_installation(
 
 		info(f'Installation completed in {elapsed_time:.0f}s')
 
-		# Persist install log + saved config to /etc/archinstoo.d after the menu so the
-		# log captures everything up to the action. subprocess.run('reboot'/'poweroff')
-		# kills the process before __exit__ runs, so syncing here is the last chance.
-		sync_artifacts(installation.target)
+		# after the menu so the log captures everything up to the action, and
+		# before reboot/poweroff since those kill the process before __exit__
+		installation.sync_artifacts()
 
 		match action:
 			case PostInstallationAction.EXIT:
@@ -255,7 +254,6 @@ def _validate_silent(config: ArchConfig) -> None:
 
 def guided() -> None:
 	handler = get_arch_config_handler()
-	args = handler.args
 
 	# Create handler instances once at the entry point and pass them through
 	device_handler = DeviceHandler()
@@ -270,9 +268,6 @@ def guided() -> None:
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(
-		args.mountpoint,
-		config,
-		args,
 		handler,
 		device_handler,
 		profile_handler,

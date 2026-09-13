@@ -13,31 +13,33 @@ from archinstoo.lib.tui import Tui
 
 def show_menu(config: ArchConfig, _args: Arguments) -> None:
 	with Tui():
-		global_menu = GlobalMenu(config)
+		# skip_auth/skip_boot: Install is refused while the auth and
+		# bootloader checks still run against items this mode hides
+		global_menu = GlobalMenu(config, skip_boot=True, skip_auth=True)
 		global_menu.disable_all()
-		global_menu.run(additional_title=' - Format mode')
 
 		global_menu.set_enabled('disk_config', True)
 		global_menu.set_enabled('__config__', True)  # also enables session-only theme
+		global_menu.set_mandatory('timezone', False)
 
-		global_menu.run()
+		global_menu.run(additional_title='- Format mode')
 
 
 def perform_installation(
-	mountpoint: Path,
-	config: ArchConfig,
 	handler: ArchConfigHandler,
 	device_handler: DeviceHandler,
 ) -> None:
-	# Performs the installation steps on a block device.
+	# Mounts the formatted layout and stops there.
 	# Only requirement is that the block devices are
 	# formatted and setup prior to entering this function.
+	config = handler.config
+
 	if not config.disk_config:
 		error('No disk configuration provided')
 		return
 
 	disk_config = config.disk_config
-	mountpoint = disk_config.mountpoint or mountpoint
+	mountpoint = disk_config.mountpoint or handler.args.mountpoint
 
 	with Installer(
 		mountpoint,
@@ -73,7 +75,6 @@ def _validate_silent(config: ArchConfig) -> None:
 
 def format_disk() -> None:
 	handler = get_arch_config_handler()
-	args = handler.args
 
 	# Create handler instance once at the entry point and pass it through
 	device_handler = DeviceHandler()
@@ -85,7 +86,7 @@ def format_disk() -> None:
 		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(args.mountpoint, config, handler, device_handler)
+	perform_installation(handler, device_handler)
 
 
 format_disk()

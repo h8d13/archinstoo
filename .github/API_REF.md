@@ -185,11 +185,12 @@ owns target, pacman, kernel params, fstab entries and teardown, and exposes
 one thin method per step. The module named for the area does the work.
 Edit the module, keep the entry, unless reordering.
 
-`Installer.__exit__` on a clean exit runs `report_outcome` over
-`_helper_flags`: `base` is set by `minimal_installation()`, `bootloader` by
-`add_bootloader()`, and a flag still `False` is reported as a step not
-reached. Scripts that skip those steps claim the flag with
-`set_helper_flag` (live/packages target `/`, format stops after mount).
+`Installer.__exit__` on a clean exit syncs log + config into the target
+(`sync_artifacts`, guided also calls it before reboot) and runs
+`report_outcome` over `_helper_flags`: `base` is set by
+`minimal_installation()`, a flag still `False` is reported as a step not
+reached. Scripts that never run it claim it with `set_helper_flag('base',
+True)` (live/packages target `/`, format stops after mount).
 
 | Step | Lives in |
 |---|---|
