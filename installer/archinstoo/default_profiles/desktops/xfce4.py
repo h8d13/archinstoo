@@ -17,6 +17,7 @@ class Xfce4Profile(XorgProfile):
 			'pavucontrol',
 			'gvfs',
 			'xarchiver',
+			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), xfce-portals.conf names it, groups only optdep it
 			'xdg-desktop-portal-gtk',  # flatpak/file-chooser portal, nothing in the xfce4 group pulls one
 			'xdg-desktop-portal-xapp',  # wallpaper/screenshot/background/settings, listed ahead of gtk in the conf
 		]

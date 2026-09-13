@@ -14,8 +14,9 @@ class MateProfile(XorgProfile):
 		return [
 			'mate',
 			'mate-extra',
+			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), mate-portals.conf names it, groups only optdep it
 			'xdg-desktop-portal-gtk',  # mate-portals.conf names gtk, nothing in the mate groups pulls it
-			'xdg-desktop-portal-xapp',  # wallpaper/screenshot/background/settings, listed ahead of gtk in the conf
+			'xdg-desktop-portal-xapp',  # wallpaper/screenshot/background: mate-portals.conf never names it, picked via xapp.portal UseIn
 		]
 
 	@property
