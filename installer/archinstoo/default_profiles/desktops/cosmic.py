@@ -13,7 +13,6 @@ class CosmicProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'cosmic',
-			'xdg-user-dirs',
 		]
 
 	@property

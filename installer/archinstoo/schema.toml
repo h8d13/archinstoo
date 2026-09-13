@@ -228,7 +228,7 @@ amd = ["vulkan-radeon"]
 packages = ["xorg-server", "xorg-xinit"]
 
 [profile_base]
-desktop = ["smartmontools", "xdg-utils"]
+desktop = ["smartmontools", "xdg-utils", "xdg-user-dirs"]
 server = ["smartmontools"]
 
 [profiles]
@@ -236,7 +236,7 @@ awesome = ["xorg-server", "awesome", "xorg-xinit", "xorg-xrandr", "feh", "slock"
 bspwm = ["bspwm", "sxhkd", "dmenu", "xdo", "rxvt-unicode"]
 budgie = ["materia-gtk-theme", "budgie", "konsole", "dolphin", "papirus-icon-theme"]
 cinnamon = ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed", "xdg-user-dirs-gtk"]
-cosmic = ["cosmic", "xdg-user-dirs"]
+cosmic = ["cosmic"]
 deepin = ["deepin", "deepin-terminal", "deepin-editor"]
 dms = ["niri", "dms-shell-niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "matugen", "cava", "kimageformats", "inter-font", "ttf-fira-code"]
 enlightenment = ["enlightenment", "terminology"]

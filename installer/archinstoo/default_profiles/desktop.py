@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Self, override
 
-from archinstoo.lib.output import debug, info
+from archinstoo.lib.exceptions import SysCallError
+from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType, SelectResult
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui.curses_menu import SelectMenu
@@ -27,6 +28,7 @@ class DesktopProfile(Profile):
 		return [
 			'smartmontools',
 			'xdg-utils',
+			'xdg-user-dirs',
 		]
 
 	@property
@@ -92,6 +94,17 @@ class DesktopProfile(Profile):
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
+		# xdg-user-dirs only runs itself from /etc/xdg/autostart or
+		# graphical-session-pre.target, and bare WMs (labwc, sway, i3...) reach
+		# neither. Create ~/Documents & co here instead; run_as goes through a
+		# login shell, so profile.d/locale.sh hands it the target LANG and the
+		# names come out localized
+		for user in users:
+			try:
+				install_session.arch_chroot(['xdg-user-dirs-update'], run_as=user.username)
+			except SysCallError as err:
+				warn(f'xdg-user-dirs-update failed for {user.username}: {err}')
+
 		for profile in self.current_selection:
 			profile.provision(install_session, users)
 
