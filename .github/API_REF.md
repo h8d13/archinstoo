@@ -1,32 +1,52 @@
 # API Reference
 
 How to extend, run, or edit the installer. Default flow:
-[guided.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/guided.py).
+[guided.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/guided.py):
+`guided()` -> `resolve_config` (menu/save/confirm, or `--silent`) ->
+`FilesystemHandler` (partition/format, before anything is mounted) ->
+`perform_installation` (`with Installer(...)`, steps in order).
 
 ## Run a script standalone
 
 `python -m archinstoo --script <name>` (or installed `archinstoo --script
-<name>`).
+<name>`). `--script list` prints what is available. `guided` is
+`DEFAULT_SCRIPT` in
+[args.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/args.py).
 
 Dispatch:
 [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/__init__.py)
-`run_as_a_module()` -> `main()` ->
+`run_as_a_module()` -> `_prepare()` (deps bootstrap, python re-exec) ->
+`main()` (root check, host `pacman.conf` guard) ->
 [`_run_script`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/checkpoints.py),
-which just `import`s `archinstoo.scripts.<name>`.
+which just `import`s `archinstoo.scripts.<name>`. Rootless scripts skip
+`_prepare()` and `main()`: `run_as_a_module()` calls `_run_script` directly.
 
 Each script
 ([scripts/](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts))
 **runs on import** (calls its entry fn at file bottom, e.g. `guided()`), so
-importing == running.
+importing == running. Files starting with `_` are helpers shared between
+scripts, not scripts (`_resolve.py`).
 
 - `--dry-run`: build + save config, then `SystemExit(0)`.
-- `--config <file>`: load saved selections, skip resume prompt.
-- Rootless (no root needed): `{'list', 'size', 'mirror', 'count'}` in
-  [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/__init__.py).
+- `--config <file>` / `--config-url <url>`: load saved selections, skip
+  resume prompt.
+- `--silent`: config is the whole input, no menu, no confirm. The script's
+  `_validate_silent` fails loud on what the menu would have refused.
+- Only `--script` picks the code path. `ArchConfig.script` in the saved
+  JSON is a label so a resume knows what produced it (`get_script()`).
+- Rootless (no root needed): `ROOTLESS_SCRIPTS` in
+  [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/__init__.py)
+  = `list`, `size`, `mirror`, `count`, `schema`. `NO_DISK_SCRIPTS`
+  (`live`, `packages`) skip the disk deps and are refused on a foreign
+  host: their target is `/`.
 - New script = new file in `scripts/` that defines + calls an entry fn.
   Reuse `get_arch_config_handler()` from
   [args.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/args.py)
-  for config/args.
+  for config/args and `resolve_config(handler, show_menu)` from
+  [configuration.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/configuration.py)
+  for the menu/save/confirm loop; `show_menu` is where a script
+  `set_enabled`/`set_mandatory`s the `GlobalMenu` for its mode (live,
+  packages, format all do this).
 
 ## Add an application (audio/firewall/... category or `cat/`)
 
@@ -115,11 +135,15 @@ decoupled parts.
 2. **The hook.** Call it from `perform_installation` in
    [guided.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/guided.py),
    gated on the config it needs, at the right point in the order (`ShellApp`
-   runs right after `create_users`, line ~116). Mirror into
+   runs right after `create_users`). Mirror into
    [live.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/live.py)
-   if it applies to live mode. Either inline `Worker().install(...)` (the
-   ShellApp style) or build a handler once in the entry fn and thread it
-   through the signature (the `ProfileHandler`/`ApplicationHandler` style).
+   if it applies to live mode, and
+   [packages.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/packages.py)
+   if it concerns profiles/apps/packages/services. Each script holds
+   its own copy of the order, there is no shared list. Either inline
+   `Worker().install(...)` (the ShellApp style) or build a handler once in
+   the entry fn and thread it through the signature (the
+   `ProfileHandler`/`ApplicationHandler` style).
 
 Order of Operations: place the hook relative to the steps it depends on
 (after users, before bootloader, ...). The `Installer` context isn't open
@@ -154,11 +178,18 @@ over a `MenuItemGroup` of `MenuItem`s
 
 ## Edit an existing install step
 
-`Installer`
+Three layers. The script (`perform_installation`) owns step order and
+gates each step on its config. `Installer`
 ([installer.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py))
-orchestrates: `perform_installation` calls its methods in order, and each
-method is a thin entry into the module that does the work. Edit the module,
-keep the entry, unless reordering.
+owns target, pacman, kernel params, fstab entries and teardown, and exposes
+one thin method per step. The module named for the area does the work.
+Edit the module, keep the entry, unless reordering.
+
+`Installer.__exit__` on a clean exit runs `report_outcome` over
+`_helper_flags`: `base` is set by `minimal_installation()`, `bootloader` by
+`add_bootloader()`, and a flag still `False` is reported as a step not
+reached. Scripts that skip those steps claim the flag with
+`set_helper_flag` (live/packages target `/`, format stops after mount).
 
 | Step | Lives in |
 |---|---|

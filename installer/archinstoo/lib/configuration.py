@@ -136,7 +136,7 @@ class ConfigStore:
 		return None
 
 
-# Shared config resolution for the entry scripts (guided/live/packages).
+# Shared config resolution for the entry scripts (guided/live/packages/format).
 # Silent: the config file is the whole input, fail loud instead of hanging on
 # a menu nobody is watching. Interactive: offer resume of the saved config
 # (skipped when --config was given), then loop menu -> save -> confirm.
