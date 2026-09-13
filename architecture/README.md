@@ -25,7 +25,8 @@ All three live on `https://arch-linux-repo.drzee.net/arch/$repo/os/$arch`. The p
 mirrorlist. What differs from x86_64 inside archinstoo:
 
 - Mirror regions are not offered (no mirror network). Custom servers and repos still are.
-- `forge` is the optional repository, in place of `multilib` and the testing repos.
+- `forge` ships enabled in that conf, nothing to toggle. The optional repositories are
+  `core-testing` and `extra-testing` only: no `multilib` on the port.
 - `archports-keyring` joins the base packages: `pacman` does not depend on it there.
 - The `microcode` initramfs hook is dropped, it only knows x86 vendors.
 - Bootloaders: `systemd-boot`, `grub` (`arm64-efi`), `limine` (`BOOTAA64.EFI`).

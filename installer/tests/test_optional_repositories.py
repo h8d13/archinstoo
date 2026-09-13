@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 	('arch', 'offered'),
 	[
 		('x86_64', [Repository.Multilib, Repository.MultilibTesting, Repository.CoreTesting, Repository.ExtraTesting]),
-		('aarch64', [Repository.Forge]),
+		('aarch64', [Repository.CoreTesting, Repository.ExtraTesting]),
 	],
 )
 def test_optional_repositories_follow_the_port(monkeypatch: pytest.MonkeyPatch, arch: str, offered: list[Repository]) -> None:

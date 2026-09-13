@@ -319,8 +319,9 @@ def select_custom_mirror(preset: list[CustomRepository] | None = None) -> list[C
 
 
 def optional_repositories() -> list[Repository]:
-	# what the mirrors carry beyond core/extra: multilib and testing on
-	# archlinux.org, forge on Arch Ports (no multilib, no testing there)
+	# the commented-out sections of the port's pacman.conf: multilib and
+	# testing on archlinux.org, testing only on Arch Ports (forge ships
+	# enabled there, nothing to toggle)
 	if SysInfo.arch() == 'x86_64':
 		return [
 			Repository.Multilib,
@@ -328,7 +329,7 @@ def optional_repositories() -> list[Repository]:
 			Repository.CoreTesting,
 			Repository.ExtraTesting,
 		]
-	return [Repository.Forge]
+	return [Repository.CoreTesting, Repository.ExtraTesting]
 
 
 def select_optional_repositories(preset: list[Repository]) -> list[Repository]:
