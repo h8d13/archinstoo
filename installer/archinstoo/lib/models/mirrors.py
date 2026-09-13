@@ -108,11 +108,7 @@ class MirrorStatusEntryV3:
 
 	@property
 	def server_url(self) -> str:
-		from archinstoo.lib.hardware import SysInfo
-
-		if SysInfo.arch() == 'x86_64':
-			return f'{self.url}$repo/os/$arch'
-		return f'{self.url}$arch/$repo'
+		return f'{self.url}$repo/os/$arch'
 
 	@property
 	def speed(self) -> float:
@@ -124,8 +120,7 @@ class MirrorStatusEntryV3:
 
 			from archinstoo.lib.hardware import SysInfo
 
-			arch = SysInfo.arch()
-			test_db = f'{self.url}core/os/{arch}/core.db' if arch == 'x86_64' else f'{self.url}{arch}/core/core.db'
+			test_db = f'{self.url}core/os/{SysInfo.arch()}/core.db'
 
 			retry = 0
 			while retry < self._speedtest_retries and self._speed is None:

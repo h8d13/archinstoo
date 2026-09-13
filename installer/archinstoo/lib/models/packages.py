@@ -7,6 +7,8 @@ from typing import Self
 class Repository(Enum):
 	Core = 'core'
 	Extra = 'extra'
+	# Arch Ports (aarch64): board kernels, firmware and archports-keyring
+	Forge = 'forge'
 	Multilib = 'multilib'
 	Testing = 'testing'
 	MultilibTesting = 'multilib-testing'

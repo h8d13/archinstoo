@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import pytest
+
+from archinstoo.lib import hardware
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.kernel.initramfs import LVM, Initramfs
 from archinstoo.lib.models.device import FilesystemType
@@ -26,6 +29,13 @@ def test_bcachefs_hook_follows_block_and_ships_the_module() -> None:
 	assert initramfs.modules == ['bcachefs']
 	assert initramfs.hooks.index('bcachefs') == initramfs.hooks.index('block') + 1
 	assert initramfs.hooks.count('bcachefs') == 1
+
+
+@pytest.mark.parametrize(('arch', 'present'), [('x86_64', True), ('aarch64', False)])
+def test_microcode_hook_only_where_it_applies(monkeypatch: pytest.MonkeyPatch, arch: str, present: bool) -> None:
+	monkeypatch.setattr(hardware.SysInfo, 'arch', staticmethod(lambda: arch))
+
+	assert ('microcode' in Initramfs().hooks) is present
 
 
 def _session(tmp_path: Path) -> Installer:

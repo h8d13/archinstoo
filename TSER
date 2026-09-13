@@ -276,8 +276,13 @@ def cmd_login(args: argparse.Namespace) -> None:
 	# grml zsh ships 'correct' on: one mangled byte turns a command into an
 	# interactive 'correct git to _git [nyae]?' prompt that eats the next
 	# keystroke and wedges the session. Fail loudly instead.
+	# Wait for the prompt in between: a TCG guest is still chewing on stty
+	# when the next line lands and loses its tail ('unsetopt corre').
+	if not wait_idle(args.timeout):
+		die('no prompt after stty')
 	serial_write(b'[ -n "$ZSH_VERSION" ] && unsetopt correct\n')
-	time.sleep(0.5)
+	if not wait_idle(args.timeout):
+		die('no prompt after unsetopt')
 	print('logged in as root')
 
 

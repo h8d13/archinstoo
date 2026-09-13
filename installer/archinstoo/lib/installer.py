@@ -53,6 +53,8 @@ if TYPE_CHECKING:
 # hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
 # UKI presets, both of which assume mkinitcpio is present in the chroot.
 __base_packages__ = ['base', 'mkinitcpio']
+# Arch Ports (aarch64) ships its keyring from forge, not as a pacman dependency
+__archports_packages__ = ['archports-keyring']
 
 # Package sets minimal_installation() and the steps after it add conditionally.
 # Named rather than inlined so schema_gen can read the same list the installer
@@ -281,6 +283,12 @@ class Installer:
 			self._base_packages.append(ucode.stem)
 		else:
 			debug('Archinstoo will not install any ucode.')
+
+		if SysInfo.arch() == 'aarch64':
+			# pacstrap copies the live gnupg dir (no -K/-G), so the target
+			# verifies today; only the package keeps the Arch Ports key
+			# current, and drzee's pacman does not depend on it
+			self._base_packages.extend(__archports_packages__)
 
 		debug(f'Optional repositories: {optional_repositories}')
 

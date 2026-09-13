@@ -17,12 +17,11 @@ _MIRROR_STATUS_URL = 'https://archlinux.org/mirrors/status/json/'
 _PACMAN_CONF_URL = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
 _KEYRING_MIRROR = 'https://geo.mirror.pkgbuild.com/core/os/x86_64/'
 
-# archlinux.org ships x86_64 only. Off it, follow archlinuxarm.org: $arch/$repo
-# mirror layout, its own repos and its own signing key, so conf + mirrorlist +
-# keyring all have to move together.
-_ARM_PACMAN_CONF_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman/pacman.conf'
-_ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
-_ARM_KEYRING_MIRROR = 'http://mirror.archlinuxarm.org/{arch}/core/'
+# archlinux.org ships x86_64 only. aarch64 follows Arch Ports (drzee.net):
+# same $repo/os/$arch layout and upstream conf, one server instead of a
+# mirror list, a forge repo on top, and its own signing key shipped there.
+_PORTS_SERVER = 'https://arch-linux-repo.drzee.net/arch/$repo/os/$arch'
+_PORTS_KEYRING_MIRROR = 'https://arch-linux-repo.drzee.net/arch/forge/os/aarch64/'
 
 _TRUSTDB = PACMAN_GNUPG / 'trustdb.gpg'
 _KEYRING_DIR = Path('/usr/share/pacman/keyrings')
@@ -47,10 +46,9 @@ class _Sources(NamedTuple):
 def _sources() -> _Sources:
 	# Single branch for the whole bootstrap: another arch means one more entry
 	# here, not conditionals scattered down the file.
-	arch = SysInfo.arch()
-	if arch == 'x86_64':
+	if SysInfo.arch() == 'x86_64':
 		return _Sources(_PACMAN_CONF_URL, _KEYRING_MIRROR, 'archlinux-keyring', 'archlinux')
-	return _Sources(_ARM_PACMAN_CONF_URL, _ARM_KEYRING_MIRROR.format(arch=arch), 'archlinuxarm-keyring', 'archlinuxarm')
+	return _Sources(_PACMAN_CONF_URL, _PORTS_KEYRING_MIRROR, 'archports-keyring', 'archports')
 
 
 def _has_repos() -> bool:
@@ -62,10 +60,8 @@ def _has_repos() -> bool:
 
 def _build_mirrorlist() -> str:
 	if SysInfo.arch() != 'x86_64':
-		# No mirror-status API off x86_64; the packaged mirrorlist already ships
-		# its geo-balanced server uncommented, so take it verbatim.
-		info(f'Fetching mirrorlist from {_ARM_MIRRORLIST_URL}...')
-		return fetch_data_from_url(_ARM_MIRRORLIST_URL, timeout=15)
+		# Arch Ports has no mirror network, one S3-backed server
+		return f'# Arch Ports, fetched by archinstoo bootstrap\nServer = {_PORTS_SERVER}\n'
 
 	info(f'Fetching mirror status from {_MIRROR_STATUS_URL}...')
 	data = json.loads(fetch_data_from_url(_MIRROR_STATUS_URL, timeout=15))
@@ -94,13 +90,17 @@ def pacman_conf() -> None:
 	# Packaging templates leave Architecture = @CARCH@ for build time to fill;
 	# no-op on a conf that ships already substituted.
 	conf = conf.replace('@CARCH@', SysInfo.arch())
+	if SysInfo.arch() != 'x86_64':
+		# upstream conf knows core/extra; the port adds forge ahead of them
+		conf = conf.replace('[core]\n', f'[forge]\nInclude = {MIRRORLIST}\n\n[core]\n', 1)
 	PACMAN_CONF.write_text(conf)
 
 
 def _latest_keyring_url(mirror: str, pkg_name: str) -> str:
 	page = fetch_data_from_url(mirror)
-	# .zst on Arch, .xz on Arch Linux ARM
-	pkgs: list[str] = re.findall(rf'href="({re.escape(pkg_name)}-[^"]+\.pkg\.tar\.(?:zst|xz))"', page)
+	# hrefs are bare filenames on archlinux.org mirrors, absolute paths on
+	# the Arch Ports S3 index: keep the filename either way
+	pkgs: list[str] = re.findall(rf'href="(?:[^"]*/)?({re.escape(pkg_name)}-[^"/]+\.pkg\.tar\.zst)"', page)
 	if not pkgs:
 		raise RuntimeError(f'{pkg_name} package not found on {mirror}')
 	# Lexical order tracks the version-date suffix, so max == newest.
@@ -125,12 +125,8 @@ def keyring_init() -> None:
 		download_file_from_url(url, pkg)
 
 		info('Extracting keyring...')
-		if pkg.suffix == '.zst':
-			with ZstdFile(pkg) as raw, tarfile.open(fileobj=raw, mode='r|') as t:
-				t.extractall(root, filter='data')
-		else:
-			with tarfile.open(pkg, mode='r:xz') as t:
-				t.extractall(root, filter='data')
+		with ZstdFile(pkg) as raw, tarfile.open(fileobj=raw, mode='r|') as t:
+			t.extractall(root, filter='data')
 
 		_KEYRING_DIR.mkdir(parents=True, exist_ok=True)
 		for key in (root / 'usr/share/pacman/keyrings').iterdir():

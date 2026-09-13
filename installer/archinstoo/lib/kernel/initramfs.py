@@ -2,6 +2,7 @@ import re
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug, info, log, warn
 
 if TYPE_CHECKING:
@@ -35,6 +36,9 @@ class Initramfs:
 			'filesystems',
 			'fsck',
 		]
+		# the hook only knows x86 vendors and warns its way out elsewhere
+		if SysInfo.arch() != 'x86_64':
+			self.hooks.remove('microcode')
 
 	def add_lvm(self) -> None:
 		# after block so the volume group's device is online before lvm2

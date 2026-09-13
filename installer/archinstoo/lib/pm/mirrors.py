@@ -164,7 +164,10 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 		)
 
 	def _define_menu_options(self) -> list[MenuItem]:
-		return [
+		# mirror regions are archlinux.org's network; Arch Ports resolves
+		# through the Server lines its own pacman.conf ships, so off x86_64
+		# there is nothing to pick from
+		regions = [
 			MenuItem(
 				text='Select regions',
 				action=partial(select_mirror_regions, mirror_list_handler=self._mirror_handler),
@@ -172,6 +175,8 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 				preview_action=self._prev_regions,
 				key='mirror_regions',
 			),
+		]
+		return (regions if SysInfo.arch() == 'x86_64' else []) + [
 			MenuItem(
 				text='Optional repositories',
 				action=select_optional_repositories,
@@ -313,18 +318,21 @@ def select_custom_mirror(preset: list[CustomRepository] | None = None) -> list[C
 	return CustomMirrorRepositoriesList(preset or []).run()
 
 
+def optional_repositories() -> list[Repository]:
+	# what the mirrors carry beyond core/extra: multilib and testing on
+	# archlinux.org, forge on Arch Ports (no multilib, no testing there)
+	if SysInfo.arch() == 'x86_64':
+		return [
+			Repository.Multilib,
+			Repository.MultilibTesting,
+			Repository.CoreTesting,
+			Repository.ExtraTesting,
+		]
+	return [Repository.Forge]
+
+
 def select_optional_repositories(preset: list[Repository]) -> list[Repository]:
-	# Allows the user to select additional repositories (multilib, and testing) if desired.
-	#
-	# :return: The string as a selected repository
-	# :rtype: Repository
-	repositories = [
-		Repository.Multilib,
-		Repository.MultilibTesting,
-		Repository.CoreTesting,
-		Repository.ExtraTesting,
-	]
-	items = [MenuItem(r.value, value=r) for r in repositories]
+	items = [MenuItem(r.value, value=r) for r in optional_repositories()]
 	group = MenuItemGroup(items, sort_items=False)
 	group.set_selected_by_value(preset)
 
@@ -413,12 +421,7 @@ class MirrorListHandler:
 		if not _MirrorCache.is_remote:
 			self.load_local_mirrors()
 
-	_ARM_MIRRORLIST_URL = 'https://raw.githubusercontent.com/archlinuxarm/PKGBUILDs/master/core/pacman-mirrorlist/mirrorlist'
-
 	def load_remote_mirrors(self) -> bool:
-		if SysInfo.arch() != 'x86_64':
-			return self._load_arm_mirrors()
-
 		attempts = 3
 
 		for attempt_nr in range(attempts):
@@ -432,16 +435,6 @@ class MirrorListHandler:
 
 		debug('Unable to fetch mirror list remotely, falling back to local mirror list')
 		return False
-
-	def _load_arm_mirrors(self) -> bool:
-		debug(f'ARM architecture ({SysInfo.arch()}), fetching Arch Linux ARM mirror list')
-		try:
-			data = fetch_data_from_url(self._ARM_MIRRORLIST_URL)
-			_MirrorCache.data.update(self._parse_local_mirrors(data))
-			return True
-		except Exception as e:
-			debug(f'Error fetching ARM mirror list: {e}')
-			return False
 
 	def load_local_mirrors(self) -> None:
 		with self._local_mirrorlist.open('r') as fp:

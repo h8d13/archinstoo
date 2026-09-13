@@ -91,6 +91,7 @@ _STANDARD_REPOS = {
 	'options',
 	'core',
 	'extra',
+	'forge',
 	'multilib',
 	'testing',
 	'core-testing',

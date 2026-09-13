@@ -135,6 +135,11 @@ SECTIONS: tuple[Section, ...] = (
 		site='installation.minimal_installation',
 	),
 	Section(
+		'archports',
+		lambda: installer.__archports_packages__,
+		site='installation.minimal_installation',
+	),
+	Section(
 		'microcode',
 		lambda: {v.value: [ucode.stem] for v in CpuVendor if (ucode := v.get_ucode())},
 		site='installation.minimal_installation',

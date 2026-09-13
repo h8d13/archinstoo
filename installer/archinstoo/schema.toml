@@ -42,6 +42,9 @@ packages = ["bcachefs-dkms"]
 [fido2]
 packages = ["libfido2"]
 
+[archports]
+packages = ["archports-keyring"]
+
 [microcode]
 amd = ["amd-ucode"]
 intel = ["intel-ucode"]

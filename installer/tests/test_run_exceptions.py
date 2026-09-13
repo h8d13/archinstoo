@@ -1,4 +1,6 @@
+import os
 import subprocess
+import sys
 
 import pytest
 
@@ -32,3 +34,21 @@ def test_run_failure_carries_stderr() -> None:
 	assert err.returncode == 3
 	assert b'boom' in err.stderr
 	assert b'boom' in err.worker_log
+
+
+def test_run_child_stdin_is_readable() -> None:
+	# nohup reopens stdin as a write-only /dev/null; arch-chroot -S passes
+	# fd 0 on to systemd-run --pipe and systemd refuses a write-only fd as
+	# StandardInput. run() must not inherit whatever the launcher left there.
+	saved = os.dup(0)
+	try:
+		os.dup2(os.open(os.devnull, os.O_WRONLY), 0)
+		run([sys.executable, '-c', 'import os; os.read(0, 1)'])
+	finally:
+		os.dup2(saved, 0)
+		os.close(saved)
+
+
+def test_run_input_still_reaches_child() -> None:
+	out = run(['cat'], input_data=b'ping')
+	assert out.stdout == b'ping'

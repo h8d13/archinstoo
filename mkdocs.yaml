@@ -79,7 +79,7 @@ nav:
       - CachyOS kernels: CACHY_KERNELS.md
       - Dependency chains: DEP_CHAINS.md
   - Advanced:
-      - ARM64 / SBCs: ARM_SUPPORT.md
+      - aarch64 (Arch Ports): ARM_SUPPORT.md
       - AUR / out-of-tree: OUT_OF_TREE.md
       - Build ISOs: BUILD_ISOS.md
       - Other Linux: DISTROS.md

@@ -79,6 +79,9 @@ def _host_packages() -> set[str]:
 	if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
 		pkgs.update(SCHEMA['microcode'].get(vendor.value, []))
 
+	if SysInfo.arch() == 'aarch64':
+		pkgs.update(_flat('archports'))
+
 	return pkgs
 
 

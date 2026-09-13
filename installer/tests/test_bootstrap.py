@@ -2,14 +2,12 @@ import pytest
 
 from archinstoo.lib.pm import bootstrap
 
-# Slice of a real archlinuxarm.org core/ index: .xz, not .zst, and
-# archlinuxarm-keyring sits right next to archlinux-keyring.
-_ARM_INDEX = """
-<a href="archlinux-keyring-20260707.1-1-any.pkg.tar.xz">archlinux-keyring-20260707.1-1-any.pkg.tar.xz</a>
-<a href="archlinux-keyring-20260707.1-1-any.pkg.tar.xz.sig">sig</a>
-<a href="archlinuxarm-keyring-20240418-2-any.pkg.tar.xz">archlinuxarm-keyring-20240418-2-any.pkg.tar.xz</a>
-<a href="archlinuxarm-keyring-20240419-2-any.pkg.tar.xz">archlinuxarm-keyring-20240419-2-any.pkg.tar.xz</a>
-<a href="archlinuxarm-keyring-20240419-2-any.pkg.tar.xz.sig">sig</a>
+# Slice of the real Arch Ports forge/ index (S3): absolute hrefs, and the
+# keyring sits next to its own .sig
+_PORTS_INDEX = """
+<a href="/arch/forge/os/aarch64/archports-keyring-20260731-1-any.pkg.tar.zst">archports-keyring-20260731-1-any.pkg.tar.zst</a>
+<a href="/arch/forge/os/aarch64/archports-keyring-20260831-1-any.pkg.tar.zst">archports-keyring-20260831-1-any.pkg.tar.zst</a>
+<a href="/arch/forge/os/aarch64/archports-keyring-20260831-1-any.pkg.tar.zst.sig">archports-keyring-20260831-1-any.pkg.tar.zst.sig</a>
 """
 
 _X86_INDEX = """
@@ -32,18 +30,19 @@ def test_sources_aarch64(monkeypatch: pytest.MonkeyPatch) -> None:
 
 	src = bootstrap._sources()
 
-	assert src.keyring_mirror == 'http://mirror.archlinuxarm.org/aarch64/core/'
-	assert (src.keyring_pkg, src.keyring) == ('archlinuxarm-keyring', 'archlinuxarm')
-	assert src.pacman_conf == bootstrap._ARM_PACMAN_CONF_URL
+	assert src.keyring_mirror == bootstrap._PORTS_KEYRING_MIRROR
+	assert (src.keyring_pkg, src.keyring) == ('archports-keyring', 'archports')
+	# same upstream conf as x86_64, the port only differs in servers
+	assert src.pacman_conf == bootstrap._PACMAN_CONF_URL
 
 
-def test_latest_keyring_url_arm(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(bootstrap, 'fetch_data_from_url', lambda url, **kw: _ARM_INDEX)
+def test_latest_keyring_url_ports(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(bootstrap, 'fetch_data_from_url', lambda url, **kw: _PORTS_INDEX)
 
-	url = bootstrap._latest_keyring_url('http://arm.test/aarch64/core/', 'archlinuxarm-keyring')
+	url = bootstrap._latest_keyring_url(bootstrap._PORTS_KEYRING_MIRROR, 'archports-keyring')
 
-	# newest of the two, and not the neighbouring archlinux-keyring
-	assert url == 'http://arm.test/aarch64/core/archlinuxarm-keyring-20240419-2-any.pkg.tar.xz'
+	# newest of the two, filename only despite the absolute href
+	assert url == f'{bootstrap._PORTS_KEYRING_MIRROR}archports-keyring-20260831-1-any.pkg.tar.zst'
 
 
 def test_latest_keyring_url_x86(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -55,15 +54,13 @@ def test_latest_keyring_url_x86(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_latest_keyring_url_missing(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(bootstrap, 'fetch_data_from_url', lambda url, **kw: '<a href="pacman-7.0.0-1-aarch64.pkg.tar.xz">pacman</a>')
+	monkeypatch.setattr(bootstrap, 'fetch_data_from_url', lambda url, **kw: '<a href="pacman-7.0.0-1-aarch64.pkg.tar.zst">pacman</a>')
 
-	with pytest.raises(RuntimeError, match='archlinuxarm-keyring package not found'):
-		bootstrap._latest_keyring_url('http://arm.test/aarch64/core/', 'archlinuxarm-keyring')
+	with pytest.raises(RuntimeError, match='archports-keyring package not found'):
+		bootstrap._latest_keyring_url(bootstrap._PORTS_KEYRING_MIRROR, 'archports-keyring')
 
 
-def test_mirrorlist_taken_verbatim_off_x86(monkeypatch: pytest.MonkeyPatch) -> None:
-	mirrorlist = '# Arch Linux ARM repository mirrorlist\nServer = http://mirror.archlinuxarm.org/$arch/$repo\n'
+def test_mirrorlist_is_the_ports_server_off_x86(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr('platform.machine', lambda: 'aarch64')
-	monkeypatch.setattr(bootstrap, 'fetch_data_from_url', lambda url, **kw: mirrorlist)
 
-	assert bootstrap._build_mirrorlist() == mirrorlist
+	assert f'Server = {bootstrap._PORTS_SERVER}' in bootstrap._build_mirrorlist()

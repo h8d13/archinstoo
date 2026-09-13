@@ -3,6 +3,7 @@
 # sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 # (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set A2_DISPLAY_BACKEND to match)
 # (audio backend is a separate pkg: qemu-audio-pipewire (default), qemu-audio-pa, qemu-audio-alsa; set A2_AUDIO_BACKEND to match)
+# (A2_ARCH=aarch64 adds: qemu-system-aarch64 edk2-aarch64; qemu-hw-display-virtio-gpu{,-pci} for A2_VGA=virtio-gpu-pci)
 #
 # Dev test VM for archinstoo. Boots an ISO under QEMU.
 # ISO building is intentionally NOT done here, use isos/ISOMOD for that/default Arch ISO.
@@ -11,6 +12,8 @@
 # Host artifacts (created in repo root, git-ignored):
 #   .dev-disk.qcow2     VM disk image (qemu-img)
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
+#                       (both get a -<arch> suffix when A2_ARCH is not x86_64,
+#                       so an aarch64 install never clobbers the x86_64 one)
 #   A2_SERIAL=1 only:
 #   .dev-boot/          kernel + initramfs pulled out of the ISO
 #   .dev-serial.sock    guest ttyS0, .dev-serial.log its full transcript
@@ -24,6 +27,14 @@
 #   ./TVM clean  | c - remove disk and NVRAM (ISOs untouched)
 #   ./TVM help   | h - show this help
 # Env overrides:
+#   A2_ARCH             guest architecture: 'x86_64' (default) or 'aarch64'.
+#                       aarch64 boots -machine virt with edk2-aarch64 pflash,
+#                       KVM only when the host is aarch64 too (TCG -cpu max
+#                       otherwise: slow, expect minutes to a shell). ISO
+#                       discovery filters on the arch in the filename. No
+#                       -cdrom on virt: the ISO rides virtio-scsi, boot order
+#                       goes through bootindex. Input is USB (xhci kbd+tablet).
+#                       A2_BIOS and A2_UKI are x86_64 only.
 #   A2_SERIAL           '1' boots headless with the console on ttyS0 and
 #                       detaches (no window, no stdio monitor). Composes with
 #                       every mode above. Drive it with ./TSER (login/run).
@@ -36,6 +47,11 @@
 #                       so the guest keeps a real UEFI environment. Needs bsdtar.
 #                       'boot' mode has no such hook: the installed system only
 #                       talks to ttyS0 if its own cmdline says console=ttyS0.
+#                       aarch64 extracts the same way (arch/boot/aarch64/).
+#                       virt's own UART is a pl011 whose QEMU model stalls on
+#                       typed input past a few hundred bytes, so both lines
+#                       ride a dual-port PCI 16550 instead: ttyS0/ttyS1 in
+#                       the guest, same as q35, same sockets on the host.
 #   A2_BIOS             '1' boots SeaBIOS instead of OVMF: no pflash, no
 #                       NVRAM. The installed disk must carry a BIOS-capable
 #                       bootloader (grub with a bios_grub partition).
@@ -48,19 +64,35 @@
 #   A2_DISK_SIZE        new disk size (default 64G)
 #   A2_DISPLAY_BACKEND  qemu -display value (default 'gtk,zoom-to-fit=off')
 #   A2_VGA              qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
+#                       On aarch64 it is a -device name instead (default 'ramfb',
+#                       built in; 'virtio-gpu-pci' needs qemu-hw-display-virtio-gpu{,-pci})
 #   A2_GL               '1' swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
 #                       Overrides A2_VGA. niri/DMS have no software fallback, black-screen
 #                       without this. Needs the full module chain (vga-gl alone won't load):
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
+#                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
+#   A2_DRY              '1' prints the assembled qemu command and exits (still
+#                       creates the disk/NVRAM the mode asks for)
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
-DISK="$PROJECT_DIR/.dev-disk.qcow2"
-OVMF_VARS="$PROJECT_DIR/.dev-ovmf-vars.fd"
+A2_ARCH="${A2_ARCH:-x86_64}"
+case "$A2_ARCH" in
+x86_64) ARCH_SUFFIX="" ;;
+aarch64) ARCH_SUFFIX="-$A2_ARCH" ;;
+*)
+	echo "ERROR: A2_ARCH=$A2_ARCH unsupported (x86_64, aarch64)" >&2
+	exit 1
+	;;
+esac
+QEMU="qemu-system-$A2_ARCH"
+HOST_ARCH="$(uname -m)"
+DISK="$PROJECT_DIR/.dev-disk$ARCH_SUFFIX.qcow2"
+OVMF_VARS="$PROJECT_DIR/.dev-ovmf-vars$ARCH_SUFFIX.fd"
 ISOMOD_OUT="$PROJECT_DIR/isos/a"
 DEV_ISO_DIR="$PROJECT_DIR/.dev-iso"
 BOOT_DIR="$PROJECT_DIR/.dev-boot"
@@ -76,7 +108,15 @@ A2_DISK_SIZE="${A2_DISK_SIZE:-64G}"
 A2_RAM="${A2_RAM:-4G}"
 A2_CPUS="${A2_CPUS:-4}"
 A2_DISPLAY_BACKEND="${A2_DISPLAY_BACKEND:-gtk,zoom-to-fit=off}"
-A2_VGA="${A2_VGA:-std}"
+# x86_64: a -vga value. aarch64 virt has no VGA slot, so a -device name:
+# ramfb is compiled in, virtio-gpu-pci is a module.
+if [ "$A2_ARCH" = "x86_64" ]; then
+	A2_VGA="${A2_VGA:-std}"
+	GL_DEVICE="virtio-vga-gl"
+else
+	A2_VGA="${A2_VGA:-ramfb}"
+	GL_DEVICE="virtio-gpu-gl-pci"
+fi
 A2_GL="${A2_GL:-0}"
 A2_AUDIO_BACKEND="${A2_AUDIO_BACKEND:-pipewire}"
 ARG="${1:-default}"
@@ -91,13 +131,25 @@ err() {
 
 probe_ovmf() {
 	[ "$A2_BIOS" = "1" ] && return 0
-	local pairs=(
-		"/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd"
-		"/usr/share/edk2-ovmf/x64/OVMF_CODE.fd:/usr/share/edk2-ovmf/x64/OVMF_VARS.fd"
-		"/usr/share/edk2/ovmf/OVMF_CODE.fd:/usr/share/edk2/ovmf/OVMF_VARS.fd"
-		"/usr/share/OVMF/OVMF_CODE_4M.fd:/usr/share/OVMF/OVMF_VARS_4M.fd"
-		"/usr/share/OVMF/OVMF_CODE.fd:/usr/share/OVMF/OVMF_VARS.fd"
-	)
+	local pairs pkg
+	if [ "$A2_ARCH" = "x86_64" ]; then
+		pkg="edk2-ovmf"
+		pairs=(
+			"/usr/share/edk2/x64/OVMF_CODE.4m.fd:/usr/share/edk2/x64/OVMF_VARS.4m.fd"
+			"/usr/share/edk2-ovmf/x64/OVMF_CODE.fd:/usr/share/edk2-ovmf/x64/OVMF_VARS.fd"
+			"/usr/share/edk2/ovmf/OVMF_CODE.fd:/usr/share/edk2/ovmf/OVMF_VARS.fd"
+			"/usr/share/OVMF/OVMF_CODE_4M.fd:/usr/share/OVMF/OVMF_VARS_4M.fd"
+			"/usr/share/OVMF/OVMF_CODE.fd:/usr/share/OVMF/OVMF_VARS.fd"
+		)
+	else
+		# virt pflash wants both images padded to 64M, Arch/Debian ship them so
+		pkg="edk2-aarch64"
+		pairs=(
+			"/usr/share/edk2/aarch64/QEMU_EFI.fd:/usr/share/edk2/aarch64/QEMU_VARS.fd"
+			"/usr/share/edk2/aarch64/QEMU_CODE.fd:/usr/share/edk2/aarch64/QEMU_VARS.fd"
+			"/usr/share/AAVMF/AAVMF_CODE.fd:/usr/share/AAVMF/AAVMF_VARS.fd"
+		)
+	fi
 	local pair code vars
 	for pair in "${pairs[@]}"; do
 		code="${pair%%:*}"
@@ -108,24 +160,28 @@ probe_ovmf() {
 			return 0
 		fi
 	done
-	err "OVMF firmware not found. Install 'edk2-ovmf' or similar on your distro."
+	err "UEFI firmware for $A2_ARCH not found. Install '$pkg' or similar on your distro."
 }
 
 # virgl needs both ends: GL-capable device AND gl=on on the display.
 # -device help skips unloaded modules; probe with device-specific help instead.
 ensure_virgl() {
-	if qemu-system-x86_64 -device virtio-vga-gl,help 2>&1 | grep -q "not found"; then
-		err "virtio-vga-gl not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} and qemu-ui-opengl)"
+	if "$QEMU" -device "$GL_DEVICE,help" 2>&1 | grep -q "not found"; then
+		err "$GL_DEVICE not loadable (install qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} / -{gpu-pci,gpu-gl-pci} and qemu-ui-opengl)"
 	fi
 }
 
 check_host_deps() {
 	local missing=() cmd
-	for cmd in qemu-system-x86_64 qemu-img; do
+	for cmd in "$QEMU" qemu-img; do
 		command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
 	done
 	if [ ${#missing[@]} -gt 0 ]; then
-		err "missing host commands: ${missing[*]} (install qemu-base)"
+		err "missing host commands: ${missing[*]} (install qemu-base / qemu-system-$A2_ARCH)"
+	fi
+	if [ "$A2_ARCH" != "x86_64" ]; then
+		[ "$A2_BIOS" != "1" ] || err "A2_BIOS is x86_64 only (no SeaBIOS on virt)"
+		[ -z "$A2_UKI" ] || err "A2_UKI is x86_64 only (UKIMOD builds x86_64 images)"
 	fi
 	if [ "$A2_SERIAL" = "1" ] && [ -z "$A2_UKI" ]; then
 		command -v bsdtar >/dev/null 2>&1 ||
@@ -155,9 +211,9 @@ extract_iso_kernel() {
 	mkdir -p "$BOOT_DIR"
 	if [ ! -f "$stamp" ] || [ "$(cat "$stamp")" != "$want" ]; then
 		echo "extracting kernel/initramfs from $(basename "$iso")"
-		bsdtar -xOf "$iso" arch/boot/x86_64/vmlinuz-linux \
+		bsdtar -xOf "$iso" "arch/boot/$A2_ARCH/vmlinuz-linux" \
 			>"$BOOT_DIR/vmlinuz-linux"
-		bsdtar -xOf "$iso" arch/boot/x86_64/initramfs-linux.img \
+		bsdtar -xOf "$iso" "arch/boot/$A2_ARCH/initramfs-linux.img" \
 			>"$BOOT_DIR/initramfs-linux.img"
 		bsdtar -xOf "$iso" loader/entries/01-archiso-linux.conf |
 			sed -n 's/^options[[:space:]]\+//p' >"$BOOT_DIR/cmdline"
@@ -173,7 +229,15 @@ find_iso() {
 		printf '%s\n' "$A2_DEV_ISO"
 		return
 	fi
-	{ ls -t "$ISOMOD_OUT"/*.iso "$DEV_ISO_DIR"/*.iso 2>/dev/null || true; } | head -n1
+	# newest first, then keep the guest arch: aarch64 ISOs carry it in the
+	# name (archlinux-*-aarch64.iso), x86_64 ones do not always (archlinux-*.iso)
+	local isos
+	isos="$(ls -t "$ISOMOD_OUT"/*.iso "$DEV_ISO_DIR"/*.iso 2>/dev/null || true)"
+	if [ "$A2_ARCH" = "x86_64" ]; then
+		printf '%s\n' "$isos" | { grep -v "aarch64" || true; } | head -n1
+	else
+		printf '%s\n' "$isos" | { grep "$A2_ARCH" || true; } | head -n1
+	fi
 }
 
 require_iso() {
@@ -254,15 +318,23 @@ if [ "$A2_SERIAL" = "1" ]; then
 	rm -f "$SERIAL_SOCK" "$MON_SOCK" "$SERIAL_LOG" "$CAPTURE_LOG"
 	if [ "$A2_GL" = "1" ]; then
 		ensure_virgl
-		CONSOLE_ARGS=(-device virtio-vga-gl -display "$A2_DISPLAY_BACKEND,gl=on")
+		CONSOLE_ARGS=(-device "$GL_DEVICE" -display "$A2_DISPLAY_BACKEND,gl=on")
 	else
 		CONSOLE_ARGS=(-display none)
 	fi
 	CONSOLE_ARGS+=(
 		-chardev "socket,id=ser0,path=$SERIAL_SOCK,server=on,wait=off,logfile=$SERIAL_LOG,logappend=on"
-		-serial chardev:ser0
 		-chardev "file,id=cap0,path=$CAPTURE_LOG"
-		-serial chardev:cap0
+	)
+	if [ "$A2_ARCH" = "x86_64" ]; then
+		CONSOLE_ARGS+=(-serial chardev:ser0 -serial chardev:cap0)
+	else
+		# q35's ISA 16550s become one dual-port PCI 16550 on virt, so the
+		# guest still sees ttyS0/ttyS1. The pl011 stays off the sockets: its
+		# QEMU model stops taking input after ~280 bytes in one line.
+		CONSOLE_ARGS+=(-device pci-serial-2x,chardev1=ser0,chardev2=cap0 -serial none)
+	fi
+	CONSOLE_ARGS+=(
 		-monitor "unix:$MON_SOCK,server=on,wait=off"
 		-pidfile "$PIDFILE"
 		-daemonize
@@ -270,9 +342,11 @@ if [ "$A2_SERIAL" = "1" ]; then
 else
 	if [ "$A2_GL" = "1" ]; then
 		ensure_virgl
-		CONSOLE_ARGS=(-device virtio-vga-gl -display "$A2_DISPLAY_BACKEND,gl=on")
-	else
+		CONSOLE_ARGS=(-device "$GL_DEVICE" -display "$A2_DISPLAY_BACKEND,gl=on")
+	elif [ "$A2_ARCH" = "x86_64" ]; then
 		CONSOLE_ARGS=(-vga "$A2_VGA" -display "$A2_DISPLAY_BACKEND")
+	else
+		CONSOLE_ARGS=(-device "$A2_VGA" -display "$A2_DISPLAY_BACKEND")
 	fi
 	CONSOLE_ARGS+=(
 		-audiodev "$A2_AUDIO_BACKEND,id=snd0"
@@ -283,17 +357,38 @@ else
 fi
 
 # shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
+if [ "$A2_ARCH" = "x86_64" ]; then
+	MACHINE_ARGS=(-machine q35 -cpu host -enable-kvm)
+	# q35 has IDE for -cdrom and PS/2 input; -boot order is honored by both firmwares
+	DISK_ARGS=(-drive "file=$DISK,format=qcow2,if=virtio" -boot "order=$BOOT_ORDER")
+else
+	if [ "$HOST_ARCH" = "aarch64" ]; then
+		MACHINE_ARGS=(-machine virt -cpu host -enable-kvm)
+	else
+		MACHINE_ARGS=(-machine virt -cpu max -accel tcg,thread=multi)
+	fi
+	# virt has neither IDE nor PS/2: ISO on virtio-scsi, USB input. -boot order
+	# means nothing to edk2 on arm, bootindex does (fw_cfg), so the disk yields
+	# to the cdrom whenever one is attached.
+	MACHINE_ARGS+=(-device qemu-xhci -device usb-kbd -device usb-tablet)
+	DISK_INDEX=0
+	[ "$BOOT_ORDER" = "d" ] && DISK_INDEX=1
+	DISK_ARGS=(
+		-drive "file=$DISK,format=qcow2,if=none,id=hd0"
+		-device "virtio-blk-pci,drive=hd0,bootindex=$DISK_INDEX"
+		-device virtio-scsi-pci,id=scsi0
+	)
+fi
+
+# shellcheck disable=SC2054 # commas are qemu device/netdev value syntax, not array separators
 QEMU_ARGS=(
-	-machine q35
-	-cpu host
-	-enable-kvm
+	"${MACHINE_ARGS[@]}"
 	-m "$A2_RAM"
 	-smp "$A2_CPUS"
-	-drive "file=$DISK,format=qcow2,if=virtio"
+	"${DISK_ARGS[@]}"
 	-device virtio-net-pci,netdev=net0
 	-netdev user,id=net0
 	"${CONSOLE_ARGS[@]}"
-	-boot "order=$BOOT_ORDER"
 )
 
 if [ "$A2_BIOS" != "1" ]; then
@@ -307,7 +402,15 @@ if [ "$ATTACH_ISO" = "true" ] && [ -n "$A2_UKI" ]; then
 	QEMU_ARGS+=(-kernel "$A2_UKI")
 elif [ "$ATTACH_ISO" = "true" ]; then
 	ISO="$(require_iso)"
-	QEMU_ARGS+=(-cdrom "$ISO")
+	if [ "$A2_ARCH" = "x86_64" ]; then
+		QEMU_ARGS+=(-cdrom "$ISO")
+	else
+		# shellcheck disable=SC2054 # qemu drive/device value syntax
+		QEMU_ARGS+=(
+			-drive "file=$ISO,media=cdrom,if=none,id=cd0,readonly=on"
+			-device scsi-cd,drive=cd0,bootindex=0
+		)
+	fi
 	if [ "$A2_SERIAL" = "1" ]; then
 		extract_iso_kernel "$ISO"
 		QEMU_ARGS+=(
@@ -324,12 +427,18 @@ if [ -n "${A2_QEMU_EXTRA:-}" ]; then
 	QEMU_ARGS+=("${EXTRA_ARGS[@]}")
 fi
 
+# print the assembled command instead of running it, one arg per line
+if [ "${A2_DRY:-0}" = "1" ]; then
+	printf '%s\n' "$QEMU" "${QEMU_ARGS[@]}"
+	exit 0
+fi
+
 if [ "$A2_SERIAL" = "1" ]; then
-	qemu-system-x86_64 "${QEMU_ARGS[@]}"
+	"$QEMU" "${QEMU_ARGS[@]}"
 	echo "VM detached, pid $(cat "$PIDFILE")"
 	echo "drive it: ./TSER login && ./TSER run 'ls /'"
 	exit 0
 fi
 
 trap 'stty sane' EXIT
-qemu-system-x86_64 "${QEMU_ARGS[@]}"
+"$QEMU" "${QEMU_ARGS[@]}"

@@ -1,100 +1,54 @@
-# Arch Linux on `arm64`
+# Arch Linux on `aarch64`
 
-Stage 1 builders for non-x86 targets. Currently ARM (Arch Linux ARM).
+Status: unofficial. Packages come from [Arch Linux Ports](https://ports.archlinux.page/aarch64/),
+built outside Arch infrastructure and signed with the port's own key. Targets ARMv8.2-A and
+later (no Raspberry Pi 4 or Cortex-A53 class CPUs).
 
-> [!NOTE]
-> UEFI spec'd boards can install using `guided` mode. But need to point [servers](https://archlinuxarm.org/about/mirrors) to ARM.
-You will either need to bootstrap from a tarball or find an ISO that can run `archinstoo`
-C.f Alpine; see [here](https://github.com/h8d13/archinstoo/tree/master/distros)
+## ISO
 
-> For non-standard SBCs;
-> Keep reading bellow.
+UEFI boards install with the regular `guided` script from the aarch64 archiso:
 
-```
-architecture/
-  ARM         entry script: generic stage 1 (partition, extract, base setup)
-  boards/     one profile per device, sourced by ARM
-```
+https://codeberg.org/ironrobin/archiso-aarch64/releases/latest
 
-## Intro
+It boots through `EFI/BOOT/BOOTAA64.EFI`, ships `linux` as kernel, and its `pacman.conf`
+already points at the port's repositories, so nothing has to be pointed anywhere.
 
-This method is more advanced. A **stage 1** usually involves:
+## Repositories
 
-- Extracted tarball onto a storage device. [Tarballs](https://archlinuxarm.org/about/downloads)
-- Format/mount
-- Replaced kernel with appropriate for hardware
-- (Hw specifics in `config.txt` or `boot.txt`)
-- (Setup `/etc/fstab` and `cmdline.txt`)
+| Repo | Content |
+|------|---------|
+| `core`, `extra` | analogues of the x86_64 repositories |
+| `forge` | board kernels and firmware (`linux-rpi5`, `linux-mainline`, `linux-firmware-rpi5`), `archports-keyring`, Pi tooling |
 
-At this stage you should have a minimal install with only kernel/and bootloader/FS.
+All three live on `https://arch-linux-repo.drzee.net/arch/$repo/os/$arch`. The port's own
+`pacman` package ships that conf, so the installed system resolves from it without a
+mirrorlist. What differs from x86_64 inside archinstoo:
 
-This involves using `qemu-user-static qemu-user-static-binfmt` from an x86 Arch host
-(runs the ARM chroot emulated; not needed from an ARM host).
+- Mirror regions are not offered (no mirror network). Custom servers and repos still are.
+- `forge` is the optional repository, in place of `multilib` and the testing repos.
+- `archports-keyring` joins the base packages: `pacman` does not depend on it there.
+- The `microcode` initramfs hook is dropped, it only knows x86 vendors.
+- Bootloaders: `systemd-boot`, `grub` (`arm64-efi`), `limine` (`BOOTAA64.EFI`).
+- Serial console defaults to `ttyAMA0,115200`, the pl011 UART most boards expose.
 
-## Usage
+Board kernels are plain package names: `"kernels": ["linux-rpi5"]` in a config reaches
+`pacstrap` as is. The interactive kernel menu lists the stock kernels only.
 
-List available boards, then build onto a target device:
+## Dev VM from an x86_64 host
 
 ```shell
-./architecture/ARM list
-sudo ./architecture/ARM rpi5 /dev/sdX
+sudo pacman -S --needed qemu-system-aarch64 edk2-aarch64
+A2_ARCH=aarch64 ./TVM              # window, ramfb
+A2_ARCH=aarch64 A2_SERIAL=1 ./TVM  # headless, drive it with ./TSER
 ```
 
-The script needs the board's tarball and finds it one of three ways:
+TCG emulation, expect minutes to a shell. The ISO is picked by the `aarch64` in its file
+name under `isos/a/`. In the VM the console is a PCI 16550 (`ttyS0`), not the pl011, so a
+config for it sets `"serial_console": "ttyS0,115200"`. See the header of `TVM` for the rest.
 
-1. Already downloaded, sitting next to the script or in cwd:
-   ```shell
-   curl -LO http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-aarch64-latest.tar.gz
-   ```
-2. Anywhere else, passed as explicit path:
-   ```shell
-   sudo ./architecture/ARM rpi5 /dev/sdX ~/Downloads/ArchLinuxARM-rpi-aarch64-latest.tar.gz
-   ```
-3. Not downloaded at all, let the script fetch it:
-   ```shell
-   sudo A2_FETCH=1 ./architecture/ARM rpi5 /dev/sdX
-   ```
+## Running on an installed system
 
-The core does everything generic: msdos label, fat32 boot + ext4 root,
-tarball extract with dirty-page progress, keyring init, locale, fstab
-by PARTUUID, wired DHCP, getty/sshd/networkd/resolved enabled.
-The board profile handles what differs per device: kernel/bootloader
-swap, `cmdline.txt`, firmware config. `rpi5` (Pi 5 Model B) swaps the
-generic `linux-aarch64` kernel for `linux-rpi` + foundation firmware.
+For non-UEFI systems where you went the hard-way with tarball modifications:
 
-**Default credentials after boot:**
-- `root:root`
-- `alarm:alarm`
-
-Once in, `passwd && passwd alarm`, or better yet create a new user.
-
-## Adding a board
-
-Copy `boards/rpi5`, adjust. A board file is sourced by `ARM` and can set:
-
-| What | Required | Purpose |
-|------|----------|---------|
-| `ARCHIVE` | yes | tarball filename |
-| `TARBALL_URL` | no | enables `A2_FETCH=1` and the download hint |
-| `BOARD_CHROOT` | no | shell run inside the chroot (kernel/bootloader swap) |
-| `board_finish()` | no | after chroot: cmdline, firmware config, boot cleanup. `$A2_MNT`, `$BOOT_PARTUUID`, `$ROOT_PARTUUID`, `$DEVICE` in scope |
-| `board_partition()` | no | replaces default partitioning entirely (exotic layouts, U-Boot at raw offsets) |
-
-Boards whose tarball boots as shipped (generic `linux-aarch64` +
-working U-Boot) need only `ARCHIVE` and `TARBALL_URL`.
-
----
-
-## Using the `live` script
-
-At this point we assume you have a working boot setup and a tty or access to terminal.
-
-This is a reduced version of `guided` that only aims to setup certain stuff.
-
-> Removes bootloaders and more things that are not needed for a running system.
-
-Then `./RUN --script live` will bring you to a minimal menu that is aimed to run on a live system.
-
-Through this you can set-up server usecases or desktops and more utilities you might need.
-
-<img width="1920" height="1080" alt="Screenshot 2026-02-05 15-32-36" src="https://github.com/user-attachments/assets/a0bdf9cd-a472-48f8-a5fc-7d5467381a30" />
+`./RUN --script live` opens a reduced menu for a system that already boots: no disk, no
+bootloader, just users, packages, profiles and services.

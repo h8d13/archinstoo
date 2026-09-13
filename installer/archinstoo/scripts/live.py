@@ -25,7 +25,7 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu = GlobalMenu(config, skip_boot=True, advanced=args.advanced)
 
 		# Disable items irrelevant for live mode
-		# We assume user built stage 1 but might still want to configure some stuff
+		# the system is already installed and booted, only what runs on it is left
 		global_menu.set_enabled('bootloader_config', False)
 		global_menu.set_enabled('disk_config', False)
 		global_menu.set_mandatory('disk_config', False)
