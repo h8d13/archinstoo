@@ -88,6 +88,7 @@
 │   │   │   ├── install
 │   │   │   └── validation
 │   │   ├── checkpoints
+│   │   ├── chroot
 │   │   ├── configuration
 │   │   ├── disk/
 │   │   │   ├── cleanup
@@ -168,6 +169,7 @@
 │   │   │   └── profiles_handler
 │   │   ├── schema_gen
 │   │   ├── schema
+│   │   ├── sysconfig
 │   │   ├── systemd
 │   │   ├── tui/
 │   │   │   ├── content_editor
@@ -207,7 +209,7 @@
 ├── pyproject.toml
 └── stubs/
     └── parted/
-        └── __init__i
+        └── __init__
 
-30 directories, 178 files
+30 directories, 180 files
 ```
