@@ -1,7 +1,7 @@
 # Arch Linux on `aarch64`
 
 Status: unofficial. Packages come from [Arch Linux Ports](https://ports.archlinux.page/aarch64/),
-built outside Arch infrastructure and signed with the port's own key. Targets ARMv8.2-A and
+built outside Arch infrastructure and signed with the port's own key. Targets `ARMv8.2-A` and
 later (no Raspberry Pi 4 or Cortex-A53 class CPUs).
 
 ## ISO
@@ -34,6 +34,13 @@ mirrorlist. What differs from x86_64 inside archinstoo:
 Board kernels are plain package names: `"kernels": ["linux-rpi5"]` in a config reaches
 `pacstrap` as is. The interactive kernel menu lists the stock kernels only.
 
+## Running on an installed system
+
+For non-UEFI systems where you went the hard-way with tarball modifications:
+
+`./RUN --script live` opens a reduced menu for a system that already boots: no disk, no
+bootloader, just users, packages, profiles and services.
+
 ## Dev VM from an x86_64 host
 
 ```shell
@@ -45,10 +52,3 @@ A2_ARCH=aarch64 A2_SERIAL=1 ./TVM  # headless, drive it with ./TSER
 TCG emulation, expect minutes to a shell. The ISO is picked by the `aarch64` in its file
 name under `isos/a/`. In the VM the console is a PCI 16550 (`ttyS0`), not the pl011, so a
 config for it sets `"serial_console": "ttyS0,115200"`. See the header of `TVM` for the rest.
-
-## Running on an installed system
-
-For non-UEFI systems where you went the hard-way with tarball modifications:
-
-`./RUN --script live` opens a reduced menu for a system that already boots: no disk, no
-bootloader, just users, packages, profiles and services.
