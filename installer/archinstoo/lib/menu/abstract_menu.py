@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Any, Self
 
-from archinstoo.lib.output import error
-from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Chars, FrameProperties, FrameStyle, PreviewStyle
@@ -21,13 +20,11 @@ class AbstractMenu[ValueT]:
 		allow_reset: bool = False,
 		reset_warning: str | None = None,
 	) -> None:
-		bug_report_url = 'https://github.com/h8d13/archinstoo'
 		self._menu_item_group = item_group
 		self._config = config
 		self.auto_cursor = auto_cursor
 		self._allow_reset = allow_reset
 		self._reset_warning = reset_warning
-		self._bug_report_url = bug_report_url
 
 		self._sync_from_config()
 
@@ -35,16 +32,9 @@ class AbstractMenu[ValueT]:
 		return self
 
 	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
-		# TODO: https://stackoverflow.com/questions/28157929/how-to-safely-handle-an-exception-inside-a-context-manager
-		# TODO: skip processing when it comes from a planified exit
-		if exc_type is not None:
-			error(str(exc_value))
-			Tui.print(f'Please submit this issue (and file) to {self._bug_report_url}/issues')
-
-			# Return None to propagate the exception
-			return
-
-		self.sync_all_to_config()
+		# a crash propagates as is, run_as_a_module reports it once
+		if exc_type is None:
+			self.sync_all_to_config()
 
 	def _sync_from_config(self) -> None:
 		for item in self._menu_item_group.all_items:
