@@ -13,6 +13,7 @@ class CosmicProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'cosmic',
+			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), cosmic-portals.conf names it, groups only optdep it
 		]
 
 	@property
