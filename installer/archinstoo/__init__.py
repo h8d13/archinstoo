@@ -395,9 +395,10 @@ def run_as_a_module() -> int:
 		try:
 			rc = main(script, handler)
 		except KeyboardInterrupt:
-			# clean user abort: no traceback / bug-report noise
+			# clean user abort: no traceback / bug-report noise. 128+SIGINT,
+			# what an uncaught ^C exits with, so callers can tell it from a failure
 			warn('Aborted by user.')
-			rc = 1
+			rc = 130
 		except Exception as e:
 			exc = e
 		finally:
