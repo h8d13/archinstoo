@@ -20,7 +20,6 @@ class CinnamonProfile(XorgProfile):
 			'gnome-screenshot',
 			'gvfs-smb',
 			'xed',
-			'xdg-user-dirs-gtk',
 		]
 
 	@property
