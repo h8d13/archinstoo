@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from shutil import rmtree
 
-from archinstoo.lib.output import error, info, logger
+from archinstoo.lib.output import TARGET_STATE_DIR, error, info, log, logger, warn
 
 
 def clean_logs() -> None:
@@ -53,3 +53,23 @@ def clean_cache(root_dir: str) -> None:
 
 	if deleted:
 		info(f'Done. {len(deleted)} cache folder(s) deleted.')
+
+
+def report_outcome(target: Path, steps: dict[str, str | bool | None]) -> None:
+	# the steps a script left unreached. A crash never gets here: the top
+	# level prints the traceback, bug report url and log path for those
+	missing = [step for step, flag in steps.items() if flag is False]
+	if missing:
+		warn('Some required steps were not reached before leaving the installer:')
+		for step in missing:
+			warn(f' - {step}')
+		warn(f'Detailed error logs can be found at: {logger.directory}')
+		return
+
+	# live/packages install onto the running system: the changes are
+	# already in effect, there is nothing to reboot into
+	closing = 'Changes are live on the running system.' if target == Path('/') else 'You may reboot when ready.'
+	log(
+		f'Installation completed without any errors.\nLog files available at {logger.directory} and in target {TARGET_STATE_DIR}.\n{closing}\n',
+		fg='green',
+	)

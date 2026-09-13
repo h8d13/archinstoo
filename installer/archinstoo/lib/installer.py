@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-from archinstoo.lib import chroot, sysconfig, systemd
+from archinstoo.lib import checkpoints, chroot, sysconfig, systemd
 from archinstoo.lib.authentication import accounts
 from archinstoo.lib.bootloader.install import BootloaderInstaller
 from archinstoo.lib.disk import snapshots
@@ -30,7 +30,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.output import TARGET_STATE_DIR, debug, error, info, log, logger, warn
+from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
 
@@ -92,7 +92,6 @@ class Installer:
 		# neither wanted for no-disk-ops runs (live)
 		self._device_handler = device_handler
 		self._args = handler.args if handler else Arguments()
-		self._bug_report_url = handler.config.bug_report_url if handler else 'https://github.com/h8d13/archinstoo'
 
 		self._base_packages = list(base_packages or __base_packages__)
 		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
@@ -140,46 +139,14 @@ class Installer:
 	def __enter__(self) -> Self:
 		return self
 
-	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> bool | None:
+	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
+		# crashes and ^C propagate as they are: run_as_a_module reports them
+		# once for every script. Only a clean exit has a verdict to give.
 		try:
-			if exc_type is KeyboardInterrupt:
-				# User abort, not a crash: no bug-report prompt. finally still
-				# tears down mounts; propagate for the top level to exit clean.
-				warn('Installation interrupted by user, tearing down target...')
-				return None
-
-			if exc_type is not None:
-				error(str(exc_value))
-				info(f'[!] A log file has been created here: {logger.path}')
-				info(f'Please submit this issue (and file) to {self._bug_report_url}/issues')
-
-				# Return None to propagate the exception
-				return None
-
-			info('Syncing the system...')
-			os.sync()
-
-			if not (missing_steps := self.post_install_check()):
-				# live/packages install onto the running system: the changes are
-				# already in effect, there is nothing to reboot into
-				closing = 'Changes are live on the running system.' if self.target == Path('/') else 'You may reboot when ready.'
-				msg = (
-					'Installation completed without any errors.\n'
-					f'Log files available at {logger.directory} and in target {TARGET_STATE_DIR}.\n'
-					f'{closing}\n'
-				)
-				log(msg, fg='green')
-
-				return True
-			warn('Some required steps were not successfully installed/configured before leaving the installer:')
-
-			for step in missing_steps:
-				warn(f' - {step}')
-
-			warn(f'Detailed error logs can be found at: {logger.directory}')
-			warn(f'Please submit this issue to {self._bug_report_url}/issues')
-
-			return False
+			if exc_type is None:
+				info('Syncing the system...')
+				os.sync()
+				checkpoints.report_outcome(self.target, self._helper_flags)
 		finally:
 			try:
 				self._teardown_target()
@@ -210,9 +177,6 @@ class Installer:
 	def generate_key_files(self) -> None:
 		info(f'Generating key files for {self._disk_encryption.encryption_type.value}...')
 		self.initramfs.files.extend(KeyFileGenerator(self.target, self._disk_encryption).generate())
-
-	def post_install_check(self) -> list[str]:
-		return [step for step, flag in self._helper_flags.items() if flag is False]
 
 	def set_mirrors(self, pacman_configuration: PacmanConfiguration, on_target: bool = False) -> None:
 		mirrors.set_mirrors(self, pacman_configuration, on_target)
