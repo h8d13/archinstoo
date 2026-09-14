@@ -303,3 +303,20 @@ def test_set_locale_en_us_only_once(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 	_, locale_gen = _run_set_locale(tmp_path, 'en_US', 'UTF-8', monkeypatch)
 	assert locale_gen.count('en_US.UTF-8 UTF-8') == 1
 	assert '#en_US.UTF-8' not in locale_gen
+
+
+# kbd ships docs and a partialfonts/ subdirectory next to the fonts. Offering
+# either writes a FONT= the sd-vconsole hook cannot resolve, and that hook
+# errors out rather than warning, so the initramfs build fails.
+def test_list_console_fonts_skips_non_fonts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(catalog, '_FONT_DIR', tmp_path)
+	(tmp_path / 'partialfonts').mkdir()
+	(tmp_path / 'ERRORS').write_text('In iso04.f08 the letters K, and k, are wrong.\n')
+	(tmp_path / 'README.Cyrillic').write_text('docs\n')
+	# README.psfu carries a font suffix, so only the prefix check excludes it
+	for name in ('cyr-sun16.psfu.gz', 'default8x16.psfu.gz', 'alt-8x16.gz', 'arm8.fnt.gz', '161.cp.gz', 'README.psfu'):
+		(tmp_path / name).write_bytes(b'')
+
+	# alt-8x16 carries no font extension at all, only compression; the kbd
+	# hooks resolve it and so must the menu
+	assert catalog.list_console_fonts() == ['161.cp', 'alt-8x16', 'arm8.fnt', 'cyr-sun16', 'default8x16']

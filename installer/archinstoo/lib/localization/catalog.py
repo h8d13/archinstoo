@@ -339,8 +339,13 @@ def set_kb_layout(locale: str) -> bool:
 	return False
 
 
+_FONT_DIR = Path('/usr/share/kbd/consolefonts')
+
 # disk fonts are gz-compressed (.psfu.gz); the upstream repo ships them raw
 _FONT_SUFFIXES = ('.psfu.gz', '.psf.gz', '.gz', '.psfu', '.psf')
+
+_FONT_EXTS = ('.psfu', '.psf', '.cp', '.fnt')
+_FONT_COMPRESSION = ('.gz', '.bz2', '.zst')
 
 
 def _strip_font_suffix(name: str) -> str:
@@ -350,12 +355,17 @@ def _strip_font_suffix(name: str) -> str:
 	return name
 
 
-def list_console_fonts() -> list[str]:
-	font_dir = Path('/usr/share/kbd/consolefonts')
+def _is_font_name(name: str) -> bool:
+	# what the sd-vconsole/consolefont hooks glob for, so the menu cannot offer
+	# a FONT= they reject. Forty kbd fonts carry no extension at all (alt-8x16,
+	# koi8r-8x16, ...), hence compression alone qualifying.
+	return name.endswith(_FONT_COMPRESSION) or name.endswith(_FONT_EXTS)
 
-	if font_dir.exists():
-		# skip documentation files (README*)
-		fonts = [_strip_font_suffix(f.name) for f in font_dir.iterdir() if not f.name.startswith('README')]
+
+def list_console_fonts() -> list[str]:
+	if _FONT_DIR.exists():
+		# README.psfu passes _is_font_name, so the prefix check still earns its keep
+		fonts = [_strip_font_suffix(f.name) for f in _FONT_DIR.iterdir() if f.is_file() and not f.name.startswith('README') and _is_font_name(f.name)]
 		if fonts:
 			return sorted(fonts, key=lambda x: (len(x), x))
 
@@ -364,7 +374,8 @@ def list_console_fonts() -> list[str]:
 
 
 def _fetch_kbd_fonts() -> list[str]:
-	fonts = [_strip_font_suffix(fn) for fn in _fetch_kbd_tree_names('data/consolefonts/') if not fn.startswith('README')]
+	names = _fetch_kbd_tree_names('data/consolefonts/')
+	fonts = [_strip_font_suffix(fn) for fn in names if not fn.startswith('README') and _is_font_name(fn)]
 	return sorted(fonts, key=lambda x: (len(x), x))
 
 
