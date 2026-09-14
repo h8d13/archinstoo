@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 
 LVM = 'lvm2'  # package and mkinitcpio hook share the name
+RAID = 'mdadm_udev'  # hook only; the package it needs is mdadm
 
 
 class Initramfs:
@@ -50,9 +51,9 @@ class Initramfs:
 	def add_raid(self) -> None:
 		# after block so the member devices are online, before sd-encrypt and
 		# filesystems: both need /dev/mdN to already exist
-		if 'mdadm_udev' not in self.hooks:
-			debug('Inserting mdadm_udev hook after block')
-			self.hooks.insert(self.hooks.index('block') + 1, 'mdadm_udev')
+		if RAID not in self.hooks:
+			debug(f'Inserting {RAID} hook after block')
+			self.hooks.insert(self.hooks.index('block') + 1, RAID)
 
 	def add_encrypt(self, before: str = 'filesystems') -> None:
 		if 'sd-encrypt' not in self.hooks:

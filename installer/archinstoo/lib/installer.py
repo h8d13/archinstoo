@@ -15,7 +15,7 @@ from archinstoo.lib.disk.mdadm import write_mdadm_conf
 from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.kernel.initramfs import LVM, Initramfs
+from archinstoo.lib.kernel.initramfs import LVM, RAID, Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
 from archinstoo.lib.kernel.sysctl import write_sysctl
 from archinstoo.lib.kernel.zram import setup_zram
@@ -127,7 +127,6 @@ class Installer:
 
 		self._zram_enabled = False
 		self._disable_fstrim = False
-		self._raid_root = False
 		self._layout_teardown_required = False
 
 		self.pacman = Pacman(self.target)
@@ -257,15 +256,6 @@ class Installer:
 		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == Path('/'):
 			self.initramfs.drop_fsck()
 
-	def _prepare_raid(self) -> None:
-		if self._raid_root:
-			return
-
-		debug('Root sits on an md array, adding mdadm and the mdadm_udev hook')
-		self._raid_root = True
-		self._base_packages.extend(__raid_packages__)
-		self.initramfs.add_raid()
-
 	def minimal_installation(
 		self,
 		optional_repositories: list[Repository] | None = None,
@@ -303,7 +293,8 @@ class Installer:
 						self.initramfs.add_encrypt()
 
 					if part.on_raid:
-						self._prepare_raid()
+						self._base_packages.extend(__raid_packages__)
+						self.initramfs.add_raid()
 
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(__fido2_packages__)
@@ -316,9 +307,6 @@ class Installer:
 			debug('Archinstoo will not install any ucode.')
 
 		if SysInfo.arch() == 'aarch64':
-			# pacstrap copies the live gnupg dir (no -K/-G), so the target
-			# verifies today; only the package keeps the Arch Ports key
-			# current, and drzee's pacman does not depend on it
 			self._base_packages.extend(__archports_packages__)
 
 		debug(f'Optional repositories: {optional_repositories}')
@@ -351,6 +339,10 @@ class Installer:
 			# fstrim is owned by util-linux, a dependency of both base and systemd.
 			self.enable_service('fstrim.timer')
 
+		# note this needs to be after pacstrap
+		if RAID in self.initramfs.hooks:
+			write_mdadm_conf(self.target)
+
 		if hostname:
 			self.set_hostname(hostname)
 
@@ -359,15 +351,6 @@ class Installer:
 
 		if timezone and not self.set_timezone(timezone):
 			warn(f'Failed to set timezone: {timezone}')
-
-		root_dir = self.target / 'root'
-		if root_dir.exists():
-			root_dir.chmod(0o700)
-		else:
-			debug(f'Root directory not found at {root_dir}, skipping chmod')
-
-		if self._raid_root:
-			write_mdadm_conf(self.target)
 
 		if mkinitcpio and not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
@@ -385,8 +368,6 @@ class Installer:
 			try:
 				fstab_entry, kernel_params = setup_swapfile(self, config.size_gib)
 			except (SysCallError, DiskError) as err:
-				# hibernation is an enhancement, not worth aborting a
-				# finished-installing system over (cf. allow_ssh)
 				warn(f'Failed to set up hibernation swap file: {err}')
 			else:
 				self._fstab_entries.append(fstab_entry)
