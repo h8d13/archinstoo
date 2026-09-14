@@ -11,6 +11,7 @@ from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.fstab import write_fstab
 from archinstoo.lib.disk.keyfiles import KeyFileGenerator
+from archinstoo.lib.disk.mdadm import write_mdadm_conf
 from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
 from archinstoo.lib.hardware import SysInfo
@@ -65,6 +66,9 @@ __bcachefs_packages__ = ['bcachefs-dkms']
 # sd-encrypt only bundles the fido2 dlopen libs if this is present when the
 # initramfs is built
 __fido2_packages__ = ['libfido2']
+# the array has to be assembled before the root is reachable, so this goes
+# into base rather than the post-install package list
+__raid_packages__ = ['mdadm']
 # fonts that are in the ISO but wont be on target unless requested before base,
 # otherwise mkinitcpio will be screaming at you
 __ter_font_packages__ = ['terminus-font']
@@ -123,6 +127,7 @@ class Installer:
 
 		self._zram_enabled = False
 		self._disable_fstrim = False
+		self._raid_root = False
 		self._layout_teardown_required = False
 
 		self.pacman = Pacman(self.target)
@@ -252,6 +257,15 @@ class Installer:
 		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == Path('/'):
 			self.initramfs.drop_fsck()
 
+	def _prepare_raid(self) -> None:
+		if self._raid_root:
+			return
+
+		debug('Root sits on an md array, adding mdadm and the mdadm_udev hook')
+		self._raid_root = True
+		self._base_packages.extend(__raid_packages__)
+		self.initramfs.add_raid()
+
 	def minimal_installation(
 		self,
 		optional_repositories: list[Repository] | None = None,
@@ -287,6 +301,9 @@ class Installer:
 
 					if part in self._disk_encryption.partitions:
 						self.initramfs.add_encrypt()
+
+					if part.on_raid:
+						self._prepare_raid()
 
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(__fido2_packages__)
@@ -348,6 +365,9 @@ class Installer:
 			root_dir.chmod(0o700)
 		else:
 			debug(f'Root directory not found at {root_dir}, skipping chmod')
+
+		if self._raid_root:
+			write_mdadm_conf(self.target)
 
 		if mkinitcpio and not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')

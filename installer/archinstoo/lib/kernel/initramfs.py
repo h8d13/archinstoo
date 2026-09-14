@@ -47,6 +47,13 @@ class Initramfs:
 		debug(f'Inserting {LVM} hook before filesystems')
 		self.hooks.insert(self.hooks.index('filesystems'), LVM)
 
+	def add_raid(self) -> None:
+		# after block so the member devices are online, before sd-encrypt and
+		# filesystems: both need /dev/mdN to already exist
+		if 'mdadm_udev' not in self.hooks:
+			debug('Inserting mdadm_udev hook after block')
+			self.hooks.insert(self.hooks.index('block') + 1, 'mdadm_udev')
+
 	def add_encrypt(self, before: str = 'filesystems') -> None:
 		if 'sd-encrypt' not in self.hooks:
 			debug(f'Inserting sd-encrypt hook before {before}')

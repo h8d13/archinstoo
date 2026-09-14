@@ -1044,6 +1044,7 @@ class PartitionModification:
 	partuuid: str | None = None
 	uuid: str | None = None
 	luks_mapper: str | None = None  # pre-mount: user-opened container, fs_type/mountpoint are the child's
+	on_raid: bool = False  # pre-mount: dev_path is an md array, the initramfs has to assemble it
 
 	# per-instance identity for __hash__ and dict keys. str, not UUID: config
 	# restores this from json as a string, and __hash__ reads it raw, so

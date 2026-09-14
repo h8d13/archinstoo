@@ -75,3 +75,19 @@ def test_lvm_hook_sits_between_block_and_filesystems() -> None:
 	assert initramfs.hooks.index('block') < initramfs.hooks.index('sd-encrypt')
 	assert initramfs.hooks.index('sd-encrypt') < initramfs.hooks.index(LVM)
 	assert initramfs.hooks.index(LVM) < initramfs.hooks.index('filesystems')
+
+
+# A LUKS root on an md array needs both hooks, and mdadm_udev has to run first:
+# sd-encrypt cannot open a container on an array that is not assembled yet.
+@pytest.mark.parametrize('encrypt_first', [True, False])
+def test_raid_hook_precedes_encrypt_either_order(encrypt_first: bool) -> None:
+	initramfs = Initramfs()
+	calls = [initramfs.add_encrypt, initramfs.add_raid]
+
+	for call in calls if encrypt_first else reversed(calls):
+		call()
+	initramfs.add_raid()  # second layout pass must not stack the hook
+
+	assert initramfs.hooks.count('mdadm_udev') == 1
+	expected = _order(initramfs.hooks, 'block', 'mdadm_udev', 'sd-encrypt', 'filesystems')
+	assert expected == sorted(expected)

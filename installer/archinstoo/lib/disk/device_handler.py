@@ -42,6 +42,7 @@ from archinstoo.lib.models.device import (
 	PartitionGUID,
 	PartitionModification,
 	PartitionTable,
+	PartitionType,
 	Size,
 	SubvolumeModification,
 	Unit,
@@ -134,7 +135,11 @@ class DeviceHandler:
 		devices.extend(self.get_loop_devices())
 
 		for device in devices:
-			if not (dev_lsblk_info := find_lsblk_info(device.path, all_lsblk_info)):
+			# lsblk's tree hangs an md array under its member partitions, so an
+			# array never shows up among the top-level nodes; ask for it by path
+			dev_lsblk_info = find_lsblk_info(device.path, all_lsblk_info) or self._lsblk_info(device.path)
+
+			if not dev_lsblk_info:
 				debug(f'Device lsblk info not found: {device.path}')
 				continue
 
@@ -180,6 +185,14 @@ class DeviceHandler:
 			block_devices[block_device.device_info.path] = block_device
 
 		self._devices = block_devices
+
+	@staticmethod
+	def _lsblk_info(dev_path: Path | str) -> LsblkInfo | None:
+		try:
+			return get_lsblk_info(dev_path)
+		except DiskError as err:
+			debug(f'lsblk has nothing for {dev_path}: {err}')
+			return None
 
 	# instance method on purpose: touches parted (getDevice/IOException), and
 	# only __init__ enforces _HAS_PARTED. As a staticmethod it was reachable
@@ -793,23 +806,63 @@ class DeviceHandler:
 
 		part_mod = PartitionModification.from_existing_partition(part_info)
 		part_mod.luks_mapper = child.name  # uuid stays the container's: rd.luks.name= wants that one
-		try:
-			part_mod.fs_type = FilesystemType(_normalize_lsblk_fstype(child))
-		except ValueError:
-			debug(f'Unsupported filesystem inside {child.path}: {child.fstype}')
+		if not self._fill_from_lsblk(part_mod, child, base_mountpoint):
 			return None
 
+		debug(f'Pre-mounted LUKS {part_info.path} via {child.path}: {part_mod.fs_type} at {part_mod.mountpoint}')
+		return part_mod
+
+	def _fill_from_lsblk(self, part_mod: PartitionModification, node: LsblkInfo, base_mountpoint: Path) -> bool:
+		# node is whatever carries the filesystem: the partition or device
+		# itself, or the dm-crypt child when a LUKS container is in the way
+		try:
+			part_mod.fs_type = FilesystemType(_normalize_lsblk_fstype(node))
+		except ValueError:
+			debug(f'Unsupported filesystem on {node.path}: {node.fstype}')
+			return False
+
 		if part_mod.fs_type == FilesystemType.BTRFS:
-			subvol_infos = self.get_btrfs_info(child.path, child)
+			subvol_infos = self.get_btrfs_info(node.path, node)
 			part_mod.btrfs_subvols = [SubvolumeModification.from_existing_subvol_info(i) for i in subvol_infos]
 			for subvol in part_mod.btrfs_subvols:
 				if sm := subvol.mountpoint:
 					subvol.mountpoint = self._rebase(sm, base_mountpoint)
 		else:
-			mounted = next(m for m in child.mountpoints if m.is_relative_to(base_mountpoint))
+			mounted = next(m for m in node.mountpoints if m.is_relative_to(base_mountpoint))
 			part_mod.mountpoint = self._rebase(mounted, base_mountpoint)
 
-		debug(f'Pre-mounted LUKS {part_info.path} via {child.path}: {part_mod.fs_type} at {part_mod.mountpoint}')
+		return True
+
+	def _pre_mounted_whole_device(self, device: BDevice, base_mountpoint: Path) -> PartitionModification | None:
+		dev_info = self._lsblk_info(device.device_info.path)
+
+		if dev_info is None:
+			return None
+
+		node, mapper = dev_info, None
+
+		if _normalize_lsblk_fstype(dev_info) == FilesystemType.CRYPTO_LUKS.value:
+			if (child := luks_child_mount(dev_info, base_mountpoint)) is None:
+				return None
+			node, mapper = child, child.name
+		elif not any(m.is_relative_to(base_mountpoint) for m in dev_info.mountpoints):
+			return None
+
+		part_mod = PartitionModification(
+			status=ModificationStatus.EXIST,
+			type=PartitionType.PRIMARY,
+			start=Size(0, Unit.sectors, device.device_info.sector_size),
+			length=device.device_info.total_size,
+			dev_path=device.device_info.path,
+			uuid=dev_info.uuid,  # the container's when LUKS, which rd.luks.name= wants
+			luks_mapper=mapper,
+			on_raid=bool(dev_info.type and dev_info.type.startswith('raid')),
+		)
+
+		if not self._fill_from_lsblk(part_mod, node, base_mountpoint):
+			return None
+
+		debug(f'Pre-mounted {dev_info.type} {dev_info.path}: {part_mod.fs_type} at {part_mod.mountpoint}')
 		return part_mod
 
 	def detect_pre_mounted_mods(self, base_mountpoint: Path) -> list[DeviceModification]:
@@ -822,6 +875,13 @@ class DeviceHandler:
 					continue
 				path = Path(part_info.disk.device.path)
 				part_mods.setdefault(path, []).append(part_mod)
+
+			# an md array carries no partition table: the filesystem, or the
+			# LUKS container holding it, sits on the device node itself
+			if not device.partition_infos:
+				whole = self._pre_mounted_whole_device(device, base_mountpoint)
+				if whole is not None:
+					part_mods.setdefault(device.device_info.path, []).append(whole)
 
 		device_mods: list[DeviceModification] = []
 		for device_path, mods in part_mods.items():
