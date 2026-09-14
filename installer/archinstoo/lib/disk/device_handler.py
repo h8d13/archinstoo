@@ -720,6 +720,23 @@ class DeviceHandler:
 			else:
 				umount(partition.path, recursive=True)
 
+	@staticmethod
+	def _validate_addressable(modification: DeviceModification, partition_table: PartitionTable) -> None:
+		# a hand-written config can ask for more than the table can express;
+		# parted's own refusal arrives as "overlapping sectors", which sends
+		# people looking in the wrong place
+		limit = partition_table.max_addressable(modification.device.device_info.sector_size)
+
+		if limit is None:
+			return
+
+		for part_mod in modification.partitions:
+			if limit < part_mod.start + part_mod.length:
+				raise DiskError(
+					f'Partition {part_mod.mountpoint or part_mod.dev_path or ""} ends past what {partition_table.value} can address '
+					f'({limit.format_highest()}); use GPT or shrink the layout'
+				)
+
 	def partition(
 		self,
 		modification: DeviceModification,
@@ -732,6 +749,8 @@ class DeviceHandler:
 		if modification.wipe:
 			if partition_table.is_mbr() and len(modification.partitions) > 3:
 				raise DiskError('Too many partitions on disk, MBR disks can only have 3 primary partitions')
+
+			self._validate_addressable(modification, partition_table)
 
 			self.wipe_dev(modification.device)
 			disk = freshDisk(modification.device.disk.device, partition_table.value)

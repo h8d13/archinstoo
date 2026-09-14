@@ -22,6 +22,7 @@ from archinstoo.lib.models.device import (
 	SubvolumeModification,
 	Unit,
 )
+from archinstoo.lib.output import warn
 from archinstoo.lib.tui.prompts import prompt_yes_no
 
 from .selectors import select_main_filesystem_format, select_mount_options, select_partition_table
@@ -59,9 +60,10 @@ def _boot_partition(
 			)
 		)
 	else:
-		# BIOS+GPT: small ef02 partition for GRUB's core.img
-		# Limine uses the MBR gap directly, so it doesn't need this
-		if using_gpt and bootloader == Bootloader.Grub:
+		# BIOS+GPT: small ef02 partition for the stage that will not fit in the
+		# MBR gap. Only MBR leaves that gap, so both loaders need this on GPT:
+		# `limine bios-install` refuses a GPT device without one, same as grub
+		if using_gpt and bootloader in (Bootloader.Grub, Bootloader.Limine):
 			partitions.append(
 				PartitionModification(
 					status=ModificationStatus.CREATE,
@@ -146,13 +148,18 @@ def suggest_disk_layout(
 		mount_options = []
 
 	uefi = SysInfo.has_uefi()
-	partition_table = PartitionTable.GPT if uefi else select_partition_table()
+	partition_table = PartitionTable.GPT if uefi else select_partition_table(device)
 	device_modification = DeviceModification(device, wipe=True, partition_table=partition_table)
 
 	using_gpt = partition_table.is_gpt()
 
-	if using_gpt:
-		available_space = available_space.gpt_end()
+	available_space = partition_table.usable_end(available_space, sector_size)
+
+	if partition_table.is_mbr() and available_space < total_size:
+		# the tail is unreachable, not merely unallocated: sizing the layout off
+		# the full disk is what makes parted reject it
+		unusable = total_size - available_space
+		warn(f'MBR cannot address past {available_space.format_highest()}, leaving {unusable.format_highest()} of {device.device_info.path} unused')
 
 	available_space = available_space.align()
 

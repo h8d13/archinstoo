@@ -327,6 +327,13 @@ class DiskLayoutConfiguration:
 		return None
 
 
+# an MBR entry stores the start LBA and the length as uint32, so nothing past
+# 2^32-1 sectors is reachable: just under 2 TiB at 512B sectors, 16 TiB at 4K.
+# parted rejects the partition outright rather than truncating it.
+# https://github.com/archlinux/archinstall/issues/2087
+_MBR_MAX_SECTORS = 2**32 - 1
+
+
 class PartitionTable(Enum):
 	GPT = 'gpt'
 	MBR = 'msdos'
@@ -340,6 +347,21 @@ class PartitionTable(Enum):
 	@classmethod
 	def default(cls) -> PartitionTable:
 		return cls.GPT if SysInfo.has_uefi() else cls.MBR
+
+	def max_addressable(self, sector_size: SectorSize) -> Size | None:
+		# GPT's 64-bit LBAs outrun any disk that exists, so only MBR has a ceiling
+		if self.is_mbr():
+			return Size(_MBR_MAX_SECTORS, Unit.sectors, sector_size)
+		return None
+
+	def usable_end(self, total_size: Size, sector_size: SectorSize) -> Size:
+		# where a layout on this table has to stop: GPT keeps its backup header
+		# in the last MiB, MBR simply cannot address past its ceiling
+		if self.is_gpt():
+			return total_size.gpt_end()
+
+		limit = self.max_addressable(sector_size)
+		return min(total_size, limit) if limit else total_size
 
 
 class Units(Enum):
