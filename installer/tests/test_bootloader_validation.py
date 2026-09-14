@@ -132,12 +132,16 @@ BOOT_EXT4_BIOS = _part('/boot', '/dev/vda2', FilesystemType.EXT4, [PartitionFlag
 ROOT_EXT4 = _part('/', '/dev/vda3', FilesystemType.EXT4, [])
 
 
-def _bios_errors(parts: list[PartitionModification], table: PartitionTable | None) -> list[str]:
+def _bios_errors(
+	parts: list[PartitionModification],
+	table: PartitionTable | None,
+	bootloader: Bootloader = Bootloader.Grub,
+) -> list[str]:
 	disk_config = DiskLayoutConfiguration(
 		config_type=DiskLayoutType.Manual,
 		device_modifications=[DeviceModification(device=None, wipe=True, partitions=parts, partition_table=table)],  # type: ignore[arg-type]
 	)
-	return validate_bootloader(BootloaderConfiguration(Bootloader.Grub, uki=False), disk_config, uefi=False)
+	return validate_bootloader(BootloaderConfiguration(bootloader, uki=False), disk_config, uefi=False)
 
 
 def test_bios_grub_flag_on_msdos_rejected() -> None:
@@ -158,6 +162,18 @@ def test_bios_gpt_grub_without_bios_grub_rejected() -> None:
 
 def test_bios_gpt_grub_with_bios_grub_accepted() -> None:
 	assert _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.GPT) == []
+
+
+def test_bios_gpt_limine_without_bios_grub_rejected() -> None:
+	# limine 12.x fails this at bios-install, a whole install too late
+	boot_fat = _part('/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.BOOT])
+	errors = _bios_errors([boot_fat, ROOT_EXT4], PartitionTable.GPT, Bootloader.Limine)
+	assert 'BIOS boot from a GPT disk needs a 1MiB bios_grub partition' in errors
+
+
+def test_bios_mbr_limine_accepted() -> None:
+	boot_fat = _part('/boot', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.BOOT])
+	assert _bios_errors([boot_fat, ROOT_EXT4], PartitionTable.MBR, Bootloader.Limine) == []
 
 
 def test_bios_mbr_grub_accepted() -> None:
