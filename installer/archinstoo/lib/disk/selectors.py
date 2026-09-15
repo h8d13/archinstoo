@@ -66,15 +66,21 @@ def select_device(
 			return None
 
 
-def select_partition_table(device: BDevice) -> PartitionTable:
+def default_partition_table(device: BDevice) -> PartitionTable:
 	default = PartitionTable.default()
 	total = device.device_info.total_size
 	limit = PartitionTable.MBR.max_addressable(device.device_info.sector_size)
 
-	# BIOS defaults to MBR, but on a disk MBR cannot address that steers the
-	# user into losing the tail; grub boots GPT on BIOS off a bios_grub partition
+	# defaulting BIOS to MBR on a disk MBR cannot address loses the tail;
+	# grub boots GPT on BIOS off a bios_grub partition
 	if default.is_mbr() and limit is not None and limit < total:
-		default = PartitionTable.GPT
+		return PartitionTable.GPT
+
+	return default
+
+
+def select_partition_table(device: BDevice) -> PartitionTable:
+	default = default_partition_table(device)
 
 	items = [
 		MenuItem('GPT', value=PartitionTable.GPT),

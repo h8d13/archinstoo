@@ -128,12 +128,10 @@ class PartitioningList(ListManager[DiskSegment]):
 		return '{}: {}'.format('Wipe', self._wipe)
 
 	def as_segments(self, device_partitions: list[PartitionModification]) -> list[DiskSegment]:
-		end = self._device.device_info.total_size
-
-		if self._using_gpt:
-			end = end.gpt_end()
-
-		end = end.align()
+		# free space the table cannot address only defers the failure
+		table = PartitionTable.GPT if self._using_gpt else PartitionTable.MBR
+		device_info = self._device.device_info
+		end = table.usable_end(device_info.total_size, device_info.sector_size).align()
 
 		# Reorder device_partitions to move all deleted partitions to the top
 		device_partitions.sort(key=lambda p: p.is_delete(), reverse=True)
