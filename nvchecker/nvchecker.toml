@@ -1248,6 +1248,9 @@ source = "pacman"
 [pulseaudio]
 source = "pacman"
 
+[python-dbus-fast]
+source = "pacman"
+
 [qps]
 source = "pacman"
 

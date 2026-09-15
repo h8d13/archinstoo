@@ -18,9 +18,10 @@ if TYPE_CHECKING:
 # Three ways a WM ends up launching it:
 #   - i3 and labwc call i3-sensible-terminal / lab-sensible-terminal, both of
 #     which try $TERMINAL before their own fallback lists. Nothing to patch.
-#   - qtile's guess_terminal() ignores $TERMINAL and returns the first
-#     installed name off a fixed list. Every Terminal enum value is on that
-#     list, so it resolves to the pick as long as we install exactly one.
+#   - qtile's guess_terminal() ignores $TERMINAL and walks a fixed list, on
+#     which foot only appears under Wayland. The profile writes the shipped
+#     default config with the pick passed in as the preference argument, which
+#     is tried before that list.
 #   - the rest hardcode a binary in a config we own or rewrite, and call
 #     terminal_command() at provision time.
 #
@@ -30,7 +31,7 @@ def terminal_command() -> str:
 	return terminal_for(get_arch_config_handler().config.app_config)
 
 
-def swap_terminal(text: str, hardcoded: str, source: Path) -> str:
+def swap_terminal(text: str, hardcoded: str, source: Path, template: str = '{terminal}') -> str:
 	# upstream renames its default terminal from time to time. a silent no-op
 	# here would leave the keybind pointing at a package we no longer install,
 	# so say so instead of shipping a dead binding
@@ -40,7 +41,9 @@ def swap_terminal(text: str, hardcoded: str, source: Path) -> str:
 		warn(f'{source}: no "{hardcoded}" to repoint at {terminal}, left as shipped')
 		return text
 
-	return text.replace(hardcoded, terminal)
+	# most configs name the binary bare; template covers the ones that want it
+	# wrapped in a call or quoted
+	return text.replace(hardcoded, template.format(terminal=terminal))
 
 
 def provision_terminal_config(
@@ -50,6 +53,7 @@ def provision_terminal_config(
 	config_path: str,
 	hardcoded: str,
 	executable: bool = False,
+	template: str = '{terminal}',
 ) -> None:
 	# hyprland and niri both copy their shipped default into ~/.config on first
 	# run, so the repointed copy has to be there before that happens. river
@@ -58,7 +62,7 @@ def provision_terminal_config(
 		warn(f'{shipped} missing, leaving the config to first run')
 		return
 
-	conf = swap_terminal(shipped.read_text(), hardcoded, shipped)
+	conf = swap_terminal(shipped.read_text(), hardcoded, shipped, template)
 
 	for user in users:
 		dest = install_session.target / 'home' / user.username / '.config' / config_path

@@ -2,6 +2,7 @@
 # default_profiles/desktops/__init__.py; these lock the ends of each one.
 
 from pathlib import Path
+from subprocess import run
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,7 @@ from archinstoo.default_profiles.desktops import swap_terminal, terminal_command
 from archinstoo.default_profiles.desktops.awesome import AwesomeProfile
 from archinstoo.default_profiles.desktops.hyprland import HyprlandProfile
 from archinstoo.default_profiles.desktops.niri import NiriProfile
+from archinstoo.default_profiles.desktops.qtile import QtileProfile
 from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
 from archinstoo.lib import args
@@ -142,6 +144,80 @@ def test_niri_survives_a_missing_shipped_config(tmp_path: Path, monkeypatch: pyt
 	NiriProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
 
 	assert not (tmp_path / 'home/ada/.config').exists()
+
+
+def test_qtile_writes_the_user_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# guess_terminal() takes a preference before its own list, so the pick is
+	# passed in rather than replacing the call
+	_pin_terminal(monkeypatch, Terminal.KITTY)
+	(tmp_path / 'usr/share/doc/qtile').mkdir(parents=True)
+	(tmp_path / 'usr/share/doc/qtile/default_config.py').write_text('terminal = guess_terminal()\n')
+	(tmp_path / 'home/ada').mkdir(parents=True)
+
+	QtileProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	assert (tmp_path / 'home/ada/.config/qtile/config.py').read_text() == 'terminal = guess_terminal("kitty")\n'
+
+
+def test_qtile_preference_covers_a_wayland_only_terminal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# foot is on guess_terminal()'s list only when WAYLAND_DISPLAY is set, and
+	# this profile is Xorg: unpreferred it would resolve to None, a dead bind
+	_pin_terminal(monkeypatch, Terminal.FOOT)
+	(tmp_path / 'usr/share/doc/qtile').mkdir(parents=True)
+	(tmp_path / 'usr/share/doc/qtile/default_config.py').write_text('terminal = guess_terminal()\n')
+	(tmp_path / 'home/ada').mkdir(parents=True)
+
+	QtileProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	assert (tmp_path / 'home/ada/.config/qtile/config.py').read_text() == 'terminal = guess_terminal("foot")\n'
+
+
+def test_qtile_writes_an_executable_xsession(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# lightdm's wrapper ends in an unquoted `exec $@`, which word-splits the
+	# quoted Exec qtile.desktop ships: the session dies and the greeter comes
+	# back. The wrapper sources ~/.xsession first, but only if it is +x
+	_pin_terminal(monkeypatch, Terminal.KITTY)
+	(tmp_path / 'home/ada').mkdir(parents=True)
+
+	QtileProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	xsession = tmp_path / 'home/ada/.xsession'
+	assert xsession.stat().st_mode & 0o111, 'lightdm skips a non-executable ~/.xsession'
+	body = xsession.read_text()
+	assert 'exec systemctl --user start --wait qtile.service' in body
+	# qtile dropped that unit again upstream, so the plain command has to be
+	# there too or the next release is the same login loop
+	assert 'exec qtile start' in body
+	# every other session the user installs has to stay on the normal path
+	assert '"$DESKTOP_SESSION" = qtile' in body
+
+
+def test_qtile_xsession_is_valid_sh(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# a syntax error here is the same login loop it exists to fix
+	_pin_terminal(monkeypatch, Terminal.KITTY)
+	(tmp_path / 'home/ada').mkdir(parents=True)
+
+	QtileProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	check = run(['/bin/sh', '-n', str(tmp_path / 'home/ada/.xsession')], capture_output=True, text=True, check=False)  # noqa: S603
+
+	assert check.returncode == 0, check.stderr
+
+
+def test_qtile_survives_a_missing_shipped_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# qtile still loads its built-in copy, so this is a warning, not a failure
+	_pin_terminal(monkeypatch, Terminal.KITTY)
+	(tmp_path / 'home/ada').mkdir(parents=True)
+
+	QtileProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+
+	assert not (tmp_path / 'home/ada/.config').exists()
+
+
+def test_qtile_ships_a_scalable_font() -> None:
+	# the default config's widget_defaults ask pango for "sans"; nothing in
+	# qtile's dep chain pulls a font, and a greeter that does is optional
+	assert 'ttf-liberation' in QtileProfile().packages
 
 
 def test_river_writes_an_executable_user_init(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
