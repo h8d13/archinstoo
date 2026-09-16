@@ -151,7 +151,6 @@ exclude = ["**/lib/grimoire.py"]
 [tool.ruff.format]
 indent-style = "tab"
 quote-style = "single"
-docstring-code-format = true
 
 [tool.ruff.lint]
 # preview behaviour for the rules already selected below (C419 catching
