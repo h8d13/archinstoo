@@ -143,6 +143,7 @@ class Terminal(StrEnum):
 	KONSOLE = auto()
 	WEZTERM = auto()
 	XTERM = auto()
+	PTYXIS = auto()
 
 	@property
 	def packages(self) -> list[str]:
