@@ -213,8 +213,9 @@
   "packages": [
     "firefox"
   ],
+  "gfx_driver": "all-open-source",
+  "gfx_packages": [],
   "profile_config": {
-    "gfx_driver": "all-open-source",
     "greeter": "lightdm-gtk-greeter",
     "profiles": [
       {

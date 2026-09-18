@@ -8,8 +8,10 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.lib import hardware
+from archinstoo.lib.args import ArchConfig
 from archinstoo.lib.hardware import (
 	GFX_CUSTOM_CHOICES,
+	XORG_EXTRA,
 	GfxDriver,
 	GfxPackage,
 	detected_gfx_drivers,
@@ -18,7 +20,6 @@ from archinstoo.lib.hardware import (
 	hybrid_gfx_packages,
 )
 from archinstoo.lib.profile.base import DisplayServer
-from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.scripts import _resolve
 
@@ -72,15 +73,13 @@ def test_resolve_mirrors_the_install_path() -> None:
 
 
 def test_config_round_trip_drops_unknown_names() -> None:
-	parsed = ProfileConfiguration.parse_arg(
-		{'profiles': [], 'gfx_driver': 'custom', 'gfx_packages': ['mesa', 'vulkan-intel', 'not-a-package'], 'greeter': None}
-	)
+	parsed = ArchConfig.from_config({'gfx_driver': 'custom', 'gfx_packages': ['mesa', 'vulkan-intel', 'not-a-package']})
 	assert parsed.gfx_driver is GfxDriver.Custom
 	assert parsed.gfx_packages == [GfxPackage.Mesa, GfxPackage.VulkanIntel]
-	assert parsed.json()['gfx_packages'] == ['mesa', 'vulkan-intel']
+	assert parsed.safe_json()['gfx_packages'] == ['mesa', 'vulkan-intel']
 
 	# a preset driver carries no list, an absent key parses as none
-	plain = ProfileConfiguration.parse_arg({'profiles': [], 'gfx_driver': 'mesa-open-source', 'greeter': None})  # type: ignore[typeddict-item]
+	plain = ArchConfig.from_config({'gfx_driver': 'mesa-open-source'})
 	assert plain.gfx_packages == []
 
 
@@ -193,3 +192,15 @@ def test_install_enables_the_service_a_pick_owns(monkeypatch: pytest.MonkeyPatch
 	handler.install_gfx_driver(session, GfxDriver.IntelOpenSource, {DisplayServer.Wayland})  # type: ignore[arg-type]
 	assert installed == [p.value for p in GfxDriver.IntelOpenSource.gfx_packages(['linux'])]
 	assert enabled == []
+
+
+def test_driver_installs_without_a_display_server() -> None:
+	# a headless box running CUDA picks a driver and never selects a profile:
+	# the driver packages still go in, only the X11 base is left out
+	installed: list[str] = []
+	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend, enable_service=lambda _units: None)
+
+	ProfileHandler().install_gfx_driver(session, GfxDriver.IntelOpenSource, set())  # type: ignore[arg-type]
+
+	assert installed == [p.value for p in GfxDriver.IntelOpenSource.gfx_packages(['linux'])]
+	assert not {p.value for p in XORG_EXTRA} & set(installed)

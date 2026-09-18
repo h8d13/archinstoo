@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 from archinstoo._version import __version__
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.models.application import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
@@ -72,6 +73,8 @@ class ArchConfig:
 	locale_config: LocaleConfiguration | None = None
 	disk_config: DiskLayoutConfiguration | None = None
 	profile_config: ProfileConfiguration | None = None
+	gfx_driver: GfxDriver | None = None
+	gfx_packages: list[GfxPackage] = field(default_factory=list)
 	pacman_config: PacmanConfiguration | None = None
 	network_config: NetworkConfiguration | None = None
 	bootloader_config: BootloaderConfiguration | None = None
@@ -104,6 +107,8 @@ class ArchConfig:
 			'kernel_headers': self.kernel_headers,
 			'firmware': self.firmware.json(),
 			'profile_config': self.profile_config.json() if self.profile_config else None,
+			'gfx_driver': self.gfx_driver.value if self.gfx_driver else None,
+			'gfx_packages': [p.value for p in self.gfx_packages],
 			'hostname': self.hostname,
 			'auth_config': self.auth_config.json() if self.auth_config else None,
 			'app_config': self.app_config.json() if self.app_config else None,
@@ -167,6 +172,11 @@ class ArchConfig:
 
 		if (swap := args_config.get('swap')) is not None:
 			arch_config.swap = SwapConfiguration.parse_arg(swap)
+
+		if gfx_driver := args_config.get('gfx_driver'):
+			arch_config.gfx_driver = GfxDriver(gfx_driver)
+		# unknown names are dropped, the same way kernels are parsed
+		arch_config.gfx_packages = [GfxPackage(p) for p in args_config.get('gfx_packages') or [] if p in GfxPackage._value2member_map_]
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 		if firmware := args_config.get('firmware'):

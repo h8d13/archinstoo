@@ -49,9 +49,10 @@
                 }
             }
         ],
-        "gfx_driver": "all-open-source",
         "greeter": "cosmic-greeter"
     },
+    "gfx_driver": "all-open-source",
+    "gfx_packages": [],
     "hostname": "archlinux",
     "auth_config": {},
     "app_config": {

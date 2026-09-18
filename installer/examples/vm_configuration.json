@@ -153,9 +153,10 @@
                 "custom_settings": {}
             }
         ],
-        "gfx_driver": null,
         "greeter": null
     },
+    "gfx_driver": null,
+    "gfx_packages": [],
     "hostname": "vmtesting",
     "auth_config": null,
     "app_config": {

@@ -228,12 +228,6 @@ class ProfileHandler:
 			debug('No profiles selected, skipping profile installation')
 			return
 
-		# Install gfx driver first as some desktops might need to satisfy deps (vulkan-driver virtual group).
-		# Pass the aggregated display servers across all selected profiles so mixed X11+Wayland picks
-		# correctly include the X11 base packages.
-		if profile_config.gfx_driver and (display_servers := profile_config.display_servers()):
-			self.install_gfx_driver(install_session, profile_config.gfx_driver, display_servers, profile_config.gfx_packages)
-
 		# one terminal for every profile that ships a keybind rather than its own
 		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
 		if any(p.needs_terminal for p in selected):
