@@ -99,6 +99,8 @@ def perform_installation(
 			hostname=config.hostname,
 			locale_config=locale_config,
 			timezone=config.timezone,
+			gfx_driver=config.gfx_driver,
+			gfx_packages=config.gfx_packages,
 		)
 
 		if pacman_config := config.pacman_config:

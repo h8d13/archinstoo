@@ -2,7 +2,7 @@ import re
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.hardware import GFX_PACKAGES, GfxDriver, GfxPackage, SysInfo
 from archinstoo.lib.output import debug, info, log, warn
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class Initramfs:
 		if SysInfo.arch() != 'x86_64':
 			self.hooks.remove('microcode')
 
-	def add_kms_modules(self) -> None:
+	def add_kms_modules(self, gfx_driver: GfxDriver | None = None, gfx_packages: list[GfxPackage] | None = None) -> None:
 		# the kms hook ships the DRM driver but leaves loading it to udev
 		# coldplug, by which point simpledrm owns the console; that handover
 		# swaps fbcon out and back and the vt resize eats the boot log already
@@ -49,7 +49,27 @@ class Initramfs:
 		if 'kms' not in self.hooks:
 			return
 
-		for module in sorted(SysInfo.kms_modules()):
+		modules = SysInfo.kms_modules()
+
+		# the probe reads the live media, which runs nouveau: nvidia-open
+		# replaces it on the target. Custom is where a hybrid lands, being the
+		# only driver that holds two GPUs at once
+		picked: list[GfxPackage] = []
+		if gfx_driver is GfxDriver.Custom:
+			picked = gfx_packages or []
+		elif gfx_driver:
+			picked = GFX_PACKAGES[gfx_driver]
+
+		if GfxPackage.NvidiaOpen in picked:
+			modules.discard('nouveau')
+			# nvidia_drm is what carries KMS (nvidia_modeset and nvidia follow
+			# as deps, and the kms hook ships none of them, out of tree). Worth
+			# loading early only when nvidia paints the console: on a hybrid the
+			# iGPU does, and waking the dGPU every boot buys nothing
+			if not modules:
+				modules.add('nvidia_drm')
+
+		for module in sorted(modules):
 			if module not in self.modules:
 				debug(f'Adding KMS module {module} for early modeset')
 				self.modules.append(module)

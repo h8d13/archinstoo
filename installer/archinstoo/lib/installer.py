@@ -14,7 +14,7 @@ from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mdadm import write_mdadm_conf
 from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
-from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo
 from archinstoo.lib.kernel.initramfs import LVM, RAID, Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
 from archinstoo.lib.kernel.sysctl import write_sysctl
@@ -263,6 +263,8 @@ class Installer:
 		hostname: str | None = None,
 		locale_config: LocaleConfiguration | None = None,
 		timezone: str | None = None,
+		gfx_driver: GfxDriver | None = None,
+		gfx_packages: list[GfxPackage] | None = None,
 	) -> None:
 		if optional_repositories is None:
 			optional_repositories = []
@@ -299,7 +301,7 @@ class Installer:
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(__fido2_packages__)
 
-		self.initramfs.add_kms_modules()
+		self.initramfs.add_kms_modules(gfx_driver, gfx_packages)
 
 		if ucode := SysInfo.ucode():
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)

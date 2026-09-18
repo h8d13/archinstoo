@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from archinstoo.lib import hardware
+from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.kernel.initramfs import LVM, Initramfs
 from archinstoo.lib.models.device import FilesystemType
@@ -65,6 +66,36 @@ def test_kms_driver_loads_from_modules(monkeypatch: pytest.MonkeyPatch, tmp_path
 
 	initramfs = Initramfs()
 	initramfs.add_kms_modules()
+
+	assert initramfs.modules == expected
+
+
+# NvidiaOpenSource is the nouveau preset despite the name, so it keeps the probe.
+# A hybrid can only be Custom: no preset holds two GPUs at once
+@pytest.mark.parametrize(
+	('cards', 'driver', 'packages', 'expected'),
+	[
+		({'card0': 'nouveau'}, GfxDriver.NvidiaOpenKernel, [], ['nvidia_drm']),
+		({'card0': 'nouveau'}, GfxDriver.Custom, [GfxPackage.NvidiaOpen], ['nvidia_drm']),
+		({'card0': 'nouveau'}, GfxDriver.NvidiaOpenSource, [], ['nouveau']),
+		({'card0': 'nouveau'}, None, [], ['nouveau']),
+		# hybrid: the iGPU paints the console, the dGPU stays asleep
+		({'card0': 'i915', 'card1': 'nouveau'}, GfxDriver.Custom, [GfxPackage.NvidiaOpen], ['i915']),
+		({'card0': 'i915', 'card1': 'nouveau'}, GfxDriver.Custom, [GfxPackage.Mesa], ['i915', 'nouveau']),
+	],
+)
+def test_nvidia_open_replaces_the_probed_nouveau(
+	monkeypatch: pytest.MonkeyPatch,
+	tmp_path: Path,
+	cards: dict[str, str | None],
+	driver: GfxDriver | None,
+	packages: list[GfxPackage],
+	expected: list[str],
+) -> None:
+	monkeypatch.setattr(hardware, '_DRM_CLASS', _fake_drm(tmp_path / 'drm', cards))
+
+	initramfs = Initramfs()
+	initramfs.add_kms_modules(driver, packages)
 
 	assert initramfs.modules == expected
 
