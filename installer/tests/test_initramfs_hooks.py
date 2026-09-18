@@ -31,6 +31,54 @@ def test_bcachefs_hook_follows_block_and_ships_the_module() -> None:
 	assert initramfs.hooks.count('bcachefs') == 1
 
 
+def _fake_drm(root: Path, cards: dict[str, str | None]) -> Path:
+	# Mirrors sysfs: card<N>/device/driver/module symlinks at the module dir.
+	# A card with no module is a built-in driver, nothing to load early.
+	root.mkdir(parents=True, exist_ok=True)
+	mod_root = root.parent / 'modules'
+	mod_root.mkdir(parents=True, exist_ok=True)
+	for card, module in cards.items():
+		driver = root / card / 'device' / 'driver'
+		driver.mkdir(parents=True)
+		if module is None:
+			continue
+
+		target = mod_root / module
+		target.mkdir(exist_ok=True)
+		(driver / 'module').symlink_to(target)
+
+	return root
+
+
+@pytest.mark.parametrize(
+	('cards', 'expected'),
+	[
+		({'card0': 'bochs'}, ['bochs']),
+		({'card0': 'i915', 'card1': 'amdgpu'}, ['amdgpu', 'i915']),
+		({'card0': 'i915', 'card0-eDP-1': 'i915'}, ['i915']),  # connectors are not cards
+		({'card0': 'nouveau'}, ['nouveau']),
+		({'card0': None}, []),  # built-in driver
+	],
+)
+def test_kms_driver_loads_from_modules(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, cards: dict[str, str | None], expected: list[str]) -> None:
+	monkeypatch.setattr(hardware, '_DRM_CLASS', _fake_drm(tmp_path / 'drm', cards))
+
+	initramfs = Initramfs()
+	initramfs.add_kms_modules()
+
+	assert initramfs.modules == expected
+
+
+def test_kms_modules_skipped_without_the_hook(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	monkeypatch.setattr(hardware, '_DRM_CLASS', _fake_drm(tmp_path / 'drm', {'card0': 'bochs'}))
+
+	initramfs = Initramfs()
+	initramfs.hooks.remove('kms')
+	initramfs.add_kms_modules()
+
+	assert initramfs.modules == []
+
+
 @pytest.mark.parametrize(('arch', 'present'), [('x86_64', True), ('aarch64', False)])
 def test_microcode_hook_only_where_it_applies(monkeypatch: pytest.MonkeyPatch, arch: str, present: bool) -> None:
 	monkeypatch.setattr(hardware.SysInfo, 'arch', staticmethod(lambda: arch))

@@ -257,6 +257,7 @@ _PCI_BUS = Path('/sys/bus/pci/devices')
 _USB_BUS = Path('/sys/bus/usb/devices')
 # CS35L41-class amps enumerate here (acpi:CSC3551:) and bind on i2c/spi
 _ACPI_BUS = Path('/sys/bus/acpi/devices')
+_DRM_CLASS = Path('/sys/class/drm')
 _FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
 _PROC_FILESYSTEMS = Path('/proc/filesystems')
@@ -606,6 +607,22 @@ class SysInfo:
 	@staticmethod
 	def graphics_devices() -> dict[str, str]:
 		return _sys_info.graphics_devices
+
+	@staticmethod
+	def kms_modules() -> set[str]:
+		# Which module drives the GPU right now, for MODULES= to load it before
+		# the console is used. card0-VGA-1 and friends are connectors on the
+		# same device, hence the dedup. A built-in driver has no module link.
+		modules: set[str] = set()
+		if not _DRM_CLASS.is_dir():
+			return modules
+
+		for card in _DRM_CLASS.glob('card*'):
+			link = card / 'device' / 'driver' / 'module'
+			if link.is_symlink():
+				modules.add(link.resolve().name)
+
+		return modules
 
 	@staticmethod
 	def has_nvidia_graphics() -> bool:

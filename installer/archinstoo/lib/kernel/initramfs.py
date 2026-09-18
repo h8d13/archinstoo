@@ -41,6 +41,19 @@ class Initramfs:
 		if SysInfo.arch() != 'x86_64':
 			self.hooks.remove('microcode')
 
+	def add_kms_modules(self) -> None:
+		# the kms hook ships the DRM driver but leaves loading it to udev
+		# coldplug, by which point simpledrm owns the console; that handover
+		# swaps fbcon out and back and the vt resize eats the boot log already
+		# on screen. MODULES= loads it with the initramfs, before any output
+		if 'kms' not in self.hooks:
+			return
+
+		for module in sorted(SysInfo.kms_modules()):
+			if module not in self.modules:
+				debug(f'Adding KMS module {module} for early modeset')
+				self.modules.append(module)
+
 	def add_lvm(self) -> None:
 		# after block so the volume group's device is online before lvm2
 		# activates it; add_encrypt(before=LVM) then slots sd-encrypt in

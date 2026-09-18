@@ -299,6 +299,8 @@ class Installer:
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(__fido2_packages__)
 
+		self.initramfs.add_kms_modules()
+
 		if ucode := SysInfo.ucode():
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)
 			debug(f'Adding microcode package {ucode.stem}')
