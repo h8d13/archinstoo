@@ -104,6 +104,7 @@
 │   │   │   ├── layouts
 │   │   │   ├── luks
 │   │   │   ├── lvm
+│   │   │   ├── mdadm
 │   │   │   ├── mount
 │   │   │   ├── partitioning_menu
 │   │   │   ├── selectors
@@ -130,6 +131,7 @@
 │   │   │   └── configure
 │   │   ├── menu/
 │   │   │   ├── abstract_menu
+│   │   │   ├── driver_select
 │   │   │   ├── list_manager
 │   │   │   ├── locale_menu
 │   │   │   └── menu_helper
@@ -164,7 +166,6 @@
 │   │   ├── profile/
 │   │   │   ├── base
 │   │   │   ├── config
-│   │   │   ├── driver_select
 │   │   │   ├── profile_menu
 │   │   │   └── profiles_handler
 │   │   ├── schema_gen
@@ -211,5 +212,5 @@
     └── parted/
         └── __init__
 
-30 directories, 180 files
+30 directories, 181 files
 ```

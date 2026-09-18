@@ -95,9 +95,10 @@
                 "custom_settings": {}
             }
         ],
-        "gfx_driver": null,
         "greeter": null
     },
+    "gfx_driver": null,
+    "gfx_packages": [],
     "hostname": "ci-alpine",
     "auth_config": {
         "root_enc_password": "$y$j9T$MwtZyQq3j0eAFWDc.pUI81$EJV4rEfwgL5nLw6gExfvxLqSuC0ee.W0903kmeZY8C/",
