@@ -193,9 +193,12 @@ _X11_RULES_PATHS = (
 
 
 @cache
-def _x11_registry() -> ET.Element | None:
+def _load_x11_registry() -> ET.Element:
 	# cached: the variant list is re-read on every layout change in the menu,
-	# and the registry is a quarter of a megabyte of XML
+	# and the registry is a quarter of a megabyte of XML. Raises instead of
+	# returning None when there is nothing to read: cache stores returns, not
+	# exceptions, so a blip on the fetch path is retried by the next caller
+	# rather than emptying every keymap list for the rest of the run
 	for path in _X11_RULES_PATHS:
 		if not path.is_file():
 			continue
@@ -206,7 +209,17 @@ def _x11_registry() -> ET.Element | None:
 
 	# host ships no xkeyboard-config (alpine, minimal foreign hosts)
 	debug('No local xkeyboard-config registry, fetching the upstream one')
-	return _fetch_x11_registry()
+	if (root := _fetch_x11_registry()) is None:
+		raise RequirementError('no xkeyboard-config registry on disk or upstream')
+	return root
+
+
+def _x11_registry() -> ET.Element | None:
+	try:
+		return _load_x11_registry()
+	except RequirementError as e:
+		debug(f'X11 keymap lists unavailable: {e}')
+		return None
 
 
 def _fetch_x11_registry() -> ET.Element | None:

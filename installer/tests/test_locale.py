@@ -402,9 +402,9 @@ _REGISTRY = """<?xml version="1.0" encoding="UTF-8"?>
 def _clear_x11_registry_cache() -> Iterator[None]:
 	# the parse is cached for the menu's repeated variant lookups, so a test
 	# swapping the source must leak it in neither direction
-	catalog._x11_registry.cache_clear()
+	catalog._load_x11_registry.cache_clear()
 	yield
-	catalog._x11_registry.cache_clear()
+	catalog._load_x11_registry.cache_clear()
 
 
 @pytest.fixture
@@ -445,3 +445,25 @@ def test_x11_registry_survives_a_broken_local_file(tmp_path: Path, monkeypatch: 
 	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
 
 	assert catalog.list_x11_keyboard_languages() == ['be']
+
+
+def test_failed_fetch_is_retried_not_cached(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# a blip on the fetch path must not leave every keymap list empty for the
+	# rest of the run: the parse is cached, the failure is not
+	attempts = []
+
+	def failing_fetch() -> None:
+		attempts.append(1)
+
+	monkeypatch.setattr(catalog, '_X11_RULES_PATHS', (tmp_path / 'missing.xml',))
+	monkeypatch.setattr(catalog, '_fetch_x11_registry', failing_fetch)
+
+	assert catalog.list_x11_keyboard_languages() == []
+	assert catalog.list_x11_keyboard_models() == []
+	assert len(attempts) == 2
+
+	# and once it comes back, the parse is cached for the calls after it
+	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
+	assert catalog.list_x11_keyboard_languages() == ['be']
+	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: pytest.fail('re-fetched a registry already parsed'))
+	assert catalog.list_x11_keyboard_models() == ['pc105']
