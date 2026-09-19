@@ -72,20 +72,20 @@ def set_keyboard(installation: Installer, locale_config: LocaleConfiguration) ->
 		debug('No graphical (XKB) keyboard layout set, skipping')
 		return False
 
-	model = locale_config.xkb_model
 	variant = locale_config.xkb_variant
-	options = locale_config.xkb_options
 
-	# Xorg: only emit the Options that are set (layout always, rest optional)
-	xorg_opts = [('XkbLayout', layout)]
-	if model:
-		xorg_opts.append(('XkbModel', model))
-	if variant:
-		xorg_opts.append(('XkbVariant', variant))
-	if options:
-		xorg_opts.append(('XkbOptions', options))
+	# (Xorg InputClass option, vconsole.conf key, value). Layout is always
+	# set, the rest only when chosen; the three consumers below all read
+	# their own names off this one list
+	settings = [('XkbLayout', 'XKBLAYOUT', layout)]
+	optional = (
+		('XkbModel', 'XKBMODEL', locale_config.xkb_model),
+		('XkbVariant', 'XKBVARIANT', variant),
+		('XkbOptions', 'XKBOPTIONS', locale_config.xkb_options),
+	)
+	settings += [(opt, key, val) for opt, key, val in optional if val]
 
-	opt_lines = '\n'.join(f'    Option "{k}" "{v}"' for k, v in xorg_opts)
+	opt_lines = '\n'.join(f'    Option "{opt}" "{val}"' for opt, _, val in settings)
 	content = f'Section "InputClass"\n    Identifier "system-keyboard"\n    MatchIsKeyboard "on"\n{opt_lines}\nEndSection\n'
 
 	xorg_conf_dir = installation.target / 'etc/X11/xorg.conf.d'
@@ -93,19 +93,29 @@ def set_keyboard(installation: Installer, locale_config: LocaleConfiguration) ->
 	(xorg_conf_dir / '00-keyboard.conf').write_text(content)
 	info(f'Wrote X11 keyboard config: layout={layout} variant={variant or "-"}')
 
-	# Wayland: libxkbcommon ignores vconsole.conf and 00-keyboard.conf,
-	# so the layout has to reach the session as env vars.
-	env_vars = {'XKB_DEFAULT_LAYOUT': layout}
-	if model:
-		env_vars['XKB_DEFAULT_MODEL'] = model
-	if variant:
-		env_vars['XKB_DEFAULT_VARIANT'] = variant
-	if options:
-		env_vars['XKB_DEFAULT_OPTIONS'] = options
+	# systemd-localed reads the XKB layout from vconsole.conf in preference to
+	# the Xorg InputClass (v253), and writes it back there, so that file is the
+	# canonical store; 00-keyboard.conf above stays for X servers started
+	# without localed in the picture
+	_set_vconsole_xkb(installation, {key: val for _, key, val in settings})
 
-	installation.set_environment(env_vars)
+	# Wayland: libxkbcommon reads neither file, so the layout has to reach the
+	# session as env vars. Same names, XKBLAYOUT -> XKB_DEFAULT_LAYOUT
+	installation.set_environment({f'XKB_DEFAULT_{key[3:]}': val for _, key, val in settings})
 
 	return True
+
+
+def _set_vconsole_xkb(installation: Installer, values: dict[str, str]) -> None:
+	# set_vconsole() ran earlier in the install and owns KEYMAP/FONT; keep
+	# those lines and replace the whole XKB* block, so a second call neither
+	# stacks duplicates nor leaves a key the new selection dropped
+	vconsole_path = installation.target / 'etc/vconsole.conf'
+	lines = vconsole_path.read_text().splitlines() if vconsole_path.is_file() else []
+	kept = [line for line in lines if not line.split('=')[0].strip().startswith('XKB')]
+
+	vconsole_path.write_text('\n'.join(kept + [f'{k}={v}' for k, v in values.items()]) + '\n')
+	debug(f'Wrote XKB keys to {vconsole_path}: {" ".join(values)}')
 
 
 def set_timezone(installation: Installer, zone: str) -> bool:

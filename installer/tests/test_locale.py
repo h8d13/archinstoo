@@ -320,3 +320,51 @@ def test_list_console_fonts_skips_non_fonts(tmp_path: Path, monkeypatch: pytest.
 	# alt-8x16 carries no font extension at all, only compression; the kbd
 	# hooks resolve it and so must the menu
 	assert catalog.list_console_fonts() == ['161.cp', 'alt-8x16', 'arm8.fnt', 'cyr-sun16', 'default8x16']
+
+
+# systemd-localed reads the XKB layout from /etc/vconsole.conf in preference to
+# the Xorg InputClass since v253, and writes it back there, so the install has
+# to put it in both places or localed reports (and later overwrites) a layout
+# the install never chose.
+def _run_set_keyboard(target: Path, config: LocaleConfiguration) -> str:
+	installation = Installer.__new__(Installer)
+	installation.target = target
+
+	installation.set_vconsole(config)
+	assert installation.set_keyboard(config)
+	return (target / 'etc/vconsole.conf').read_text()
+
+
+def test_xkb_keys_land_in_vconsole(tmp_path: Path) -> None:
+	config = LocaleConfiguration(
+		'fr',
+		'en_US.UTF-8',
+		'UTF-8',
+		xkb_layout='fr',
+		xkb_model='pc105',
+		xkb_variant='oss',
+		xkb_options='grp:alt_shift_toggle',
+	)
+	vconsole = _run_set_keyboard(tmp_path, config)
+
+	# the console keymap set_vconsole() owns survives the XKB rewrite
+	assert 'KEYMAP=fr\n' in vconsole
+	assert 'FONT=default8x16\n' in vconsole
+	assert 'XKBLAYOUT=fr\n' in vconsole
+	assert 'XKBMODEL=pc105\n' in vconsole
+	assert 'XKBVARIANT=oss\n' in vconsole
+	assert 'XKBOPTIONS=grp:alt_shift_toggle\n' in vconsole
+
+	xorg = (tmp_path / 'etc/X11/xorg.conf.d/00-keyboard.conf').read_text()
+	assert 'Option "XkbLayout" "fr"' in xorg
+	assert 'XKB_DEFAULT_LAYOUT=fr\n' in (tmp_path / 'etc/environment').read_text()
+
+
+def test_xkb_rewrite_drops_stale_keys(tmp_path: Path) -> None:
+	with_variant = LocaleConfiguration('fr', 'en_US.UTF-8', 'UTF-8', xkb_layout='fr', xkb_variant='oss')
+	_run_set_keyboard(tmp_path, with_variant)
+
+	# second pass without a variant: the key is gone, not kept from the first
+	vconsole = _run_set_keyboard(tmp_path, LocaleConfiguration('fr', 'en_US.UTF-8', 'UTF-8', xkb_layout='fr'))
+	assert 'XKBVARIANT' not in vconsole
+	assert vconsole.count('XKBLAYOUT=fr') == 1
