@@ -72,14 +72,25 @@ def test_swap_terminal_leaves_an_unknown_config_alone(monkeypatch: pytest.Monkey
 	assert swap_terminal('set $term wezterm\n', 'alacritty', Path('rc')) == 'set $term wezterm\n'
 
 
-def test_write_environment_appends_once(tmp_path: Path) -> None:
+def test_write_environment_replaces_in_place(tmp_path: Path) -> None:
+	# a key the caller owns is rewritten where it stands: no duplicate line,
+	# and no stale value surviving a second pass (live mode writes /etc twice)
 	(tmp_path / 'etc').mkdir()
 	(tmp_path / 'etc/environment').write_text('EDITOR=nano\n')
 
 	write_environment(tmp_path, {'TERMINAL': 'foot'})
 	write_environment(tmp_path, {'TERMINAL': 'kitty', 'LANG': 'C'})
 
-	assert (tmp_path / 'etc/environment').read_text() == 'EDITOR=nano\nTERMINAL=foot\nLANG=C\n'
+	assert (tmp_path / 'etc/environment').read_text() == 'EDITOR=nano\nTERMINAL=kitty\nLANG=C\n'
+
+
+def test_write_environment_leaves_unclaimed_lines_alone(tmp_path: Path) -> None:
+	(tmp_path / 'etc').mkdir()
+	(tmp_path / 'etc/environment').write_text('# set by hand\nEDITOR=nano\nXKB_DEFAULT_LAYOUT=be\n')
+
+	write_environment(tmp_path, {'XKB_DEFAULT_LAYOUT': 'de'})
+
+	assert (tmp_path / 'etc/environment').read_text() == '# set by hand\nEDITOR=nano\nXKB_DEFAULT_LAYOUT=de\n'
 
 
 def test_terminal_app_installs_and_exports(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
