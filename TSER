@@ -107,8 +107,12 @@ def log_read(offset: int = 0) -> bytes:
 
 
 def clean(raw: bytes) -> str:
+	# busybox ash (alpine) prefixes its cursor-position query with a bare ESC
+	# ('\x1b\x1b[6n'), and one left on the end of the prompt line is enough to
+	# make it stop looking like a prompt, so wait_idle never fires. Drop any
+	# ESC the sequence patterns above did not consume
 	text = raw.decode('utf-8', 'replace').replace('\r\n', '\n')
-	return ANSI.sub('', text).replace('\r', '\n')
+	return ANSI.sub('', text).replace('\x1b', '').replace('\r', '\n')
 
 
 def vm_pid() -> int | None:
