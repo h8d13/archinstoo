@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -16,14 +15,20 @@ if TYPE_CHECKING:
 	from collections.abc import Iterable
 
 
+# last resort so a menu is never empty; both exist on the target, which is
+# what the choice configures
+_MIN_KEYMAPS = ['us']
+_MIN_FONTS = ['default8x16']
+
+
 def list_keyboard_languages() -> list[str]:
-	# the kbd keymaps on disk, which is what localectl would fork to read back
-	# (same 252 names on Arch) off dirs it has compiled in and that a NixOS or
-	# alpine host does not have. Upstream kbd tree when the host ships none
+	# the kbd keymaps on disk, which is what localectl would fork to read back.
+	# Every supported host carries them: kbd on arch, kbd-misc on alpine,
+	# console-data on debian, the kbd store path on nixos
 	if names := _scan_keymaps():
 		return names
-	debug('No local kbd keymaps, fetching the upstream kbd tree')
-	return _fetch_kbd_keymaps()
+	warn('No kbd keymaps on this host, offering us only (install kbd)')
+	return _MIN_KEYMAPS
 
 
 # arch/alpine/nixos ship kbd keymaps as *.map[.gz], debian's console-data as
@@ -47,34 +52,8 @@ def _scan_keymaps() -> list[str]:
 	return sorted(names)
 
 
-# upstream kbd mirror; its data/ tree is the canonical source of kbd keymap and
-# console-font names, used when the host carries none (e.g. alpine/musl)
-_KBD_TREE_URL = 'https://api.github.com/repos/legionus/kbd/git/trees/master?recursive=1'
 # base.lst is generated at build time so the source ships only base.xml; the raw
 _X11_BASE_XML_URL = 'https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-config/-/raw/master/rules/base.xml?ref_type=heads'
-
-
-def _fetch_kbd_tree_names(prefix: str) -> list[str]:
-	# return the basename of every file under <prefix> in the kbd git tree
-	try:
-		tree = json.loads(fetch_data_from_url(_KBD_TREE_URL)).get('tree', [])
-	except ValueError as e:
-		debug(f'Fetch failed for {_KBD_TREE_URL}: {e}')
-		return []
-
-	return [entry['path'].rsplit('/', 1)[-1] for entry in tree if entry.get('type') == 'blob' and entry.get('path', '').startswith(prefix)]
-
-
-def _fetch_kbd_keymaps() -> list[str]:
-	# keymap name is the filename minus the .map[.gz] suffix (matches loadkeys)
-	names = set()
-	for fn in _fetch_kbd_tree_names('data/keymaps/'):
-		if fn.endswith('.map.gz'):
-			names.add(fn[:-7])
-		elif fn.endswith('.map'):
-			names.add(fn[:-4])
-
-	return sorted(names)
 
 
 # glibc lists every locale it can generate here; fetched only on non-glibc hosts
@@ -424,14 +403,8 @@ def list_console_fonts() -> list[str]:
 		if fonts:
 			return sorted(fonts, key=lambda x: (len(x), x))
 
-	# foreign host with no kbd consolefonts on disk (alpine): names from upstream
-	return _fetch_kbd_fonts()
-
-
-def _fetch_kbd_fonts() -> list[str]:
-	names = _fetch_kbd_tree_names('data/consolefonts/')
-	fonts = [_strip_font_suffix(fn) for fn in names if not fn.startswith('README') and _is_font_name(fn)]
-	return sorted(fonts, key=lambda x: (len(x), x))
+	warn('No kbd console fonts on this host, keeping the target default')
+	return _MIN_FONTS
 
 
 def list_timezones() -> list[str]:

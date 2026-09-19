@@ -718,3 +718,13 @@ def test_scan_keymaps_reads_both_distro_spellings(tmp_path: Path, monkeypatch: p
 
 	# the .inc include is not a keymap and must not reach the menu
 	assert catalog._scan_keymaps() == ['be-latin1', 'fr-latin9', 'us']
+
+
+def test_keymap_and_font_lists_never_come_back_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# the kbd data is a hard dependency now, so a host without it is broken
+	# rather than offline: say so and keep the menu usable instead of reaching
+	# for the network
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [tmp_path / 'nothing'])
+
+	assert catalog.list_keyboard_languages() == ['us']
+	assert catalog.list_console_fonts() == ['default8x16']
