@@ -33,6 +33,12 @@ _PED_PARTITION_BLS_BOOT = 20
 _PED_PARTITION_LINUX_HOME = 21
 
 ENC_IDENTIFIER = 'ainst'
+# PCR 7 (Secure Boot state) alone: PCR 0 measures firmware code, so every
+# UEFI update invalidates the keyslot and drops the machine back to the
+# passphrase with no re-enrollment path from here. systemd v258 went further
+# and dropped PCR 7 from its own defaults (fwupd rotates SecureBoot policy),
+# recommending pcrlock instead, which the installer does not ship.
+DEFAULT_TPM2_PCRS = '7'
 DEFAULT_ITER_TIME = 10000
 # encrypted /boot overrides: GRUB unlocks it with unaccelerated crypto and
 # a small heap, so slots get clamped regardless of the user's iter_time
@@ -1651,7 +1657,7 @@ class DiskEncryption:
 	cipher: EncryptionCipher | None = None
 	auto_unlock_root: bool = False
 	tpm2_unlock: bool = False
-	tpm2_pcrs: str = '0+7'
+	tpm2_pcrs: str = DEFAULT_TPM2_PCRS
 	tpm2_pin: Password | None = None  # https://github.com/archlinux/archinstall/issues/1584
 	fido2_device: Fido2Device | None = None
 
@@ -1739,7 +1745,7 @@ class DiskEncryption:
 			cipher=EncryptionCipher(cipher) if (cipher := arg.get('cipher')) else None,
 			auto_unlock_root=arg.get('auto_unlock_root', False),
 			tpm2_unlock=arg.get('tpm2_unlock', False),
-			tpm2_pcrs=arg.get('tpm2_pcrs', '0+7'),
+			tpm2_pcrs=arg.get('tpm2_pcrs', DEFAULT_TPM2_PCRS),
 			tpm2_pin=Password(plaintext=pin) if (pin := arg.get('tpm2_pin')) else None,
 		)
 

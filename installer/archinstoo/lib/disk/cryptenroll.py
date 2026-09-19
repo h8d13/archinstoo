@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.disk.luks import KEYFILE_DIR
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.models.device import DiskEncryption, EncryptionType
+from archinstoo.lib.models.device import DEFAULT_TPM2_PCRS, DiskEncryption, EncryptionType
 from archinstoo.lib.output import info, warn
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ def enroll_tpm2(target: Path, enc: DiskEncryption, chroot: Callable[..., object]
 		warn('TPM2 enrollment skipped: no encrypted devices in this layout')
 		return
 
-	pcrs = enc.tpm2_pcrs or '0+7'
+	pcrs = enc.tpm2_pcrs or DEFAULT_TPM2_PCRS
 	pin = enc.tpm2_pin
 	# the PIN requirement lands in the LUKS2 token, systemd-cryptsetup prompts on its own
 	pin_args = ['--tpm2-with-pin=yes'] if pin else []

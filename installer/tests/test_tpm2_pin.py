@@ -7,6 +7,7 @@ from typing import Any
 
 from archinstoo.lib.disk.cryptenroll import enroll_tpm2
 from archinstoo.lib.models.device import (
+	DEFAULT_TPM2_PCRS,
 	DiskEncryption,
 	EncryptionType,
 	ModificationStatus,
@@ -60,6 +61,14 @@ def test_enroll_without_pin(tmp_path: Path) -> None:
 	((cmd, env),) = _enroll(tmp_path, None)
 	assert '--tpm2-with-pin=yes' not in cmd
 	assert env is None
+
+
+def test_default_pcrs_exclude_firmware_code(tmp_path: Path) -> None:
+	# PCR 0 measures firmware code, so a UEFI update would invalidate the
+	# keyslot; systemd v258 dropped even PCR 7 from its own enrollment default
+	assert DEFAULT_TPM2_PCRS == '7'
+	((cmd, _),) = _enroll(tmp_path, None)
+	assert f'--tpm2-pcrs={DEFAULT_TPM2_PCRS}' in cmd
 
 
 def test_bootstrap_key_removed_after_enroll(tmp_path: Path) -> None:
