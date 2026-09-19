@@ -153,11 +153,12 @@ def test_config_file_parsing(
 	assert arch_config.profile_config is not None
 	assert arch_config.profile_config.profiles
 	assert arch_config.profile_config.profiles[0].name == 'desktop'
-	assert arch_config.profile_config.gfx_driver == GfxDriver.AllOpenSource
 	assert arch_config.profile_config.greeter == GreeterType.Lightdm
+	assert arch_config.gfx_driver == GfxDriver.AllOpenSource
 
 	# Clear profile_config for main comparison
 	arch_config.profile_config = None
+	arch_config.gfx_driver = None
 
 	assert arch_config == ArchConfig(
 		script='test_script',

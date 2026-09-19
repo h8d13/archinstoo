@@ -317,7 +317,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
-	pkgs.update(_gfx_packages(pc.get('gfx_driver', ''), pc.get('gfx_packages') or [], kernels, selected))
+	pkgs.update(_gfx_packages(config.get('gfx_driver', ''), config.get('gfx_packages') or [], kernels, selected))
 
 	# network
 	net = config.get('network_config') or {}

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
+from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.swap import SwapConfiguration
@@ -29,6 +30,7 @@ from .interactions.general_conf import (
 )
 from .interactions.system_conf import select_firmware, select_kernel, select_swap
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
+from .menu.driver_select import select_driver, select_gfx_packages
 from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration, FirmwareType, detect_optdeps
@@ -154,6 +156,23 @@ class GlobalMenu(AbstractMenu[None]):
 				action=self._select_profile,
 				preview_action=self._prev_profile,
 				key='profile_config',
+			),
+			MenuItem(
+				text='Graphics driver',
+				action=self._select_gfx_driver,
+				value=None,
+				preview_action=self._prev_gfx_driver,
+				key='gfx_driver',
+			),
+			MenuItem(
+				text='Graphics packages',
+				action=select_gfx_packages,
+				value=[],
+				preview_action=self._prev_gfx_packages,
+				# only value is synced from a loaded config, not enabled
+				enabled=self._arch_config.gfx_driver is GfxDriver.Custom,
+				dependencies=['gfx_driver'],
+				key='gfx_packages',
 			),
 			MenuItem(
 				text='Hostname',
@@ -604,11 +623,6 @@ class GlobalMenu(AbstractMenu[None]):
 				if sub_names := profile.current_selection_names():
 					output += f'  {profile.name}: ' + ', '.join(sub_names) + '\n'
 
-			if profile_config.gfx_driver:
-				output += 'Graphics driver' + ': ' + profile_config.gfx_driver.display_name() + '\n'
-				if profile_config.gfx_packages:
-					output += '  ' + ', '.join(p.value for p in profile_config.gfx_packages) + '\n'
-
 			if profile_config.greeter:
 				output += 'Greeter' + ': ' + profile_config.greeter.value + '\n'
 
@@ -646,8 +660,32 @@ class GlobalMenu(AbstractMenu[None]):
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu
 
+		return ProfileMenu(preset=current_profile).run()
+
+	def _select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
 		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
-		return ProfileMenu(preset=current_profile, kernels=kernels).run()
+		driver = select_driver(preset=preset, kernels=kernels)
+
+		# custom chains straight into the package list; any other driver
+		# owns its packages and the list item goes dark
+		item = self._item_group.find_by_key('gfx_packages')
+		item.enabled = driver is GfxDriver.Custom
+		item.value = select_gfx_packages(item.value) if driver is GfxDriver.Custom else []
+
+		return driver
+
+	def _prev_gfx_driver(self, item: MenuItem) -> str | None:
+		driver: GfxDriver | None = item.value
+		if not driver:
+			return None
+		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
+		return f'{"Graphics driver"}: {driver.display_name()}\n{driver.packages_text(kernels)}'
+
+	def _prev_gfx_packages(self, item: MenuItem) -> str | None:
+		packages: list[GfxPackage] = item.value or []
+		if not packages:
+			return 'No packages picked'
+		return 'Graphics packages' + ':\n' + ''.join(f'\t- {name}\n' for name in sorted(p.value for p in packages))
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:
 		# repos come from the live pacman.conf, which _pacman_configuration has

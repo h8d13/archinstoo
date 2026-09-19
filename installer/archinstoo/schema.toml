@@ -138,6 +138,7 @@ ghostty = ["ghostty"]
 konsole = ["konsole"]
 wezterm = ["wezterm"]
 xterm = ["xterm"]
+ptyxis = ["ptyxis"]
 
 [security]
 apparmor = ["apparmor"]

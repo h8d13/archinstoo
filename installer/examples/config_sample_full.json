@@ -217,9 +217,10 @@
                 "custom_settings": {}
             }
         ],
-        "gfx_driver": "intel-open-source",
         "greeter": "gdm"
     },
+    "gfx_driver": "intel-open-source",
+    "gfx_packages": [],
     "hostname": "archinstoo",
     "auth_config": {
         "lock_root_account": true,
