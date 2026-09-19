@@ -15,6 +15,7 @@ from archinstoo.lib.utils.net import download_file_from_url, fetch_data_from_url
 # (_PACMAN_CONF_URL is the same upstream default pm.pacman.reset_conf resets to.)
 _MIRROR_STATUS_URL = 'https://archlinux.org/mirrors/status/json/'
 _PACMAN_CONF_URL = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
+_GEO_MIRROR = 'https://geo.mirror.pkgbuild.com/$repo/os/$arch'
 _KEYRING_MIRROR = 'https://geo.mirror.pkgbuild.com/core/os/x86_64/'
 
 # archlinux.org ships x86_64 only. aarch64 follows Arch Ports (drzee.net):
@@ -67,7 +68,11 @@ def _build_mirrorlist() -> str:
 	data = json.loads(fetch_data_from_url(_MIRROR_STATUS_URL, timeout=15))
 	# Emit every active http/https mirror; ranking happens later, not here.
 	servers = [f'Server = {m["url"]}$repo/os/$arch' for m in data.get('urls', []) if m.get('active') and m.get('protocol') in ('https', 'http')]
-	return '\n'.join(['# Arch mirrors fetched by archinstoo bootstrap', *servers]) + '\n'
+	# but lead with the geo CDN: the status list is in no useful order, and a
+	# foreign host has no ranked mirrorlist of its own to fall back on, so the
+	# first pacstrap can otherwise spend its retries on the far side of the
+	# planet. Same host the keyring already comes from.
+	return '\n'.join(['# Arch mirrors fetched by archinstoo bootstrap', f'Server = {_GEO_MIRROR}', *servers]) + '\n'
 
 
 def pacman_conf() -> None:
@@ -76,12 +81,16 @@ def pacman_conf() -> None:
 	for d in _PACMAN_DIRS:
 		d.mkdir(parents=True, exist_ok=True)
 
+	# the two are independent: a conf can declare repos while the mirrorlist it
+	# includes is missing, and pacman refuses to run at all in that state
+	if not MIRRORLIST.exists():
+		info('Building a mirrorlist for this host...')
+		MIRRORLIST.write_text(_build_mirrorlist())
+
 	if _has_repos():
 		return
 
 	info('Configuring pacman for non-Arch host...')
-	MIRRORLIST.write_text(_build_mirrorlist())
-
 	conf_url = _sources().pacman_conf
 	info(f'Fetching pacman.conf from {conf_url}...')
 	conf = fetch_data_from_url(conf_url)
