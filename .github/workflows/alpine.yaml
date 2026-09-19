@@ -35,7 +35,7 @@ jobs:
                 truncate -s 8G /tmp/disk.img
                 loopdev=$(losetup -f --show /tmp/disk.img)
                 echo "LOOPDEV=${loopdev#/dev/}" >> "$GITHUB_ENV"
-                sed "s|/dev/LOOPDEV|$loopdev|" distros/ci_minimal.json > /tmp/ci.json
+                sed "s|/dev/LOOPDEV|$loopdev|" installer/examples/ci_minimal.json > /tmp/ci.json
             - name: Install (guided --silent)
               run: sh RUN --script guided --config /tmp/ci.json --silent --debug
             - name: Verify target
