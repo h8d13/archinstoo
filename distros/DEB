@@ -27,6 +27,7 @@ apt-get install --no-install-recommends -y $(
     pciutils                    # lspci
     tzdata                      # timezone data
     kbd                         # loadkeys/setfont, anchors the data lookup
+    console-data                # the keymap data itself, kbd ships none here
     xkeyboard-config            # X11/Wayland keymap lists, fetched when absent
     dosfstools                  # mkfs.fat
     dmsetup                     # dm-* devices

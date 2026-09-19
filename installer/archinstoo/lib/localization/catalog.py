@@ -26,10 +26,24 @@ def list_keyboard_languages() -> list[str]:
 	return _fetch_kbd_keymaps()
 
 
+# arch/alpine/nixos ship kbd keymaps as *.map[.gz], debian's console-data as
+# *.kmap.gz (usr/share/keymaps/i386/qwerty/us.kmap.gz). Same upstream data, so
+# the names match once the suffix is off
+_KEYMAP_SUFFIXES = ('.map', '.kmap')
+
+
 def _scan_keymaps() -> list[str]:
-	# kbd keymap files (*.map[.gz]) live under different roots per distro
-	roots = share_paths('loadkeys', 'kbd/keymaps', 'keymaps')
-	names = {p.name.removesuffix('.gz').removesuffix('.map') for root in roots if root.is_dir() for p in root.rglob('*.map*')}
+	names = set()
+	for root in share_paths('loadkeys', 'kbd/keymaps', 'keymaps'):
+		if not root.is_dir():
+			continue
+
+		for path in root.rglob('*'):
+			stem = path.name.removesuffix('.gz')
+			suffix = next((s for s in _KEYMAP_SUFFIXES if stem.endswith(s)), None)
+			if suffix and path.is_file():
+				names.add(stem.removesuffix(suffix))
+
 	return sorted(names)
 
 

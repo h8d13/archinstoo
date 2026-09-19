@@ -697,3 +697,24 @@ def test_xkb_root_env_beats_the_share_paths(tmp_path: Path, monkeypatch: pytest.
 
 	assert catalog.list_x11_keyboard_languages() == ['be']
 	catalog._load_x11_registry.cache_clear()
+
+
+def _keymap_tree(root: Path, *names: str) -> None:
+	for name in names:
+		path = root / name
+		path.parent.mkdir(parents=True, exist_ok=True)
+		path.write_bytes(b'')
+
+
+def test_scan_keymaps_reads_both_distro_spellings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# arch/alpine/nixos: *.map[.gz]. debian's console-data: *.kmap.gz, under
+	# the same /usr/share/keymaps root. Same upstream data, same names.
+	arch = tmp_path / 'arch/share/kbd/keymaps'
+	debian = tmp_path / 'debian/share/keymaps'
+	_keymap_tree(arch, 'i386/qwerty/us.map.gz', 'i386/azerty/be-latin1.map.gz', 'include/compose.inc')
+	_keymap_tree(debian, 'i386/qwerty/us.kmap.gz', 'i386/azerty/fr-latin9.kmap.gz')
+
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [arch, debian])
+
+	# the .inc include is not a keymap and must not reach the menu
+	assert catalog._scan_keymaps() == ['be-latin1', 'fr-latin9', 'us']
