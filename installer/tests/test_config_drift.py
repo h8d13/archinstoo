@@ -40,7 +40,11 @@ def test_full_example_fills_development_config() -> None:
 
 @pytest.mark.parametrize('path', sorted(EXAMPLES.glob('*.json')), ids=lambda p: p.name)
 def test_example_app_config_round_trips(path: Path) -> None:
-	raw = _load(path)['app_config']
+	# the section is optional: ci_minimal installs no apps at all and names
+	# none, which has to stay a valid config. What is declared must still parse
+	raw = _load(path).get('app_config')
+	if raw is None:
+		pytest.skip('no app_config section')
 	# parse_arg raises ValueError on an enum value the code no longer knows
 	parsed = ApplicationConfiguration.parse_arg(raw)
 	assert parsed.json() == raw
