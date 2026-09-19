@@ -12,7 +12,7 @@ indent_style = tab
 indent_size = 8
 trim_trailing_whitespace = true
 
-[{*.sh,*.bash,PKGBUILD,DEV,RUN,RUN_VENV,TVM,ISOMOD,ISOMOD_CACHE}]
+[{*.sh,*.bash,PKGBUILD,DEV,RUN,TVM,ISOMOD,ISOMOD_CACHE}]
 indent_style = tab
 indent_size = 8
 trim_trailing_whitespace = true

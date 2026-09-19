@@ -227,7 +227,7 @@ def _prepare() -> int:
 	# log python/host-2-target
 	_log_env_info()
 
-	if is_venv() or not is_root():
+	if not is_root():
 		return 0
 
 	# check online (or offline requested) before trying to fetch packages
