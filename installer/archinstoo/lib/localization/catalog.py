@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import xml.etree.ElementTree as ET
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,21 +18,9 @@ if TYPE_CHECKING:
 
 
 def list_keyboard_languages() -> list[str]:
-	try:
-		out = SysCommand(
-			'localectl --no-pager list-keymaps',
-			environment_vars={'SYSTEMD_COLORS': '0'},
-		).decode()
-		if out.strip():
-			return out.splitlines()
-	except (SysCallError, RequirementError) as e:
-		# SysCallError: localectl present but failed. RequirementError: no
-		# localectl at all (non-systemd host). Either way scan kbd data.
-		debug(f'localectl list-keymaps unavailable ({e}), scanning kbd data')
-
-	# localectl reads compiled-in FHS keymap dirs that don't exist on e.g.
-	# NixOS; scan local kbd data, then fall back to the upstream kbd tree when
-	# the host ships no kbd keymaps at all (alpine, foreign hosts)
+	# the kbd keymaps on disk, which is what localectl would fork to read back
+	# (same 252 names on Arch) off dirs it has compiled in and that a NixOS or
+	# alpine host does not have. Upstream kbd tree when the host ships none
 	if names := _scan_keymaps():
 		return names
 	debug('No local kbd keymaps, fetching the upstream kbd tree')
@@ -194,21 +183,34 @@ def verify_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_keyboard_languages())
 
 
-def _localectl_keymap(subcmd: str) -> list[str]:
-	# raises SysCallError/RequirementError when localectl is absent or fails
-	return (
-		SysCommand(
-			f'localectl --no-pager {subcmd}',
-			environment_vars={'SYSTEMD_COLORS': '0'},
-		)
-		.decode()
-		.splitlines()
-	)
+# xkeyboard-config's registry is what localectl serves its X11 lists from, so
+# read it here instead of forking per list. evdev is the ruleset Linux uses,
+# base its pre-evdev name; hosts ship one, the other, or both as copies
+_X11_RULES_PATHS = (
+	Path('/usr/share/X11/xkb/rules/evdev.xml'),
+	Path('/usr/share/X11/xkb/rules/base.xml'),
+)
+
+
+@cache
+def _x11_registry() -> ET.Element | None:
+	# cached: the variant list is re-read on every layout change in the menu,
+	# and the registry is a quarter of a megabyte of XML
+	for path in _X11_RULES_PATHS:
+		if not path.is_file():
+			continue
+		try:
+			return ET.parse(path).getroot()  # noqa: S314 - distro-shipped xkeyboard-config data
+		except ET.ParseError as e:
+			warn(f'Could not parse {path}: {e}')
+
+	# host ships no xkeyboard-config (alpine, minimal foreign hosts)
+	debug('No local xkeyboard-config registry, fetching the upstream one')
+	return _fetch_x11_registry()
 
 
 def _fetch_x11_registry() -> ET.Element | None:
-	# upstream xkeyboard-config rules registry; used when localectl is missing
-	# (non-systemd hosts: alpine, foreign hosts, ...)
+	# upstream xkeyboard-config rules registry, for hosts carrying none
 	try:
 		text = fetch_data_from_url(_X11_BASE_XML_URL)
 	except ValueError as e:
@@ -221,60 +223,33 @@ def _fetch_x11_registry() -> ET.Element | None:
 		return None
 
 
-def _debug_x11_fallback(what: str, err: Exception) -> None:
-	debug(f'localectl x11 {what} unavailable ({err}), using the upstream registry')
-
-
-def _fetch_x11_names(xpath: str) -> list[str]:
-	root = _fetch_x11_registry()
+def _x11_names(xpath: str) -> list[str]:
+	root = _x11_registry()
 	if root is None:
 		return []
 	return [name.text for name in root.findall(xpath) if name.text]
 
 
 def list_x11_keyboard_languages() -> list[str]:
-	try:
-		if out := _localectl_keymap('list-x11-keymap-layouts'):
-			return out
-	except (SysCallError, RequirementError) as e:
-		# no localectl (non-systemd host) or it failed; fetch from upstream
-		_debug_x11_fallback('layouts', e)
-	return _fetch_x11_names('./layoutList/layout/configItem/name')
+	return _x11_names('./layoutList/layout/configItem/name')
 
 
 def list_x11_keyboard_models() -> list[str]:
-	try:
-		if out := _localectl_keymap('list-x11-keymap-models'):
-			return out
-	except (SysCallError, RequirementError) as e:
-		_debug_x11_fallback('models', e)
-	return _fetch_x11_names('./modelList/model/configItem/name')
+	return _x11_names('./modelList/model/configItem/name')
 
 
 def list_x11_keyboard_options() -> list[str]:
-	try:
-		if out := _localectl_keymap('list-x11-keymap-options'):
-			return out
-	except (SysCallError, RequirementError) as e:
-		_debug_x11_fallback('options', e)
-	return _fetch_x11_names('./optionList/group/option/configItem/name')
+	# leaf options only: the group names localectl also prints (caps, grp, ...)
+	# are headings, not values XkbOptions accepts
+	return _x11_names('./optionList/group/option/configItem/name')
 
 
 def list_x11_keyboard_variants(layout: str) -> list[str]:
 	# variants are layout-scoped (e.g. 'be' -> nodeadkeys, oss, ...)
 	if not layout.strip():
 		return []
-	try:
-		if out := _localectl_keymap(f'list-x11-keymap-variants {layout}'):
-			return out
-	except (SysCallError, RequirementError) as e:
-		_debug_x11_fallback('variants', e)
-	return _fetch_x11_variants(layout)
 
-
-def _fetch_x11_variants(layout: str) -> list[str]:
-	# variant names live under the matching layout's variantList in the registry
-	root = _fetch_x11_registry()
+	root = _x11_registry()
 	if root is None:
 		return []
 	for lay in root.findall('./layoutList/layout'):

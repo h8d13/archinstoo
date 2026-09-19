@@ -6,7 +6,10 @@
 # normalized-codeset alias for codeset-less names (glibc locarchive.c).
 # All entries below are verbatim from /usr/share/i18n/SUPPORTED.
 
+import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
+
+import pytest
 
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.localization import catalog
@@ -14,9 +17,8 @@ from archinstoo.lib.menu import locale_menu
 from archinstoo.lib.models.locale import LocaleConfiguration
 
 if TYPE_CHECKING:
+	from collections.abc import Iterator
 	from pathlib import Path
-
-	import pytest
 
 
 # Arch's generated /etc/locale.gen keeps the trailing spaces from SUPPORTED.
@@ -368,3 +370,78 @@ def test_xkb_rewrite_drops_stale_keys(tmp_path: Path) -> None:
 	vconsole = _run_set_keyboard(tmp_path, LocaleConfiguration('fr', 'en_US.UTF-8', 'UTF-8', xkb_layout='fr'))
 	assert 'XKBVARIANT' not in vconsole
 	assert vconsole.count('XKBLAYOUT=fr') == 1
+
+
+# The X11 lists come from xkeyboard-config's own registry, the same file
+# localectl parses to answer list-x11-keymap-*; the fetch is for hosts that
+# ship no xkeyboard-config at all.
+_REGISTRY = """<?xml version="1.0" encoding="UTF-8"?>
+<xkbConfigRegistry version="1.1">
+  <modelList>
+    <model><configItem><name>pc105</name></configItem></model>
+  </modelList>
+  <layoutList>
+    <layout>
+      <configItem><name>be</name></configItem>
+      <variantList>
+        <variant><configItem><name>oss</name></configItem></variant>
+        <variant><configItem><name>nodeadkeys</name></configItem></variant>
+      </variantList>
+    </layout>
+  </layoutList>
+  <optionList>
+    <group><configItem><name>caps</name></configItem>
+      <option><configItem><name>caps:escape</name></configItem></option>
+    </group>
+  </optionList>
+</xkbConfigRegistry>
+"""
+
+
+@pytest.fixture(autouse=True)
+def _clear_x11_registry_cache() -> Iterator[None]:
+	# the parse is cached for the menu's repeated variant lookups, so a test
+	# swapping the source must leak it in neither direction
+	catalog._x11_registry.cache_clear()
+	yield
+	catalog._x11_registry.cache_clear()
+
+
+@pytest.fixture
+def local_registry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+	path = tmp_path / 'evdev.xml'
+	path.write_text(_REGISTRY)
+	monkeypatch.setattr(catalog, '_X11_RULES_PATHS', (path,))
+	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: pytest.fail('fetched with a local registry present'))
+	return path
+
+
+def test_x11_lists_read_the_local_registry(local_registry: Path) -> None:
+	assert catalog.list_x11_keyboard_languages() == ['be']
+	assert catalog.list_x11_keyboard_models() == ['pc105']
+	assert catalog.list_x11_keyboard_variants('be') == ['oss', 'nodeadkeys']
+	# unknown and empty layouts are not an error, they have no variants
+	assert catalog.list_x11_keyboard_variants('zz') == []
+	assert catalog.list_x11_keyboard_variants('') == []
+
+
+def test_x11_options_skip_group_headings(local_registry: Path) -> None:
+	# localectl also prints the group names (caps, grp, ...); XkbOptions takes
+	# only the group:option leaves, so offering a bare group is offering junk
+	assert catalog.list_x11_keyboard_options() == ['caps:escape']
+
+
+def test_x11_registry_falls_back_to_the_fetch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(catalog, '_X11_RULES_PATHS', (tmp_path / 'missing.xml',))
+	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
+
+	assert catalog.list_x11_keyboard_languages() == ['be']
+
+
+def test_x11_registry_survives_a_broken_local_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	broken = tmp_path / 'evdev.xml'
+	broken.write_text('<xkbConfigRegistry')
+	monkeypatch.setattr(catalog, '_X11_RULES_PATHS', (broken,))
+	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
+
+	assert catalog.list_x11_keyboard_languages() == ['be']
