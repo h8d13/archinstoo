@@ -37,3 +37,7 @@ dnf install -y $(
     xfsprogs                    # ...
 EOF
 )
+
+# Fedora ships both halves itself and its python is already 3.14, so `FED` is a
+# single `dnf` line. Its installer ISO carries no package manager at all, so test
+# from the Cloud Base qcow2 instead (~550mb, see `./TSER` for the cloud-init bit) similar to DEB.
