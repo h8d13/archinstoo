@@ -586,3 +586,22 @@ def test_menu_opens_unset_for_an_uncovered_keymap() -> None:
 
 	assert not menu._menu_item_group.find_by_key('xkb_layout').value
 	assert not menu._menu_item_group.find_by_key('xkb_variant').enabled
+
+
+@pytest.mark.usefixtures('model_map')
+def test_preselected_layout_can_be_cleared_back_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
+	# the derivation only moves the default: '(none)' in the layout menu has
+	# to survive all the way into the config, or empty stops meaning empty
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8'))
+	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'be'
+
+	monkeypatch.setattr(locale_menu, 'select_xkb_layout', lambda preset=None: '')
+	assert not menu._select_xkb_layout('be')
+
+	layout_item = menu._menu_item_group.find_by_key('xkb_layout')
+	layout_item.value = ''
+	assert not menu._menu_item_group.find_by_key('xkb_variant').enabled
+
+	menu.sync_all_to_config()
+	assert not menu._locale_conf.xkb_layout
+	assert not menu._locale_conf.xkb_variant
