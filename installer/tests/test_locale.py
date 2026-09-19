@@ -11,10 +11,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.localization import catalog
 from archinstoo.lib.menu import locale_menu
 from archinstoo.lib.models.locale import LocaleConfiguration
+from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
 	from collections.abc import Iterator
@@ -605,3 +607,48 @@ def test_preselected_layout_can_be_cleared_back_to_none(monkeypatch: pytest.Monk
 	menu.sync_all_to_config()
 	assert not menu._locale_conf.xkb_layout
 	assert not menu._locale_conf.xkb_variant
+
+
+# LocaleConfiguration.default() reads the host keymap, and the locale menu
+# builds a default on every preview redraw, so the probe has to be cached or
+# it forks localectl per keystroke (on a host without one, per keystroke in
+# the log too, which is how this was spotted on alpine).
+def test_host_keymap_probe_is_cached(monkeypatch: pytest.MonkeyPatch) -> None:
+	calls: list[str] = []
+
+	def fake_syscommand(cmd: str, **_kwargs: object) -> None:
+		calls.append(cmd)
+		raise SysCallError('no localectl here')
+
+	monkeypatch.setattr(catalog, 'SysCommand', fake_syscommand)
+	catalog.get_kb_layout.cache_clear()
+
+	assert not catalog.get_kb_layout()
+	assert not catalog.get_kb_layout()
+	assert LocaleConfiguration.default().kb_layout == 'us'
+	assert len(calls) == 1
+
+	catalog.get_kb_layout.cache_clear()
+
+
+def test_setting_the_host_keymap_drops_the_cached_probe(monkeypatch: pytest.MonkeyPatch) -> None:
+	calls: list[str] = []
+
+	def fake_syscommand(cmd: str, **_kwargs: object) -> None:
+		calls.append(cmd)
+		if 'status' in cmd:
+			raise SysCallError('no localectl here')
+
+	monkeypatch.setattr(catalog, 'SysCommand', fake_syscommand)
+	monkeypatch.setattr(Os, 'running_from_host', lambda: False)
+	monkeypatch.setattr(catalog, 'verify_keyboard_layout', lambda layout: True)
+	catalog.get_kb_layout.cache_clear()
+
+	catalog.get_kb_layout()
+	assert catalog.set_kb_layout('be-latin1')
+	catalog.get_kb_layout()
+
+	# probe, set-keymap, probe again: the second read is not the stale one
+	assert [c.split()[1] for c in calls] == ['--no-pager', 'set-keymap', '--no-pager']
+
+	catalog.get_kb_layout.cache_clear()

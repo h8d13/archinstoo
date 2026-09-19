@@ -313,7 +313,12 @@ def verify_x11_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_x11_keyboard_languages())
 
 
+@cache
 def get_kb_layout() -> str:
+	# cached: LocaleConfiguration.default() calls this, and the locale menu
+	# builds a default per preview redraw, so an uncached probe forks
+	# localectl on every keystroke (and on a host without one, logs the same
+	# failure that many times). set_kb_layout() clears it when it moves
 	try:
 		lines = (
 			SysCommand(
@@ -359,6 +364,8 @@ def set_kb_layout(locale: str) -> bool:
 		except SysCallError as err:
 			raise ServiceError(f"Unable to set locale '{locale}' for console: {err}") from err
 
+		# the host keymap just moved, so the cached probe above is stale
+		get_kb_layout.cache_clear()
 		return True
 
 	return False
