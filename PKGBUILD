@@ -8,7 +8,7 @@
 # Contributor: Demostanis Worlds <demostanis@protonmail.com>
 
 pkgname=archinstoo
-pkgver=0.1.15
+pkgver=0.1.16
 pkgrel=0
 pkgdesc="Archinstall revamped"
 arch=(any)

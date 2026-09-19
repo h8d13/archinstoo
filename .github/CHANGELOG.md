@@ -7,6 +7,301 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.16-0
+
+	- Foreign hosts: `distros/` bootstraps from Debian (forky), Fedora 44,
+	  Alpine 3.24 and NixOS, each verified end to end with a guided
+	  `--silent` install onto a second disk from that host
+		- `RUN_VENV` is deleted: every host ships a pyparted binding
+		  now, and it was the one documented way into a venv, where
+		  `_prepare` returned early and skipped the foreign-host half
+		  of the bootstrap. A debian install through it reached
+		  pacstrap with a pacman that had no repositories at all
+		- `pacman_conf()` checks mirrorlist presence and repo
+		  declaration independently (a conf with repos and no
+		  mirrorlist never got the file back, and pacman refuses to
+		  run in that state). `_build_mirrorlist()` leads with
+		  geo.mirror.pkgbuild.com, so the first pacstrap stops
+		  spending its retries on an australian mirror from a
+		  european host
+		- "Copy ISO network configuration" translates when the host
+		  has nothing to copy (alpine's udhcpc holds its lease in
+		  memory, debian's ifupdown file has no reader on Arch):
+		  writes the wired DHCP `20-wired.network` the iwd path
+		  already used and enables networkd. Before, the target
+		  booted with resolved on, no DHCP client and no network
+		- keymap, console font and X11 layout lists read off disk on
+		  every host through one `data_paths(anchor, *relative)`
+		  helper: `/usr/share` then the anchor binary's own prefix,
+		  `share/` then `lib/`, `$XKB_CONFIG_ROOT` honoured. NixOS
+		  has no `/usr/share`, fedora keeps kbd data under
+		  `/usr/lib/kbd`, debian spells it `us.kmap.gz`. The kbd
+		  github tree fetch and its unauthenticated API call on the
+		  menu path are gone: a host with no data is misconfigured,
+		  says so, and falls back to `us`/`default8x16`. Bootstraps
+		  install the data (kbd kbd-misc xkeyboard-config,
+		  console-data, xkb-data). Measured: arch 252/190, alpine
+		  574/190, nixos 251/190, debian 216/203, fedora 600/190
+		- `xkeyboard-config` is optdepends in both PKGBUILDs (the ISO
+		  does not carry it, the registry fetch stays the live path),
+		  and a failed registry fetch is retried by the next caller
+		  instead of `@cache` memoising the None for the whole run
+		- host keymap probe cached: the locale menu preview built a
+		  default per redraw, forking localectl each time, five
+		  "localectl status failed" per visit on hosts without it
+		- TSER drives busybox ash (bare ESC before the cursor query,
+		  `localhost:~#` accepted at login). `push SRC [DEST]` serves
+		  over http to 10.0.2.2, `ctrl KEY...` sends the raw ttyS0
+		  bytes `send` cannot carry, so curses menus are drivable
+		  from the host. Cloud images (debian, fedora) log in through
+		  user-data on the SMBIOS serial, no seed ISO needed
+		- `ci_minimal.json` moves next to the examples; CI runs a
+		  minimal install on `alpine:edge`
+	- aarch64 follows Arch Ports (drzee.net) instead of Arch Linux ARM:
+	  same `$repo/os/$arch` layout and upstream conf, one server instead
+	  of a mirror network, `forge` ahead of core, `archports-keyring` in
+	  base (pacstrap copies the live gnupg dir, only the package keeps
+	  the key current). Mirror regions hidden off x86_64, optional repos
+	  are the testing pair. The `microcode` hook is dropped off x86, it
+	  only knows those vendors. TVM gains ARM TCG emulation. `run()`
+	  opens a readable stdin: `arch-chroot -S` hands fd 0 to
+	  `systemd-run --pipe`, and a launcher like nohup leaves a
+	  write-only `/dev/null` there, "StandardInputFileDescriptor passed
+	  is of incompatible type" on every chroot call
+	- `installer.py` split (#236): roughly two thirds moved out along
+	  the acyclic siblings contract, thin `Installer` wrappers kept
+	  where profiles and scripts call in
+		- `bootloader/install.py` `BootloaderInstaller` (~950 lines:
+		  kernel cmdline, BLS entries, the five loaders, limine/UKI
+		  pacman hooks, random seed); `add_bootloader` keeps the
+		  pre-flight and raises `HardwareIncompatibilityError` once
+		  before the strap instead of three per-loader raises after
+		  it. Layout-wide efi/boot/root lookups live on
+		  `DiskLayoutConfiguration`, validation and installer shared
+		  the same loop
+		- `disk/`: `mount.py` `LayoutMounter`, `keyfiles.py`
+		  `KeyFileGenerator`, `fstab.py`, `snapshots.py` (the
+		  grub-btrfsd override with it), `cryptenroll.py` (tpm2 and
+		  fido2 shared a device-collection block and the transient
+		  keyfile dance, now a context manager), `mdadm.py`.
+		  `KEYFILE_DIR` lives with `Luks2`
+		- `kernel/`: `initramfs.py` (hook edits are `add_lvm`,
+		  `add_encrypt`, `add_bcachefs`, `add_raid`, `drop_fsck` and
+		  own the index arithmetic), `swap.py`, `zram.py` split from
+		  it, `sysctl.py`
+		- `authentication/accounts.py`, `crypt.py`, `stash.py`;
+		  `localization/configure.py` (locale, vconsole, keyboard,
+		  timezone) and `catalog.py` (was `utils.py`); `pm/mirrors.py`,
+		  `pm/aur.py`, `pm/pacman.py`; `lib/systemd.py` (host probes,
+		  NTP/WKD wait, target unit toggles); `lib/chroot.py`;
+		  `lib/sysconfig.py`; `checkpoints.py`
+		- `pathnames.py` goes back to its callers; `ARTIFACTS_STORE`
+		  becomes `TARGET_STATE_DIR` (`/etc/archinstoo.d` was spelled
+		  out five times); underscore names match who reads them;
+		  `_obj_id` `default_factory` replaces unreachable hasattr
+		  guards; `Size` is frozen with `total_ordering`;
+		  `PackageSearch` models, `find_partition`, `use_dkms` and the
+		  three `enable_service` wrappers had no callers
+		- exit verdict: `run_as_a_module` already prints traceback,
+		  bug report url and log path for every crash, and
+		  `Installer.__exit__` and `AbstractMenu.__exit__` repeated it
+		  (the doubled `/issues` came from here). `report_outcome`
+		  names the unreached steps; artifacts sync once on exit
+		- `Password` hashes where the hash is consumed: the menu hands
+		  plaintext, a config the hash, only chpasswd needs it. LUKS
+		  passphrases and TPM PINs stop paying for a yescrypt nobody
+		  reads. The `passwd` script goes, any crypt(3) hash works in
+		  a config
+		- lint: `lint-imports` blocking in pre-commit and CI with the
+		  remaining sibling cycles broken; N818 and TRY004 selected;
+		  PLW1641, PLW2901, SIM108 and the docstring lint dropped;
+		  `stubs/` excluded from N818 since the names mirror pyparted
+	- Upstream issues closed one layer down
+		- #4680: `limine.conf` is regenerated from
+		  `/usr/lib/modules/*/pkgbase` by `limine-entries.sh` on every
+		  kernel install/remove (91 hook, name order so plain linux
+		  stays the default entry). UKI preset and os-release for
+		  kernels installed later come from `uki-preset.sh` (89 hook,
+		  ahead of 90-mkinitcpio-install which keeps an existing
+		  preset)
+		- #3976, #3990, #2367, #3065: firmware refusing the NVRAM
+		  entry (full, read-only) falls back to `--removable` for grub
+		  and limine, and a UKI efistub is copied to
+		  `EFI/BOOT/BOOT{X64,AA64}.EFI`. A plain kernel has no
+		  removable fallback and says so
+		- #4182: a pre-mounted LUKS root is detected through the
+		  dm-crypt child lsblk hangs the fs and mountpoint on;
+		  `DiskEncryption.from_pre_mounted` carries no password on
+		  purpose, crypttab prompts at boot, and the menu keeps the
+		  detected encryption instead of resetting it
+		- #4275: `umount_all_existing` refuses a device holding `/`,
+		  `/usr`, `/var`, `/boot`, `/efi` of the running system,
+		  walking mappers and LVs since they hold the mount
+		- #2488: the device serial is saved into the config and
+		  checked on replay: `/dev/nvme0n1` is whatever enumerated
+		  first today
+		- #2334: the countdown lists the pending changes (wipe,
+		  create, format, delete per device), so "Starting device
+		  modifications" stops reading as a whole-disk wipe to people
+		  keeping Windows on the same SSD
+		- #3764: `en_US.UTF-8` is uncommented alongside the chosen
+		  locale, tools hardcoding `LC_ALL` warned on every non-US
+		  system
+		- #1584: TPM2 PIN on top of the PCR binding
+		  (`--tpm2-with-pin=yes`, `NEWPIN` through env so the secret
+		  stays off argv and out of the command history)
+		- #4769: boot partition is 2 GiB
+		- #2087: MBR past the 32-bit LBA ceiling (2 TiB at 512B, 16
+		  TiB at 4K). `PartitionTable.max_addressable`/`usable_end`:
+		  suggested layouts stop at the limit and warn what stays
+		  unused, BIOS defaults to GPT on a disk MBR cannot address,
+		  a hand-written config ending past it fails with the reason
+		  instead of parted's "overlapping sectors", and the
+		  partitioning menu's free-space rows stop there too
+		- #1629: `flatpak` application category with
+		  `xdg-desktop-portal-gtk` as the fallback portal and a
+		  `portals.conf` for WMs shipping none, flathub remote added
+		  in chroot. xfce4 and mate get `xdg-desktop-portal-xapp`
+		  ahead of gtk; labwc's autostart imports
+		  `WAYLAND_DISPLAY`/`XDG_CURRENT_DESKTOP` into the user
+		  session, without it `xdg-desktop-portal-wlr` never starts
+	- Boot and disk
+		- BIOS+GPT: `limine bios-install` refuses a GPT device without
+		  a bios_grub partition, same as grub. Layouts add it and
+		  validation requires it for both loaders
+		- pre-mount on an md array: lsblk hangs the array under its
+		  member partitions, so it is asked for by path, and the fs
+		  (or the LUKS container) sits on the device node itself.
+		  `mdadm` joins base, `mdadm_udev` after block, the ARRAY
+		  lines and `MAILADDR root` are appended to `mdadm.conf`
+		  (`mdadm --monitor` exits 1 without one, so mdmonitor landed
+		  the fresh install degraded)
+		- lvm2 hook landed before block: `index('filesystems') - 1`
+		  is block's own slot, inherited from upstream. The conf reads
+		  `block sd-encrypt lvm2 filesystems` as the wiki lists it
+		- ntfs3 root never dropped the fsck hook: the mountpoint was
+		  compared against the install target instead of `/`
+		- grub-btrfs is set up before grub-mkconfig runs: `grub.cfg`
+		  never sourced `grub-btrfs.cfg`, so there was no snapshots
+		  submenu until a manual run (#231)
+		- hibernation defaults off: a RAM-sized swap file on root is
+		  not a safe default, and mkswap refuses one on a loop-backed
+		  root. Skipped on bcachefs
+		- default TPM2 PCRs `7` (was `0+7`): PCR 0 measures firmware
+		  code, so any UEFI update dropped the machine to the
+		  passphrase with no re-enrollment path. systemd v258 removed
+		  7 from its own default too, pointing at pcrlock, which we do
+		  not ship. Menu labels name what breaks each PCR
+		- `partition()` validates addressability before deciding to
+		  wipe, and `using_gpt` reads the on-disk label when nothing
+		  is wiped
+	- Network and pacman
+		- `00-mac-address.link` matches every interface and replaces
+		  `99-default.link`, so without the default `NamePolicy` the
+		  NIC booted as eth0 and a `Name=enp0s2` match never applied.
+		  The `mac` `AlternativeNamesPolicy` is dropped from the copy
+		  too: under a random MAC it minted a fresh `enx<mac>` altname
+		  every boot
+		- pacman conf rendered from the config into the target
+		  (`apply_config(target)`): before, the installed conf was a
+		  copy of the live one, so `pacman_options` and
+		  `parallel_downloads` never applied on `--silent` and the
+		  ISO's ILoveCandy/CheckSpace/DownloadUser workarounds were
+		  inherited by every install. `file://` custom repos stay out
+		  of the target, the path is gone on reboot
+		- `--silent` implies `--noprogressbar`, gated once in
+		  `Pacman.run` off an argv peek since `_prepare` syncs before
+		  argparse
+		- the gnupg scriptlet watchdog around pacstrap is reverted
+	- Localization
+		- the X11/Wayland layout is derived from the console keymap
+		  through systemd's `kbd-model-map` (`uk` is `gb`, `it2` is
+		  `it`): 53 of the 252 keymaps map, layout and variant only,
+		  multi-layout rows skipped, a hand-picked layout never
+		  overwritten. Derived once in `__init__`, so the
+		  host-detected keymap gets it too, and `(none)` still reaches
+		  the config
+		- XKB keys are written to `vconsole.conf`, the canonical store
+		  since systemd v253. The install only wrote the Xorg file, so
+		  the first `localectl set-x11-keymap` rewrote vconsole.conf
+		  behind its back. One (Xorg option, vconsole key, value) list
+		  feeds the InputClass, vconsole.conf and `XKB_DEFAULT_*`,
+		  replacing three parallel if-chains
+		- `write_environment` rewrites keys it owns in place instead
+		  of first-writer-wins, so a live target re-run stops keeping
+		  a stale `XKB_DEFAULT_*`
+		- xkb registry read locally instead of forking `localectl`
+		- console font list filtered to what the sd-vconsole and
+		  consolefont hooks glob for: `partialfonts/` and `ERRORS`
+		  were offered, that hook errors out, so the initramfs build
+		  failed (192 -> 190)
+	- Graphics driver moves out of `profile_config`: a headless CUDA box
+	  picks a driver and never selects a profile. `GfxDriver.Custom`
+	  multi-selects over the GPU package pool, pre-filled from a sysfs
+	  probe (class 0x03, vendor/device, nvidia split at 0x1e00 between
+	  open-kernel and nouveau); two GPUs pre-tick the PRIME glue
+	  (switcheroo-control, vulkan-mesa-layers, nvidia-prime)
+	- Desktops and apps
+		- `river` profile: `river-classic`, since `river` 0.4 in extra
+		  is compositor only and no window manager is packaged. The
+		  shipped example init is provisioned executable (a 0644 copy
+		  is silently skipped) with the terminal repointed, plus what
+		  its media keys bind (pamixer, playerctl, brightnessctl)
+		- `awesome` profile; `qtile` tested; `ptyxis` terminal
+		- `thunderbolt` category installs `bolt` when
+		  `/sys/bus/thunderbolt` has a domain; plasma pulls it too,
+		  gnome already depended on it
+		- gnome-keyring on gnome, cosmic, budgie, mate and xfce4: their
+		  portals.conf named it for Secret and nothing pulled it.
+		  `xdg-user-dirs` in the desktop base, it was cosmic-only;
+		  `xdg-user-dirs-gtk` dropped, it only renamed after a locale
+		  change
+		- guarded rewrites are independent: a missing awesome `rc.lua`
+		  no longer skips the xinitrc exec line, unknown dms/noctalia
+		  compositors are filtered and reported once, no ufw or
+		  slick-greeter rewrite when the marker is absent
+		- AUR bootstrap drops `base-devel` (pulls sudo), explicit deps
+		  instead. `expac` was missing for `size`
+	- Scripts
+		- `format` and `minimal` accept `--silent` through
+		  `resolve_config`. `format`'s menu could not reach Install
+		  (it ran twice, first with every item disabled). `minimal`
+		  generates an fstab: gpt-auto hid its absence while
+		  mkinitcpio and the bootloader wrote into the root fs. Saved
+		  configs stamp the running script, `minimal` replayed as
+		  `guided`. No reboot line for running-system installs
+		- `rescue`: fstab tags (`UUID=`, `PARTUUID=`, `LABEL=`) resolve
+		  through `/dev/disk/by-*` so `/boot` mounts, and the chroot
+		  inherits stdio so the shell takes input
+		- `perform_installation` takes the handler in all five
+		  scripts; packages passes its skip flags to `sanity_check`
+		- exit 130 on ^C, not 1
+	- ISOs, CI and tooling
+		- mkosi live UKI (`isos/UKIMOD`, `A2_UKI=<efi>` boots it in TVM
+		  via `-kernel`). `systemd.firstboot=off`: it prompted for a
+		  timezone on /dev/console and held the boot there
+		- `ISOMOD_CACHE` local repo under `airootfs/srv`: pacman 7
+		  fetches as `alpm` and `/root` is 0750
+		- schema section order derived from `guided.py` call sites, so
+		  a reorder regenerates instead of drifting. `bootloaders_bios`
+		  doubles as the BIOS whitelist; `xorg_profiles` and
+		  `terminal_profiles` are gone, every flat section is
+		  `packages`
+		- arch devcontainer (pacman only, privileged for `./RUN`
+		  loop-disk installs); system pylint hook, no venv build of
+		  pyparted; release workflow fires only when pkgver/pkgrel
+		  change; code workflows skip docs-only pushes; renovate
+		  tracks pyparted via repology
+		- peeked output loses its escapes when stdout is not a
+		  terminal (CI logs had `25l`/`25h` litter). debug/warn at
+		  previously unlogged sites, `contextlib.suppress` in
+		  effectful paths became try/except with debug
+		- `A2_SERIAL/A2_BIOS/A2_GL` are 1/0 booleans; TVM takes extra
+		  qemu args
+	- Docs: partial upgrades rewritten (`-Syyu`, kernel reboot section,
+	  `kernel-modules-hook`), `advanced` tab, step docs point at the
+	  split modules, distros host table with logos
+
 ## 0.1.15-0
 
 	- `schema.jsonc` becomes `schema.toml`, generated by
