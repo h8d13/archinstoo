@@ -10,8 +10,8 @@ Historical changes/commits before I went rogue:
 ## 0.1.16-0
 
 	- Foreign hosts: `distros/` bootstraps from Debian (forky), Fedora 44,
-	  Alpine 3.24 and NixOS, each verified end to end with a guided
-	  `--silent` install onto a second disk from that host
+	  Alpine 3.24 and NixOS, each verified with a guided `--silent`
+	  install onto a second disk from that host
 		- `RUN_VENV` is deleted: every host ships a pyparted binding
 		  now, and it was the one documented way into a venv, where
 		  `_prepare` returned early and skipped the foreign-host half
