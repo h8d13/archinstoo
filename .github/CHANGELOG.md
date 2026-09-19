@@ -49,12 +49,6 @@ Historical changes/commits before I went rogue:
 		- host keymap probe cached: the locale menu preview built a
 		  default per redraw, forking localectl each time, five
 		  "localectl status failed" per visit on hosts without it
-		- TSER drives busybox ash (bare ESC before the cursor query,
-		  `localhost:~#` accepted at login). `push SRC [DEST]` serves
-		  over http to 10.0.2.2, `ctrl KEY...` sends the raw ttyS0
-		  bytes `send` cannot carry, so curses menus are drivable
-		  from the host. Cloud images (debian, fedora) log in through
-		  user-data on the SMBIOS serial, no seed ISO needed
 		- `ci_minimal.json` moves next to the examples; CI runs a
 		  minimal install on `alpine:edge`
 	- aarch64 follows Arch Ports (drzee.net) instead of Arch Linux ARM:
