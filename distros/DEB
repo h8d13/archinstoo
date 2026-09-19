@@ -28,7 +28,7 @@ apt-get install --no-install-recommends -y $(
     tzdata                      # timezone data
     kbd                         # loadkeys/setfont, anchors the data lookup
     console-data                # the keymap data itself, kbd ships none here
-    xkeyboard-config            # X11/Wayland keymap lists, fetched when absent
+    xkb-data                    # X11/Wayland keymap lists (xkeyboard-config here)
     dosfstools                  # mkfs.fat
     dmsetup                     # dm-* devices
     e2fsprogs                   # mkfs.ext4
