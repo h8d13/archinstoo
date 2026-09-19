@@ -265,6 +265,7 @@ class Installer:
 		timezone: str | None = None,
 		gfx_driver: GfxDriver | None = None,
 		gfx_packages: list[GfxPackage] | None = None,
+		hibernation: bool = False,
 	) -> None:
 		if optional_repositories is None:
 			optional_repositories = []
@@ -301,7 +302,7 @@ class Installer:
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(__fido2_packages__)
 
-		self.initramfs.add_kms_modules(gfx_driver, gfx_packages)
+		self.initramfs.add_kms_modules(gfx_driver, gfx_packages, hibernation)
 
 		if ucode := SysInfo.ucode():
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)

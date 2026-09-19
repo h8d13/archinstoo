@@ -41,7 +41,12 @@ class Initramfs:
 		if SysInfo.arch() != 'x86_64':
 			self.hooks.remove('microcode')
 
-	def add_kms_modules(self, gfx_driver: GfxDriver | None = None, gfx_packages: list[GfxPackage] | None = None) -> None:
+	def add_kms_modules(
+		self,
+		gfx_driver: GfxDriver | None = None,
+		gfx_packages: list[GfxPackage] | None = None,
+		hibernation: bool = False,
+	) -> None:
 		# the kms hook ships the DRM driver but leaves loading it to udev
 		# coldplug, by which point simpledrm owns the console; that handover
 		# swaps fbcon out and back and the vt resize eats the boot log already
@@ -61,12 +66,19 @@ class Initramfs:
 			picked = GFX_PACKAGES[gfx_driver]
 
 		if GfxPackage.NvidiaOpen in picked:
+			# nouveau would preempt the device: nvidia-utils only blacklists it,
+			# which does not stop MODULES= loading it by name
 			modules.discard('nouveau')
 			# nvidia_drm is what carries KMS (nvidia_modeset and nvidia follow
-			# as deps, and the kms hook ships none of them, out of tree). Worth
-			# loading early only when nvidia paints the console: on a hybrid the
+			# as deps, and the kms hook ships none of them, out of tree). An
+			# empty set here means nvidia paints the console: on a hybrid the
 			# iGPU does, and waking the dGPU every boot buys nothing
-			if not modules:
+			if not modules and hibernation:
+				# the driver saves video memory to NVreg_TemporaryFilePath
+				# (/var/tmp) and cannot reach it from the initramfs, so early
+				# loading costs a working resume. The gap is the cheaper loss
+				debug('Hibernation enabled, skipping nvidia early modeset')
+			elif not modules:
 				modules.add('nvidia_drm')
 
 		for module in sorted(modules):

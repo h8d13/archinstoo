@@ -101,6 +101,7 @@ def perform_installation(
 			timezone=config.timezone,
 			gfx_driver=config.gfx_driver,
 			gfx_packages=config.gfx_packages,
+			hibernation=bool(config.swap and config.swap.hibernation),
 		)
 
 		if pacman_config := config.pacman_config:

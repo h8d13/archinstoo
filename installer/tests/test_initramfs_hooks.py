@@ -100,6 +100,29 @@ def test_nvidia_open_replaces_the_probed_nouveau(
 	assert initramfs.modules == expected
 
 
+# early loading puts the driver in the initramfs, where NVreg_TemporaryFilePath
+# (/var/tmp) does not exist yet, so the saved video memory cannot be restored
+@pytest.mark.parametrize(
+	('cards', 'expected'),
+	[
+		({'card0': 'nouveau'}, []),  # nouveau still goes, it would preempt nvidia
+		({'card0': 'i915', 'card1': 'nouveau'}, ['i915']),  # the iGPU is unaffected
+	],
+)
+def test_hibernation_skips_the_nvidia_early_load(
+	monkeypatch: pytest.MonkeyPatch,
+	tmp_path: Path,
+	cards: dict[str, str | None],
+	expected: list[str],
+) -> None:
+	monkeypatch.setattr(hardware, '_DRM_CLASS', _fake_drm(tmp_path / 'drm', cards))
+
+	initramfs = Initramfs()
+	initramfs.add_kms_modules(GfxDriver.NvidiaOpenKernel, [], hibernation=True)
+
+	assert initramfs.modules == expected
+
+
 def test_kms_modules_skipped_without_the_hook(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 	monkeypatch.setattr(hardware, '_DRM_CLASS', _fake_drm(tmp_path / 'drm', {'card0': 'bochs'}))
 
