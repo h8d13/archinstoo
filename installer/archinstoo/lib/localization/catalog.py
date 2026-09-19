@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.exceptions import RequirementError, ServiceError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, error, warn
-from archinstoo.lib.utils.env import Os, share_paths
+from archinstoo.lib.utils.env import Os, data_paths
 from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
@@ -39,7 +39,7 @@ _KEYMAP_SUFFIXES = ('.map', '.kmap')
 
 def _scan_keymaps() -> list[str]:
 	names = set()
-	for root in share_paths('loadkeys', 'kbd/keymaps', 'keymaps'):
+	for root in data_paths('loadkeys', 'kbd/keymaps', 'keymaps'):
 		if not root.is_dir():
 			continue
 
@@ -175,7 +175,7 @@ def verify_keyboard_layout(layout: str) -> bool:
 # base its pre-evdev name; hosts ship one, the other, or both as copies
 _X11_RULES = ('X11/xkb/rules/evdev.xml', 'X11/xkb/rules/base.xml')
 # xkeyboard-config ships data and no binary, so there is nothing to anchor
-# share_paths() on. libxkbcommon's own variable names the xkb root instead,
+# data_paths() on. libxkbcommon's own variable names the xkb root instead,
 # which is how a store based distro (and the flake devshell) points at it
 _XKB_ROOT_ENV = 'XKB_CONFIG_ROOT'
 
@@ -183,7 +183,7 @@ _XKB_ROOT_ENV = 'XKB_CONFIG_ROOT'
 def _x11_rules_paths() -> list[Path]:
 	if xkb_root := Os.get_env(_XKB_ROOT_ENV):
 		return [Path(xkb_root) / 'rules' / name for name in ('evdev.xml', 'base.xml')]
-	return share_paths('setxkbmap', *_X11_RULES)
+	return data_paths('setxkbmap', *_X11_RULES)
 
 
 @cache
@@ -274,7 +274,7 @@ _KBD_MODEL_MAP = 'systemd/kbd-model-map'
 
 def _kbd_model_map_path() -> Path | None:
 	# systemd ships it, so localectl anchors the store based case
-	return next((p for p in share_paths('localectl', _KBD_MODEL_MAP) if p.is_file()), None)
+	return next((p for p in data_paths('localectl', _KBD_MODEL_MAP) if p.is_file()), None)
 
 
 @cache
@@ -395,7 +395,7 @@ def _is_font_name(name: str) -> bool:
 
 
 def list_console_fonts() -> list[str]:
-	for font_dir in share_paths('setfont', *_FONT_DIRS):
+	for font_dir in data_paths('setfont', *_FONT_DIRS):
 		if not font_dir.is_dir():
 			continue
 		# README.psfu passes _is_font_name, so the prefix check still earns its keep
