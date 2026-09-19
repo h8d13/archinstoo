@@ -174,11 +174,14 @@ class MacAddressPolicy(StrEnum):
 		# https://wiki.archlinux.org/title/MAC_address_spoofing#systemd-networkd
 		# a .link matching every interface replaces 99-default.link outright, so
 		# it has to carry the naming policies too or the NIC stays eth0 and a
-		# manual Name=enp0s2 match never applies
+		# manual Name=enp0s2 match never applies.
+		# "mac" is dropped from the altname policy that 99-default.link carries
+		# since v256: it derives an enx<mac> name, which under a per-boot random
+		# address is a new altname every boot
 		return (
 			'[Match]\nOriginalName=*\n\n[Link]\n'
 			'NamePolicy=keep kernel database onboard slot path\n'
-			'AlternativeNamesPolicy=database onboard slot path mac\n'
+			'AlternativeNamesPolicy=database onboard slot path\n'
 			'MACAddressPolicy=random\n'
 		)
 

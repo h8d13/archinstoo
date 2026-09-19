@@ -105,7 +105,10 @@ def test_random_mac_link_keeps_predictable_names(nic_type: NicType, tmp_path: Pa
 
 	link = (tmp_path / 'etc/systemd/network/00-mac-address.link').read_text()
 	assert 'NamePolicy=keep kernel database onboard slot path' in link
-	assert 'AlternativeNamesPolicy=database onboard slot path mac' in link
+	assert 'AlternativeNamesPolicy=database onboard slot path' in link
+	# "mac" would mint a fresh enx<mac> altname on every boot under a random
+	# address; 99-default.link only carries it next to MACAddressPolicy=persistent
+	assert 'AlternativeNamesPolicy=database onboard slot path mac' not in link
 	assert 'MACAddressPolicy=random' in link
 
 
