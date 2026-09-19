@@ -8,18 +8,14 @@ Not fully cooked since it takes a lot of time, but at least all deps should be c
 
 Can be found bellow:
 
-| Host | `arch-install-scripts` | `pacman` | Script | Tested |
-|------|------------------------|----------|--------|--------|
-| Debian | V | V | [DEB](https://github.com/h8d13/archinstoo/tree/master/distros/DEB) | X |
-| Nix | V | V | [NIX](https://github.com/h8d13/archinstoo/blob/master/distros/flake.nix) | X |
-| Alpine | V | V | [ALP](https://github.com/h8d13/archinstoo/tree/master/distros/ALP) | V |
-| Fedora | V | V | [FED](https://github.com/h8d13/archinstoo/tree/master/distros/FED) | V |
+| Logo | Host | `arch-install-scripts` | `pacman` | Script | Tested |
+|------|------|------------------------|----------|--------|--------|
+| <img src="assets/deb_bw.svg" width="24" alt="Debian"> | Debian | V | V | [DEB](https://github.com/h8d13/archinstoo/tree/master/distros/DEB) | V |
+| <img src="assets/nix_bw.svg" width="24" alt="Nix"> | Nix | V | V | [NIX](https://github.com/h8d13/archinstoo/blob/master/distros/flake.nix) | V |
+| <img src="assets/alp_bw.svg" width="24" alt="Alpine"> | Alpine | V | V | [ALP](https://github.com/h8d13/archinstoo/tree/master/distros/ALP) | V |
+| <img src="assets/fed_bw.svg" width="24" alt="Fedora"> | Fedora | V | V | [FED](https://github.com/h8d13/archinstoo/tree/master/distros/FED) | V |
 
 For alpine ISOs: https://alpinelinux.org/downloads/ (See "Standard" ~400mb)
-
-Fedora ships both halves itself and its python is already 3.14, so `FED` is a
-single `dnf` line. Its installer ISO carries no package manager at all, so test
-from the Cloud Base qcow2 instead (~550mb, see `./TSER` for the cloud-init bit).
 
 ---
 

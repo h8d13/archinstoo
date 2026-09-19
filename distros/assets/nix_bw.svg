@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="-2.0 51.99999999999997 52.0 52.0">
+  <g transform="translate(-300 -189.246)">
+    <ns0:circle xmlns:ns0="http://www.w3.org/2000/svg" cx="324" cy="267.246" r="24" style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:4.0678;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    
+    <ns0:path xmlns:ns0="http://www.w3.org/2000/svg" d="m317.2422 255.539-.752 1.3008 1.502 2.6015h-3.004l-1.5018 2.6016h13.1425l-1.502-2.6016h-4.1308l-2.252-3.9023zm6.0078 0 6.5703 11.3828 1.502-2.6016-2.0664-3.5781 2.2539-3.9023-.752-1.3008h-1.502l-1.5019 2.6015-1.502-2.6015zm10.5117 5.2031-6.5703 11.3809h3.004l2.0644-3.5762h4.5059l.7519-1.3008-.752-1.3008h-3.0039l1.502-2.6015zm-15.957 1.627-2.0645 3.5761h-4.5058l-.752 1.3008.752 1.3008h3.0039l-1.502 2.6015 1.502 2.6016 6.5703-11.3808zm.375 5.2011-1.502 2.6016 2.0664 3.5781-2.2539 3.9024.752 1.3007h1.502l1.502-2.6015 1.5019 2.6015h3.002zm3.1914 4.879 1.502 2.6015h4.1308l2.252 3.9023h1.502l.7519-1.3007-1.502-2.6016h3.004l1.5019-2.6016z" style="fill:none;stroke:#fff;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none" />
+  
+  </g>
+</svg>
