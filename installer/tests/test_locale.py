@@ -17,7 +17,9 @@ from archinstoo.lib.installer import Installer
 from archinstoo.lib.localization import catalog
 from archinstoo.lib.menu import locale_menu
 from archinstoo.lib.models.locale import LocaleConfiguration
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.env import Os, share_paths
+
+_SHARE_PATHS = 'archinstoo.lib.localization.catalog.share_paths'
 
 if TYPE_CHECKING:
 	from collections.abc import Iterator
@@ -314,7 +316,7 @@ def test_set_locale_en_us_only_once(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 # either writes a FONT= the sd-vconsole hook cannot resolve, and that hook
 # errors out rather than warning, so the initramfs build fails.
 def test_list_console_fonts_skips_non_fonts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(catalog, 'share_paths', lambda anchor, *rel: [tmp_path])
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [tmp_path])
 	(tmp_path / 'partialfonts').mkdir()
 	(tmp_path / 'ERRORS').write_text('In iso04.f08 the letters K, and k, are wrong.\n')
 	(tmp_path / 'README.Cyrillic').write_text('docs\n')
@@ -414,7 +416,8 @@ def _clear_x11_registry_cache() -> Iterator[None]:
 def local_registry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 	path = tmp_path / 'evdev.xml'
 	path.write_text(_REGISTRY)
-	monkeypatch.setattr(catalog, 'share_paths', lambda anchor, *rel: [path])
+	monkeypatch.delenv(catalog._XKB_ROOT_ENV, raising=False)
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [path])
 	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: pytest.fail('fetched with a local registry present'))
 	return path
 
@@ -435,7 +438,7 @@ def test_x11_options_skip_group_headings(local_registry: Path) -> None:
 
 
 def test_x11_registry_falls_back_to_the_fetch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(catalog, 'share_paths', lambda anchor, *rel: [tmp_path / 'missing.xml'])
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [tmp_path / 'missing.xml'])
 	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
 
 	assert catalog.list_x11_keyboard_languages() == ['be']
@@ -444,7 +447,7 @@ def test_x11_registry_falls_back_to_the_fetch(tmp_path: Path, monkeypatch: pytes
 def test_x11_registry_survives_a_broken_local_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	broken = tmp_path / 'evdev.xml'
 	broken.write_text('<xkbConfigRegistry')
-	monkeypatch.setattr(catalog, 'share_paths', lambda anchor, *rel: [broken])
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [broken])
 	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
 
 	assert catalog.list_x11_keyboard_languages() == ['be']
@@ -458,7 +461,7 @@ def test_failed_fetch_is_retried_not_cached(tmp_path: Path, monkeypatch: pytest.
 	def failing_fetch() -> None:
 		attempts.append(1)
 
-	monkeypatch.setattr(catalog, 'share_paths', lambda anchor, *rel: [tmp_path / 'missing.xml'])
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [tmp_path / 'missing.xml'])
 	monkeypatch.setattr(catalog, '_fetch_x11_registry', failing_fetch)
 
 	assert catalog.list_x11_keyboard_languages() == []
@@ -668,14 +671,29 @@ def test_kbd_model_map_found_off_localectl(tmp_path: Path, monkeypatch: pytest.M
 	catalog._kbd_model_map.cache_clear()
 
 	# /usr/share comes first and is not there, so the prefix candidate wins
-	assert str(catalog.share_paths('localectl', 'systemd/kbd-model-map')[0]) == '/usr/share/systemd/kbd-model-map'
+	assert str(share_paths('localectl', 'systemd/kbd-model-map')[0]) == '/usr/share/systemd/kbd-model-map'
 	assert catalog.xkb_from_keymap('be-latin1') == ('be', '')
 	catalog._kbd_model_map.cache_clear()
 
 
 def test_no_kbd_model_map_anywhere_is_not_an_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(catalog, 'share_paths', lambda anchor, *rel: [tmp_path / 'missing'])
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: [tmp_path / 'missing'])
 	catalog._kbd_model_map.cache_clear()
 
 	assert catalog.xkb_from_keymap('be-latin1') is None
 	catalog._kbd_model_map.cache_clear()
+
+
+def test_xkb_root_env_beats_the_share_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# xkeyboard-config ships no binary to anchor on, so a store based host (and
+	# the nix devshell) names the registry root through libxkbcommon's variable
+	xkb_root = tmp_path / 'nix/store/abc-xkeyboard-config/share/X11/xkb'
+	(xkb_root / 'rules').mkdir(parents=True)
+	(xkb_root / 'rules/evdev.xml').write_text(_REGISTRY)
+
+	monkeypatch.setenv(catalog._XKB_ROOT_ENV, str(xkb_root))
+	monkeypatch.setattr(_SHARE_PATHS, lambda anchor, *rel: pytest.fail('looked past XKB_CONFIG_ROOT'))
+	catalog._load_x11_registry.cache_clear()
+
+	assert catalog.list_x11_keyboard_languages() == ['be']
+	catalog._load_x11_registry.cache_clear()

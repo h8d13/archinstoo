@@ -1,7 +1,6 @@
 import json
 import os
 import re
-import shutil
 import xml.etree.ElementTree as ET
 from functools import cache
 from pathlib import Path
@@ -10,7 +9,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.exceptions import RequirementError, ServiceError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, error, warn
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.env import Os, share_paths
 from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
@@ -25,18 +24,6 @@ def list_keyboard_languages() -> list[str]:
 		return names
 	debug('No local kbd keymaps, fetching the upstream kbd tree')
 	return _fetch_kbd_keymaps()
-
-
-def share_paths(anchor: str, *relative: str) -> list[Path]:
-	# Data a package ships next to its binaries: /usr/share on an FHS host,
-	# <prefix>/share on a store based one (NixOS keeps no /usr/share at all,
-	# but every binary resolves into its own package). Callers get the
-	# candidates in preference order and pick the ones that exist.
-	roots = [Path('/usr')]
-	if binary := shutil.which(anchor):
-		roots.append(Path(binary).resolve().parent.parent)
-
-	return [root / 'share' / rel for root in roots for rel in relative]
 
 
 def _scan_keymaps() -> list[str]:
@@ -194,6 +181,16 @@ def verify_keyboard_layout(layout: str) -> bool:
 # read it here instead of forking per list. evdev is the ruleset Linux uses,
 # base its pre-evdev name; hosts ship one, the other, or both as copies
 _X11_RULES = ('X11/xkb/rules/evdev.xml', 'X11/xkb/rules/base.xml')
+# xkeyboard-config ships data and no binary, so there is nothing to anchor
+# share_paths() on. libxkbcommon's own variable names the xkb root instead,
+# which is how a store based distro (and the flake devshell) points at it
+_XKB_ROOT_ENV = 'XKB_CONFIG_ROOT'
+
+
+def _x11_rules_paths() -> list[Path]:
+	if xkb_root := Os.get_env(_XKB_ROOT_ENV):
+		return [Path(xkb_root) / 'rules' / name for name in ('evdev.xml', 'base.xml')]
+	return share_paths('setxkbmap', *_X11_RULES)
 
 
 @cache
@@ -203,7 +200,7 @@ def _load_x11_registry() -> ET.Element:
 	# returning None when there is nothing to read: cache stores returns, not
 	# exceptions, so a blip on the fetch path is retried by the next caller
 	# rather than emptying every keymap list for the rest of the run
-	for path in share_paths('setxkbmap', *_X11_RULES):
+	for path in _x11_rules_paths():
 		if not path.is_file():
 			continue
 		try:
