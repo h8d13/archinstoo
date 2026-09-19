@@ -21,7 +21,6 @@ depends=(
 	'util-linux'           #For partition utilities
 	'pciutils'             #For PCI device detection
 	'kbd'                  #For keyboard layout configuration
-	'xkeyboard-config'     #Offline X11/Wayland keymap lists, fetched otherwise
 	'libxcrypt'
 	'pacman'
 	'expac'
@@ -34,6 +33,11 @@ depends=(
 	'xfsprogs'    #XFS filesystem support
 	'cryptsetup'  #LUKS encryption support
 	'lvm2'        #LVM layout support
+)
+# nothing here is required: the keymap menus fall back to fetching the same
+# data upstream, these only keep that off the network
+optdepends=(
+	'xkeyboard-config' #X11/Wayland keymap lists, fetched otherwise
 )
 makedepends=(
 	'python-build'
