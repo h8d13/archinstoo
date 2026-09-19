@@ -27,14 +27,21 @@ def list_keyboard_languages() -> list[str]:
 	return _fetch_kbd_keymaps()
 
 
-def _scan_keymaps() -> list[str]:
-	# kbd keymap files (*.map[.gz]) live under different roots per distro;
-	# locate via the loadkeys binary's prefix, plus the common FHS spots.
-	roots = [Path('/usr/share/kbd/keymaps'), Path('/usr/share/keymaps')]
-	if loadkeys := shutil.which('loadkeys'):
-		prefix = Path(loadkeys).resolve().parent.parent
-		roots += [prefix / 'share/kbd/keymaps', prefix / 'share/keymaps']
+def share_paths(anchor: str, *relative: str) -> list[Path]:
+	# Data a package ships next to its binaries: /usr/share on an FHS host,
+	# <prefix>/share on a store based one (NixOS keeps no /usr/share at all,
+	# but every binary resolves into its own package). Callers get the
+	# candidates in preference order and pick the ones that exist.
+	roots = [Path('/usr')]
+	if binary := shutil.which(anchor):
+		roots.append(Path(binary).resolve().parent.parent)
 
+	return [root / 'share' / rel for root in roots for rel in relative]
+
+
+def _scan_keymaps() -> list[str]:
+	# kbd keymap files (*.map[.gz]) live under different roots per distro
+	roots = share_paths('loadkeys', 'kbd/keymaps', 'keymaps')
 	names = {p.name.removesuffix('.gz').removesuffix('.map') for root in roots if root.is_dir() for p in root.rglob('*.map*')}
 	return sorted(names)
 
@@ -186,10 +193,7 @@ def verify_keyboard_layout(layout: str) -> bool:
 # xkeyboard-config's registry is what localectl serves its X11 lists from, so
 # read it here instead of forking per list. evdev is the ruleset Linux uses,
 # base its pre-evdev name; hosts ship one, the other, or both as copies
-_X11_RULES_PATHS = (
-	Path('/usr/share/X11/xkb/rules/evdev.xml'),
-	Path('/usr/share/X11/xkb/rules/base.xml'),
-)
+_X11_RULES = ('X11/xkb/rules/evdev.xml', 'X11/xkb/rules/base.xml')
 
 
 @cache
@@ -199,7 +203,7 @@ def _load_x11_registry() -> ET.Element:
 	# returning None when there is nothing to read: cache stores returns, not
 	# exceptions, so a blip on the fetch path is retried by the next caller
 	# rather than emptying every keymap list for the rest of the run
-	for path in _X11_RULES_PATHS:
+	for path in share_paths('setxkbmap', *_X11_RULES):
 		if not path.is_file():
 			continue
 		try:
@@ -275,7 +279,12 @@ def list_x11_keyboard_variants(layout: str) -> list[str]:
 # systemd's console keymap -> X11 layout table, the one `localectl set-keymap`
 # applies when it converts. Shipped by systemd itself, so it is there whenever
 # the host can run localectl at all
-_KBD_MODEL_MAP = Path('/usr/share/systemd/kbd-model-map')
+_KBD_MODEL_MAP = 'systemd/kbd-model-map'
+
+
+def _kbd_model_map_path() -> Path | None:
+	# systemd ships it, so localectl anchors the store based case
+	return next((p for p in share_paths('localectl', _KBD_MODEL_MAP) if p.is_file()), None)
 
 
 @cache
@@ -285,11 +294,12 @@ def _kbd_model_map() -> dict[str, tuple[str, str]]:
 	# carries 'pc105+inet', which xkeyboard-config does not list, and every row
 	# sets terminate:ctrl_alt_bksp, a policy Arch does not ship
 	table: dict[str, tuple[str, str]] = {}
-	if not _KBD_MODEL_MAP.is_file():
-		debug(f'No {_KBD_MODEL_MAP}, graphical layout stays unset until chosen')
+	path = _kbd_model_map_path()
+	if path is None:
+		debug('No kbd-model-map on this host, graphical layout stays unset until chosen')
 		return table
 
-	for line in _KBD_MODEL_MAP.read_text().splitlines():
+	for line in path.read_text().splitlines():
 		if line.startswith('#') or len(cols := line.split()) < 4:
 			continue
 		keymap, layout, _model, variant = cols[:4]
@@ -371,7 +381,7 @@ def set_kb_layout(locale: str) -> bool:
 	return False
 
 
-_FONT_DIR = Path('/usr/share/kbd/consolefonts')
+_FONT_DIRS = ('kbd/consolefonts', 'consolefonts')
 
 # disk fonts are gz-compressed (.psfu.gz); the upstream repo ships them raw
 _FONT_SUFFIXES = ('.psfu.gz', '.psf.gz', '.gz', '.psfu', '.psf')
@@ -395,9 +405,11 @@ def _is_font_name(name: str) -> bool:
 
 
 def list_console_fonts() -> list[str]:
-	if _FONT_DIR.exists():
+	for font_dir in share_paths('setfont', *_FONT_DIRS):
+		if not font_dir.is_dir():
+			continue
 		# README.psfu passes _is_font_name, so the prefix check still earns its keep
-		fonts = [_strip_font_suffix(f.name) for f in _FONT_DIR.iterdir() if f.is_file() and not f.name.startswith('README') and _is_font_name(f.name)]
+		fonts = [_strip_font_suffix(f.name) for f in font_dir.iterdir() if f.is_file() and not f.name.startswith('README') and _is_font_name(f.name)]
 		if fonts:
 			return sorted(fonts, key=lambda x: (len(x), x))
 
