@@ -559,3 +559,30 @@ def test_uncovered_keymap_clears_a_derived_layout(monkeypatch: pytest.MonkeyPatc
 	# no row for 'ru': back to unset rather than left on the old derivation
 	assert not menu._menu_item_group.find_by_key('xkb_layout').value
 	assert not menu._menu_item_group.find_by_key('xkb_variant').enabled
+
+
+@pytest.mark.usefixtures('model_map')
+def test_menu_preselects_from_the_keymap_it_opens_with() -> None:
+	# the keymap is usually detected off the host before the menu opens, so
+	# the derivation cannot wait for a pick that never happens
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8'))
+
+	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'be'
+	assert menu._menu_item_group.find_by_key('xkb_variant').enabled
+	assert menu._locale_conf.xkb_layout == 'be'
+
+
+@pytest.mark.usefixtures('model_map')
+def test_menu_keeps_an_xkb_layout_it_opens_with() -> None:
+	# a config that already names one is the user's answer, not a gap to fill
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8', xkb_layout='dvorak'))
+
+	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'dvorak'
+
+
+@pytest.mark.usefixtures('model_map')
+def test_menu_opens_unset_for_an_uncovered_keymap() -> None:
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('ru', 'en_US.UTF-8', 'UTF-8'))
+
+	assert not menu._menu_item_group.find_by_key('xkb_layout').value
+	assert not menu._menu_item_group.find_by_key('xkb_variant').enabled

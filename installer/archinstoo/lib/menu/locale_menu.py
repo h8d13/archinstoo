@@ -28,6 +28,12 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		locale_conf: LocaleConfiguration,
 	) -> None:
 		self._locale_conf = locale_conf
+		# the keymap is usually already set when the menu opens (detected off
+		# the host, or carried in a config), so derive before the items are
+		# built from it rather than only when the keymap is picked here
+		if locale_conf.kb_layout and not locale_conf.xkb_layout:
+			self._apply_xkb_from_keymap(locale_conf.kb_layout)
+
 		menu_options = self._define_menu_options()
 
 		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
@@ -158,13 +164,17 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 			if derived_before is None or current != derived_before[0]:
 				return
 
-		layout, variant = xkb_from_keymap(keymap) or ('', '')
+		layout, variant = self._apply_xkb_from_keymap(keymap)
 		layout_item.value = layout
 		variant_item.value = variant
 		variant_item.enabled = bool(layout)
+
+	def _apply_xkb_from_keymap(self, keymap: str) -> tuple[str, str]:
+		layout, variant = xkb_from_keymap(keymap) or ('', '')
 		self._locale_conf.xkb_layout = layout
 		self._locale_conf.xkb_variant = variant
 		debug(f'Keymap {keymap} pre-selected graphical layout {layout or "(none)"} {variant}')
+		return layout, variant
 
 	def _select_xkb_layout(self, preset: str | None) -> str | None:
 		layout = select_xkb_layout(preset)
