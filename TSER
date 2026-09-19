@@ -270,7 +270,9 @@ def cmd_login(args: argparse.Namespace) -> None:
 		if not match:
 			die('no password prompt')
 		serial_write(args.password.encode() + b'\n')
-	text, match = wait_for(rf'{args.user}@\S+', args.timeout, offset)
+	# bash/zsh announce the shell as user@host, busybox ash as 'host:~#', and
+	# a guest that logs in without either is a guest we cannot drive anyway
+	text, match = wait_for(rf'{args.user}@\S+|\S+:~\s*[#$]', args.timeout, offset)
 	if not match:
 		print('\n'.join(text.splitlines()[-10:]))
 		die('no shell prompt after login')
