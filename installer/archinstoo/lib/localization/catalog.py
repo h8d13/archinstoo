@@ -272,6 +272,43 @@ def list_x11_keyboard_variants(layout: str) -> list[str]:
 	return []
 
 
+# systemd's console keymap -> X11 layout table, the one `localectl set-keymap`
+# applies when it converts. Shipped by systemd itself, so it is there whenever
+# the host can run localectl at all
+_KBD_MODEL_MAP = Path('/usr/share/systemd/kbd-model-map')
+
+
+@cache
+def _kbd_model_map() -> dict[str, tuple[str, str]]:
+	# console keymap -> (layout, variant), first row wins the way localed reads
+	# it. Model and options columns are dropped on purpose: the model column
+	# carries 'pc105+inet', which xkeyboard-config does not list, and every row
+	# sets terminate:ctrl_alt_bksp, a policy Arch does not ship
+	table: dict[str, tuple[str, str]] = {}
+	if not _KBD_MODEL_MAP.is_file():
+		debug(f'No {_KBD_MODEL_MAP}, graphical layout stays unset until chosen')
+		return table
+
+	for line in _KBD_MODEL_MAP.read_text().splitlines():
+		if line.startswith('#') or len(cols := line.split()) < 4:
+			continue
+		keymap, layout, _model, variant = cols[:4]
+		# 'ru,us' and friends are two-group setups that only work with the
+		# grp: toggle on the same row; a single layout field cannot hold one
+		if ',' in layout or keymap in table:
+			continue
+		table[keymap] = (layout, '' if variant == '-' else variant)
+
+	return table
+
+
+def xkb_from_keymap(keymap: str) -> tuple[str, str] | None:
+	# (layout, variant) for a console keymap, None when the table has no
+	# single-layout row for it. Every layout it can return is in the
+	# xkeyboard-config registry, so callers need no second check
+	return _kbd_model_map().get(keymap)
+
+
 def verify_x11_keyboard_layout(layout: str) -> bool:
 	return any(layout.lower() == language.lower() for language in list_x11_keyboard_languages())
 

@@ -10,9 +10,11 @@ from archinstoo.lib.localization.catalog import (
 	list_x11_keyboard_options,
 	list_x11_keyboard_variants,
 	set_kb_layout,
+	xkb_from_keymap,
 )
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.locale import LocaleConfiguration
+from archinstoo.lib.output import debug
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice
@@ -134,9 +136,35 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		return self._locale_conf
 
 	def _select_kb_layout(self, preset: str | None) -> str | None:
-		if kb_lang := select_kb_layout(preset):
-			set_kb_layout(kb_lang)
+		kb_lang = select_kb_layout(preset)
+		if not kb_lang:
+			return kb_lang
+
+		set_kb_layout(kb_lang)
+		self._derive_xkb_layout(preset, kb_lang)
 		return kb_lang
+
+	def _derive_xkb_layout(self, previous: str | None, keymap: str) -> None:
+		# console and graphical layouts are named differently ('uk' is 'gb',
+		# 'it2' is 'it'), so guessing the second one off the first is a trap.
+		# Pre-select it from the same table localectl converts with, and leave
+		# it editable. A layout the user picked is never overwritten: only one
+		# derived from the previous keymap, or none at all, gives way
+		layout_item = self._menu_item_group.find_by_key('xkb_layout')
+		variant_item = self._menu_item_group.find_by_key('xkb_variant')
+
+		if current := layout_item.value:
+			derived_before = xkb_from_keymap(previous) if previous else None
+			if derived_before is None or current != derived_before[0]:
+				return
+
+		layout, variant = xkb_from_keymap(keymap) or ('', '')
+		layout_item.value = layout
+		variant_item.value = variant
+		variant_item.enabled = bool(layout)
+		self._locale_conf.xkb_layout = layout
+		self._locale_conf.xkb_variant = variant
+		debug(f'Keymap {keymap} pre-selected graphical layout {layout or "(none)"} {variant}')
 
 	def _select_xkb_layout(self, preset: str | None) -> str | None:
 		layout = select_xkb_layout(preset)

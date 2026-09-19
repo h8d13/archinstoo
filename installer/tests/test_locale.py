@@ -467,3 +467,95 @@ def test_failed_fetch_is_retried_not_cached(tmp_path: Path, monkeypatch: pytest.
 	assert catalog.list_x11_keyboard_languages() == ['be']
 	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: pytest.fail('re-fetched a registry already parsed'))
 	assert catalog.list_x11_keyboard_models() == ['pc105']
+
+
+# systemd's kbd-model-map is the table localectl converts with. The console and
+# X11 names disagree often enough ('uk' is 'gb') that the graphical layout
+# cannot be guessed off the console one, so the menu pre-selects it.
+_MODEL_MAP = """\
+# consolelayout\txlayout\txmodel\txvariant\txoptions
+be-latin1\tbe\tpc105\t-\tterminate:ctrl_alt_bksp
+uk\tgb\tpc105\t-\tterminate:ctrl_alt_bksp
+fr-latin9\tfr\tpc105\tlatin9\tterminate:ctrl_alt_bksp
+de\tde\tpc105\t-\tterminate:ctrl_alt_bksp
+ru\tru,us\tpc105\t-\tterminate:ctrl_alt_bksp,grp:shifts_toggle
+de\tde\tpc105\tSECOND-ROW-IGNORED\tterminate:ctrl_alt_bksp
+"""
+
+
+@pytest.fixture
+def model_map(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+	path = tmp_path / 'kbd-model-map'
+	path.write_text(_MODEL_MAP)
+	monkeypatch.setattr(catalog, '_KBD_MODEL_MAP', path)
+	catalog._kbd_model_map.cache_clear()
+	yield
+	catalog._kbd_model_map.cache_clear()
+
+
+@pytest.mark.usefixtures('model_map')
+def test_xkb_from_keymap_reads_the_conversion_table() -> None:
+	assert catalog.xkb_from_keymap('be-latin1') == ('be', '')
+	# console and X11 disagree on the name, which is the point of the table
+	assert catalog.xkb_from_keymap('uk') == ('gb', '')
+	assert catalog.xkb_from_keymap('fr-latin9') == ('fr', 'latin9')
+	# first row wins, the way localed reads it
+	assert catalog.xkb_from_keymap('de') == ('de', '')
+
+
+@pytest.mark.usefixtures('model_map')
+def test_xkb_from_keymap_skips_what_a_single_field_cannot_hold() -> None:
+	# 'ru,us' is a two-group setup that needs the grp: toggle on the same row
+	assert catalog.xkb_from_keymap('ru') is None
+	assert catalog.xkb_from_keymap('no-such-keymap') is None
+
+
+@pytest.mark.usefixtures('model_map')
+def test_keymap_choice_preselects_the_graphical_layout(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1')
+	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
+
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8'))
+	assert menu._select_kb_layout('us') == 'be-latin1'
+
+	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'be'
+	# the variant item only shows once a layout is set
+	assert menu._menu_item_group.find_by_key('xkb_variant').enabled
+
+
+@pytest.mark.usefixtures('model_map')
+def test_keymap_choice_keeps_a_layout_the_user_picked(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1')
+	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
+
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8', xkb_layout='dvorak'))
+	assert menu._select_kb_layout('us') == 'be-latin1'
+
+	# 'dvorak' is not what 'us' derives, so it was chosen by hand: leave it
+	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'dvorak'
+
+
+@pytest.mark.usefixtures('model_map')
+def test_keymap_change_follows_a_derived_layout(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'uk')
+	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
+
+	# 'de' is exactly what the previous keymap derived, so the user never
+	# touched it and it follows the new keymap instead of going stale
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('de', 'en_US.UTF-8', 'UTF-8', xkb_layout='de'))
+	assert menu._select_kb_layout('de') == 'uk'
+
+	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'gb'
+
+
+@pytest.mark.usefixtures('model_map')
+def test_uncovered_keymap_clears_a_derived_layout(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'ru')
+	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
+
+	menu = locale_menu.LocaleMenu(LocaleConfiguration('de', 'en_US.UTF-8', 'UTF-8', xkb_layout='de'))
+	assert menu._select_kb_layout('de') == 'ru'
+
+	# no row for 'ru': back to unset rather than left on the old derivation
+	assert not menu._menu_item_group.find_by_key('xkb_layout').value
+	assert not menu._menu_item_group.find_by_key('xkb_variant').enabled
