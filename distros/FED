@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# goal was to document building archinstoo from a fedora host
+# fedora packages both halves of the toolchain (pacman and the arch install
+# scripts), and its python is already 3.14, so this is one dnf line: no third
+# party repos, no source builds, unlike the debian path
+#
+# dnf install -y git
+# git clone <url>
+# cd archinstoo
+# ./distros/FED
+# ./RUN
+
+# shellcheck disable=SC2046
+dnf install -y $(
+	awk '{print $1}' <<'EOF'
+    python3                     # interpreter (3.14 on f44)
+    python3-pyparted            # prebuilt parted bindings
+    parted                      # partition cli + libparted runtime
+    pacman                      # arch package manager
+    arch-install-scripts        # pacstrap, genfstab, arch-chroot
+    coreutils                   # gnu core utils
+    util-linux                  # lsblk, blkid, etc
+    pciutils                    # lspci
+    tzdata                      # timezone data
+    kbd                         # loadkeys/setfont + /usr/lib/kbd data
+    xkeyboard-config            # X11/Wayland keymap lists, fetched when absent
+    libxcrypt                   # crypt.py dlopen
+    git                         # cloning stashes
+    dosfstools                  # mkfs.fat
+    device-mapper               # dm-* devices
+    e2fsprogs                   # mkfs.ext4
+    cryptsetup                  # luks
+    lvm2                        # always checked
+    btrfs-progs                 # optional FS supports
+    f2fs-tools                  # ...
+    xfsprogs                    # ...
+EOF
+)
