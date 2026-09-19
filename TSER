@@ -44,6 +44,12 @@
 # disk (A2_SERIAL=1 ./TVM boot) and log in straight away, no chpasswd needed:
 #   ./TSER login -p test           # root
 #   ./TSER login -u vm -p test     # user
+#
+# Foreign hosts (distros/DEB, distros/FED) come as cloud images, which have no
+# password until cloud-init sets one. Serve a user-data next to this file and
+# name it on the SMBIOS serial, no seed ISO and no mtools/xorriso needed:
+#   python3 -m http.server 8731 --bind 127.0.0.1   # dir with user-data+meta-data
+#   A2_QEMU_EXTRA='-smbios type=1,serial=ds=nocloud-net;s=http://10.0.2.2:8731/'
 
 import argparse
 import os

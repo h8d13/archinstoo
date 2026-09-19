@@ -72,6 +72,8 @@
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
 #                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
+#                       a cloud image (distros/DEB, distros/FED) takes its
+#                       cloud-init config off the SMBIOS serial, see ./TSER
 #   A2_DRY              '1' prints the assembled qemu command and exits (still
 #                       creates the disk/NVRAM the mode asks for)
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
