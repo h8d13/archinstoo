@@ -46,20 +46,21 @@ makedepends=(
 # in a 'stable' state of release
 # you should obviously feel free to only select the ones you need
 optdepends=(
-	'btrfs-progs'    #For btrfs filesystem support
-	'dosfstools'     #For FAT/EFI filesystem support
-	'e2fsprogs'      #For ext4 filesystem support
-	'f2fs-tools'     #For f2fs filesystem support
-	'ntfsprogs'      #For NTFS filesystem support
-	'xfsprogs'       #For XFS filesystem support
-	'cryptsetup'     #For LUKS encryption support
-	'lvm2'           #For LVM FS layout support
-	'pacman-contrib' #For count and other utilities
-	'expac'          #For size extraction of alpm DB
-	'tree'           #For docs project tree output
-	'nvchecker'      #For bumping versions auto
-	'archiso'        #For creating your own ISOs
-	'qemu-base'      #For testing all of the above
+	'xkeyboard-config' #For offline X11/Wayland keymap lists (fetched otherwise)
+	'btrfs-progs'      #For btrfs filesystem support
+	'dosfstools'       #For FAT/EFI filesystem support
+	'e2fsprogs'        #For ext4 filesystem support
+	'f2fs-tools'       #For f2fs filesystem support
+	'ntfsprogs'        #For NTFS filesystem support
+	'xfsprogs'         #For XFS filesystem support
+	'cryptsetup'       #For LUKS encryption support
+	'lvm2'             #For LVM FS layout support
+	'pacman-contrib'   #For count and other utilities
+	'expac'            #For size extraction of alpm DB
+	'tree'             #For docs project tree output
+	'nvchecker'        #For bumping versions auto
+	'archiso'          #For creating your own ISOs
+	'qemu-base'        #For testing all of the above
 )
 # qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 provides=(archinstoo)

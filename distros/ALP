@@ -40,6 +40,7 @@ apk add --no-cache $(
     util-linux              # lsblk, blkid, etc
     pciutils                # lspci
     tzdata                  # timezone data
+    xkeyboard-config        # X11/Wayland keymap lists, fetched when absent
     dosfstools              # mkfs.fat
     device-mapper           # dm-* devices
     e2fsprogs               # mkfs.ext4
