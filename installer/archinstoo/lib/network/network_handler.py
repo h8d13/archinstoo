@@ -12,6 +12,12 @@ if TYPE_CHECKING:
 	from archinstoo.lib.profile.config import ProfileConfiguration
 
 
+# what a live ISO keeps that the target can read back: iwd's saved PSKs and
+# the networkd units archiso configures the live session with
+ISO_IWD_DIR = '/var/lib/iwd'
+ISO_NETWORK_DIR = '/etc/systemd/network'
+
+
 class NetworkHandler:
 	def install_network_config(
 		self,
@@ -85,6 +91,12 @@ def _configure_iwd_standalone(installation: Installer, mac: MacAddressPolicy) ->
 	(iwd_conf_dir / 'main.conf').write_text(f'[General]\n{general}\n[Network]\nNameResolvingService=systemd\n')
 	debug(f'Wrote {iwd_conf_dir / "main.conf"}')
 
+	_write_wired_dhcp(installation)
+
+
+def _write_wired_dhcp(installation: Installer) -> None:
+	# Type=ether covers every physical wired NIC without naming one, Kind=!*
+	# keeps virtual devices (bridges, veth, ...) out of it
 	networkd_dir = installation.target / 'etc/systemd/network'
 	networkd_dir.mkdir(parents=True, exist_ok=True)
 	(networkd_dir / '20-wired.network').write_text('[Match]\nType=ether\nKind=!*\n\n[Network]\nDHCP=yes\n')
@@ -127,7 +139,7 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 	on_host = installation.target == Path('/')
 
 	# Copy (if any) iwd password and config files
-	iwd_dir = LPath('/var/lib/iwd')
+	iwd_dir = LPath(ISO_IWD_DIR)
 	if psk_files := list(iwd_dir.glob('*.psk')):
 		info(f'Copying {len(psk_files)} iwd profile(s) to target')
 		if not on_host:
@@ -143,7 +155,7 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 			installation.enable_service('iwd')
 
 	# Copy (if any) systemd-networkd config files
-	network_dir = LPath('/etc/systemd/network')
+	network_dir = LPath(ISO_NETWORK_DIR)
 	if netconfigurations := list(network_dir.glob('*')):
 		info(f'Copying {len(netconfigurations)} systemd-networkd config(s) to target')
 		if not on_host:
@@ -156,8 +168,21 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 		if enable_services:
 			installation.enable_service('systemd-networkd')
 
-	if not psk_files and not netconfigurations:
-		debug('No iwd profiles or systemd-networkd configs found on ISO')
+	if psk_files or netconfigurations:
+		return
+
+	debug('No iwd profiles or systemd-networkd configs found on ISO')
+	if on_host or not enable_services:
+		return
+
+	# a foreign host keeps nothing the target can read: alpine's udhcpc holds
+	# its lease in memory and writes no config at all, debian's ifupdown names
+	# an interface file Arch has no reader for. Copying is not on the table, so
+	# translate the one thing that host was doing (DHCP on the wire) instead of
+	# handing over an install with no client and no .network
+	warn('Nothing to copy from this host, giving the target wired DHCP instead')
+	_write_wired_dhcp(installation)
+	installation.enable_service('systemd-networkd')
 
 
 def _configure_nic(installation: Installer, nic: Nic) -> None:

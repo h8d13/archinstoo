@@ -7,6 +7,7 @@ import pytest
 
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, NicType
+from archinstoo.lib.network import network_handler
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.utils.env import Os
 
@@ -133,3 +134,40 @@ def test_stable_mac_without_nm_writes_no_link(tmp_path: Path, monkeypatch: pytes
 	NetworkHandler().install_network_config(NetworkConfiguration(NicType.MANUAL, mac_address=MacAddressPolicy.STABLE), installation)
 
 	assert not (tmp_path / 'etc/systemd/network/00-mac-address.link').exists()
+
+
+# A foreign host (alpine, debian) keeps nothing the target can read: busybox
+# udhcpc holds its lease in memory and writes no config, so 'copy from ISO'
+# copied nothing and the install ended with no DHCP client and no .network.
+def _iso_sources(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	empty = tmp_path / 'empty-host'
+	empty.mkdir()
+	monkeypatch.setattr(network_handler, 'ISO_IWD_DIR', str(empty))
+	monkeypatch.setattr(network_handler, 'ISO_NETWORK_DIR', str(empty))
+
+
+def test_iso_copy_falls_back_to_wired_dhcp(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	(tmp_path / 'etc').mkdir()
+	installation, enabled = _session(tmp_path, monkeypatch)
+	_iso_sources(monkeypatch, tmp_path)
+
+	NetworkHandler().install_network_config(NetworkConfiguration(NicType.ISO), installation)
+
+	wired = (tmp_path / 'etc/systemd/network/20-wired.network').read_text()
+	assert 'DHCP=yes' in wired
+	assert 'Type=ether' in wired
+	assert 'systemd-networkd' in enabled
+
+
+def test_iso_copy_leaves_a_live_target_alone(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# live mode installs onto the running system, which already has whatever
+	# network got us here; writing a .network over it would be a downgrade.
+	# Calls the copy directly: the full handler would rewrite the host's own
+	# /etc/resolv.conf with target='/'
+	installation, enabled = _session(tmp_path, monkeypatch)
+	installation.target = Path('/')
+	_iso_sources(monkeypatch, tmp_path)
+
+	network_handler._copy_iso_network_config(installation, enable_services=True)
+
+	assert enabled == []
