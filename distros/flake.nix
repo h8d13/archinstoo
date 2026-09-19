@@ -41,6 +41,7 @@
 					kbd
 					libxcrypt
 					tzdata
+					xkeyboard-config
 				];
 
 				# libxcrypt is dlopen'd by crypt.py via ctypes; buildInputs only
@@ -49,6 +50,10 @@
 				shellHook = ''
 					export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libxcrypt ]}:$LD_LIBRARY_PATH
 					export TZDIR=${pkgs.tzdata}/share/zoneinfo
+					# xkeyboard-config ships no binary, so the keymap lists have
+					# nothing to find it by; libxkbcommon's own variable is how
+					# every other reader locates the registry
+					export XKB_CONFIG_ROOT=${pkgs.xkeyboard-config}/share/X11/xkb
 				'';
 			};
 		}
