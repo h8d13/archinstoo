@@ -6,9 +6,7 @@ later (no Raspberry Pi 4 or Cortex-A53 class CPUs).
 
 ## ISO
 
-UEFI boards install with the regular `guided` script from the aarch64 archiso:
-
-https://codeberg.org/ironrobin/archiso-aarch64/releases/latest
+UEFI boards install with the regular `guided` script from the [aarch64 archiso](https://codeberg.org/ironrobin/archiso-aarch64/releases/latest)
 
 It boots through `EFI/BOOT/BOOTAA64.EFI`, ships `linux` as kernel, and its `pacman.conf`
 already points at the port's repositories, so nothing has to be pointed anywhere.
