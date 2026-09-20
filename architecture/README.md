@@ -35,7 +35,7 @@ Board kernels are plain package names: `"kernels": ["linux-rpi5"]` in a config r
 
 ## Running on an installed system
 
-For non-UEFI systems where you went the hard-way with tarball modifications:
+For non-UEFI systems where you went the hard-way with [tarball modifications](https://github.com/h8d13/archinstoo/blob/master/architecture/ARM):
 
 `./RUN --script live` opens a reduced menu for a system that already boots: no disk, no
 bootloader, just users, packages, profiles and services.
