@@ -1,9 +1,7 @@
 #!/bin/sh
 
-# Debian bootstrap for archinstoo. Targets forky/sid, where python3 is
-# already 3.14 and python3-parted is built against it. Older releases are out:
-# on trixie python3 is 3.13, so the apt bindings would not import under a
-# separately installed 3.14, and archinstoo needs 3.14 to parse at all.
+# Debian bootstrap for archinstoo. Targets forky/sid.
+# Also use cloud image + cloud-init meta.
 
 set -e
 export DEBIAN_FRONTEND=noninteractive
@@ -13,29 +11,29 @@ apt-get update
 # shellcheck disable=SC2046
 apt-get install --no-install-recommends -y $(
 	awk '{print $1}' <<'EOF'
-    ca-certificates             # https support
-    python3.14                  # runtime (already the default on forky)
-    python3-parted              # parted bindings, built against the default 3.14
-    parted                      # partition cli + libparted runtime
-    libcrypt-dev                # libcrypt.so symlink (crypt.py dlopen)
-    pacman-package-manager      # arch package manager
-    makepkg                     # pacman-key depends on makepkg utils
-    arch-install-scripts        # pacstrap, genfstab, etc
-    coreutils                   # gnu core utils
-    util-linux                  # lsblk, blkid, etc
-    pciutils                    # lspci
-    tzdata                      # timezone data
-    kbd                         # loadkeys/setfont, anchors the data lookup
-    console-data                # the keymap data itself, kbd ships none here
-    xkb-data                    # X11/Wayland keymap lists (xkeyboard-config here)
-    dosfstools                  # mkfs.fat
-    dmsetup                     # dm-* devices
-    e2fsprogs                   # mkfs.ext4
-    cryptsetup-bin              # luks
-    lvm2
-    btrfs-progs
-    f2fs-tools
-    xfsprogs                    # mkfs.xfs
+	ca-certificates             # https support
+	python3.14                  # runtime (already the default on forky)
+	python3-parted              # parted bindings, built against the default 3.14
+	parted                      # partition cli + libparted runtime
+	libcrypt-dev                # libcrypt.so symlink (crypt.py dlopen)
+	pacman-package-manager      # arch package manager
+	makepkg                     # pacman-key depends on makepkg utils
+	arch-install-scripts        # pacstrap, genfstab, etc
+	coreutils                   # gnu core utils
+	util-linux                  # lsblk, blkid, etc
+	pciutils                    # lspci
+	tzdata                      # timezone data
+	kbd                         # loadkeys/setfont, anchors the data lookup
+	console-data                # the keymap data itself, kbd ships none here
+	xkb-data                    # X11/Wayland keymap lists (xkeyboard-config here)
+	dosfstools                  # mkfs.fat
+	dmsetup                     # dm-* devices
+	e2fsprogs                   # mkfs.ext4
+	cryptsetup-bin              # luks
+	lvm2
+	btrfs-progs
+	f2fs-tools
+	xfsprogs                    # mkfs.xfs
 EOF
 )
 
