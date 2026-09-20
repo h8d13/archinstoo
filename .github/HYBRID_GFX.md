@@ -20,3 +20,7 @@ Some other useful debug commands:
 - `lspci -k | grep -A3 "VGA"`
 - `lsmod | grep "nvidia"`
 - `sudo dmesg | grep -iE 'nvrm|nvidia|nouveau'`
+
+In many cases you'll need to either add kernel params or check BIOS settings.
+
+See [issues/244](https://github.com/h8d13/archinstoo/issues/244) for reference.
