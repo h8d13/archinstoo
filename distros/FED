@@ -14,30 +14,29 @@
 # shellcheck disable=SC2046
 dnf install -y $(
 	awk '{print $1}' <<'EOF'
-    python3                     # interpreter (3.14 on f44)
-    python3-pyparted            # prebuilt parted bindings
-    parted                      # partition cli + libparted runtime
-    pacman                      # arch package manager
-    arch-install-scripts        # pacstrap, genfstab, arch-chroot
-    coreutils                   # gnu core utils
-    util-linux                  # lsblk, blkid, etc
-    pciutils                    # lspci
-    tzdata                      # timezone data
-    kbd                         # loadkeys/setfont + /usr/lib/kbd data
-    xkeyboard-config            # X11/Wayland keymap lists, fetched when absent
-    libxcrypt                   # crypt.py dlopen
-    git                         # cloning stashes
-    dosfstools                  # mkfs.fat
-    device-mapper               # dm-* devices
-    e2fsprogs                   # mkfs.ext4
-    cryptsetup                  # luks
-    lvm2                        # always checked
-    btrfs-progs                 # optional FS supports
-    f2fs-tools                  # ...
-    xfsprogs                    # ...
+	python3                     # interpreter (3.14 on f44)
+	python3-pyparted            # prebuilt parted bindings
+	parted                      # partition cli + libparted runtime
+	pacman                      # arch package manager
+	arch-install-scripts        # pacstrap, genfstab, arch-chroot
+	coreutils                   # gnu core utils
+	util-linux                  # lsblk, blkid, etc
+	pciutils                    # lspci
+	tzdata                      # timezone data
+	kbd                         # loadkeys/setfont + /usr/lib/kbd data
+	xkeyboard-config            # X11/Wayland keymap lists, fetched when absent
+	libxcrypt                   # crypt.py dlopen
+	git                         # cloning stashes
+	dosfstools                  # mkfs.fat
+	device-mapper               # dm-* devices
+	e2fsprogs                   # mkfs.ext4
+	cryptsetup                  # luks
+	lvm2                        # always checked
+	btrfs-progs                 # optional FS supports
+	f2fs-tools                  # ...
+	xfsprogs                    # ...
 EOF
 )
 
-# Fedora ships both halves itself and its python is already 3.14, so `FED` is a
-# single `dnf` line. Its installer ISO carries no package manager at all, so test
-# from the Cloud Base qcow2 instead (~550mb, see `./TSER` for the cloud-init bit) similar to DEB.
+# Its installer ISO carries no package manager at all, so test
+# from the Cloud Base qcow2 instead (needs cloud-init bit) similar to DEB.
