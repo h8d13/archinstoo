@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# goal was to document building archinstoo from a fedora host
-# fedora packages both halves of the toolchain (pacman and the arch install
-# scripts), and its python is already 3.14, so this is one dnf line: no third
-# party repos, no source builds, unlike the debian path
-#
 # dnf install -y git
 # git clone <url>
 # cd archinstoo
