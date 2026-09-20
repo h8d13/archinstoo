@@ -13,3 +13,10 @@ Defaults install: `switcheroo-control` and `vulkan-mesa-layers`.
 
 Hardware detection can be found in this [code path](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py)
 
+In order to check your dGPU is running fine: `nvidia-smi`
+
+Some other useful debug commands:
+
+- `lspci -k | grep -A3 "VGA"`
+- `lsmod | grep "nvidia"`
+- `sudo dmesg | grep -iE 'nvrm|nvidia|nouveau'`
