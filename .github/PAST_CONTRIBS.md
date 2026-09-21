@@ -11,6 +11,12 @@ Two distinct places to send things: Arch **packaging** (gitlab, the pkgs the ins
 
 Issues tracker:
 
+- `CONFIG_DUMMY_CONSOLE_{COLUMNS,ROWS}`` on `systemd` type hooks vs `busybox`
+
+Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/214)
+
+Fixed next day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/commit/af10abc6832d3d3e1176011fcf2cd80f68a33c3d)
+
 - Missing deps in `linux-*-headers` variants
 
 Reported [here](https://github.com/archlinux/archinstall/issues/4360)

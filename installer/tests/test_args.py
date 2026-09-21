@@ -256,6 +256,10 @@ def test_example_config_parsing(
 	monkeypatch: pytest.MonkeyPatch,
 	example_config_fixture: Path,
 ) -> None:
+	# the example names /dev/nvme0n1; on a runner that has one, its partitions
+	# get validated against that disk's real geometry. Pin the device to absent
+	# so parsing exercises the config, never the host
+	monkeypatch.setattr('archinstoo.lib.disk.device_handler.DeviceHandler.get_device', lambda self, path: None)
 	monkeypatch.setattr(
 		'sys.argv',
 		[
@@ -276,7 +280,7 @@ def test_example_config_parsing(
 
 def test_example_config_partitions(example_config_fixture: Path) -> None:
 	# partition entries are only parsed when the configured device is present on
-	# the machine, which is never the case in CI, so read them here directly
+	# the machine, which the parse test above pins to never, so read them raw
 	config = json.loads(example_config_fixture.read_text())
 	device_modifications = config['disk_config']['device_modifications']
 
