@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
 
 
-from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug, warn
 
 # libparted PED_PARTITION_* values, re-exported verbatim by pyparted.
@@ -349,10 +348,6 @@ class PartitionTable(Enum):
 
 	def is_mbr(self) -> bool:
 		return self == PartitionTable.MBR
-
-	@classmethod
-	def default(cls) -> PartitionTable:
-		return cls.GPT if SysInfo.has_uefi() else cls.MBR
 
 	def max_addressable(self, sector_size: SectorSize) -> Size | None:
 		# GPT's 64-bit LBAs outrun any disk that exists, so only MBR has a ceiling
@@ -934,6 +929,8 @@ class PartitionGUID(Enum):
 	def linux_root(cls) -> PartitionGUID:
 		# discoverable partitions spec keys root by arch: the wrong GUID
 		# leaves systemd-gpt-auto-generator unable to find /
+		from archinstoo.lib.hardware import SysInfo
+
 		if SysInfo.arch() == 'aarch64':
 			return cls.LINUX_ROOT_AARCH64
 		return cls.LINUX_ROOT_X86_64

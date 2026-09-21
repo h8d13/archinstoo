@@ -67,7 +67,7 @@ def select_device(
 
 
 def default_partition_table(device: BDevice) -> PartitionTable:
-	default = PartitionTable.default()
+	default = PartitionTable.GPT if SysInfo.has_uefi() else PartitionTable.MBR
 	total = device.device_info.total_size
 	limit = PartitionTable.MBR.max_addressable(device.device_info.sector_size)
 

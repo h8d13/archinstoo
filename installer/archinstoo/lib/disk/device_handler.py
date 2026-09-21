@@ -26,6 +26,7 @@ except ModuleNotFoundError:
 
 from archinstoo.lib.exceptions import DiskError, RequirementError, SysCallError, UnknownFilesystemFormatError
 from archinstoo.lib.general import SysCommand, SysCommandWorker
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.device import (
 	DEFAULT_ITER_TIME,
 	BDevice,
@@ -115,7 +116,7 @@ class DeviceHandler:
 		if not _HAS_PARTED:
 			raise RequirementError('python-pyparted is required for disk operations')
 		self._devices: dict[Path, BDevice] = {}
-		self._partition_table = PartitionTable.default()
+		self._partition_table = PartitionTable.GPT if SysInfo.has_uefi() else PartitionTable.MBR
 		self.load_devices()
 
 	@property
