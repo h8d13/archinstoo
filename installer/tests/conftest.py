@@ -16,3 +16,8 @@ def _isolate_logs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(scope='session')
 def config_fixture() -> Path:
 	return Path(__file__).parent / 'data' / 'test_config.json'
+
+
+@pytest.fixture(scope='session')
+def example_config_fixture() -> Path:
+	return Path(__file__).parent.parent / 'examples' / 'config_sample_full.json'
