@@ -47,30 +47,10 @@ body:
       value: |
         #### Description of the issue
 
-        I was installing on X hardware ...
-
         Then X Y Z happened and archinstoo crashed ...
 
-        #### Virtual machine config:
+        #### Hardware
 
-        ```xml
-        <domain type="kvm">
-          <name>my-arch-machine</name>
-          ...
-          </devices>
-        </domain>
-        ```
-
-        ```console
-        /usr/bin/qemu-system-x86_64 -name guest=my-arch-machine,debug-threads=on -object ...
-        ```
+        Machine/GPU, and anything unusual (dual boot, RAID, existing partitions)
     validations:
       required: true
-
-  - type: markdown
-    attributes:
-      value: >
-        **Note**: Feel free to modify the textarea above as you wish.
-        But it will grately help us in testing if we can generate the specific qemu command line,
-        for instance via:
-        `sudo virsh domxml-to-native qemu-argv --domain my-arch-machine`
