@@ -11,7 +11,7 @@ Two distinct places to send things: Arch **packaging** (gitlab, the pkgs the ins
 
 Issues tracker:
 
-- `CONFIG_DUMMY_CONSOLE_{COLUMNS,ROWS}`` on `systemd` type hooks vs `busybox`
+- `CONFIG_DUMMY_CONSOLE_{COLUMNS,ROWS}` on `systemd` type hooks vs `busybox`
 
 Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/214)
 
