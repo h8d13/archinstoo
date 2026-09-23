@@ -7,7 +7,7 @@ Divergence [point](https://github.com/archlinux/archinstall/pull/3997)
 
 Two distinct places to send things: Arch **packaging** (gitlab, the pkgs the installer sits on top of) and **archinstall** itself (github). Different trackers, different review, different lifetimes.
 
-## Arch packaging
+## Arch packaging / Upstreams
 
 Issues tracker:
 
@@ -35,7 +35,17 @@ Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/coreut
 
 Fixed same day [here](https://gitlab.archlinux.org/archlinux/packaging/packages/coreutils/-/commit/f33db1312f616064d4730f92e793d6a761a69e5a)
 
-Pending upstream fixes:
+- `systemd` failed ISO unit
+
+Reported [here](https://github.com/systemd/systemd/issues/43605)
+
+Fixed within weeks.
+
+- DankMaterialShell add `setup` command and fix keyboard layouts
+
+Reported [here](https://github.com/AvengeMedia/DankMaterialShell/issues/2851)
+
+## Pending upstream fixes:
 
 - Modify existing `base-devel` pkg for `doas` or alternatives (`sudo` optional)
 
