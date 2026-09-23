@@ -73,8 +73,19 @@ LOG = ROOT / '.dev-serial.log'
 CAPTURE = ROOT / '.dev-capture.log'
 PIDFILE = ROOT / '.dev-vm.pid'
 
-# CSI/OSC noise from agetty, pacman progress bars, the installer TUI
-ANSI = re.compile(r'\x1b\[[0-9;?]*[a-zA-Z]|\x1b[()][B0]|\x1b\][^\x07]*\x07')
+# terminal control noise: CSI from agetty, pacman progress bars, the
+# installer TUI; DCS and OSC from systemd, which resets the tty (ESC[!p,
+# OSC 104), tags it (OSC 3008 context) and asks the terminal its name
+# (DCS +q) every time it spawns a getty. Nobody on the host end answers,
+# so the queries stay in the log as bytes: printed raw they make the
+# host terminal answer into the shell instead. Payloads stop at ESC/BEL
+# so a truncated sequence at the tail of the log cannot swallow the rest
+ANSI = re.compile(
+	r'\x1b\[[0-9;?<=>]*[ -/]*[@-~]'  # CSI: params, intermediates (ESC[!p), final
+	r'|\x1bP[^\x1b\x07]*\x1b\\'  # DCS ... ST
+	r'|\x1b[\]_^X][^\x1b\x07]*(?:\x07|\x1b\\)'  # OSC/APC/PM/SOS ... BEL or ST
+	r'|\x1b[ -/]*[0-~]'  # two/three byte escapes: charset selects, ESC7/ESC8
+)
 # grml zsh pads the prompt line out to the tty width, 400 blanks of nothing
 PROMPT = re.compile(r'#|\S+@\S+ .* #')
 # a shell waiting for input ends the line with its prompt char: 'root@archiso
@@ -117,8 +128,12 @@ def clean(raw: bytes) -> str:
 	# ('\x1b\x1b[6n'), and one left on the end of the prompt line is enough to
 	# make it stop looking like a prompt, so wait_idle never fires. Drop any
 	# ESC the sequence patterns above did not consume
-	text = raw.decode('utf-8', 'replace').replace('\r\n', '\n')
-	return ANSI.sub('', text).replace('\x1b', '').replace('\r', '\n')
+	# the tty's onlcr turns an explicit '\r\n' into '\r\r\n' (systemd status
+	# lines, agetty), so runs of CR before LF are one line end, not blanks.
+	# A lone CR is a redraw (pacman progress bars): keep it as a line break
+	text = re.sub(r'\r+\n', '\n', raw.decode('utf-8', 'replace'))
+	# readline rings BEL for the ^U serial_write sends on an empty line
+	return ANSI.sub('', text).replace('\x1b', '').replace('\x07', '').replace('\r', '\n')
 
 
 def vm_pid() -> int | None:
@@ -230,6 +245,11 @@ def marked_run(cmd: str, timeout: float) -> tuple[str, int | None]:
 	# same duplication can inflate a nonzero status ('1' -> '11'); zero
 	# survives it ('00' is still 0), so pass/fail stays trustworthy
 	text, match = wait_for(fuzzy(marker) + r'rc=(\d+)', timeout, offset)
+	# the match lands while the shell is still writing what follows the
+	# marker (systemd's OSC 3008 end tag, the next prompt): cut there, a
+	# half-written sequence would otherwise leak through as text
+	if match:
+		text = text[: match.end()]
 	# drop the shell's echo of what we typed and grml zsh's prompt padding
 	body = [ln for ln in text.splitlines() if marker not in ln and not PROMPT.fullmatch(ln.rstrip())]
 	return '\n'.join(body).strip(), (int(match.group(1)) if match else None)

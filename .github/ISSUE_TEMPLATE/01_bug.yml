@@ -19,7 +19,10 @@ body:
     id: bug-report
     attributes:
       label: The installation log
-      description: 'note: located at `/var/log/archinstoo/install.log`'
+      description: >
+        `~/.local/state/archinstoo/install.log` during the run,
+        `/etc/archinstoo.d/<timestamp>_install.log` after install.
+        See .github/CONFIG.md
       placeholder: |
         Hardware model detected: Dell Inc. Precision 7670; UEFI mode: True
         Processor model detected: 12th Gen Intel(R) Core(TM) i7-12850HX
