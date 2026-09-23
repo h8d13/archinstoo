@@ -15,8 +15,7 @@ arch=(any)
 url="https://github.com/h8d13/archinstoo"
 license=(GPL-3.0-only)
 #internals first
-depends=
-(
+depends=(
 	'python-pyparted'
 	'python'
 	'arch-install-scripts' #For pacstrap, genfstab, chroot
