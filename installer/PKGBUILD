@@ -42,8 +42,10 @@ optdepends=(
 makedepends=(
 	'python-build'
 	'python-installer'
+	'python-pylint'
 	'python-setuptools'
 	'python-wheel'
+	'python-pytest'
 )
 
 provides=(archinstoo)
