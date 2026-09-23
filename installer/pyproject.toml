@@ -11,7 +11,6 @@ authors = [
     {name = "Hadean Eon", email = "hadean-eon-dev@proton.me"},
 ]
 license = "GPL-3.0-only"
-readme = "readme.md"
 requires-python = ">=3.14"
 keywords = ["linux", "arch", "archinstoo", "installer"]
 classifiers = [

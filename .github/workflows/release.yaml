@@ -51,9 +51,21 @@ jobs:
           PKGREL=$(grep -E '^pkgrel=' PKGBUILD | cut -d= -f2)
           echo "VER=v${PKGVER}-${PKGREL}" >> "$GITHUB_ENV"
           echo "SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          echo "PKGVER=${PKGVER}" >> "$GITHUB_ENV"
+          echo "PKGREL=${PKGREL}" >> "$GITHUB_ENV"
 
       - name: Create release archive
         run: tar --exclude='.git' -czf /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz -C "$GITHUB_WORKSPACE" .
+
+      # after the tar so the archive stays an untouched checkout. same stamp
+      # PKGBUILD build() applies, plus pyproject so the wheel name/pip metadata
+      # carry the version (0.0.0 would make pip skip upgrades between releases)
+      - name: Build stamped wheel
+        run: |
+          sed -i "s/^version = \"0.0.0\"/version = \"${PKGVER}\"/" installer/pyproject.toml
+          sed -i "s/^__pkgstamp__ = '[^']*'/__pkgstamp__ = '${PKGVER}-${PKGREL}'/" installer/archinstoo/_version.py
+          pip install build
+          python -m build --wheel installer
 
       - name: Delete existing latest tag
         run: |
@@ -68,6 +80,8 @@ jobs:
           tag_name: latest
           name: ${{ env.VER }}
           make_latest: true
-          files: /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz
+          files: |
+            /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz
+            installer/dist/*.whl
           body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
 
