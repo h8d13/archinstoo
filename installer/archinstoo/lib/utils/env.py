@@ -83,14 +83,6 @@ def is_venv() -> bool:
 	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
 
 
-def reload_python() -> None:
-	# dirty python trick to reload any changed library modules
-	# skip reload during testing
-	if 'pytest' in sys.modules:
-		return
-	os.execv(sys.executable, [sys.executable, '-m', 'archinstoo', *sys.argv[1:]])  # noqa: S606 - explicit re-exec of current interpreter
-
-
 def is_root() -> bool:
 	return os.getuid() == 0
 

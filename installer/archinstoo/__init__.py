@@ -78,7 +78,7 @@ from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.bootstrap import keyring_init, pacman_conf
 from .lib.pm.pacman import Pacman
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, is_root, is_venv, kernel_info, reload_python
+from .lib.utils.env import Os, is_root, is_venv, kernel_info
 from .lib.utils.net import ping
 
 if TYPE_CHECKING:
@@ -194,17 +194,9 @@ def _arch_bootstrap(no_disk: bool) -> int:
 			# alone on a running system is a partial upgrade
 			Os.set_env('A2_DEPS_FETCHED', '1')
 			return 0
-		# refresh python last then re-exec to load new libraries
-		Pacman.run('-S --needed --noconfirm python', peek_output=True)
 		Os.set_env('A2_DEPS_FETCHED', '1')
 	except Exception as e:
 		error(f'Failed to fetch deps: {e}')
-		return 1
-	info('Reloading python...')
-	try:
-		reload_python()
-	except Exception as e:
-		error(f'Failed to reload python: {e}')
 		return 1
 
 	return 0
