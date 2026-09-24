@@ -2,12 +2,14 @@
 
 ## Intro
 
-Scripts in `isos/` wrap `mkarchiso` to produce custom Arch ISOs. Run from the repo root.
+Scripts in `isos/` wrap `mkarchiso` to produce custom Arch ISOs.
 
 | Script | Purpose |
 |---|---|
 | [`isos/ISOMOD`](https://github.com/h8d13/archinstoo/blob/master/isos/ISOMOD) | Installer ISO with `archinstoo` baked in |
 | [`isos/ISOMOD_CACHE`](https://github.com/h8d13/archinstoo/blob/master/isos/ISOMOD_CACHE) | Helper, pre-caches packages from `${A2_ISO_PROFILE}.conf` |
+
+Additional documentation is [available here](https://wiki.archlinux.org/title/Archiso).
 
 ## Configure
 
