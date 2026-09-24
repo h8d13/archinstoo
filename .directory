@@ -1,2 +1,47 @@
 [Desktop Entry]
 Icon=folder-build
+# .
+# ├── architecture
+# │   └── boards
+# ├── distros
+# │   └── assets
+# ├── installer
+# │   ├── archinstoo
+# │   │   ├── default_profiles
+# │   │   │   ├── desktops
+# │   │   │   │   └── noctalia_assets
+# │   │   │   │       ├── hyprland
+# │   │   │   │       ├── labwc
+# │   │   │   │       ├── niri
+# │   │   │   │       └── sway
+# │   │   │   └── servers
+# │   │   ├── lib
+# │   │   │   ├── applications
+# │   │   │   │   └── cat
+# │   │   │   ├── authentication
+# │   │   │   ├── bootloader
+# │   │   │   ├── disk
+# │   │   │   ├── interactions
+# │   │   │   ├── kernel
+# │   │   │   ├── localization
+# │   │   │   ├── menu
+# │   │   │   ├── models
+# │   │   │   ├── network
+# │   │   │   ├── pm
+# │   │   │   ├── profile
+# │   │   │   ├── tui
+# │   │   │   └── utils
+# │   │   └── scripts
+# │   ├── docs
+# │   ├── examples
+# │   ├── stubs
+# │   │   └── parted
+# │   └── tests
+# │       └── data
+# ├── isos
+# │   ├── a
+# │   ├── assets
+# │   └── mkosi
+# └── nvchecker
+# 
+# 43 directories

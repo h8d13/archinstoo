@@ -22,6 +22,11 @@ case "$1" in
 		tree -F -I '*.po|*.pyc|*.mo|*.png|*.svg|*.egg-info|locales|docs|logs|__pycache__|__init__.py|tests' | sed -E 's/\.pyi?(\*?)$/\1/'
 		echo '```'
 	} >docs/README.md
+	cd "$SCRIPT_DIR" || exit 1
+	{
+		printf '[Desktop Entry]\nIcon=folder-build\n'
+		tree -d -I '__pycache__' | sed 's/^/# /'
+	} >.directory
 	;;
 -ul | --up-logs)
 	log=$(log_path)

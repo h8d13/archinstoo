@@ -201,6 +201,7 @@
 │   │   └── size
 │   └── _version
 ├── examples/
+│   ├── ci_minimal.json
 │   ├── config_custom.json
 │   ├── config_sample_full.json
 │   ├── custom
@@ -212,5 +213,5 @@
     └── parted/
         └── __init__
 
-30 directories, 181 files
+30 directories, 182 files
 ```
