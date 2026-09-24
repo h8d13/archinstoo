@@ -47,7 +47,15 @@ $ nmcli dev wifi connect "SSID" -a
 *If on the ISO instead of a live system*
 ```shell
 pacman-key --init
-pacman -Syy git
+pacman -Syy git python
+```
+
+> [!NOTE]
+> Do also note that the ISO has limited `cow_space` (256MiB by default).
+> If you need more space in the temporary environment you can simply:
+
+```shell
+mount -o remount,size=1G /run/archiso/cowspace
 ```
 
 ### **3. Get the source code**
