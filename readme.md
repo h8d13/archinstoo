@@ -51,8 +51,8 @@ pacman -Syy git python
 ```
 
 > [!NOTE]
-> Do also note that the ISO has limited `cow_space` (256M by default).
-> If you need more space in the temporary environment you can simply:
+> The ISO has limited `cow_spacesize` (256M by default).
+> Optionally, if you need more space in the temporary environment you can simply:
 
 ```shell
 mount -o remount,size=1G /run/archiso/cowspace
