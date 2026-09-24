@@ -51,7 +51,7 @@ pacman -Syy git python
 ```
 
 > [!NOTE]
-> Do also note that the ISO has limited `cow_space` (256MiB by default).
+> Do also note that the ISO has limited `cow_space` (256M by default).
 > If you need more space in the temporary environment you can simply:
 
 ```shell
