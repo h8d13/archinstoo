@@ -67,6 +67,27 @@ jobs:
           pip install build
           python -m build --wheel installer
 
+      # installer/PKGBUILD is a -git package: it clones master HEAD in a clean
+      # chroot, so the pkg matches an AUR install and never touches this checkout.
+      # extra-x86_64-build needs Arch + devtools + a privileged chroot, hence the
+      # container. Output is archinstoo-git-r<count>.<sha>-any.pkg.tar.zst.
+      - name: Build pacman package (clean chroot)
+        run: |
+          mkdir -p /tmp/pkgout
+          docker run --rm --privileged \
+            -v "$GITHUB_WORKSPACE/installer/PKGBUILD:/pkg/PKGBUILD:ro" \
+            -v /tmp/pkgout:/out \
+            archlinux:base-devel bash -euo pipefail -c '
+              pacman -Syu --noconfirm --needed devtools git
+              useradd -m builder
+              echo "builder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
+              cp /pkg/PKGBUILD /home/builder/PKGBUILD
+              chown -R builder:builder /home/builder /out
+              su builder -c "cd ~ && extra-x86_64-build"
+              install -Dm644 /home/builder/*.pkg.tar.zst -t /out/
+            '
+          ls -l /tmp/pkgout
+
       - name: Delete existing latest tag
         run: |
           git push origin :refs/tags/latest || true
@@ -83,5 +104,6 @@ jobs:
           files: |
             /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz
             installer/dist/*.whl
+            /tmp/pkgout/*.pkg.tar.zst
           body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
 
