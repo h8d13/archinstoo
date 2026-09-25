@@ -40,6 +40,7 @@ optdepends=(
 	'xkeyboard-config' #X11/Wayland keymap lists, fetched otherwise
 )
 makedepends=(
+	'git' #VCS source fetch
 	'python-build'
 	'python-installer'
 	'python-pylint'
