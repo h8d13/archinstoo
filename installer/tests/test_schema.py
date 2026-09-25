@@ -116,17 +116,16 @@ def test_pick_paths_exist_in_the_serialization(section: schema_gen.Section) -> N
 
 def test_resolve_walks_the_picks() -> None:
 	# one of each shape: flag on a flat section, name on a flat section, name
-	# on a table, list on a table, nested path; an unknown name drops out
+	# on a table, list on a table; an unknown name drops out
 	app: dict[str, Any] = {
 		'media_codecs_config': {'enabled': True},
 		'print_service_config': {'enabled': False},
 		'cpu_scheduler_config': {'scheduler': 'scx_lavd'},
 		'monitor_config': {'monitor': 'htop'},
 		'management_config': {'tools': ['git', 'not-a-tool']},
-		'development_config': {'devtool_config': {'tools': ['gdb']}},
 	}
 
-	expected = set(SCHEMA['media_codecs']['packages']) | set(SCHEMA['cpu_scheduler']['packages']) | {'htop', 'git', 'gdb'}
+	expected = set(SCHEMA['media_codecs']['packages']) | set(SCHEMA['cpu_scheduler']['packages']) | {'htop', 'git'}
 	assert _resolve._application_packages(app, []) == expected
 
 

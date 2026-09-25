@@ -10,16 +10,11 @@ from archinstoo.lib.models.application import (
 	BluetoothConfiguration,
 	CPUScheduler,
 	CPUSchedulerConfiguration,
-	DevelopmentConfiguration,
-	DevTool,
-	DevToolConfiguration,
 	Editor,
 	EditorConfiguration,
 	Firewall,
 	FirewallConfiguration,
 	FlatpakConfiguration,
-	Language,
-	LanguageConfiguration,
 	Management,
 	ManagementConfiguration,
 	MediaCodecsConfiguration,
@@ -158,7 +153,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			),
 		]
 
-		# development tooling and sched_ext are opt-in; only surfaced with --advanced
+		# sched_ext is opt-in; only surfaced with --advanced
 		if self._advanced:
 			items.append(
 				MenuItem(
@@ -166,14 +161,6 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 					action=select_cpu_scheduler,
 					preview_action=self._prev_cpu_scheduler,
 					key='cpu_scheduler_config',
-				),
-			)
-			items.append(
-				MenuItem(
-					text='Development',
-					action=select_development,
-					preview_action=self._prev_development,
-					key='development_config',
 				),
 			)
 
@@ -263,78 +250,6 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			config: SecurityConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
 			return f'{"Security"}: {tools}'
-		return None
-
-	def _prev_development(self, item: MenuItem) -> str | None:
-		if item.value is None:
-			return None
-
-		config: DevelopmentConfiguration = item.value
-		lines = []
-
-		if config.language_config and config.language_config.tools:
-			tools = ', '.join([t.value for t in config.language_config.tools])
-			lines.append(f'{"Languages"}: {tools}')
-
-		if config.devtool_config and config.devtool_config.tools:
-			tools = ', '.join([t.value for t in config.devtool_config.tools])
-			lines.append(f'{"Build & Debug"}: {tools}')
-
-		return '\n'.join(lines) if lines else None
-
-
-class DevelopmentMenu(AbstractSubMenu[DevelopmentConfiguration]):
-	def __init__(
-		self,
-		preset: DevelopmentConfiguration | None = None,
-	) -> None:
-		if preset:
-			self._dev_config = preset
-		else:
-			self._dev_config = DevelopmentConfiguration()
-
-		menu_options = self._define_menu_options()
-		self._item_group = MenuItemGroup(menu_options, checkmarks=True)
-
-		super().__init__(
-			self._item_group,
-			config=self._dev_config,
-			allow_reset=True,
-		)
-
-	@override
-	def run(self, additional_title: str | None = None) -> DevelopmentConfiguration:
-		super().run(additional_title=additional_title)
-		return self._dev_config
-
-	def _define_menu_options(self) -> list[MenuItem]:
-		return [
-			MenuItem(
-				text='Languages',
-				action=select_languages,
-				preview_action=self._prev_languages,
-				key='language_config',
-			),
-			MenuItem(
-				text='Build & Debug',
-				action=select_devtools,
-				preview_action=self._prev_devtools,
-				key='devtool_config',
-			),
-		]
-
-	def _prev_languages(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: LanguageConfiguration = item.value
-			tools = ', '.join([t.value for t in config.tools])
-			return f'{"Languages"}: {tools}'
-		return None
-
-	def _prev_devtools(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: DevToolConfiguration = item.value
-			tools = ', '.join([t.value for t in config.tools])
-			return f'{"Build & Debug"}: {tools}'
 		return None
 
 
@@ -473,68 +388,5 @@ def select_security(preset: SecurityConfiguration | None = None) -> SecurityConf
 			return preset
 		case ResultType.Selection:
 			return SecurityConfiguration(tools=result.get_values())
-		case ResultType.Reset:
-			return None
-
-
-def select_development(preset: DevelopmentConfiguration | None = None) -> DevelopmentConfiguration | None:
-	config = DevelopmentMenu(preset).run()
-	if config.language_config is None and config.devtool_config is None:
-		return None
-	return config
-
-
-def select_languages(preset: LanguageConfiguration | None = None) -> LanguageConfiguration | None:
-	items = [MenuItem(lang.value, value=lang) for lang in Language]
-	group = MenuItemGroup(items)
-
-	header = 'Would you like to install language toolchains?' + '\n'
-
-	if preset:
-		group.set_selected_by_value(preset.tools)
-
-	result = SelectMenu[Language](
-		group,
-		header=header,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('Languages'),
-		multi=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return LanguageConfiguration(tools=result.get_values())
-		case ResultType.Reset:
-			return None
-
-
-def select_devtools(preset: DevToolConfiguration | None = None) -> DevToolConfiguration | None:
-	items = [MenuItem(tool.value, value=tool) for tool in DevTool]
-	group = MenuItemGroup(items)
-
-	header = 'Would you like to install build & debug tools?' + '\n'
-
-	if preset:
-		group.set_selected_by_value(preset.tools)
-
-	result = SelectMenu[DevTool](
-		group,
-		header=header,
-		allow_skip=True,
-		alignment=Alignment.CENTER,
-		allow_reset=True,
-		frame=FrameProperties.min('Build & Debug'),
-		multi=True,
-	).run()
-
-	match result.type_:
-		case ResultType.Skip:
-			return preset
-		case ResultType.Selection:
-			return DevToolConfiguration(tools=result.get_values())
 		case ResultType.Reset:
 			return None

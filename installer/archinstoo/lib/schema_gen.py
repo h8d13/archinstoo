@@ -36,10 +36,8 @@ from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_
 from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.application import (
 	Audio,
-	DevTool,
 	Editor,
 	Firewall,
-	Language,
 	Management,
 	Monitor,
 	PowerManagement,
@@ -247,18 +245,6 @@ SECTIONS: tuple[Section, ...] = (
 			**{s.value: [s.value] for s in Security if s not in (Security.APPARMOR, Security.FIREJAIL, Security.BUBBLEWRAP)},
 		},
 		pick=('security_config', 'tools'),
-		site='application_handler.install_applications',
-	),
-	Section(
-		'languages',
-		lambda: _one_to_one(Language),
-		pick=('development_config', 'language_config', 'tools'),
-		site='application_handler.install_applications',
-	),
-	Section(
-		'devtools',
-		lambda: _one_to_one(DevTool),
-		pick=('development_config', 'devtool_config', 'tools'),
 		site='application_handler.install_applications',
 	),
 	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='installation.setup_btrfs_snapshot'),

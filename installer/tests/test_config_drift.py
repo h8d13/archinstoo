@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from archinstoo.lib.args import ArchConfig
-from archinstoo.lib.models.application import ApplicationConfiguration, DevelopmentConfiguration
+from archinstoo.lib.models.application import ApplicationConfiguration
 
 EXAMPLES = Path(__file__).parent.parent / 'examples'
 FULL = EXAMPLES / 'config_sample_full.json'
@@ -29,13 +29,6 @@ def test_full_example_has_every_app_section() -> None:
 	expected = set(ApplicationConfiguration._config_parsers)
 	missing = expected - set(_load(FULL)['app_config'])
 	assert not missing, f'config_sample_full.json lacks app_config sections: {sorted(missing)}'
-
-
-def test_full_example_fills_development_config() -> None:
-	# nested optional block: an empty {} would pass the section check above
-	expected = {f.name for f in DevelopmentConfiguration.__dataclass_fields__.values()}
-	missing = expected - set(_load(FULL)['app_config']['development_config'])
-	assert not missing, f'development_config lacks: {sorted(missing)}'
 
 
 @pytest.mark.parametrize('path', sorted(EXAMPLES.glob('*.json')), ids=lambda p: p.name)
