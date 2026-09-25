@@ -22,11 +22,9 @@ Can also check available ones:
 
 ### **1. Get internet access**
 > [!NOTE]
-> Ethernet cable is plug and play.
+> Ethernet cable is plug and play. *You can then skip wifi setup below*
 
 Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms` 3 times...
-
-*You can then skip wifi setup below*
 
 **For Wifi**:
 ```shell
