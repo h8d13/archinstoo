@@ -3,18 +3,18 @@ import select
 import shutil
 import signal
 import socket
-import ssl
 import struct
 import time
 from typing import TYPE_CHECKING, Self
 from urllib.error import URLError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from urllib.request import urlopen
 
 from archinstoo.lib.exceptions import DownloadTimeoutError
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+	from http.client import HTTPResponse
 	from pathlib import Path
 	from types import FrameType, TracebackType
 
@@ -105,16 +105,16 @@ class DownloadTimer:
 		self.start_time = None
 
 
-def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout: int = 30) -> str:
-	from urllib.parse import urlparse
-
+def _urlopen_checked(url: str, timeout: int) -> HTTPResponse:
+	# scheme guard for every outbound fetch: urlopen would otherwise accept
+	# file:// and friends. default context verifies TLS.
 	if urlparse(url).scheme not in ('http', 'https'):
 		raise ValueError(f'Refusing to fetch non-http(s) url: {url}')
+	resp: HTTPResponse = urlopen(url, timeout=timeout)  # noqa: S310 - scheme restricted above
+	return resp
 
-	ssl_context = ssl.create_default_context()
-	ssl_context.check_hostname = False
-	ssl_context.verify_mode = ssl.CERT_NONE
 
+def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout: int = 30) -> str:
 	if params is not None:
 		encoded = urlencode(params)
 		full_url = f'{url}?{encoded}'
@@ -122,7 +122,7 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 		full_url = url
 
 	try:
-		response = urlopen(full_url, context=ssl_context, timeout=timeout)  # noqa: S310 - scheme restricted above
+		response = _urlopen_checked(full_url, timeout)
 		data: str = response.read().decode('UTF-8')
 		return data
 	except URLError as e:
@@ -134,17 +134,8 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 def download_file_from_url(url: str, dest: Path, timeout: int = 30) -> None:
 	# binary sibling of fetch_data_from_url: streams the response to disk instead
 	# of decoding to text, for package/archive downloads
-	from urllib.parse import urlparse
-
-	if urlparse(url).scheme not in ('http', 'https'):
-		raise ValueError(f'Refusing to fetch non-http(s) url: {url}')
-
-	ssl_context = ssl.create_default_context()
-	ssl_context.check_hostname = False
-	ssl_context.verify_mode = ssl.CERT_NONE
-
 	try:
-		with urlopen(url, context=ssl_context, timeout=timeout) as resp, dest.open('wb') as out:  # noqa: S310 - scheme restricted above
+		with _urlopen_checked(url, timeout) as resp, dest.open('wb') as out:
 			shutil.copyfileobj(resp, out)
 	except URLError as e:
 		raise ValueError(f'Unable to download from url: {url}\n{e}') from e
