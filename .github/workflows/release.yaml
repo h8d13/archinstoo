@@ -70,28 +70,18 @@ jobs:
       # installer/PKGBUILD is a -git package: it clones master HEAD in a clean
       # chroot, so the pkg matches an AUR install and never touches this checkout.
       # extra-x86_64-build needs Arch + devtools + a privileged chroot, hence the
-      # container. Output is archinstoo-git-r<count>.<sha>-any.pkg.tar.zst.
+      # container. --tmpfs /run lets arch-nspawn clean up its mounts; the rest of
+      # the container workarounds live in build-pkg.sh. Output is
+      # archinstoo-git-r<count>.<sha>-any.pkg.tar.zst.
       - name: Build pacman package (clean chroot)
         run: |
           mkdir -p /tmp/pkgout
-          # --tmpfs /run: arch-nspawn (devtools chroot) puts its propagate
-          #   mounts under /run and refuses to rmdir them off a disk fs on
-          #   teardown; a tmpfs lets it clean up.
-          # machine-id: nspawn wants /etc/machine-id, absent in the image.
           docker run --rm --privileged \
             --tmpfs /run \
+            -v "$GITHUB_WORKSPACE/.github/build-pkg:/build-pkg:ro" \
             -v "$GITHUB_WORKSPACE/installer/PKGBUILD:/pkg/PKGBUILD:ro" \
             -v /tmp/pkgout:/out \
-            archlinux:base-devel bash -euo pipefail -c '
-              pacman -Syu --noconfirm --needed devtools git
-              systemd-machine-id-setup
-              useradd -m builder
-              echo "builder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
-              cp /pkg/PKGBUILD /home/builder/PKGBUILD
-              chown -R builder:builder /home/builder /out
-              su builder -c "cd ~ && extra-x86_64-build"
-              install -Dm644 /home/builder/*.pkg.tar.zst -t /out/
-            '
+            archlinux:base-devel bash /build-pkg
           ls -l /tmp/pkgout
 
       - name: Delete existing latest tag

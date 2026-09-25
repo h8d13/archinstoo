@@ -1,0 +1,31 @@
+#!/bin/bash
+# Build installer/PKGBUILD (archinstoo-git) in a clean devtools chroot and drop
+# the package in /out. Runs inside a privileged archlinux:base-devel container;
+# the release workflow bind-mounts the PKGBUILD at /pkg and an output dir at /out
+# and gives the container a tmpfs /run (arch-nspawn cleans up mounts there).
+#
+# systemd-nspawn (via arch-nspawn) needs two container workarounds:
+#   - /etc/machine-id must exist            -> systemd-machine-id-setup
+#   - it registers with systemd-machined over dbus, which isn't running here
+#     -> shim systemd-nspawn to --register=no --keep-unit so it skips the bus
+set -euo pipefail
+
+pacman -Syu --noconfirm --needed devtools git
+systemd-machine-id-setup
+
+# sudo secure_path puts /usr/local/bin first, so this shadows the real binary
+# for arch-nspawn (which invokes systemd-nspawn by name under sudo).
+cat >/usr/local/bin/systemd-nspawn <<'EOF'
+#!/bin/bash
+exec /usr/bin/systemd-nspawn --register=no --keep-unit "$@"
+EOF
+chmod +x /usr/local/bin/systemd-nspawn
+
+# makepkg/devtools refuse to run as root
+useradd -m builder
+echo 'builder ALL=(ALL) NOPASSWD: ALL' >/etc/sudoers.d/builder
+cp /pkg/PKGBUILD /home/builder/PKGBUILD
+chown -R builder:builder /home/builder /out
+
+su builder -c 'cd ~ && extra-x86_64-build'
+install -Dm644 /home/builder/*.pkg.tar.zst -t /out/
