@@ -34,6 +34,13 @@ Options here are also important: Both `NetworkManager`:
 
 Usually I pick Copy to ISO from VMs or a desktop (cabled) and other two options for laptops this allows for proper integration to `DE`or`WM`.
 
+- `Graphics driver`
+
+> [!NOTE]
+> Hardware drivers can also be skipped and added to AUR step below if needed.
+
+Select according to your setup.
+
 - `Applications` & `Profile`
 
 This is all up to user preference, can be multi-selected / some set the global default
@@ -42,8 +49,6 @@ This is all up to user preference, can be multi-selected / some set the global d
 `Terminal` is the one every window manager profile shares: it installs the package, exports
 `TERMINAL`, and repoints the keybind in whatever config the profile ships. Skipping it leaves
 the profiles on `alacritty`.
-
-> Hardware drivers can also be skipped and added to AUR step below if needed.
 
 - `Additional packages` & `AUR packages`
 
