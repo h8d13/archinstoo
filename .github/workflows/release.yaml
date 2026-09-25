@@ -74,11 +74,17 @@ jobs:
       - name: Build pacman package (clean chroot)
         run: |
           mkdir -p /tmp/pkgout
+          # --tmpfs /run: arch-nspawn (devtools chroot) puts its propagate
+          #   mounts under /run and refuses to rmdir them off a disk fs on
+          #   teardown; a tmpfs lets it clean up.
+          # machine-id: nspawn wants /etc/machine-id, absent in the image.
           docker run --rm --privileged \
+            --tmpfs /run \
             -v "$GITHUB_WORKSPACE/installer/PKGBUILD:/pkg/PKGBUILD:ro" \
             -v /tmp/pkgout:/out \
             archlinux:base-devel bash -euo pipefail -c '
               pacman -Syu --noconfirm --needed devtools git
+              systemd-machine-id-setup
               useradd -m builder
               echo "builder ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builder
               cp /pkg/PKGBUILD /home/builder/PKGBUILD
