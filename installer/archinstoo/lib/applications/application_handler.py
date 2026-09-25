@@ -5,11 +5,9 @@ from archinstoo.lib.output import info
 from .cat.audio import AudioApp
 from .cat.bluetooth import BluetoothApp
 from .cat.cpu_scheduler import CPUSchedulerApp
-from .cat.devtools import DevToolsApp
 from .cat.editor import EditorApp
 from .cat.firewall import FirewallApp
 from .cat.flatpak import FlatpakApp
-from .cat.languages import LanguagesApp
 from .cat.management import ManagementApp
 from .cat.media_codecs import MediaCodecsApp
 from .cat.monitor import MonitorApp
@@ -101,18 +99,3 @@ class ApplicationHandler:
 				install_session,
 				app_config.security_config,
 			)
-
-		if app_config.development_config:
-			dev_config = app_config.development_config
-
-			if dev_config.language_config and dev_config.language_config.tools:
-				LanguagesApp().install(
-					install_session,
-					dev_config.language_config,
-				)
-
-			if dev_config.devtool_config and dev_config.devtool_config.tools:
-				DevToolsApp().install(
-					install_session,
-					dev_config.devtool_config,
-				)

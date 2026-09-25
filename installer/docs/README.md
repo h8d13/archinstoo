@@ -61,11 +61,9 @@
 │   │   │       ├── audio
 │   │   │       ├── bluetooth
 │   │   │       ├── cpu_scheduler
-│   │   │       ├── devtools
 │   │   │       ├── editor
 │   │   │       ├── firewall
 │   │   │       ├── flatpak
-│   │   │       ├── languages
 │   │   │       ├── management
 │   │   │       ├── media_codecs
 │   │   │       ├── monitor

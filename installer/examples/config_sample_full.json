@@ -278,19 +278,6 @@
         "terminal_config": {
             "terminal": "alacritty"
         },
-        "development_config": {
-            "language_config": {
-                "tools": [
-                    "rustup"
-                ]
-            },
-            "devtool_config": {
-                "tools": [
-                    "make",
-                    "gdb"
-                ]
-            }
-        },
         "security_config": {
             "tools": [
                 "fail2ban"

@@ -172,45 +172,6 @@ class SecurityConfigSerialization(TypedDict):
 	tools: list[str]
 
 
-class Language(StrEnum):
-	RUSTUP = auto()
-	GO = auto()
-	JAVA = 'jdk-openjdk'
-	NODEJS = auto()
-	CLANG = auto()
-	ZIG = auto()
-	LUA = auto()
-
-
-class LanguageConfigSerialization(TypedDict):
-	tools: list[str]
-
-
-# build + debug utilities, picked à la carte (one package per entry)
-class DevTool(StrEnum):
-	CMAKE = auto()
-	MAKE = auto()
-	NINJA = auto()
-	MESON = auto()
-	GDB = auto()
-	LLVM = auto()
-	LLD = auto()
-	LLDB = auto()
-	PERF = auto()
-	STRACE = auto()
-	LTRACE = auto()
-	VALGRIND = auto()
-
-
-class DevToolConfigSerialization(TypedDict):
-	tools: list[str]
-
-
-class DevelopmentConfigSerialization(TypedDict):
-	language_config: NotRequired[LanguageConfigSerialization]
-	devtool_config: NotRequired[DevToolConfigSerialization]
-
-
 class ApplicationSerialization(TypedDict):
 	bluetooth_config: NotRequired[BluetoothConfigSerialization]
 	thunderbolt_config: NotRequired[ThunderboltConfigSerialization]
@@ -226,7 +187,6 @@ class ApplicationSerialization(TypedDict):
 	editor_config: NotRequired[EditorConfigSerialization]
 	terminal_config: NotRequired[TerminalConfigSerialization]
 	security_config: NotRequired[SecurityConfigSerialization]
-	development_config: NotRequired[DevelopmentConfigSerialization]
 
 
 @dataclass
@@ -322,39 +282,6 @@ class SecurityConfiguration(_Category):
 
 
 @dataclass
-class LanguageConfiguration(_Category):
-	tools: list[Language]
-
-
-@dataclass
-class DevToolConfiguration(_Category):
-	tools: list[DevTool]
-
-
-@dataclass
-class DevelopmentConfiguration:
-	language_config: LanguageConfiguration | None = None
-	devtool_config: DevToolConfiguration | None = None
-
-	def json(self) -> dict[str, Any]:
-		out: dict[str, Any] = {}
-		if self.language_config:
-			out['language_config'] = self.language_config.json()
-		if self.devtool_config:
-			out['devtool_config'] = self.devtool_config.json()
-		return out
-
-	@classmethod
-	def parse_arg(cls, arg: DevelopmentConfigSerialization) -> Self:
-		config = cls()
-		if (lang := arg.get('language_config')) is not None:
-			config.language_config = LanguageConfiguration.parse_arg(lang)
-		if (devtool := arg.get('devtool_config')) is not None:
-			config.devtool_config = DevToolConfiguration.parse_arg(devtool)
-		return config
-
-
-@dataclass
 class ApplicationConfiguration:
 	bluetooth_config: BluetoothConfiguration | None = None
 	thunderbolt_config: ThunderboltConfiguration | None = None
@@ -370,7 +297,6 @@ class ApplicationConfiguration:
 	editor_config: EditorConfiguration | None = None
 	terminal_config: TerminalConfiguration | None = None
 	security_config: SecurityConfiguration | None = None
-	development_config: DevelopmentConfiguration | None = None
 
 	# category -> its class, read off the fields below the class body
 	_config_parsers: ClassVar[dict[str, type]]
