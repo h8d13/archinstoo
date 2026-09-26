@@ -432,19 +432,18 @@ class MenuItemsState:
 		elif not self._item_group.has_filter() and focus_row_idx in self._prev_visible_rows:  # focus is in the same view
 			self._prev_row_idx = focus_row_idx
 			return self._view_items
+		elif self._item_group.has_filter():
+			start = focus_row_idx
+			end = focus_row_idx + self._total_rows
 		else:
-			if self._item_group.has_filter():
+			delta = focus_row_idx - self._prev_row_idx
+
+			if delta > 0:  # cursor is on the bottom most row
+				start = focus_row_idx - self._total_rows + 1
+				end = focus_row_idx + 1
+			else:  # focus is on the top most row
 				start = focus_row_idx
 				end = focus_row_idx + self._total_rows
-			else:
-				delta = focus_row_idx - self._prev_row_idx
-
-				if delta > 0:  # cursor is on the bottom most row
-					start = focus_row_idx - self._total_rows + 1
-					end = focus_row_idx + 1
-				else:  # focus is on the top most row
-					start = focus_row_idx
-					end = focus_row_idx + self._total_rows
 
 		self._view_items = self._get_view_items(enabled_items, start, end)
 		self._prev_visible_rows = list(range(start, end))

@@ -76,7 +76,7 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 			if action == self._actions[2]:  # edit subvolume
 				if (new_subvolume := self._add_subvolume(entry)) is not None:
 					# we'll remove the original subvolume and add the modified version
-					data = [d for d in data if d.name != entry.name and d.name != new_subvolume.name]
+					data = [d for d in data if d.name not in (entry.name, new_subvolume.name)]
 					data += [new_subvolume]
 			elif action == self._actions[3]:  # delete
 				data = [d for d in data if d != entry]

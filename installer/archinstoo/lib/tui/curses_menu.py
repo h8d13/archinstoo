@@ -228,8 +228,7 @@ class AbstractViewport:
 			frame_end += 3  # 2 for frame
 
 			frame_height = len(rows) + 1
-			if frame_height > max_height:
-				frame_height = max_height
+			frame_height = min(frame_height, max_height)
 		else:
 			frame_start = 0
 			frame_end = max_width
@@ -1123,10 +1122,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		if pct + SCROLL_INTERVAL > 100:
 			pct = 100
 
-		if pct < 0:
-			pct = 0
-
-		return pct
+		return max(pct, 0)
 
 	def _get_scroll_win_prev_entries(
 		self,
@@ -1138,8 +1134,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 
 		end_row = start_row + available_rows
 
-		if end_row > total_prev_rows:
-			end_row = total_prev_rows
+		end_row = min(end_row, total_prev_rows)
 
 		prev_entries = [e for e in entries if start_row <= e.row < end_row]
 
@@ -1256,9 +1251,8 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				if self._active_search:
 					self._active_search = False
 					self._item_group.set_filter_pattern('')
-				else:
-					if self._allow_skip:
-						return Result(ResultType.Skip, None)
+				elif self._allow_skip:
+					return Result(ResultType.Skip, None)
 			case MenuKeys.NUM_KEYS:
 				self._item_group.focus_index(key - 49)
 			case MenuKeys.SCROLL_DOWN:

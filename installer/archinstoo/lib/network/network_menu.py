@@ -79,8 +79,8 @@ class ManualNetworkConfig(ListManager[Nic]):
 			ips = ip.split(' ') if multi else [ip]
 
 			try:
-				for ip in ips:
-					ipaddress.ip_interface(ip)
+				for addr in ips:
+					ipaddress.ip_interface(addr)
 				return None
 			except ValueError:
 				return failure

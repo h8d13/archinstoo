@@ -188,6 +188,10 @@ select = [
     "PLC",    # Pylint conventions
     "PLC1901", # compare-to-empty-string (preview)
     "PLE",    # Pylint errors
+    "PLR1704", # redefined-argument-from-local
+    "PLR1714", # repeated-equality-comparison
+    "PLR1730", # if-stmt-min-max
+    "PLR5501", # collapsible-else-if
     "PLW",    # Pylint warnings
     "PT",     # flake8-pytest-style
     "PTH",    # flake8-use-pathlib

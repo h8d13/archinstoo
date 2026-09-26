@@ -207,7 +207,7 @@ class Profile:
 		return self.profile_type == ProfileType.ServerType
 
 	def is_desktop_type_profile(self) -> bool:
-		return self.profile_type == ProfileType.DesktopEnv or self.profile_type == ProfileType.WindowMgr
+		return self.profile_type in (ProfileType.DesktopEnv, ProfileType.WindowMgr)
 
 	def is_greeter_supported(self) -> bool:
 		return self.profile_type == ProfileType.Desktop
