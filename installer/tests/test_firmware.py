@@ -114,6 +114,15 @@ def _fake_driver_bus(root: Path, devices: dict[str, str | None]) -> Path:
 	return root
 
 
+def _driver_buses(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, buses: dict[str, dict[str, str | None]]) -> None:
+	# a synthetic /sys/bus holding only these buses; the rest of _MODULE_BUSES is absent
+	root = tmp_path / 'bus'
+	root.mkdir()
+	for bus, devices in buses.items():
+		_fake_driver_bus(root / bus / 'devices', devices)
+	monkeypatch.setattr(hardware, '_SYS_BUS', root)
+
+
 def _stub_run(
 	monkeypatch: pytest.MonkeyPatch,
 	firmware: dict[str, list[str]],
@@ -150,9 +159,7 @@ def test_splits_resolve_through_module_and_owner(monkeypatch: pytest.MonkeyPatch
 	(root / 'ath11k/WCN6855/hw2.0').mkdir(parents=True)
 	(root / 'ath11k/WCN6855/hw2.0/board-2.bin.zst').write_text('')
 
-	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:01.0': 'ath11k_pci'}))
-	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
+	_driver_buses(monkeypatch, tmp_path, {'pci': {'0000:00:01.0': 'ath11k_pci'}})
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(
 		monkeypatch,
@@ -171,9 +178,7 @@ def test_splits_match_zst_and_collapse_flat_entries(monkeypatch: pytest.MonkeyPa
 	for ucode in ('iwlwifi-100-5.ucode', 'iwlwifi-cc-a0-77.ucode'):
 		(root / f'{ucode}.zst').write_text('')
 
-	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:14.3': 'iwlwifi'}))
-	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
+	_driver_buses(monkeypatch, tmp_path, {'pci': {'0000:00:14.3': 'iwlwifi'}})
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	calls = _stub_run(
 		monkeypatch,
@@ -194,9 +199,7 @@ def test_splits_drop_non_split_owners(monkeypatch: pytest.MonkeyPatch, tmp_path:
 	(root / 'intel/sof').mkdir(parents=True)
 	(root / 'intel/sof/blob.ri').write_text('')
 
-	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:1f.3': 'snd_sof_pci'}))
-	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
+	_driver_buses(monkeypatch, tmp_path, {'pci': {'0000:00:1f.3': 'snd_sof_pci'}})
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(
 		monkeypatch,
@@ -213,13 +216,7 @@ def test_splits_survive_modules_declaring_no_firmware(monkeypatch: pytest.Monkey
 	root = tmp_path / 'fw'
 	root.mkdir()
 
-	monkeypatch.setattr(
-		hardware,
-		'_PCI_BUS',
-		_fake_driver_bus(tmp_path / 'pci', {'0000:00:02.0': 'rtw88_8822be', '0000:00:03.0': None}),
-	)
-	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
+	_driver_buses(monkeypatch, tmp_path, {'pci': {'0000:00:02.0': 'rtw88_8822be', '0000:00:03.0': None}})
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(monkeypatch, firmware={}, owners={})
 	_reset(monkeypatch)
@@ -231,18 +228,8 @@ def test_splits_use_module_name_not_driver_name(monkeypatch: pytest.MonkeyPatch,
 	# i801_smbus is the driver directory, i2c_i801 the module modinfo answers to
 	root = tmp_path / 'fw'
 	root.mkdir()
-	bus = tmp_path / 'pci'
-	bus.mkdir()
-	modules = tmp_path / 'modules'
-	modules.mkdir()
-	(modules / 'i2c_i801').mkdir()
-	dev = bus / '0000:00:1f.4'
-	(dev / 'driver').mkdir(parents=True)
-	(dev / 'driver' / 'module').symlink_to(modules / 'i2c_i801')
 
-	monkeypatch.setattr(hardware, '_PCI_BUS', bus)
-	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(hardware, '_ACPI_BUS', tmp_path / 'absent')
+	_driver_buses(monkeypatch, tmp_path, {'pci': {'0000:00:1f.4': 'i2c_i801'}})
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	calls = _stub_run(monkeypatch, firmware={}, owners={})
 	_reset(monkeypatch)
@@ -258,13 +245,7 @@ def test_splits_reach_acpi_amps_through_wrapper_depends(monkeypatch: pytest.Monk
 	(root / 'cirrus').mkdir(parents=True)
 	(root / 'cirrus/cs35l41-dsp1-spk-prot-10280c05.wmfw.zst').write_text('')
 
-	monkeypatch.setattr(hardware, '_PCI_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(
-		hardware,
-		'_ACPI_BUS',
-		_fake_driver_bus(tmp_path / 'acpi', {'CSC3551:00': 'snd_hda_scodec_cs35l41_i2c'}),
-	)
+	_driver_buses(monkeypatch, tmp_path, {'acpi': {'CSC3551:00': 'snd_hda_scodec_cs35l41_i2c'}})
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(
 		monkeypatch,
@@ -282,14 +263,80 @@ def test_splits_skip_cirrus_without_amp(monkeypatch: pytest.MonkeyPatch, tmp_pat
 	root = tmp_path / 'fw'
 	root.mkdir()
 
-	monkeypatch.setattr(hardware, '_PCI_BUS', _fake_driver_bus(tmp_path / 'pci', {'0000:00:1f.3': 'snd_hda_intel'}))
-	monkeypatch.setattr(hardware, '_USB_BUS', tmp_path / 'absent')
-	monkeypatch.setattr(hardware, '_ACPI_BUS', _fake_driver_bus(tmp_path / 'acpi', {'PNP0C09:00': 'ec'}))
+	_driver_buses(monkeypatch, tmp_path, {'pci': {'0000:00:1f.3': 'snd_hda_intel'}, 'acpi': {'PNP0C09:00': 'ec'}})
 	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
 	_stub_run(monkeypatch, firmware={}, owners={})
 	_reset(monkeypatch)
 
 	assert set(detect_splits()) == BASELINE
+
+
+def test_splits_reach_sdio_wifi(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# brcmfmac on SDIO has no PCI or USB node; the pci/usb/acpi scan missed it
+	root = tmp_path / 'fw'
+	(root / 'brcm').mkdir(parents=True)
+	(root / 'brcm/brcmfmac43455-sdio.bin.zst').write_text('')
+
+	_driver_buses(monkeypatch, tmp_path, {'sdio': {'mmc1:0001:1': 'brcmfmac'}})
+	monkeypatch.setattr(hardware, '_FIRMWARE_ROOT', root)
+	_stub_run(
+		monkeypatch,
+		firmware={'brcmfmac': ['brcm/brcmfmac43455-sdio.bin']},
+		owners={str(root / 'brcm/brcmfmac43455-sdio.bin.zst'): 'linux-firmware-broadcom'},
+	)
+	_reset(monkeypatch)
+
+	assert set(detect_splits()) == BASELINE | {FirmwareVendor.BROADCOM}
+
+
+def test_modprobe_resolves_against_target_release(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# after an upgrade without reboot the running kernel's modules are gone
+	_driver_buses(monkeypatch, tmp_path, {'pci': {'0000:00:03.0': None}})
+	calls = _stub_run(monkeypatch, firmware={}, owners={})
+	_reset(monkeypatch)
+
+	hardware.SysInfo.device_modules()
+
+	assert [c for c in calls if c[0] == 'modprobe'] == [['modprobe', '-S', '0-test', '-R', 'pci:v00000000:00:03.0d0']]
+
+
+# -- sound firmware: bound drivers, not /proc/modules --------------------------
+
+
+@pytest.mark.parametrize(
+	('buses', 'depends', 'sof', 'alsa'),
+	[
+		# SOF probes and declines on HDA-only laptops, snd_hda_intel binds
+		({'pci': {'0000:00:1f.3': 'snd_hda_intel'}}, {}, False, False),
+		({'pci': {'0000:00:1f.3': 'snd_sof_pci_intel_tgl'}}, {}, True, False),
+		({'pci': {'0000:04:00.5': 'snd_sof_amd_rembrandt'}}, {}, True, False),
+		# Creative codec binds on the HDA codec bus, behind a plain HDA controller
+		({'pci': {'0000:00:1f.3': 'snd_hda_intel'}, 'hdaudio': {'hdaudioC0D0': 'snd_hda_codec_ca0132'}}, {}, False, True),
+		# the listed module is a library, reached one depend down
+		({'pci': {'0000:05:00.0': 'snd_vx222'}}, {'snd_vx222': 'snd-vx-lib,snd-pcm'}, False, True),
+	],
+)
+def test_sound_firmware_from_device_modules(
+	monkeypatch: pytest.MonkeyPatch,
+	tmp_path: Path,
+	buses: dict[str, dict[str, str | None]],
+	depends: dict[str, str],
+	sof: bool,
+	alsa: bool,
+) -> None:
+	_driver_buses(monkeypatch, tmp_path, buses)
+	_stub_run(monkeypatch, firmware={}, owners={}, depends=depends)
+	_reset(monkeypatch)
+
+	assert (hardware.SysInfo.requires_sof_fw(), hardware.SysInfo.requires_alsa_fw()) == (sof, alsa)
+
+
+def test_sound_firmware_skipped_on_vm(monkeypatch: pytest.MonkeyPatch) -> None:
+	monkeypatch.setattr(hardware, '_sys_info', hardware._SysInfo())
+	monkeypatch.setattr(hardware.SysInfo, 'is_vm', staticmethod(lambda: True))
+
+	assert not hardware.SysInfo.requires_sof_fw()
+	assert not hardware.SysInfo.requires_alsa_fw()
 
 
 def test_split_scan_skipped_on_vm(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -10,6 +10,7 @@ class FirmwareType(StrEnum):
 
 
 class FirmwareVendor(StrEnum):
+	AMD = 'linux-firmware-amd'  # non-GPU AMD devices, GPUs are AMDGPU/RADEON
 	AMDGPU = 'linux-firmware-amdgpu'
 	ATHEROS = 'linux-firmware-atheros'
 	BROADCOM = 'linux-firmware-broadcom'
@@ -26,6 +27,7 @@ class FirmwareVendor(StrEnum):
 	QLOGIC = 'linux-firmware-qlogic'
 	RADEON = 'linux-firmware-radeon'
 	REALTEK = 'linux-firmware-realtek'
+	TI = 'linux-firmware-ti'
 
 
 # linux-firmware's OPTIONAL deps only. pacman never pulls them in, so their

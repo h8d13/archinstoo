@@ -57,25 +57,7 @@ source = "pacman"
 [python]
 source = "pacman"
 
-[python-build]
-source = "pacman"
-
-[python-installer]
-source = "pacman"
-
-[python-pylint]
-source = "pacman"
-
 [python-pyparted]
-source = "pacman"
-
-[python-pytest]
-source = "pacman"
-
-[python-setuptools]
-source = "pacman"
-
-[python-wheel]
 source = "pacman"
 
 [systemd]
@@ -105,6 +87,30 @@ source = "pacman"
 [tree]
 source = "pacman"
 
+[xkeyboard-config]
+source = "pacman"
+
+# ============================================================
+# BUILD DEPENDENCIES
+# ============================================================
+[python-build]
+source = "pacman"
+
+[python-installer]
+source = "pacman"
+
+[python-pylint]
+source = "pacman"
+
+[python-pytest]
+source = "pacman"
+
+[python-setuptools]
+source = "pacman"
+
+[python-wheel]
+source = "pacman"
+
 # ============================================================
 # KERNELS, FIRMWARE, DRIVER AND SEAT OPTIONS
 # ============================================================
@@ -130,6 +136,9 @@ source = "pacman"
 source = "pacman"
 
 [linux]
+source = "pacman"
+
+[linux-firmware-amd]
 source = "pacman"
 
 [linux-firmware-amdgpu]
@@ -178,6 +187,9 @@ source = "pacman"
 source = "pacman"
 
 [linux-firmware-realtek]
+source = "pacman"
+
+[linux-firmware-ti]
 source = "pacman"
 
 [linux-hardened]
@@ -417,12 +429,6 @@ source = "pacman"
 [cinnamon]
 source = "pacman"
 
-[clang]
-source = "pacman"
-
-[cmake]
-source = "pacman"
-
 [cockpit]
 source = "pacman"
 
@@ -468,6 +474,9 @@ source = "pacman"
 [cosmic-osd]
 source = "pacman"
 
+[cosmic-osk]
+source = "pacman"
+
 [cosmic-panel]
 source = "pacman"
 
@@ -499,6 +508,9 @@ source = "pacman"
 source = "pacman"
 
 [cosmic-text-editor]
+source = "pacman"
+
+[cosmic-viewer]
 source = "pacman"
 
 [cosmic-wallpapers]
@@ -765,9 +777,6 @@ source = "pacman"
 [gcc]
 source = "pacman"
 
-[gdb]
-source = "pacman"
-
 [gdm]
 source = "pacman"
 
@@ -805,9 +814,6 @@ source = "pacman"
 source = "pacman"
 
 [gnu-free-fonts]
-source = "pacman"
-
-[go]
 source = "pacman"
 
 [greetd]
@@ -888,9 +894,6 @@ source = "pacman"
 [iwd]
 source = "pacman"
 
-[jdk-openjdk]
-source = "pacman"
-
 [jre-openjdk-headless]
 source = "pacman"
 
@@ -946,21 +949,6 @@ source = "pacman"
 source = "pacman"
 
 [linux-firmware]
-source = "pacman"
-
-[lld]
-source = "pacman"
-
-[lldb]
-source = "pacman"
-
-[llvm]
-source = "pacman"
-
-[ltrace]
-source = "pacman"
-
-[lua]
 source = "pacman"
 
 [lximage-qt]
@@ -1113,9 +1101,6 @@ source = "pacman"
 [matugen]
 source = "pacman"
 
-[meson]
-source = "pacman"
-
 [micro]
 source = "pacman"
 
@@ -1146,16 +1131,10 @@ source = "pacman"
 [nginx]
 source = "pacman"
 
-[ninja]
-source = "pacman"
-
 [niri]
 source = "pacman"
 
 [noctalia]
-source = "pacman"
-
-[nodejs]
 source = "pacman"
 
 [ntsync-autoload]
@@ -1200,9 +1179,6 @@ source = "pacman"
 [pcmanfm-qt]
 source = "pacman"
 
-[perf]
-source = "pacman"
-
 [pipewire]
 source = "pacman"
 
@@ -1242,6 +1218,9 @@ source = "pacman"
 [power-profiles-daemon]
 source = "pacman"
 
+[ptyxis]
+source = "pacman"
+
 [pulseaudio]
 source = "pacman"
 
@@ -1278,9 +1257,6 @@ source = "pacman"
 [rtkit]
 source = "pacman"
 
-[rustup]
-source = "pacman"
-
 [rxvt-unicode]
 source = "pacman"
 
@@ -1315,9 +1291,6 @@ source = "pacman"
 source = "pacman"
 
 [sof-firmware]
-source = "pacman"
-
-[strace]
 source = "pacman"
 
 [sudo]
@@ -1396,9 +1369,6 @@ source = "pacman"
 source = "pacman"
 
 [uwsm]
-source = "pacman"
-
-[valgrind]
 source = "pacman"
 
 [vim]
@@ -1615,9 +1585,6 @@ source = "pacman"
 source = "pacman"
 
 [xwayland-satellite]
-source = "pacman"
-
-[zig]
 source = "pacman"
 
 [zram-generator]

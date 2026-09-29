@@ -4,6 +4,7 @@
 Tracks (into nvchecker.toml) the Arch packages archinstoo touches:
 - Direct dependencies (PKGBUILD depends)
 - Optional dependencies (PKGBUILD optdepends)
+- Build dependencies (PKGBUILD makedepends)
 - All installable packages (schema.toml)
 - Config-conditional packages that live in code enums, not the schema:
   kernels + headers, vendor firmware, gfx extras (dkms), microcode, seat
@@ -111,10 +112,13 @@ def _needs_update() -> bool:
 
 
 def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
-	# extract a bash array (depends, optdepends, ...) from a PKGBUILD
-	text = path.read_text()
-	pattern = rf'{name}=\(\s*([\s\S]*?)\)'
-	match = re.search(pattern, text)
+	# extract a bash array (depends, optdepends, ...) from a PKGBUILD. comments
+	# go first: a ')' in one ended the array early. bash only opens one at a
+	# word start, which keeps url#fragment and ${var#x} intact. anchored to
+	# line start so 'depends' cannot match inside 'makedepends'/'optdepends'
+	text = re.sub(r'(^|\s)#.*', r'\1', path.read_text(), flags=re.MULTILINE)
+	pattern = rf'^{name}=\(\s*([\s\S]*?)\)'
+	match = re.search(pattern, text, re.MULTILINE)
 	if not match:
 		return []
 
@@ -192,6 +196,9 @@ def generate_toml() -> str:
 	optdepends = set(parse_pkgbuild_array(PKGBUILD_DEV, 'optdepends'))
 	optdepends.update(parse_pkgbuild_array(PKGBUILD_REL, 'optdepends'))
 
+	makedepends = set(parse_pkgbuild_array(PKGBUILD_DEV, 'makedepends'))
+	makedepends.update(parse_pkgbuild_array(PKGBUILD_REL, 'makedepends'))
+
 	log('Reading package groups from pacman...')
 	groups = groups_mod.sync()
 	if not groups:
@@ -228,12 +235,15 @@ def generate_toml() -> str:
 			lines.append(f'source = "{detect_source(pkg)}"')
 			lines.append('')
 
+	# each package lands once, in the first section that claims it
 	add_section('DIRECT DEPENDENCIES', depends)
 	add_section('OPTIONAL DEPENDENCIES', optdepends - depends)
-	add_section('KERNELS, FIRMWARE, DRIVER AND SEAT OPTIONS', code_pkgs - depends - optdepends)
-	add_section('INSTALLABLE PACKAGES', schema_pkgs - depends - optdepends - code_pkgs)
+	add_section('BUILD DEPENDENCIES', makedepends - depends - optdepends)
+	pkgbuild = depends | optdepends | makedepends
+	add_section('KERNELS, FIRMWARE, DRIVER AND SEAT OPTIONS', code_pkgs - pkgbuild)
+	add_section('INSTALLABLE PACKAGES', schema_pkgs - pkgbuild - code_pkgs)
 
-	total = len(depends | optdepends | code_pkgs | schema_pkgs)
+	total = len(pkgbuild | code_pkgs | schema_pkgs)
 	log(f'Done: {total} packages tracked')
 
 	return '\n'.join(lines)

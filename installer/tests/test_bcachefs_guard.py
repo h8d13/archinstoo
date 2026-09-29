@@ -23,6 +23,8 @@ def _proc(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, text: str | None) -> 
 	if text is not None:
 		path.write_text(text)
 	monkeypatch.setattr(hardware, '_PROC_FILESYSTEMS', path)
+	# the probe caches on the module singleton for the process
+	monkeypatch.setattr(hardware, '_sys_info', hardware._SysInfo())
 
 
 def _offered(monkeypatch: pytest.MonkeyPatch, advanced: bool) -> list[object]:
@@ -45,6 +47,15 @@ def test_registered_filesystem_is_detected(monkeypatch: pytest.MonkeyPatch, tmp_
 def test_stock_kernel_has_no_bcachefs(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 	_proc(monkeypatch, tmp_path, STOCK)
 	assert not hardware.SysInfo.has_bcachefs()
+
+
+def test_probe_reads_once(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# the menu asks on every redraw; the dkms oneshot registers it at boot,
+	# before the installer starts, so the first answer holds
+	_proc(monkeypatch, tmp_path, CUSTOM)
+	assert hardware.SysInfo.has_bcachefs()
+	(tmp_path / 'filesystems').write_text(STOCK)
+	assert hardware.SysInfo.has_bcachefs()
 
 
 def test_missing_proc_reads_as_absent(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

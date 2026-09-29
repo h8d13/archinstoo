@@ -152,8 +152,10 @@ GFX_HYBRID_EXTRA: list[GfxPackage] = [GfxPackage.SwitcherooControl, GfxPackage.V
 # ticking switcheroo-control also enables its dbus service
 GFX_SERVICES: dict[GfxPackage, str] = {GfxPackage.SwitcherooControl: 'switcheroo-control'}
 
+_PCI_VENDOR_AMD = 0x1002  # ATI's ID, every AMD GPU still carries it
+_PCI_VENDOR_INTEL = 0x8086
 _PCI_VENDOR_NVIDIA = 0x10DE
-_GFX_BY_VENDOR: dict[int, GfxDriver] = {0x1002: GfxDriver.AmdOpenSource, 0x8086: GfxDriver.IntelOpenSource}
+_GFX_BY_VENDOR: dict[int, GfxDriver] = {_PCI_VENDOR_AMD: GfxDriver.AmdOpenSource, _PCI_VENDOR_INTEL: GfxDriver.IntelOpenSource}
 # nvidia-open needs the GSP, so Turing on: TU102 opens at 0x1e02 and every
 # later generation numbers higher. Volta (GV100, 0x1d81) stays below
 _NVIDIA_TURING_FIRST = 0x1E00
@@ -253,13 +255,17 @@ MESA_HOST_EXTRA: dict[str, list[GfxPackage]] = {
 XORG_EXTRA: list[GfxPackage] = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
 
 # Module-level so tests can point the sweeps at a synthetic tree
-_PCI_BUS = Path('/sys/bus/pci/devices')
-_USB_BUS = Path('/sys/bus/usb/devices')
-# CS35L41-class amps enumerate here (acpi:CSC3551:) and bind on i2c/spi
-_ACPI_BUS = Path('/sys/bus/acpi/devices')
+_SYS_BUS = Path('/sys/bus')
+_PCI_BUS = _SYS_BUS / 'pci/devices'
+_USB_BUS = _SYS_BUS / 'usb/devices'
+# every bus a driver can bind a device on. CS35L41-class amps enumerate on
+# acpi (acpi:CSC3551:) and bind on i2c/spi, HDA codecs (ca0132) on hdaudio,
+# brcmfmac/mwifiex on sdio, SoC blocks on platform
+_MODULE_BUSES = ('pci', 'usb', 'acpi', 'hdaudio', 'i2c', 'platform', 'sdio', 'soundwire', 'spi')
 _FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
 _PROC_FILESYSTEMS = Path('/proc/filesystems')
+_DMI_ID = Path('/sys/class/dmi/id')
 
 
 def _run_splitlines(cmd: list[str]) -> list[str]:
@@ -287,6 +293,14 @@ def _module_release() -> str:
 		return installed[0]
 
 	return release
+
+
+def _read_dmi(attr: str) -> str | None:
+	# absent on DMI-less boards (most ARM), not an error
+	try:
+		return (_DMI_ID / attr).read_text().strip()
+	except OSError:
+		return None
 
 
 def _modalias(dev: Path) -> str | None:
@@ -318,7 +332,7 @@ def _bus_vendor_ids(bus: Path, attr: str) -> set[str]:
 	return found
 
 
-def _bus_modules(bus: Path) -> set[str]:
+def _bus_modules(bus: Path, release: str) -> set[str]:
 	# A driver directory is not a module name: i801_smbus lives in i2c_i801 and
 	# modinfo only answers to the latter. Unbound devices have no symlink to
 	# follow, so match their modalias against the kernel's own table instead.
@@ -333,7 +347,7 @@ def _bus_modules(bus: Path) -> set[str]:
 			continue
 
 		if alias := _modalias(dev):
-			modules.update(_run_splitlines(['modprobe', '-R', alias]))
+			modules.update(_run_splitlines(['modprobe', '-S', release, '-R', alias]))
 
 	return modules
 
@@ -410,6 +424,33 @@ class _SysInfo:
 		return any(Path('/sys/bus/thunderbolt/devices').glob('domain*'))
 
 	@cached_property
+	def has_tpm2(self) -> bool:
+		# Detects a TPM 2.0 chip via /sys/class/tpm/<dev>/tpm_version_major == 2.
+		# Filters out TPM 1.2 chips, which systemd-cryptenroll cannot bind to.
+		tpm_dir = Path('/sys/class/tpm')
+		if not tpm_dir.is_dir():
+			return False
+		for dev in tpm_dir.iterdir():
+			ver_file = dev / 'tpm_version_major'
+			try:
+				if ver_file.read_text().strip() == '2':
+					return True
+			except OSError:
+				continue
+		return False
+
+	@cached_property
+	def has_bcachefs(self) -> bool:
+		# out of tree since 6.18: the stock ISO cannot format or mount it, only
+		# a medium built with A2_BCACHEFS=1 registers the filesystem (at boot,
+		# before the installer runs)
+		try:
+			text = _PROC_FILESYSTEMS.read_text()
+		except OSError:
+			return False
+		return any(line.split()[-1] == 'bcachefs' for line in text.splitlines() if line.strip())
+
+	@cached_property
 	def cpu_info(self) -> dict[str, str]:
 		# Returns system cpu information
 		cpu_info_path = Path('/proc/cpuinfo')
@@ -436,27 +477,17 @@ class _SysInfo:
 		raise RequirementError('MemTotal missing from /proc/meminfo')
 
 	@cached_property
-	def loaded_modules(self) -> list[str]:
-		# Returns loaded kernel modules
-		modules_path = Path('/proc/modules')
-		modules: list[str] = []
-
-		with modules_path.open() as file:
-			for line in file:
-				module = line.split(maxsplit=1)[0]
-				modules.append(module)
-
-		return modules
+	def sys_vendor(self) -> str | None:
+		return _read_dmi('sys_vendor')
 
 	@cached_property
-	def graphics_devices(self) -> dict[str, str]:
-		# Returns detected graphics devices
-		cards: dict[str, str] = {}
-		for line in SysCommand('lspci'):
-			if b' VGA ' in line or b' 3D ' in line:
-				_, identifier = line.split(b': ', 1)
-				cards[identifier.strip().decode('UTF-8')] = str(line)
-		return cards
+	def product_name(self) -> str | None:
+		return _read_dmi('product_name')
+
+	@cached_property
+	def module_release(self) -> str:
+		# globs /usr/lib/modules; the device scan and firmware lookup both need it
+		return _module_release()
 
 	@cached_property
 	def is_vm(self) -> bool:
@@ -477,8 +508,7 @@ class _SysInfo:
 		if Path('/sys/hypervisor/type').exists():
 			return True
 
-		vendor = Path('/sys/class/dmi/id/sys_vendor')
-		if vendor.exists():
+		if vendor := self.sys_vendor:
 			known = (
 				'qemu',
 				'kvm',
@@ -491,8 +521,7 @@ class _SysInfo:
 				'parallels',
 				'bhyve',
 			)
-			text = vendor.read_text().strip().lower()
-			return any(v in text for v in known)
+			return any(v in vendor.lower() for v in known)
 
 		return False
 
@@ -524,16 +553,29 @@ class _SysInfo:
 		return _bus_vendor_ids(_USB_BUS, 'idVendor')
 
 	@cached_property
+	def device_modules(self) -> set[str]:
+		# what drives the hardware: the bound module (or the modalias match
+		# when unbound) plus one level of depends. /proc/modules would also
+		# list drivers that probed and declined, like SOF on an HDA-only laptop
+		release = self.module_release
+		bound: set[str] = set()
+		for bus in _MODULE_BUSES:
+			bound |= _bus_modules(_SYS_BUS / bus / 'devices', release)
+
+		modules = set(bound)
+		for module in sorted(bound):
+			modules |= _module_depends(release, module)
+
+		return modules
+
+	@cached_property
 	def firmware_owners(self) -> list[str]:
 		# device -> module -> firmware file -> owning package. Under-detects:
 		# rtw88/rtw89/btusb build their names at runtime and declare none, and a
 		# proprietary driver's blobs are unowned. Callers use this to narrow an
 		# install, never to decide a blob is unneeded.
-		release = _module_release()
-		bound = _bus_modules(_PCI_BUS) | _bus_modules(_USB_BUS) | _bus_modules(_ACPI_BUS)
-		modules = set(bound)
-		for module in sorted(bound):
-			modules |= _module_depends(release, module)
+		release = self.module_release
+		modules = self.device_modules
 
 		files: list[Path] = []
 		for module in sorted(modules):
@@ -559,29 +601,11 @@ class SysInfo:
 
 	@staticmethod
 	def has_tpm2() -> bool:
-		# Detects a TPM 2.0 chip via /sys/class/tpm/<dev>/tpm_version_major == 2.
-		# Filters out TPM 1.2 chips, which systemd-cryptenroll cannot bind to.
-		tpm_dir = Path('/sys/class/tpm')
-		if not tpm_dir.is_dir():
-			return False
-		for dev in tpm_dir.iterdir():
-			ver_file = dev / 'tpm_version_major'
-			try:
-				if ver_file.read_text().strip() == '2':
-					return True
-			except OSError:
-				continue
-		return False
+		return _sys_info.has_tpm2
 
 	@staticmethod
 	def has_bcachefs() -> bool:
-		# out of tree since 6.18: the stock ISO cannot format or mount it, only
-		# a medium built with A2_BCACHEFS=1 registers the filesystem
-		try:
-			text = _PROC_FILESYSTEMS.read_text()
-		except OSError:
-			return False
-		return any(line.split()[-1] == 'bcachefs' for line in text.splitlines() if line.strip())
+		return _sys_info.has_bcachefs
 
 	@staticmethod
 	def bitness() -> int | None:
@@ -604,20 +628,16 @@ class SysInfo:
 		return _sys_info.gpu_ids
 
 	@staticmethod
-	def graphics_devices() -> dict[str, str]:
-		return _sys_info.graphics_devices
-
-	@staticmethod
 	def has_nvidia_graphics() -> bool:
-		return any('nvidia' in x.lower() for x in _sys_info.graphics_devices)
+		return any(vendor == _PCI_VENDOR_NVIDIA for vendor, _ in _sys_info.gpu_ids)
 
 	@staticmethod
 	def has_amd_graphics() -> bool:
-		return any('amd' in x.lower() for x in _sys_info.graphics_devices)
+		return any(vendor == _PCI_VENDOR_AMD for vendor, _ in _sys_info.gpu_ids)
 
 	@staticmethod
 	def has_intel_graphics() -> bool:
-		return any('intel' in x.lower() for x in _sys_info.graphics_devices)
+		return any(vendor == _PCI_VENDOR_INTEL for vendor, _ in _sys_info.gpu_ids)
 
 	@staticmethod
 	def bus_vendor_ids() -> tuple[set[str], set[str]]:
@@ -625,10 +645,16 @@ class SysInfo:
 		return _sys_info.pci_vendor_ids, _sys_info.usb_vendor_ids
 
 	@staticmethod
-	def firmware_owners() -> list[str]:
+	def device_modules() -> set[str]:
 		# virtio ships no blobs, and the scan costs a modinfo per bound driver
 		if SysInfo.is_vm():
-			debug('VM detected: skipping firmware owner scan')
+			debug('VM detected: skipping device module scan')
+			return set()
+		return _sys_info.device_modules
+
+	@staticmethod
+	def firmware_owners() -> list[str]:
+		if SysInfo.is_vm():
 			return []
 		return _sys_info.firmware_owners
 
@@ -652,19 +678,11 @@ class SysInfo:
 
 	@staticmethod
 	def sys_vendor() -> str | None:
-		try:
-			with Path('/sys/devices/virtual/dmi/id/sys_vendor').open() as vendor:
-				return vendor.read().strip()
-		except FileNotFoundError:
-			return None
+		return _sys_info.sys_vendor
 
 	@staticmethod
 	def product_name() -> str | None:
-		try:
-			with Path('/sys/devices/virtual/dmi/id/product_name').open() as product:
-				return product.read().strip()
-		except FileNotFoundError:
-			return None
+		return _sys_info.product_name
 
 	@staticmethod
 	def mem_total() -> int:
@@ -676,10 +694,14 @@ class SysInfo:
 
 	@staticmethod
 	def requires_sof_fw() -> bool:
-		return 'snd_sof' in _sys_info.loaded_modules
+		# the bound driver is a platform one (snd_sof_pci_intel_tgl,
+		# snd_sof_amd_rembrandt); snd_sof itself sits two depends down
+		return any(m.startswith('snd_sof') for m in SysInfo.device_modules())
 
 	@staticmethod
 	def requires_alsa_fw() -> bool:
+		# snd_hda_codec_ca0132 binds on hdaudio, snd_vx_lib is reached as a
+		# depend of snd_vx222/snd_vxpocket
 		modules = (
 			'snd_asihpi',
 			'snd_cs46xx',
@@ -705,4 +727,4 @@ class SysInfo:
 			'snd_vx_lib',
 		)
 
-		return any(loaded_module in modules for loaded_module in _sys_info.loaded_modules)
+		return not SysInfo.device_modules().isdisjoint(modules)

@@ -117,6 +117,25 @@ def test_gpu_ids_empty_without_a_bus(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 	assert hardware.SysInfo.gpu_ids() == set()
 
 
+def test_vendor_checks_read_gpu_ids(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# hybrid dGPUs often report as Display controller (0x0380), which the old
+	# lspci ' VGA '/' 3D ' match skipped; an AMD CPU's own functions are 0x1022
+	bus = _fake_gpus(
+		tmp_path,
+		[
+			('0x030000', '0x8086', '0xa7a0'),  # Raptor Lake iGPU
+			('0x038000', '0x1002', '0x73ff'),  # Navi 23 mobile, Display controller
+			('0x060000', '0x1022', '0x14e8'),  # AMD host bridge, not a GPU
+		],
+	)
+	monkeypatch.setattr(hardware, '_PCI_BUS', bus)
+	monkeypatch.setattr(hardware, '_sys_info', hardware._SysInfo())
+
+	assert hardware.SysInfo.has_intel_graphics()
+	assert hardware.SysInfo.has_amd_graphics()
+	assert not hardware.SysInfo.has_nvidia_graphics()
+
+
 @pytest.mark.parametrize(
 	('gpus', 'drivers'),
 	[
