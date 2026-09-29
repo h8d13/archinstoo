@@ -178,7 +178,7 @@ def _arch_bootstrap(no_disk: bool) -> int:
 		debug('Fetching deps...')
 		depends = base_depends if no_disk else base_depends + disk_depends
 		missing = _missing_deps(depends)
-		# mark in current env as bootstraped
+		# mark in current env as bootstrapped
 		# avoid infinite reloads
 		if not missing:
 			# nothing installed, so nothing new to import: the ISO ships these
