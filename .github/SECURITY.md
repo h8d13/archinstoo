@@ -32,7 +32,7 @@ Some options are also given in the menu directly but **are always optional**.
     - `sysctl` confs
     - SSH/Server hardenings
 
-3. Additionals examples:
+3. Additional examples:
     - `apparmor`
     - `firejail`
     - `fail2ban`

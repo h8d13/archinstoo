@@ -69,7 +69,7 @@ __fido2_packages__ = ['libfido2']
 # the array has to be assembled before the root is reachable, so this goes
 # into base rather than the post-install package list
 __raid_packages__ = ['mdadm']
-# fonts that are in the ISO but wont be on target unless requested before base,
+# fonts that are in the ISO but won't be on target unless requested before base,
 # otherwise mkinitcpio will be screaming at you
 __ter_font_packages__ = ['terminus-font']
 

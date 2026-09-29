@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import User
 
 
-# any special handling for a shell can go here bellow
+# any special handling for a shell can go here below
 # TODO: peak elitism busybox shell and remove bash
 class ShellApp:
 	def install(
