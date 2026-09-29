@@ -1,6 +1,6 @@
 # The custom graphics driver: a hand-picked package list in place of a preset.
 # Covers the one derived step (the nvidia-open dkms swap) on both the install
-# path and the count/size mirror, the config round trip that drops unknowns,
+# path and the count mirror, the config round trip that drops unknowns,
 # and the host GPU probe that pre-ticks the picker.
 from types import SimpleNamespace
 from typing import TYPE_CHECKING

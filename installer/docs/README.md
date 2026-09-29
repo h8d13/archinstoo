@@ -195,8 +195,7 @@
 │   │   ├── packages
 │   │   ├── rescue
 │   │   ├── _resolve
-│   │   ├── schema
-│   │   └── size
+│   │   └── schema
 │   └── _version
 ├── examples/
 │   ├── ci_minimal.json

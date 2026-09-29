@@ -96,7 +96,6 @@ Available options:
               [*] requires root
     count
     mirror
-    size
     format    [*]
     guided    [*] < DEFAULT
     live      [*]

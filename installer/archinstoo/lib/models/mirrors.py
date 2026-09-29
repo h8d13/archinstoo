@@ -234,11 +234,32 @@ class SignOption(Enum):
 	DatabaseTrustAll = 'DatabaseTrustAll'
 
 
+# sections pacman or the Arch repos already own; a custom repo by one of
+# these names would shadow or duplicate it. 'options' is not a repo but
+# still a section header
+RESERVED_REPO_NAMES = frozenset(
+	{
+		'options',
+		'core',
+		'extra',
+		'forge',
+		'multilib',
+		'testing',
+		'core-testing',
+		'extra-testing',
+		'multilib-testing',
+		'community',
+		'community-testing',
+	}
+)
+
+
 class _CustomRepositorySerialization(TypedDict):
 	name: str
 	url: str
 	sign_check: str
 	sign_option: str
+	priority: bool
 
 
 @dataclass
@@ -247,6 +268,9 @@ class CustomRepository:
 	url: str
 	sign_check: SignCheck
 	sign_option: SignOption
+	# pacman resolves a package from the first repo listing it, so a repo
+	# above [core] overrides official packages of the same name
+	priority: bool = False
 
 	def table_data(self) -> dict[str, str]:
 		return {
@@ -254,6 +278,7 @@ class CustomRepository:
 			'Url': self.url,
 			'Sign check': self.sign_check.value,
 			'Sign options': self.sign_option.value,
+			'Priority': str(self.priority),
 		}
 
 	def json(self) -> _CustomRepositorySerialization:
@@ -262,19 +287,38 @@ class CustomRepository:
 			'url': self.url,
 			'sign_check': self.sign_check.value,
 			'sign_option': self.sign_option.value,
+			'priority': self.priority,
 		}
 
+	@staticmethod
+	def name_error(name: str, taken: list[str]) -> str | None:
+		# None when name is usable. Case-insensitive: [Core] next to [core]
+		# is legal to pacman and only ever a mistake
+		key = name.lower()
+		if not key.strip():
+			return 'Repository name cannot be empty'
+		if key in RESERVED_REPO_NAMES:
+			return f'[{name}] is a reserved pacman.conf section'
+		if key in {t.lower() for t in taken}:
+			return f'A repository named [{name}] already exists'
+		return None
+
 	@classmethod
-	def parse_args(cls, args: list[dict[str, str]]) -> list[Self]:
-		return [
-			cls(
-				arg['name'],
-				arg['url'],
-				SignCheck(arg['sign_check']),
-				SignOption(arg['sign_option']),
+	def parse_args(cls, args: list[dict[str, Any]]) -> list[Self]:
+		repos: list[Self] = []
+		for arg in args:
+			if error := cls.name_error(arg['name'], [r.name for r in repos]):
+				raise ValueError(f'custom_repositories: {error}')
+			repos.append(
+				cls(
+					arg['name'],
+					arg['url'],
+					SignCheck(arg['sign_check']),
+					SignOption(arg['sign_option']),
+					arg.get('priority', False),
+				),
 			)
-			for arg in args
-		]
+		return repos
 
 
 @dataclass

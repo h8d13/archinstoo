@@ -1,9 +1,9 @@
-# Shared package-set resolution for the count and size scripts.
+# Package-set resolution for the count script.
 #
 # collect() turns a saved config into its explicit package set; resolve_deps()
 # expands pacman groups, then the full dependency tree via pactree
-# (pacman-contrib). Kept free of a module-level entrypoint so both scripts can
-# import it without side effects.
+# (pacman-contrib). Kept free of a module-level entrypoint so count and the
+# tests can import it without side effects.
 
 import re
 import sys
@@ -70,7 +70,7 @@ def _iso_has_psks() -> bool:
 
 def _host_packages() -> set[str]:
 	# what the installer reads off the running system rather than the config;
-	# count and size run on that same host, so the detection carries over
+	# count runs on that same host, so the detection carries over
 	pkgs: set[str] = set()
 
 	if accessibility_tools_in_use():
@@ -176,7 +176,7 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], selected: lis
 		pkgs = set(SCHEMA['gfx_drivers'][gfx])
 
 	# the generic driver picks its vulkan layer off the host GPU, the way the
-	# microcode does; count and size run on that same host
+	# microcode does; count runs on that same host
 	if gfx == GfxDriver.MesaOpenSource.value:
 		mesa_extra = SCHEMA['gfx_mesa_extra']
 		if SysInfo.has_intel_graphics():
@@ -370,7 +370,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	# grimoire builds AUR packages on the target, so its toolchain lands there.
 	# it needs an elevated user to build as, and the AUR packages themselves are
-	# in no repo, so nothing here can size them
+	# in no repo, so nothing here can resolve them
 	if config.get('aur_packages') and any(user.get('elev') for user in users):
 		pkgs.update(_flat('aur_bootstrap'))
 

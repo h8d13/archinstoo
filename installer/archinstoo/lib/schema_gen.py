@@ -1,7 +1,7 @@
 # Generate schema.toml from the installer's own package definitions.
 #
 # Flattening what an install can pull into plain tables lets two tools read it
-# without the runtime: scripts/_resolve.py (count, size), which expands a saved
+# without the runtime: scripts/_resolve.py (count), which expands a saved
 # config, and nvchecker/NVGEN, which version-tracks every package we can touch.
 # Generating rather than transcribing is what keeps them from disagreeing with
 # the install; tests/test_schema.py fails when the committed file goes stale.
@@ -336,7 +336,7 @@ _HEADER = """\
 # schema.toml - generated, do not edit.
 #
 # The package sets an archinstoo install can pull, flattened out of the code
-# that installs them. Read by scripts/_resolve.py (count, size) and by
+# that installs them. Read by scripts/_resolve.py (count) and by
 # nvchecker/NVGEN, neither of which should have to guess.
 #
 # Sections follow the order the install runs them, banners naming the call in

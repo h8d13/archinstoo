@@ -23,7 +23,8 @@
                 "name": "evoquus",
                 "url": "https://evoquus.com/pkgs/",
                 "sign_check": "Never",
-                "sign_option": "TrustAll"
+                "sign_option": "TrustAll",
+                "priority": false
             }
         ],
         "pacman_options": [

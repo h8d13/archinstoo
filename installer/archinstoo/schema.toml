@@ -1,7 +1,7 @@
 # schema.toml - generated, do not edit.
 #
 # The package sets an archinstoo install can pull, flattened out of the code
-# that installs them. Read by scripts/_resolve.py (count, size) and by
+# that installs them. Read by scripts/_resolve.py (count) and by
 # nvchecker/NVGEN, neither of which should have to guess.
 #
 # Sections follow the order the install runs them, banners naming the call in

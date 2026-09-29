@@ -30,9 +30,6 @@ source = "pacman"
 [e2fsprogs]
 source = "pacman"
 
-[expac]
-source = "pacman"
-
 [f2fs-tools]
 source = "pacman"
 

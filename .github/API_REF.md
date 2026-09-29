@@ -75,7 +75,7 @@ flag for an enum, the way `firewall`/`management` do.
 5. [schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py):
    one `Section` in install order, with `pick=('media_codecs_config', 'enabled')`,
    the key path the choice lives at under `app_config`. The pick is what
-   `--script count`/`size` walk, so `_resolve.py` needs no edit. Then:
+   `--script count` walks, so `_resolve.py` needs no edit. Then:
 
    ```shell
    python -m archinstoo --script schema   # regenerates schema.toml

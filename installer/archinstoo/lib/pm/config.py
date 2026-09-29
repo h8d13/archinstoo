@@ -3,7 +3,7 @@ import contextlib
 import re
 from typing import TYPE_CHECKING, assert_never
 
-from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
+from archinstoo.lib.models.mirrors import RESERVED_REPO_NAMES, CustomRepository, SignCheck, SignOption
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug, info
 from archinstoo.lib.pm.pacman import PACMAN_CONF
@@ -85,21 +85,6 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 
 	return downloads
 
-
-# Standard Arch repos to ignore when detecting custom repos
-_STANDARD_REPOS = {
-	'options',
-	'core',
-	'extra',
-	'forge',
-	'multilib',
-	'testing',
-	'core-testing',
-	'extra-testing',
-	'multilib-testing',
-	'community',
-	'community-testing',
-}
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -183,34 +168,35 @@ class PacmanConfig:
 		# Append custom repositories (skip if already exists)
 		content_str = ''.join(content)
 		core_idx = next((i for i, line in enumerate(content) if re.match(r'^\[core\]', line)), None)
+		# advances past each block so priority repos keep their list order,
+		# which is their priority order to pacman
+		priority_at = core_idx if core_idx is not None else len(content)
 
 		for custom in self._custom_repositories:
 			if f'[{custom.name}]' in content_str:
 				continue
-			if custom.url.startswith('file://'):
-				if self._target:
-					# an ISO-local cache is gone after reboot, it only ever
-					# belonged to the conf doing the installing
-					debug(f'Skipping file:// repository [{custom.name}] for the target')
-					continue
+			if custom.url.startswith('file://') and self._target:
+				# an ISO-local cache is gone after reboot, it only ever
+				# belonged to the conf doing the installing
+				debug(f'Skipping file:// repository [{custom.name}] for the target')
+				continue
 
-				# Insert before [core] to give priority (mirrors ISOMOD_CACHE behaviour)
-				insert_at = core_idx if core_idx is not None else len(content)
-				content[insert_at:insert_at] = [
-					f'[{custom.name}]\n',
-					f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n',
-					f'Server = {custom.url}\n',
-					'\n',
-				]
+			block = [
+				f'[{custom.name}]\n',
+				f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n',
+				f'Server = {custom.url}\n',
+			]
+			if custom.priority:
+				content[priority_at:priority_at] = [*block, '\n']
+				priority_at += len(block) + 1
 			else:
-				content.append(f'\n[{custom.name}]\n')
-				content.append(f'SigLevel = {custom.sign_check.value} {custom.sign_option.value}\n')
-				content.append(f'Server = {custom.url}\n')
+				content += ['\n', *block]
 
 		if repos_to_enable:
 			info(f'Enabling repositories {", ".join(repos_to_enable)} in {self._conf_path}')
 		for custom in self._custom_repositories:
-			debug(f'Custom repository [{custom.name}] -> {custom.url}')
+			place = 'priority, above [core]' if custom.priority else 'appended'
+			debug(f'Custom repository [{custom.name}] -> {custom.url} ({place})')
 
 		# Host conf is snapshotted and restored on exit by guard_host_conf(); just write.
 		with self._conf_path.open('w') as f:
@@ -236,10 +222,12 @@ class PacmanConfig:
 		# Parse pacman.conf for existing custom repositories.
 		content = PACMAN_CONF.read_text()
 		repos: list[CustomRepository] = []
+		core = re.search(r'^\[core\]', content, re.MULTILINE)
+		core_pos = core.start() if core else 0
 
 		for match in re.finditer(r'\[([^\]]+)\]\s*\n([^[]*)', content):
 			name = match.group(1)
-			if name.lower() in _STANDARD_REPOS:
+			if name.lower() in RESERVED_REPO_NAMES:
 				continue
 
 			block = match.group(2)
@@ -257,6 +245,7 @@ class PacmanConfig:
 					elif part in [e.value for e in SignOption]:
 						sign_option = SignOption(part)
 
-			repos.append(CustomRepository(name, server.group(1).strip(), sign_check, sign_option))
+			priority = match.start() < core_pos
+			repos.append(CustomRepository(name, server.group(1).strip(), sign_check, sign_option, priority))
 
 		return repos

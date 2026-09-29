@@ -36,7 +36,7 @@ Include = /etc/pacman.d/mirrorlist
 # what a customised ISO runs with, none of which the target should inherit
 _ISO_CONF = _STOCK_CONF.replace('#Color', 'Color').replace('ParallelDownloads = 5', 'ParallelDownloads = 5\nILoveCandy')
 
-_CACHE_REPO = CustomRepository('isocache', 'file:///run/archiso/cache', SignCheck.Never, SignOption.TrustAll)
+_CACHE_REPO = CustomRepository('isocache', 'file:///run/archiso/cache', SignCheck.Never, SignOption.TrustAll, priority=True)
 _NET_REPO = CustomRepository('cachyos', 'https://mirror.cachyos.org/repo/x86_64/cachyos', SignCheck.Required, SignOption.TrustedOnly)
 
 
@@ -96,3 +96,68 @@ def test_file_url_repo_still_serves_the_live_install(tmp_path: Path, monkeypatch
 	written = live.read_text()
 	assert '[isocache]' in written
 	assert written.index('[isocache]') < written.index('[core]'), 'cache must outrank the network repos'
+
+
+def _live(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> LPath:
+	live = LPath(tmp_path / 'pacman.conf')
+	live.write_text(_STOCK_CONF)
+	monkeypatch.setattr(pm_config, 'PACMAN_CONF', live)
+	return live
+
+
+def test_network_priority_repo_reaches_the_target(target: Path) -> None:
+	# unlike a file:// cache, a network repo is still reachable after reboot
+	# and keeps its priority on the installed system
+	repo = CustomRepository(
+		'vrch',
+		'https://raw.githubusercontent.com/h8d13/Vrch/master/out/$repo/$arch',
+		SignCheck.Required,
+		SignOption.TrustedOnly,
+		priority=True,
+	)
+	config = PacmanConfiguration(custom_repositories=[repo, _NET_REPO])
+
+	PacmanConfig.apply_config(config, target)
+
+	written = (target / 'etc/pacman.conf').read_text()
+	assert written.index('[vrch]') < written.index('[core]')
+	assert written.index('[cachyos]') > written.index('[extra]'), 'default placement is appended'
+
+
+def test_priority_repos_keep_list_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# pacman takes the first repo that has the package, so list order is priority
+	live = _live(tmp_path, monkeypatch)
+	first = CustomRepository('first', 'https://a.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
+	second = CustomRepository('second', 'https://b.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
+
+	PacmanConfig.apply_config(PacmanConfiguration(custom_repositories=[first, second]), None)
+
+	written = live.read_text()
+	assert written.index('[first]') < written.index('[second]') < written.index('[core]')
+
+
+def test_existing_repo_position_survives_reread(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	_live(tmp_path, monkeypatch)
+	above = CustomRepository('above', 'https://a.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
+	below = CustomRepository('below', 'https://b.example/$arch', SignCheck.Never, SignOption.TrustAll)
+
+	PacmanConfig.apply_config(PacmanConfiguration(custom_repositories=[above, below]), None)
+
+	assert PacmanConfig.get_existing_custom_repos() == [above, below]
+
+
+def test_priority_json_round_trip() -> None:
+	repo = CustomRepository('above', 'https://a.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
+
+	assert CustomRepository.parse_args([dict(repo.json())]) == [repo]
+
+
+def test_priority_repos_first_then_the_rest_in_insertion_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	live = _live(tmp_path, monkeypatch)
+	names = [('a', False), ('b', True), ('c', False), ('d', True)]
+	repos = [CustomRepository(n, f'https://{n}.example/$arch', SignCheck.Never, SignOption.TrustAll, p) for n, p in names]
+
+	PacmanConfig.apply_config(PacmanConfiguration(custom_repositories=repos), None)
+
+	sections = [line for line in live.read_text().splitlines() if line.startswith('[')]
+	assert sections == ['[options]', '[b]', '[d]', '[core]', '[extra]', '[a]', '[c]']

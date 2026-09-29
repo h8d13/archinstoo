@@ -23,7 +23,7 @@ from archinstoo.lib.pm.config import PacmanConfig, set_parallel_downloads
 from archinstoo.lib.pm.pacman import MIRRORLIST
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_choice, prompt_text
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -60,21 +60,30 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		entry: CustomRepository | None,
 		data: list[CustomRepository],
 	) -> list[CustomRepository]:
+		# list order is the order repos land in pacman.conf, so an edit keeps
+		# its slot and only an add goes to the end
 		if action == self._actions[0]:  # add
-			if (new_repo := self._add_custom_repository()) is not None:
-				data = [d for d in data if d.name != new_repo.name]
-				data += [new_repo]
+			if (new_repo := self._add_custom_repository([d.name for d in data])) is not None:
+				data = [*data, new_repo]
 		elif action == self._actions[1] and entry:  # modify repo
-			if (new_repo := self._add_custom_repository(entry)) is not None:
-				data = [d for d in data if d.name != entry.name]
-				data += [new_repo]
+			taken = [d.name for d in data if d != entry]
+			if (new_repo := self._add_custom_repository(taken, entry)) is not None:
+				data = [new_repo if d == entry else d for d in data]
 		elif action == self._actions[2] and entry:  # delete
 			data = [d for d in data if d != entry]
 
 		return data
 
-	def _add_custom_repository(self, preset: CustomRepository | None = None) -> CustomRepository | None:
-		name = prompt_text('Repository name', preset=preset.name if preset else None)
+	def _add_custom_repository(
+		self,
+		taken: list[str],
+		preset: CustomRepository | None = None,
+	) -> CustomRepository | None:
+		name = prompt_text(
+			'Repository name',
+			preset=preset.name if preset else None,
+			validator=lambda text: CustomRepository.name_error(text or '', taken),
+		)
 		if name is None:
 			return preset
 
@@ -96,7 +105,14 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		sign_opt_items = [MenuItem(s.value, value=s) for s in SignOption]
 		sign_opt = prompt_choice(sign_opt_items, preset.sign_option if preset else None, header=prompt, allow_skip=False)
 
-		return CustomRepository(name, url, sign_check, sign_opt)
+		header += f'{"Signature option"}: {sign_opt.value}\n'
+		prompt = f'{header}\n' + 'Priority? (placed above [core], overrides official packages of the same name)'
+
+		# a local cache only pays off if pacman reads it before the network
+		priority_default = preset.priority if preset else url.startswith('file://')
+		priority = prompt_yes_no(prompt, priority_default, allow_skip=False)
+
+		return CustomRepository(name, url, sign_check, sign_opt, priority)
 
 
 class CustomMirrorServersList(ListManager[CustomServer]):

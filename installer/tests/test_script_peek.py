@@ -16,8 +16,8 @@ from archinstoo.lib.utils.env import Os
 		(['archinstoo', '--script', 'packages'], 'packages'),
 		(['archinstoo', '--script=packages'], 'packages'),
 		(['archinstoo', '--debug', '--script=live', '--offline'], 'live'),
-		(['archinstoo', '--script', 'size'], 'size'),
-		(['archinstoo', '--script=size'], 'size'),
+		(['archinstoo', '--script', 'count'], 'count'),
+		(['archinstoo', '--script=count'], 'count'),
 		# trailing/empty forms: no value to read, fall back to the full path
 		(['archinstoo', '--script'], None),
 		(['archinstoo', '--script='], None),

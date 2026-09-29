@@ -29,11 +29,3 @@ This is useful before committing to an install and understanding why certain thi
 For a `seatd` only setup we'll have to jump a few hoops: Network option `Copy from ISO` or `iwd standalone` other NM options pull in `polkit`.
 
 `networkmanager → wpa_supplicant → pcsclite → polkit`
-
----
-
-## Space/Bandwidth
-
-Similarly you can test the estimate final size of your install.
-
-Finish configuring in the TUI: then `./RUN --script size /path/to/config`

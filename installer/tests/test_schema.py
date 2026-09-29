@@ -88,7 +88,7 @@ def test_exact_sections(key: str, enum: type[Enum]) -> None:
 #
 # The literal test below cannot see an enum-driven category (its packages are
 # runtime values), so a category with no section would pass everything and be
-# invisible to count, size and nvchecker. The pick is what ties app_config to
+# invisible to count and nvchecker. The pick is what ties app_config to
 # the section that answers it.
 
 _PICKED = [s for s in schema_gen.SECTIONS if s.pick]
@@ -194,14 +194,14 @@ def _installed_literals() -> dict[str, set[str]]:
 
 def test_every_installed_package_is_in_the_schema() -> None:
 	# the reverse of the generator: a package some codepath grew that no
-	# section claims is invisible to count, size and nvchecker
+	# section claims is invisible to count and nvchecker
 	known = schema.package_names(SCHEMA)
 	missing = {name: sorted(where) for name, where in _installed_literals().items() if name not in known}
 	assert not missing, f'packages installed by code that no schema section lists: {missing}'
 
 
 # disk_encryption is never written to a saved config (the password would go
-# with it), so nothing count or size can be handed reaches this
+# with it), so nothing count can be handed reaches this
 _NOT_READ = {'fido2'}
 
 
@@ -295,9 +295,9 @@ def test_nvgen_shares_the_installer_modules() -> None:
 
 # -- pacman groups (lib/pm/groups.py) ----------------------------------------
 #
-# Some schema entries are groups, not packages. pactree/expac report them as
+# Some schema entries are groups, not packages. pactree reports them as
 # unknown, so resolve_deps() expands them first or the members and their whole
-# closure vanish from the count and size estimates.
+# closure vanish from the count estimate.
 
 _SGG_OUTPUT = """mate caja
 mate marco
