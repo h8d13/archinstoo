@@ -952,9 +952,12 @@ class DeviceHandler:
 		# Wipe a device (partition or otherwise) of meta-data, be it file system, LVM, etc.
 		# @param dev_path:	Device path of the partition to be wiped.
 		# @type dev_path:		str
-		debug(f'Zeroing first 1024 bytes of {dev_path}')
 		with dev_path.open('wb') as p:
-			p.write(bytearray(1024))
+			# 1-sector partitions exist (ChromeOS KERN-C/ROOT-C), past-end write = ENOSPC
+			size = p.seek(0, os.SEEK_END)
+			p.seek(0)
+			debug(f'Zeroing first {min(1024, size)} bytes of {dev_path}')
+			p.write(bytearray(min(1024, size)))
 
 	def wipe_dev(self, block_device: BDevice) -> None:
 		# Wipe the block device of meta-data, be it file system, LVM, etc.
