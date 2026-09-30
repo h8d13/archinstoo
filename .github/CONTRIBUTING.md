@@ -4,17 +4,18 @@
 
 ### Get an overview
 
-Best places are probably `args.py` and `scripts/` themselves. Then `installer.py`
+Best places are `args.py` and `scripts/*` themselves. Then `installer.py`
 for the order of steps, and the package named for the area (`disk/`, `kernel/`,
 `bootloader/`, `authentication/`, `localization/`, `pm/`, `network/`) for how a step works.
+
+Each module gets a linked data structure in `models/`.
 
 ### Code standards
 
 Small patches are preferred, and need to be tested (ISO env + Host-2-Target).
+Unit tests run from the repo root: `pytest -c installer/pyproject.toml installer/tests`
 
-Usually the first steps involve finding bugs or having a good idea!
-
-Larger patches are okay too but need more thorough testing.
+Usually the first steps involve finding bugs, digging the actual causes or having a good idea!
 
 ### Structure
 
@@ -28,7 +29,7 @@ Larger patches are okay too but need more thorough testing.
 These are used as a mods system, that can be used to run different kinds of installs/utilities.
 Default being `guided` and `--script list` just returns all files in this dir.
 
-- Config files only ever store all but encryption / auth info
+- Config files only ever store all but disk encryption / auth info
 
 The rest of classes/defs/files can be traced using global search inside `./installer/*`
 This contains all the necessary logic and calls to different parts of the codebase to produce the final output.
@@ -41,7 +42,8 @@ If not for code, documentation changes, testing and digging up docs or command l
 ### You can also help by testing or suggesting ideas:
 
 Many thanks to **@ShreshthTiwari, @dzamlo, @eososlinux** and some/many reddit/discord reporters too for the many indirect contribs.
-Time spent testing or drawing up reports/digging info.
+Time spent testing or drawing up reports/digging information.
+
 This in its core, takes just as much time as coding since often you need to test many scenarios.
 
 Therefore, guidelines and style changes to the code might come into effect as well as rules surrounding bug reporting, discussions and PRs.
@@ -52,18 +54,17 @@ These are mostly there to try to help us figure out the actual issues and correc
 For each patch create a branch specifically targeted to fix something, `master` should stay clean and accept these patches if tested/reproduced.
 It also means it should be the stable branch and single source of truth.
 
-For your submitted patches you'll likely need to accommodate yourself with `git` branches:
+For your submitted patches you'll likely need to get comfortable with `git` branches:
 ```shell
-# fork first
+# fork first, or make sure it's up to date w/ master
 git checkout <existing>
 git checkout -b <new>
 git add <file(s)>
 git commit
 # describe what this commit fixes, ideally one fix/feat/chore per commit
-git push
 ```
 
-Then open the PR with explanations too, link to resources/issues.
+Then push and open the PR with explanations too, link to resources/issues.
 If your commits are well scoped/documented you can skip most theatrics.
 
 ## Pre-commit hooks
@@ -95,7 +96,7 @@ There might therefore be older code which does not follow the coding convention 
 
 A lot of these are also checked in CI.
 
-Some style in the codebase includes: 80 chars soft limit in code (160 hard enforced), 8 spaces for a tab, no docstrings (inline comments).
+Some style in the codebase includes: 80 chars soft limit in code (160 hard enforced), tab for indentation, 8 spaces for a tab (visually), no docstrings (inline comments).
 Reduce duplicates and function grouping into clear models/utils/dispatchers.
 
 ## Submitting Changes
@@ -115,11 +116,14 @@ For example, you can point to a code sample that is outdated in terms of Arch Li
 It is also helpful to add links to online documentation or to the implementation of the code you are changing.
 Any related digging/testing is actually usually just as useful as the code itself.
 
-## AI usage
+## AI Usage
 
-1. Docs, testing and code should originate from your arguments/command lines usages/etc
-2. Low-effort and large changes without proper scoping will be closed without explaining
-3. Disclose usage in the PR details and for what it was used (debugging, writing code, ...)
+Docs, testing and code should originate from your arguments/command lines usages/reflection.
+Commit messages and PR bodies should also be written/reviewed by you. Ideally linked to issues/discussions/docs.
+
+Low-effort and large changes without proper scoping/testing will be closed without explaining, same is true for issues.
+Disclose usage/model in the PR/issues details and for what it was used (debugging, writing code, translating...).
+Smaller reproduced fixes are more likely to be accepted than PRs that go in many directions or touch a lot of things.
 
 ## Discussions
 
