@@ -34,9 +34,10 @@ A host needs:
 
 From Alpine (mdev by default): `apk add bash curl zstd tar coreutils util-linux gnupg eudev && setup-devd udev`
 
-The root takes ~750 MB. On the Arch ISO `/var/tmp` sits on the 256 MB cowspace, so point it at RAM:
-`BOOT_DIR=/tmp/archinstoo-boot ./distros/BOOT ...`
+``
 
 ```shell
+# point to ram
+# export BOOT_DIR=/tmp/a2-boot
 ./distros/BOOT [archinstoo args...]
 ```
