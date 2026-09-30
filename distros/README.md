@@ -21,9 +21,8 @@ Instead of host packages, [BOOT](https://github.com/h8d13/archinstoo/blob/master
 [Arch bootstrap tarball](https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux#Creating_a_chroot).
 
 On aarch64 it takes the Arch Linux Ports tarball instead, see [`architecture/`](https://github.com/h8d13/archinstoo/blob/master/architecture):
-`gnupg` is required there, and the port's key is handed to pacman since the tarball only ships Arch's keyring.
 
-The host needs:
+A host needs:
 
 | Dependency | Why |
 |------------|-----|
@@ -33,11 +32,11 @@ The host needs:
 | `gnupg` (optional on x86_64) | verifies the signature against the pinned release key, else checksum only |
 | a running udev (`systemd-udevd` or `eudev`) | Arch's `lsblk`, `genfstab` and `udevadm settle` read its db through the bound `/run` |
 
-Alpine live ISO (mdev by default): `apk add bash curl zstd tar coreutils util-linux gnupg eudev && setup-devd udev`
+From Alpine (mdev by default): `apk add bash curl zstd tar coreutils util-linux gnupg eudev && setup-devd udev`
 
 The root takes ~750 MB. On the Arch ISO `/var/tmp` sits on the 256 MB cowspace, so point it at RAM:
 `BOOT_DIR=/tmp/archinstoo-boot ./distros/BOOT ...`
 
-```
+```shell
 ./distros/BOOT [archinstoo args...]
 ```
