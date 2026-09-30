@@ -2,6 +2,7 @@
 # copied from the ISO that ran the installer, so a vanilla and a customised ISO
 # produce the same target conf for the same config.
 
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -11,6 +12,7 @@ from archinstoo.lib.models.mirrors import CustomRepository, PacmanConfiguration,
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pm import config as pm_config
 from archinstoo.lib.pm.config import PacmanConfig
+from archinstoo.lib.tui.result import Result, ResultType
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -161,3 +163,14 @@ def test_priority_repos_first_then_the_rest_in_insertion_order(tmp_path: Path, m
 
 	sections = [line for line in live.read_text().splitlines() if line.startswith('[')]
 	assert sections == ['[options]', '[b]', '[d]', '[core]', '[extra]', '[a]', '[c]']
+
+
+def test_parallel_downloads_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# a trailing newline used to be written back as an extra blank line per run
+	live = _live(tmp_path, monkeypatch)
+	monkeypatch.setattr(pm_config, 'EditMenu', lambda *_a, **_kw: SimpleNamespace(input=lambda: Result(ResultType.Selection, '8')))
+
+	pm_config.set_parallel_downloads()
+	pm_config.set_parallel_downloads()
+
+	assert live.read_text() == _STOCK_CONF.replace('ParallelDownloads = 5', 'ParallelDownloads = 8')

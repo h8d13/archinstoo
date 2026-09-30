@@ -73,15 +73,8 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 			assert_never(result.type_)
 
 	debug(f'Setting ParallelDownloads = {downloads}')
-	with PACMAN_CONF.open() as f:
-		pacman_conf = f.read().split('\n')
-
-	with PACMAN_CONF.open('w') as fwrite:
-		for line in pacman_conf:
-			if 'ParallelDownloads' in line:
-				fwrite.write(f'ParallelDownloads = {downloads}\n')
-			else:
-				fwrite.write(f'{line}\n')
+	pacman_conf = [f'ParallelDownloads = {downloads}' if 'ParallelDownloads' in line else line for line in PACMAN_CONF.read_text().splitlines()]
+	PACMAN_CONF.write_text('\n'.join(pacman_conf) + '\n')
 
 	return downloads
 

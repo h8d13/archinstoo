@@ -344,8 +344,7 @@ class _SysInfo:
 	@cached_property
 	def efi_bitness(self) -> int | None:
 		try:
-			with (self.efi_path / 'fw_platform_size').open() as fw_ps:
-				return int(fw_ps.read().strip())
+			return int((self.efi_path / 'fw_platform_size').read_text().strip())
 		except OSError:
 			return None
 
@@ -353,9 +352,8 @@ class _SysInfo:
 	def has_battery(self) -> bool:
 		for type_path in Path('/sys/class/power_supply/').glob('*/type'):
 			try:
-				with type_path.open() as f:
-					if f.read().strip() == 'Battery':
-						return True
+				if type_path.read_text().strip() == 'Battery':
+					return True
 			except OSError:
 				continue
 

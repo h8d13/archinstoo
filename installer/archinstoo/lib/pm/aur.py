@@ -102,11 +102,8 @@ def run_grimoire_installation(
 	finally:
 		if priv_esc == PrivilegeEscalation.Doas and aur_rule is not None and aur_rule.exists():
 			debug(f'Removing temporary doas rule for {build_user.username}')
-			with aur_rule.open('r') as f:
-				lines = f.readlines()
-			with aur_rule.open('w') as f:
-				for line in lines:
-					if f'permit nopass {build_user.username} as root' not in line:
-						f.write(line)
+			rule = f'permit nopass {build_user.username} as root'
+			lines = aur_rule.read_text().splitlines(keepends=True)
+			aur_rule.write_text(''.join(line for line in lines if rule not in line))
 		elif priv_esc != PrivilegeEscalation.Doas and aur_rule is not None:
 			aur_rule.unlink(missing_ok=True)

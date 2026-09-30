@@ -798,9 +798,8 @@ class BootloaderInstaller:
 
 		# Set up kernel command line
 		cmdline_path = self.target / 'etc/kernel/cmdline'
-		with cmdline_path.open('w') as cmdline:
-			kernel_parameters = self._get_kernel_params(root)
-			cmdline.write(' '.join(kernel_parameters) + '\n')
+		kernel_parameters = self._get_kernel_params(root)
+		cmdline_path.write_text(' '.join(kernel_parameters) + '\n')
 		debug(f'Wrote {cmdline_path}')
 
 		diff_mountpoint = None
