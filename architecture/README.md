@@ -48,6 +48,4 @@ A2_ARCH=aarch64 ./TVM              # window, ramfb
 A2_ARCH=aarch64 A2_SERIAL=1 ./TVM  # headless, drive it with ./TSER
 ```
 
-TCG emulation, expect minutes to a shell. The ISO is picked by the `aarch64` in its file
-name under `isos/a/`. In the VM the console is a PCI 16550 (`ttyS0`), not the pl011, so a
-config for it sets `"serial_console": "ttyS0,115200"`. See the header of `TVM` for the rest.
+TCG emulation is slow.
