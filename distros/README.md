@@ -34,8 +34,6 @@ A host needs:
 
 From Alpine (mdev by default): `apk add bash curl zstd tar coreutils util-linux gnupg eudev && setup-devd udev`
 
-``
-
 ```shell
 # point to ram
 # export BOOT_DIR=/tmp/a2-boot
