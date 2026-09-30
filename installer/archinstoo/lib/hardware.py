@@ -366,22 +366,6 @@ class _SysInfo:
 		return any(Path('/sys/bus/thunderbolt/devices').glob('domain*'))
 
 	@cached_property
-	def has_tpm2(self) -> bool:
-		# Detects a TPM 2.0 chip via /sys/class/tpm/<dev>/tpm_version_major == 2.
-		# Filters out TPM 1.2 chips, which systemd-cryptenroll cannot bind to.
-		tpm_dir = Path('/sys/class/tpm')
-		if not tpm_dir.is_dir():
-			return False
-		for dev in tpm_dir.iterdir():
-			ver_file = dev / 'tpm_version_major'
-			try:
-				if ver_file.read_text().strip() == '2':
-					return True
-			except OSError:
-				continue
-		return False
-
-	@cached_property
 	def has_bcachefs(self) -> bool:
 		# out of tree since 6.18: the stock ISO cannot format or mount it, only
 		# a medium built with A2_BCACHEFS=1 registers the filesystem
@@ -521,10 +505,6 @@ class SysInfo:
 	@staticmethod
 	def has_uefi() -> bool:
 		return _sys_info.has_uefi
-
-	@staticmethod
-	def has_tpm2() -> bool:
-		return _sys_info.has_tpm2
 
 	@staticmethod
 	def has_bcachefs() -> bool:

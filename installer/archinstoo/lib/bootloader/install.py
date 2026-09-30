@@ -188,21 +188,12 @@ class BootloaderInstaller:
 		if self._zram:
 			kernel_parameters.append('zswap.enabled=0')
 
-		if self._enc.encryption_type != EncryptionType.NO_ENCRYPTION:
-			# All options must be joined into a single rd.luks.options=: systemd's
-			# cryptsetup-generator does not merge repeated non-UUID occurrences, the
-			# last one wins, so separate tpm2/fido2 params would silently drop one.
-			luks_options = []
-			if self._enc.tpm2_unlock:
-				luks_options.append('tpm2-device=auto')
-			if self._enc.fido2_device:
-				# auto, not the enrolled hidraw path: hidraw numbering is not stable across boots.
-				# password-echo=no per upstream archlinux/archinstall#1196
-				# token-timeout: absent token otherwise holds the PIN/token prompt
-				# for the 30s default before falling back to the passphrase query
-				luks_options.append('fido2-device=auto,token-timeout=5,password-echo=no')
-			if luks_options:
-				kernel_parameters.append('rd.luks.options=' + ','.join(luks_options))
+		if self._enc.encryption_type != EncryptionType.NO_ENCRYPTION and self._enc.fido2_device:
+			# auto, not the enrolled hidraw path: hidraw numbering is not stable across boots.
+			# password-echo=no per upstream archlinux/archinstall#1196
+			# token-timeout: absent token otherwise holds the PIN/token prompt
+			# for the 30s default before falling back to the passphrase query
+			kernel_parameters.append('rd.luks.options=fido2-device=auto,token-timeout=5,password-echo=no')
 
 		if id_root:
 			for sub_vol in root.btrfs_subvols:

@@ -7,7 +7,7 @@ from archinstoo.lib.authentication import accounts
 from archinstoo.lib.bootloader.install import BootloaderInstaller
 from archinstoo.lib.disk import snapshots
 from archinstoo.lib.disk.cleanup import teardown_layout
-from archinstoo.lib.disk.cryptenroll import enroll_fido2, enroll_tpm2
+from archinstoo.lib.disk.cryptenroll import enroll_fido2
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.fstab import write_fstab
 from archinstoo.lib.disk.keyfiles import KeyFileGenerator
@@ -387,8 +387,7 @@ class Installer:
 		serial_console: str | None = None,
 	) -> None:
 		# Run before bootloader install so kernel cmdline reflects rd.luks.options
-		# (tpm2-device/fido2-device) but is extensively gated and a no-op if not present/selected
-		enroll_tpm2(self.target, self._disk_encryption, self.arch_chroot)
+		# (fido2-device) but is extensively gated and a no-op if not present/selected
 		enroll_fido2(self.target, self._disk_encryption)
 
 		if quiet and 'quiet' not in self._kernel_params:

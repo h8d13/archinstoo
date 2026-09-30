@@ -2,13 +2,11 @@ from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.authentication.password_prompt import get_password
 from archinstoo.lib.disk.fido import Fido2
-from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.device import (
 	BOOT_ITER_TIME,
 	DEFAULT_ITER_TIME,
-	DEFAULT_TPM2_PCRS,
 	DeviceModification,
 	DiskEncryption,
 	EncryptionCipher,
@@ -24,7 +22,7 @@ from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.tui.types import Alignment
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
@@ -126,30 +124,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				key='auto_unlock_root',
 			),
 			MenuItem(
-				text='TPM2 auto unlock',
-				action=self._select_tpm2_unlock,
-				value=self._enc_config.tpm2_unlock,
-				dependencies=[self._check_dep_tpm2],
-				preview_action=self._preview,
-				key='tpm2_unlock',
-			),
-			MenuItem(
-				text='TPM2 PCRs',
-				action=self._select_tpm2_pcrs,
-				value=self._enc_config.tpm2_pcrs,
-				dependencies=[self._check_dep_tpm2_pcrs],
-				preview_action=self._preview,
-				key='tpm2_pcrs',
-			),
-			MenuItem(
-				text='TPM2 PIN',
-				action=self._select_tpm2_pin,
-				value=self._enc_config.tpm2_pin,
-				dependencies=[self._check_dep_tpm2_pcrs],
-				preview_action=self._preview,
-				key='tpm2_pin',
-			),
-			MenuItem(
 				text='FIDO2 auto unlock',
 				action=self._select_fido2_device,
 				value=self._enc_config.fido2_device,
@@ -186,51 +160,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def _check_dep_auto_unlock(self) -> bool:
 		return self._allow_auto_unlock and self._check_dep_enc_type()
 
-	def _check_dep_tpm2(self) -> bool:
-		return SysInfo.has_tpm2() and self._check_dep_enc_type()
-
 	def _check_dep_fido2(self) -> bool:
 		return bool(Fido2.get_cryptenroll_devices()) and self._check_dep_enc_type()
-
-	def _check_dep_tpm2_pcrs(self) -> bool:
-		return self._check_dep_tpm2() and bool(self._item_group.find_by_key('tpm2_unlock').value)
-
-	# Firmware-time PCRs are stable host->target so binding from the installer matches
-	# the target's first boot. OS-side PCRs need a different enrollment path that we do
-	# not ship from the installer.
-	_TPM2_PCR_OPTIONS: tuple[tuple[int, str], ...] = (
-		(0, 'Firmware executable code (a UEFI update breaks the keyslot)'),
-		(1, 'Firmware data / platform config (breaks on setup changes)'),
-		(2, 'Pluggable executable code (option ROMs)'),
-		(3, 'Pluggable firmware data'),
-		(7, 'Secure Boot state (PK/KEK/db/dbx, SBAT)'),
-	)
-
-	def _select_tpm2_pcrs(self, preset: str) -> str:
-		default_pcrs = {int(p) for p in DEFAULT_TPM2_PCRS.split('+') if p.isdigit()}
-		preset_pcrs = {int(p) for p in preset.split('+') if p.isdigit()} if preset else default_pcrs
-		valid_pcrs = {pcr for pcr, _ in self._TPM2_PCR_OPTIONS}
-
-		items = [MenuItem(text=f'PCR {pcr:>2} - {desc}', value=pcr) for pcr, desc in self._TPM2_PCR_OPTIONS]
-		group = MenuItemGroup(items)
-		group.set_selected_by_value([pcr for pcr in preset_pcrs if pcr in valid_pcrs])
-
-		result = SelectMenu[int](
-			group,
-			alignment=Alignment.CENTER,
-			multi=True,
-			allow_skip=True,
-			frame=FrameProperties.min('TPM2 PCRs'),
-		).run()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Selection:
-				selected = sorted(result.get_values())
-				return '+'.join(str(p) for p in selected) if selected else preset
-			case _:
-				return preset
 
 	def _select_fido2_device(self, preset: Fido2Device | None) -> Fido2Device | None:
 		header = 'Select a FIDO2 token to enroll as a LUKS keyslot' + '\n'
@@ -244,18 +175,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		group = MenuHelper(data=devices).create_menu_group()
 		return prompt_choice(group, preset, header=header, allow_reset=True)
 
-	def _select_tpm2_pin(self, preset: Password | None) -> Password | None:
-		header = 'PIN asked at boot on top of the PCR binding (leave blank for none)' + '\n'
-		return get_password(text='TPM2 PIN', header=header, allow_skip=True, preset=preset.plaintext if preset else None)
-
-	def _select_tpm2_unlock(self, preset: bool) -> bool:
-		prompt = 'Bind a TPM2 keyslot to the LUKS device(s) so the disk auto-unlocks at boot ?' + '\n'
-		prompt += f'PCR selection picked separately. Defaults to {DEFAULT_TPM2_PCRS}.' + '\n'
-		prompt += 'Passphrase keyslot stays as fallback.' + '\n'
-
-		choice = prompt_yes_no(prompt, preset)
-		return preset if choice is None else choice
-
 	@override
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
 		super().run(additional_title=additional_title)
@@ -268,9 +187,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_partitions = self._item_group.find_by_key('partitions').value
 		enc_lvm_vols = self._item_group.find_by_key('lvm_volumes').value
 		auto_unlock_root: bool = self._item_group.find_by_key('auto_unlock_root').value or False
-		tpm2_unlock: bool = self._item_group.find_by_key('tpm2_unlock').value or False
-		tpm2_pcrs: str = self._item_group.find_by_key('tpm2_pcrs').value or DEFAULT_TPM2_PCRS
-		tpm2_pin: Password | None = self._item_group.find_by_key('tpm2_pin').value
 		fido2_device: Fido2Device | None = self._item_group.find_by_key('fido2_device').value
 
 		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
@@ -292,9 +208,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 				pbkdf=pbkdf or LuksPbkdf.Argon2id,
 				cipher=cipher,
 				auto_unlock_root=auto_unlock_root,
-				tpm2_unlock=tpm2_unlock,
-				tpm2_pcrs=tpm2_pcrs,
-				tpm2_pin=tpm2_pin,
 				fido2_device=fido2_device,
 			)
 
@@ -326,15 +239,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if (auto_unlock := self._prev_auto_unlock_root()) is not None:
 			output += f'\n{auto_unlock}'
-
-		if (tpm2 := self._prev_tpm2_unlock()) is not None:
-			output += f'\n{tpm2}'
-
-		if (tpm2_pcrs := self._prev_tpm2_pcrs()) is not None:
-			output += f'\n{tpm2_pcrs}'
-
-		if (tpm2_pin := self._prev_tpm2_pin()) is not None:
-			output += f'\n{tpm2_pin}'
 
 		if (fido2 := self._prev_fido2_device()) is not None:
 			output += f'\n{fido2}'
@@ -417,29 +321,6 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			return f'{"Auto unlock root"}: {status}'
 
 		return None
-
-	def _prev_tpm2_unlock(self) -> str | None:
-		enc_type = self._item_group.find_by_key('encryption_type').value
-		if not enc_type or enc_type == EncryptionType.NO_ENCRYPTION:
-			return None
-		if not SysInfo.has_tpm2():
-			return None
-
-		tpm2 = self._item_group.find_by_key('tpm2_unlock').value
-		status = 'Enabled' if tpm2 else 'Disabled'
-		return f'{"TPM2 auto unlock"}: {status}'
-
-	def _prev_tpm2_pcrs(self) -> str | None:
-		if not self._item_group.find_by_key('tpm2_unlock').value:
-			return None
-		pcrs = self._item_group.find_by_key('tpm2_pcrs').value or DEFAULT_TPM2_PCRS
-		return f'{"TPM2 PCRs"}: {pcrs}'
-
-	def _prev_tpm2_pin(self) -> str | None:
-		if not self._item_group.find_by_key('tpm2_unlock').value:
-			return None
-		pin: Password | None = self._item_group.find_by_key('tpm2_pin').value
-		return f'TPM2 PIN: {pin.hidden() if pin else "none"}'
 
 	def _prev_fido2_device(self) -> str | None:
 		enc_type = self._item_group.find_by_key('encryption_type').value

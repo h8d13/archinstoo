@@ -75,8 +75,8 @@ Historical changes/commits before I went rogue:
 		  the same loop
 		- `disk/`: `mount.py` `LayoutMounter`, `keyfiles.py`
 		  `KeyFileGenerator`, `fstab.py`, `snapshots.py` (the
-		  grub-btrfsd override with it), `cryptenroll.py` (tpm2 and
-		  fido2 shared a device-collection block and the transient
+		  grub-btrfsd override with it), `cryptenroll.py` (fido2
+		  shared a device-collection block and the transient
 		  keyfile dance, now a context manager), `mdadm.py`.
 		  `KEYFILE_DIR` lives with `Luks2`
 		- `kernel/`: `initramfs.py` (hook edits are `add_lvm`,
@@ -103,7 +103,7 @@ Historical changes/commits before I went rogue:
 		  names the unreached steps; artifacts sync once on exit
 		- `Password` hashes where the hash is consumed: the menu hands
 		  plaintext, a config the hash, only chpasswd needs it. LUKS
-		  passphrases and TPM PINs stop paying for a yescrypt nobody
+		  passphrases stop paying for a yescrypt nobody
 		  reads. The `passwd` script goes, any crypt(3) hash works in
 		  a config
 		- lint: `lint-imports` blocking in pre-commit and CI with the
@@ -141,9 +141,6 @@ Historical changes/commits before I went rogue:
 		- #3764: `en_US.UTF-8` is uncommented alongside the chosen
 		  locale, tools hardcoding `LC_ALL` warned on every non-US
 		  system
-		- #1584: TPM2 PIN on top of the PCR binding
-		  (`--tpm2-with-pin=yes`, `NEWPIN` through env so the secret
-		  stays off argv and out of the command history)
 		- #4769: boot partition is 2 GiB
 		- #2087: MBR past the 32-bit LBA ceiling (2 TiB at 512B, 16
 		  TiB at 4K). `PartitionTable.max_addressable`/`usable_end`:
@@ -181,14 +178,6 @@ Historical changes/commits before I went rogue:
 		- hibernation defaults off: a RAM-sized swap file on root is
 		  not a safe default, and mkswap refuses one on a loop-backed
 		  root. Skipped on bcachefs
-		- default TPM2 PCRs `7` (was `0+7`): PCR 0 measures firmware
-		  code, so any UEFI update dropped the machine to the
-		  passphrase with no re-enrollment path. systemd v258 removed
-		  7 from its own default too, pointing at pcrlock, which we do
-		  not ship. Menu labels name what breaks each PCR
-		- `partition()` validates addressability before deciding to
-		  wipe, and `using_gpt` reads the on-disk label when nothing
-		  is wiped
 	- Network and pacman
 		- `00-mac-address.link` matches every interface and replaces
 		  `99-default.link`, so without the default `NamePolicy` the
@@ -744,7 +733,7 @@ Historical changes/commits before I went rogue:
 		- Detect via `systemd-cryptenroll --fido2-device=list`; token
 		  picker in encryption menu, passphrase keyslot as fallback
 		- Strap `libfido2` before initramfs; combined `rd.luks.options=`
-		  (tpm2/fido2), fido2 gets `password-echo=no`
+		  fido2 gets `password-echo=no`
 		- Menu hidden when no token, gated behind a ready prompt
 		- `SYSTEMD_EMOJI=0` so cryptenroll PIN/touch prompts stay plain
 	- Extend locale for Wayland: ENV vars + keyboard models, variants,
@@ -980,19 +969,6 @@ Historical changes/commits before I went rogue:
 
 ## 0.1.07-0
 
-    - TPM2 auto-unlock for LUKS-encrypted installs (opt-in)
-        - New `Installer.enroll_tpm2()` runs `systemd-cryptenroll
-          --tpm2-device=auto` in chroot at bootloader-install time
-        - Hardware-gated menu toggle: only appears when
-          `/sys/class/tpm/*/tpm_version_major == 2` (`SysInfo.has_tpm2()`)
-        - Multi-select PCR picker restricted to firmware-time PCRs (0, 1, 2, 3,
-          7) that are stable host->target
-        - Default `0+7` (firmware + Secure Boot state); passphrase keyslot stays
-          as fallback
-        - Adds `rd.luks.options=tpm2-device=auto` to kernel cmdline so
-          sd-encrypt attempts TPM2 unlock at boot
-        - Transient unlock keyfile follows `_create_root_keyfile` convention
-          (`/etc/cryptsetup-keys.d/`), unlinked after enrollment
     - Post-install artifacts synced into target for debugging
         - `/etc/archinstoo.d/<UTC-timestamp>-install.log` and
           `<UTC-timestamp>-config.json`

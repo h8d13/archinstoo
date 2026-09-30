@@ -194,7 +194,7 @@ True)` (live/packages target `/`, format stops after mount).
 
 | Step | Lives in |
 |---|---|
-| mount layout, key files, TPM2/FIDO2 enrollment, fstab, snapshots | `disk/` (`mount`, `keyfiles`, `cryptenroll`, `fstab`, `snapshots`) |
+| mount layout, key files, FIDO2 enrollment, fstab, snapshots | `disk/` (`mount`, `keyfiles`, `cryptenroll`, `fstab`, `snapshots`) |
 | initramfs, swap file, zram, sysctl | `kernel/` |
 | bootloaders, UKI, kernel cmdline | `bootloader/install.py` |
 | users, sudo/doas, stash clone | `authentication/accounts.py`, `authentication/stash.py` |
