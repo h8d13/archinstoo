@@ -27,13 +27,11 @@ On aarch64 it takes the Arch Linux Ports tarball instead, see [`architecture/`](
 
 A host _only_ needs:
 
-| Dependency | Why |
-|------------|-----|
-| `bash`, `util-linux` | the tarball's own `arch-chroot` runs on the host |
-| `curl` | fetches the tarball, its signature and checksums |
-| `zstd`, `tar`, `sha256sum` | checks and unpacks the tarball |
-| `gnupg` (optional on x86_64) | verifies the signature against the pinned release key, else checksum only |
-| a running udev (`systemd-udevd` or `eudev`) | Arch's `lsblk`, `genfstab` and `udevadm settle` read its db through the bound `/run` |
+```
+bash util-linux curl zstd tar coreutils gnupg
+```
+
+`gnupg` is optional on x86_64 (checksum only without it).
 
 From Alpine (mdev by default): `apk add bash curl zstd tar coreutils util-linux gnupg eudev && setup-devd udev`
 
