@@ -2,6 +2,9 @@
 
 Experimental ports `archinstoo` to run from **any Linux host** (not just Arch ISOs).
 
+
+## Per distro host:
+
 > Mostly tested from smallest **server type ISOs/cloud images** (see `./distros/CLOUD fed|deb`).
 
 Not fully cooked since it takes a lot of time, but at least all deps should be correct.
