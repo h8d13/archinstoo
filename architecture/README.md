@@ -39,13 +39,3 @@ For non-UEFI systems where you went the hard-way with tarball modifications.
 
 `./RUN --script live` opens a reduced menu for a system that already boots: no disk, no
 bootloader, just users, packages, profiles and services.
-
-## Dev VM from an x86_64 host
-
-```shell
-sudo pacman -S --needed qemu-system-aarch64 edk2-aarch64
-A2_ARCH=aarch64 ./TVM              # window, ramfb
-A2_ARCH=aarch64 A2_SERIAL=1 ./TVM  # headless, drive it with ./TSER
-```
-
-TCG emulation is slow.
