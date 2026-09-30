@@ -33,9 +33,9 @@ mirrorlist. What differs from x86_64 inside archinstoo:
 Board kernels are plain package names: `"kernels": ["linux-rpi5"]` in a config reaches
 `pacstrap` as is. The interactive kernel menu lists the stock kernels only.
 
-## Running on an installed system
+## Running on an already installed system
 
-For non-UEFI systems where you went the hard-way with [tarball modifications](https://github.com/h8d13/archinstoo/blob/master/architecture/ARM):
+For non-UEFI systems where you went the hard-way with tarball modifications.
 
 `./RUN --script live` opens a reduced menu for a system that already boots: no disk, no
 bootloader, just users, packages, profiles and services.
