@@ -17,12 +17,12 @@ Can be found below:
 
 ## Any host: `BOOT`
 
-Instead of host packages, [BOOT](https://github.com/h8d13/archinstoo/blob/master/distros/BOOT) runs archinstoo inside the
+Instead of host packages, [BOOT](https://github.com/h8d13/archinstoo/blob/master/distros/BOOT) runs archinstoo inside a
 [Arch bootstrap tarball](https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux#Creating_a_chroot).
 
 On aarch64 it takes the Arch Linux Ports tarball instead, see [`architecture/`](https://github.com/h8d13/archinstoo/blob/master/architecture):
 
-A host needs:
+A host _only_ needs:
 
 | Dependency | Why |
 |------------|-----|
