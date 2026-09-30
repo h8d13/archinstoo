@@ -32,17 +32,20 @@ def test_script_peek(monkeypatch: pytest.MonkeyPatch, argv: list[str], expected:
 
 
 @pytest.mark.parametrize(
-	('script', 'distro_id', 'on_iso', 'blocked'),
+	('script', 'distro_id', 'on_iso', 'bootstrap', 'blocked'),
 	[
 		# running-system scripts on a non-Arch root: the case the guard exists for
-		('packages', 'debian', False, True),
-		('live', 'alpine', False, True),
+		('packages', 'debian', False, False, True),
+		('live', 'alpine', False, False, True),
 		# same scripts where target '/' really is Arch
-		('packages', 'arch', False, False),
-		('live', '', True, False),
+		('packages', 'arch', False, False, False),
+		('live', '', True, False, False),
+		# Arch too, but distros/BOOT's throwaway root
+		('packages', 'arch', False, True, True),
 		# disk scripts pacstrap a separate target, foreign host or not
-		('guided', 'debian', False, False),
-		(None, 'debian', False, False),
+		('guided', 'debian', False, False, False),
+		('guided', 'arch', False, True, False),
+		(None, 'debian', False, False, False),
 	],
 )
 def test_foreign_blocked(
@@ -50,10 +53,12 @@ def test_foreign_blocked(
 	script: str | None,
 	distro_id: str,
 	on_iso: bool,
+	bootstrap: bool,
 	blocked: bool,
 ) -> None:
 	monkeypatch.setattr('platform.freedesktop_os_release', lambda: {'ID': distro_id})
 	monkeypatch.setattr(Os, 'running_from_host', staticmethod(lambda: not on_iso))
+	monkeypatch.setattr(Os, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
 
 	assert archinstoo._is_foreign_blocked(script) is blocked
 

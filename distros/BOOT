@@ -1,0 +1,169 @@
+#!/bin/sh
+
+# Any-host bootstrap for archinstoo, following
+# https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux
+
+# Runs archinstoo inside the Arch bootstrap tarball instead of host packages.
+
+# Host dependencies: distros/README.md
+
+# ./distros/BOOT [archinstoo args...]
+# BOOT_DIR    where the root lives, reused across runs (default /var/tmp:
+#             /tmp is often tmpfs, and python + deps take several hundred MB)
+# BOOT_MIRROR x86_64 mirror to fetch the tarball and packages from
+
+set -eu
+
+BOOT_DIR=${BOOT_DIR:-/var/tmp/archinstoo-boot}
+BOOT_MIRROR=${BOOT_MIRROR:-https://geo.mirror.pkgbuild.com}
+ARCH=$(uname -m)
+ROOT=$BOOT_DIR/root.$ARCH
+
+# same split as installer/archinstoo/lib/pm/bootstrap.py _sources()
+case $ARCH in
+x86_64)
+	# wiki: signature from archlinux.org, not a mirror
+	RELEASE_URL=https://archlinux.org/iso/latest
+	TARBALL_URL=$BOOT_MIRROR/iso/latest/archlinux-bootstrap-x86_64.tar.zst
+	SIG_URL=$RELEASE_URL/archlinux-bootstrap-x86_64.tar.zst.sig
+	SUMS_URL=$RELEASE_URL/sha256sums.txt
+	KEY_WKD=pierre@archlinux.org
+	KEY_URL=
+	KEY_FPR=3E80CA1A8B89F69CBA57D98A76A5EF9054449A5C
+	;;
+aarch64)
+	# Arch Linux Ports (architecture/): no checksums, so gpg is required
+	PORTS=https://arch-linux-repo.drzee.net/arch
+	TARBALL_URL=$PORTS/tarballs/os/aarch64/archlinux-bootstrap-latest-aarch64.tar.zst
+	SIG_URL=$TARBALL_URL.sig
+	SUMS_URL=
+	KEY_WKD=
+	KEY_URL=$PORTS/extra/os/aarch64/public.key
+	KEY_FPR=9B2C213B21883BB65CE2FB900CF25682E6BA0751
+	;;
+*) ;;
+esac
+TARBALL=${TARBALL_URL##*/}
+# the tarball ships Arch's keyring only, pacman needs the port's too
+PORT_KEY=$ROOT/etc/pacman.d/boot-port.key
+
+REPO=$(cd "$(dirname "$0")/.." && pwd)
+
+die() {
+	echo "==> ERROR: $*" >&2
+	exit 1
+}
+
+teardown() {
+	# also catches what a killed arch-chroot left mounted
+	if mountpoint -q "$ROOT"; then
+		umount -R "$ROOT"
+	fi
+}
+
+fetch() {
+	curl -fL --retry 3 -o "$BOOT_DIR/${1##*/}" "$1"
+}
+
+import_key() {
+	if [ -n "$KEY_URL" ]; then
+		fetch "$KEY_URL"
+		gpg --homedir "$gnupg" --import "$BOOT_DIR/${KEY_URL##*/}"
+	else
+		gpg --homedir "$gnupg" --auto-key-locate clear,wkd \
+			--locate-external-key "$KEY_WKD"
+	fi
+}
+
+verify() {
+	if [ -n "$SUMS_URL" ]; then
+		grep " $TARBALL\$" "$BOOT_DIR/${SUMS_URL##*/}" >"$BOOT_DIR/$TARBALL.sha256"
+		(cd "$BOOT_DIR" && sha256sum -c "$TARBALL.sha256")
+	fi
+
+	if ! command -v gpg >/dev/null; then
+		[ -n "$SUMS_URL" ] || die "no checksums published for $ARCH, gpg is required"
+		echo "==> WARNING: no gpg, checksum only, trusting TLS to ${SUMS_URL%/*}" >&2
+		return 0
+	fi
+	gnupg=$BOOT_DIR/gnupg
+	mkdir -p "$gnupg" && chmod 700 "$gnupg"
+	import_key
+	# pin the signer, not just any valid signature
+	gpg --homedir "$gnupg" --status-fd 1 \
+		--verify "$BOOT_DIR/$TARBALL.sig" "$BOOT_DIR/$TARBALL" |
+		grep -q "^\[GNUPG:\] VALIDSIG $KEY_FPR " ||
+		die "$TARBALL not signed by $KEY_FPR"
+}
+
+[ "$(id -u)" -eq 0 ] || die 'must run as root'
+[ -n "${TARBALL_URL:-}" ] || die "no bootstrap tarball for $ARCH (x86_64, aarch64)"
+for bin in bash curl zstd tar sha256sum mount umount mountpoint unshare chroot; do
+	command -v "$bin" >/dev/null || die "missing host binary: $bin"
+done
+# without it lsblk has no UUIDs and genfstab silently writes /dev/vdaN
+[ -d /run/udev/data ] ||
+	die 'no udev db in /run/udev, start udev' \
+		'(alpine: apk add eudev && setup-devd udev)'
+
+mkdir -p "$BOOT_DIR"
+
+if [ ! -x "$ROOT/usr/bin/pacman" ]; then
+	fetch "$TARBALL_URL"
+	fetch "$SIG_URL"
+	if [ -n "$SUMS_URL" ]; then
+		fetch "$SUMS_URL"
+	fi
+	verify
+	# piped: busybox tar can't always spawn zstd
+	zstd -dc "$BOOT_DIR/$TARBALL" | tar -x --numeric-owner -f - -C "$BOOT_DIR"
+	rm "$BOOT_DIR/$TARBALL"
+	if [ -n "$KEY_URL" ]; then
+		cp "$BOOT_DIR/${KEY_URL##*/}" "$PORT_KEY"
+	fi
+fi
+
+# rm -rf the root only after this exits: a live run has /dev mounted inside
+teardown
+trap teardown EXIT
+trap 'exit 130' INT TERM HUP
+
+# pacman's CheckSpace wants a mountpoint
+mount --bind "$ROOT" "$ROOT"
+mkdir -p "$ROOT/root/archinstoo"
+mount --bind "$REPO" "$ROOT/root/archinstoo"
+
+# Arch Ports puts Server lines in pacman.conf, no mirrorlist to fill there
+if grep -q '^Include = /etc/pacman.d/mirrorlist' "$ROOT/etc/pacman.conf" &&
+	! grep -q '^Server' "$ROOT/etc/pacman.d/mirrorlist"; then
+	echo "Server = $BOOT_MIRROR/\$repo/os/\$arch" >>"$ROOT/etc/pacman.d/mirrorlist"
+fi
+
+# arch-chroot only binds the host resolv.conf onto an existing one
+if [ ! -e "$ROOT/etc/resolv.conf" ] && [ ! -L "$ROOT/etc/resolv.conf" ]; then
+	touch "$ROOT/etc/resolv.conf"
+fi
+
+# no -S: it needs systemd >= 257 on the host
+# A2_BOOTSTRAP: '/' is this throwaway root, archinstoo blocks live/packages
+# shellcheck disable=SC2016 # expands in the chroot's bash
+A2_BOOTSTRAP=1 BOOT_KEY_FPR=$KEY_FPR "$ROOT/usr/bin/arch-chroot" "$ROOT" /bin/bash -c '
+	set -e
+	if [ ! -e /etc/pacman.d/gnupg/trustdb.gpg ]; then
+		pacman-key --init
+		pacman-key --populate
+		# pacstrap copies this gnupg into the target
+		if [ -e /etc/pacman.d/boot-port.key ]; then
+			pacman-key --add /etc/pacman.d/boot-port.key
+			pacman-key --lsign-key "$BOOT_KEY_FPR"
+		fi
+	fi
+	# old Debian: /dev/shm -> /run/shm, else pacstrap cannot mount it
+	if [ -L /dev/shm ]; then
+		mkdir -p /run/shm
+	fi
+	# -Syu: a lone python may want a newer glibc than the tarball has
+	pacman -Syu --needed --noconfirm python
+	cd /root/archinstoo
+	exec ./RUN "$@"
+' boot "$@"

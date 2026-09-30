@@ -25,6 +25,7 @@ architecture/*.tar.gz
 **/**.target
 **/**.qcow2
 /.dev-boot/
+/.dev-cloud/
 **/**.sock
 **/**.pid
 **/**.log

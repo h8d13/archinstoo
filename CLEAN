@@ -15,7 +15,9 @@
 # ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 
 # ISOs stay: ignored by git but expensive to redownload
-git clean -Xnd ':(exclude)*.iso'
+keep=(-e '!*.iso' -e '!isos/a/')
+
+git clean -Xnd "${keep[@]}"
 
 read -rp "Proceed? [y/N] " reply
 [[ "${reply}" == [yY] ]] || {
@@ -23,4 +25,4 @@ read -rp "Proceed? [y/N] " reply
 	exit 0
 }
 
-git clean -Xfd ':(exclude)*.iso'
+git clean -Xfd "${keep[@]}"

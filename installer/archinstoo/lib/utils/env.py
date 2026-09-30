@@ -46,6 +46,27 @@ class Os:
 		return Os.running_from_host() and not Os.running_from_arch()
 
 	@staticmethod
+	def running_from_bootstrap() -> bool:
+		# distros/BOOT: an Arch root, but the throwaway bootstrap tarball, not
+		# anything that boots. plain arch-chroot keeps the env, so it gets here
+		return Os.get_env('A2_BOOTSTRAP') == '1'
+
+	@staticmethod
+	def running_in_chroot() -> bool:
+		# systemd's own test: PID1 sits on another root
+		try:
+			return not Path('/proc/1/root').samefile('/')
+		except OSError:
+			return False
+
+	@staticmethod
+	def has_systemd() -> bool:
+		# sd_booted() minus chroots: arch-chroot binds the host /run in, so the
+		# marker leaks through, yet -S hands RootDirectory to the host PID1,
+		# which resolves it against its own root (distros/BOOT runs us there)
+		return Path('/run/systemd/system').is_dir() and not Os.running_in_chroot()
+
+	@staticmethod
 	def invoking_username() -> str | None:
 		# the human behind sudo/doas; None when running as real root (su -, autologin)
 		name = os.environ.get('SUDO_USER') or os.environ.get('DOAS_USER')

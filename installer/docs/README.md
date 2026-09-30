@@ -204,6 +204,7 @@
 │   ├── config_custom.json
 │   ├── config_sample_full.json
 │   ├── custom
+│   ├── vm_cloud_bios.json
 │   ├── vm_configuration.json
 │   └── vm_unattended.json
 ├── PKGBUILD

@@ -73,7 +73,7 @@
 #                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
 #                       a cloud image (distros/DEB, distros/FED) takes its
-#                       cloud-init config off the SMBIOS serial, see ./TSER
+#                       cloud-init config off the SMBIOS serial, see distros/CLOUD
 #   A2_DRY              '1' prints the assembled qemu command and exits (still
 #                       creates the disk/NVRAM the mode asks for)
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
@@ -208,21 +208,33 @@ ensure_no_running_vm() {
 # console=ttyS0 appended. The ISO stays attached as a cdrom: the archiso hook
 # still finds the squashfs on it.
 extract_iso_kernel() {
-	local iso="$1" stamp="$BOOT_DIR/.stamp" want
+	local iso="$1" stamp="$BOOT_DIR/.stamp" want kernel initrd
 	want="$iso:$(stat -c %Y "$iso")"
 	mkdir -p "$BOOT_DIR"
-	if [ ! -f "$stamp" ] || [ "$(cat "$stamp")" != "$want" ]; then
+	# a missing output re-extracts too: a stamp can outlive the file names
+	if [ ! -f "$stamp" ] || [ "$(cat "$stamp")" != "$want" ] || [ ! -s "$BOOT_DIR/initrd" ]; then
 		echo "extracting kernel/initramfs from $(basename "$iso")"
-		bsdtar -xOf "$iso" "arch/boot/$A2_ARCH/vmlinuz-linux" \
-			>"$BOOT_DIR/vmlinuz-linux"
-		bsdtar -xOf "$iso" "arch/boot/$A2_ARCH/initramfs-linux.img" \
-			>"$BOOT_DIR/initramfs-linux.img"
-		bsdtar -xOf "$iso" loader/entries/01-archiso-linux.conf |
-			sed -n 's/^options[[:space:]]\+//p' >"$BOOT_DIR/cmdline"
+		rm -f "$BOOT_DIR"/{vmlinuz,initrd,cmdline,grub.cfg}
+		if bsdtar -tf "$iso" loader/entries/01-archiso-linux.conf >/dev/null 2>&1; then
+			kernel="arch/boot/$A2_ARCH/vmlinuz-linux"
+			initrd="arch/boot/$A2_ARCH/initramfs-linux.img"
+			bsdtar -xOf "$iso" loader/entries/01-archiso-linux.conf |
+				sed -n 's/^options[[:space:]]\+//p' >"$BOOT_DIR/cmdline"
+		else
+			# any other live ISO (alpine, for distros/ALP and distros/BOOT):
+			# its first grub entry names kernel, cmdline and initramfs
+			bsdtar -xOf "$iso" boot/grub/grub.cfg >"$BOOT_DIR/grub.cfg"
+			kernel="$(awk '$1 == "linux" { sub("^/", "", $2); print $2; exit }' "$BOOT_DIR/grub.cfg")"
+			initrd="$(awk '$1 == "initrd" { sub("^/", "", $2); print $2; exit }' "$BOOT_DIR/grub.cfg")"
+			awk '$1 == "linux" { $1 = $2 = ""; sub("^ +", ""); print; exit }' \
+				"$BOOT_DIR/grub.cfg" >"$BOOT_DIR/cmdline"
+		fi
+		bsdtar -xOf "$iso" "$kernel" >"$BOOT_DIR/vmlinuz"
+		bsdtar -xOf "$iso" "$initrd" >"$BOOT_DIR/initrd"
 		printf '%s\n' "$want" >"$stamp"
 	fi
-	[ -s "$BOOT_DIR/vmlinuz-linux" ] || err "no kernel in $iso (archiso layout?)"
-	[ -s "$BOOT_DIR/cmdline" ] || err "no boot cmdline in $iso (archiso layout?)"
+	[ -s "$BOOT_DIR/vmlinuz" ] || err "no kernel in $iso (archiso or grub layout?)"
+	[ -s "$BOOT_DIR/cmdline" ] || err "no boot cmdline in $iso (archiso or grub layout?)"
 }
 
 find_iso() {
@@ -416,8 +428,8 @@ elif [ "$ATTACH_ISO" = "true" ]; then
 	if [ "$A2_SERIAL" = "1" ]; then
 		extract_iso_kernel "$ISO"
 		QEMU_ARGS+=(
-			-kernel "$BOOT_DIR/vmlinuz-linux"
-			-initrd "$BOOT_DIR/initramfs-linux.img"
+			-kernel "$BOOT_DIR/vmlinuz"
+			-initrd "$BOOT_DIR/initrd"
 			-append "$(cat "$BOOT_DIR/cmdline") console=ttyS0,115200"
 		)
 	fi

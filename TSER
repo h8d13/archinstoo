@@ -45,11 +45,9 @@
 #   ./TSER login -p test           # root
 #   ./TSER login -u vm -p test     # user
 #
-# Foreign hosts (distros/DEB, distros/FED) come as cloud images, which have no
-# password until cloud-init sets one. Serve a user-data next to this file and
-# name it on the SMBIOS serial, no seed ISO and no mtools/xorriso needed:
-#   python3 -m http.server 8731 --bind 127.0.0.1   # dir with user-data+meta-data
-#   A2_QEMU_EXTRA='-smbios type=1,serial=ds=nocloud-net;s=http://10.0.2.2:8731/'
+# Foreign hosts (distros/BOOT, DEB, FED) come as cloud images, which have no
+# password until cloud-init sets one: ./distros/CLOUD fed|deb boots one,
+# then ./TSER login -p test as above
 
 import argparse
 import os
@@ -81,7 +79,12 @@ PIDFILE = ROOT / '.dev-vm.pid'
 # host terminal answer into the shell instead. Payloads stop at ESC/BEL
 # so a truncated sequence at the tail of the log cannot swallow the rest
 ANSI = re.compile(
-	r'\x1b\[[0-9;?<=>]*[ -/]*[@-~]'  # CSI: params, intermediates (ESC[!p), final
+	# busybox ash ends every prompt with a cursor query (ESC[6n). The log can
+	# double any byte of it (see fuzzy), and the 'n' a plain CSI match leaves
+	# behind turns 'host:~# ' into 'host:~# n', which wait_idle never takes
+	# for a prompt: the next command is never even typed
+	r'\x1b+\[+6+n+'
+	r'|\x1b\[[0-9;?<=>]*[ -/]*[@-~]'  # CSI: params, intermediates (ESC[!p), final
 	r'|\x1bP[^\x1b\x07]*\x1b\\'  # DCS ... ST
 	r'|\x1b[\]_^X][^\x1b\x07]*(?:\x07|\x1b\\)'  # OSC/APC/PM/SOS ... BEL or ST
 	r'|\x1b[ -/]*[0-~]'  # two/three byte escapes: charset selects, ESC7/ESC8

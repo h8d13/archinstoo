@@ -189,8 +189,6 @@ def _arch_bootstrap(no_disk: bool) -> int:
 		Pacman.run(f'-S --needed --noconfirm {" ".join(missing)}', peek_output=True)
 
 		if no_disk:
-			# no python lib in base, so nothing to re-exec for, and -S python
-			# alone on a running system is a partial upgrade
 			Os.set_env('A2_DEPS_FETCHED', '1')
 			return 0
 		Os.set_env('A2_DEPS_FETCHED', '1')
@@ -325,8 +323,9 @@ def _is_foreign_blocked(script: str | None) -> bool:
 	# a foreign host gets its deps from its own package manager (see distros/)
 	# and pacstraps a separate target, which is fine. these scripts instead
 	# install onto the running system: target '/' means `pacman -S` straight
-	# into the Debian/Alpine root, never a chroot.
-	return script in NO_DISK_SCRIPTS and Os.running_from_foreign()
+	# into the Debian/Alpine root, never a chroot. distros/BOOT's root is
+	# Arch, yet thrown away once the install is done: same outcome.
+	return script in NO_DISK_SCRIPTS and (Os.running_from_foreign() or Os.running_from_bootstrap())
 
 
 def run_as_a_module() -> int:
@@ -349,7 +348,8 @@ def run_as_a_module() -> int:
 		output.log_level = logging.DEBUG
 
 	if _is_foreign_blocked(script_peek):
-		error(f'archinstoo {script_peek} configures the running system, which is {Os.running_from_who() or "not Arch"}.')
+		running = 'the distros/BOOT bootstrap root' if Os.running_from_bootstrap() else Os.running_from_who() or 'not Arch'
+		error(f'archinstoo {script_peek} configures the running system, which is {running}.')
 		error('Use a disk script from a foreign host (see distros/), or run this one from an Arch host/ISO.')
 		return 1
 

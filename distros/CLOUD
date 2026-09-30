@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# Boots a distro cloud image as a foreign host under TVM, for testing
+# distros/BOOT (and the native distros/ ports) from a real non-Arch system.
+#
+# The cloud image, as a throwaway overlay, is the boot disk (/dev/vda) and an
+# empty disk rides along as the install target (/dev/vdb, see
+# installer/examples/vm_cloud_bios.json). SeaBIOS, so the target installs grub on MBR.
+
+# Usage:
+#   ./distros/CLOUD fed|deb       fresh overlay + target, boot, wait for cloud-init
+#   ./distros/CLOUD target        boot what got installed on the target disk (the
+#                                 cloud overlay is dropped, the target becomes vda)
+#   ./distros/CLOUD clean         remove overlays and seed (images stay cached)
+# then: ./TSER login -p test
+# Env: REL BUILD (fedora release/build), SEED_PORT, PASS, A2_RAM, A2_CPUS
+
+set -euo pipefail
+
+# repo root: TVM and its .dev-* files live there
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CLOUD_DIR="$PROJECT_DIR/.dev-cloud"
+SEED="$CLOUD_DIR/seed"
+# TVM boots this one; the target is ours
+DISK="$PROJECT_DIR/.dev-disk.qcow2"
+TARGET="$PROJECT_DIR/.dev-target.qcow2"
+LOG="$PROJECT_DIR/.dev-serial.log"
+REL="${REL:-44}"
+BUILD="${BUILD:-1.7}"
+SEED_PORT="${SEED_PORT:-8731}"
+PASS="${PASS:-test}"
+HTTP_PID=""
+
+err() {
+	echo "ERROR: $*" >&2
+	exit 1
+}
+
+pick_image() {
+	case "$1" in
+	fed)
+		IMAGE="Fedora-Cloud-Base-Generic-$REL-$BUILD.x86_64.qcow2"
+		URL="https://download.fedoraproject.org/pub/fedora/linux/releases/$REL/Cloud/x86_64/images/$IMAGE"
+		;;
+	deb)
+		IMAGE="debian-13-genericcloud-amd64.qcow2"
+		URL="https://cloud.debian.org/images/cloud/trixie/latest/$IMAGE"
+		;;
+	*) err "unknown distro: $1 (fed, deb)" ;;
+	esac
+}
+
+fetch() {
+	[ -s "$CLOUD_DIR/$IMAGE" ] && return 0
+	curl -fL --retry 3 -o "$CLOUD_DIR/$IMAGE.part" "$URL"
+	mv "$CLOUD_DIR/$IMAGE.part" "$CLOUD_DIR/$IMAGE"
+}
+
+# vendor-data/network-config must exist: cloud-init retries 404s ~1/s for
+# ~20s each, which shows as "stuck" at cloud-init-network.service.
+# instance-id changes per run, else a reused overlay skips the seed
+seed() {
+	mkdir -p "$SEED"
+	: >"$SEED/vendor-data"
+	: >"$SEED/network-config"
+	cat >"$SEED/meta-data" <<META
+instance-id: cloud-$1-$(date +%s)
+local-hostname: cloud-$1
+META
+	cat >"$SEED/user-data" <<USER
+#cloud-config
+disable_root: false
+chpasswd:
+  expire: false
+  users:
+    - {name: root, password: $PASS, type: text}
+users:
+  - default
+  - name: root
+USER
+}
+
+serve() {
+	python3 -m http.server "$SEED_PORT" --bind 127.0.0.1 --directory "$SEED" \
+		>"$CLOUD_DIR/http.log" 2>&1 &
+	HTTP_PID=$!
+	sleep 0.5
+	if ! kill -0 "$HTTP_PID" 2>/dev/null; then
+		cat "$CLOUD_DIR/http.log"
+		err "seed server failed on 127.0.0.1:$SEED_PORT (in use?)"
+	fi
+}
+
+teardown() {
+	# the seed is read once at first boot; nothing needs the server after
+	if [ -n "$HTTP_PID" ]; then
+		kill "$HTTP_PID" 2>/dev/null || true
+	fi
+}
+
+wait_cloud_init() {
+	# cloud-init prints its summary line on the console once every stage ran
+	local deadline=$((SECONDS + 600))
+	until grep -aq 'Cloud-init v\. .* finished' "$LOG" 2>/dev/null; do
+		[ "$SECONDS" -lt "$deadline" ] || err "cloud-init not done after 600s, see ./TSER read"
+		sleep 2
+	done
+}
+
+boot() {
+	pick_image "$1"
+	mkdir -p "$CLOUD_DIR"
+	fetch
+	# pristine every run: overlays over the cached image, and an empty target
+	rm -f "$DISK" "$TARGET"
+	qemu-img create -f qcow2 -F qcow2 -b "$CLOUD_DIR/$IMAGE" "$DISK" 20G
+	qemu-img create -f qcow2 "$TARGET" 64G
+	seed "$1"
+	trap teardown EXIT
+	serve
+	A2_SERIAL=1 A2_BIOS=1 \
+		A2_QEMU_EXTRA="-drive file=$TARGET,format=qcow2,if=virtio -smbios type=1,serial=ds=nocloud;s=http://10.0.2.2:$SEED_PORT/" \
+		"$PROJECT_DIR/TVM" boot
+	wait_cloud_init
+	echo "cloud-init done: ./TSER login -p $PASS (target disk is /dev/vdb)"
+}
+
+boot_target() {
+	[ -s "$TARGET" ] || err "no $TARGET, run ./distros/CLOUD fed|deb and install first"
+	# fstab and grub name UUIDs, so vdb installing as vda boots the same
+	mv "$TARGET" "$DISK"
+	A2_SERIAL=1 A2_BIOS=1 "$PROJECT_DIR/TVM" boot
+}
+
+case "${1:-}" in
+fed | deb) boot "$1" ;;
+target) boot_target ;;
+clean) rm -rfv "$DISK" "$TARGET" "$SEED" "$CLOUD_DIR/http.log" ;;
+*)
+	sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
+	exit 1
+	;;
+esac

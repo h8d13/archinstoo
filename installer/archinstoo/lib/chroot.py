@@ -19,11 +19,12 @@ if TYPE_CHECKING:
 
 
 def chroot_prefix(target: Path) -> list[str]:
-	# `arch-chroot -S` runs the chroot through systemd-run, which a foreign
-	# host (Debian, ...) has no running systemd to provide; drop -S there so
-	# it falls back to plain chroot(8).
+	# `arch-chroot -S` runs the chroot through systemd-run, so it needs a
+	# booted systemd we are not chrooted away from. It also dies below
+	# systemd 257, which only an Arch host/ISO guarantees; everywhere else
+	# drop -S so it falls back to plain chroot(8).
 	prefix = ['arch-chroot']
-	if not Os.running_from_foreign():
+	if Os.running_from_arch() and Os.has_systemd():
 		prefix.append('-S')
 	prefix.append(str(target))
 	return prefix

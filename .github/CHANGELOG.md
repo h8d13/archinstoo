@@ -650,8 +650,6 @@ Historical changes/commits before I went rogue:
 	- Split bootstrap deps `base_depends` / `disk_depends`
 		- `live` takes base only: no disk, no chroot, and `pyparted` stays
 		  out to match the import guard
-		- `live` skips the `-S python` refresh + re-exec (nothing to reload,
-		  and it partial-upgrades a running system)
 	- `--script` alone decides the code path; `ArchConfig.script` is a
 	  label saved into the JSON (`--config-url` must not pick what runs)
 	- Rename `ConfigurationHandler` -> `ConfigStore`: parse side binds
