@@ -323,8 +323,8 @@ def _is_foreign_blocked(script: str | None) -> bool:
 	# a foreign host gets its deps from its own package manager (see distros/)
 	# and pacstraps a separate target, which is fine. these scripts instead
 	# install onto the running system: target '/' means `pacman -S` straight
-	# into the Debian/Alpine root, never a chroot. distros/BOOT's root is
-	# Arch, yet thrown away once the install is done: same outcome.
+	# into the Debian/Alpine root, never a chroot. distros/BOOT's Arch root
+	# is thrown away after, same outcome.
 	return script in NO_DISK_SCRIPTS and (Os.running_from_foreign() or Os.running_from_bootstrap())
 
 

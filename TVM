@@ -221,8 +221,7 @@ extract_iso_kernel() {
 			bsdtar -xOf "$iso" loader/entries/01-archiso-linux.conf |
 				sed -n 's/^options[[:space:]]\+//p' >"$BOOT_DIR/cmdline"
 		else
-			# any other live ISO (alpine, for distros/ALP and distros/BOOT):
-			# its first grub entry names kernel, cmdline and initramfs
+			# other live ISOs (alpine): first grub entry has kernel, cmdline, initrd
 			bsdtar -xOf "$iso" boot/grub/grub.cfg >"$BOOT_DIR/grub.cfg"
 			kernel="$(awk '$1 == "linux" { sub("^/", "", $2); print $2; exit }' "$BOOT_DIR/grub.cfg")"
 			initrd="$(awk '$1 == "initrd" { sub("^/", "", $2); print $2; exit }' "$BOOT_DIR/grub.cfg")"

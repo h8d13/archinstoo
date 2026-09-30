@@ -47,8 +47,7 @@ class Os:
 
 	@staticmethod
 	def running_from_bootstrap() -> bool:
-		# distros/BOOT: an Arch root, but the throwaway bootstrap tarball, not
-		# anything that boots. plain arch-chroot keeps the env, so it gets here
+		# distros/BOOT: Arch, but a throwaway root (set through arch-chroot)
 		return Os.get_env('A2_BOOTSTRAP') == '1'
 
 	@staticmethod
@@ -61,9 +60,7 @@ class Os:
 
 	@staticmethod
 	def has_systemd() -> bool:
-		# sd_booted() minus chroots: arch-chroot binds the host /run in, so the
-		# marker leaks through, yet -S hands RootDirectory to the host PID1,
-		# which resolves it against its own root (distros/BOOT runs us there)
+		# sd_booted(), except chroots: arch-chroot binds the host /run in
 		return Path('/run/systemd/system').is_dir() and not Os.running_in_chroot()
 
 	@staticmethod

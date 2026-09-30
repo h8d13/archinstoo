@@ -28,12 +28,12 @@ def test_running_from_arch(monkeypatch: pytest.MonkeyPatch, distro_id: str, is_a
 		(True, False),
 		(False, True),
 		# /proc/1/root unreadable (not root): assume no chroot
-		(PermissionError, False),
+		(PermissionError(), False),
 	],
 )
-def test_running_in_chroot(monkeypatch: pytest.MonkeyPatch, same_root: bool | type[OSError], in_chroot: bool) -> None:
+def test_running_in_chroot(monkeypatch: pytest.MonkeyPatch, same_root: bool | OSError, in_chroot: bool) -> None:
 	def samefile(self: Path, other: str) -> bool:
-		if isinstance(same_root, type):
+		if isinstance(same_root, OSError):
 			raise same_root
 		return same_root
 

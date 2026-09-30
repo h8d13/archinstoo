@@ -45,9 +45,8 @@
 #   ./TSER login -p test           # root
 #   ./TSER login -u vm -p test     # user
 #
-# Foreign hosts (distros/BOOT, DEB, FED) come as cloud images, which have no
-# password until cloud-init sets one: ./distros/CLOUD fed|deb boots one,
-# then ./TSER login -p test as above
+# Foreign hosts for distros/: ./distros/CLOUD fed|deb boots a cloud image,
+# then ./TSER login -p test
 
 import argparse
 import os
@@ -79,10 +78,8 @@ PIDFILE = ROOT / '.dev-vm.pid'
 # host terminal answer into the shell instead. Payloads stop at ESC/BEL
 # so a truncated sequence at the tail of the log cannot swallow the rest
 ANSI = re.compile(
-	# busybox ash ends every prompt with a cursor query (ESC[6n). The log can
-	# double any byte of it (see fuzzy), and the 'n' a plain CSI match leaves
-	# behind turns 'host:~# ' into 'host:~# n', which wait_idle never takes
-	# for a prompt: the next command is never even typed
+	# busybox ash's prompt cursor query (ESC[6n), any byte doubled (see
+	# fuzzy): a leftover 'n' hides the prompt from wait_idle
 	r'\x1b+\[+6+n+'
 	r'|\x1b\[[0-9;?<=>]*[ -/]*[@-~]'  # CSI: params, intermediates (ESC[!p), final
 	r'|\x1bP[^\x1b\x07]*\x1b\\'  # DCS ... ST

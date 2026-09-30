@@ -5,7 +5,7 @@
 # The cloud image, as a throwaway overlay, is the boot disk (/dev/vda) and an
 # empty disk rides along as the install target (/dev/vdb, see
 # installer/examples/vm_cloud_bios.json). SeaBIOS, so the target installs grub on MBR.
-
+#
 # Usage:
 #   ./distros/CLOUD fed|deb       fresh overlay + target, boot, wait for cloud-init
 #   ./distros/CLOUD target        boot what got installed on the target disk (the
