@@ -15,7 +15,7 @@ How to extend, run, or edit the installer. Default flow:
 
 Dispatch:
 [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/__init__.py)
-`run_as_a_module()` -> `_prepare()` (deps bootstrap, python re-exec) ->
+`run_as_a_module()` -> `_prepare()` (deps bootstrap) ->
 `main()` (root check, host `pacman.conf` guard) ->
 [`_run_script`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/checkpoints.py),
 which just `import`s `archinstoo.scripts.<name>`. Rootless scripts skip
