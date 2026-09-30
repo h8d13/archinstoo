@@ -89,8 +89,9 @@ verify() {
 	gnupg=$BOOT_DIR/gnupg
 	mkdir -p "$gnupg" && chmod 700 "$gnupg"
 	import_key
-	# pin the signer, not just any valid signature
-	gpg --homedir "$gnupg" --status-fd 1 \
+	# pin the signer, not just any valid signature. --trusted-key only quiets
+	# the web of trust warning, VALIDSIG is the real check
+	gpg --homedir "$gnupg" --trusted-key "$KEY_FPR" --status-fd 1 \
 		--verify "$BOOT_DIR/$TARBALL.sig" "$BOOT_DIR/$TARBALL" |
 		grep -q "^\[GNUPG:\] VALIDSIG $KEY_FPR " ||
 		die "$TARBALL not signed by $KEY_FPR"
@@ -98,9 +99,6 @@ verify() {
 
 [ "$(id -u)" -eq 0 ] || die 'must run as root'
 [ -n "${TARBALL_URL:-}" ] || die "no bootstrap tarball for $ARCH (x86_64, aarch64)"
-for bin in bash curl zstd tar sha256sum mount umount mountpoint unshare chroot; do
-	command -v "$bin" >/dev/null || die "missing host binary: $bin"
-done
 # without it lsblk has no UUIDs and genfstab silently writes /dev/vdaN
 [ -d /run/udev/data ] ||
 	die 'no udev db in /run/udev, start udev' \
@@ -115,8 +113,8 @@ if [ ! -x "$ROOT/usr/bin/pacman" ]; then
 		fetch "$SUMS_URL"
 	fi
 	verify
-	# piped: busybox tar can't always spawn zstd
-	zstd -dc "$BOOT_DIR/$TARBALL" | tar -x --numeric-owner -f - -C "$BOOT_DIR"
+	# bsdtar: restores the LIBARCHIVE.xattr file capabilities GNU/busybox tar drop
+	bsdtar -x --numeric-owner -f "$BOOT_DIR/$TARBALL" -C "$BOOT_DIR"
 	rm "$BOOT_DIR/$TARBALL"
 	if [ -n "$KEY_URL" ]; then
 		cp "$BOOT_DIR/${KEY_URL##*/}" "$PORT_KEY"
@@ -162,7 +160,8 @@ A2_BOOTSTRAP=1 BOOT_KEY_FPR=$KEY_FPR "$ROOT/usr/bin/arch-chroot" "$ROOT" /bin/ba
 	if [ -L /dev/shm ]; then
 		mkdir -p /run/shm
 	fi
-	# -Syu: a lone python may want a newer glibc than the tarball has
+	# -Syu: the tarball has no sync dbs, and a lone python may want a newer
+	# glibc than it ships
 	pacman -Syu --needed --noconfirm python
 	cd /root/archinstoo
 	exec ./RUN "$@"

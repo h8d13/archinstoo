@@ -28,12 +28,13 @@ On aarch64 it takes the Arch Linux Ports tarball instead, see [`architecture/`](
 A host _only_ needs:
 
 ```
-bash util-linux curl zstd tar coreutils gnupg
+bash util-linux curl bsdtar coreutils gnupg
 ```
 
 `gnupg` is optional on x86_64 (checksum only without it).
+`bsdtar` is `libarchive-tools` on Debian and Alpine, `bsdtar` on Fedora.
 
-From Alpine (mdev by default): `apk add bash curl zstd tar coreutils util-linux gnupg eudev && setup-devd udev`
+From Alpine (mdev by default): `apk add bash curl libarchive-tools coreutils util-linux gnupg eudev && setup-devd udev`
 
 ```shell
 # point to ram
