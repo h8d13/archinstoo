@@ -1,14 +1,15 @@
 # Hybrid Graphics - iGPU + dGPU
 
 Many laptops seem to have an integrated graphics card + dedicated.
-For this case: certain utilities are added through the `Custom` option in `Graphics driver`
+A laptop chassis with two GPUs is detected as hybrid: `Graphics driver` then focuses `Custom`,
+pre-ticked with the packages of both GPUs. A single-vendor preset leaves the other GPU unaccelerated.
 
-You would still need to known if the iGPU is `amd` or `intel` in the common cases.
-
-Defaults install: `switcheroo-control` and `vulkan-mesa-layers`.
+`vulkan-mesa-layers` stays in the `Custom` list, unticked.
 
 > [!TIP]
-> Other tools like [`nvidia-prime`](https://archlinux.org/packages/extra/any/nvidia-prime/) or equivalent [`asusctl`](https://wiki.archlinux.org/title/Asusctl) for instance.
+> Offload tools are opt-in, install what fits after the first boot:
+> [`switcheroo-control`](https://archlinux.org/packages/extra/x86_64/switcheroo-control/) (desktop "launch on discrete GPU"),
+> [`nvidia-prime`](https://archlinux.org/packages/extra/any/nvidia-prime/) (`prime-run`) or equivalent [`asusctl`](https://wiki.archlinux.org/title/Asusctl) for instance.
 > More information is also available on this page: [Wiki PRIME](https://wiki.archlinux.org/title/PRIME).
 
 Hardware detection can be found in this [code path](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py)

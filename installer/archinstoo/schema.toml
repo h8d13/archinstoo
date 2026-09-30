@@ -196,14 +196,15 @@ vm-virtio = ["mesa", "vulkan-virtio"]
 custom = []
 
 [gfx_custom_choices]
-packages = ["intel-media-driver", "libva-intel-driver", "libva-nvidia-driver", "mesa", "nvidia-open", "nvidia-prime", "switcheroo-control", "vpl-gpu-rt", "libvpl", "vulkan-intel", "vulkan-mesa-layers", "vulkan-radeon", "vulkan-nouveau", "vulkan-swrast", "vulkan-virtio", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau"]
+packages = ["intel-media-driver", "libva-intel-driver", "libva-nvidia-driver", "mesa", "nvidia-open", "vpl-gpu-rt", "libvpl", "vulkan-intel", "vulkan-mesa-layers", "vulkan-radeon", "vulkan-nouveau", "vulkan-swrast", "vulkan-virtio", "xf86-video-amdgpu", "xf86-video-ati", "xf86-video-nouveau"]
 
 [gfx_drivers_dkms]
 nvidia-open-kernel = ["nvidia-open-dkms", "libva-nvidia-driver", "dkms"]
 
 [gfx_mesa_extra]
-intel = ["vulkan-intel"]
 amd = ["vulkan-radeon"]
+intel = ["vulkan-intel"]
+nvidia = ["vulkan-nouveau"]
 
 [xorg_extra]
 packages = ["xorg-server", "xorg-xinit"]

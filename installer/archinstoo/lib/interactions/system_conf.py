@@ -1,15 +1,10 @@
 from typing import assert_never
 
-from archinstoo.lib.models.firmware import (
-	FirmwareConfiguration,
-	FirmwareType,
-	FirmwareVendor,
-	detect_optdeps,
-	detect_splits,
-)
+from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
-from archinstoo.lib.tui.curses_menu import SelectMenu
+from archinstoo.lib.pm.firmware import detect_optdeps, detect_splits
+from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
@@ -88,7 +83,12 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 	default = FirmwareConfiguration.default()
 	preset = preset or default
 
-	header = 'Full installs the linux-firmware meta package.' + '\n'
+	# syncs core's files db on first use, like the package list does
+	Tui.print('Detecting firmware...', clear_screen=True)
+	splits, optdeps = detect_splits(), detect_optdeps()
+
+	extras = f', plus {", ".join(v.value for v in optdeps)}' if optdeps else ''
+	header = f'Full installs the linux-firmware meta package{extras}.' + '\n'
 	header += 'Minimal skips firmware entirely (safe for most VMs using virtio).' + '\n'
 	header += 'Vendor lets you pick only the firmware subpackages you need.' + '\n'
 
@@ -122,7 +122,7 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 	vendor_group = MenuItemGroup(vendor_items, sort_items=True)
 
 	# Seed selection from detection only when the user has no prior preset
-	initial_vendors = preset.vendors or detect_splits() + detect_optdeps()
+	initial_vendors = preset.vendors or splits
 	vendor_group.set_selected_by_value(initial_vendors)
 
 	vendor_result = SelectMenu[FirmwareVendor](

@@ -12,12 +12,12 @@ from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
-from archinstoo.lib.hardware import CpuVendor, GfxDriver, GfxPackage, SysInfo
-from archinstoo.lib.models import firmware as firmware_model
+from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo, gpu_vendors
 from archinstoo.lib.models.application import DEFAULT_TERMINAL
 from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.network import NicType
+from archinstoo.lib.pm import firmware as firmware_pm
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
@@ -47,7 +47,7 @@ def _requirements(*binaries: str) -> bool:
 
 
 def _firmware_packages(config: dict[str, Any]) -> set[str]:
-	# mirrors FirmwareConfiguration.packages(): the schema holds what is static,
+	# mirrors pm/firmware.firmware_packages(): the schema holds what is static,
 	# the vendor list comes from the config and FULL's optdeps from the host
 	firmware_cfg = config.get('firmware') or {}
 	firmware_type = firmware_cfg.get('firmware_type', FirmwareType.FULL.value)
@@ -57,7 +57,7 @@ def _firmware_packages(config: dict[str, Any]) -> set[str]:
 		pkgs.update(firmware_cfg.get('vendors', []) or [])
 	elif firmware_type == FirmwareType.FULL.value:
 		# through the module so a test can pin the detection, as gfx does
-		pkgs.update(v.value for v in firmware_model.detect_optdeps())
+		pkgs.update(v.value for v in firmware_pm.detect_optdeps())
 
 	return pkgs
 
@@ -175,14 +175,11 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], selected: lis
 	else:
 		pkgs = set(SCHEMA['gfx_drivers'][gfx])
 
-	# the generic driver picks its vulkan layer off the host GPU, the way the
+	# the generic driver picks its vulkan drivers off the host GPUs, the way the
 	# microcode does; count runs on that same host
 	if gfx == GfxDriver.MesaOpenSource.value:
-		mesa_extra = SCHEMA['gfx_mesa_extra']
-		if SysInfo.has_intel_graphics():
-			pkgs.update(mesa_extra[CpuVendor.GenuineIntel.value])
-		elif SysInfo.has_amd_graphics():
-			pkgs.update(mesa_extra[CpuVendor.AuthenticAMD.value])
+		for vendor in gpu_vendors(SysInfo.gpu_ids()):
+			pkgs.update(SCHEMA['gfx_mesa_extra'][vendor])
 
 	if any(DisplayServer.X11 in p.display_servers() for p in selected):
 		pkgs.update(_flat('xorg_extra'))

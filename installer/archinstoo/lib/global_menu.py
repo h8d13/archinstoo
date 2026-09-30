@@ -33,7 +33,7 @@ from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .menu.driver_select import select_driver, select_gfx_packages
 from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
-from .models.firmware import FirmwareConfiguration, FirmwareType, detect_optdeps
+from .models.firmware import FirmwareConfiguration, FirmwareType
 from .models.locale import LocaleConfiguration
 from .models.network import MacAddressPolicy, NetworkConfiguration, NicType
 from .network.network_menu import select_network
@@ -577,9 +577,6 @@ class GlobalMenu(AbstractMenu[None]):
 		output = f'{"Firmware"}: {config.firmware_type.value}'
 		if config.firmware_type == FirmwareType.VENDOR and config.vendors:
 			output += '\n' + ', '.join(v.value for v in config.vendors)
-		# the one part of FULL that its name does not already say
-		elif config.firmware_type == FirmwareType.FULL and (extras := detect_optdeps()):
-			output += '\n' + ', '.join(v.value for v in extras)
 		return output
 
 	def _prev_bootloader_config(self, item: MenuItem) -> str | None:

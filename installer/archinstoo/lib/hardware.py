@@ -42,8 +42,6 @@ class GfxPackage(Enum):
 	Mesa = 'mesa'  # provides libva-mesa-driver since 24.2.7
 	NvidiaOpen = 'nvidia-open'
 	NvidiaOpenDkms = 'nvidia-open-dkms'
-	NvidiaPrime = 'nvidia-prime'
-	SwitcherooControl = 'switcheroo-control'
 	VplGpuRt = 'vpl-gpu-rt'
 	LibVpl = 'libvpl'
 	VulkanIntel = 'vulkan-intel'
@@ -115,12 +113,10 @@ class GfxDriver(Enum):
 		# and added by the caller (profiles_handler.install_gfx_driver) when X11 is in use.
 		packages = dkms_packages(GFX_PACKAGES[self], kernels)
 
-		# the generic driver adds the vulkan layer for whatever GPU is present
+		# the generic driver adds the vulkan driver of every GPU present
 		if self is GfxDriver.MesaOpenSource:
-			if SysInfo.has_intel_graphics():
-				packages += MESA_HOST_EXTRA[CpuVendor.GenuineIntel.value]
-			elif SysInfo.has_amd_graphics():
-				packages += MESA_HOST_EXTRA[CpuVendor.AuthenticAMD.value]
+			for vendor in gpu_vendors(SysInfo.gpu_ids()):
+				packages += MESA_HOST_EXTRA[vendor]
 
 		return packages
 
@@ -145,17 +141,11 @@ GFX_CUSTOM_CHOICES: list[GfxPackage] = [
 	p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms, GfxPackage.XorgServer, GfxPackage.XorgXinit)
 ]
 
-# the PRIME glue two GPUs need and one never does: switcheroo-control is what
-# desktops read to honour PrefersNonDefaultGPU, vulkan-mesa-layers what
-# DRI_PRIME needs for vulkan on the mesa half. RTD3 is default since nvidia-open 610
-GFX_HYBRID_EXTRA: list[GfxPackage] = [GfxPackage.SwitcherooControl, GfxPackage.VulkanMesaLayers]
-# ticking switcheroo-control also enables its dbus service
-GFX_SERVICES: dict[GfxPackage, str] = {GfxPackage.SwitcherooControl: 'switcheroo-control'}
-
 _PCI_VENDOR_AMD = 0x1002  # ATI's ID, every AMD GPU still carries it
 _PCI_VENDOR_INTEL = 0x8086
 _PCI_VENDOR_NVIDIA = 0x10DE
 _GFX_BY_VENDOR: dict[int, GfxDriver] = {_PCI_VENDOR_AMD: GfxDriver.AmdOpenSource, _PCI_VENDOR_INTEL: GfxDriver.IntelOpenSource}
+_GPU_VENDORS: dict[int, str] = {_PCI_VENDOR_AMD: 'amd', _PCI_VENDOR_INTEL: 'intel', _PCI_VENDOR_NVIDIA: 'nvidia'}
 # nvidia-open needs the GSP, so Turing on: TU102 opens at 0x1e02 and every
 # later generation numbers higher. Volta (GV100, 0x1d81) stays below
 _NVIDIA_TURING_FIRST = 0x1E00
@@ -174,22 +164,17 @@ def detected_gfx_drivers(gpus: set[tuple[int, int]]) -> list[GfxDriver]:
 	return drivers
 
 
-def hybrid_gfx_packages(drivers: list[GfxDriver]) -> list[GfxPackage]:
-	if len(drivers) < 2:
-		return []
-	# prime-run only wraps the nvidia userspace; nouveau hybrids use DRI_PRIME
-	nvidia = [GfxPackage.NvidiaPrime] if GfxDriver.NvidiaOpenKernel in drivers else []
-	return GFX_HYBRID_EXTRA + nvidia
+def gpu_vendors(gpus: set[tuple[int, int]]) -> list[str]:
+	# known vendors only: a server's BMC (ASPEED) is display class too
+	return sorted({_GPU_VENDORS[vendor] for vendor, _ in gpus if vendor in _GPU_VENDORS})
 
 
 def detected_gfx_packages(gpus: set[tuple[int, int]]) -> list[GfxPackage]:
-	# the union of the matching presets, first occurrence wins the order,
-	# then the hybrid extras when there is more than one
-	drivers = detected_gfx_drivers(gpus)
+	# the union of the matching presets, first occurrence wins the order
 	packages: list[GfxPackage] = []
-	for driver in drivers:
+	for driver in detected_gfx_drivers(gpus):
 		packages += [p for p in GFX_PACKAGES[driver] if p not in packages]
-	return packages + hybrid_gfx_packages(drivers)
+	return packages
 
 
 # the static half of every driver, before the DKMS and host-GPU conditionals
@@ -244,10 +229,11 @@ GFX_PACKAGES: dict[GfxDriver, list[GfxPackage]] = {
 	],
 }
 
-# what MesaOpenSource adds once the host GPU is known, keyed by vendor tag
+# what MesaOpenSource adds per GPU vendor present
 MESA_HOST_EXTRA: dict[str, list[GfxPackage]] = {
-	CpuVendor.GenuineIntel.value: [GfxPackage.VulkanIntel],
-	CpuVendor.AuthenticAMD.value: [GfxPackage.VulkanRadeon],
+	'amd': [GfxPackage.VulkanRadeon],
+	'intel': [GfxPackage.VulkanIntel],
+	'nvidia': [GfxPackage.VulkanNouveau],
 }
 
 # the X11 half of a graphical install, added off DisplayServer rather than
@@ -257,20 +243,17 @@ XORG_EXTRA: list[GfxPackage] = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
 # Module-level so tests can point the sweeps at a synthetic tree
 _SYS_BUS = Path('/sys/bus')
 _PCI_BUS = _SYS_BUS / 'pci/devices'
-_USB_BUS = _SYS_BUS / 'usb/devices'
-# every bus a driver can bind a device on. CS35L41-class amps enumerate on
-# acpi (acpi:CSC3551:) and bind on i2c/spi, HDA codecs (ca0132) on hdaudio,
-# brcmfmac/mwifiex on sdio, SoC blocks on platform
+# amps enumerate on acpi and bind on i2c/spi, codecs on hdaudio, SoC blocks on platform
 _MODULE_BUSES = ('pci', 'usb', 'acpi', 'hdaudio', 'i2c', 'platform', 'sdio', 'soundwire', 'spi')
-_FIRMWARE_ROOT = Path('/usr/lib/firmware')
 _MODULE_ROOT = Path('/usr/lib/modules')
 _PROC_FILESYSTEMS = Path('/proc/filesystems')
 _DMI_ID = Path('/sys/class/dmi/id')
+# SMBIOS portable chassis: chwd's laptop set plus sub notebook and detachable
+_PORTABLE_CHASSIS = frozenset({'8', '9', '10', '11', '14', '31', '32'})
 
 
 def _run_splitlines(cmd: list[str]) -> list[str]:
-	# pacman -Qo exits 1 over paths it could not match while still printing the
-	# owners it did find, so read stdout and ignore the status
+	# a nonzero exit from modinfo/modprobe -R only means no answer
 	try:
 		proc = subprocess.run(cmd, capture_output=True, text=True, check=False)  # noqa: S603 - fixed argv, no user input
 	except OSError as err:
@@ -296,7 +279,6 @@ def _module_release() -> str:
 
 
 def _read_dmi(attr: str) -> str | None:
-	# absent on DMI-less boards (most ARM), not an error
 	try:
 		return (_DMI_ID / attr).read_text().strip()
 	except OSError:
@@ -315,21 +297,6 @@ def _modalias(dev: Path) -> str | None:
 			return value
 
 	return None
-
-
-def _bus_vendor_ids(bus: Path, attr: str) -> set[str]:
-	# USB interface nodes (1-1:1.0) carry no vendor-ID attr: skip, do not abort
-	if not bus.is_dir():
-		return set()
-
-	found: set[str] = set()
-	for dev in bus.iterdir():
-		try:
-			found.add((dev / attr).read_text().strip().lower())
-		except OSError:
-			continue
-
-	return found
 
 
 def _bus_modules(bus: Path, release: str) -> set[str]:
@@ -362,29 +329,6 @@ def _module_depends(release: str, module: str) -> set[str]:
 		deps.update(d.replace('-', '_') for d in line.split(',') if d)
 
 	return deps
-
-
-def _firmware_files(declared: list[str], root: Path) -> list[Path]:
-	# modinfo reports uncompressed names and shell globs; on disk they are zstd
-	# compressed. One file per top-level dir names the package as well as all of
-	# them would, which keeps iwlwifi's ~200 flat .ucode entries to one lookup.
-	found: dict[str, Path] = {}
-	for entry in declared:
-		top = entry.split('/')[0] if '/' in entry else ''
-		if top in found:
-			continue
-
-		if '*' in entry or '?' in entry:
-			# a suffixed glob (cirrus/cs35l41-*.wmfw) misses the .zst on disk,
-			# only a bare trailing * happened to cover it
-			match = next(iter(sorted([*root.glob(entry), *root.glob(f'{entry}.zst')])), None)
-		else:
-			match = next((p for p in (root / entry, root / f'{entry}.zst') if p.is_file()), None)
-
-		if match:
-			found[top] = match
-
-	return list(found.values())
 
 
 class _SysInfo:
@@ -442,8 +386,7 @@ class _SysInfo:
 	@cached_property
 	def has_bcachefs(self) -> bool:
 		# out of tree since 6.18: the stock ISO cannot format or mount it, only
-		# a medium built with A2_BCACHEFS=1 registers the filesystem (at boot,
-		# before the installer runs)
+		# a medium built with A2_BCACHEFS=1 registers the filesystem
 		try:
 			text = _PROC_FILESYSTEMS.read_text()
 		except OSError:
@@ -485,8 +428,11 @@ class _SysInfo:
 		return _read_dmi('product_name')
 
 	@cached_property
+	def is_portable(self) -> bool:
+		return _read_dmi('chassis_type') in _PORTABLE_CHASSIS
+
+	@cached_property
 	def module_release(self) -> str:
-		# globs /usr/lib/modules; the device scan and firmware lookup both need it
 		return _module_release()
 
 	@cached_property
@@ -545,18 +491,9 @@ class _SysInfo:
 		return found
 
 	@cached_property
-	def pci_vendor_ids(self) -> set[str]:
-		return _bus_vendor_ids(_PCI_BUS, 'vendor')
-
-	@cached_property
-	def usb_vendor_ids(self) -> set[str]:
-		return _bus_vendor_ids(_USB_BUS, 'idVendor')
-
-	@cached_property
 	def device_modules(self) -> set[str]:
-		# what drives the hardware: the bound module (or the modalias match
-		# when unbound) plus one level of depends. /proc/modules would also
-		# list drivers that probed and declined, like SOF on an HDA-only laptop
+		# bound module (modalias match when unbound) plus one level of depends.
+		# Bound only: SOF probes and declines on HDA laptops, yet stays loaded
 		release = self.module_release
 		bound: set[str] = set()
 		for bus in _MODULE_BUSES:
@@ -569,26 +506,14 @@ class _SysInfo:
 		return modules
 
 	@cached_property
-	def firmware_owners(self) -> list[str]:
-		# device -> module -> firmware file -> owning package. Under-detects:
-		# rtw88/rtw89/btusb build their names at runtime and declare none, and a
-		# proprietary driver's blobs are unowned. Callers use this to narrow an
-		# install, never to decide a blob is unneeded.
+	def declared_firmware(self) -> set[str]:
+		# relative to /usr/lib/firmware, uncompressed, some globs
 		release = self.module_release
-		modules = self.device_modules
+		declared: set[str] = set()
+		for module in sorted(self.device_modules):
+			declared.update(_run_splitlines(['modinfo', '-k', release, '-F', 'firmware', module]))
 
-		files: list[Path] = []
-		for module in sorted(modules):
-			declared = _run_splitlines(['modinfo', '-k', release, '-F', 'firmware', module])
-			files += _firmware_files(declared, _FIRMWARE_ROOT)
-
-		if not files:
-			debug(f'No firmware files declared by {len(modules)} bound modules')
-			return []
-
-		# raw owners: sof-firmware and the nvidia driver tree live under there
-		# too, and only the caller knows which names it can resolve
-		return sorted(set(_run_splitlines(['pacman', '-Qoq', *(str(f) for f in files)])))
+		return declared
 
 
 _sys_info = _SysInfo()
@@ -640,9 +565,10 @@ class SysInfo:
 		return any(vendor == _PCI_VENDOR_INTEL for vendor, _ in _sys_info.gpu_ids)
 
 	@staticmethod
-	def bus_vendor_ids() -> tuple[set[str], set[str]]:
-		# (pci, usb). Sysfs only, no subprocess, so FULL can afford it
-		return _sys_info.pci_vendor_ids, _sys_info.usb_vendor_ids
+	def has_hybrid_graphics() -> bool:
+		# laptops only: a desktop often keeps its iGPU enabled beside the card
+		known = [gpu for gpu in _sys_info.gpu_ids if gpu[0] in _GPU_VENDORS]
+		return _sys_info.is_portable and len(known) > 1
 
 	@staticmethod
 	def device_modules() -> set[str]:
@@ -653,10 +579,10 @@ class SysInfo:
 		return _sys_info.device_modules
 
 	@staticmethod
-	def firmware_owners() -> list[str]:
+	def declared_firmware() -> set[str]:
 		if SysInfo.is_vm():
-			return []
-		return _sys_info.firmware_owners
+			return set()
+		return _sys_info.declared_firmware
 
 	@staticmethod
 	def cpu_vendor() -> CpuVendor | None:
@@ -694,14 +620,11 @@ class SysInfo:
 
 	@staticmethod
 	def requires_sof_fw() -> bool:
-		# the bound driver is a platform one (snd_sof_pci_intel_tgl,
-		# snd_sof_amd_rembrandt); snd_sof itself sits two depends down
+		# the bound one is per platform (snd_sof_pci_intel_tgl), snd_sof sits deeper
 		return any(m.startswith('snd_sof') for m in SysInfo.device_modules())
 
 	@staticmethod
 	def requires_alsa_fw() -> bool:
-		# snd_hda_codec_ca0132 binds on hdaudio, snd_vx_lib is reached as a
-		# depend of snd_vx222/snd_vxpocket
 		modules = (
 			'snd_asihpi',
 			'snd_cs46xx',

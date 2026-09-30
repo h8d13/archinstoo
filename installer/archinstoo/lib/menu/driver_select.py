@@ -11,8 +11,8 @@ def select_gfx_packages(preset: list[GfxPackage] | None = None) -> list[GfxPacka
 	# laptop ticks nvidia-open next to vulkan-intel, which no preset offers
 	items = [MenuItem(p.value, value=p) for p in GFX_CUSTOM_CHOICES]
 	group = MenuItemGroup(items, sort_items=True)
-	# first visit starts from the presets the host's GPUs map to (both halves
-	# of a hybrid, plus its PRIME glue); a saved pick is left alone
+	# first visit starts from the presets the host's GPUs map to, both halves
+	# of a hybrid; a saved pick is left alone
 	gpus = SysInfo.gpu_ids()
 	group.set_selected_by_value(preset or detected_gfx_packages(gpus))
 
@@ -65,8 +65,11 @@ def select_driver(
 	items = [MenuItem(o.display_name(), value=o, preview_action=preview_driver) for o in options]
 	items.append(MenuItem(text='None', value=None))
 	group = MenuItemGroup(items, sort_items=True)
+	hybrid = SysInfo.has_hybrid_graphics()
 	if GfxDriver.MesaOpenSource in options and (SysInfo.is_vm() or SysInfo.arch() != 'x86_64'):
 		default_driver = GfxDriver.MesaOpenSource
+	elif hybrid and GfxDriver.Custom in options:
+		default_driver = GfxDriver.Custom
 	elif GfxDriver.AllOpenSource in options:
 		default_driver = GfxDriver.AllOpenSource
 	else:
@@ -85,6 +88,8 @@ def select_driver(
 		header += 'Intel detected: use All open-source, Intel (open-source), or Mesa (open-source) options.\n'
 	if SysInfo.has_nvidia_graphics():
 		header += 'Nvidia detected: Turing+ use open kernel module, older GPUs use nouveau (legacy nvidia-*xx drivers are on AUR).\n'
+	if hybrid:
+		header += 'Hybrid laptop detected: use Custom, pre-ticked for both GPUs. A single-vendor preset leaves the other GPU unaccelerated.\n'
 
 	result = SelectMenu[GfxDriver](
 		group,

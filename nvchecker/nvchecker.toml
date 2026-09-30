@@ -234,16 +234,10 @@ source = "pacman"
 [nvidia-open-dkms]
 source = "pacman"
 
-[nvidia-prime]
-source = "pacman"
-
 [polkit]
 source = "pacman"
 
 [seatd]
-source = "pacman"
-
-[switcheroo-control]
 source = "pacman"
 
 [vpl-gpu-rt]

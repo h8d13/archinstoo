@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstoo.lib.hardware import GFX_SERVICES, XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
+from archinstoo.lib.hardware import XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.models.application import terminal_for
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
@@ -214,9 +214,6 @@ class ProfileHandler:
 			pkg_names += [p.value for p in XORG_EXTRA]
 
 		install_session.add_additional_packages(pkg_names)
-
-		if services := [unit for pkg, unit in GFX_SERVICES.items() if pkg in driver_pkgs]:
-			install_session.enable_service(services)
 
 	def install_profile_config(
 		self,

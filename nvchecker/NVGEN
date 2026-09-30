@@ -113,9 +113,8 @@ def _needs_update() -> bool:
 
 def parse_pkgbuild_array(path: Path, name: str) -> list[str]:
 	# extract a bash array (depends, optdepends, ...) from a PKGBUILD. comments
-	# go first: a ')' in one ended the array early. bash only opens one at a
-	# word start, which keeps url#fragment and ${var#x} intact. anchored to
-	# line start so 'depends' cannot match inside 'makedepends'/'optdepends'
+	# go first, a ')' in one ends the array; '#' only at a word start, as bash
+	# (url#fragment, ${var#x}). anchored so 'depends' skips 'makedepends'
 	text = re.sub(r'(^|\s)#.*', r'\1', path.read_text(), flags=re.MULTILINE)
 	pattern = rf'^{name}=\(\s*([\s\S]*?)\)'
 	match = re.search(pattern, text, re.MULTILINE)

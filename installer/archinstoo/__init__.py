@@ -73,7 +73,6 @@ from .lib import output
 from .lib.checkpoints import _run_script, clean_cache, clean_logs
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
-from .lib.models.firmware import detect_optdeps, detect_splits
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.bootstrap import keyring_init, pacman_conf
 from .lib.pm.pacman import Pacman
@@ -263,8 +262,6 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Memory statistics: {SysInfo.mem_total()} kB total installed')
 	debug(f'Graphics devices detected: {sorted(f"{v:04x}:{d:04x}" for v, d in SysInfo.gpu_ids())}')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
-	debug(f'Firmware optional deps matched: {detect_optdeps()}')
-	debug(f'Firmware splits detected: {detect_splits()}')
 
 	if args.debug:
 		from .lib.disk.utils import disk_layouts

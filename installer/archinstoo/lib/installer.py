@@ -34,6 +34,7 @@ from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.output import debug, error, info, sync_artifacts, warn
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
+from archinstoo.lib.pm.firmware import firmware_packages
 
 if TYPE_CHECKING:
 	from subprocess import CompletedProcess
@@ -100,7 +101,7 @@ class Installer:
 		self._args = handler.args if handler else Arguments()
 
 		self._base_packages = list(base_packages or __base_packages__)
-		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
+		self._base_packages.extend(firmware_packages(firmware or FirmwareConfiguration()))
 		self.kernels = kernels or [DEFAULT_KERNEL.value]
 		self._disk_config = disk_config
 

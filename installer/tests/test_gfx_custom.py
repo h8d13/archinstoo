@@ -11,13 +11,13 @@ from archinstoo.lib import hardware
 from archinstoo.lib.args import ArchConfig
 from archinstoo.lib.hardware import (
 	GFX_CUSTOM_CHOICES,
+	GFX_PACKAGES,
 	XORG_EXTRA,
 	GfxDriver,
 	GfxPackage,
 	detected_gfx_drivers,
 	detected_gfx_packages,
 	dkms_packages,
-	hybrid_gfx_packages,
 )
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
@@ -118,8 +118,7 @@ def test_gpu_ids_empty_without_a_bus(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
 
 def test_vendor_checks_read_gpu_ids(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	# hybrid dGPUs often report as Display controller (0x0380), which the old
-	# lspci ' VGA '/' 3D ' match skipped; an AMD CPU's own functions are 0x1022
+	# hybrid dGPUs often report as Display controller (0x0380)
 	bus = _fake_gpus(
 		tmp_path,
 		[
@@ -164,60 +163,79 @@ def test_detected_packages_union_both_halves() -> None:
 	assert set(packages) <= set(GFX_CUSTOM_CHOICES)
 
 
-# -- hybrid extras: PRIME glue on top of the per-GPU sets --
+# -- mesa and hybrids: every GPU gets its vulkan driver, glue stays opt-in --
+
+INTEL, AMD, TURING, ASPEED = (0x8086, 0xA7A0), (0x1002, 0x73FF), (0x10DE, 0x2520), (0x1A03, 0x2000)
+
+
+def _host_gpus(monkeypatch: pytest.MonkeyPatch, gpus: set[tuple[int, int]], chassis: str = '10') -> None:
+	info = hardware._SysInfo()
+	info.__dict__.update(gpu_ids=gpus, is_portable=chassis in hardware._PORTABLE_CHASSIS)
+	monkeypatch.setattr(hardware, '_sys_info', info)
 
 
 @pytest.mark.parametrize(
-	('drivers', 'expected'),
+	('gpus', 'vulkan'),
 	[
-		([GfxDriver.IntelOpenSource], []),
-		([GfxDriver.NvidiaOpenKernel], []),
-		([GfxDriver.IntelOpenSource, GfxDriver.AmdOpenSource], [GfxPackage.SwitcherooControl, GfxPackage.VulkanMesaLayers]),
-		(
-			[GfxDriver.AmdOpenSource, GfxDriver.NvidiaOpenKernel],
-			[GfxPackage.SwitcherooControl, GfxPackage.VulkanMesaLayers, GfxPackage.NvidiaPrime],
-		),
-		# nouveau is a mesa driver: DRI_PRIME, not prime-run
-		([GfxDriver.IntelOpenSource, GfxDriver.NvidiaOpenSource], [GfxPackage.SwitcherooControl, GfxPackage.VulkanMesaLayers]),
+		({INTEL}, {'vulkan-intel'}),
+		({AMD}, {'vulkan-radeon'}),
+		# nvidia under mesa runs nouveau, NVK is its vulkan
+		({TURING}, {'vulkan-nouveau'}),
+		({INTEL, AMD}, {'vulkan-intel', 'vulkan-radeon'}),
+		({AMD, TURING}, {'vulkan-radeon', 'vulkan-nouveau'}),
+		({ASPEED}, set()),
 	],
 )
-def test_hybrid_extras_need_two_gpus(drivers: list[GfxDriver], expected: list[GfxPackage]) -> None:
-	assert hybrid_gfx_packages(drivers) == expected
+def test_mesa_adds_vulkan_for_every_gpu(monkeypatch: pytest.MonkeyPatch, gpus: set[tuple[int, int]], vulkan: set[str]) -> None:
+	_host_gpus(monkeypatch, gpus)
+	installed = {p.value for p in GfxDriver.MesaOpenSource.gfx_packages(['linux'])}
+	counted = _resolve._gfx_packages('mesa-open-source', [], ['linux'], [])
+
+	assert installed == counted == {'mesa', *vulkan}
 
 
-def test_detected_packages_carry_the_hybrid_extras() -> None:
-	single = detected_gfx_packages({(0x10DE, 0x2208)})
-	assert GfxPackage.NvidiaPrime not in single
-	assert GfxPackage.SwitcherooControl not in single
-
-	hybrid = detected_gfx_packages({(0x8086, 0xA7A0), (0x10DE, 0x2208)})
-	assert hybrid[-3:] == [GfxPackage.SwitcherooControl, GfxPackage.VulkanMesaLayers, GfxPackage.NvidiaPrime]
-	assert set(hybrid) <= set(GFX_CUSTOM_CHOICES)
+def test_detected_packages_leave_the_glue_unticked() -> None:
+	packages = detected_gfx_packages({INTEL, TURING})
+	assert GfxPackage.VulkanMesaLayers not in packages
+	assert set(packages) == set(GFX_PACKAGES[GfxDriver.IntelOpenSource]) | set(GFX_PACKAGES[GfxDriver.NvidiaOpenKernel])
 
 
-def test_install_enables_the_service_a_pick_owns(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+	('gpus', 'chassis', 'hybrid'),
+	[
+		({INTEL, TURING}, '10', True),
+		# same vendor twice: an AMD Advantage laptop
+		({(0x1002, 0x1681), AMD}, '9', True),
+		({INTEL}, '10', False),
+		# a desktop keeping its iGPU beside the card, a server's BMC beside one
+		({INTEL, TURING}, '3', False),
+		({ASPEED, TURING}, '10', False),
+	],
+)
+def test_hybrid_needs_a_laptop_with_two_gpus(
+	monkeypatch: pytest.MonkeyPatch,
+	gpus: set[tuple[int, int]],
+	chassis: str,
+	hybrid: bool,
+) -> None:
+	_host_gpus(monkeypatch, gpus, chassis)
+	assert hardware.SysInfo.has_hybrid_graphics() is hybrid
+
+
+def test_custom_install_takes_the_picks_as_given() -> None:
 	installed: list[str] = []
-	enabled: list[str] = []
-	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend, enable_service=enabled.extend)
+	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend)
 
 	handler = ProfileHandler()
-	handler.install_gfx_driver(session, GfxDriver.Custom, {DisplayServer.Wayland}, [GfxPackage.Mesa, GfxPackage.SwitcherooControl])  # type: ignore[arg-type]
-	assert installed == ['mesa', 'switcheroo-control']
-	assert enabled == ['switcheroo-control']
-
-	# no switcheroo pick, no unit; a preset behaves the same as before
-	installed.clear()
-	enabled.clear()
-	handler.install_gfx_driver(session, GfxDriver.IntelOpenSource, {DisplayServer.Wayland})  # type: ignore[arg-type]
-	assert installed == [p.value for p in GfxDriver.IntelOpenSource.gfx_packages(['linux'])]
-	assert enabled == []
+	handler.install_gfx_driver(session, GfxDriver.Custom, {DisplayServer.Wayland}, [GfxPackage.Mesa, GfxPackage.VulkanMesaLayers])  # type: ignore[arg-type]
+	assert installed == ['mesa', 'vulkan-mesa-layers']
 
 
 def test_driver_installs_without_a_display_server() -> None:
 	# a headless box running CUDA picks a driver and never selects a profile:
 	# the driver packages still go in, only the X11 base is left out
 	installed: list[str] = []
-	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend, enable_service=lambda _units: None)
+	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend)
 
 	ProfileHandler().install_gfx_driver(session, GfxDriver.IntelOpenSource, set())  # type: ignore[arg-type]
 
