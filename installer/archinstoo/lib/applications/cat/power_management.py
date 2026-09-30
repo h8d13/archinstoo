@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import PowerManagement, PowerManagementConfiguration
+from archinstoo.lib.models.applications import PowerManagement, PowerManagementConfiguration
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:

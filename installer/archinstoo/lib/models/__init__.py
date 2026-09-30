@@ -1,4 +1,4 @@
-from .application import ApplicationConfiguration, Audio, AudioConfiguration, BluetoothConfiguration, PrintServiceConfiguration, ThunderboltConfiguration
+from .applications import ApplicationConfiguration, Audio, AudioConfiguration, BluetoothConfiguration, PrintServiceConfiguration, ThunderboltConfiguration
 from .bootloader import Bootloader
 from .device import (
 	BDevice,
@@ -26,7 +26,7 @@ from .device import (
 	_DeviceInfo,
 )
 from .kernel import DEFAULT_KERNEL, Kernel
-from .locale import LocaleConfiguration
+from .localization import LocaleConfiguration
 from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
 from .packages import Repository

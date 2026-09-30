@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments
 from archinstoo.lib.hardware import GfxDriver
-from archinstoo.lib.models.application import (
+from archinstoo.lib.models.applications import (
 	ApplicationConfiguration,
 	Audio,
 	AudioConfiguration,
@@ -30,7 +30,7 @@ from archinstoo.lib.models.application import (
 from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, Size
-from archinstoo.lib.models.locale import LocaleConfiguration
+from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.models.packages import Repository

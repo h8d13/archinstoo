@@ -16,7 +16,7 @@ from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.localization import catalog
 from archinstoo.lib.menu import locale_menu
-from archinstoo.lib.models.locale import LocaleConfiguration
+from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.utils.env import Os, data_paths
 
 _DATA_PATHS = 'archinstoo.lib.localization.catalog.data_paths'

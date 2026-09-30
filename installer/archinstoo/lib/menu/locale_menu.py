@@ -13,7 +13,7 @@ from archinstoo.lib.localization.catalog import (
 	xkb_from_keymap,
 )
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
-from archinstoo.lib.models.locale import LocaleConfiguration
+from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.output import debug
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

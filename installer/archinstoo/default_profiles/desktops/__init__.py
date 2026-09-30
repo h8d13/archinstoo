@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.args import get_arch_config_handler
-from archinstoo.lib.models.application import terminal_for
+from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.output import warn
 
 if TYPE_CHECKING:

@@ -17,7 +17,7 @@ from archinstoo.default_profiles.desktops.sway import SwayProfile
 from archinstoo.lib import args
 from archinstoo.lib.applications.cat.terminal import TerminalApp
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.application import DEFAULT_TERMINAL, ApplicationConfiguration, Terminal, TerminalConfiguration
+from archinstoo.lib.models.applications import DEFAULT_TERMINAL, ApplicationConfiguration, Terminal, TerminalConfiguration
 from archinstoo.lib.models.users import User
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler

@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.args import ArchConfigHandler
 	from archinstoo.lib.general import SysCommand
-	from archinstoo.lib.models.locale import LocaleConfiguration
+	from archinstoo.lib.models.localization import LocaleConfiguration
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
 	from archinstoo.lib.models.packages import Repository
 	from archinstoo.lib.models.service import UserService

@@ -7,7 +7,7 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.hardware import XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
-from archinstoo.lib.models.application import terminal_for
+from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 	from types import ModuleType
 
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.application import ApplicationConfiguration
+	from archinstoo.lib.models.applications import ApplicationConfiguration
 	from archinstoo.lib.profile.config import ProfileConfiguration
 
 

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo, gpu_vendors
-from archinstoo.lib.models.application import DEFAULT_TERMINAL
+from archinstoo.lib.models.applications import DEFAULT_TERMINAL
 from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.network import NicType

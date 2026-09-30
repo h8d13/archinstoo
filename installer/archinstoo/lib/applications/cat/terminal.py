@@ -4,7 +4,7 @@ from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.application import TerminalConfiguration
+	from archinstoo.lib.models.applications import TerminalConfiguration
 
 
 class TerminalApp:

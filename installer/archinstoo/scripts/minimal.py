@@ -9,7 +9,7 @@ from archinstoo.lib.disk.filesystem import FilesystemHandler
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models import Bootloader
-from archinstoo.lib.models.locale import LocaleConfiguration
+from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, error, info

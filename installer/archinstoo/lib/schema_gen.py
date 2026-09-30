@@ -34,7 +34,7 @@ from archinstoo.lib.authentication import stash
 from archinstoo.lib.disk import snapshots
 from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
 from archinstoo.lib.kernel import zram
-from archinstoo.lib.models.application import (
+from archinstoo.lib.models.applications import (
 	Audio,
 	Editor,
 	Firewall,

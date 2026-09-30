@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.models.application import Firewall, FirewallConfiguration
+from archinstoo.lib.models.applications import Firewall, FirewallConfiguration
 from archinstoo.lib.output import debug, warn
 
 if TYPE_CHECKING:

@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from archinstoo.lib.args import ArchConfig
-from archinstoo.lib.models.application import ApplicationConfiguration
+from archinstoo.lib.models.applications import ApplicationConfiguration
 
 EXAMPLES = Path(__file__).parent.parent / 'examples'
 FULL = EXAMPLES / 'config_sample_full.json'

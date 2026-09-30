@@ -19,7 +19,7 @@ from .cat.thunderbolt import ThunderboltApp
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.application import ApplicationConfiguration
+	from archinstoo.lib.models.applications import ApplicationConfiguration
 	from archinstoo.lib.models.users import User
 
 

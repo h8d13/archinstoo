@@ -34,7 +34,7 @@ from .menu.driver_select import select_driver, select_gfx_packages
 from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration, FirmwareType
-from .models.locale import LocaleConfiguration
+from .models.localization import LocaleConfiguration
 from .models.network import MacAddressPolicy, NetworkConfiguration, NicType
 from .network.network_menu import select_network
 from .output import FormattedOutput
@@ -43,7 +43,7 @@ from .pm.mirrors import PMenu
 from .profile.config import ProfileConfiguration
 
 if TYPE_CHECKING:
-	from archinstoo.lib.models.application import ApplicationConfiguration
+	from archinstoo.lib.models.applications import ApplicationConfiguration
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
 
 	from .args import ArchConfig

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import Monitor, MonitorConfiguration
+from archinstoo.lib.models.applications import Monitor, MonitorConfiguration
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:

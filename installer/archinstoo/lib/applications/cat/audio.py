@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.models.application import Audio, AudioConfiguration
+from archinstoo.lib.models.applications import Audio, AudioConfiguration
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:

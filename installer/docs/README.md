@@ -134,13 +134,13 @@
 │   │   │   ├── locale_menu
 │   │   │   └── menu_helper
 │   │   ├── models/
-│   │   │   ├── application
+│   │   │   ├── applications
 │   │   │   ├── authentication
 │   │   │   ├── bootloader
 │   │   │   ├── device
 │   │   │   ├── firmware
 │   │   │   ├── kernel
-│   │   │   ├── locale
+│   │   │   ├── localization
 │   │   │   ├── mirrors
 │   │   │   ├── network
 │   │   │   ├── packages
@@ -157,10 +157,12 @@
 │   │   │   ├── aur
 │   │   │   ├── bootstrap
 │   │   │   ├── config
+│   │   │   ├── firmware
 │   │   │   ├── groups
 │   │   │   ├── mirrors
 │   │   │   ├── packages
-│   │   │   └── pacman
+│   │   │   ├── pacman
+│   │   │   └── tmpdb
 │   │   ├── profile/
 │   │   │   ├── base
 │   │   │   ├── config
@@ -210,5 +212,5 @@
     └── parted/
         └── __init__
 
-30 directories, 182 files
+30 directories, 181 files
 ```

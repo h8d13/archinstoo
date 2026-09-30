@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 	from pathlib import Path
 
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.locale import LocaleConfiguration
+	from archinstoo.lib.models.localization import LocaleConfiguration
 
 # writes the target's locale, console and graphical keyboard files; the
 # listings and validation the menus use live in catalog.py

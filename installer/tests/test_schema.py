@@ -17,7 +17,7 @@ import pytest
 
 from archinstoo.lib import installer, schema, schema_gen
 from archinstoo.lib.hardware import CpuVendor, GfxPackage
-from archinstoo.lib.models.application import (
+from archinstoo.lib.models.applications import (
 	DEFAULT_TERMINAL,
 	ApplicationConfiguration,
 	ApplicationSerialization,

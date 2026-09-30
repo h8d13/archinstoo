@@ -2,7 +2,7 @@ from typing import override
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
-from archinstoo.lib.models.application import (
+from archinstoo.lib.models.applications import (
 	EXPERIMENTAL_CPU_SCHEDULERS,
 	ApplicationConfiguration,
 	Audio,

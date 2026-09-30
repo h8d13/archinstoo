@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.application import Security, SecurityConfiguration
+from archinstoo.lib.models.applications import Security, SecurityConfiguration
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:

@@ -54,7 +54,7 @@ Worked example: `media_codecs`, a yes/no that installs a fixed set. Follow
 it file by file; a single-pick or multi-select category swaps the `enabled`
 flag for an enum, the way `firewall`/`management` do.
 
-1. [models/application.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/application.py):
+1. [models/applications.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/applications.py):
    `MediaCodecsConfigSerialization` (TypedDict, the JSON shape),
    `MediaCodecsConfiguration` (a `_Category` dataclass with its one field:
    an enum, a bool, or a list of enums; `json()`/`parse_arg()` come from the
