@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -611,6 +612,13 @@ class DeviceHandler:
 
 	def fetch_part_info(self, path: Path) -> LsblkInfo:
 		lsblk_info = get_lsblk_info(path)
+		# lsblk reads the udev db, which can lag mkfs where settle is a no-op
+		deadline = time.monotonic() + 5
+		while not all((lsblk_info.partn, lsblk_info.partuuid, lsblk_info.uuid)):
+			if time.monotonic() >= deadline:
+				break
+			time.sleep(0.1)
+			lsblk_info = get_lsblk_info(path)
 
 		if not lsblk_info.partn:
 			debug(f'Unable to determine new partition number: {path}\n{lsblk_info}')
@@ -985,6 +993,17 @@ class DeviceHandler:
 	@staticmethod
 	def udev_sync() -> None:
 		try:
-			SysCommand('udevadm settle')
+			# arch-chroot (distros/BOOT) exports SYSTEMD_IN_CHROOT=1: no settle
+			env = {'SYSTEMD_IN_CHROOT': '0'}
+			SysCommand('udevadm settle', environment_vars=env)
 		except SysCallError as err:
 			debug(f'Failed to synchronize with udev: {err}')
+
+		# settle skips a udevd without varlink (eudev, Debian 13), but
+		# every udevd keeps this file while events are queued
+		deadline = time.monotonic() + 10
+		while Path('/run/udev/queue').exists():
+			if time.monotonic() >= deadline:
+				debug('udev queue still busy after 10s')
+				return
+			time.sleep(0.05)
