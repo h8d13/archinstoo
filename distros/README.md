@@ -28,11 +28,12 @@ On aarch64 it takes the Arch Linux Ports tarball instead, see [`architecture/`](
 A host _only_ needs:
 
 ```
-bash util-linux curl bsdtar coreutils gnupg
+bash util-linux curl libarchive coreutils gnupg
 ```
 
 `gnupg` is optional on x86_64 (checksum only without it).
-`bsdtar` is `libarchive-tools` on Debian and Alpine, `bsdtar` on Fedora.
+
+Package names might differ per distro. `libarchive-tools` on Debian and Alpine, `bsdtar` on Fedora.
 
 From Alpine (mdev by default): `apk add bash curl libarchive-tools coreutils util-linux gnupg eudev && setup-devd udev`
 

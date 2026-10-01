@@ -5,6 +5,7 @@
 # cd archinstoo
 # ./distros/FED
 # ./RUN
+set -e
 
 # shellcheck disable=SC2046
 dnf install -y $(

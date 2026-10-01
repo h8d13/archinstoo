@@ -100,8 +100,8 @@ verify() {
 [ "$(id -u)" -eq 0 ] || die 'must run as root'
 [ -n "${TARBALL_URL:-}" ] || die "no bootstrap tarball for $ARCH (x86_64, aarch64)"
 # without it lsblk has no UUIDs and genfstab silently writes /dev/vdaN
-[ -d /run/udev/data ] ||
-	die 'no udev db in /run/udev, start udev' \
+[ -S /run/udev/control ] ||
+	die 'no udev' \
 		'(alpine: apk add eudev && setup-devd udev)'
 
 mkdir -p "$BOOT_DIR"

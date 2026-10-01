@@ -2,8 +2,8 @@
 
 # Debian bootstrap for archinstoo. Targets forky/sid.
 # Also use cloud image + cloud-init meta.
-
 set -e
+
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
