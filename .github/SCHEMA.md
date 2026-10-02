@@ -46,9 +46,9 @@ Select according to your setup.
 This is all up to user preference, can be multi-selected / some set the global default
 (like `Editor` and `Terminal`) through `/etc/environment`
 
-`Terminal` is the one every window manager profile shares: it installs the package, exports
-`TERMINAL`, and repoints the keybind in whatever config the profile ships. Skipping it leaves
-the profiles on `alacritty`.
+`Terminal` is the one every window manager profile shares: it installs the package and exports
+`TERMINAL`. Configs a window manager ships keep the terminal upstream put in them. Skipping it
+leaves the profiles on `alacritty`.
 
 - `Additional packages` & `AUR packages`
 

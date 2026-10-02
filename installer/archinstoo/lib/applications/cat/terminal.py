@@ -18,6 +18,6 @@ class TerminalApp:
 
 		install_session.add_additional_packages(terminal.packages)
 
-		# profiles read this back through terminal_command(); the WMs whose
-		# sensible-terminal helpers honour $TERMINAL (i3, labwc) need nothing else
+		# this is all a profile gets: shipped WM configs keep whatever terminal
+		# upstream hardcodes, only our own (noctalia) launch $TERMINAL
 		install_session.set_environment({'TERMINAL': terminal.value})

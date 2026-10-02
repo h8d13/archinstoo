@@ -1,11 +1,8 @@
 from typing import TYPE_CHECKING, override
 
+from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import ProfileType, SeatAccess, seat_services
-from archinstoo.lib.tui.curses_menu import SelectMenu
-from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.profile.base import ProfileType, seat_packages, seat_services
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -25,14 +22,9 @@ class LabwcProfile(WaylandProfile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		additional: list[str] = []
-		seat = self.custom_settings.get('seat_access')
-		if isinstance(seat, str):
-			additional = [seat]
-
 		return [
 			'labwc',
-			*additional,
+			*seat_packages(self.custom_settings.get('seat_access')),
 			'xdg-desktop-portal-wlr',  # labwc-portals.conf: default=wlr; labwc pulls no backend
 		]
 
@@ -56,28 +48,9 @@ class LabwcProfile(WaylandProfile):
 	def services(self) -> list[str]:
 		return seat_services(self.custom_settings.get('seat_access'))
 
-	def _select_seat_access(self) -> None:
-		# need to activate seat service and add to seat group
-		header = 'labwc needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
-		header += '\n' + 'Choose an option to give labwc access to your hardware' + '\n'
-
-		items = [MenuItem(s.label, value=s) for s in SeatAccess]
-		group = MenuItemGroup(items, sort_items=True)
-
-		default = self.custom_settings.get('seat_access', None)
-		group.set_default_by_value(default)
-
-		result = SelectMenu[SeatAccess](
-			group,
-			header=header,
-			allow_skip=False,
-			frame=FrameProperties.min('Seat access'),
-			alignment=Alignment.CENTER,
-		).run()
-
-		if result.type_ == ResultType.Selection:
-			self.custom_settings['seat_access'] = result.get_value().value
-
 	@override
 	def do_on_select(self) -> None:
-		self._select_seat_access()
+		self.custom_settings['seat_access'] = select_seat_access(
+			'labwc',
+			self.custom_settings.get('seat_access'),
+		)

@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import provision_terminal_config
 from archinstoo.default_profiles.xorg import XorgProfile
 from archinstoo.lib.output import debug
 from archinstoo.lib.profile.base import ProfileType
@@ -36,16 +35,6 @@ class AwesomeProfile(XorgProfile):
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
-		# rc.lua hardcodes `terminal = "xterm"` and everything else reads that
-		# variable; awesome prefers the ~/.config copy over the packaged one
-		provision_terminal_config(
-			install_session,
-			users,
-			install_session.target / 'etc/xdg/awesome/rc.lua',
-			'awesome/rc.lua',
-			'xterm',
-		)
-
 		# TODO: check if we selected a greeter,
 		# but for now, awesome is intended to run without one.
 

@@ -1,12 +1,9 @@
+import shutil
 from typing import TYPE_CHECKING, override
 
-from archinstoo.default_profiles.desktops import provision_terminal_config
+from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import ProfileType, SeatAccess, seat_services
-from archinstoo.lib.tui.curses_menu import SelectMenu
-from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.profile.base import ProfileType, seat_packages, seat_services
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -24,11 +21,6 @@ class RiverProfile(WaylandProfile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		additional: list[str] = []
-		seat = self.custom_settings.get('seat_access')
-		if isinstance(seat, str):
-			additional = [seat]
-
 		# `river` in extra is the 0.4 rewrite: compositor only, the window
 		# manager is a separate client and none is packaged. river-classic
 		# is the 0.3 line with riverctl/rivertile, the one that runs standalone
@@ -40,7 +32,7 @@ class RiverProfile(WaylandProfile):
 			'pamixer',
 			'playerctl',
 			'brightnessctl',
-			*additional,
+			*seat_packages(self.custom_settings.get('seat_access')),
 		]
 
 	@property
@@ -52,39 +44,22 @@ class RiverProfile(WaylandProfile):
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
 
-		# river reads ~/.config/river/init and nothing else (no /etc fallback).
-		# the example binds Super+Shift+Return to a hardcoded foot
-		provision_terminal_config(
-			install_session,
-			users,
-			install_session.target / 'usr/share/river-classic/example/init',
-			'river/init',
-			'foot',
-			executable=True,
-		)
+		# river reads ~/.config/river/init and nothing else (no /etc fallback):
+		# no init means no bindings and no layout, a black screen
+		shipped = install_session.target / 'usr/share/river-classic/example/init'
 
-	def _select_seat_access(self) -> None:
-		# need to activate seat service and add to seat group
-		header = 'River needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
-		header += '\n' + 'Choose an option to give River access to your hardware' + '\n'
+		for user in users:
+			init = install_session.target / 'home' / user.username / '.config/river/init'
+			init.parent.mkdir(parents=True, exist_ok=True)
+			shutil.copy(shipped, init)
+			# river runs init as a program, a 0644 copy is silently skipped
+			init.chmod(0o755)
 
-		items = [MenuItem(s.label, value=s) for s in SeatAccess]
-		group = MenuItemGroup(items, sort_items=True)
-
-		default = self.custom_settings.get('seat_access', None)
-		group.set_default_by_value(default)
-
-		result = SelectMenu[SeatAccess](
-			group,
-			header=header,
-			allow_skip=False,
-			frame=FrameProperties.min('Seat access'),
-			alignment=Alignment.CENTER,
-		).run()
-
-		if result.type_ == ResultType.Selection:
-			self.custom_settings['seat_access'] = result.get_value().value
+			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
 
 	@override
 	def do_on_select(self) -> None:
-		self._select_seat_access()
+		self.custom_settings['seat_access'] = select_seat_access(
+			'River',
+			self.custom_settings.get('seat_access'),
+		)

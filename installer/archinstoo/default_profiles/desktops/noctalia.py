@@ -1,14 +1,11 @@
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, override
 
-from archinstoo.default_profiles.desktops import terminal_command
+from archinstoo.default_profiles.desktops import select_compositor, select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.output import debug, warn
-from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess, seat_services
-from archinstoo.lib.tui.curses_menu import SelectMenu
-from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
+from archinstoo.lib.output import debug
+from archinstoo.lib.profile.base import GreeterType, ProfileType, seat_packages, seat_services
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -49,38 +46,19 @@ class NoctaliaProfile(WaylandProfile):
 	def __init__(self) -> None:
 		super().__init__('noctalia', ProfileType.WindowMgr)
 
-		self.custom_settings = {'noctalia_compositor': ['niri'], 'seat_access': None}
-
-	@property
-	def compositors(self) -> list[str]:
-		# consumers index compositor_packages/_COMPOSITOR_CONFIG_DIRS by these:
-		# drop unknowns
-		return [c for c in self._requested_compositors() if c in self.compositor_packages] or ['niri']
-
-	def _requested_compositors(self) -> list[str]:
-		comp = self.custom_settings.get('noctalia_compositor')
-		if isinstance(comp, str):  # tolerate single value in hand-written configs
-			return [comp]
-		return comp if isinstance(comp, list) else []
+		self.custom_settings = {'noctalia_compositor': 'niri', 'seat_access': None}
 
 	@property
 	@override
 	def packages(self) -> list[str]:
-		additional: list[str] = []
-		seat = self.custom_settings.get('seat_access')
-		if isinstance(seat, str):
-			additional = [seat]
-
-		compositor_pkgs = [p for comp in self.compositors for p in self.compositor_packages[comp]]
-
 		return [
-			*compositor_pkgs,
+			*self.compositor_packages[self.compositor],
 			'noctalia',
 			# noctalia resolves fonts via fontconfig (sans-serif default);
 			# bare installs ship none, so seed one sans + one mono
 			'inter-font',
 			'ttf-jetbrains-mono-nerd',
-			*additional,
+			*seat_packages(self.custom_settings.get('seat_access')),
 		]
 
 	@property
@@ -92,73 +70,28 @@ class NoctaliaProfile(WaylandProfile):
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
 
-		requested = self._requested_compositors()
-		if dropped := [c for c in requested if c not in self.compositor_packages]:
-			warn(f'Ignoring unknown noctalia_compositor {dropped}, valid: {list(self.compositor_packages)}')
-		elif not requested:
-			debug(f'No noctalia_compositor set, using {self.compositors}')
-
 		# noctalia starts via the compositor's autostart hook; only the
 		# compositor config is provisioned, the shell configures itself
 		for user in users:
 			config_dir = install_session.target / 'home' / user.username / '.config'
+			dest_dir = config_dir / _COMPOSITOR_CONFIG_DIRS[self.compositor]
+			dest_dir.mkdir(parents=True, exist_ok=True)
 
-			for comp in self.compositors:
-				dest_dir = config_dir / _COMPOSITOR_CONFIG_DIRS[comp]
-				dest_dir.mkdir(parents=True, exist_ok=True)
-
-				for asset in sorted((_ASSETS_DIR / comp).iterdir()):
-					conf = asset.read_text().replace('{{TERMINAL_COMMAND}}', terminal_command())
-					dest = dest_dir / asset.name
-					debug(f'Writing {dest} for {user.username}')
-					dest.write_text(conf)
+			for asset in sorted((_ASSETS_DIR / self.compositor).iterdir()):
+				dest = dest_dir / asset.name
+				debug(f'Writing {dest} for {user.username}')
+				shutil.copy(asset, dest)
 
 			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
 
-	def _select_compositors(self) -> None:
-		header = 'Noctalia runs on top of a Wayland compositor' + '\n'
-		header += 'Choose one or more to install' + '\n'
-
-		items = [MenuItem(c, value=c) for c in self.compositor_packages]
-		group = MenuItemGroup(items, sort_items=True)
-		group.set_selected_by_value(self.compositors)
-
-		result = SelectMenu[str](
-			group,
-			multi=True,
-			header=header,
-			allow_skip=False,
-			frame=FrameProperties.min('Compositor'),
-			alignment=Alignment.CENTER,
-		).run()
-
-		# empty multi-selection keeps the previous choice
-		if result.type_ == ResultType.Selection and (values := result.get_values()):
-			self.custom_settings['noctalia_compositor'] = values
-
-	def _select_seat_access(self) -> None:
-		# need to activate seat service and add to seat group
-		header = 'Noctalia needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
-		header += '\n' + 'Choose an option to give Noctalia access to your hardware' + '\n'
-
-		items = [MenuItem(s.label, value=s) for s in SeatAccess]
-		group = MenuItemGroup(items, sort_items=True)
-
-		default = self.custom_settings.get('seat_access', None)
-		group.set_default_by_value(default)
-
-		result = SelectMenu[SeatAccess](
-			group,
-			header=header,
-			allow_skip=False,
-			frame=FrameProperties.min('Seat access'),
-			alignment=Alignment.CENTER,
-		).run()
-
-		if result.type_ == ResultType.Selection:
-			self.custom_settings['seat_access'] = result.get_value().value
-
 	@override
 	def do_on_select(self) -> None:
-		self._select_compositors()
-		self._select_seat_access()
+		self.custom_settings['noctalia_compositor'] = select_compositor(
+			'Noctalia',
+			list(self.compositor_packages),
+			self.compositor,
+		)
+		self.custom_settings['seat_access'] = select_seat_access(
+			'Noctalia',
+			self.custom_settings.get('seat_access'),
+		)

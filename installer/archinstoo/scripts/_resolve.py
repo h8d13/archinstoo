@@ -119,12 +119,8 @@ def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 
 	# <name>_compositor swaps the default (niri) compositor set
 	if comp_sets := SCHEMA['compositors'].get(name):
-		comps = settings.get(f'{name}_compositor') or ['niri']
-		if isinstance(comps, str):
-			comps = [comps]
 		prof_pkgs.difference_update(comp_sets['niri'])
-		for comp in comps:
-			prof_pkgs.update(comp_sets.get(comp, []))
+		prof_pkgs.update(comp_sets[settings[f'{name}_compositor']])
 
 	return prof_pkgs
 
@@ -287,7 +283,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 			if name in profiles:
 				pkgs.update(p for p in _profile_packages(name, settings) if p not in excluded)
 
-			# seat_access for sway/river/niri/labwc/dms
+			# seat_access for the wayland WMs (see seat_packages)
 			if (seat := settings.get('seat_access')) and seat not in excluded:
 				pkgs.add(seat)
 

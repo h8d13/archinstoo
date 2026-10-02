@@ -16,8 +16,8 @@
     <default />
 
     <!-- application launchers -->
-    <keybind key="W-t"><action name="Execute"><command>{{TERMINAL_COMMAND}}</command></action></keybind>
-    <keybind key="W-Return"><action name="Execute"><command>{{TERMINAL_COMMAND}}</command></action></keybind>
+    <keybind key="W-t"><action name="Execute"><command>sh -c 'exec "$TERMINAL"'</command></action></keybind>
+    <keybind key="W-Return"><action name="Execute"><command>sh -c 'exec "$TERMINAL"'</command></action></keybind>
     <keybind key="W-space"><action name="Execute"><command>noctalia msg panel-toggle launcher</command></action></keybind>
     <keybind key="W-s"><action name="Execute"><command>noctalia msg panel-toggle control-center</command></action></keybind>
     <keybind key="W-,"><action name="Execute"><command>noctalia msg settings-toggle</command></action></keybind>

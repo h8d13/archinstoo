@@ -6,7 +6,7 @@ set $left h
 set $down j
 set $up k
 set $right l
-set $term {{TERMINAL_COMMAND}}
+set $term $TERMINAL
 set $ipc noctalia msg
 
 # noctalia owns bar, launcher, notifications, wallpaper, lock and OSDs

@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from archinstoo.default_profiles import desktops
+from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.desktops.dms import DmsProfile
 from archinstoo.default_profiles.desktops.hyprland import HyprlandProfile
 from archinstoo.default_profiles.desktops.labwc import LabwcProfile
@@ -14,10 +16,11 @@ from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
 from archinstoo.lib.profile.base import SeatAccess, seat_services
-from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
+from archinstoo.lib.tui.result import Result, ResultType
 
 if TYPE_CHECKING:
 	from archinstoo.default_profiles.wayland import WaylandProfile
+	from archinstoo.lib.tui.menu_item import MenuItemGroup
 
 SEAT_PROFILES: list[type[WaylandProfile]] = [
 	DmsProfile,
@@ -28,6 +31,30 @@ SEAT_PROFILES: list[type[WaylandProfile]] = [
 	RiverProfile,
 	SwayProfile,
 ]
+
+
+class FakeMenu:
+	# stands in for SelectMenu: keeps every group it was built with, in order,
+	# and accepts the preselected entry as Enter does, without a terminal
+	groups: list[MenuItemGroup]
+
+	def __init__(self, group: MenuItemGroup, **_: object) -> None:
+		self.group = group
+		FakeMenu.groups.append(group)
+
+	@classmethod
+	def __class_getitem__(cls, _: object) -> type[FakeMenu]:
+		return cls
+
+	def run(self) -> Result[object]:
+		return Result(ResultType.Selection, self.group.default_item)
+
+
+@pytest.fixture
+def fake_menu(monkeypatch: pytest.MonkeyPatch) -> type[FakeMenu]:
+	monkeypatch.setattr(desktops, 'SelectMenu', FakeMenu)
+	monkeypatch.setattr(FakeMenu, 'groups', [], raising=False)
+	return FakeMenu
 
 
 @pytest.mark.parametrize('profile_cls', SEAT_PROFILES)
@@ -56,15 +83,16 @@ def test_only_seatd_ships_a_unit() -> None:
 
 
 @pytest.mark.parametrize('seat', list(SeatAccess))
-def test_saved_choice_preselects_menu_item(seat: SeatAccess) -> None:
+def test_saved_choice_preselects_and_saves_plain_string(seat: SeatAccess, fake_menu: type[FakeMenu]) -> None:
 	# custom_settings stores the plain string, the menu items carry the member
-	items = [MenuItem(s.label, value=s) for s in SeatAccess]
-	group = MenuItemGroup(items, sort_items=True)
+	picked = select_seat_access('Sway', seat.value)
 
-	group.set_default_by_value(seat.value)
-
+	[group] = fake_menu.groups
 	assert group.default_item is not None
 	assert group.default_item.value is seat
+	# a StrEnum member would serialize fine but compare as a different type
+	assert type(picked) is str
+	assert picked == seat.value
 
 
 def test_labels_name_the_mechanism() -> None:

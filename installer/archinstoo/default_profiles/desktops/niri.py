@@ -1,16 +1,8 @@
-from typing import TYPE_CHECKING, override
+from typing import override
 
-from archinstoo.default_profiles.desktops import provision_terminal_config
+from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import ProfileType, SeatAccess, seat_services
-from archinstoo.lib.tui.curses_menu import SelectMenu
-from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties
-
-if TYPE_CHECKING:
-	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.users import User
+from archinstoo.lib.profile.base import ProfileType, seat_packages, seat_services
 
 
 class NiriProfile(WaylandProfile):
@@ -27,11 +19,6 @@ class NiriProfile(WaylandProfile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		additional: list[str] = []
-		seat = self.custom_settings.get('seat_access')
-		if isinstance(seat, str):
-			additional = [seat]
-
 		return [
 			'niri',
 			'fuzzel',
@@ -43,7 +30,7 @@ class NiriProfile(WaylandProfile):
 			'swaylock',
 			'xdg-desktop-portal-gnome',
 			'xdg-desktop-portal-gtk',
-			*additional,
+			*seat_packages(self.custom_settings.get('seat_access')),
 		]
 
 	@property
@@ -52,39 +39,8 @@ class NiriProfile(WaylandProfile):
 		return seat_services(self.custom_settings.get('seat_access'))
 
 	@override
-	def provision(self, install_session: Installer, users: list[User]) -> None:
-		super().provision(install_session, users)
-
-		# default-config.kdl binds Mod+T to a hardcoded alacritty
-		provision_terminal_config(
-			install_session,
-			users,
-			install_session.target / 'usr/share/doc/niri/default-config.kdl',
-			'niri/config.kdl',
-			'alacritty',
-		)
-
-	def _select_seat_access(self) -> None:
-		header = 'Niri needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
-		header += '\n' + 'Choose an option to give Niri access to your hardware' + '\n'
-
-		items = [MenuItem(s.label, value=s) for s in SeatAccess]
-		group = MenuItemGroup(items, sort_items=True)
-
-		default = self.custom_settings.get('seat_access', None)
-		group.set_default_by_value(default)
-
-		result = SelectMenu[SeatAccess](
-			group,
-			header=header,
-			allow_skip=False,
-			frame=FrameProperties.min('Seat access'),
-			alignment=Alignment.CENTER,
-		).run()
-
-		if result.type_ == ResultType.Selection:
-			self.custom_settings['seat_access'] = result.get_value().value
-
-	@override
 	def do_on_select(self) -> None:
-		self._select_seat_access()
+		self.custom_settings['seat_access'] = select_seat_access(
+			'Niri',
+			self.custom_settings.get('seat_access'),
+		)

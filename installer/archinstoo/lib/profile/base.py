@@ -53,6 +53,11 @@ class SeatAccess(StrEnum):
 		return 'systemd-logind' if self is SeatAccess.logind else self.value
 
 
+def seat_packages(pref: object) -> list[str]:
+	# the saved value is the package; unset until the menu runs
+	return [pref] if isinstance(pref, str) else []
+
+
 def seat_services(pref: object) -> list[str]:
 	# per the issue above, only seatd needs its service enabled. logind is
 	# already up as part of systemd, and polkit is D-Bus activated with no
@@ -152,6 +157,11 @@ class Profile:
 		self.current_selection = list(current_selection or [])
 		self._packages = list(packages or [])
 		self._services = list(services or [])
+
+	@property
+	def compositor(self) -> str:
+		# set by the menu, one of compositor_packages
+		return str(self.custom_settings[f'{self.name}_compositor'])
 
 	@property
 	def packages(self) -> list[str]:
