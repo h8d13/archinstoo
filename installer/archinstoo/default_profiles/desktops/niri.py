@@ -21,6 +21,7 @@ class NiriProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'niri',
+			'alacritty',
 			'fuzzel',
 			'mako',
 			'xwayland-satellite',

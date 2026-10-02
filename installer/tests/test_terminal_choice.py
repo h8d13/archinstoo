@@ -1,6 +1,6 @@
 # A terminal choice is a package plus TERMINAL in /etc/environment, nothing
-# more: shipped WM configs keep their upstream terminal, only our own noctalia
-# assets launch $TERMINAL. These lock both ends.
+# more: shipped WM configs keep their upstream terminal and the profile
+# installs it, only our own noctalia assets launch $TERMINAL.
 
 from pathlib import Path
 from types import SimpleNamespace
@@ -146,19 +146,27 @@ def test_awesome_starts_from_a_user_xinitrc(tmp_path: Path, monkeypatch: pytest.
 	assert shipped.read_text() == _STOCK_XINITRC, 'the packaged xinitrc must be left alone'
 
 
-_TERMINAL_PROFILES = ('i3-wm', 'qtile', 'labwc', 'river', 'sway', 'hyprland', 'niri', 'awesome', 'noctalia')
+_SHIPPED_TERMINAL = {
+	'i3-wm': None,
+	'qtile': None,
+	'labwc': None,
+	'noctalia': None,
+	'niri': 'alacritty',
+	'dms': 'alacritty',
+	'hyprland': 'kitty',
+	'sway': 'foot',
+	'river': 'foot',
+	'awesome': 'xterm',
+}
+_TERMINALS = {'ghostty', 'alacritty', 'foot', 'kitty', 'xterm'}
 
 
-@pytest.mark.parametrize('name', _TERMINAL_PROFILES)
-def test_terminal_profiles_ship_no_terminal(name: str, monkeypatch: pytest.MonkeyPatch) -> None:
-	# these carry a keybind, not a terminal: install_profile_config() installs
-	# the one choice for them, which is what keeps their package list fixed
-	_pin_terminal(monkeypatch, Terminal.GHOSTTY)
-
+@pytest.mark.parametrize(('name', 'shipped'), _SHIPPED_TERMINAL.items())
+def test_profiles_ship_the_terminal_their_config_launches(name: str, shipped: str | None) -> None:
 	profile: Profile = next(p for p in ProfileHandler().profiles if p.name == name)
 
 	assert profile.needs_terminal
-	assert not {'ghostty', 'alacritty', 'foot', 'kitty', 'xterm'} & set(profile.packages), f'{name} still carries a terminal'
+	assert _TERMINALS & set(profile.packages) == ({shipped} if shipped else set())
 
 
 @pytest.mark.parametrize(('pick', 'expected'), [(Terminal.GHOSTTY, 'ghostty'), (None, DEFAULT_TERMINAL)])
@@ -174,15 +182,6 @@ def test_install_adds_the_choice_once(pick: Terminal | None, expected: str, tmp_
 	handler.install_profile_config(session, ProfileConfiguration(profiles=[sway]), app_config)
 
 	assert installed.count(expected) == 1
-
-
-def test_dms_ships_the_terminal_its_keybind_names() -> None:
-	# `dms setup --terminal alacritty` pins Mod+T, so alacritty has to come
-	# with the profile whatever the Terminal choice was
-	profile: Profile = next(p for p in ProfileHandler().profiles if p.name == 'dms')
-
-	assert profile.needs_terminal
-	assert 'alacritty' in profile.packages
 
 
 @pytest.mark.parametrize('compositor', list(NoctaliaProfile.compositor_packages))

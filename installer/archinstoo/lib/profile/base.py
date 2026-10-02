@@ -134,8 +134,7 @@ class SelectResult(Enum):
 
 
 class Profile:
-	# ships a terminal keybind rather than a terminal: install_profile_config()
-	# installs the one Terminal choice for these, so their package list stays fixed
+	# has a terminal keybind: install_profile_config() adds the Terminal choice
 	needs_terminal: bool = False
 
 	# profiles that run on top of a compositor of the user's choosing; the

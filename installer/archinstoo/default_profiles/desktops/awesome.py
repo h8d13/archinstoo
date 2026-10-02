@@ -23,6 +23,7 @@ class AwesomeProfile(XorgProfile):
 		return [
 			*super().packages,
 			'awesome',
+			'xterm',
 			'xorg-xinit',
 			'xorg-xrandr',
 			'feh',

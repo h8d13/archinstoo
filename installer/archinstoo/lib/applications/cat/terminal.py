@@ -18,6 +18,4 @@ class TerminalApp:
 
 		install_session.add_additional_packages(terminal.packages)
 
-		# this is all a profile gets: shipped WM configs keep whatever terminal
-		# upstream hardcodes, only our own (noctalia) launch $TERMINAL
 		install_session.set_environment({'TERMINAL': terminal.value})

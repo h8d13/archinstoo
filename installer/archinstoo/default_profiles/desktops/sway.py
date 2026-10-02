@@ -21,6 +21,7 @@ class SwayProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'sway',
+			'foot',
 			'swaybg',
 			'swaylock',
 			'swayidle',

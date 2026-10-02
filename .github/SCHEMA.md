@@ -47,8 +47,8 @@ This is all up to user preference, can be multi-selected / some set the global d
 (like `Editor` and `Terminal`) through `/etc/environment`
 
 `Terminal` is the one every window manager profile shares: it installs the package and exports
-`TERMINAL`. Configs a window manager ships keep the terminal upstream put in them. Skipping it
-leaves the profiles on `alacritty`.
+`TERMINAL`. Configs a window manager ships keep the terminal upstream put in them, and the
+profile installs that one too. Skipping it leaves the profiles on `alacritty`.
 
 - `Additional packages` & `AUR packages`
 

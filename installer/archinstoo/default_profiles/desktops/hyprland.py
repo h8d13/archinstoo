@@ -20,6 +20,7 @@ class HyprlandProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'hyprland',
+			'kitty',
 			'dunst',
 			'uwsm',
 			'hyprlauncher',
