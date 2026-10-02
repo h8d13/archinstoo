@@ -1,7 +1,6 @@
 import contextlib
 import curses
 import signal
-import subprocess
 import sys
 import termios
 from abc import ABCMeta, abstractmethod
@@ -1419,14 +1418,16 @@ class Tui:
 		endl: str = '\n',
 		clear_screen: bool = False,
 	) -> None:
-		if clear_screen:
-			subprocess.run(['clear'], check=False)  # noqa: S607 - `clear` from $PATH on the live ISO
-
+		# outside curses we write to the user's shell: never clear it, the
+		# startup output and scrollback stay ahead of the install log
 		if Tui._t is None:
 			print(text, end=endl)
 			sys.stdout.flush()
 
 			return
+
+		if clear_screen:
+			Tui.t().screen.clear()
 
 		# will append the row at the very bottom of the screen
 		# and also scroll the existing text up by 1 line

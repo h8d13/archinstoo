@@ -398,7 +398,7 @@ class FilesystemHandler:
 	def _final_warning(self, device_mods: list[DeviceModification]) -> bool:
 		# Issue a final warning before we continue with something un-revertable.
 		# We count down from 5 to 0.
-		Tui.print('\n'.join(pending_changes(device_mods)) + '\n', row=0, clear_screen=True)
+		Tui.print('\n'.join(pending_changes(device_mods)) + '\n', row=0)
 		out = 'Starting device modifications in '
 		Tui.print(out, row=0, endl='')
 
