@@ -38,7 +38,7 @@ repos:
     - id: detect-private-key  # Checks for the existence of private keys
     - id: check-ast  # Simply check whether files parse as valid python
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.1
+    rev: v2.4.0
     hooks:
     - id: mypy
       args: [
