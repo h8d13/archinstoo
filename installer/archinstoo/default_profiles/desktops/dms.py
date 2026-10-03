@@ -15,11 +15,14 @@ class DmsProfile(WaylandProfile):
 	# `dms setup` writes is pinned to alacritty, so that one ships here
 	needs_terminal = True
 
-	# dms-shell-<compositor> pulls dms-shell (quickshell, dgop)
+	# dms-shell is compositor-agnostic since 1.6.2-2 (replaces the old
+	# dms-shell-niri/-hyprland shims), so these only carry the compositor
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
-		'niri': ['niri', 'dms-shell-niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
+		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
 		# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
-		'hyprland': ['hyprland', 'dms-shell-hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+		# mango-portals.conf: gtk default, wlr for screencast; mangowm pulls neither
+		'mango': ['mangowm', 'xdg-desktop-portal-gtk', 'xdg-desktop-portal-wlr'],
 	}
 
 	# dms-shell 1.6.0 embedded the UI in the dms binary and dropped
@@ -41,6 +44,7 @@ class DmsProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			*self.compositor_packages[self.compositor],
+			'dms-shell',
 			'matugen',
 			'cava',
 			'kimageformats',
@@ -64,9 +68,12 @@ class DmsProfile(WaylandProfile):
 
 		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
 		# any session that activates the target: niri natively, hyprland via the
-		# hyprland-session.target the setup below deploys
-		debug('Enabling dms.service globally for all users')
-		install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
+		# hyprland-session.target the setup below deploys. mango activates it
+		# too (mango-session.target), but setup gives mango `exec-once=dms run`
+		# instead, so the unit would start a second shell
+		if self.compositor != 'mango':
+			debug('Enabling dms.service globally for all users')
+			install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
 
 		# `dms setup headless` writes the compositor config, the dms/ overrides
 		# and (for hyprland) ~/.config/systemd/user/hyprland-session.target.

@@ -654,10 +654,7 @@ source = "pacman"
 [dmenu]
 source = "pacman"
 
-[dms-shell-hyprland]
-source = "pacman"
-
-[dms-shell-niri]
+[dms-shell]
 source = "pacman"
 
 [docker]
@@ -1036,9 +1033,6 @@ source = "pacman"
 source = "pacman"
 
 [mate-icon-theme]
-source = "pacman"
-
-[mate-icon-theme-faenza]
 source = "pacman"
 
 [mate-media]
