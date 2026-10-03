@@ -227,6 +227,7 @@ hyprland = ["hyprland", "kitty", "dunst", "uwsm", "hyprlauncher", "xdg-desktop-p
 i3-wm = ["i3-wm", "i3lock", "i3status", "i3blocks", "xss-lock", "lightdm-gtk-greeter", "lightdm", "dmenu"]
 labwc = ["labwc", "xdg-desktop-portal-wlr"]
 lxqt = ["lxqt", "breeze-icons", "oxygen-icons", "xdg-utils", "gnu-free-fonts", "l3afpad", "slock"]
+mangowm = ["mangowm", "foot", "rofi", "xdg-desktop-portal-gtk", "xdg-desktop-portal-wlr"]
 mate = ["mate", "mate-extra", "gnome-keyring", "xdg-desktop-portal-gtk", "xdg-desktop-portal-xapp"]
 niri = ["niri", "alacritty", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"]
 noctalia = ["niri", "xdg-desktop-portal-gnome", "xorg-xwayland", "noctalia", "inter-font", "ttf-jetbrains-mono-nerd"]

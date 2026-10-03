@@ -156,6 +156,7 @@ _SHIPPED_TERMINAL = {
 	'hyprland': 'kitty',
 	'sway': 'foot',
 	'river': 'foot',
+	'mangowm': 'foot',
 	'awesome': 'xterm',
 }
 _TERMINALS = {'ghostty', 'alacritty', 'foot', 'kitty', 'xterm'}

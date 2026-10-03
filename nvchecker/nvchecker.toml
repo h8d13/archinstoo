@@ -1011,6 +1011,9 @@ source = "pacman"
 [man-db]
 source = "pacman"
 
+[mangowm]
+source = "pacman"
+
 [marco]
 source = "pacman"
 
@@ -1246,6 +1249,9 @@ source = "pacman"
 source = "pacman"
 
 [river-classic]
+source = "pacman"
+
+[rofi]
 source = "pacman"
 
 [rtkit]
