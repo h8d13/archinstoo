@@ -22,7 +22,7 @@ Or use GitHub's private vulnerability [reporting](https://github.com/h8d13/archi
 
 The real key to security is YOU being mindful.
 
-Some options are also given in the menu directly but **are always optional**.
+Some options are also given in the TUI but **are always optional**.
 
 1. Limit AUR usage to "known", review `PKGBUILD` AND post install scriplets.
 2. Common security practices
@@ -32,7 +32,7 @@ Some options are also given in the menu directly but **are always optional**.
     - `sysctl` confs
     - SSH/Server hardenings
 
-3. Additional examples:
+3. Additional security apps examples:
     - `apparmor`
     - `firejail`
     - `fail2ban`
@@ -41,7 +41,6 @@ Some options are also given in the menu directly but **are always optional**.
     - `auditd`
     - `aide`
     - `tripwire`
-    - your security stacks...
 
 ---
 
@@ -75,8 +74,8 @@ Root account can **optionally be locked** in the TUI.
 
 ### Guest users
 
-Ex: siblings using the same system as you can set a user to have access to the same apps yet no terminal.
-In the menu you can simply create the user without elevated privileges and optionally `rbash`
+Ex: siblings using the same system as you can set a user to have access to the same apps, yet no terminal.
+In the menu you can simply create the user without elevated privileges and optionally `rbash`.
 
 ### Laptop Encryption
 
@@ -85,7 +84,9 @@ Highly recommended in case of theft.
 ### U2F
 
 You can enroll `pam.d` for passwordless auth/2FA/etc. Using keys such as:  YubiKey, Titan, SoloKey, Nitrokey
-And use them for encryption too.
+And use them for encryption too. See this wiki [article](https://wiki.archlinux.org/title/Universal_2nd_Factor)
+
+Unlock LUKS disk devices using [`systemd-cryptenroll`](https://wiki.archlinux.org/title/Systemd-cryptenroll) is also available.
 
 ---
 
