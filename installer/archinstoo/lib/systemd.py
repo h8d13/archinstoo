@@ -26,8 +26,8 @@ def _unit(service_name: str) -> str:
 
 
 def _service_started(service_name: str) -> str | None:
-	if not shutil.which('systemctl'):
-		# non-systemd host has no unit to have started
+	if not Os.has_systemd():
+		# no running pid1 to ask (non-systemd host, or a chroot)
 		return None
 
 	last_execution_time = (
@@ -43,8 +43,8 @@ def _service_started(service_name: str) -> str | None:
 
 
 def _service_state(service_name: str) -> str:
-	if not shutil.which('systemctl'):
-		# non-systemd host: nothing to poll, report inert so waits exit
+	if not Os.has_systemd():
+		# nothing to poll, report inert so waits exit
 		return 'dead'
 
 	return SysCommand(
@@ -54,9 +54,10 @@ def _service_state(service_name: str) -> str:
 
 
 def accessibility_tools_in_use() -> bool:
-	# espeakup is a live-ISO accessibility unit; a non-systemd host has neither
-	# the binary nor the unit, so report not-in-use instead of crashing
-	if not shutil.which('systemctl'):
+	# espeakup is a live-ISO accessibility unit. In a chroot systemctl
+	# answers is-active with "Running in chroot, ignoring command" and
+	# exit 0, which would read as active
+	if not Os.has_systemd():
 		return False
 
 	try:
