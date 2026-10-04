@@ -8,13 +8,13 @@
 # Host dependencies: distros/README.md
 
 # ./distros/BOOT [archinstoo args...]
-# BOOT_DIR    where the root lives, reused across runs (default /var/tmp:
-#             /tmp is often tmpfs, and python + deps take several hundred MB)
+# BOOT_DIR    where the root lives, reused across runs (default /tmp;
+#             override for persistent storage or non-tmpfs location)
 # BOOT_MIRROR x86_64 mirror to fetch the tarball and packages from
 
 set -eu
 
-BOOT_DIR=${BOOT_DIR:-/var/tmp/archinstoo-boot}
+BOOT_DIR=${BOOT_DIR:-/tmp/A2-boot}
 BOOT_MIRROR=${BOOT_MIRROR:-https://geo.mirror.pkgbuild.com}
 ARCH=$(uname -m)
 ROOT=$BOOT_DIR/root.$ARCH
