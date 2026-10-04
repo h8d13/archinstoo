@@ -48,7 +48,7 @@ Some options are also given in the TUI but **are always optional**.
 
 Strong Passwords & Usernames
 
-    Usernames/Hostnames: Avoid admin, user, root - use something descriptive unrelated to your identity.
+Usernames/Hostnames: Avoid admin, user, root. Use something descriptive unrelated to your identity.
 
 Hostname has to be RFC-compliant for DNS (strict):
 
