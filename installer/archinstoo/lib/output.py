@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 	from _typeshed import DataclassInstance
 
 from .linux_path import LPath
+from .utils.env import Os
 from .utils.unicode import unicode_ljust, unicode_rjust
 
 
@@ -81,12 +82,10 @@ class FormattedOutput:
 
 def restore_perms(path: Path, recursive: bool = False) -> None:
 	# no-ops if ISO or run as root directly
-	from .utils.env import Os
-
 	if not Os.running_from_host():
 		return
 
-	orig_user = Os.get_env('SUDO_USER') or Os.get_env('DOAS_USER')
+	orig_user = Os.invoking_username()
 	if not orig_user:
 		return
 
@@ -114,8 +113,7 @@ def _default_log_dir() -> Path:
 	#
 	# Under sudo the environment is root's, so the invoker's path comes from
 	# passwd rather than HOME/XDG_STATE_HOME.
-	invoker = os.environ.get('SUDO_USER') or os.environ.get('DOAS_USER')
-	if invoker and invoker != 'root':
+	if invoker := Os.invoking_username():
 		try:
 			home = Path(pwd.getpwnam(invoker).pw_dir)
 			return home / '.local' / 'state' / 'archinstoo'
@@ -194,8 +192,6 @@ def _supports_color() -> bool:
 	#
 	# Return True if the running system's terminal supports color,
 	# and False otherwise.
-	from .utils.env import Os
-
 	supported_platform = sys.platform != 'win32' or Os.has_env('ANSICON')
 
 	# isatty is not always implemented, #6223.
