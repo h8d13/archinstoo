@@ -76,13 +76,14 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 	# architecture and parse results for prints
 	# https://github.com/archlinux/archinstall/issues/3688
 	# be more descriptive about status in code + what user sees
-	if Os.running_from_host():
+	if Os.running_from_host() or Os.running_from_bootstrap():
 		# NTP/keyring-wkd-sync are live-ISO startup units: archiso boots
 		# with an untrusted RTC and an empty trustdb and starts both. An
 		# installed host runs whatever it runs; an idle timesyncd there
 		# (networkd reporting offline, chrony instead, nothing) is not a
 		# sign the clock is wrong, and pacman fails loudly if it is.
-		debug('Running from host, skipping ISO service-stop checks')
+		# bootstrap: running inside arch-chroot from BOOT, no live units
+		debug('Running from host or bootstrap, skipping ISO service-stop checks')
 		return
 
 	if not skip_ntp:
