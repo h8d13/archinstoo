@@ -4,18 +4,18 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 go_to() {
-	cd "$SCRIPT_DIR/installer" || exit 1
+	cd "$SCRIPT_DIR/$1" || exit 1
 }
 
-# the logger owns its path (invoking user's XDG state dir), so ask it
+# keeps in sync with actual installer
 log_path() {
-	go_to
+	go_to "installer"
 	python3 -c 'from archinstoo.lib.output import logger; print(logger.path)'
 }
 
 case "$1" in
 -t | --tree)
-	go_to
+	go_to "installer"
 	{
 		echo '# Project Tree'
 		echo '```'
@@ -28,6 +28,10 @@ case "$1" in
 		tree -d -I '__pycache__' | sed 's/^/# /'
 	} >.directory
 	;;
+-b | --bootstrap)
+	go_to "distros"
+	./BOOT
+	;;
 -ul | --up-logs)
 	log=$(log_path)
 	curl --data-binary @"$log" https://paste.rs
@@ -37,7 +41,7 @@ case "$1" in
 	grep -i "$2" "$log"
 	;;
 -gc | --grep-code)
-	go_to
+	go_to "installer"
 	git grep -ni "$2"
 	;;
 -tc | --test-config)
@@ -47,7 +51,7 @@ case "$1" in
 	./RUN --advanced --config examples/vm_configuration.json
 	;;
 -h2t | --host-to-target)
-	go_to
+	go_to "installer"
 	# this checks dependencies for dev workflow from top level PKGBUILD
 	. ./PKGBUILD
 	if [ "$2" = "-o" ] || [ "$2" = "--opt" ]; then
