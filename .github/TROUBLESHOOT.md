@@ -30,7 +30,7 @@ pacman-key --init
 pacman-key --populate
 pacman -Sy archlinux-keyring
 ```
-Then run `archinstoo` [Back to Step 1](https://github.com/h8d13/archinstoo?tab=readme-ov-file#1-get-the-source-code)
+Then run `archinstoo` [Back to Step 3](https://github.com/h8d13/archinstoo?tab=readme-ov-file#3-get-the-source-code)
 
 https://github.com/archlinux/archinstall/issues/4018
 https://github.com/archlinux/archinstall/issues/2213
