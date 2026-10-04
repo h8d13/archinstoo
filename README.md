@@ -10,6 +10,8 @@ An operating system installer (and tools) for [archlinux](https://archlinux.org)
 > In the [ISO](https://archlinux.org/download/), you are root by default.
 > Use `sudo` or equivalent, *when from an existing system.*
 
+Or also works from many [`distros/`](https://github.com/h8d13/archinstoo/tree/master/distros)
+
 ## Setup / Usage
 
 ### 0. Keymap
