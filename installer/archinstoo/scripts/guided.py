@@ -107,7 +107,7 @@ def perform_installation(
 		if config.swap and config.swap.enabled:
 			installation.setup_swap(config.swap)
 
-		if config.sysctl:
+		if config.sysctl and config.sysctl.enabled:
 			installation.setup_sysctl(config.sysctl)
 
 		# Create users before applications i.e audio needs user(s) for pipewire config

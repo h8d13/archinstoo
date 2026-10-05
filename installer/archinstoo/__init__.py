@@ -128,7 +128,7 @@ disk_depends = (
 
 ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema'}
 # scripts that only touch the running system, so they skip disk_depends
-NO_DISK_SCRIPTS = {'live', 'packages'}
+NO_DISK_SCRIPTS = {'packages'}
 
 
 def _log_env_info() -> None:

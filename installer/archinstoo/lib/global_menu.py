@@ -5,7 +5,7 @@ from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.swap import SwapConfiguration
-from archinstoo.lib.models.sysctl import sysctl_defaults
+from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.pm import list_available_packages
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.tui.content_editor import edit_content
@@ -28,7 +28,7 @@ from .interactions.general_conf import (
 	select_ntp,
 	select_timezone,
 )
-from .interactions.system_conf import select_firmware, select_kernel, select_swap
+from .interactions.system_conf import select_firmware, select_kernel, select_swap, select_sysctl
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .menu.driver_select import select_driver, select_gfx_packages
 from .menu.locale_menu import LocaleMenu
@@ -227,8 +227,8 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text='Sysctl',
-				action=self._edit_sysctl,
-				value=[],
+				action=select_sysctl,
+				value=SysctlConfiguration(),
 				preview_action=self._prev_sysctl,
 				key='sysctl',
 			),
@@ -467,34 +467,12 @@ class GlobalMenu(AbstractMenu[None]):
 			return output
 		return None
 
-	def _edit_sysctl(self, preset: list[str]) -> list[str]:
-		try:
-			if not preset:
-				items = [
-					MenuItem(text='Start empty', value='empty'),
-					MenuItem(text='Load optimized defaults', value='optimized'),
-				]
-
-				if prompt_choice(items, header='Sysctl') == 'optimized':
-					swap_item = self._item_group.find_by_key('swap')
-					preset = sysctl_defaults(swap_item.value)
-
-			current_text = '\n'.join(preset) if preset else ''
-			edited = edit_content(preset=current_text, title='Sysctl', mode='kvp')
-			if edited is not None:
-				lines = edited.split('\n')
-				# Strip trailing blank lines only
-				while lines and not lines[-1].strip():
-					lines.pop()
-				return lines
-			return preset
-		except KeyboardInterrupt:
-			return []
-
 	def _prev_sysctl(self, item: MenuItem) -> str | None:
-		entries: list[str] = item.value or []
-		if entries:
-			output = f'{"Entries"}: {len(entries)}\n'
+		config: SysctlConfiguration | None = item.value
+		if config and config.enabled:
+			output = f'Optimized defaults: {"Enabled" if config.optimized else "Disabled"}\n'
+			entries = config.entries
+			output += f'Custom entries: {len(entries)}\n'
 			for line in entries[:5]:
 				display = line[:60] + '...' if len(line) > 60 else line
 				output += f'  {display}\n'

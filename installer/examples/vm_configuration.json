@@ -178,6 +178,6 @@
     "packages": [],
     "aur_packages": [],
     "services": [],
-    "sysctl": [],
+    "sysctl": {"optimized": false, "entries": []},
     "custom_commands": []
 }

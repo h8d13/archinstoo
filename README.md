@@ -100,7 +100,6 @@ Available options:
     mirror
     format    [*]
     guided    [*] < DEFAULT
-    live      [*]
     minimal   [*]
     packages  [*]
     rescue    [*]

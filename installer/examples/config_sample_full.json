@@ -302,7 +302,7 @@
     "aur_packages": [
         "nvidia-580xx-utils"
     ],
-    "sysctl": [],
+    "sysctl": {"optimized": false, "entries": []},
     "services": [
         "sshd",
         {

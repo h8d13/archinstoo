@@ -1,13 +1,12 @@
-from typing import TYPE_CHECKING, Final
-
-if TYPE_CHECKING:
-	from archinstoo.lib.models.swap import SwapConfiguration
+from dataclasses import dataclass
+from typing import Final, NotRequired, Self, TypedDict
 
 # Update as settings get merged into shipped defaults
 # (10-arch.conf, 50-default.conf, or CONFIG_ in /proc/config.gz)
 #
 # Zram block: docs.kernel.org/admin-guide/blockdev/zram.html#optimizing,
-#   zram only, swappiness 180 is wrong for a disk-backed swap file
+#   written by zram setup itself, swappiness 180 is wrong for a disk-backed
+#   swap file and only holds while zram is the swap device
 #
 # Network performance
 #   rmem_max/wmem_max = 16M: raise socket buffer ceiling from ~208K for 1G+ links
@@ -77,10 +76,33 @@ BASE_DEFAULTS: Final = [
 ]
 
 
-def sysctl_defaults(swap: SwapConfiguration | None) -> list[str]:
-	if swap and swap.zram:
-		return [*ZRAM_DEFAULTS, '', *BASE_DEFAULTS]
-	return list(BASE_DEFAULTS)
+# drop-ins apply in lexical order: user entries come last and win
+DEFAULTS_CONF: Final = '90-archinstoo-defaults'
+ZRAM_CONF: Final = '91-archinstoo-zram'
+ENTRIES_CONF: Final = '99-archinstoo'
+
+
+class SysctlConfigSerialization(TypedDict):
+	optimized: NotRequired[bool]
+	entries: NotRequired[list[str]]
+
+
+@dataclass(frozen=True)
+class SysctlConfiguration:
+	# BASE_DEFAULTS in their own drop-in, never copied into entries
+	optimized: bool = False
+	entries: tuple[str, ...] = ()
+
+	@property
+	def enabled(self) -> bool:
+		return self.optimized or bool(self.entries)
+
+	@classmethod
+	def parse_arg(cls, arg: SysctlConfigSerialization) -> Self:
+		return cls(
+			optimized=arg.get('optimized', False),
+			entries=tuple(arg.get('entries', [])),
+		)
 
 
 # sysctl.d(5) shape: 'key = value', comments and blanks skipped

@@ -17,7 +17,7 @@ from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, S
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.kernel.initramfs import LVM, RAID, Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
-from archinstoo.lib.kernel.sysctl import write_sysctl
+from archinstoo.lib.kernel.sysctl import setup_sysctl
 from archinstoo.lib.kernel.zram import setup_zram
 from archinstoo.lib.localization import configure
 from archinstoo.lib.models.authentication import PrivilegeEscalation
@@ -46,6 +46,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.packages import Repository
 	from archinstoo.lib.models.service import UserService
 	from archinstoo.lib.models.swap import SwapConfiguration
+	from archinstoo.lib.models.sysctl import SysctlConfiguration
 	from archinstoo.lib.models.users import User
 
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
@@ -368,10 +369,10 @@ class Installer:
 				warn(f'Failed to set up hibernation swap file: {err}')
 			else:
 				self._fstab_entries.append(fstab_entry)
-				self._kernel_params.extend(kernel_params)
+				self.add_kernel_param(kernel_params)
 
-	def setup_sysctl(self, entries: list[str]) -> None:
-		write_sysctl(self.target, entries)
+	def setup_sysctl(self, config: SysctlConfiguration) -> None:
+		setup_sysctl(self.target, config)
 
 	def add_bootloader(
 		self,

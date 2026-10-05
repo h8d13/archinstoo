@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.kernel.sysctl import write_sysctl
 from archinstoo.lib.models.swap import ZramAlgorithm
+from archinstoo.lib.models.sysctl import ZRAM_CONF, ZRAM_DEFAULTS
 from archinstoo.lib.output import info
 
 if TYPE_CHECKING:
@@ -22,4 +24,6 @@ def setup_zram(installation: Installer, algo: ZramAlgorithm, recomp_algo: ZramAl
 				comp_line += f' {recomp_algo.value} (type=idle)'
 			zram_conf.write(f'compression-algorithm = {comp_line}\n')
 
+	# tuning that only holds with zram as the swap device, so it ships with it
+	write_sysctl(installation.target, ZRAM_CONF, ZRAM_DEFAULTS)
 	installation.enable_service('systemd-zram-setup@zram0')

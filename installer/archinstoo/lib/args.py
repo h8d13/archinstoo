@@ -27,6 +27,7 @@ from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
+from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.profile.config import ProfileConfiguration
 
@@ -90,7 +91,7 @@ class ArchConfig:
 	aur_packages: list[str] = field(default_factory=list)
 	timezone: str | None = None
 	services: list[str | UserService] = field(default_factory=list)
-	sysctl: list[str] = field(default_factory=list)
+	sysctl: SysctlConfiguration | None = None
 	custom_commands: list[str] = field(default_factory=list)
 
 	def safe_json(self) -> dict[str, Any]:
@@ -139,7 +140,6 @@ class ArchConfig:
 				'kernels': 'kernels',
 				'packages': 'packages',
 				'aur_packages': 'aur_packages',
-				'sysctl': 'sysctl',
 				'custom_commands': 'custom_commands',
 			},
 		)
@@ -172,6 +172,9 @@ class ArchConfig:
 
 		if (swap := args_config.get('swap')) is not None:
 			arch_config.swap = SwapConfiguration.parse_arg(swap)
+
+		if (sysctl := args_config.get('sysctl')) is not None:
+			arch_config.sysctl = SysctlConfiguration.parse_arg(sysctl)
 
 		if gfx_driver := args_config.get('gfx_driver'):
 			arch_config.gfx_driver = GfxDriver(gfx_driver)

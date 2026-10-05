@@ -3,7 +3,9 @@ from typing import assert_never
 from archinstoo.lib.models.firmware import FIRMWARE_OPTDEPS, FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel, kernel_names_error
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
+from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.pm import missing_packages
+from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
@@ -106,6 +108,31 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 		hibernation=hibernation,
 		size_gib=preset.size_gib,
 	)
+
+
+def select_sysctl(preset: SysctlConfiguration | None = None) -> SysctlConfiguration:
+	if preset is None:
+		preset = SysctlConfiguration()
+
+	try:
+		opt_prompt = 'Apply optimized defaults? Network, security and performance tunables.' + '\n'
+		optimized = prompt_yes_no(opt_prompt, preset.optimized, default=False)
+		if optimized is None:
+			optimized = preset.optimized
+
+		# custom entries only: the defaults live in their own drop-in
+		edited = edit_content(preset='\n'.join(preset.entries), title='Sysctl', mode='kvp')
+	except KeyboardInterrupt:
+		return SysctlConfiguration()
+
+	if edited is None:
+		return SysctlConfiguration(optimized=optimized, entries=preset.entries)
+
+	entries = edited.split('\n')
+	# strip trailing blank lines only
+	while entries and not entries[-1].strip():
+		entries.pop()
+	return SysctlConfiguration(optimized=optimized, entries=tuple(entries))
 
 
 def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConfiguration:
