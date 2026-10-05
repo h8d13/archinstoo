@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
+from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.output import debug, error, info, warn
@@ -182,10 +183,10 @@ class ProfileHandler:
 				""")
 			)
 
-		# regreet runs the cage compositor as the greeter user
+		# regreet runs the cage compositor as the greeter user; only seatd
+		# ships the seat group, logind needs no membership
 		if greeter == GreeterType.Regreet:
-			debug('Adding greeter user to seat group for regreet')
-			install_session.add_to_seat_group(['greeter'])
+			add_to_group(install_session, 'seat', ['greeter'])
 
 	def install_gfx_driver(
 		self,

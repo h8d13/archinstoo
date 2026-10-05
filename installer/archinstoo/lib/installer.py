@@ -437,9 +437,6 @@ class Installer:
 	) -> None:
 		accounts.create_users(self, users, privilege_escalation)
 
-	def add_to_seat_group(self, usernames: list[str]) -> None:
-		accounts.add_to_seat_group(self, usernames)
-
 	def set_user_password(self, user: User) -> bool:
 		return accounts.set_user_password(self, user)
 

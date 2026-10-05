@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, override
 
+from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.output import debug
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile, ProfileType
 
@@ -25,10 +26,9 @@ class WaylandProfile(Profile):
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
+		# compositors need seat membership to reach /run/seatd.sock (DRM/input)
 		if self.custom_settings.get('seat_access') == 'seatd':
-			usernames = [user.username for user in users]
-			debug(f'Adding {usernames} to seat group')
-			install_session.add_to_seat_group(usernames)
+			add_to_group(install_session, 'seat', [user.username for user in users])
 
 	@property
 	@override

@@ -46,17 +46,16 @@ def _enable_sudo(installation: Installer, user: User, group: bool = False) -> No
 	rule_file.chmod(0o440)
 
 
-# under seatd, compositors need seat membership to reach /run/seatd.sock (DRM/input).
-# group exists only when the seatd package landed (sysusers); skip otherwise so
-# usermod can't abort the install on logind/polkit systems.
-def add_to_seat_group(installation: Installer, usernames: list[str]) -> None:
+# package groups (seat, docker) come from the package's sysusers config, so they
+# exist only when it landed; skip otherwise so usermod can't abort the install
+def add_to_group(installation: Installer, group: str, usernames: list[str]) -> None:
 	group_lines = installation.target.joinpath('etc/group').read_text().splitlines()
-	if not any(line.startswith('seat:') for line in group_lines):
-		debug('No seat group on target (seatd not installed), skipping seat membership')
+	if not any(line.startswith(f'{group}:') for line in group_lines):
+		debug(f'No {group} group on target, skipping membership for {usernames}')
 		return
 	for name in usernames:
-		debug(f'Adding {name} to seat group')
-		installation.arch_chroot(['usermod', '-a', '-G', 'seat', name])
+		debug(f'Adding {name} to {group} group')
+		installation.arch_chroot(['usermod', '-a', '-G', group, name])
 
 
 def _enable_doas(installation: Installer, user: User) -> None:

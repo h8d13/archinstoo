@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, override
 
+from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.profile.base import Profile, ProfileType
 
 if TYPE_CHECKING:
@@ -26,5 +27,4 @@ class DockerProfile(Profile):
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
-		for user in users:
-			install_session.arch_chroot(['usermod', '-a', '-G', 'docker', user.username])
+		add_to_group(install_session, 'docker', [user.username for user in users])

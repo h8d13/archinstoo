@@ -113,7 +113,7 @@ set `ProfileType` (`ServerType` / `DesktopEnv` / `WindowMgr`). Contract
   after `install_profile_config` in guided/live/packages; not minimal.
 - `provision(install_session, users)`: per-user wiring that needs the user
   list (e.g. docker/wayland add each user to a group,
-  `add_to_seat_group`). Runs right after `post_install` in
+  `accounts.add_to_group`). Runs right after `post_install` in
   guided/live/packages. Guided uses the configured users; live falls back
   to, and packages always uses, the sudo/doas invoking user
   (`invoking_user()` in models/users.py: running-system flows).
