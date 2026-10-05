@@ -28,7 +28,7 @@ def chroot_prefix(target: Path) -> list[str]:
 	return prefix
 
 
-def arch_chroot(
+def run_in_target(
 	target: Path,
 	cmd: str | list[str],
 	run_as: str | None = None,
