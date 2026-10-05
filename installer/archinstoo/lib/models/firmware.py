@@ -42,7 +42,6 @@ FIRMWARE_OPTDEPS = frozenset(
 	}
 )
 
-# pm/firmware.py adds the detected optdeps
 FULL_FIRMWARE = ['linux-firmware']
 
 
@@ -66,9 +65,19 @@ class FirmwareConfiguration:
 			return cls(firmware_type=FirmwareType.MINIMAL)
 		return cls()
 
+	def packages(self) -> list[str]:
+		# FULL's vendors are the picked optdeps, VENDOR's the picked splits
+		match self.firmware_type:
+			case FirmwareType.FULL:
+				return [*FULL_FIRMWARE, *self.vendors]
+			case FirmwareType.MINIMAL:
+				return []
+			case FirmwareType.VENDOR:
+				return list(self.vendors)
+
 	def json(self) -> FirmwareConfigSerialization:
 		out: FirmwareConfigSerialization = {'firmware_type': self.firmware_type.value}
-		if self.firmware_type == FirmwareType.VENDOR:
+		if self.vendors:
 			out['vendors'] = [v.value for v in self.vendors]
 		return out
 

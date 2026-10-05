@@ -33,7 +33,7 @@ from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .menu.driver_select import select_driver, select_gfx_packages
 from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
-from .models.firmware import FirmwareConfiguration, FirmwareType
+from .models.firmware import FirmwareConfiguration
 from .models.localization import LocaleConfiguration
 from .models.network import MacAddressPolicy, NetworkConfiguration, NicType
 from .network.network_menu import select_network
@@ -575,7 +575,7 @@ class GlobalMenu(AbstractMenu[None]):
 		if not config:
 			return None
 		output = f'{"Firmware"}: {config.firmware_type.value}'
-		if config.firmware_type == FirmwareType.VENDOR and config.vendors:
+		if config.vendors:
 			output += '\n' + ', '.join(v.value for v in config.vendors)
 		return output
 

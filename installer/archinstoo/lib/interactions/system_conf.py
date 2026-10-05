@@ -1,10 +1,9 @@
 from typing import assert_never
 
-from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.firmware import FIRMWARE_OPTDEPS, FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
-from archinstoo.lib.pm.firmware import detect_optdeps, detect_splits
-from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
+from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
@@ -83,12 +82,7 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 	default = FirmwareConfiguration.default()
 	preset = preset or default
 
-	# syncs core's files db on first use, like the package list does
-	Tui.print('Detecting firmware...', clear_screen=True)
-	splits, optdeps = detect_splits(), detect_optdeps()
-
-	extras = f', plus {", ".join(v.value for v in optdeps)}' if optdeps else ''
-	header = f'Full installs the linux-firmware meta package{extras}.' + '\n'
+	header = 'Full installs the linux-firmware meta package, plus picked optional firmware.' + '\n'
 	header += 'Minimal skips firmware entirely (safe for most VMs using virtio).' + '\n'
 	header += 'Vendor lets you pick only the firmware subpackages you need.' + '\n'
 
@@ -115,28 +109,37 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 		case _:
 			assert_never(result.type_)
 
-	if firmware_type != FirmwareType.VENDOR:
+	if firmware_type == FirmwareType.MINIMAL:
 		return FirmwareConfiguration(firmware_type=firmware_type)
 
-	vendor_items = [MenuItem(v.value, value=v) for v in FirmwareVendor]
-	vendor_group = MenuItemGroup(vendor_items, sort_items=True)
+	if firmware_type == FirmwareType.FULL:
+		# linux-firmware leaves its optdeps out, so they are opt-in here
+		choices = sorted(FIRMWARE_OPTDEPS)
+		title = 'Optional firmware'
+		vendor_header = 'Select optional firmware (none are pulled in by linux-firmware):'
+	else:
+		choices = list(FirmwareVendor)
+		title = 'Firmware vendors'
+		vendor_header = 'Select firmware subpackages:'
 
-	# Seed selection from detection only when the user has no prior preset
-	initial_vendors = preset.vendors or splits
-	vendor_group.set_selected_by_value(initial_vendors)
+	# a pick saved under the other type may hold names this list lacks
+	kept = [v for v in preset.vendors if v in choices]
+	vendor_group = MenuItemGroup([MenuItem(v.value, value=v) for v in choices], sort_items=True)
+	vendor_group.set_selected_by_value(kept)
 
 	vendor_result = SelectMenu[FirmwareVendor](
 		vendor_group,
-		header='Select firmware subpackages:' + '\n',
+		header=vendor_header + '\n',
 		allow_skip=True,
+		allow_reset=True,
 		alignment=Alignment.CENTER,
-		frame=FrameProperties.min('Firmware vendors'),
+		frame=FrameProperties.min(title),
 		multi=True,
 	).run()
 
 	match vendor_result.type_:
 		case ResultType.Skip:
-			vendors = preset.vendors
+			vendors = kept
 		case ResultType.Selection:
 			vendors = vendor_result.get_values()
 		case ResultType.Reset:
@@ -144,7 +147,7 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 		case _:
 			assert_never(vendor_result.type_)
 
-	return FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=vendors)
+	return FirmwareConfiguration(firmware_type=firmware_type, vendors=vendors)
 
 
 def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | None:

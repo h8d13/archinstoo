@@ -201,11 +201,6 @@ packages = ["intel-media-driver", "libva-intel-driver", "libva-nvidia-driver", "
 [gfx_drivers_dkms]
 nvidia-open-kernel = ["nvidia-open-dkms", "libva-nvidia-driver", "dkms"]
 
-[gfx_mesa_extra]
-amd = ["vulkan-radeon"]
-intel = ["vulkan-intel"]
-nvidia = ["vulkan-nouveau"]
-
 [xorg_extra]
 packages = ["xorg-server", "xorg-xinit"]
 

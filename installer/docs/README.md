@@ -157,12 +157,10 @@
 │   │   │   ├── aur
 │   │   │   ├── bootstrap
 │   │   │   ├── config
-│   │   │   ├── firmware
 │   │   │   ├── groups
 │   │   │   ├── mirrors
 │   │   │   ├── packages
-│   │   │   ├── pacman
-│   │   │   └── tmpdb
+│   │   │   └── pacman
 │   │   ├── profile/
 │   │   │   ├── base
 │   │   │   ├── config

@@ -32,7 +32,7 @@ from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.authentication import stash
 from archinstoo.lib.disk import snapshots
-from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, CpuVendor, GfxDriver
+from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, CpuVendor, GfxDriver
 from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.applications import (
 	Audio,
@@ -287,11 +287,6 @@ SECTIONS: tuple[Section, ...] = (
 	Section(
 		'gfx_drivers_dkms',
 		lambda: {d.value: [p.value for p in d.gfx_packages(_DKMS_KERNEL)] for d in GfxDriver if d.has_dkms_variant()},
-		site='profile_handler.install_profile_config',
-	),
-	Section(
-		'gfx_mesa_extra',
-		lambda: {vendor: [p.value for p in pkgs] for vendor, pkgs in MESA_HOST_EXTRA.items()},
 		site='profile_handler.install_profile_config',
 	),
 	Section(

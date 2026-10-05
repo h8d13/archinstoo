@@ -12,12 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
-from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo, gpu_vendors
+from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo
 from archinstoo.lib.models.applications import DEFAULT_TERMINAL
 from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.network import NicType
-from archinstoo.lib.pm import firmware as firmware_pm
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
@@ -47,17 +46,13 @@ def _requirements(*binaries: str) -> bool:
 
 
 def _firmware_packages(config: dict[str, Any]) -> set[str]:
-	# mirrors pm/firmware.firmware_packages(): the schema holds what is static,
-	# the vendor list comes from the config and FULL's optdeps from the host
+	# mirrors FirmwareConfiguration.packages(): the schema holds what is
+	# static, the picked vendors come from the config
 	firmware_cfg = config.get('firmware') or {}
 	firmware_type = firmware_cfg.get('firmware_type', FirmwareType.FULL.value)
 	pkgs = set(SCHEMA['firmware'].get(firmware_type, []))
-
-	if firmware_type == FirmwareType.VENDOR.value:
+	if firmware_type != FirmwareType.MINIMAL.value:
 		pkgs.update(firmware_cfg.get('vendors', []) or [])
-	elif firmware_type == FirmwareType.FULL.value:
-		# through the module so a test can pin the detection, as gfx does
-		pkgs.update(v.value for v in firmware_pm.detect_optdeps())
 
 	return pkgs
 
@@ -169,12 +164,6 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
 		pkgs.update(f'{k}-headers' for k in kernels)
 	else:
 		pkgs = set(SCHEMA['gfx_drivers'][gfx])
-
-	# the generic driver picks its vulkan drivers off the host GPUs, the way the
-	# microcode does; count runs on that same host
-	if gfx == GfxDriver.MesaOpenSource.value:
-		for vendor in gpu_vendors(SysInfo.gpu_ids()):
-			pkgs.update(SCHEMA['gfx_mesa_extra'][vendor])
 
 	return pkgs
 

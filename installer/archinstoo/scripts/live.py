@@ -13,7 +13,6 @@ from archinstoo.lib.models.users import User, invoking_user
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, info
 from archinstoo.lib.pm.aur import run_grimoire_installation
-from archinstoo.lib.pm.firmware import firmware_packages
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.tui import Tui
@@ -95,7 +94,7 @@ def perform_installation(
 				headers = [f'{kernel}-headers' for kernel in config.kernels]
 				installation.add_additional_packages(headers)
 
-		if packages := firmware_packages(config.firmware):
+		if packages := config.firmware.packages():
 			installation.add_additional_packages(packages)
 
 		# Network
