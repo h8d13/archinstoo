@@ -162,7 +162,7 @@ log_level = logging.INFO
 TARGET_STATE_DIR = LPath('/etc/archinstoo.d')
 
 
-def sync_artifacts(target: Path) -> None:
+def copy_artifacts(target: Path) -> None:
 	# Copy the run log and saved user config into the target so they survive reboot
 	# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for post-install debugging.
 	try:

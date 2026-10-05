@@ -28,7 +28,7 @@ from archinstoo.lib.models.device import (
 	SnapshotType,
 )
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.output import debug, error, info, sync_artifacts, warn
+from archinstoo.lib.output import copy_artifacts, debug, error, info, warn
 from archinstoo.lib.pm import Pacman, mirrors
 from archinstoo.lib.pm.config import PacmanConfig
 
@@ -146,7 +146,7 @@ class Installer:
 		# kill the process before __exit__ runs
 		if self._artifacts_synced:
 			return
-		sync_artifacts(self.target)
+		copy_artifacts(self.target)
 		self._artifacts_synced = True
 
 	def __enter__(self) -> Self:
