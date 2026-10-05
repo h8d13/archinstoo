@@ -1004,7 +1004,7 @@ def has_separate_boot(
 	boot_partition: PartitionModification,
 	efi_partition: PartitionModification | None,
 ) -> bool:
-	# add_bootloader falls back to boot_partition = efi_partition when nothing
+	# BootloaderInstaller falls back to boot_partition = efi_partition when nothing
 	# is mounted at /boot, so both names can be one object. Both getters walk
 	# the same partition list, so identity is the whole question, and `!=`
 	# answered it only by accident: _obj_id is a per-instance uuid4 sitting in

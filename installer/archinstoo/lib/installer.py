@@ -12,15 +12,14 @@ from archinstoo.lib.disk.fstab import write_fstab
 from archinstoo.lib.disk.keyfiles import KeyFileGenerator
 from archinstoo.lib.disk.mdadm import write_mdadm_conf
 from archinstoo.lib.disk.mount import LayoutMounter
-from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
+from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.kernel.initramfs import LVM, RAID, Initramfs
+from archinstoo.lib.kernel.initramfs import LVM, Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
 from archinstoo.lib.kernel.sysctl import setup_sysctl
 from archinstoo.lib.kernel.zram import setup_zram
 from archinstoo.lib.localization import configure
 from archinstoo.lib.models.authentication import PrivilegeEscalation
-from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
@@ -41,6 +40,7 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.args import ArchConfigHandler
 	from archinstoo.lib.general import SysCommand
+	from archinstoo.lib.models.bootloader import Bootloader
 	from archinstoo.lib.models.localization import LocaleConfiguration
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
 	from archinstoo.lib.models.packages import Repository
@@ -123,6 +123,7 @@ class Installer:
 
 		self._zram_enabled = False
 		self._disable_fstrim = False
+		self._on_raid = False
 		self._layout_teardown_required = False
 
 		self.pacman = Pacman(self.target)
@@ -231,7 +232,7 @@ class Installer:
 			self._base_packages.append(pkg)
 
 		# https://github.com/archlinux/archinstall/issues/1837
-		if fs_type.fs_type_mount == 'btrfs':
+		if fs_type == FilesystemType.BTRFS:
 			self._disable_fstrim = True
 
 	def minimal_installation(
@@ -248,7 +249,7 @@ class Installer:
 		info(f'Installing base system: kernels={", ".join(self.kernels)}, hostname={hostname or "(unset)"}', step=True)
 
 		if self._disk_config.lvm_config:
-			self.add_additional_packages(__lvm_packages__)
+			self._base_packages.extend(__lvm_packages__)
 			self.initramfs.add_lvm()
 
 			for vg in self._disk_config.lvm_config.vol_groups:
@@ -271,6 +272,7 @@ class Installer:
 						self.initramfs.add_encrypt()
 
 					if part.on_raid:
+						self._on_raid = True
 						self._base_packages.extend(__raid_packages__)
 						self.initramfs.add_raid()
 
@@ -278,6 +280,8 @@ class Installer:
 			self._base_packages.extend(__fido2_packages__)
 
 		if ucode := SysInfo.ucode():
+			# the ucode package owns its image in /boot: an unowned copy left
+			# on a reused /boot fails pacstrap with "exists in filesystem"
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)
 			debug(f'Adding microcode package {ucode.stem}')
 			self._base_packages.append(ucode.stem)
@@ -317,8 +321,8 @@ class Installer:
 			# fstrim is owned by util-linux, a dependency of both base and systemd.
 			self.enable_service('fstrim.timer')
 
-		# note this needs to be after pacstrap
-		if RAID in self.initramfs.hooks:
+		# appends to the mdadm.conf the package ships, so after pacstrap
+		if self._on_raid:
 			write_mdadm_conf(self.target)
 
 		if hostname:
@@ -367,55 +371,17 @@ class Installer:
 		# (fido2-device) but is extensively gated and a no-op if not present/selected
 		enroll_fido2(self.target, self._disk_encryption)
 
-		if quiet and 'quiet' not in self._kernel_params:
-			self.add_kernel_param('quiet')
-
-		if serial_console and (param := f'console={serial_console}') not in self._kernel_params:
-			self.add_kernel_param(param)
-
-		efi_partition = self._disk_config.get_efi_partition()
-		boot_partition = self._disk_config.get_boot_partition()
-		root = self._disk_config.get_root()
-
-		if boot_partition is None:
-			if SysInfo.has_uefi() and efi_partition is not None:
-				boot_partition = efi_partition
-			else:
-				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
-
-		if root is None:
-			raise ValueError(f'Could not detect root at mountpoint {self.target}')
-
-		info(f'Adding bootloader {bootloader.display_name()} to {boot_partition.dev_path}', step=True)
-
-		if not SysInfo.has_uefi() and not bootloader.has_bios_support():
-			raise HardwareIncompatibilityError
-
-		# validate removable bootloader option
-		if removable:
-			if not SysInfo.has_uefi():
-				warn('Removable install requested but system is not UEFI; disabling.')
-				removable = False
-			elif not bootloader.has_removable_support():
-				warn(f'Bootloader {bootloader.display_name()} lacks removable support; disabling.')
-				removable = False
-
-		# grub-btrfs cannot consume a UKI for snapshot entries; keep standalone initramfs alongside.
-		keep_standalone = uki_enabled and bootloader == Bootloader.Grub and self._disk_config.btrfs_snapshot_type() is not None
-
-		BootloaderInstaller(self, self._disk_encryption, self._kernel_params, self._zram_enabled).install(
+		BootloaderInstaller(self, self._disk_config, self._disk_encryption, self._kernel_params, self._zram_enabled).install(
 			bootloader,
-			boot_partition,
-			efi_partition,
-			root,
 			uki_enabled=uki_enabled,
 			removable=removable,
+			quiet=quiet,
 			splash=splash,
-			keep_standalone_initramfs=keep_standalone,
+			serial_console=serial_console,
 		)
 
 	def add_additional_packages(self, packages: str | list[str]) -> None:
-		return self.pacman.strap(packages)
+		self.pacman.strap(packages)
 
 	def add_kernel_param(self, params: str | list[str]) -> None:
 		if isinstance(params, str):

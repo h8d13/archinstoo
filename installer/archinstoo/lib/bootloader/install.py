@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.chroot import chroot_prefix
 from archinstoo.lib.disk.lvm import lvm_pvseg_info
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path
-from archinstoo.lib.exceptions import DiskError, SysCallError
+from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.linux_path import LPath
@@ -24,6 +24,7 @@ from archinstoo.lib.output import TARGET_STATE_DIR, debug, error, info, warn
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+	from archinstoo.lib.models.device import DiskLayoutConfiguration
 
 
 def _luks_uuid_from_mapper_dev(mapper_dev_path: Path) -> str:
@@ -53,13 +54,15 @@ def refind_kernel_dir(root: PartitionModification | LvmVolume, *, boot_on_root: 
 
 
 class BootloaderInstaller:
-	# One per add_bootloader() call. Runs on the mounted target through the
+	# One per add_bootloader() call. Resolves boot/ESP/root from the layout and
+	# validates the request, then runs on the mounted target through the
 	# Installer (chroot, pacstrap, mkinitcpio); what it needs from the install
 	# state is fixed by the time the bootloader goes in, so it is handed over
 	# once instead of read back through private attributes.
 	def __init__(
 		self,
 		installation: Installer,
+		disk_config: DiskLayoutConfiguration,
 		disk_encryption: DiskEncryption,
 		kernel_params: list[str],
 		zram_enabled: bool,
@@ -68,25 +71,67 @@ class BootloaderInstaller:
 		self.target = installation.target
 		self.kernels = installation.kernels
 		self.pacman = installation.pacman
+		self._disk_config = disk_config
 		self._enc = disk_encryption
-		# extra cmdline entries collected during the install (resume=, quiet, console=)
-		self._extra_params = kernel_params
+		# extra cmdline entries collected during the install (resume=), plus
+		# quiet/console= added by install(); a copy, the install's list stays put
+		self._extra_params = list(kernel_params)
 		self._zram = zram_enabled
+
+	def _partitions(self) -> tuple[PartitionModification, PartitionModification | None, PartitionModification | LvmVolume]:
+		efi_partition = self._disk_config.get_efi_partition()
+		boot_partition = self._disk_config.get_boot_partition()
+		root = self._disk_config.get_root()
+
+		# nothing at /boot: the ESP carries the kernels, see has_separate_boot
+		if boot_partition is None:
+			if SysInfo.has_uefi() and efi_partition is not None:
+				boot_partition = efi_partition
+			else:
+				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
+
+		if root is None:
+			raise ValueError(f'Could not detect root at mountpoint {self.target}')
+
+		return boot_partition, efi_partition, root
+
+	def _add_param(self, param: str) -> None:
+		if param not in self._extra_params:
+			self._extra_params.append(param)
 
 	def install(
 		self,
 		bootloader: Bootloader,
-		boot_partition: PartitionModification,
-		efi_partition: PartitionModification | None,
-		root: PartitionModification | LvmVolume,
 		*,
 		uki_enabled: bool = False,
 		removable: bool = False,
+		quiet: bool = False,
 		splash: bool = False,
-		keep_standalone_initramfs: bool = False,
+		serial_console: str | None = None,
 	) -> None:
+		boot_partition, efi_partition, root = self._partitions()
+
+		info(f'Adding bootloader {bootloader.display_name()} to {boot_partition.dev_path}', step=True)
+
+		if not SysInfo.has_uefi() and not bootloader.has_bios_support():
+			raise HardwareIncompatibilityError
+
+		if removable and not SysInfo.has_uefi():
+			warn('Removable install requested but system is not UEFI; disabling.')
+			removable = False
+		elif removable and not bootloader.has_removable_support():
+			warn(f'Bootloader {bootloader.display_name()} lacks removable support; disabling.')
+			removable = False
+
+		if quiet:
+			self._add_param('quiet')
+		if serial_console:
+			self._add_param(f'console={serial_console}')
+
 		if uki_enabled:
-			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone_initramfs, splash=splash)
+			# grub-btrfs cannot consume a UKI for snapshot entries; keep standalone initramfs alongside
+			keep_standalone = bootloader == Bootloader.Grub and self._disk_config.btrfs_snapshot_type() is not None
+			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone, splash=splash)
 
 		match bootloader:
 			case Bootloader.Systemd:

@@ -41,7 +41,7 @@ SEPARATE_BOOT = ('/boot', '/dev/vda2', [PartitionFlag.BOOT])
 @pytest.mark.parametrize(
 	('layout', 'shared'),
 	[
-		# add_bootloader hands the same object twice when nothing is at /boot
+		# BootloaderInstaller hands the same object twice when nothing is at /boot
 		(ESP_EFI, True),
 		(ESP_BOOT_EFI, True),
 		# ESP mounted at /boot: both getters return that one partition
