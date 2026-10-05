@@ -28,11 +28,7 @@ class SshdProfile(Profile):
 	def install(self, install_session: Installer) -> None:
 		# sshd is reachable on first boot only if the chosen firewall lets
 		# 22 through; open it here so a headless install isn't locked out
-		handler = install_session.handler
-		if handler is None:
-			return
-
-		app_config = handler.config.app_config
+		app_config = install_session.handler.config.app_config
 		if app_config is None or app_config.firewall_config is None:
 			return
 

@@ -86,18 +86,15 @@ class Installer:
 		kernels: list[str] | None = None,
 		firmware: FirmwareConfiguration | None = None,
 		*,
-		handler: ArchConfigHandler | None = None,
+		handler: ArchConfigHandler,
 		device_handler: DeviceHandler | None = None,
 	) -> None:
 		# orders the steps the scripts call; each step is a thin entry into the
 		# package named for its area
-		from archinstoo.lib.args import Arguments
-
 		self._handler = handler
 		# lazy: constructing DeviceHandler scans disks and needs pyparted,
 		# neither wanted for no-disk-ops runs (live)
 		self._device_handler = device_handler
-		self._args = handler.args if handler else Arguments()
 
 		self._base_packages = list(base_packages or __base_packages__)
 		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
@@ -132,7 +129,7 @@ class Installer:
 		self.pacman = Pacman(self.target)
 
 	@property
-	def handler(self) -> ArchConfigHandler | None:
+	def handler(self) -> ArchConfigHandler:
 		return self._handler
 
 	@property
@@ -187,7 +184,7 @@ class Installer:
 		self._layout_teardown_required = False
 
 	def sanity_check(self) -> None:
-		systemd.wait_iso_services(self._args.skip_ntp, self._args.skip_wkd)
+		systemd.wait_iso_services(self._handler.args.skip_ntp, self._handler.args.skip_wkd)
 
 	def mount_ordered_layout(self) -> None:
 		info(f'Mounting ordered layout at {self.target} (encryption: {self._disk_encryption.encryption_type.value})', step=True)
