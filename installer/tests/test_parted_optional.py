@@ -41,7 +41,7 @@ sys.meta_path.insert(0, _BlockParted())
 _DUMMY_INSTALLER = """
 from pathlib import Path
 from types import SimpleNamespace
-from archinstoo.lib.args import Arguments
+from archinstoo.lib.args import ArchConfig, Arguments
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType
 
@@ -50,7 +50,7 @@ disk_config = DiskLayoutConfiguration(
 	device_modifications=[],
 	mountpoint=Path('/'),
 )
-Installer(Path('/'), disk_config, kernels=[], handler=SimpleNamespace(args=Arguments()))
+Installer(Path('/'), disk_config, kernels=[], handler=SimpleNamespace(args=Arguments(), config=ArchConfig()))
 """
 
 

@@ -27,7 +27,6 @@ from archinstoo.lib.models.device import (
 	FilesystemType,
 	SnapshotType,
 )
-from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.output import debug, error, info, sync_artifacts, warn
 from archinstoo.lib.pm import Pacman, mirrors
@@ -83,7 +82,6 @@ class Installer:
 		disk_config: DiskLayoutConfiguration,
 		base_packages: list[str] | None = None,
 		kernels: list[str] | None = None,
-		firmware: FirmwareConfiguration | None = None,
 		*,
 		handler: ArchConfigHandler,
 		device_handler: DeviceHandler | None = None,
@@ -96,7 +94,7 @@ class Installer:
 		self._device_handler = device_handler
 
 		self._base_packages = list(base_packages or __base_packages__)
-		self._base_packages.extend((firmware or FirmwareConfiguration()).packages())
+		self._base_packages.extend(handler.config.firmware.packages())
 		self.kernels = kernels or [DEFAULT_KERNEL.value]
 		self._disk_config = disk_config
 
