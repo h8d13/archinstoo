@@ -152,7 +152,6 @@ class Pacman:
 		flags = '--noconfirm --needed' + _QUIET_FLAGS
 
 		if self.target == Path('/'):
-			# Live mode: install directly on the running system
 			cmd = f'pacman -S {" ".join(packages)} {flags}'
 			bail = f'Package installation failed. See {logger.path} or above message for error details'
 		else:

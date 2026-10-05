@@ -126,7 +126,6 @@ class DiskLayoutConfiguration:
 
 	@classmethod
 	def running_system(cls) -> Self:
-		# live/packages configure the booted system: no disk ops, target is /
 		return cls(config_type=DiskLayoutType.Pre_mount, mountpoint=Path('/'))
 
 	def json(self) -> _DiskLayoutConfigurationSerialization:

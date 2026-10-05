@@ -217,9 +217,9 @@ class User:
 		return users
 
 
-# live/packages run on the running system (target /): with no auth config the
-# person driving the install through sudo/doas is the provision target, so
-# profile group wiring (seat/docker) reaches their account, not every account.
+# with no auth config the person driving the install through sudo/doas is
+# the provision target, so profile group wiring (seat/docker) reaches their
+# account, not every account.
 def invoking_user() -> User | None:
 	if name := Os.invoking_username():
 		return User(name, None, False)

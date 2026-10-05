@@ -46,7 +46,7 @@ def _session(target: Path, monkeypatch: pytest.MonkeyPatch) -> Installer:
 
 def test_write_environment_replaces_in_place(tmp_path: Path) -> None:
 	# a key the caller owns is rewritten where it stands: no duplicate line,
-	# and no stale value surviving a second pass (live mode writes /etc twice)
+	# and no stale value surviving a second pass (a rerun writes it again)
 	(tmp_path / 'etc').mkdir()
 	(tmp_path / 'etc/environment').write_text('EDITOR=nano\n')
 

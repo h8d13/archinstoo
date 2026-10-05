@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-# optional: scripts that never touch disk state (live) import this module
+# optional: scripts that never touch disk state import this module
 # through installer; only actually constructing a DeviceHandler needs pyparted
 try:
 	from parted import (

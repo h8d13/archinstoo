@@ -94,7 +94,7 @@ class Installer:
 		# package named for its area
 		self._handler = handler
 		# lazy: constructing DeviceHandler scans disks and needs pyparted,
-		# neither wanted for no-disk-ops runs (live)
+		# neither wanted for no-disk-ops runs
 		self._device_handler = device_handler
 
 		self._base_packages = list(base_packages or __base_packages__)
@@ -106,7 +106,7 @@ class Installer:
 		self.target: Path = target
 
 		# steps report_outcome names as missed on a clean exit. bootloader is
-		# not here: a flow may legitimately have none (skip_boot, live)
+		# not here: a flow may legitimately have none
 		self._helper_flags: dict[str, bool] = {
 			'base': False,
 		}
@@ -140,8 +140,7 @@ class Installer:
 		return self._device_handler
 
 	def set_helper_flag(self, key: str, value: bool) -> None:
-		# flows that never run a step (format stops at mount, live/packages
-		# are on a booted system) claim it so the exit summary stays true
+		# flows that never run a step claim it so the exit summary stays true
 		self._helper_flags[key] = value
 
 	def sync_artifacts(self) -> None:

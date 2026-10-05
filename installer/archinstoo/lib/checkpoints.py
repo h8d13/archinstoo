@@ -66,8 +66,6 @@ def report_outcome(target: Path, steps: dict[str, bool]) -> None:
 		warn(f'Detailed error logs can be found at: {logger.directory}')
 		return
 
-	# live/packages install onto the running system: the changes are
-	# already in effect, there is nothing to reboot into
 	closing = 'Changes are live on the running system.' if target == Path('/') else 'You may reboot when ready.'
 	log(
 		f'Installation completed without any errors.\nLog files available at {logger.directory} and in target {TARGET_STATE_DIR}.\n{closing}\n',

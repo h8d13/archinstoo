@@ -34,7 +34,7 @@ class _BlockParted:
 sys.meta_path.insert(0, _BlockParted())
 """
 
-# the scripts call themselves at module level (`live()`), so importing one
+# the scripts call themselves at module level (`packages()`), so importing one
 # would run an install; replay its top-level imports instead, then the same
 # dummy-disk Installer construction they perform (must not build a
 # DeviceHandler, which would scan disks through parted)

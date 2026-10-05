@@ -157,17 +157,3 @@ def test_iso_copy_falls_back_to_wired_dhcp(tmp_path: Path, monkeypatch: pytest.M
 	assert 'DHCP=yes' in wired
 	assert 'Type=ether' in wired
 	assert 'systemd-networkd' in enabled
-
-
-def test_iso_copy_leaves_a_live_target_alone(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	# live mode installs onto the running system, which already has whatever
-	# network got us here; writing a .network over it would be a downgrade.
-	# Calls the copy directly: the full handler would rewrite the host's own
-	# /etc/resolv.conf with target='/'
-	installation, enabled = _session(tmp_path, monkeypatch)
-	installation.target = Path('/')
-	_iso_sources(monkeypatch, tmp_path)
-
-	network_handler._copy_iso_network_config(installation, enable_services=True)
-
-	assert enabled == []

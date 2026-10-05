@@ -15,14 +15,14 @@ from archinstoo.lib.utils.env import Os
 		(['archinstoo'], None),
 		(['archinstoo', '--script', 'packages'], 'packages'),
 		(['archinstoo', '--script=packages'], 'packages'),
-		(['archinstoo', '--debug', '--script=live', '--offline'], 'live'),
+		(['archinstoo', '--debug', '--script=packages', '--offline'], 'packages'),
 		(['archinstoo', '--script', 'count'], 'count'),
 		(['archinstoo', '--script=count'], 'count'),
 		# trailing/empty forms: no value to read, fall back to the full path
 		(['archinstoo', '--script'], None),
 		(['archinstoo', '--script='], None),
 		# a value that merely contains the flag name is not the flag
-		(['archinstoo', '--config', 'my--script=live.json'], None),
+		(['archinstoo', '--config', 'my--script=packages.json'], None),
 	],
 )
 def test_script_peek(monkeypatch: pytest.MonkeyPatch, argv: list[str], expected: str | None) -> None:
@@ -34,12 +34,12 @@ def test_script_peek(monkeypatch: pytest.MonkeyPatch, argv: list[str], expected:
 @pytest.mark.parametrize(
 	('script', 'distro_id', 'on_iso', 'bootstrap', 'blocked'),
 	[
-		# running-system scripts on a non-Arch root: the case the guard exists for
+		# running-system script on a non-Arch root: the case the guard exists for
 		('packages', 'debian', False, False, True),
-		('live', 'alpine', False, False, True),
-		# same scripts where target '/' really is Arch
+		('packages', 'alpine', False, False, True),
+		# same script where target '/' really is Arch, host or ISO
 		('packages', 'arch', False, False, False),
-		('live', '', True, False, False),
+		('packages', '', True, False, False),
 		# Arch too, but distros/BOOT's throwaway root
 		('packages', 'arch', False, True, True),
 		# disk scripts pacstrap a separate target, foreign host or not

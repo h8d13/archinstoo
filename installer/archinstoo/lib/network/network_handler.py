@@ -133,21 +133,15 @@ def _configure_mac_address(installation: Installer, nic_type: NicType, mac: MacA
 
 
 def _copy_iso_network_config(installation: Installer, enable_services: bool = False) -> None:
-	# Live mode targets the running system: configs already in place,
-	# copying a path onto itself raises OSError (Errno 22). Skip the
-	# copies, keep service enablement.
-	on_host = installation.target == Path('/')
-
 	# Copy (if any) iwd password and config files
 	iwd_dir = LPath(ISO_IWD_DIR)
 	if psk_files := list(iwd_dir.glob('*.psk')):
 		info(f'Copying {len(psk_files)} iwd profile(s) to target')
-		if not on_host:
-			iwd_target = installation.target / iwd_dir.relative_to_root()
-			iwd_target.mkdir(parents=True, exist_ok=True)
+		iwd_target = installation.target / iwd_dir.relative_to_root()
+		iwd_target.mkdir(parents=True, exist_ok=True)
 
-			for psk in psk_files:
-				psk.copy(iwd_target / psk.name, preserve_metadata=True)
+		for psk in psk_files:
+			psk.copy(iwd_target / psk.name, preserve_metadata=True)
 
 		if enable_services:
 			# every script runs this after minimal_installation, the target takes packages
@@ -158,12 +152,11 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 	network_dir = LPath(ISO_NETWORK_DIR)
 	if netconfigurations := list(network_dir.glob('*')):
 		info(f'Copying {len(netconfigurations)} systemd-networkd config(s) to target')
-		if not on_host:
-			network_target = installation.target / network_dir.relative_to_root()
-			network_target.mkdir(parents=True, exist_ok=True)
+		network_target = installation.target / network_dir.relative_to_root()
+		network_target.mkdir(parents=True, exist_ok=True)
 
-			for netconf_file in netconfigurations:
-				netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
+		for netconf_file in netconfigurations:
+			netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
 
 		if enable_services:
 			installation.enable_service('systemd-networkd')
@@ -172,7 +165,7 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 		return
 
 	debug('No iwd profiles or systemd-networkd configs found on ISO')
-	if on_host or not enable_services:
+	if not enable_services:
 		return
 
 	# a foreign host keeps nothing the target can read: alpine's udhcpc holds

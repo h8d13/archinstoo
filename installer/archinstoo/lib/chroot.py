@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.installer import Installer
 
-# running commands inside the mounted target. live/packages runs have the
-# target at /, there the command runs on the host as is
+# running commands inside the mounted target; a target at / runs them on
+# the host as is
 
 
 def chroot_prefix(target: Path) -> list[str]:

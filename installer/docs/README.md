@@ -190,7 +190,6 @@
 │   │   ├── format
 │   │   ├── guided
 │   │   ├── list
-│   │   ├── live
 │   │   ├── minimal
 │   │   ├── mirror
 │   │   ├── packages
