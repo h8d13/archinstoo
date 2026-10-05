@@ -60,12 +60,6 @@ class Initramfs:
 			debug(f'Inserting sd-encrypt hook before {before}')
 			self.hooks.insert(self.hooks.index(before), 'sd-encrypt')
 
-	def drop_fsck(self) -> None:
-		# no fsck tool for ntfs3, the hook would fail on a root it cannot check
-		if 'fsck' in self.hooks:
-			debug('Removing fsck hook: no fsck tool for ntfs3 root')
-			self.hooks.remove('fsck')
-
 	def write_conf(self, target: Path) -> None:
 		with (target / 'etc/mkinitcpio.conf').open('r+') as mkinit:
 			content = mkinit.read()

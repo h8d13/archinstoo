@@ -182,7 +182,6 @@ if [ "$A2_MINIMAL" = "1" ]; then
 		echo "dosfstools"
 		echo "e2fsprogs"
 		echo "f2fs-tools"
-		echo "ntfs-3g"
 		echo "xfsprogs"
 		echo "cryptsetup"
 		echo "lvm2"

@@ -102,7 +102,6 @@ disk_depends = (
 	'dosfstools',  		# FAT EFI filesystem support
 	'e2fsprogs',  		# ext4 filesystem support
 	'f2fs-tools',  		# f2fs filesystem support
-	'ntfsprogs',  		# NTFS filesystem support
 	'xfsprogs',  		# XFS filesystem support
 	'cryptsetup',  		# LUKS encryption support
 	'lvm2',  		# LVM layout support
@@ -153,7 +152,7 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 	# -T prints only what is unsatisfied and honours `provides`, so a package
 	# the ISO already covers under another name is left alone. --needed skips
 	# reinstalls but not upgrades, and upgrading an ISO package into a newer
-	# split breaks the ISO's own tools (ntfs-3g -> ntfsprogs, testdisk).
+	# split breaks the ISO's own tools (e.g. a package moving into a split).
 	try:
 		Pacman.run(f'-T {" ".join(depends)}')
 	except SysCallError as err:

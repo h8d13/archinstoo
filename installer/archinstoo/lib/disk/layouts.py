@@ -130,10 +130,9 @@ def suggest_disk_layout(
 	filesystem_type: FilesystemType | None = None,
 	separate_home: bool | None = None,
 	bootloader: Bootloader | None = None,
-	advanced: bool = False,
 ) -> DeviceModification:
 	if not filesystem_type:
-		filesystem_type = select_main_filesystem_format(advanced=advanced, allow_lvm=True)
+		filesystem_type = select_main_filesystem_format(allow_lvm=True)
 
 	sector_size = device.device_info.sector_size
 	total_size = device.device_info.total_size
@@ -226,7 +225,6 @@ def suggest_lvm_layout(
 	disk_config: DiskLayoutConfiguration,
 	filesystem_type: FilesystemType | None = None,
 	vg_grp_name: str = 'ArchinstooVg',
-	advanced: bool = False,
 	home_volume: bool = True,
 ) -> LvmConfiguration:
 	if disk_config.config_type not in (DiskLayoutType.Default, DiskLayoutType.Manual):
@@ -239,7 +237,7 @@ def suggest_lvm_layout(
 	mount_options = []
 
 	if not filesystem_type:
-		filesystem_type = select_main_filesystem_format(advanced=advanced)
+		filesystem_type = select_main_filesystem_format()
 
 	if filesystem_type == FilesystemType.BTRFS:
 		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?' + '\n', preset=True, allow_skip=False)
@@ -323,11 +321,9 @@ def get_default_partition_layout(
 	device: BDevice,
 	filesystem_type: FilesystemType | None = None,
 	bootloader: Bootloader | None = None,
-	advanced: bool = False,
 ) -> DeviceModification:
 	return suggest_disk_layout(
 		device,
 		filesystem_type=filesystem_type,
 		bootloader=bootloader,
-		advanced=advanced,
 	)

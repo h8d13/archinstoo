@@ -89,16 +89,13 @@ def select_partition_table(device: BDevice) -> PartitionTable:
 	return prompt_choice(items, default, frame='Partition table', allow_skip=False)
 
 
-def select_main_filesystem_format(advanced: bool = False, allow_lvm: bool = False) -> FilesystemType:
+def select_main_filesystem_format(allow_lvm: bool = False) -> FilesystemType:
 	items = [
 		MenuItem('btrfs', value=FilesystemType.BTRFS),
 		MenuItem('ext4', value=FilesystemType.EXT4),
 		MenuItem('xfs', value=FilesystemType.XFS),
 		MenuItem('f2fs', value=FilesystemType.F2FS),
 	]
-
-	if advanced:
-		items.append(MenuItem('ntfs', value=FilesystemType.NTFS))
 
 	# LVM marks the data partition a PV, so no throwaway root fs is asked before the LVM step
 	if allow_lvm:

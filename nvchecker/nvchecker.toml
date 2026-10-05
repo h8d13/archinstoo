@@ -45,9 +45,6 @@ source = "pacman"
 [lvm2]
 source = "pacman"
 
-[ntfsprogs]
-source = "pacman"
-
 [pacman]
 source = "pacman"
 

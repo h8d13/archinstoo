@@ -1,11 +1,7 @@
-from pathlib import Path
-
 import pytest
 
 from archinstoo.lib import hardware
-from archinstoo.lib.installer import Installer
 from archinstoo.lib.kernel.initramfs import LVM, Initramfs
-from archinstoo.lib.models.device import FilesystemType
 
 
 def _order(hooks: list[str], *names: str) -> list[int]:
@@ -26,32 +22,6 @@ def test_microcode_hook_only_where_it_applies(monkeypatch: pytest.MonkeyPatch, a
 	monkeypatch.setattr(hardware.SysInfo, 'arch', staticmethod(lambda: arch))
 
 	assert ('microcode' in Initramfs().hooks) is present
-
-
-def _session(tmp_path: Path) -> Installer:
-	installation = Installer.__new__(Installer)
-	installation.target = tmp_path
-	installation.kernels = ['linux']
-	installation.initramfs = Initramfs()
-	installation._base_packages = []
-	installation._disable_fstrim = False
-	return installation
-
-
-def test_ntfs3_root_drops_fsck(tmp_path: Path) -> None:
-	# partitions carry their mountpoint relative to the installed system,
-	# so root is / and never the install target path
-	installation = _session(tmp_path)
-	installation._prepare_fs_type(FilesystemType.NTFS, Path('/'))
-
-	assert 'fsck' not in installation.initramfs.hooks
-
-
-def test_ntfs3_data_partition_keeps_fsck(tmp_path: Path) -> None:
-	installation = _session(tmp_path)
-	installation._prepare_fs_type(FilesystemType.NTFS, Path('/data'))
-
-	assert 'fsck' in installation.initramfs.hooks
 
 
 def test_lvm_hook_sits_between_block_and_filesystems() -> None:

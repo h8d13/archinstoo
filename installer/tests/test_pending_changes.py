@@ -47,7 +47,7 @@ def test_manual_layout_lists_touched_partitions_only() -> None:
 		_device('/dev/nvme0n1'),
 		wipe=False,
 		partitions=[
-			_part(ModificationStatus.EXIST, FilesystemType.NTFS, None, '/dev/nvme0n1p3'),
+			_part(ModificationStatus.EXIST, None, None, '/dev/nvme0n1p3'),
 			_part(ModificationStatus.MODIFY, FilesystemType.FAT32, '/boot', '/dev/nvme0n1p1'),
 			_part(ModificationStatus.DELETE, FilesystemType.EXT4, None, '/dev/nvme0n1p5'),
 			_part(ModificationStatus.CREATE, FilesystemType.BTRFS, '/', None, gib=40),

@@ -3,13 +3,13 @@ import pytest
 import archinstoo
 from archinstoo.lib.exceptions import SysCallError
 
-_DEPS = ('pacman', 'git', 'ntfsprogs')
+_DEPS = ('pacman', 'git', 'xfsprogs')
 
 
 @pytest.mark.parametrize(
 	('output', 'expected'),
 	[
-		('git\nntfsprogs\n', ['git', 'ntfsprogs']),
+		('git\nxfsprogs\n', ['git', 'xfsprogs']),
 		# only names we asked about are installable, anything else is noise
 		('warning: whatever\ngit\n', ['git']),
 	],
@@ -25,7 +25,7 @@ def test_missing_deps_reports_unsatisfied(monkeypatch: pytest.MonkeyPatch, outpu
 
 
 def test_missing_deps_all_satisfied(monkeypatch: pytest.MonkeyPatch) -> None:
-	# -T exits 0 and prints nothing: e.g. ntfsprogs covered by a provides
+	# -T exits 0 and prints nothing: e.g. xfsprogs covered by a provides
 	monkeypatch.setattr(archinstoo.Pacman, 'run', lambda args, **kw: None)
 
 	assert archinstoo._missing_deps(_DEPS) == []

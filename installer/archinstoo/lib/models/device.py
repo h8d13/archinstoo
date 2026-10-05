@@ -942,7 +942,6 @@ class FilesystemType(StrEnum):
 	FAT12 = auto()
 	FAT16 = auto()
 	FAT32 = auto()
-	NTFS = auto()
 	XFS = auto()
 	LINUX_SWAP = 'linux-swap'
 
@@ -958,8 +957,6 @@ class FilesystemType(StrEnum):
 	@property
 	def fs_type_mount(self) -> str:
 		match self:
-			case FilesystemType.NTFS:
-				return 'ntfs3'
 			case FilesystemType.FAT32:
 				return 'vfat'
 			case _:

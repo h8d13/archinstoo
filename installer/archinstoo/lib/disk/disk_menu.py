@@ -40,11 +40,9 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		disk_layout_config: DiskLayoutConfiguration | None,
 		allow_auto_unlock: bool = False,
 		bootloader: Bootloader | None = None,
-		advanced: bool = False,
 	) -> None:
 		self._allow_auto_unlock = allow_auto_unlock
 		self._bootloader = bootloader
-		self._advanced = advanced
 		if not disk_layout_config:
 			self._disk_menu_config = DiskMenuConfig(
 				disk_config=None,
@@ -162,7 +160,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		return DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset, allow_auto_unlock=allow_auto_unlock).run()
 
 	def _select_disk_layout_config(self, preset: DiskLayoutConfiguration | None) -> DiskLayoutConfiguration | None:
-		disk_config = select_disk_config(preset, bootloader=self._bootloader, advanced=self._advanced)
+		disk_config = select_disk_config(preset, bootloader=self._bootloader)
 
 		if disk_config != preset:
 			# carry an inline-defined lvm_config (fs=lvm in the default flow) into the peer item; else reset
@@ -178,7 +176,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		if not disk_config:
 			return preset
 
-		lvm_config = select_lvm_config(disk_config, preset=preset, advanced=self._advanced)
+		lvm_config = select_lvm_config(disk_config, preset=preset)
 
 		if lvm_config != preset:
 			self._menu_item_group.find_by_key('disk_encryption').value = None
