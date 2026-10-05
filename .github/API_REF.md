@@ -209,5 +209,5 @@ Primitives reused inside any step / app / profile (on `Installer`):
 - `arch_chroot(cmd, run_as=None)`: run argv list in the target.
 - `self.target` (`Path` of the new root), `self.handler.config` (full
   `ArchConfig`, e.g. read `app_config.firewall_config`).
-- bootloader/keymap/fs: `add_bootloader()`, `set_keyboard()`,
-  `minimal_installation()`, `genfstab()`.
+- bootloader/keymap/fs: `add_bootloader()`, `enroll_fido2()`,
+  `set_keyboard()`, `minimal_installation()`, `genfstab()`.

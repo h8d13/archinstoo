@@ -66,6 +66,7 @@ def perform_installation(
 		installation.mount_ordered_layout()
 		installation.minimal_installation(locale_config=LocaleConfiguration.default())
 		installation.set_hostname('minimal-arch')
+		installation.enroll_fido2()
 		installation.add_bootloader(Bootloader.Systemd)
 
 		if network_config := config.network_config:

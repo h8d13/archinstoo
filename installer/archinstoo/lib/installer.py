@@ -194,6 +194,10 @@ class Installer:
 		info(f'Generating key files for {self._disk_encryption.encryption_type.value}...')
 		self.initramfs.files.extend(KeyFileGenerator(self.target, self._disk_encryption).generate())
 
+	def enroll_fido2(self) -> None:
+		# no-op unless a token was picked for an encrypted layout
+		enroll_fido2(self.target, self._disk_encryption)
+
 	def set_mirrors(self, pacman_configuration: PacmanConfiguration, on_target: bool = False) -> None:
 		mirrors.set_mirrors(self, pacman_configuration, on_target)
 
@@ -367,10 +371,6 @@ class Installer:
 		splash: bool = False,
 		serial_console: str | None = None,
 	) -> None:
-		# Run before bootloader install so kernel cmdline reflects rd.luks.options
-		# (fido2-device) but is extensively gated and a no-op if not present/selected
-		enroll_fido2(self.target, self._disk_encryption)
-
 		BootloaderInstaller(self, self._disk_config, self._disk_encryption, self._kernel_params, self._zram_enabled).install(
 			bootloader,
 			uki_enabled=uki_enabled,
