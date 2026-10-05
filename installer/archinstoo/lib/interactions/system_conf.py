@@ -1,30 +1,33 @@
 from typing import assert_never
 
 from archinstoo.lib.models.firmware import FIRMWARE_OPTDEPS, FirmwareConfiguration, FirmwareType, FirmwareVendor
-from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel
+from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel, kernel_names_error
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
+from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
 
+# menu entry that opens the name prompt, no package is named ''
+_TYPE_KERNEL = ''
+
 
 def select_kernel(preset: list[str] | None = None) -> list[str]:
-	# Asks the user to select a kernel for system.
-	#
-	# :return: The string as a selected kernel
-	# :rtype: string
-	if preset is None:
-		preset = []
+	# stock kernels, then names typed on an earlier visit so they stay
+	# tickable, then the escape hatch for board kernels (linux-rpi5)
+	preset = preset or []
+	stock = [k.value for k in Kernel]
+	typed = sorted(k for k in preset if k not in stock)
 
-	preset_kernels = [Kernel(p) for p in preset if p in Kernel._value2member_map_]
+	items = [MenuItem(k, value=k) for k in sorted(stock) + typed]
+	items.append(MenuItem('Custom (type a name)', value=_TYPE_KERNEL))
+	group = MenuItemGroup(items)
+	group.set_selected_by_value(preset)
+	group.set_default_by_value(DEFAULT_KERNEL.value)
+	group.set_focus_by_value(DEFAULT_KERNEL.value)
 
-	group = MenuItemGroup.from_enum(Kernel, sort_items=True, preset=preset_kernels)
-	group.set_default_by_value(DEFAULT_KERNEL)
-	group.set_focus_by_value(DEFAULT_KERNEL)
-
-	result = SelectMenu[Kernel](
+	result = SelectMenu[str](
 		group,
 		allow_skip=True,
 		allow_reset=True,
@@ -39,7 +42,18 @@ def select_kernel(preset: list[str] | None = None) -> list[str]:
 		case ResultType.Reset:
 			return []
 		case ResultType.Selection:
-			return [k.value for k in result.get_values()]
+			picked = result.get_values()
+		case _:
+			assert_never(result.type_)
+
+	if _TYPE_KERNEL not in picked:
+		return picked
+
+	header = 'Kernel package names, space separated (e.g. linux-rpi5)' + '\n'
+	names = prompt_text('Custom kernels', header, validator=kernel_names_error)
+	kept = [k for k in picked if k != _TYPE_KERNEL]
+	# a skipped prompt keeps the ticked kernels, dict.fromkeys drops repeats
+	return list(dict.fromkeys(kept + (names or '').split()))
 
 
 def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:

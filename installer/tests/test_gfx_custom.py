@@ -8,10 +8,12 @@ import pytest
 from archinstoo.lib.args import ArchConfig
 from archinstoo.lib.models.graphics import (
 	GFX_CUSTOM_CHOICES,
+	GFX_PACKAGES,
 	GfxDriver,
 	GfxPackage,
 	dkms_packages,
 	gfx_custom_choices,
+	gfx_drivers,
 )
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.config import ProfileConfiguration
@@ -31,12 +33,34 @@ def test_custom_choices_per_arch() -> None:
 	x86 = set(gfx_custom_choices('x86_64'))
 	arm = set(gfx_custom_choices('aarch64'))
 
-	# aarch64: mesa and every vulkan driver, none of the x86 vendor stacks
-	assert arm == {GfxPackage.Mesa} | {p for p in GfxPackage if p.value.startswith('vulkan-')}
 	assert {GfxPackage.VulkanPanfrost, GfxPackage.VulkanFreedreno} <= arm - x86
-	assert GfxPackage.NvidiaOpen in x86 - arm
+	assert {GfxPackage.IntelMediaDriver, GfxPackage.VplGpuRt} <= x86 - arm
+	# PCIe cards work on both: nvidia-open is prebuilt for ports' linux too
+	assert {GfxPackage.NvidiaOpen, GfxPackage.VulkanRadeon} <= x86 & arm
 	# both are slices of the pool the count mirror validates against
 	assert x86 | arm == set(GFX_CUSTOM_CHOICES)
+
+
+def test_drivers_per_arch() -> None:
+	assert gfx_drivers('aarch64') == [
+		GfxDriver.AmdOpenSource,
+		GfxDriver.NvidiaOpenKernel,
+		GfxDriver.NvidiaOpenSource,
+		GfxDriver.MesaOpenSource,
+		GfxDriver.VMSoftware,
+		GfxDriver.VMVirtio,
+		GfxDriver.Custom,
+	]
+	assert GfxDriver.MesaOpenSource not in gfx_drivers('x86_64')
+	assert {GfxDriver.AllOpenSource, GfxDriver.IntelOpenSource} <= set(gfx_drivers('x86_64'))
+
+
+@pytest.mark.parametrize('arch', ['x86_64', 'aarch64'])
+def test_offered_presets_fit_the_arch(arch: str) -> None:
+	# a preset never installs what the custom list hides on that arch
+	choices = set(gfx_custom_choices(arch))
+	for driver in gfx_drivers(arch):
+		assert set(GFX_PACKAGES[driver]) <= choices, driver
 
 
 @pytest.mark.parametrize(

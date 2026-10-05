@@ -31,7 +31,7 @@ mirrorlist. What differs from x86_64 inside archinstoo:
 - Serial console defaults to `ttyAMA0,115200`, the pl011 UART most boards expose.
 
 Board kernels are plain package names: `"kernels": ["linux-rpi5"]` in a config reaches
-`pacstrap` as is. The interactive kernel menu lists the stock kernels only.
+`pacstrap` as is. In the interactive kernel menu, `Custom (type a name)` takes the same names.
 
 ## Running on an already installed system
 

@@ -102,23 +102,34 @@ def dkms_packages(packages: list[GfxPackage], kernels: list[str] | None) -> list
 # variant are derived from the kernel list
 GFX_CUSTOM_CHOICES: list[GfxPackage] = [p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms)]
 
-# SoC and translation-layer vulkan drivers, offered off x86_64 only
-_NON_X86_VULKAN = (
-	GfxPackage.VulkanAsahi,
-	GfxPackage.VulkanBroadcom,
-	GfxPackage.VulkanDzn,
-	GfxPackage.VulkanFreedreno,
-	GfxPackage.VulkanGfxstream,
-	GfxPackage.VulkanPanfrost,
-	GfxPackage.VulkanPowervr,
-)
+# hidden per arch. x86_64 repos carry the SoC and translation-layer vulkan
+# drivers, but no x86 GPU uses them; Arch Ports aarch64 builds no Intel media
+_HIDDEN: dict[str, frozenset[GfxPackage]] = {
+	'x86_64': frozenset(
+		{
+			GfxPackage.VulkanAsahi,
+			GfxPackage.VulkanBroadcom,
+			GfxPackage.VulkanDzn,
+			GfxPackage.VulkanFreedreno,
+			GfxPackage.VulkanGfxstream,
+			GfxPackage.VulkanPanfrost,
+			GfxPackage.VulkanPowervr,
+		}
+	),
+	'aarch64': frozenset({GfxPackage.IntelMediaDriver, GfxPackage.LibvaIntelDriver, GfxPackage.VplGpuRt}),
+}
 
 
 def gfx_custom_choices(arch: str) -> list[GfxPackage]:
-	# off x86_64 there are no vendor presets: mesa plus every vulkan driver
-	if arch == 'x86_64':
-		return [p for p in GFX_CUSTOM_CHOICES if p not in _NON_X86_VULKAN]
-	return [p for p in GFX_CUSTOM_CHOICES if p is GfxPackage.Mesa or p.value.startswith('vulkan-')]
+	hidden = _HIDDEN.get(arch, frozenset())
+	return [p for p in GFX_CUSTOM_CHOICES if p not in hidden]
+
+
+def gfx_drivers(arch: str) -> list[GfxDriver]:
+	# a preset shows when none of its packages is hidden. On x86_64 the
+	# vendor presets cover what plain mesa would
+	hidden = _HIDDEN.get(arch, frozenset())
+	return [d for d in GfxDriver if hidden.isdisjoint(GFX_PACKAGES[d]) and not (arch == 'x86_64' and d is GfxDriver.MesaOpenSource)]
 
 
 # the static half of every driver, before the DKMS swap
