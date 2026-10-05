@@ -14,7 +14,6 @@ from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.applications import DEFAULT_TERMINAL
-from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.network import NicType
@@ -81,7 +80,7 @@ def _host_packages() -> set[str]:
 	return pkgs
 
 
-def _filesystem_packages(disk: dict[str, Any], kernels: list[str]) -> set[str]:
+def _filesystem_packages(disk: dict[str, Any]) -> set[str]:
 	# minimal_installation() prepares LVM volumes or partitions, never both, and
 	# lvm_config sits next to device_modifications rather than inside them
 	fs_tools = SCHEMA['filesystem_tools']
@@ -101,11 +100,6 @@ def _filesystem_packages(disk: dict[str, Any], kernels: list[str]) -> set[str]:
 
 	if lvm_config:
 		pkgs.update(_flat('lvm'))
-
-	# out-of-tree module, built per kernel
-	if FilesystemType.BCACHEFS.value in fs_types:
-		pkgs.update(_flat('bcachefs_extra'))
-		pkgs.update(f'{k}-headers' for k in kernels)
 
 	return pkgs
 
@@ -329,7 +323,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	# filesystem tools, lvm
 	disk = config.get('disk_config') or {}
-	pkgs.update(_filesystem_packages(disk, kernels))
+	pkgs.update(_filesystem_packages(disk))
 
 	# console font: the ISO has terminus, the target only gets it on request
 	if str((config.get('locale_config') or {}).get('console_font', '')).startswith('ter-'):

@@ -33,7 +33,6 @@ class CpuVendor(Enum):
 		return None
 
 
-_PROC_FILESYSTEMS = Path('/proc/filesystems')
 _DMI_ID = Path('/sys/class/dmi/id')
 _PROC_MODULES = Path('/proc/modules')
 
@@ -78,16 +77,6 @@ class _SysInfo:
 		# one domainN per host controller bound by the thunderbolt driver
 		# (USB4 hosts register on the same bus); disabled in firmware = absent
 		return any(Path('/sys/bus/thunderbolt/devices').glob('domain*'))
-
-	@cached_property
-	def has_bcachefs(self) -> bool:
-		# out of tree since 6.18: the stock ISO cannot format or mount it, only
-		# a medium built with A2_BCACHEFS=1 registers the filesystem
-		try:
-			text = _PROC_FILESYSTEMS.read_text()
-		except OSError:
-			return False
-		return any(line.split()[-1] == 'bcachefs' for line in text.splitlines() if line.strip())
 
 	@cached_property
 	def cpu_info(self) -> dict[str, str]:
@@ -172,10 +161,6 @@ class SysInfo:
 	@staticmethod
 	def has_uefi() -> bool:
 		return _sys_info.has_uefi
-
-	@staticmethod
-	def has_bcachefs() -> bool:
-		return _sys_info.has_bcachefs
 
 	@staticmethod
 	def bitness() -> int | None:

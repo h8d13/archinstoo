@@ -62,8 +62,6 @@ __archports_packages__ = ['archports-keyring']
 # Named rather than inlined so schema_gen can read the same list the installer
 # straps, instead of a transcription of it.
 __lvm_packages__ = [LVM]
-# out-of-tree module, built per kernel: every selected kernel also pulls -headers
-__bcachefs_packages__ = ['bcachefs-dkms']
 # sd-encrypt only bundles the fido2 dlopen libs if this is present when the
 # initramfs is built
 __fido2_packages__ = ['libfido2']
@@ -236,19 +234,9 @@ class Installer:
 		if (pkg := fs_type.installation_pkg) is not None:
 			self._base_packages.append(pkg)
 
-		# Install linux-headers and bcachefs-dkms if bcachefs is selected
-		# xxhash is required by objtool (part of linux-headers) at dkms build time
-		if fs_type == FilesystemType.BCACHEFS:
-			self._base_packages.extend(f'{kernel}-headers' for kernel in self.kernels)
-			self._base_packages.extend(__bcachefs_packages__)
-
 		# https://github.com/archlinux/archinstall/issues/1837
-		# https://github.com/koverstreet/bcachefs/issues/916
-		if fs_type.fs_type_mount in ('btrfs', 'bcachefs'):
+		if fs_type.fs_type_mount == 'btrfs':
 			self._disable_fstrim = True
-
-		if fs_type == FilesystemType.BCACHEFS:
-			self.initramfs.add_bcachefs()
 
 		if fs_type.fs_type_mount == 'ntfs3' and mountpoint == Path('/'):
 			self.initramfs.drop_fsck()

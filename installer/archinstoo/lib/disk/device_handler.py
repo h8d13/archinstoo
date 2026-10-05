@@ -331,10 +331,6 @@ class DeviceHandler:
 		options = []
 
 		match fs_type:
-			case FilesystemType.BCACHEFS:
-				# bcachefs uses a different command structure
-				command = 'bcachefs'
-				options.append('format')
 			case FilesystemType.BTRFS | FilesystemType.XFS:
 				# Force overwrite
 				options.append('-f')
@@ -571,13 +567,9 @@ class DeviceHandler:
 			length=length_sector.value,
 		)
 
-		# Parted does not have a file system type for bcachefs as of version 3.6, use
-		# ext4 in its place as that will result in a type of native Linux file system
-		if part_mod.fs_type == FilesystemType.BCACHEFS:
-			fs_value: str | None = FilesystemType.EXT4.parted_value
-		elif part_mod.fs_type == FilesystemType.LVM:
+		if part_mod.fs_type == FilesystemType.LVM:
 			# LVM PV: create a raw partition, no parted filesystem signature; pvcreate handles it
-			fs_value = None
+			fs_value: str | None = None
 		else:
 			fs_value = part_mod.fs_type.parted_value if part_mod.fs_type else None
 		filesystem = FileSystem(type=fs_value, geometry=geometry) if fs_value else None

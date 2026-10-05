@@ -339,12 +339,6 @@ source = "pacman"
 [base-devel]
 source = "pacman"
 
-[bcachefs-dkms]
-source = "pacman"
-
-[bcachefs-tools]
-source = "pacman"
-
 [binutils]
 source = "pacman"
 

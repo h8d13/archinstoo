@@ -124,11 +124,6 @@ SECTIONS: tuple[Section, ...] = (
 		site='installation.minimal_installation',
 	),
 	Section(
-		'bcachefs_extra',
-		lambda: installer.__bcachefs_packages__,
-		site='installation.minimal_installation',
-	),
-	Section(
 		'fido2',
 		lambda: installer.__fido2_packages__,
 		site='installation.minimal_installation',

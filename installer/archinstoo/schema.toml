@@ -31,13 +31,9 @@ packages = ["brltty", "espeakup", "alsa-utils"]
 packages = ["lvm2"]
 
 [filesystem_tools]
-bcachefs = ["bcachefs-tools"]
 btrfs = ["btrfs-progs"]
 f2fs = ["f2fs-tools"]
 xfs = ["xfsprogs"]
-
-[bcachefs_extra]
-packages = ["bcachefs-dkms"]
 
 [fido2]
 packages = ["libfido2"]

@@ -17,7 +17,7 @@ RAID = 'mdadm_udev'  # hook only; the package it needs is mdadm
 class Initramfs:
 	# what the install puts into mkinitcpio.conf before building the image.
 	# The add_*/drop_* methods reorder the lists as the layout demands
-	# (sd-encrypt, lvm2, bcachefs); keyfiles append to files directly.
+	# (sd-encrypt, lvm2, mdadm_udev); keyfiles append to files directly.
 	# build() writes them and runs mkinitcpio
 	def __init__(self) -> None:
 		self.modules: list[str] = []
@@ -59,14 +59,6 @@ class Initramfs:
 		if 'sd-encrypt' not in self.hooks:
 			debug(f'Inserting sd-encrypt hook before {before}')
 			self.hooks.insert(self.hooks.index(before), 'sd-encrypt')
-
-	def add_bcachefs(self) -> None:
-		if 'bcachefs' not in self.modules:
-			debug('Adding bcachefs module to initramfs')
-			self.modules.append('bcachefs')
-		if 'bcachefs' not in self.hooks and 'block' in self.hooks:
-			debug('Inserting bcachefs hook after block')
-			self.hooks.insert(self.hooks.index('block') + 1, 'bcachefs')
 
 	def drop_fsck(self) -> None:
 		# no fsck tool for ntfs3, the hook would fail on a root it cannot check

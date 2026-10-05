@@ -22,7 +22,6 @@ Flags (env vars, all optional):
 | `A2_LIVE_USER` / `A2_LIVE_PASS` | `live` / `live` | Credentials for the live user (A2_LIVE=1 only) |
 | `A2_AUTOLOGIN` | `1` | SDDM autologin into Plasma (A2_LIVE=1 only) |
 | `A2_CACHING` | `0` | `1` runs `ISOMOD_CACHE` to bundle extra packages |
-| `A2_BCACHEFS` | `0` | Add `bcachefs-dkms` and a oneshot module-build service |
 | `A2_COW_SIZE` | `1G` (A2_LIVE=`2G`, A2_MINIMAL=stock) | COW overlay size; A2_MINIMAL inherits archiso default unless set |
 | `A2_THREADS` | `$(nproc)` | Build parallelism |
 | `A2_SILENT_MODE` | `0` | Swallow `mkarchiso` output |

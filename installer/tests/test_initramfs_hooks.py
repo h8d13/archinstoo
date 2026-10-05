@@ -21,16 +21,6 @@ def test_encrypt_lands_between_block_and_filesystems() -> None:
 	assert _order(initramfs.hooks, 'block', 'sd-encrypt', 'filesystems') == sorted(_order(initramfs.hooks, 'block', 'sd-encrypt', 'filesystems'))
 
 
-def test_bcachefs_hook_follows_block_and_ships_the_module() -> None:
-	initramfs = Initramfs()
-	initramfs.add_bcachefs()
-	initramfs.add_bcachefs()
-
-	assert initramfs.modules == ['bcachefs']
-	assert initramfs.hooks.index('bcachefs') == initramfs.hooks.index('block') + 1
-	assert initramfs.hooks.count('bcachefs') == 1
-
-
 @pytest.mark.parametrize(('arch', 'present'), [('x86_64', True), ('aarch64', False)])
 def test_microcode_hook_only_where_it_applies(monkeypatch: pytest.MonkeyPatch, arch: str, present: bool) -> None:
 	monkeypatch.setattr(hardware.SysInfo, 'arch', staticmethod(lambda: arch))
