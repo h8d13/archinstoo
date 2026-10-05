@@ -43,8 +43,15 @@ class GfxPackage(Enum):
 	NvidiaOpenDkms = 'nvidia-open-dkms'
 	VplGpuRt = 'vpl-gpu-rt'
 	LibVpl = 'libvpl'
+	VulkanAsahi = 'vulkan-asahi'
+	VulkanBroadcom = 'vulkan-broadcom'
+	VulkanDzn = 'vulkan-dzn'
+	VulkanFreedreno = 'vulkan-freedreno'
+	VulkanGfxstream = 'vulkan-gfxstream'
 	VulkanIntel = 'vulkan-intel'
 	VulkanMesaLayers = 'vulkan-mesa-layers'
+	VulkanPanfrost = 'vulkan-panfrost'
+	VulkanPowervr = 'vulkan-powervr'
 	VulkanRadeon = 'vulkan-radeon'
 	VulkanNouveau = 'vulkan-nouveau'
 	VulkanSwrast = 'vulkan-swrast'
@@ -123,9 +130,28 @@ def dkms_packages(packages: list[GfxPackage], kernels: list[str] | None) -> list
 	return [*swapped, GfxPackage.Dkms]
 
 
-# what the custom driver lets a user tick. dkms and its nvidia variant are
-# derived from the kernel list
+# what the custom driver lets a user tick on any arch. dkms and its nvidia
+# variant are derived from the kernel list
 GFX_CUSTOM_CHOICES: list[GfxPackage] = [p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms)]
+
+# SoC and translation-layer vulkan drivers, offered off x86_64 only
+_NON_X86_VULKAN = (
+	GfxPackage.VulkanAsahi,
+	GfxPackage.VulkanBroadcom,
+	GfxPackage.VulkanDzn,
+	GfxPackage.VulkanFreedreno,
+	GfxPackage.VulkanGfxstream,
+	GfxPackage.VulkanPanfrost,
+	GfxPackage.VulkanPowervr,
+)
+
+
+def gfx_custom_choices(arch: str) -> list[GfxPackage]:
+	# off x86_64 there are no vendor presets: mesa plus every vulkan driver
+	if arch == 'x86_64':
+		return [p for p in GFX_CUSTOM_CHOICES if p not in _NON_X86_VULKAN]
+	return [p for p in GFX_CUSTOM_CHOICES if p is GfxPackage.Mesa or p.value.startswith('vulkan-')]
+
 
 # the static half of every driver, before the DKMS swap
 GFX_PACKAGES: dict[GfxDriver, list[GfxPackage]] = {

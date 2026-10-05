@@ -1,4 +1,4 @@
-from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GfxDriver, GfxPackage, SysInfo
+from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo, gfx_custom_choices
 from archinstoo.lib.output import debug
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -9,11 +9,16 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties, FrameStyle, Pre
 def select_gfx_packages(preset: list[GfxPackage] | None = None) -> list[GfxPackage]:
 	# the custom driver: one package per line, nothing derived. A hybrid
 	# laptop ticks nvidia-open next to vulkan-intel, which no preset offers
-	items = [MenuItem(p.value, value=p) for p in GFX_CUSTOM_CHOICES]
+	choices = gfx_custom_choices(SysInfo.arch())
+	items = [MenuItem(p.value, value=p) for p in choices]
 	group = MenuItemGroup(items, sort_items=True)
-	group.set_selected_by_value(preset or [])
+	# a pick saved on the other arch may hold names this list lacks
+	group.set_selected_by_value([p for p in preset or [] if p in choices])
 
-	header = 'dkms and xorg packages are added from the kernel and profile picks.\n'
+	if SysInfo.arch() == 'x86_64':
+		header = 'dkms and xorg packages are added from the kernel and profile picks.\n'
+	else:
+		header = 'Tick mesa and the vulkan driver of your GPU (panfrost: Mali, freedreno: Adreno, broadcom: Raspberry Pi).\n'
 
 	result = SelectMenu[GfxPackage](
 		group,
@@ -43,13 +48,15 @@ def select_driver(
 	# Select a graphics driver from a pre-defined set of popular options.
 	# This comment was stupid so I removed it. A profile should plain dictate
 	# What it needs to run and be in minimal functional state.
+	x86 = SysInfo.arch() == 'x86_64'
 	if not options:
-		if SysInfo.arch() != 'x86_64':
-			# On ARM only mesa-based drivers are available
-			debug(f'arch={SysInfo.arch()}, restricting gfx driver options to mesa')
-			options = [GfxDriver.MesaOpenSource]
+		if x86:
+			# the vendor presets cover what plain mesa would on x86_64
+			options = [d for d in GfxDriver if d is not GfxDriver.MesaOpenSource]
 		else:
-			options = list(GfxDriver)
+			# no vendor presets: plain mesa, or custom for a vulkan driver
+			debug(f'arch={SysInfo.arch()}, restricting gfx driver options to mesa and custom')
+			options = [GfxDriver.MesaOpenSource, GfxDriver.Custom]
 
 	def preview_driver(x: MenuItem, k: list[str] | None = kernels) -> str | None:
 		if x.value is None:
@@ -65,8 +72,11 @@ def select_driver(
 	if preset is not None:
 		group.set_focus_by_value(preset)
 
-	header = 'Nvidia: Turing+ use the open kernel module, older GPUs use nouveau (legacy nvidia-*xx drivers are on AUR).\n'
-	header += 'Hybrid laptops: use Custom to pick packages for both GPUs.\n'
+	if x86:
+		header = 'Nvidia: Turing+ use the open kernel module, older GPUs use nouveau (legacy nvidia-*xx drivers are on AUR).\n'
+		header += 'Hybrid laptops: use Custom to pick packages for both GPUs.\n'
+	else:
+		header = 'Mesa is OpenGL only: use Custom to add the vulkan driver of your GPU.\n'
 
 	result = SelectMenu[GfxDriver](
 		group,

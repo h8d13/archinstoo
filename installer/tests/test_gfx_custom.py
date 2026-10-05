@@ -11,6 +11,7 @@ from archinstoo.lib.hardware import (
 	GfxDriver,
 	GfxPackage,
 	dkms_packages,
+	gfx_custom_choices,
 )
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.config import ProfileConfiguration
@@ -24,6 +25,18 @@ def test_custom_choices_leave_out_derived_packages() -> None:
 	derived = {GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms}
 	assert not derived & set(GFX_CUSTOM_CHOICES)
 	assert set(GFX_CUSTOM_CHOICES) | derived == set(GfxPackage)
+
+
+def test_custom_choices_per_arch() -> None:
+	x86 = set(gfx_custom_choices('x86_64'))
+	arm = set(gfx_custom_choices('aarch64'))
+
+	# aarch64: mesa and every vulkan driver, none of the x86 vendor stacks
+	assert arm == {GfxPackage.Mesa} | {p for p in GfxPackage if p.value.startswith('vulkan-')}
+	assert {GfxPackage.VulkanPanfrost, GfxPackage.VulkanFreedreno} <= arm - x86
+	assert GfxPackage.NvidiaOpen in x86 - arm
+	# both are slices of the pool the count mirror validates against
+	assert x86 | arm == set(GFX_CUSTOM_CHOICES)
 
 
 @pytest.mark.parametrize(

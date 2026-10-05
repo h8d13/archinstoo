@@ -243,6 +243,21 @@ source = "pacman"
 [vpl-gpu-rt]
 source = "pacman"
 
+[vulkan-asahi]
+source = "pacman"
+
+[vulkan-broadcom]
+source = "pacman"
+
+[vulkan-dzn]
+source = "pacman"
+
+[vulkan-freedreno]
+source = "pacman"
+
+[vulkan-gfxstream]
+source = "pacman"
+
 [vulkan-intel]
 source = "pacman"
 
@@ -250,6 +265,12 @@ source = "pacman"
 source = "pacman"
 
 [vulkan-nouveau]
+source = "pacman"
+
+[vulkan-panfrost]
+source = "pacman"
+
+[vulkan-powervr]
 source = "pacman"
 
 [vulkan-radeon]
@@ -268,12 +289,6 @@ source = "pacman"
 source = "pacman"
 
 [xf86-video-nouveau]
-source = "pacman"
-
-[xorg-server]
-source = "pacman"
-
-[xorg-xinit]
 source = "pacman"
 
 # ============================================================
@@ -1561,6 +1576,12 @@ source = "pacman"
 source = "pacman"
 
 [xmonad-extras]
+source = "pacman"
+
+[xorg-server]
+source = "pacman"
+
+[xorg-xinit]
 source = "pacman"
 
 [xorg-xrandr]
