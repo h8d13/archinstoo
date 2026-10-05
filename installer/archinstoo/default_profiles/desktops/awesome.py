@@ -24,7 +24,6 @@ class AwesomeProfile(XorgProfile):
 			*super().packages,
 			'awesome',
 			'xterm',
-			'xorg-xinit',
 			'xorg-xrandr',
 			'feh',
 			'slock',

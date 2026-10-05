@@ -53,8 +53,6 @@ class GfxPackage(Enum):
 	Xf86VideoAmdgpu = 'xf86-video-amdgpu'
 	Xf86VideoAti = 'xf86-video-ati'
 	Xf86VideoNouveau = 'xf86-video-nouveau'
-	XorgServer = 'xorg-server'
-	XorgXinit = 'xorg-xinit'
 
 
 class GfxDriver(Enum):
@@ -109,8 +107,6 @@ class GfxDriver(Enum):
 		return text
 
 	def gfx_packages(self, kernels: list[str] | None = None) -> list[GfxPackage]:
-		# GPU-vendor packages only. xorg-server/xorg-xinit are a display-server concern
-		# and added by the caller (profiles_handler.install_gfx_driver) when X11 is in use.
 		packages = dkms_packages(GFX_PACKAGES[self], kernels)
 
 		# the generic driver adds the vulkan driver of every GPU present
@@ -136,10 +132,8 @@ def dkms_packages(packages: list[GfxPackage], kernels: list[str] | None) -> list
 
 
 # what the custom driver lets a user tick. dkms and its nvidia variant are
-# derived from the kernel list, xorg from the profile's display server
-GFX_CUSTOM_CHOICES: list[GfxPackage] = [
-	p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms, GfxPackage.XorgServer, GfxPackage.XorgXinit)
-]
+# derived from the kernel list
+GFX_CUSTOM_CHOICES: list[GfxPackage] = [p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms)]
 
 _PCI_VENDOR_AMD = 0x1002  # ATI's ID, every AMD GPU still carries it
 _PCI_VENDOR_INTEL = 0x8086
@@ -235,10 +229,6 @@ MESA_HOST_EXTRA: dict[str, list[GfxPackage]] = {
 	'intel': [GfxPackage.VulkanIntel],
 	'nvidia': [GfxPackage.VulkanNouveau],
 }
-
-# the X11 half of a graphical install, added off DisplayServer rather than
-# off the driver (profiles_handler.install_gfx_driver)
-XORG_EXTRA: list[GfxPackage] = [GfxPackage.XorgServer, GfxPackage.XorgXinit]
 
 # Module-level so tests can point the sweeps at a synthetic tree
 _SYS_BUS = Path('/sys/bus')

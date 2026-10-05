@@ -6,10 +6,10 @@ from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstoo.lib.hardware import XORG_EXTRA, GfxDriver, GfxPackage, dkms_packages
+from archinstoo.lib.hardware import GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.output import debug, error, info, warn
-from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
+from archinstoo.lib.profile.base import GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
@@ -191,7 +191,6 @@ class ProfileHandler:
 		self,
 		install_session: Installer,
 		driver: GfxDriver,
-		display_servers: set[DisplayServer],
 		custom: list[GfxPackage] | None = None,
 	) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
@@ -206,14 +205,7 @@ class ProfileHandler:
 			headers = [f'{kernel}-headers' for kernel in install_session.kernels]
 			install_session.add_additional_packages(headers)
 
-		pkg_names = [p.value for p in driver_pkgs]
-
-		# Add X11 base packages if any selected profile uses X11. Wayland is handled by
-		# the DE/WM itself via package deps, so it gets nothing here.
-		if DisplayServer.X11 in display_servers:
-			pkg_names += [p.value for p in XORG_EXTRA]
-
-		install_session.add_additional_packages(pkg_names)
+		install_session.add_additional_packages([p.value for p in driver_pkgs])
 
 	def install_profile_config(
 		self,
@@ -229,6 +221,9 @@ class ProfileHandler:
 		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
 		if any(p.needs_terminal for p in selected):
 			install_session.add_additional_packages([terminal_for(app_config)])
+
+		for server in profile_config.display_servers():
+			install_session.add_additional_packages(server.packages())
 
 		# Install all selected profiles AFTER
 		for profile in profile_config.profiles:

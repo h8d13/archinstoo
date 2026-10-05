@@ -214,7 +214,7 @@ desktop = ["smartmontools", "xdg-utils", "xdg-user-dirs"]
 server = ["smartmontools"]
 
 [profiles]
-awesome = ["xorg-server", "awesome", "xterm", "xorg-xinit", "xorg-xrandr", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"]
+awesome = ["awesome", "xterm", "xorg-xrandr", "feh", "slock", "terminus-font", "gnu-free-fonts", "ttf-liberation", "xsel"]
 bspwm = ["bspwm", "sxhkd", "dmenu", "xdo", "rxvt-unicode"]
 budgie = ["materia-gtk-theme", "budgie", "gnome-keyring", "konsole", "dolphin", "papirus-icon-theme"]
 cinnamon = ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed"]

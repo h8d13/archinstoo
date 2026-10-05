@@ -12,6 +12,14 @@ class DisplayServer(Enum):
 	X11 = 'x11'
 	Wayland = 'wayland'
 
+	def packages(self) -> list[str]:
+		# Wayland compositors pull their own deps, X11 needs the server itself
+		match self:
+			case DisplayServer.X11:
+				return ['xorg-server', 'xorg-xinit']
+			case DisplayServer.Wayland:
+				return []
+
 
 class ProfileType(Enum):
 	# top level default_profiles

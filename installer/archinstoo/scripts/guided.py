@@ -160,11 +160,9 @@ def perform_installation(
 
 		# before the profiles, as some desktops need the driver to satisfy deps
 		# (vulkan-driver virtual group). Independent of them too: a headless box
-		# picks a driver and never selects a profile. The display servers only
-		# decide whether the X11 base packages come along.
+		# picks a driver and never selects a profile.
 		if config.gfx_driver:
-			display_servers = config.profile_config.display_servers() if config.profile_config else set()
-			profile_handler.install_gfx_driver(installation, config.gfx_driver, display_servers, config.gfx_packages)
+			profile_handler.install_gfx_driver(installation, config.gfx_driver, config.gfx_packages)
 
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config, config.app_config)

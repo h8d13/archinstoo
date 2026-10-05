@@ -147,9 +147,8 @@ def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	return [profile for tp in entries if (profile := handler.parse_profile_config(tp))]
 
 
-def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], selected: list[Profile]) -> set[str]:
-	# mirrors profiles_handler.install_gfx_driver(): the driver set, then the
-	# X11 half if any selected profile needs it
+def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
+	# mirrors profiles_handler.install_gfx_driver()
 	if gfx not in SCHEMA['gfx_drivers']:
 		return set()
 
@@ -176,9 +175,6 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str], selected: lis
 	if gfx == GfxDriver.MesaOpenSource.value:
 		for vendor in gpu_vendors(SysInfo.gpu_ids()):
 			pkgs.update(SCHEMA['gfx_mesa_extra'][vendor])
-
-	if any(DisplayServer.X11 in p.display_servers() for p in selected):
-		pkgs.update(_flat('xorg_extra'))
 
 	return pkgs
 
@@ -303,6 +299,9 @@ def collect(config: dict[str, Any]) -> set[str]:
 	for profile in custom_profiles:
 		selected += [profile, *profile.current_selection]
 
+	if any(DisplayServer.X11 in p.display_servers() for p in selected):
+		pkgs.update(_flat('xorg_extra'))
+
 	main = next(iter(mains), '')
 
 	# greeter
@@ -310,7 +309,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
-	pkgs.update(_gfx_packages(config.get('gfx_driver', ''), config.get('gfx_packages') or [], kernels, selected))
+	pkgs.update(_gfx_packages(config.get('gfx_driver', ''), config.get('gfx_packages') or [], kernels))
 
 	# network
 	net = config.get('network_config') or {}

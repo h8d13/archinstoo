@@ -32,7 +32,7 @@ from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.authentication import stash
 from archinstoo.lib.disk import snapshots
-from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, XORG_EXTRA, CpuVendor, GfxDriver
+from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, MESA_HOST_EXTRA, CpuVendor, GfxDriver
 from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.applications import (
 	Audio,
@@ -51,7 +51,7 @@ from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.pm import aur
-from archinstoo.lib.profile.base import GreeterType, ProfileType, SeatAccess
+from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType, SeatAccess
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
 
@@ -296,7 +296,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'xorg_extra',
-		lambda: [p.value for p in XORG_EXTRA],
+		DisplayServer.X11.packages,
 		site='profile_handler.install_profile_config',
 	),
 	Section(
