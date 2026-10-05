@@ -78,6 +78,16 @@ def list_available_packages() -> dict[str, AvailablePackage]:
 	return packages
 
 
+def missing_packages(names: list[str]) -> list[str]:
+	# names the synced repos lack. No listing at all (offline, failed sync)
+	# checks nothing: pacstrap still reports a bad name, as without the menu
+	available = list_available_packages()
+	if not available:
+		debug('No package listing, skipping the repository check')
+		return []
+	return [n for n in names if n not in available]
+
+
 @lru_cache(maxsize=128)
 def _normalize_key_name(key: str) -> str:
 	return key.strip().lower().replace(' ', '_')

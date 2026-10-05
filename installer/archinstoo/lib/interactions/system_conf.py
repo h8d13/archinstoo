@@ -3,7 +3,8 @@ from typing import assert_never
 from archinstoo.lib.models.firmware import FIRMWARE_OPTDEPS, FirmwareConfiguration, FirmwareType, FirmwareVendor
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel, kernel_names_error
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
-from archinstoo.lib.tui.curses_menu import SelectMenu
+from archinstoo.lib.pm import missing_packages
+from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
@@ -49,11 +50,27 @@ def select_kernel(preset: list[str] | None = None) -> list[str]:
 	if _TYPE_KERNEL not in picked:
 		return picked
 
-	header = 'Kernel package names, space separated (e.g. linux-rpi5)' + '\n'
-	names = prompt_text('Custom kernels', header, validator=kernel_names_error)
 	kept = [k for k in picked if k != _TYPE_KERNEL]
-	# a skipped prompt keeps the ticked kernels, dict.fromkeys drops repeats
-	return list(dict.fromkeys(kept + (names or '').split()))
+	# dict.fromkeys drops a typed name that was also ticked
+	return list(dict.fromkeys(kept + _prompt_kernel_names()))
+
+
+def _prompt_kernel_names() -> list[str]:
+	# re-asks until the repos carry every name, as the AUR menu does; the
+	# names that resolved are kept in the field. A skip types nothing
+	base_header = 'Kernel package names, space separated (e.g. linux-rpi5)' + '\n'
+	header, text = base_header, None
+
+	while (text := prompt_text('Custom kernels', header, text, kernel_names_error)) is not None:
+		names = text.split()
+		Tui.print('Checking repositories...', clear_screen=True)
+		if not (missing := missing_packages(names)):
+			return names
+
+		text = ' '.join(n for n in names if n not in missing)
+		header = base_header + '\nNot found in the repositories: ' + ', '.join(missing) + '\n'
+
+	return []
 
 
 def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
