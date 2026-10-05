@@ -37,5 +37,4 @@ Board kernels are plain package names: `"kernels": ["linux-rpi5"]` in a config r
 
 For non-UEFI systems where you went the hard-way with tarball modifications.
 
-`./RUN --script live` opens a reduced menu for a system that already boots: no disk, no
-bootloader, just users, packages, profiles and services.
+`./RUN --script packages` opens a reduced menu for `Profile, Applications and Additional packages`
