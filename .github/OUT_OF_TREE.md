@@ -14,7 +14,7 @@ Especially given the automated nature of the installs (privileged build user): s
 
 ## More hardware support
 
-Directly supported [hardware](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py) can all be seen here through detection.
+Directly supported [graphics](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/graphics.py) and [firmware](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/firmware.py) packages can all be seen here.
 
 The AUR might be useful for RealTek (and often requires you to pick LTS kernel).
 

@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
-from archinstoo.lib.hardware import GfxDriver, GfxPackage
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType
+from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import sysctl_defaults

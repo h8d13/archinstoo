@@ -12,10 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
-from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.applications import DEFAULT_TERMINAL
 from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.models.firmware import FirmwareType
+from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.profile.base import DisplayServer

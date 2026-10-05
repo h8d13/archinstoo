@@ -1,4 +1,5 @@
-from archinstoo.lib.hardware import GfxDriver, GfxPackage, SysInfo, gfx_custom_choices
+from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, gfx_custom_choices
 from archinstoo.lib.output import debug
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

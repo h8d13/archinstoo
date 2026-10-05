@@ -139,6 +139,7 @@
 │   │   │   ├── bootloader
 │   │   │   ├── device
 │   │   │   ├── firmware
+│   │   │   ├── graphics
 │   │   │   ├── kernel
 │   │   │   ├── localization
 │   │   │   ├── mirrors

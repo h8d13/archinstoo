@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, get_type_hints
 import pytest
 
 from archinstoo.lib import installer, schema, schema_gen
-from archinstoo.lib.hardware import CpuVendor, GfxPackage
+from archinstoo.lib.hardware import CpuVendor
 from archinstoo.lib.models.applications import (
 	DEFAULT_TERMINAL,
 	ApplicationConfiguration,
@@ -27,6 +27,7 @@ from archinstoo.lib.models.applications import (
 	Security,
 )
 from archinstoo.lib.models.firmware import FirmwareType, FirmwareVendor
+from archinstoo.lib.models.graphics import GfxPackage
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.pm import groups
 from archinstoo.lib.profile.base import SeatAccess

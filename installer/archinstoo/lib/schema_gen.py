@@ -32,7 +32,7 @@ from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.authentication import stash
 from archinstoo.lib.disk import snapshots
-from archinstoo.lib.hardware import GFX_CUSTOM_CHOICES, GFX_PACKAGES, CpuVendor, GfxDriver
+from archinstoo.lib.hardware import CpuVendor
 from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.applications import (
 	Audio,
@@ -48,6 +48,7 @@ from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import FilesystemType, SnapshotType
 from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
+from archinstoo.lib.models.graphics import GFX_CUSTOM_CHOICES, GFX_PACKAGES, GfxDriver
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.pm import aur

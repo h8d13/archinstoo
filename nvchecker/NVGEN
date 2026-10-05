@@ -60,7 +60,7 @@ PKGBUILD_REL = ROOT / 'installer' / 'PKGBUILD'
 PKG_ENUMS = (
 	(PKG / 'lib' / 'models' / 'kernel.py', 'Kernel', ('', '-headers')),
 	(PKG / 'lib' / 'models' / 'firmware.py', 'FirmwareVendor', ('',)),
-	(PKG / 'lib' / 'hardware.py', 'GfxPackage', ('',)),
+	(PKG / 'lib' / 'models' / 'graphics.py', 'GfxPackage', ('',)),
 	(PKG / 'lib' / 'hardware.py', 'CpuVendor', ('-ucode',)),
 	(PKG / 'lib' / 'profile' / 'base.py', 'SeatAccess', ('',)),
 )

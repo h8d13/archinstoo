@@ -1,10 +1,11 @@
 # Hybrid Graphics - iGPU + dGPU
 
 Many laptops seem to have an integrated graphics card + dedicated.
-A laptop chassis with two GPUs is detected as hybrid: `Graphics driver` then focuses `Custom`,
-pre-ticked with the packages of both GPUs. A single-vendor preset leaves the other GPU unaccelerated.
+No preset covers both GPUs: pick `Custom` under `Graphics driver` and tick the packages of each,
+for instance `nvidia-open` + `libva-nvidia-driver` next to `mesa` + `vulkan-intel`.
+A single-vendor preset leaves the other GPU unaccelerated.
 
-`vulkan-mesa-layers` stays in the `Custom` list, unticked.
+`vulkan-mesa-layers` is in the `Custom` list too, only needed for multi-GPU device selection.
 
 > [!TIP]
 > Offload tools are opt-in, install what fits after the first boot:
@@ -12,7 +13,7 @@ pre-ticked with the packages of both GPUs. A single-vendor preset leaves the oth
 > [`nvidia-prime`](https://archlinux.org/packages/extra/any/nvidia-prime/) (`prime-run`) or equivalent [`asusctl`](https://wiki.archlinux.org/title/Asusctl) for instance.
 > More information is also available on this page: [Wiki PRIME](https://wiki.archlinux.org/title/PRIME).
 
-Hardware detection can be found in this [code path](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py)
+Presets and the `Custom` package list can be found in this [code path](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/graphics.py)
 
 In order to check your dGPU is running fine: `nvidia-smi`
 

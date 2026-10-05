@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from archinstoo.lib.args import ArchConfig
-from archinstoo.lib.hardware import (
+from archinstoo.lib.models.graphics import (
 	GFX_CUSTOM_CHOICES,
 	GfxDriver,
 	GfxPackage,
