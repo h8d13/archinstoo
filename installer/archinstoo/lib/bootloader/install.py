@@ -313,9 +313,11 @@ class BootloaderInstaller:
 		# skips writing EFI boot variables; --variables=BOOL (systemd >=258)
 		# forces the choice. We always pacstrap a current Arch target, so the
 		# flag is always present. https://github.com/systemd/systemd/pull/37144
+		# Under plain chroot it also treats the system as offline and writes
+		# the entry with a zeroed ESP partition GUID: systemd mode resolves it
 		def _bootctl_install(variables: str) -> None:
 			argv = ' '.join(('bootctl', variables, *bootctl_options, 'install'))
-			self._inst.arch_chroot(argv)
+			self._inst.arch_chroot(argv, systemd_mode=True)
 
 		try:
 			_bootctl_install('--variables=yes')

@@ -7,6 +7,7 @@ from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, info, warn
+from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
 	from subprocess import CompletedProcess
@@ -21,9 +22,17 @@ if TYPE_CHECKING:
 KEEP_ENV = ('http_proxy', 'https_proxy', 'no_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY')
 
 
-def chroot_prefix(target: Path) -> list[str]:
-	# plain chroot(1) inherits our environment (-S, systemd-run, would not)
-	return ['arch-chroot', str(target)]
+def chroot_prefix(target: Path, systemd_mode: bool = False) -> list[str]:
+	# plain chroot(1) inherits our environment (proxies); -S goes through
+	# systemd-run + setpriv --reset-env, which drops it but gives systemd
+	# tools the real system view (bootctl resolves the ESP for NVRAM).
+	# -S needs a booted systemd >= 257 outside any chroot, which only an
+	# Arch host/ISO guarantees
+	prefix = ['arch-chroot']
+	if systemd_mode and Os.running_from_arch() and Os.has_systemd():
+		prefix.append('-S')
+	prefix.append(str(target))
+	return prefix
 
 
 def su_prefix(run_as: str) -> list[str]:
@@ -36,6 +45,7 @@ def run_in_target(
 	run_as: str | None = None,
 	peek_output: bool = False,
 	env: dict[str, str] | None = None,
+	systemd_mode: bool = False,
 ) -> SysCommand | CompletedProcess[bytes]:
 	on_host = target == Path('/')
 
@@ -43,13 +53,13 @@ def run_in_target(
 	if isinstance(cmd, list):
 		if run_as:
 			cmd = [*su_prefix(run_as), shlex.join(cmd)]
-		argv = cmd if on_host else [*chroot_prefix(target), *cmd]
+		argv = cmd if on_host else [*chroot_prefix(target, systemd_mode), *cmd]
 		return run(argv, env=env)  # env: secrets (NEWPIN) stay off argv and out of cmd_history
 
 	if run_as:
 		cmd = f'{shlex.join(su_prefix(run_as))} {shlex.quote(cmd)}'
 	if not on_host:
-		cmd = f'{" ".join(chroot_prefix(target))} {cmd}'
+		cmd = f'{" ".join(chroot_prefix(target, systemd_mode))} {cmd}'
 	return SysCommand(cmd, peek_output=peek_output)
 
 
