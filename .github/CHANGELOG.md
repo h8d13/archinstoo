@@ -111,13 +111,6 @@ Historical changes/commits before I went rogue:
 		  PLW1641, PLW2901, SIM108 and the docstring lint dropped;
 		  `stubs/` excluded from N818 since the names mirror pyparted
 	- Upstream issues closed one layer down
-		- #4680: `limine.conf` is regenerated from
-		  `/usr/lib/modules/*/pkgbase` by `limine-entries.sh` on every
-		  kernel install/remove (91 hook, name order so plain linux
-		  stays the default entry). UKI preset and os-release for
-		  kernels installed later come from `uki-preset.sh` (89 hook,
-		  ahead of 90-mkinitcpio-install which keeps an existing
-		  preset)
 		- #3976, #3990, #2367, #3065: firmware refusing the NVRAM
 		  entry (full, read-only) falls back to `--removable` for grub
 		  and limine, and a UKI efistub is copied to

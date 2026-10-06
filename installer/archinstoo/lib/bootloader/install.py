@@ -1,5 +1,4 @@
 import re
-import shlex
 import shutil
 import textwrap
 from pathlib import Path
@@ -20,7 +19,7 @@ from archinstoo.lib.models.device import (
 	PartitionModification,
 	has_separate_boot,
 )
-from archinstoo.lib.output import TARGET_STATE_DIR, debug, error, info, warn
+from archinstoo.lib.output import debug, error, info, warn
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -625,62 +624,28 @@ class BootloaderInstaller:
 			elif efi_partition.mountpoint != Path('/boot') and isinstance(root, PartitionModification):
 				path_root = f'uuid({root.partuuid})'
 
-		self._install_limine_entries_hook(config_path, path_root, self._get_kernel_params(root), uki_enabled)
+		kernel_params = ' '.join(self._get_kernel_params(root))
+		config_contents = 'timeout: 5\n'
 
-	def _install_limine_entries_hook(self, config_path: Path, path_root: str, kernel_params: list[str], uki: bool) -> None:
-		# limine.conf is a static list and limine has no EFI/Linux discovery: the
-		# target regenerates it from /usr/lib/modules/*/pkgbase, at install and on
-		# every kernel install/remove (after 90-mkinitcpio-install built the image)
-		if uki:
-			entry = ['protocol: efi', 'path: boot():/EFI/Linux/arch-$k.efi', 'cmdline: $cmdline']
-		else:
-			entry = ['protocol: linux', f'path: {path_root}:/vmlinuz-$k', 'cmdline: $cmdline', f'module_path: {path_root}:/initramfs-$k.img']
-		conf = Path('/') / config_path.relative_to(self.target)
-		# entry lines substituted after dedent: they carry their own indent
-		entries = '\n'.join(f'\t\tprintf \'    %s\\n\' "{it}"' for it in entry)
-		script = textwrap.dedent(
-			f"""\
-			#!/bin/sh
-			# archinstoo: limine kernel entries, regenerated on kernel changes (hand edits do not survive)
-			set -e
-			conf={shlex.quote(str(conf))}
-			cmdline={shlex.quote(' '.join(kernel_params))}
-			{{
-				printf 'timeout: 5\\n'
-				# name order, not module-dir (version) order: plain linux stays the default entry
-				for k in $(cat /usr/lib/modules/*/pkgbase | sort -u); do
-					printf '\\n/Arch Linux (%s)\\n' "$k"
-			@ENTRIES@
-				done
-			}} > "$conf"
-			"""
-		).replace('@ENTRIES@', entries)
-		script_path = self.target / TARGET_STATE_DIR.relative_to_root() / 'limine-entries.sh'
-		script_path.parent.mkdir(parents=True, exist_ok=True)
-		script_path.write_text(script)
-		script_path.chmod(0o755)
+		for kernel in self.kernels:
+			if uki_enabled:
+				entry = [
+					'protocol: efi',
+					f'path: boot():/EFI/Linux/arch-{kernel}.efi',
+					f'cmdline: {kernel_params}',
+				]
+			else:
+				entry = [
+					'protocol: linux',
+					f'path: {path_root}:/vmlinuz-{kernel}',
+					f'cmdline: {kernel_params}',
+					f'module_path: {path_root}:/initramfs-{kernel}.img',
+				]
+			config_contents += f'\n/Arch Linux ({kernel})\n'
+			config_contents += '\n'.join(f'    {it}' for it in entry) + '\n'
 
-		hook = textwrap.dedent(
-			f"""\
-			[Trigger]
-			Type = Path
-			Operation = Install
-			Operation = Upgrade
-			Operation = Remove
-			Target = usr/lib/modules/*/pkgbase
-
-			[Action]
-			Description = Updating Limine kernel entries...
-			When = PostTransaction
-			Exec = {TARGET_STATE_DIR}/limine-entries.sh
-			"""
-		)
-		hooks_dir = self.target / 'etc/pacman.d/hooks'
-		hooks_dir.mkdir(parents=True, exist_ok=True)
-		(hooks_dir / '91-limine-entries.hook').write_text(hook)
-
-		self._inst.arch_chroot(str(TARGET_STATE_DIR / 'limine-entries.sh'))
-		debug(f'Wrote {config_path} via limine-entries.sh')
+		config_path.write_text(config_contents)
+		debug(f'Wrote {config_path}')
 
 	def _add_efistub_bootloader(
 		self,
@@ -898,8 +863,6 @@ class BootloaderInstaller:
 			preset.write_text(''.join(config))
 			debug(f'Updated preset {preset}')
 
-		self._install_uki_preset_hook(diff_mountpoint or '/efi', keep_standalone_initramfs, splash)
-
 		# Directory for the UKIs
 		uki_dir = self.target / efi_partition.relative_mountpoint / 'EFI/Linux'
 		uki_dir.mkdir(parents=True, exist_ok=True)
@@ -907,58 +870,3 @@ class BootloaderInstaller:
 		# Build the UKIs
 		if not self._inst.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
-
-	def _install_uki_preset_hook(self, esp: str, keep_standalone_initramfs: bool, splash: bool) -> None:
-		# kernels installed later get mkinitcpio's stock preset (plain initramfs), so no UKI
-		# and no boot entry. Runs before 90-mkinitcpio-install, which keeps an existing preset.
-		# https://github.com/archlinux/archinstall/issues/4680
-		options = '--osrelease /etc/os-release.d/$pkgbase'
-		if splash:
-			options += ' --splash /usr/share/systemd/bootctl/splash-arch.bmp'
-		seds = [
-			'"s|%PKGBASE%|$pkgbase|g"',
-			f'"s|^#default_uki=\\"/efi|default_uki=\\"{esp}|"',
-			f'"s|^#default_options=.*|default_options=\\"{options}\\"|"',
-		]
-		if not keep_standalone_initramfs:
-			seds.append('"s|^default_image=|#default_image=|"')
-		sed_args = ' '.join(f'-e {e}' for e in seds)
-		script = textwrap.dedent(
-			f"""\
-			#!/bin/sh
-			# archinstoo: UKI preset + os-release for kernels installed after the fact
-			set -e
-			while read -r pkgbase_path; do
-				pkgbase=$(cat "/$pkgbase_path")
-				preset="/etc/mkinitcpio.d/$pkgbase.preset"
-				[ -e "$preset" ] && continue
-				mkdir -p /etc/os-release.d
-				osrel="/etc/os-release.d/$pkgbase"
-				[ -e "$osrel" ] || sed "s/^PRETTY_NAME=.*/PRETTY_NAME=\\"Arch Linux ($pkgbase)\\"/" /etc/os-release > "$osrel"
-				sed {sed_args} /usr/share/mkinitcpio/hook.preset > "$preset"
-			done
-			"""
-		)
-		script_path = self.target / TARGET_STATE_DIR.relative_to_root() / 'uki-preset.sh'
-		script_path.parent.mkdir(parents=True, exist_ok=True)
-		script_path.write_text(script)
-		script_path.chmod(0o755)
-
-		hook = textwrap.dedent(
-			f"""\
-			[Trigger]
-			Type = Path
-			Operation = Install
-			Target = usr/lib/modules/*/pkgbase
-
-			[Action]
-			Description = Creating UKI preset for new kernel...
-			When = PostTransaction
-			Exec = {TARGET_STATE_DIR}/uki-preset.sh
-			NeedsTargets
-			"""
-		)
-		hooks_dir = self.target / 'etc/pacman.d/hooks'
-		hooks_dir.mkdir(parents=True, exist_ok=True)
-		(hooks_dir / '89-uki-preset.hook').write_text(hook)
-		debug(f'Wrote {script_path} and pacman hook 89-uki-preset.hook')
