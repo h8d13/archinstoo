@@ -17,15 +17,26 @@ if TYPE_CHECKING:
 # running commands inside the mounted target; a target at / runs them on
 # the host as is
 
+# su - resets the environment; proxies set for the install must still reach
+# git/curl in AUR builds
+KEEP_ENV = ('http_proxy', 'https_proxy', 'no_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY')
 
-def chroot_prefix(target: Path) -> list[str]:
-	# -S goes through systemd-run: needs a booted systemd >= 257 outside any
-	# chroot, which only an Arch host/ISO guarantees
+
+def chroot_prefix(target: Path, systemd_mode: bool = False) -> list[str]:
+	# plain chroot(1) inherits our environment (proxies); -S goes through
+	# systemd-run + setpriv --reset-env, which drops it but gives systemd
+	# tools the real system view (bootctl resolves the ESP for NVRAM).
+	# -S needs a booted systemd >= 257 outside any chroot, which only an
+	# Arch host/ISO guarantees
 	prefix = ['arch-chroot']
-	if Os.running_from_arch() and Os.has_systemd():
+	if systemd_mode and Os.running_from_arch() and Os.has_systemd():
 		prefix.append('-S')
 	prefix.append(str(target))
 	return prefix
+
+
+def su_prefix(run_as: str) -> list[str]:
+	return ['su', '-w', ','.join(KEEP_ENV), '-', run_as, '-c']
 
 
 def run_in_target(
@@ -34,20 +45,21 @@ def run_in_target(
 	run_as: str | None = None,
 	peek_output: bool = False,
 	env: dict[str, str] | None = None,
+	systemd_mode: bool = False,
 ) -> SysCommand | CompletedProcess[bytes]:
 	on_host = target == Path('/')
 
 	# argv list form avoids shell injection when arguments come from user or config input
 	if isinstance(cmd, list):
 		if run_as:
-			cmd = ['su', '-', run_as, '-c', shlex.join(cmd)]
-		argv = cmd if on_host else [*chroot_prefix(target), *cmd]
+			cmd = [*su_prefix(run_as), shlex.join(cmd)]
+		argv = cmd if on_host else [*chroot_prefix(target, systemd_mode), *cmd]
 		return run(argv, env=env)  # env: secrets (NEWPIN) stay off argv and out of cmd_history
 
 	if run_as:
-		cmd = f'su - {run_as} -c {shlex.quote(cmd)}'
+		cmd = f'{shlex.join(su_prefix(run_as))} {shlex.quote(cmd)}'
 	if not on_host:
-		cmd = f'{" ".join(chroot_prefix(target))} {cmd}'
+		cmd = f'{" ".join(chroot_prefix(target, systemd_mode))} {cmd}'
 	return SysCommand(cmd, peek_output=peek_output)
 
 

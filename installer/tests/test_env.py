@@ -1,8 +1,10 @@
+import shlex
 from pathlib import Path
 
 import pytest
 
-from archinstoo.lib.chroot import chroot_prefix
+from archinstoo.lib import chroot
+from archinstoo.lib.chroot import chroot_prefix, run_in_target
 from archinstoo.lib.utils.env import Os
 
 
@@ -42,28 +44,19 @@ def test_running_in_chroot(monkeypatch: pytest.MonkeyPatch, same_root: bool | OS
 	assert Os.running_in_chroot() is in_chroot
 
 
-@pytest.mark.parametrize(
-	('is_arch', 'booted', 'in_chroot', 'wants_s'),
-	[
-		# Arch host or ISO
-		(True, True, False, True),
-		# distros/BOOT: Arch tarball, host /run bound in, host PID1 elsewhere
-		(True, True, True, False),
-		# Alpine, OpenRC
-		(False, False, False, False),
-		# Debian/Fedora: systemd, but no promise of >= 257
-		(False, True, False, False),
-	],
-)
-def test_chroot_prefix_systemd_mode(
-	monkeypatch: pytest.MonkeyPatch,
-	is_arch: bool,
-	booted: bool,
-	in_chroot: bool,
-	wants_s: bool,
-) -> None:
-	monkeypatch.setattr(Os, 'running_from_arch', lambda: is_arch)
-	monkeypatch.setattr(Os, 'running_in_chroot', lambda: in_chroot)
-	monkeypatch.setattr(Path, 'is_dir', lambda self: booted)
+def test_chroot_prefix_inherits_env() -> None:
+	# no -S: systemd-run would drop the caller's env (proxies) on the floor
+	assert chroot_prefix(Path('/mnt')) == ['arch-chroot', '/mnt']
 
-	assert ('-S' in chroot_prefix(Path('/mnt'))) is wants_s
+
+def test_run_as_keeps_proxy_env(monkeypatch: pytest.MonkeyPatch) -> None:
+	calls: list[str] = []
+	monkeypatch.setattr(chroot, 'SysCommand', lambda cmd, **_: calls.append(cmd))
+
+	run_in_target(Path('/mnt'), 'grimoire install foo', run_as='alice')
+
+	argv = shlex.split(calls[0])
+	assert argv[:2] == ['arch-chroot', '/mnt']
+	assert argv[2:4] == ['su', '-w']
+	assert set(argv[4].split(',')) >= {'http_proxy', 'https_proxy', 'no_proxy'}
+	assert argv[5:] == ['-', 'alice', '-c', 'grimoire install foo']

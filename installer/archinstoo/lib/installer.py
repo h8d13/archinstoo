@@ -223,8 +223,9 @@ class Installer:
 		run_as: str | None = None,
 		peek_output: bool = False,
 		env: dict[str, str] | None = None,
+		systemd_mode: bool = False,
 	) -> SysCommand | CompletedProcess[bytes]:
-		return chroot.run_in_target(self.target, cmd, run_as, peek_output, env)
+		return chroot.run_in_target(self.target, cmd, run_as, peek_output, env, systemd_mode)
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		return self.initramfs.build(self, flags)
