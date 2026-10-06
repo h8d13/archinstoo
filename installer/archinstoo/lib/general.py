@@ -491,11 +491,8 @@ def run(
 ) -> subprocess.CompletedProcess[bytes]:
 	_cmd_history(cmd)
 
-	# arch-chroot -S hands our fd 0 to systemd-run --pipe, and systemd vets
-	# it for read access: a launcher like nohup leaves a write-only /dev/null
-	# there and every chroot call dies with "StandardInputFileDescriptor
-	# passed is of incompatible type". Nothing here reads stdin, so open a
-	# readable one instead of inheriting (input= brings its own pipe).
+	# nothing here reads stdin: never let a child block on the console
+	# (input= brings its own pipe)
 	try:
 		return subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
 			cmd,

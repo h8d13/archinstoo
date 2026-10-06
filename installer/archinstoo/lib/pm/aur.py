@@ -2,6 +2,7 @@ import shlex
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.chroot import KEEP_ENV
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.output import debug, info, warn
@@ -43,6 +44,20 @@ __aur_bootstrap_packages__ = [
 ]
 
 
+# grimoire elevates `pacman -S` for official repo deps: those downloads need
+# the proxy too, and sudo/doas reset the env unless the rule keeps it
+def sudo_aur_rule(username: str) -> str:
+	return f'Defaults:{username} env_keep += "{" ".join(KEEP_ENV)}"\n{username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n'
+
+
+def doas_aur_rules(username: str) -> str:
+	# doas matches cmd against argv[0] as typed: grimoire runs `doas
+	# pacman`, makepkg -i runs `doas /usr/bin/pacman` (PACMAN_PATH),
+	# so both spellings need a rule
+	keep = ' '.join(KEEP_ENV)
+	return ''.join(f'permit nopass setenv {{ {keep} }} {username} as root cmd {cmd}\n' for cmd in ('pacman', '/usr/bin/pacman'))
+
+
 def run_grimoire_installation(
 	packages: list[str],
 	installation: Installer,
@@ -75,18 +90,14 @@ def run_grimoire_installation(
 			aur_rule = doas_conf
 			if not doas_conf.exists():
 				doas_conf.write_text('')
-			# doas matches cmd against argv[0] as typed: grimoire runs `doas
-			# pacman`, makepkg -i runs `doas /usr/bin/pacman` (PACMAN_PATH),
-			# so both spellings need a rule
 			debug(f'Adding temporary doas rules for AUR build: permit nopass {build_user.username} as root cmd pacman')
 			with doas_conf.open('a') as doas:
-				for cmd in ('pacman', '/usr/bin/pacman'):
-					doas.write(f'permit nopass {build_user.username} as root cmd {cmd}\n')
+				doas.write(doas_aur_rules(build_user.username))
 			doas_conf.chmod(0o644)
 		else:
 			sudoers_dir = installation.target / 'etc/sudoers.d'
 			aur_rule = sudoers_dir / '99-aur-build'
-			aur_rule.write_text(f'{build_user.username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n')
+			aur_rule.write_text(sudo_aur_rule(build_user.username))
 			aur_rule.chmod(0o440)
 
 		for pkg in packages:
@@ -102,8 +113,8 @@ def run_grimoire_installation(
 	finally:
 		if priv_esc == PrivilegeEscalation.Doas and aur_rule is not None and aur_rule.exists():
 			debug(f'Removing temporary doas rule for {build_user.username}')
-			rule = f'permit nopass {build_user.username} as root'
+			added = set(doas_aur_rules(build_user.username).splitlines(keepends=True))
 			lines = aur_rule.read_text().splitlines(keepends=True)
-			aur_rule.write_text(''.join(line for line in lines if rule not in line))
+			aur_rule.write_text(''.join(line for line in lines if line not in added))
 		elif priv_esc != PrivilegeEscalation.Doas and aur_rule is not None:
 			aur_rule.unlink(missing_ok=True)
