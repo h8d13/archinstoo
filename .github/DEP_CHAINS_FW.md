@@ -30,7 +30,7 @@ For a `seatd` only setup we'll have to jump a few hoops: Network option `Copy fr
 
 `networkmanager → wpa_supplicant → pcsclite → polkit`
 
-## Which firmware do I actually need ?
+## Which firmware do I need ?
 
 ```shell
 ./RUN --script detect
