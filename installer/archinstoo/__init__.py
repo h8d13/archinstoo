@@ -126,7 +126,7 @@ disk_depends = (
 # short-circuit all of the ini
 
 
-ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema'}
+ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema', 'detect'}
 # scripts that only touch the running system, so they skip disk_depends
 NO_DISK_SCRIPTS = {'packages'}
 
@@ -364,16 +364,20 @@ def run_as_a_module() -> int:
 	handler = get_arch_config_handler()
 	script = handler.get_script()
 	source = handler.args.config or handler.args.config_url or 'menu'
-	info(f'Script: {script} silent={handler.args.silent} config={source}')
+	run = f'Script: {script} silent={handler.args.silent} config={source}'
 
 	# handle rootless scripts early
 	if is_rootless:
+		# their stdout is the report: the run header stays a debug line
+		debug(run)
 		if is_root():
 			warn(f'archinstoo {script} does not need root privileges.')
 
 		handler.pass_args_to_subscript()
 		_run_script(script)
 		return 0
+
+	info(run)
 
 	# now handle root scripts
 	try:
