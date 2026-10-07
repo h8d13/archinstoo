@@ -6,17 +6,20 @@ on:
     paths:
       - 'PKGBUILD'
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   # paths: fires on any PKGBUILD edit (comments, deps), only release on a bump
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       bumped: ${{ steps.bump.outputs.bumped }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Compare pkgver/pkgrel against previous master
         id: bump
@@ -42,8 +45,12 @@ jobs:
     needs: check
     if: needs.check.outputs.bumped == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set version info
         run: |
@@ -55,7 +62,9 @@ jobs:
           echo "PKGREL=${PKGREL}" >> "$GITHUB_ENV"
 
       - name: Create release archive
-        run: tar --exclude='.git' -czf /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz -C "$GITHUB_WORKSPACE" .
+        run: |
+          tar --exclude='.git' -czf "/tmp/archinstoo-${VER}-${SHA}.tar.gz" \
+            -C "$GITHUB_WORKSPACE" .
 
       # after the tar so the archive stays an untouched checkout. same stamp
       # PKGBUILD build() applies, plus pyproject so the wheel name/pip metadata
@@ -84,22 +93,18 @@ jobs:
             archlinux:base-devel bash /build-pkg
           ls -l /tmp/pkgout
 
-      - name: Delete existing latest tag
-        run: |
-          git push origin :refs/tags/latest || true
-          gh release delete latest --yes || true
+      # tag deleted on its own too: an orphan tag from a failed run would
+      # otherwise pin create to the old sha
+      - name: Publish rolling latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish rolling latest
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
-        with:
-          tag_name: latest
-          name: ${{ env.VER }}
-          make_latest: true
-          files: |
-            /tmp/archinstoo-${{ env.VER }}-${{ env.SHA }}.tar.gz
-            installer/dist/*.whl
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete latest --yes || true
+          gh api -X DELETE "repos/${GH_REPO}/git/refs/tags/latest" || true
+          gh release create latest --target "$GITHUB_SHA" --latest \
+            --title "$VER" \
+            --notes "Changelog: [here](https://github.com/${GH_REPO}/blob/master/.github/CHANGELOG.md)" \
+            "/tmp/archinstoo-${VER}-${SHA}.tar.gz" \
+            installer/dist/*.whl \
             /tmp/pkgout/*.pkg.tar.zst
-          body: "Changelog: [here](https://github.com/${{ github.repository }}/blob/master/.github/CHANGELOG.md)"
-

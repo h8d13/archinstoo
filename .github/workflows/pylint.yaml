@@ -12,9 +12,11 @@ jobs:
     pylint:
         runs-on: ubuntu-latest
         container:
-            image: archlinux/archlinux:latest
+            image: archlinux/archlinux:latest@sha256:d7acae9e4bc27cf1af53092bbce111799ac9d1fbee7c47b7f1cb644d52a3f580
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                persist-credentials: false
             - name: Prepare arch
               run: |
                 pacman-key --init
