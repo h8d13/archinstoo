@@ -73,12 +73,12 @@ nav:
       - Config schema: SCHEMA.md
       - Maintenance: MAINTENANCE.md
   - Cases:
+      - Pre-install tools: DEP_CHAINS_FW.md
       - Headless / servers: HEADLESS.md
       - Multi-boot: MULTI_BOOT.md
       - nVIDIA new / old: NVIDIA.md
       - Hybrid GFX: HYBRID_GFX.md
       - CachyOS kernels: CACHY_KERNELS.md
-      - Dependency chains: DEP_CHAINS.md
   - Advanced:
       - ARM / aarch64 ports: ARM_SUPPORT.md
       - AUR / out-of-tree: OUT_OF_TREE.md

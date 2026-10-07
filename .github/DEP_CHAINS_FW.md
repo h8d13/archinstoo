@@ -29,3 +29,9 @@ This is useful before committing to an install and understanding why certain thi
 For a `seatd` only setup we'll have to jump a few hoops: Network option `Copy from ISO` or `iwd standalone` other NM options pull in `polkit`.
 
 `networkmanager → wpa_supplicant → pcsclite → polkit`
+
+## Which firmware do I actually need ?
+
+```shell
+./RUN --script detect
+```
