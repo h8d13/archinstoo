@@ -18,7 +18,7 @@ class DockerProfile(Profile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return ['docker']
+		return ['docker', 'docker-compose']
 
 	@property
 	@override
