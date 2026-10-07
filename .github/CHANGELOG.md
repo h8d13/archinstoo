@@ -7,6 +7,124 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.17-0
+
+	- `distros/BOOT`: any-host bootstrap through the Arch tarball,
+	  verified with a guided install from Fedora 44, Alpine 3.24 and
+	  Debian 13
+		- `A2_BOOTSTRAP=1` marks the root: `packages` is blocked
+		  there as on a foreign host (the root is thrown away), ISO
+		  service waits and WKD sync are skipped, the script owns the
+		  keyring
+		- `udevadm settle` runs with `SYSTEMD_IN_CHROOT=0` (arch-chroot
+		  exports 1, which made it a no-op), then `/run/udev/queue`
+		  is polled: eudev and Debian 13's udevd have no varlink and
+		  skip settle. `fetch_part_info` retries lsblk for up to 5s
+		  until the uuid shows, the mkfs event could still be
+		  unqueued (4/50 runs on fedora, 23/50 on debian)
+		- systemd probes go through `Os.has_systemd()` (booted pid1,
+		  not in a chroot): inside one, `systemctl is-active` answers
+		  "Running in chroot, ignoring command" with exit 0, read as
+		  espeakup active
+		- ALP/FED host scripts `set -e`: a failed `apk add` went on to
+		  `apk del` and removed apk-tools
+		- `distros/CLOUD` for testing from cloud images; TVM `-kernel`
+		  boot also reads grub layouts (alpine)
+	- Hardware detection is gone: everything is a menu pick, nothing
+	  assumed from the host the installer runs on
+		- graphics: no GPU probe, the custom driver starts empty, no
+		  vendor hints in the header. `nvidia-prime` and
+		  `switcheroo-control` (and its service) leave the package
+		  pool. Driver tables move to `models/graphics.py`
+		- firmware: no PCI/USB ID or module-owner scan. `full` asks for
+		  linux-firmware's optdeps (liquidio, marvell, mellanox, nfp,
+		  qcom, qlogic), `vendor` for the splits, both start from the
+		  saved pick. `linux-firmware-amd` and `-ti` splits added
+	- Graphics per arch: one hidden set per arch drives both the
+	  custom list and the presets. aarch64 gets the nvidia-open,
+	  amd and nouveau presets (Ports builds them) and the SoC vulkan
+	  drivers (panfrost, freedreno, broadcom, asahi, powervr), no
+	  Intel media; x86_64 hides those and plain Mesa
+	- `xorg-server`/`xorg-xinit` follow the profile's display server
+	  instead of riding on the gfx driver, so X11 still lands with no
+	  driver picked
+	- Kernel menu: `Custom (type a name)` for board and third-party
+	  kernels (`linux-rpi5`, cachy). Names are checked against
+	  pacman's charset, then against the synced repos, re-asking with
+	  the missing ones named; typed names stay tickable on the next
+	  visit
+	- Sysctl: "optimized defaults" is a toggle written to its own
+	  `90-archinstoo-defaults.conf`, custom entries to
+	  `99-archinstoo.conf` so they win. The zram tuning
+	  (swappiness 180 etc.) ships with zram itself in
+	  `91-archinstoo-zram.conf`: it was only offered through the
+	  sysctl menu and is wrong for a disk swap file
+	- Custom repositories: `priority` places a repo above `[core]`
+	  (list order kept, a `file://` repo defaults to it), names are
+	  checked case-insensitively against pacman's own sections and
+	  each other, an edit keeps its slot in the list
+	- Desktops and terminals
+		- terminal config rewrites dropped: each WM installs the
+		  terminal its shipped config names (hyprland kitty, niri
+		  alacritty, sway/river foot, awesome xterm) and the Terminal
+		  pick only lands in `$TERMINAL`, which i3, labwc and fuzzel
+		  read. Swapping should be upstream's job
+		  (xdg-terminal-exec is still unmerged)
+		- dms and noctalia run on one compositor. dms-shell is
+		  compositor-agnostic since 1.6.2-2, the `dms-shell-niri`
+		  /`-hyprland` shims are gone; `dms setup` gets `--terminal
+		  alacritty` as upstream pins it
+		- `mangowm` profile (stock `/etc/mango/config.conf`, foot +
+		  rofi) and `mango` as a dms compositor. dms.service stays off
+		  there: setup writes `exec-once=dms run`, the unit would start
+		  a second shell
+		- seat access and compositor menus shared; `add_to_group`
+		  replaces the seat-only helper and docker uses it, skipping a
+		  group the package did not create
+	- Removed
+		- bcachefs (filesystem, ISO `A2_BCACHEFS`, dkms strap) and
+		  NTFS (filesystem, `ntfsprogs` dep)
+		- TPM2 auto-unlock: FIDO2 stays
+		- the `live` script, `packages` covers it; the `size` script
+		  and the `expac` dependency
+		- limine-entries and uki-preset pacman hooks: the installer
+		  should not own scripts that outlive the install, limine.conf
+		  is written once for the selected kernels again
+		- `architecture/ARM` and board files
+	- Install flow
+		- FIDO2 enrolls as its own step right after mount, while the
+		  user is still there to touch the token, not inside
+		  `add_bootloader`
+		- boot/ESP/root lookup and bootloader option checks move into
+		  `BootloaderInstaller`; `quiet`/`console=` no longer leak into
+		  the install's kernel param list
+		- lvm2 straps with base, RAID is flagged on the partition
+		  instead of read back from the hook list; swap `resume=`
+		  goes through `add_kernel_param`
+		- `Installer` requires the handler and reads firmware from its
+		  config, the `Arguments()` fallback is gone
+	- Chroot and proxies
+		- arch-chroot runs plain chroot by default: `-S` goes through
+		  `setpriv --reset-env` and dropped proxy variables. Only
+		  `bootctl install` asks for `-S` (Arch host with systemd), under
+		  plain chroot it writes the entry with a zeroed ESP GUID
+		- `su -w` keeps `http(s)_proxy`/`no_proxy` for AUR builds, and
+		  the temporary sudo/doas rules keep them for grimoire's
+		  `pacman -S`
+	- Disk
+		- `_wipe` caps the zeroing to the device size: ChromeOS GPT has
+		  512 B partitions (KERN-C, ROOT-C), a 1024 B write was ENOSPC
+		  (upstream #4807, #4809)
+	- Config format
+		- `sysctl` is an object, `{"optimized": bool, "entries":
+		  [...]}`, instead of a list of lines
+		- `dms_compositor` / `noctalia_compositor` take one name
+		  (`"niri"`), not a list
+		- `custom_repositories[]` gains `priority` (defaults false);
+		  `disk_encryption` drops `tpm2_unlock`/`tpm2_pcrs`/`tpm2_pin`
+		- `firmware.vendors` is kept for `full` as well (the picked
+		  optional firmware), not only for `vendor`
+
 ## 0.1.16-0
 
 	- Foreign hosts: `distros/` bootstraps from Debian (forky), Fedora 44,
