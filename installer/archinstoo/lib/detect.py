@@ -104,6 +104,12 @@ def gfx_drivers(gpus: set[tuple[int, int]]) -> list[GfxDriver]:
 	return drivers
 
 
+def is_hybrid(gpus: set[tuple[int, int]], portable: bool) -> bool:
+	# laptops only: a desktop often keeps its iGPU enabled beside the card,
+	# which then drives the display alone. Same-vendor pairs share a preset
+	return portable and len(gfx_drivers(gpus)) > 1
+
+
 def gfx_packages(gpus: set[tuple[int, int]]) -> list[GfxPackage]:
 	# the union of the matching presets, first occurrence wins the order
 	packages: list[GfxPackage] = []

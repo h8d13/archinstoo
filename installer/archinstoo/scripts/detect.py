@@ -37,8 +37,10 @@ def _graphics() -> None:
 	_row('vendors', ', '.join(detect.gpu_vendors(gpus)) or 'none')
 	_row('driver', ', '.join(d.value for d in drivers) or 'none')
 	# a hybrid needs both halves, which no single preset holds
-	if len(drivers) > 1:
+	if detect.is_hybrid(gpus, detect.is_portable()):
 		_row('custom', ' '.join(p.value for p in detect.gfx_packages(gpus)))
+	elif len(drivers) > 1:
+		_row('custom', 'desktop: the card driving the display takes its preset')
 
 
 def _firmware(offline: bool) -> None:

@@ -6,7 +6,7 @@ import pytest
 
 from archinstoo.lib import detect
 from archinstoo.lib.models.firmware import FirmwareVendor
-from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
+from archinstoo.lib.models.graphics import GFX_PACKAGES, GfxDriver, GfxPackage
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -66,11 +66,46 @@ def test_drivers_per_gpu(gpus: set[tuple[int, int]], drivers: list[GfxDriver]) -
 	assert detect.gfx_drivers(gpus) == drivers
 
 
-def test_packages_union_both_halves() -> None:
-	packages = detect.gfx_packages({(0x8086, 0xA7A0), (0x10DE, 0x2208)})
-	assert GfxPackage.VulkanIntel in packages
-	assert GfxPackage.NvidiaOpen in packages
+INTEL_RPL = (0x8086, 0xA7A0)
+INTEL_ARC = (0x8086, 0x5693)
+AMD_APU = (0x1002, 0x1681)
+AMD_NAVI = (0x1002, 0x73FF)
+NV_RTX = (0x10DE, 0x2520)
+NV_PASCAL = (0x10DE, 0x1C8D)
+
+
+@pytest.mark.parametrize(
+	('gpus', 'kept'),
+	[
+		({INTEL_RPL, NV_RTX}, {GfxPackage.VulkanIntel, GfxPackage.NvidiaOpen}),
+		({INTEL_RPL, NV_PASCAL}, {GfxPackage.VulkanIntel, GfxPackage.VulkanNouveau}),
+		({AMD_APU, NV_RTX}, {GfxPackage.VulkanRadeon, GfxPackage.NvidiaOpen}),
+	],
+)
+def test_hybrid_ticks_both_presets(gpus: set[tuple[int, int]], kept: set[GfxPackage]) -> None:
+	# what Custom must hold: every package of either GPU's preset, once
+	packages = detect.gfx_packages(gpus)
+	presets = [set(GFX_PACKAGES[d]) for d in detect.gfx_drivers(gpus)]
+
+	assert detect.is_hybrid(gpus, portable=True)
+	assert set(packages) == set.union(*presets)
+	assert kept <= set(packages)
 	assert len(packages) == len(set(packages))
+
+
+@pytest.mark.parametrize(
+	('gpus', 'portable'),
+	[
+		# a desktop's iGPU beside the card is not a hybrid to drive
+		({INTEL_RPL, NV_RTX}, False),
+		# same vendor twice: one preset covers both
+		({AMD_APU, AMD_NAVI}, True),
+		({INTEL_RPL, INTEL_ARC}, True),
+		({INTEL_RPL}, True),
+	],
+)
+def test_not_hybrid(gpus: set[tuple[int, int]], portable: bool) -> None:
+	assert not detect.is_hybrid(gpus, portable)
 
 
 def test_vendors_skip_unknown_display_class() -> None:
