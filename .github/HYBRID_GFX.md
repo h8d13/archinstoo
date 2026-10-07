@@ -5,8 +5,6 @@ No preset covers both GPUs: pick `Custom` under `Graphics driver` and tick the p
 for instance `nvidia-open` + `libva-nvidia-driver` next to `mesa` + `vulkan-intel`.
 A single-vendor preset leaves the other GPU unaccelerated.
 
-`vulkan-mesa-layers` is in the `Custom` list too, only needed for multi-GPU device selection.
-
 > [!TIP]
 > Offload tools are opt-in, install what fits after the first boot:
 > [`switcheroo-control`](https://archlinux.org/packages/extra/x86_64/switcheroo-control/) (desktop "launch on discrete GPU"),
