@@ -93,18 +93,6 @@ Or modify existing ones directly. Can also see here for [examples](https://githu
 
 You can make plugins easily `--script list` for `archinstoo`, anything inside [`scripts/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/scripts) is also imported.
 
-```yaml
-Available options:
-              [*] requires root
-    count
-    mirror
-    format    [*]
-    guided    [*] < DEFAULT
-    minimal   [*]
-    packages  [*]
-    rescue    [*]
-```
-
 The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/installer)
 
 Install steps are ordered in [`installer.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py) here search/find/replace is your friend.
