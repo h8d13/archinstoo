@@ -126,7 +126,7 @@ disk_depends = (
 # short-circuit all of the ini
 
 
-ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema'}
+ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema', 'detect'}
 # scripts that only touch the running system, so they skip disk_depends
 NO_DISK_SCRIPTS = {'packages'}
 

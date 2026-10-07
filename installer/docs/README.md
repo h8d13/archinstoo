@@ -18,6 +18,7 @@
 │   │   │   ├── i3
 │   │   │   ├── labwc
 │   │   │   ├── lxqt
+│   │   │   ├── mangowm
 │   │   │   ├── mate
 │   │   │   ├── niri
 │   │   │   ├── noctalia_assets/
@@ -88,6 +89,7 @@
 │   │   ├── checkpoints
 │   │   ├── chroot
 │   │   ├── configuration
+│   │   ├── detect
 │   │   ├── disk/
 │   │   │   ├── cleanup
 │   │   │   ├── conf
@@ -161,7 +163,8 @@
 │   │   │   ├── groups
 │   │   │   ├── mirrors
 │   │   │   ├── packages
-│   │   │   └── pacman
+│   │   │   ├── pacman
+│   │   │   └── tmpdb
 │   │   ├── profile/
 │   │   │   ├── base
 │   │   │   ├── config
@@ -187,6 +190,7 @@
 │   ├── schema.toml
 │   ├── scripts/
 │   │   ├── count
+│   │   ├── detect
 │   │   ├── format
 │   │   ├── guided
 │   │   ├── list
@@ -211,5 +215,5 @@
     └── parted/
         └── __init__
 
-30 directories, 181 files
+30 directories, 184 files
 ```
