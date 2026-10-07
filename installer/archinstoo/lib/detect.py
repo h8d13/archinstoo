@@ -65,9 +65,6 @@ def is_portable() -> bool:
 		return False
 
 
-# -- GPUs ------------------------------------------------------------------------
-
-
 def gpu_ids() -> set[tuple[int, int]]:
 	# (vendor, device) of every display-class function (0x03xxxx: VGA, 3D,
 	# display). Sysfs rather than lspci text so the device id is usable
@@ -116,9 +113,6 @@ def gfx_packages(gpus: set[tuple[int, int]]) -> list[GfxPackage]:
 	for driver in gfx_drivers(gpus):
 		packages += [p for p in GFX_PACKAGES[driver] if p not in packages]
 	return packages
-
-
-# -- device modules --------------------------------------------------------------
 
 
 def _modalias(dev: Path) -> str | None:
@@ -194,12 +188,9 @@ def declared_firmware(release: str, modules: set[str]) -> dict[str, set[str]]:
 	return declared
 
 
-# -- firmware ownership ----------------------------------------------------------
 # A lower bound, never a full list. Runtime-named firmware goes undetected:
 # SOF, tas2781, amdtee, and Bluetooth (btintel declares ibt-12-16 while the
 # chip loads ibt-0040-0041, built from its hw/fw variant at setup)
-
-
 def firmware_index() -> dict[str, str]:
 	# blob path -> owning package, from core's files db
 	db = TmpDB(('core',))

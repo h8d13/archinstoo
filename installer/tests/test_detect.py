@@ -14,9 +14,6 @@ if TYPE_CHECKING:
 RELEASE = '0-test'
 
 
-# -- GPUs ------------------------------------------------------------------------
-
-
 def _fake_gpus(tmp_path: Path, functions: list[tuple[str, str, str]]) -> Path:
 	bus = tmp_path / 'pci'
 	for index, (cls, vendor, device) in enumerate(functions):
@@ -113,9 +110,6 @@ def test_vendors_skip_unknown_display_class() -> None:
 	assert detect.gpu_vendors({(0x1A03, 0x2000), (0x8086, 0xA7A0)}) == ['intel']
 
 
-# -- device modules --------------------------------------------------------------
-
-
 def _driver_buses(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, buses: dict[str, dict[str, str | None]]) -> None:
 	# name -> module when bound, None for an unbound device with only a MODALIAS
 	root = tmp_path / 'bus'
@@ -209,9 +203,6 @@ def test_btusb_skips_the_other_vendors_helpers(monkeypatch: pytest.MonkeyPatch, 
 	)
 
 	assert _declared() == {}
-
-
-# -- firmware ownership ----------------------------------------------------------
 
 
 @pytest.mark.parametrize(
