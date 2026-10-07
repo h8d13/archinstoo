@@ -1,5 +1,4 @@
 import importlib
-import os
 from pathlib import Path
 from shutil import rmtree
 
@@ -30,19 +29,20 @@ def _run_script(script: str) -> None:
 		raise SystemExit(1) from e
 
 
-def clean_cache(root_dir: str) -> None:
-	# only clean if running from source (archinstoo dir exists in cwd)
-	if not (Path(root_dir) / 'archinstoo').is_dir():
+def clean_cache(root: Path) -> None:
+	# only clean a source checkout: an installed copy has no pyproject.toml
+	# beside it, and its caches belong to the package manager
+	if not (root / 'pyproject.toml').is_file():
 		return
 
 	deleted = []
 
 	info('Cleaning up...')
 	try:
-		for dirpath, dirnames, _ in os.walk(root_dir):
+		for dirpath, dirnames, _ in root.walk():
 			for dirname in dirnames:
 				if dirname.lower() == '__pycache__':
-					full_path = Path(dirpath) / dirname
+					full_path = dirpath / dirname
 					try:
 						rmtree(full_path)
 						deleted.append(full_path)

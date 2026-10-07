@@ -66,6 +66,7 @@ import logging
 import sys
 import textwrap
 import traceback
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._version import __gitstat__, __pkgver__, __version__
@@ -404,7 +405,7 @@ def run_as_a_module() -> int:
 			info(f'--clean: removing {logger.directory}')
 			clean_logs()
 		# note this removes any __pycache__ if possible
-		clean_cache('.')
+		clean_cache(Path(__file__).parent.parent)
 
 
 __all__ = [
