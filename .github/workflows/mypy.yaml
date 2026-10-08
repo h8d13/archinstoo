@@ -12,7 +12,7 @@ jobs:
     mypy:
         runs-on: ubuntu-latest
         container:
-            image: archlinux/archlinux:latest@sha256:d7acae9e4bc27cf1af53092bbce111799ac9d1fbee7c47b7f1cb644d52a3f580
+            image: archlinux/archlinux:latest@sha256:77b5aed28bc6b5535eefecc8afe7bcf23a64d591e99dc0ad793247c53eddd081
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
