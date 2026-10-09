@@ -97,18 +97,17 @@ base_depends = (
 	'git',  	        # Cloning stashes
 	'arch-install-scripts', # For pacstrap, genfstab, chroot
 )
-disk_depends = (
-	'python-pyparted',
-	'btrfs-progs', 		# btrfs filesystem support
-	'dosfstools',  		# FAT EFI filesystem support
-	'e2fsprogs',  		# ext4 filesystem support
-	'f2fs-tools',  		# f2fs filesystem support
-	'xfsprogs',  		# XFS filesystem support
-	'cryptsetup',  		# LUKS encryption support
-	'lvm2',  		# LVM layout support
-)  # together they mirror the inner PKGBUILD -python is reloaded last
+# disk_depends = (
+# 	'python-pyparted',
+# 	'btrfs-progs', 		# btrfs filesystem support
+# 	'dosfstools',  		# FAT EFI filesystem support
+# 	'e2fsprogs',  		# ext4 filesystem support
+# 	'f2fs-tools',  		# f2fs filesystem support
+# 	'xfsprogs',  		# XFS filesystem support
+# 	'cryptsetup',  		# LUKS encryption support
+# 	'lvm2',  		# LVM layout support
+# )  # together they mirror the inner PKGBUILD -python is reloaded last
 # fmt: on
-
 
 # main init file of archinstoo
 # we will log some useful info
@@ -127,7 +126,7 @@ disk_depends = (
 
 
 ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema', 'detect'}
-# scripts that only touch the running system, so they skip disk_depends
+# scripts that only touch the running system
 NO_DISK_SCRIPTS = {'packages'}
 
 
@@ -175,8 +174,7 @@ def _arch_bootstrap(no_disk: bool) -> int:
 		return 0
 	try:
 		debug('Fetching deps...')
-		depends = base_depends if no_disk else base_depends + disk_depends
-		missing = _missing_deps(depends)
+		missing = _missing_deps(base_depends)
 		# mark in current env as bootstrapped
 		# avoid infinite reloads
 		if not missing:
