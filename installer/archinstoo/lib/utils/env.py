@@ -46,6 +46,12 @@ class Os:
 		return Os.running_from_host() and not Os.running_from_arch()
 
 	@staticmethod
+	def running_from_arch_host() -> bool:
+		# H2T on an installed Arch: '/' is the user's own system, not a live or
+		# throwaway root, so archinstoo must not sync or install into it
+		return Os.running_from_host() and Os.running_from_arch() and not Os.running_from_bootstrap()
+
+	@staticmethod
 	def running_from_bootstrap() -> bool:
 		# distros/BOOT: Arch, but a throwaway root (set through arch-chroot)
 		return Os.get_env('A2_BOOTSTRAP') == '1'

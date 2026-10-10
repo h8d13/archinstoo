@@ -73,3 +73,14 @@ def test_both_spellings_agree(monkeypatch: pytest.MonkeyPatch, script: str) -> N
 	spaced = archinstoo._script_from_argv()
 
 	assert glued == spaced == script
+
+
+@pytest.mark.parametrize('bootstrap', [False, True])
+def test_disk_depends_only_on_bootstrap(monkeypatch: pytest.MonkeyPatch, bootstrap: bool) -> None:
+	# Arch host/ISO ship the disk tools; the BOOT tarball root ships only python
+	monkeypatch.setattr(Os, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
+	depends = set(archinstoo._depends())
+
+	assert set(archinstoo.base_depends) <= depends
+	assert (set(archinstoo.disk_depends) <= depends) is bootstrap
+	assert not set(archinstoo.base_depends) & set(archinstoo.disk_depends)

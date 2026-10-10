@@ -45,13 +45,14 @@ makedepends=(
 # you should obviously feel free to only select the ones you need
 optdepends=(
 	'xkeyboard-config' #For offline X11/Wayland keymap lists (fetched otherwise)
-	'btrfs-progs'      #For btrfs filesystem support
-	'dosfstools'       #For FAT/EFI filesystem support
-	'e2fsprogs'        #For ext4 filesystem support
-	'f2fs-tools'       #For f2fs filesystem support
-	'xfsprogs'         #For XFS filesystem support
+	'dosfstools'       #For FAT/EFI support
+	'e2fsprogs'        #For ext4 support
+	'btrfs-progs'      #For btrfs support
+	'f2fs-tools'       #For f2fs support
+	'xfsprogs'         #For XFS support
 	'cryptsetup'       #For LUKS encryption support
-	'lvm2'             #For LVM FS layout support
+	'lvm2'             #For LVM layout support
+	'mdadm'            #For RAID layout support
 	'pacman-contrib'   #For count and other utilities
 	'tree'             #For docs project tree output
 	'nvchecker'        #For bumping versions auto

@@ -97,16 +97,19 @@ base_depends = (
 	'git',  	        # Cloning stashes
 	'arch-install-scripts', # For pacstrap, genfstab, chroot
 )
-# disk_depends = (
-# 	'python-pyparted',
-# 	'btrfs-progs', 		# btrfs filesystem support
-# 	'dosfstools',  		# FAT EFI filesystem support
-# 	'e2fsprogs',  		# ext4 filesystem support
-# 	'f2fs-tools',  		# f2fs filesystem support
-# 	'xfsprogs',  		# XFS filesystem support
-# 	'cryptsetup',  		# LUKS encryption support
-# 	'lvm2',  		# LVM layout support
-# )  # together they mirror the inner PKGBUILD -python is reloaded last
+disk_depends = (
+	'python-pyparted',
+	'btrfs-progs', 		# btrfs filesystem support
+	'dosfstools',  		# FAT EFI filesystem support
+	'e2fsprogs',  		# ext4 filesystem support
+	'f2fs-tools',  		# f2fs filesystem support
+	'xfsprogs',  		# XFS filesystem support
+	'cryptsetup',  		# LUKS encryption support
+	'lvm2',  		# LVM layout support
+	'mdadm',		# RAID layout support
+)  # we only need to check this on bootstrap tarball paths.
+# since most are already expected on the default ISO.
+# https://gitlab.archlinux.org/archlinux/archiso/-/blob/master/configs/releng/packages.x86_64
 # fmt: on
 
 # main init file of archinstoo
@@ -134,7 +137,7 @@ def _log_env_info() -> None:
 	# install.log is appended to, so consecutive runs land in one file and
 	# read as duplicated output. Open each one with a line that says which
 	# run it is
-	info(f'=== archinstoo {__pkgver__} ({__gitstat__}) ===')
+	info(f'Ver: {__name__} {__pkgver__} ({__gitstat__})')
 
 	# log which mode we are using
 	info(f'Python path: {sys.executable} is_venv={is_venv()}')
@@ -159,36 +162,40 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 		# -T exits 127 when it has names to report; anything else is the call
 		# itself failing, and nothing can be concluded about the deps
 		debug(f'pacman -T exited {err.exit_code}: {err}')
+		if err.exit_code != 127:
+			raise
 		out = err.worker_log.decode('utf-8', errors='ignore')
 		missing = [line.strip() for line in out.splitlines() if line.strip() in depends]
 		if not missing:
-			warn(f'pacman -T exited {err.exit_code} naming no missing package, assuming deps satisfied')
+			raise
 		return missing
 
 	return []
 
 
-def _arch_bootstrap(no_disk: bool) -> int:
+def _depends() -> tuple[str, ...]:
+	# an Arch host/ISO already ships the disk tools; the distros/BOOT tarball
+	if Os.running_from_bootstrap():
+		return base_depends + disk_depends
+	return base_depends
+
+
+def _bootstrap() -> int:
 	if Os.get_env('A2_DEPS_FETCHED'):
-		info('Already bootstrapped...')
+		info('Already fetched.')
 		return 0
 	try:
 		debug('Fetching deps...')
-		missing = _missing_deps(base_depends)
+		missing = _missing_deps(_depends())
 		# mark in current env as bootstrapped
-		# avoid infinite reloads
 		if not missing:
-			# nothing installed, so nothing new to import: the ISO ships these
+			# nothing installed
 			info('Deps already satisfied...')
 			Os.set_env('A2_DEPS_FETCHED', '1')
 			return 0
 
 		info(f'Fetching {len(missing)} missing dep(s): {" ".join(missing)}')
 		Pacman.run(f'-S --needed --noconfirm {" ".join(missing)}', peek_output=True)
-
-		if no_disk:
-			Os.set_env('A2_DEPS_FETCHED', '1')
-			return 0
 		Os.set_env('A2_DEPS_FETCHED', '1')
 	except Exception as e:
 		error(f'Failed to fetch deps: {e}')
@@ -223,6 +230,10 @@ def _prepare() -> int:
 			return rc
 		# note indent fully offlines installs should be possible
 		# instead of importing full handler use sys.argv directly
+		# -Syy then -S without -u is a partial upgrade of the running system:
+		# fine on the ISO, not on the user's own Arch, which provides the deps
+		if Os.running_from_arch_host():
+			return 0
 		try:
 			# a foreign host ships pacman but none of its config/keyring; build
 			# it first (conf before keyring: pacman-key reads pacman.conf).
@@ -234,9 +245,9 @@ def _prepare() -> int:
 			Pacman.run('-Syy', peek_output=True)
 			# python deps come from the host package manager on a foreign host
 			# we only bootstrap pacman related files: ex Alpine ISOs
-			# running-system scripts also skip the disk half of the deps
-			if not foreign_host and (rc := _arch_bootstrap(_script_from_argv() in NO_DISK_SCRIPTS)):
+			if not foreign_host and (rc := _bootstrap()):
 				return rc
+			# however if in a bootstrap tarball we need to install disk depends.
 		except Exception as e:
 			error('Failed to prepare app.')
 			if 'could not resolve host' in str(e).lower():
