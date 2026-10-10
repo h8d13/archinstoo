@@ -15,7 +15,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     container:
-      image: archlinux/archlinux:latest@sha256:67f575e6ae9319883231be5e32468bb88d4afcfab281b5ac014bd03f0571f3bc
+      image: archlinux/archlinux:latest@sha256:d15a9b5548b8dd19bc8bf3e5a38265646c903d4d3b88c09c97b68227809fa925
       options: --privileged
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
