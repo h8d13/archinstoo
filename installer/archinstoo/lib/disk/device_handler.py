@@ -1,6 +1,7 @@
 import os
 import time
 from pathlib import Path
+from shutil import which
 from typing import TYPE_CHECKING
 
 # optional: scripts that never touch disk state import this module
@@ -457,6 +458,10 @@ class DeviceHandler:
 				debug(f'Could not force-remove dm devices for VG {vg_name}')
 
 	def lvm_deactivate_vgs_on_device(self, device: BDevice) -> None:
+		# lvm2 is optional on an H2T host; without it no VG can be active
+		if not which('pvs'):
+			debug('pvs not found, skipping LVM teardown')
+			return
 		# Deactivate any LVM VGs using partitions on this device.
 		# First try using partition_infos
 		for partition in device.partition_infos:

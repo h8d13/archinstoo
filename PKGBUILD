@@ -27,6 +27,7 @@ depends=(
 	'libxcrypt'            #For password hashing
 	'pacman'
 	'git'
+	'dosfstools' #For FAT/EFI support
 )
 # base-devel tools are assumed for dev
 makedepends=(
@@ -45,7 +46,6 @@ makedepends=(
 # you should obviously feel free to only select the ones you need
 optdepends=(
 	'xkeyboard-config' #For offline X11/Wayland keymap lists (fetched otherwise)
-	'dosfstools'       #For FAT/EFI support
 	'e2fsprogs'        #For ext4 support
 	'btrfs-progs'      #For btrfs support
 	'f2fs-tools'       #For f2fs support

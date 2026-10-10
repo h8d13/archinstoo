@@ -2,6 +2,9 @@
 # host (H2T) that pair is a partial upgrade of the user's own system, so it
 # must not run there; the ISO and the distros/BOOT root are throwaway.
 
+import re
+from pathlib import Path
+
 import pytest
 
 import archinstoo
@@ -52,7 +55,9 @@ def test_prepare_skips_pacman_on_arch_host(
 
 	assert archinstoo._prepare() == 0
 	assert ('-Syy' in calls) is synced
-	assert any(call.startswith('-T') for call in calls) is synced
+	# the host still gets a read-only -T; only -S would touch it
+	assert any(call.startswith('-T') for call in calls)
+	assert not any(call.startswith('-S ') for call in calls)
 
 
 def _deptest_exits(monkeypatch: pytest.MonkeyPatch, code: int, log: bytes) -> None:
@@ -96,3 +101,29 @@ def test_bootstrap_fails_on_broken_deptest(monkeypatch: pytest.MonkeyPatch) -> N
 
 	assert archinstoo._bootstrap() == 1
 	assert not Os.has_env('A2_DEPS_FETCHED')
+
+
+def test_arch_host_missing_deps_stops(monkeypatch: pytest.MonkeyPatch) -> None:
+	# reported, never fetched: the host's own pacman owns its packages
+	_deptest_exits(monkeypatch, 127, b'arch-install-scripts\r\npython-pyparted\r\ndosfstools\r\n')
+
+	assert archinstoo._ensure_host_deps() == 1
+
+
+@pytest.mark.parametrize(
+	('pkgbuild', 'expected'),
+	[
+		# dev PKGBUILD: what _ensure_host_deps checks on an H2T host
+		('PKGBUILD', archinstoo.base_depends),
+		# release PKGBUILD: every disk tool too, same as the BOOT root fetches
+		('installer/PKGBUILD', archinstoo.base_depends + archinstoo.disk_depends),
+	],
+)
+def test_depends_match_pkgbuild(pkgbuild: str, expected: tuple[str, ...]) -> None:
+	# python itself is already running by the time either list is checked
+	text = (Path(__file__).parents[2] / pkgbuild).read_text()
+	block = re.search(r'^depends=\((.*?)^\)', text, re.MULTILINE | re.DOTALL)
+	assert block
+	depends = set(re.findall(r"'([^']+)'", block.group(1))) - {'python'}
+
+	assert depends == set(expected)

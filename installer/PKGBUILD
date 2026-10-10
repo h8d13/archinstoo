@@ -31,6 +31,7 @@ depends=(
 	'xfsprogs'    #XFS filesystem support
 	'cryptsetup'  #LUKS encryption support
 	'lvm2'        #LVM layout support
+	'mdadm'       #RAID layout support
 )
 # nothing here is required: the keymap menus fall back to fetching the same
 # data upstream, these only keep that off the network

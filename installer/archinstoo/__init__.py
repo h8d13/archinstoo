@@ -96,11 +96,11 @@ base_depends = (
 	'pacman',
 	'git',  	        # Cloning stashes
 	'arch-install-scripts', # For pacstrap, genfstab, chroot
+	'python-pyparted',
+	'dosfstools',  	        # FAT EFI filesystem support
 )
 disk_depends = (
-	'python-pyparted',
 	'btrfs-progs', 		# btrfs filesystem support
-	'dosfstools',  		# FAT EFI filesystem support
 	'e2fsprogs',  		# ext4 filesystem support
 	'f2fs-tools',  		# f2fs filesystem support
 	'xfsprogs',  		# XFS filesystem support
@@ -204,6 +204,16 @@ def _bootstrap() -> int:
 	return 0
 
 
+def _ensure_host_deps() -> int:
+	# read-only: an H2T host installs these with its own pacman, so a miss
+	# stops here instead of as a traceback mid-install
+	if missing := _missing_deps(base_depends):
+		error(f'Missing host deps: {" ".join(missing)}')
+		info(f'Install them first: pacman -Syu --needed {" ".join(missing)}')
+		return 1
+	return 0
+
+
 def _check_online() -> int:
 	try:
 		ping('1.1.1.1')
@@ -230,11 +240,11 @@ def _prepare() -> int:
 			return rc
 		# note indent fully offlines installs should be possible
 		# instead of importing full handler use sys.argv directly
-		# -Syy then -S without -u is a partial upgrade of the running system:
-		# fine on the ISO, not on the user's own Arch, which provides the deps
-		if Os.running_from_arch_host():
-			return 0
 		try:
+			# -Syy then -S without -u is a partial upgrade of the running system:
+			# fine on the ISO, not on the user's own Arch, which provides the deps
+			if Os.running_from_arch_host():
+				return _ensure_host_deps()
 			# a foreign host ships pacman but none of its config/keyring; build
 			# it first (conf before keyring: pacman-key reads pacman.conf).
 			foreign_host = Os.running_from_foreign()
