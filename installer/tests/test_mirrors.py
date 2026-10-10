@@ -1,5 +1,5 @@
-import datetime
 import json
+from datetime import datetime
 
 from archinstoo.lib.models.mirrors import MirrorStatusListV3
 
@@ -45,4 +45,4 @@ def test_mirror_status_v3_from_json() -> None:
 	# score is rounded in __post_init__
 	assert entry.score == 2
 	# ISO strings are parsed into datetimes at the boundary
-	assert isinstance(entry.last_sync, datetime.datetime)
+	assert isinstance(entry.last_sync, datetime)

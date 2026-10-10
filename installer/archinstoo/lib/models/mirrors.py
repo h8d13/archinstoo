@@ -1,10 +1,10 @@
-import datetime
 import http.client
 import json
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, NotRequired, Self, TypedDict
 
@@ -13,14 +13,14 @@ from archinstoo.lib.output import debug
 from archinstoo.lib.utils.net import DownloadTimer, ping
 
 
-def _parse_datetime(value: str | datetime.datetime | None) -> datetime.datetime | None:
+def _parse_datetime(value: str | datetime | None) -> datetime | None:
 	# Parse ISO datetime string, handling Z suffix and already-parsed values.
 	if value is None:
 		return None
-	if isinstance(value, datetime.datetime):
+	if isinstance(value, datetime):
 		return value
 	try:
-		return datetime.datetime.fromisoformat(value)
+		return datetime.fromisoformat(value)
 	except ValueError, AttributeError:
 		debug(f'Unparseable mirror timestamp {value!r}, ignoring')
 		return None
@@ -66,7 +66,7 @@ class MirrorStatusEntryV3:
 	ipv6: bool
 	details: str
 	delay: int | None = None
-	last_sync: datetime.datetime | None = None
+	last_sync: datetime | None = None
 	duration_avg: float | None = None
 	duration_stddev: float | None = None
 	completion_pct: float | None = None
@@ -173,7 +173,7 @@ class MirrorStatusEntryV3:
 @dataclass
 class MirrorStatusListV3:
 	cutoff: int
-	last_check: datetime.datetime
+	last_check: datetime
 	num_checks: int
 	urls: list[MirrorStatusEntryV3]
 	version: int
@@ -189,7 +189,7 @@ class MirrorStatusListV3:
 
 		return cls(
 			cutoff=data['cutoff'],
-			last_check=_parse_datetime(data['last_check']) or datetime.datetime.now(datetime.UTC),
+			last_check=_parse_datetime(data['last_check']) or datetime.now(UTC),
 			num_checks=data['num_checks'],
 			urls=[MirrorStatusEntryV3.from_dict(u) for u in data['urls']],
 			version=data['version'],
