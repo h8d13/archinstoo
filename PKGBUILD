@@ -29,7 +29,6 @@ depends=(
 	'git'
 )
 # base-devel tools are assumed for dev
-# note: dev tools are usually handled through pre-commit
 makedepends=(
 	'python-build'
 	'python-installer'
@@ -60,6 +59,7 @@ optdepends=(
 	'qemu-base'        #For testing all of the above
 )
 # qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
+# optionally arm64 qemu testing tools
 provides=(archinstoo)
 replaces=(archinstoo)
 source=()
@@ -73,7 +73,7 @@ build() {
 	#
 	# git picks the files: tracked plus untracked-not-ignored, so uncommitted
 	# work still gets built while .gitignore stays the only place listing what
-	# to leave out (.venv, build, dist, logs, __pycache__).
+	# to leave out.
 	rm -rf "$srcdir/installer"
 	git -C "$startdir" ls-files -co --exclude-standard installer >"$srcdir/filelist"
 	tar -C "$startdir" -cf - -T "$srcdir/filelist" | tar -C "$srcdir" -xf -
