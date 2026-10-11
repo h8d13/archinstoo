@@ -17,7 +17,7 @@ jobs:
                 persist-credentials: false
             - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
               with:
-                python-version: '3.14'
+                python-version-file: installer/pyproject.toml
             - run: pip install import-linter
             - name: Check for circular imports (SCC) Syblings Check
               working-directory: installer
@@ -31,7 +31,7 @@ jobs:
                 persist-credentials: false
             - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
               with:
-                python-version: '3.14'
+                python-version-file: installer/pyproject.toml
             - run: pip install zizmor
             - name: Audit workflow security
               run: zizmor --offline .github/workflows
@@ -43,7 +43,7 @@ jobs:
                 persist-credentials: false
             - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
               with:
-                python-version: '3.14'
+                python-version-file: installer/pyproject.toml
             - run: pip install vulture
             - name: Check for dead code
               continue-on-error: true

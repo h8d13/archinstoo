@@ -14,7 +14,6 @@ license = "GPL-3.0-only"
 requires-python = ">=3.14"
 keywords = ["linux", "arch", "archinstoo", "installer"]
 classifiers = [
-    "Programming Language :: Python :: 3.14",
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
@@ -57,7 +56,6 @@ include-package-data = true
 archinstoo = "archinstoo"
 
 [tool.mypy]
-python_version = "3.14"
 files = "."
 # relative to this file, not the cwd: CI runs mypy from the repo root
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
@@ -115,7 +113,6 @@ ignore-paths = [
     ".*grimoire.py",
 ]
 persistent = false
-py-version = "3.14"
 recursive = true
 
 [tool.pylint.format]
@@ -142,7 +139,6 @@ init-import = true
 ignored-modules = ["parted"]
 
 [tool.ruff]
-target-version = "py314"
 line-length = 160
 indent-width = 8
 exclude = ["**/lib/grimoire.py"]
