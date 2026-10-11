@@ -8,6 +8,14 @@
   "pre-commit": {
     "enabled": true
   },
+  "customDatasources": {
+    "archlinux": {
+      "defaultRegistryUrlTemplate": "https://archlinux.org/packages/search/json/?name={{packageName}}",
+      "transformTemplates": [
+        "{\"releases\": [results[repo in [\"core\", \"extra\"]].{\"version\": pkgver}]}"
+      ]
+    }
+  },
   "customManagers": [
     {
       "customType": "regex",
@@ -19,9 +27,9 @@
         "\"[^\"]*?>=(?<currentValue>[^\"]+)\",?\\s*#\\s*renovate:\\s*arch=(?<depName>\\S+)"
       ],
       "depNameTemplate": "arch/{{{depName}}}",
-      "datasourceTemplate": "repology",
+      "datasourceTemplate": "custom.archlinux",
       "versioningTemplate": "loose",
-      "extractVersionTemplate": "^(?<version>.+)-\\d+$"
+      "packageNameTemplate": "{{{depName}}}"
     }
   ],
   "packageRules": [
@@ -40,7 +48,7 @@
     },
     {
       "description": "Python floor moves with Arch minor releases, not point releases",
-      "matchPackageNames": [
+      "matchDepNames": [
         "arch/python"
       ],
       "extractVersion": "^(?<version>\\d+\\.\\d+)"
