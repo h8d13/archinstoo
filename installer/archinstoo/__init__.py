@@ -81,6 +81,9 @@ from .lib.pm.pacman import Pacman
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info
 from .lib.utils.net import ping
+lazy from .lib.args import get_arch_config_handler
+lazy from .lib.disk.utils import disk_layouts
+lazy from .lib.pm.config import guard_host_conf
 
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
@@ -279,8 +282,6 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 
 	if args.debug:
-		from .lib.disk.utils import disk_layouts
-
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 
 
@@ -299,8 +300,6 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 
 	# On host, snapshot /etc/pacman.conf and restore it on exit so an H2T run never leaves
 	# the running system with a modified pacman.conf (heals a prior crashed run too).
-	from .lib.pm.config import guard_host_conf
-
 	guard_host_conf()
 
 	# usually 'guided' from default lib/args
@@ -363,8 +362,6 @@ def run_as_a_module() -> int:
 		return rc
 
 	# now safe to import after bootstrap (or skipped for rootless)
-	from .lib.args import get_arch_config_handler
-
 	handler = get_arch_config_handler()
 	script = handler.get_script()
 	source = handler.args.config or handler.args.config_url or 'menu'

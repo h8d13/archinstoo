@@ -14,6 +14,7 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment
+lazy from archinstoo.lib.models.authentication import PrivilegeEscalation
 
 from .applications.application_menu import ApplicationMenu
 from .authentication.authentication_menu import AuthenticationMenu
@@ -41,6 +42,7 @@ from .output import FormattedOutput
 from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
 from .profile.config import ProfileConfiguration
+lazy from .profile.profile_menu import ProfileMenu
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.applications import ApplicationConfiguration
@@ -280,11 +282,9 @@ class GlobalMenu(AbstractMenu[None]):
 			missing.add('SDDM requires at least one regular user to log in')
 
 		aur_packages_item = self._item_group.find_by_key('aur_packages')
-		if aur_packages_item.has_value() and aur_packages_item.value:
-			from archinstoo.lib.models.authentication import PrivilegeEscalation
-
-			if not auth_config or auth_config.privilege_escalation == PrivilegeEscalation.Run0:
-				missing.add('AUR packages require Sudo or Doas privilege escalation (Run0 requires booted environment)')
+		run0_only = not auth_config or auth_config.privilege_escalation == PrivilegeEscalation.Run0
+		if aur_packages_item.has_value() and aur_packages_item.value and run0_only:
+			missing.add('AUR packages require Sudo or Doas privilege escalation (Run0 requires booted environment)')
 
 		for item in self._item_group.items:
 			if item.mandatory:
@@ -628,8 +628,6 @@ class GlobalMenu(AbstractMenu[None]):
 		return Profile('minimal', ProfileType.Minimal)
 
 	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
-		from .profile.profile_menu import ProfileMenu
-
 		return ProfileMenu(preset=current_profile).run()
 
 	def _select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:

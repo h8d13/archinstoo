@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, NotRequired, Self, TypedDict
 
 from archinstoo.lib.output import warn
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
+lazy from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
@@ -31,8 +32,6 @@ class ProfileConfiguration:
 		return any(p.is_greeter_supported() for p in self.profiles)
 
 	def json(self) -> _ProfileConfigurationSerialization:
-		from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
 		handler = ProfileHandler()
 		return {
 			'profiles': [handler.to_json(p) for p in self.profiles],
@@ -41,8 +40,6 @@ class ProfileConfiguration:
 
 	@classmethod
 	def parse_arg(cls, arg: _ProfileConfigurationSerialization) -> Self:
-		from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
 		handler = ProfileHandler()
 		profiles = [profile for profile_data in arg.get('profiles', []) if (profile := handler.parse_profile_config(profile_data))]
 

@@ -8,6 +8,11 @@ from itertools import zip_longest
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
+lazy import parted
+
+lazy from archinstoo.lib.hardware import SysInfo
+lazy from archinstoo.lib.models.users import Password
+
 if TYPE_CHECKING:
 	import builtins
 	from collections.abc import Callable
@@ -15,8 +20,6 @@ if TYPE_CHECKING:
 	from parted import Disk, Geometry, Partition
 
 	from archinstoo.lib.disk.device_handler import DeviceHandler
-	from archinstoo.lib.models.users import Password
-
 
 from archinstoo.lib.output import debug, warn
 
@@ -728,8 +731,6 @@ class _DeviceInfo:
 
 	@classmethod
 	def from_disk(cls, disk: Disk, serial: str | None = None) -> Self:
-		import parted
-
 		device = disk.device
 		if device.type == 18:
 			device_type = 'loop'
@@ -921,8 +922,6 @@ class PartitionGUID(Enum):
 	def linux_root(cls) -> PartitionGUID:
 		# discoverable partitions spec keys root by arch: the wrong GUID
 		# leaves systemd-gpt-auto-generator unable to find /
-		from archinstoo.lib.hardware import SysInfo
-
 		if SysInfo.arch() == 'aarch64':
 			return cls.LINUX_ROOT_AARCH64
 		return cls.LINUX_ROOT_X86_64
@@ -1681,8 +1680,6 @@ class DiskEncryption:
 	@classmethod
 	def parse_arg(cls, arg: _DiskEncryptionSerialization, disk_config: DiskLayoutConfiguration) -> Self:
 		# users imports stay lazy here: device.py only type-checks Password
-		from archinstoo.lib.models.users import Password
-
 		encryption_type = EncryptionType(arg['encryption_type'])
 
 		password: Password | None = None

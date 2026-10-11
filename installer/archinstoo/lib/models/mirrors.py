@@ -11,6 +11,7 @@ from typing import NotRequired, Self, TypedDict
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug
 from archinstoo.lib.utils.net import DownloadTimer, ping
+lazy from archinstoo.lib.hardware import SysInfo
 
 
 def _parse_datetime(value: str | datetime | None) -> datetime | None:
@@ -118,8 +119,6 @@ class MirrorStatusEntryV3:
 				self._speedtest_retries = 3
 			elif self._speedtest_retries < 1:
 				self._speedtest_retries = 1
-
-			from archinstoo.lib.hardware import SysInfo
 
 			test_db = f'{self.url}core/os/{SysInfo.arch()}/core.db'
 

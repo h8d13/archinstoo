@@ -216,8 +216,6 @@ ignore = [
     # `ruff format` under the tab + magic-trailing-comma style set above.
     "COM812",   # missing-trailing-comma
     "W191",     # tab-indentation
-    "PLC0415",  # import-outside-top-level: models/ -> hardware, disk breaks
-                # cycles; the rest defer optional/slow imports (parted, tui)
     "RUF067",   # non-empty-init-module: init hacks are on purpose.
 
 ]

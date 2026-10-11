@@ -1,4 +1,7 @@
 default_stages: ['pre-commit']
+# hook venvs parse the code (check-ast, mypy, import-linter): 3.15 syntax
+default_language_version:
+  python: python3.15
 # run sc and ruff everywhere, rest is scoped to installer/
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
