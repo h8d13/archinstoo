@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# archinstoo gates root per script (ROOTLESS_SCRIPTS), only setup needs it
+# if we are root, check ISO
 if [ "$EUID" -eq 0 ]; then
 	if mountpoint -q /run/archiso/cowspace; then
 		# on iso probably need more space
 		mount -o remount,size=1G /run/archiso/cowspace
 	fi
+	# check deps
 	pacman -S --needed uv gcc pkgconf || exit 1
 fi
 
@@ -15,12 +16,11 @@ if ! pacman -T uv gcc pkgconf; then
 fi
 
 cd installer || exit 1
-# reuse existing venv, only fetch python + create on first run
-if [ ! -x .venv315/bin/python ]; then
-	uv python install 3.15 || exit 1
-	uv venv -p 3.15 .venv315 || exit 1
+# reuse existing venv; uv picks (or fetches) python from requires-python
+if [ ! -x .venv/bin/python ]; then
+	uv venv .venv || exit 1
 fi
 # editable: cheap re-run, picks up pyproject dep changes
-uv pip install -p .venv315 -e . || exit 1
+uv pip install -p .venv -e . || exit 1
 
-exec .venv315/bin/python -B -m archinstoo "$@"
+exec .venv/bin/python -B -m archinstoo "$@"
