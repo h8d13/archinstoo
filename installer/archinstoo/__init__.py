@@ -81,6 +81,8 @@ from .lib.pm.pacman import Pacman
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info
 from .lib.utils.net import ping
+
+# args pulls in deps _prepare() may still have to install: first use loads it
 lazy from .lib.args import get_arch_config_handler
 lazy from .lib.disk.utils import disk_layouts
 lazy from .lib.pm.config import guard_host_conf
@@ -361,7 +363,7 @@ def run_as_a_module() -> int:
 	if not is_rootless and not is_help and (rc := _prepare(early.offline)):
 		return rc
 
-	# now safe to import after bootstrap (or skipped for rootless)
+	# first lib.args load: after bootstrap (or skipped for rootless)
 	handler = get_arch_config_handler()
 	script = handler.get_script()
 	source = handler.args.config or handler.args.config_url or 'menu'
