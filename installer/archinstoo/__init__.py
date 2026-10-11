@@ -71,21 +71,19 @@ from typing import TYPE_CHECKING
 
 from ._version import __gitstat__, __pkgver__, __version__
 from .lib import output
-from .lib.checkpoints import _run_script, clean_cache, clean_logs
 from .lib.cli import build_parser
 from .lib.exceptions import SysCallError
-from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
-from .lib.pm.bootstrap import keyring_init, pacman_conf
-from .lib.pm.pacman import Pacman
-from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info
-from .lib.utils.net import ping
-
-# args pulls in deps _prepare() may still have to install: first use loads it
-lazy from .lib.args import get_arch_config_handler
+lazy from .lib.args import get_arch_config_handler  # _prepare() may install its deps first
+lazy from .lib.checkpoints import _run_script, clean_cache, clean_logs
 lazy from .lib.disk.utils import disk_layouts
+lazy from .lib.hardware import SysInfo
+lazy from .lib.pm.bootstrap import keyring_init, pacman_conf
 lazy from .lib.pm.config import guard_host_conf
+lazy from .lib.pm.pacman import Pacman
+lazy from .lib.tui.curses_menu import Tui
+lazy from .lib.utils.net import ping
 
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
