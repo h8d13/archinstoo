@@ -123,7 +123,7 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 
 	try:
 		response = _urlopen_checked(full_url, timeout)
-		data: str = response.read().decode('UTF-8')
+		data: str = response.read().decode()
 		return data
 	except URLError as e:
 		raise ValueError(f'Unable to fetch data from url: {url}\n{e}') from e

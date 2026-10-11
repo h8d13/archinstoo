@@ -77,7 +77,7 @@ def _search_login_defs(key: str) -> str | None:
 
 def crypt_gen_salt(prefix: str | bytes, rounds: int) -> bytes:
 	if isinstance(prefix, str):
-		prefix = prefix.encode('utf-8')
+		prefix = prefix.encode()
 
 	setting: bytes | None = libcrypt.crypt_gensalt(prefix, rounds, None, 0)
 
@@ -103,7 +103,7 @@ def _crypt_with(plaintext: bytes, salt: bytes, prefix: str) -> str | None:
 	if result is None:
 		return None
 
-	decoded = result.decode('utf-8')
+	decoded = result.decode()
 	if not decoded.startswith(prefix):
 		return None
 
@@ -126,7 +126,7 @@ def crypt_yescrypt(plaintext: str) -> str:
 
 	debug(f'Creating yescrypt hash with rounds {rounds}')
 
-	enc_plaintext = plaintext.encode('utf-8')
+	enc_plaintext = plaintext.encode()
 
 	# try yescrypt when the host can build a $y$ salt; the result is validated so
 	# a host that has crypt_gensalt but whose crypt() can't actually do yescrypt

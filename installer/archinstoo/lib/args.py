@@ -252,7 +252,7 @@ class ArchConfigHandler:
 			try:
 				req = Request(url, headers={'User-Agent': 'ArchInstoo'})  # noqa: S310 - scheme restricted above
 				with urlopen(req) as resp:  # noqa: S310 - scheme restricted above
-					content: str = resp.read().decode('utf-8')
+					content: str = resp.read().decode()
 					return content
 			except urllib.error.HTTPError as err:
 				error(f'Could not fetch JSON from {url}: {err}')

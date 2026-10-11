@@ -140,7 +140,7 @@ class SysCommandWorker:
 	@override
 	def __str__(self) -> str:
 		try:
-			return self._trace_log.decode('utf-8')
+			return self._trace_log.decode()
 		except UnicodeDecodeError:
 			return str(self.trace_log)
 
@@ -168,7 +168,7 @@ class SysCommandWorker:
 		if self.exit_code != 0:
 			cleaned_log = clear_vt100_escape_codes(self.trace_log)
 			raise SysCallError(
-				f'{self.cmd} exited with abnormal exit code [{self.exit_code}]: {cleaned_log.decode("utf-8", errors="ignore")[-500:]}',
+				f'{self.cmd} exited with abnormal exit code [{self.exit_code}]: {cleaned_log.decode(errors="ignore")[-500:]}',
 				self.exit_code,
 				worker_log=cleaned_log,
 				cmd=self.cmd,
@@ -201,14 +201,14 @@ class SysCommandWorker:
 	def peak(self, output: str | bytes) -> bool:
 		if self.peek_output:
 			if isinstance(output, str):
-				output = output.encode('UTF-8')
+				output = output.encode()
 			# the pty makes the child think it has a terminal, so pacman-key
 			# colours and pacman hides the cursor; only a real terminal wants
 			# those bytes, a log (CI, redirect, cmd_output.txt) wants the text
 			plain = clear_vt100_escape_codes(output)
 			try:
-				text = (output if sys.stdout.isatty() else plain).decode('UTF-8')
-				_cmd_output(plain.decode('UTF-8'))
+				text = (output if sys.stdout.isatty() else plain).decode()
+				_cmd_output(plain.decode())
 			except UnicodeDecodeError:
 				return False
 
@@ -354,7 +354,7 @@ class SysCommand:
 
 	@override
 	def __repr__(self, *args: list[Any], **kwargs: dict[str, Any]) -> str:
-		return self.decode('UTF-8', errors='backslashreplace') or ''
+		return self.decode(errors='backslashreplace') or ''
 
 	def create_session(self) -> bool:
 		# Initiates a :ref:`SysCommandWorker` session in this class ``.session``.
@@ -506,7 +506,7 @@ def run(
 		# normalize to the SysCommand path's type so handlers written
 		# against either exception see failures from both exec paths
 		raise SysCallError(
-			f'{cmd} exited with abnormal exit code [{err.returncode}]: {(err.stderr or err.stdout or b"").decode("utf-8", errors="ignore")[-500:]}',
+			f'{cmd} exited with abnormal exit code [{err.returncode}]: {(err.stderr or err.stdout or b"").decode(errors="ignore")[-500:]}',
 			err.returncode,
 			worker_log=(err.stdout or b'') + (err.stderr or b''),
 			cmd=err.cmd,

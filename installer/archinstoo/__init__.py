@@ -169,7 +169,7 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 		debug(f'pacman -T exited {err.exit_code}: {err}')
 		if err.exit_code != 127:
 			raise
-		out = err.worker_log.decode('utf-8', errors='ignore')
+		out = err.worker_log.decode(errors='ignore')
 		missing = [line.strip() for line in out.splitlines() if line.strip() in depends]
 		if not missing:
 			raise

@@ -57,7 +57,7 @@ class MenuKeys(Enum):
 	@classmethod
 	def decode(cls, key: int) -> str:
 		byte_str = curses.keyname(key)
-		return byte_str.decode('utf-8')
+		return byte_str.decode()
 
 
 class FrameStyle(Enum):

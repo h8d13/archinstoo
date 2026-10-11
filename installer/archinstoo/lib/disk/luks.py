@@ -67,7 +67,7 @@ class Luks2:
 
 		if isinstance(self.password, bytes):
 			return self.password
-		return bytes(self.password.plaintext, 'UTF-8')
+		return self.password.plaintext.encode()
 
 	def _get_passphrase_args(
 		self,

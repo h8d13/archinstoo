@@ -125,7 +125,6 @@ disable = [
     "R",                       # ruff covers refactors
     "broad-exception-caught",  # log-and-continue boundaries
     "fixme",                   # tracked in-code on purpose
-    "unspecified-encoding",    # PEP 686: utf-8 is the default from 3.15
 ]
 
 [tool.pylint.refactoring]
