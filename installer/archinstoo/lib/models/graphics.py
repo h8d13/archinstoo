@@ -104,20 +104,22 @@ GFX_CUSTOM_CHOICES: list[GfxPackage] = [p for p in GfxPackage if p not in (GfxPa
 
 # hidden per arch. x86_64 repos carry the SoC and translation-layer vulkan
 # drivers, but no x86 GPU uses them; Arch Ports aarch64 builds no Intel media
-_HIDDEN: dict[str, frozenset[GfxPackage]] = {
-	'x86_64': frozenset(
-		{
-			GfxPackage.VulkanAsahi,
-			GfxPackage.VulkanBroadcom,
-			GfxPackage.VulkanDzn,
-			GfxPackage.VulkanFreedreno,
-			GfxPackage.VulkanGfxstream,
-			GfxPackage.VulkanPanfrost,
-			GfxPackage.VulkanPowervr,
-		}
-	),
-	'aarch64': frozenset({GfxPackage.IntelMediaDriver, GfxPackage.LibvaIntelDriver, GfxPackage.VplGpuRt}),
-}
+_HIDDEN: frozendict[str, frozenset[GfxPackage]] = frozendict(
+	{
+		'x86_64': frozenset(
+			{
+				GfxPackage.VulkanAsahi,
+				GfxPackage.VulkanBroadcom,
+				GfxPackage.VulkanDzn,
+				GfxPackage.VulkanFreedreno,
+				GfxPackage.VulkanGfxstream,
+				GfxPackage.VulkanPanfrost,
+				GfxPackage.VulkanPowervr,
+			}
+		),
+		'aarch64': frozenset({GfxPackage.IntelMediaDriver, GfxPackage.LibvaIntelDriver, GfxPackage.VplGpuRt}),
+	}
+)
 
 
 def gfx_custom_choices(arch: str) -> list[GfxPackage]:
@@ -133,53 +135,55 @@ def gfx_drivers(arch: str) -> list[GfxDriver]:
 
 
 # the static half of every driver, before the DKMS swap
-GFX_PACKAGES: dict[GfxDriver, list[GfxPackage]] = {
-	GfxDriver.AllOpenSource: [
-		GfxPackage.Mesa,
-		GfxPackage.Xf86VideoAmdgpu,
-		GfxPackage.Xf86VideoAti,
-		GfxPackage.Xf86VideoNouveau,
-		GfxPackage.LibvaIntelDriver,
-		GfxPackage.IntelMediaDriver,
-		GfxPackage.VplGpuRt,
-		GfxPackage.LibVpl,
-		GfxPackage.VulkanRadeon,
-		GfxPackage.VulkanIntel,
-		GfxPackage.VulkanNouveau,
-	],
-	GfxDriver.AmdOpenSource: [
-		GfxPackage.Mesa,
-		GfxPackage.Xf86VideoAmdgpu,
-		GfxPackage.Xf86VideoAti,
-		GfxPackage.VulkanRadeon,
-	],
-	GfxDriver.IntelOpenSource: [
-		GfxPackage.Mesa,
-		GfxPackage.LibvaIntelDriver,
-		GfxPackage.IntelMediaDriver,
-		GfxPackage.VplGpuRt,
-		GfxPackage.LibVpl,
-		GfxPackage.VulkanIntel,
-	],
-	GfxDriver.NvidiaOpenKernel: [
-		GfxPackage.NvidiaOpen,
-		GfxPackage.LibvaNvidiaDriver,
-	],
-	GfxDriver.NvidiaOpenSource: [
-		GfxPackage.Mesa,
-		GfxPackage.Xf86VideoNouveau,
-		GfxPackage.VulkanNouveau,
-	],
-	GfxDriver.MesaOpenSource: [
-		GfxPackage.Mesa,
-	],
-	GfxDriver.VMSoftware: [
-		GfxPackage.Mesa,
-		GfxPackage.VulkanSwrast,
-	],
-	GfxDriver.Custom: [],
-	GfxDriver.VMVirtio: [
-		GfxPackage.Mesa,
-		GfxPackage.VulkanVirtio,
-	],
-}
+GFX_PACKAGES: frozendict[GfxDriver, list[GfxPackage]] = frozendict(
+	{
+		GfxDriver.AllOpenSource: [
+			GfxPackage.Mesa,
+			GfxPackage.Xf86VideoAmdgpu,
+			GfxPackage.Xf86VideoAti,
+			GfxPackage.Xf86VideoNouveau,
+			GfxPackage.LibvaIntelDriver,
+			GfxPackage.IntelMediaDriver,
+			GfxPackage.VplGpuRt,
+			GfxPackage.LibVpl,
+			GfxPackage.VulkanRadeon,
+			GfxPackage.VulkanIntel,
+			GfxPackage.VulkanNouveau,
+		],
+		GfxDriver.AmdOpenSource: [
+			GfxPackage.Mesa,
+			GfxPackage.Xf86VideoAmdgpu,
+			GfxPackage.Xf86VideoAti,
+			GfxPackage.VulkanRadeon,
+		],
+		GfxDriver.IntelOpenSource: [
+			GfxPackage.Mesa,
+			GfxPackage.LibvaIntelDriver,
+			GfxPackage.IntelMediaDriver,
+			GfxPackage.VplGpuRt,
+			GfxPackage.LibVpl,
+			GfxPackage.VulkanIntel,
+		],
+		GfxDriver.NvidiaOpenKernel: [
+			GfxPackage.NvidiaOpen,
+			GfxPackage.LibvaNvidiaDriver,
+		],
+		GfxDriver.NvidiaOpenSource: [
+			GfxPackage.Mesa,
+			GfxPackage.Xf86VideoNouveau,
+			GfxPackage.VulkanNouveau,
+		],
+		GfxDriver.MesaOpenSource: [
+			GfxPackage.Mesa,
+		],
+		GfxDriver.VMSoftware: [
+			GfxPackage.Mesa,
+			GfxPackage.VulkanSwrast,
+		],
+		GfxDriver.Custom: [],
+		GfxDriver.VMVirtio: [
+			GfxPackage.Mesa,
+			GfxPackage.VulkanVirtio,
+		],
+	}
+)

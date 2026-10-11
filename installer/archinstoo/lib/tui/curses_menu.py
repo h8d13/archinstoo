@@ -1279,17 +1279,17 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 				self._item_group.focus_last()
 
 
-ACCENT_COLORS: dict[str, int] = {
-	'cyan': curses.COLOR_CYAN,
-	'green': curses.COLOR_GREEN,
-	'red': curses.COLOR_RED,
-	'orange': curses.COLOR_YELLOW,
-	'blue': curses.COLOR_BLUE,
-	'magenta': curses.COLOR_MAGENTA,
-}
+ACCENT_COLORS: frozendict[str, int] = frozendict(
+	cyan=curses.COLOR_CYAN,
+	green=curses.COLOR_GREEN,
+	red=curses.COLOR_RED,
+	orange=curses.COLOR_YELLOW,
+	blue=curses.COLOR_BLUE,
+	magenta=curses.COLOR_MAGENTA,
+)
 
 # Light accents need dark text, dark accents need light text
-LIGHT_ACCENTS: set[str] = {'cyan', 'green', 'orange'}
+LIGHT_ACCENTS: frozenset[str] = frozenset({'cyan', 'green', 'orange'})
 
 
 def _build_theme(mode: str, accent: str) -> dict[STYLE, tuple[int, int]]:

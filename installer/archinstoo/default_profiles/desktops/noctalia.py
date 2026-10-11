@@ -18,12 +18,12 @@ _ASSETS_DIR = Path(__file__).parent / 'noctalia_assets'
 
 # compositor -> config dir under ~/.config; every file in the matching
 # noctalia_assets/<compositor>/ dir is provisioned into it
-_COMPOSITOR_CONFIG_DIRS = {
-	'niri': 'niri',
-	'hyprland': 'hypr',
-	'sway': 'sway',
-	'labwc': 'labwc',
-}
+_COMPOSITOR_CONFIG_DIRS = frozendict(
+	niri='niri',
+	hyprland='hypr',
+	sway='sway',
+	labwc='labwc',
+)
 
 
 class NoctaliaProfile(WaylandProfile):
