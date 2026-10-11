@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+mount -o remount,size=2G /run/archiso/cowspace
+pacman -Sy --needed uv gcc pkgconf
+
+cd archinstoo/installer || exit 1
+uv python install 3.15
+uv venv -p 3.15 .venv315
+uv pip install -p .venv315 -e .
+
+.venv315/bin/python -m archinstoo --debug --advanced
