@@ -102,7 +102,8 @@ class SysCommandWorker:
 		self.working_directory = working_directory
 
 		self.exit_code: int | None = None
-		self._trace_log = b''
+		# grows per pty read: bytes += would copy the whole log every time
+		self._trace_log = bytearray()
 		self._trace_log_pos = 0
 		self.poll_object = epoll()
 		self.child_fd: int | None = None
@@ -123,7 +124,7 @@ class SysCommandWorker:
 
 	def __iter__(self, *args: str, **kwargs: dict[str, Any]) -> Iterator[bytes]:
 		last_line = self._trace_log.rfind(b'\n')
-		lines = filter(None, self._trace_log[self._trace_log_pos : last_line].splitlines())
+		lines = filter(None, bytes(self._trace_log[self._trace_log_pos : last_line]).splitlines())
 		for raw in lines:
 			line = clear_vt100_escape_codes(raw) if self.remove_vt100_escape_codes_from_lines else raw
 			yield line + b'\n'
@@ -133,14 +134,14 @@ class SysCommandWorker:
 	@override
 	def __repr__(self) -> str:
 		self.make_sure_we_are_executing()
-		return str(self._trace_log)
+		return str(self.trace_log)
 
 	@override
 	def __str__(self) -> str:
 		try:
 			return self._trace_log.decode('utf-8')
 		except UnicodeDecodeError:
-			return str(self._trace_log)
+			return str(self.trace_log)
 
 	def __enter__(self) -> Self:
 		return self
@@ -164,7 +165,7 @@ class SysCommandWorker:
 			debug(str(exc_value))
 
 		if self.exit_code != 0:
-			cleaned_log = clear_vt100_escape_codes(self._trace_log)
+			cleaned_log = clear_vt100_escape_codes(self.trace_log)
 			raise SysCallError(
 				f'{self.cmd} exited with abnormal exit code [{self.exit_code}]: {cleaned_log.decode("utf-8", errors="ignore")[-500:]}',
 				self.exit_code,
@@ -303,7 +304,7 @@ class SysCommandWorker:
 	@property
 	def trace_log(self) -> bytes:
 		# everything the child wrote so far, raw
-		return self._trace_log
+		return bytes(self._trace_log)
 
 	def decode(self, encoding: str = 'UTF-8') -> str:
 		return self._trace_log.decode(encoding)
