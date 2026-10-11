@@ -1672,7 +1672,7 @@ class DiskEncryption:
 		modifications: list[DeviceModification],
 		lvm_config: LvmConfiguration | None = None,
 	) -> bool:
-		partitions = [part for mod in modifications for part in mod.partitions]
+		partitions = [*mod.partitions for mod in modifications]
 
 		# assume one boot and at least 2 additional
 		return not (len(partitions) > 2 and lvm_config)
