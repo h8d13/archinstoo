@@ -11,7 +11,7 @@ authors = [
     {name = "Hadean Eon", email = "hadean-eon-dev@proton.me"},
 ]
 license = "GPL-3.0-only"
-requires-python = ">=3.14"  # renovate: arch=python
+requires-python = ">=3.15"  # renovate: arch=python
 keywords = ["linux", "arch", "archinstoo", "installer"]
 classifiers = [
     "Operating System :: POSIX :: Linux",
