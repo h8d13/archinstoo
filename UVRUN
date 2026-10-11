@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
-if mountpoint -q /run/archiso/cowspace; then
-	# on iso probably need more space
-	mount -o remount,size=1G /run/archiso/cowspace
+# archinstoo gates root per script (ROOTLESS_SCRIPTS), only setup needs it
+if [ "$EUID" -eq 0 ]; then
+	if mountpoint -q /run/archiso/cowspace; then
+		# on iso probably need more space
+		mount -o remount,size=1G /run/archiso/cowspace
+	fi
+	pacman -S --needed uv gcc pkgconf || exit 1
 fi
 
-pacman -S --needed uv gcc pkgconf
+# rootless runs skip install: pacman -T prints whatever is missing
+if ! pacman -T uv gcc pkgconf; then
+	echo "UVRUN: missing deps above, run once as root to install" >&2
+	exit 1
+fi
 
-cd archinstoo/installer || exit 1
-uv python install 3.15
-uv venv -p 3.15 .venv315
-uv pip install -p .venv315 -e .
+cd installer || exit 1
+# reuse existing venv, only fetch python + create on first run
+if [ ! -x .venv315/bin/python ]; then
+	uv python install 3.15 || exit 1
+	uv venv -p 3.15 .venv315 || exit 1
+fi
+# editable: cheap re-run, picks up pyproject dep changes
+uv pip install -p .venv315 -e . || exit 1
 
-.venv315/bin/python -m archinstoo "$@"
+exec .venv315/bin/python -B -m archinstoo "$@"
