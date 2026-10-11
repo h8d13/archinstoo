@@ -8,7 +8,7 @@ import time
 from typing import TYPE_CHECKING, Self
 from urllib.error import URLError
 from urllib.parse import urlencode, urlparse
-from urllib.request import urlopen
+lazy from urllib.request import urlopen
 
 from archinstoo.lib.exceptions import DownloadTimeoutError
 

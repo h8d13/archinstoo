@@ -1,12 +1,12 @@
-import http.client
 import json
 import urllib.error
 import urllib.parse
-import urllib.request
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 from typing import NotRequired, Self, TypedDict
+lazy import http.client
+lazy import urllib.request
 
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug

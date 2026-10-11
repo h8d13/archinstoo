@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self
-from urllib.request import Request, urlopen
+lazy from urllib.request import Request, urlopen
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
