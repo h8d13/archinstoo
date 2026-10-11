@@ -11,13 +11,13 @@ authors = [
     {name = "Hadean Eon", email = "hadean-eon-dev@proton.me"},
 ]
 license = "GPL-3.0-only"
-requires-python = ">=3.14"
+requires-python = ">=3.14"  # renovate: arch=python
 keywords = ["linux", "arch", "archinstoo", "installer"]
 classifiers = [
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
-    "pyparted>=3.13.0",
+    "pyparted>=3.13.0",  # renovate: arch=python-pyparted
 ]
 
 [project.urls]

@@ -11,14 +11,14 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Track runtime Python deps via Arch Linux repos instead of PyPI",
+      "description": "Floors tracked via Arch Linux repos, annotated inline with `# renovate: arch=<pkg>`",
       "managerFilePatterns": [
         "**/pyproject.toml"
       ],
       "matchStrings": [
-        "\"(?<depName>pyparted)>=(?<currentValue>[^\"]+)\""
+        "\"[^\"]*?>=(?<currentValue>[^\"]+)\",?\\s*#\\s*renovate:\\s*arch=(?<depName>\\S+)"
       ],
-      "depNameTemplate": "arch/python-{{{depName}}}",
+      "depNameTemplate": "arch/{{{depName}}}",
       "datasourceTemplate": "repology",
       "versioningTemplate": "loose",
       "extractVersionTemplate": "^(?<version>.+)-\\d+$"
@@ -39,12 +39,21 @@
       ]
     },
     {
-      "description": "Disable PyPI updates for runtime deps tracked via Arch repos",
+      "description": "Python floor moves with Arch minor releases, not point releases",
+      "matchPackageNames": [
+        "arch/python"
+      ],
+      "extractVersion": "^(?<version>\\d+\\.\\d+)"
+    },
+    {
+      "description": "Disable upstream updates for versions tracked via Arch repos",
       "matchDatasources": [
-        "pypi"
+        "pypi",
+        "python-version"
       ],
       "matchPackageNames": [
-        "pyparted"
+        "pyparted",
+        "python"
       ],
       "enabled": false
     }
