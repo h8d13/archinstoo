@@ -1,6 +1,7 @@
 import contextlib
 import json
 import os
+import pty
 import re
 import shlex
 import stat
@@ -270,8 +271,6 @@ class SysCommandWorker:
 		self.exit_code = 1
 
 	def execute(self) -> bool:
-		import pty
-
 		if (old_dir := str(Path.cwd())) != self.working_directory:
 			os.chdir(str(self.working_directory))
 
