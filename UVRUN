@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
+if mountpoint -q /run/archiso/cowspace; then
+	# on iso probably need more space
+	mount -o remount,size=1G /run/archiso/cowspace
+fi
 
-mount -o remount,size=2G /run/archiso/cowspace
-pacman -Sy --needed uv gcc pkgconf
+pacman -S --needed uv gcc pkgconf
 
 cd archinstoo/installer || exit 1
 uv python install 3.15
 uv venv -p 3.15 .venv315
 uv pip install -p .venv315 -e .
 
-.venv315/bin/python -m archinstoo --debug --advanced
+.venv315/bin/python -m archinstoo "$@"
