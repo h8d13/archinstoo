@@ -128,9 +128,9 @@ disk_depends = (
 # short-circuit all of the ini
 
 
-ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema', 'detect'}
+ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect'})
 # scripts that only touch the running system
-NO_DISK_SCRIPTS = {'packages'}
+NO_DISK_SCRIPTS = frozenset({'packages'})
 
 
 def _log_env_info() -> None:
