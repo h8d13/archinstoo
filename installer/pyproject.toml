@@ -124,7 +124,7 @@ disable = [
     "C",                       # ruff covers style
     "R",                       # ruff covers refactors
     "broad-exception-caught",  # 25 sites, all log-and-continue boundaries
-    "fixme",                   # TODOs are tracked in-code on purpose
+    "fixme",                   # tracked in-code on purpose
     "protected-access",        # SysInfo._bitness & co are package-internal
     "unspecified-encoding",    # PEP 686: utf-8 is the default from 3.15
 ]
@@ -216,11 +216,9 @@ ignore = [
     # `ruff format` under the tab + magic-trailing-comma style set above.
     "COM812",   # missing-trailing-comma
     "W191",     # tab-indentation
-
-    # deliberate architecture
     "PLC0415",  # import-outside-top-level: models/ -> hardware, disk breaks
-                # cycles; the rest defer optional/slow imports (parted, pty, tui)
-    "RUF067",   # non-empty-init-module: __init__ holds the dep tables and main()
+                # cycles; the rest defer optional/slow imports (parted, tui)
+    "RUF067",   # non-empty-init-module: init hacks are on purpose.
 
 ]
 

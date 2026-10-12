@@ -71,12 +71,14 @@ repos:
       pass_filenames: false
       files: ^installer/
       fail_fast: true
-    # system pylint (pacman python-pylint): pyparted is already importable there,
-    # a hook venv would have to compile it (pkgconf gcc parted)
+    # hook venv like the rest; pyparted is not needed, the rcfile
+    # lists parted under ignored-modules
     - id: pylint
       name: pylint
       entry: pylint
-      language: system
+      language: python
+      additional_dependencies:
+        - pylint==4.1.3
       args: ['--rcfile=installer/pyproject.toml', 'installer/archinstoo']
       pass_filenames: false
       files: ^installer/
