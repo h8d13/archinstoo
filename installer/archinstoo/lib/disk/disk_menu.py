@@ -197,14 +197,14 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		disk_layout_conf = item.get_value()
 
 		if disk_layout_conf.config_type == DiskLayoutType.Pre_mount:
-			msg = f'Configuration type: {disk_layout_conf.config_type.display_msg()}' + '\n'
-			msg += 'Mountpoint' + ': ' + str(disk_layout_conf.mountpoint)
+			msg = f'Configuration type: {disk_layout_conf.config_type.display_msg()}\n'
+			msg += f'Mountpoint: {disk_layout_conf.mountpoint}'
 			return msg
 
 		device_mods = [d for d in disk_layout_conf.device_modifications if d.partitions]
 
 		if device_mods:
-			output_partition = '{}: {}\n'.format('Configuration', disk_layout_conf.config_type.display_msg())
+			output_partition = f'Configuration: {disk_layout_conf.config_type.display_msg()}\n'
 			output_btrfs = ''
 
 			for mod in device_mods:
@@ -212,7 +212,7 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 				partition_table = FormattedOutput.as_table(mod.partitions)
 
 				output_partition += f'{mod.device_path}: {mod.device.device_info.model}\n'
-				output_partition += '{}: {}\n'.format('Wipe', mod.wipe)
+				output_partition += f'Wipe: {mod.wipe}\n'
 				output_partition += partition_table + '\n'
 
 				# create btrfs table
@@ -231,16 +231,16 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 
 		lvm_config: LvmConfiguration = item.value
 
-		output = '{}: {}\n'.format('Configuration', lvm_config.config_type.display_msg())
+		output = f'Configuration: {lvm_config.config_type.display_msg()}\n'
 
 		for vol_gp in lvm_config.vol_groups:
 			pv_table = FormattedOutput.as_table(vol_gp.pvs)
-			output += '{}:\n{}'.format('Physical volumes', pv_table)
+			output += f'Physical volumes:\n{pv_table}'
 
 			output += f'\nVolume Group: {vol_gp.name}'
 
 			lvm_volumes = FormattedOutput.as_table(vol_gp.volumes)
-			output += '\n\n{}:\n{}'.format('Volumes', lvm_volumes)
+			output += f'\n\nVolumes:\n{lvm_volumes}'
 
 			return output
 

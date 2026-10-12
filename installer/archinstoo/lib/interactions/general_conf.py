@@ -59,10 +59,10 @@ def select_additional_packages(preset: list[str] | None = None) -> list[str]:
 	repos_text = ', '.join(dict.fromkeys(p.repository for p in packages.values()))
 
 	# Additional packages (with some light weight error handling for invalid package names)
-	header = f'Repositories: {repos_text}' + '\n\n'
-	header += 'Only packages such as base, linux, some firmware, efibootmgr and optional profile packages are installed.' + '\n'
-	header += 'Note: base-devel is no longer installed by default. Add it here if you need build tools + devtools for tooling..' + '\n'
-	header += 'Select any packages from the below list that should be installed additionally' + '\n'  # noqa: S608 - menu prompt, not SQL
+	header = f'Repositories: {repos_text}\n\n'
+	header += 'Only packages such as base, linux, some firmware, efibootmgr and optional profile packages are installed.\n'
+	header += 'Note: base-devel is no longer installed by default. Add it here if you need build tools + devtools for tooling..\n'
+	header += 'Select any packages from the below list that should be installed additionally\n'
 
 	# there are over 15k packages so this needs to be quick
 	preset_packages: list[AvailablePackage | PackageGroup] = []
@@ -161,8 +161,8 @@ def select_aur_packages(preset: list[str] | None = None) -> list[str]:
 	if preset is None:
 		preset = []
 
-	base_header = 'Enter AUR package names separated by commas' + '\n'
-	base_header += 'git and the makepkg toolchain (base-devel minus sudo) will be installed automatically' + '\n'
+	base_header = 'Enter AUR package names separated by commas\n'
+	base_header += 'git and the makepkg toolchain (base-devel minus sudo) will be installed automatically\n'
 
 	error_msg = ''
 	current_text = ', '.join(preset) if preset else ''
@@ -202,7 +202,7 @@ def select_aur_packages(preset: list[str] | None = None) -> list[str]:
 					return names
 
 				current_text = ', '.join(n for n in names if n not in invalid)
-				error_msg = 'Not found in AUR' + ': ' + ', '.join(invalid) + '\n'
+				error_msg = 'Not found in AUR: ' + ', '.join(invalid) + '\n'
 
 
 def select_post_installation(elapsed_time: float | None = None) -> PostInstallationAction:
@@ -210,9 +210,9 @@ def select_post_installation(elapsed_time: float | None = None) -> PostInstallat
 	if elapsed_time is not None:
 		minutes = int(elapsed_time // 60)
 		seconds = int(elapsed_time % 60)
-		header += f' in {minutes}m{seconds}s' + '\n'
-	header += 'What would you like to do next?' + '\n'
-	header += '\nAfter reboot, remove the installation medium' + '\n'
+		header += f' in {minutes}m{seconds}s\n'
+	header += 'What would you like to do next?\n'
+	header += '\nAfter reboot, remove the installation medium\n'
 
 	items = [MenuItem(action.value, value=action) for action in PostInstallationAction]
 	return prompt_choice(items, header=header, allow_skip=False)

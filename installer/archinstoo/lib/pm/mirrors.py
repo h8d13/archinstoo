@@ -87,26 +87,26 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		if name is None:
 			return preset
 
-		header = f'{"Name"}: {name}'
+		header = f'Name: {name}'
 
 		url = prompt_text('Url', header, preset.url if preset else None)
 		if url is None:
 			return preset
 
-		header += f'\n{"Url"}: {url}\n'
-		prompt = f'{header}\n' + 'Select signature check'
+		header += f'\nUrl: {url}\n'
+		prompt = f'{header}\nSelect signature check'
 
 		sign_chk_items = [MenuItem(s.value, value=s) for s in SignCheck]
 		sign_check = prompt_choice(sign_chk_items, preset.sign_check if preset else None, header=prompt, allow_skip=False)
 
-		header += f'{"Signature check"}: {sign_check.value}\n'
-		prompt = f'{header}\n' + 'Select signature option'
+		header += f'Signature check: {sign_check.value}\n'
+		prompt = f'{header}\nSelect signature option'
 
 		sign_opt_items = [MenuItem(s.value, value=s) for s in SignOption]
 		sign_opt = prompt_choice(sign_opt_items, preset.sign_option if preset else None, header=prompt, allow_skip=False)
 
-		header += f'{"Signature option"}: {sign_opt.value}\n'
-		prompt = f'{header}\n' + 'Priority? (placed above [core], overrides official packages of the same name)'
+		header += f'Signature option: {sign_opt.value}\n'
+		prompt = f'{header}\nPriority? (placed above [core], overrides official packages of the same name)'
 
 		# a local cache only pays off if pacman reads it before the network
 		priority_default = preset.priority if preset else url.startswith('file://')
@@ -249,7 +249,7 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 		if item.value:
 			repositories: list[Repository] = item.value
 			repos = ', '.join([repo.value for repo in repositories])
-			return f'{"Additional repositories"}: {repos}'
+			return f'Additional repositories: {repos}'
 		return None
 
 	def _prev_custom_mirror(self, item: MenuItem) -> str | None:
@@ -591,7 +591,7 @@ def set_mirrors(
 ) -> None:
 	# same conf and mirrorlist twice: once on the live system for pacstrap,
 	# once on the target so the installed pacman starts from the same choices
-	info('Setting mirrors on ' + ('target' if on_target else 'live system' + '...'))
+	info('Setting mirrors on ' + ('target' if on_target else 'live system...'))
 
 	mirrorlist_path = installation.target / MIRRORLIST.relative_to_root() if on_target else MIRRORLIST
 

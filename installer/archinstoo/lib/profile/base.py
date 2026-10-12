@@ -255,7 +255,7 @@ class Profile:
 				if sub_profile.packages:
 					packages.update(sub_profile.packages)
 
-		text = 'Installed packages' + ':\n'
+		text = 'Installed packages:\n'
 
 		for pkg in sorted(packages):
 			text += f'\t- {pkg}\n'

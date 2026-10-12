@@ -140,7 +140,7 @@ def suggest_disk_layout(
 	min_size_to_allow_home_part = Size(64, Unit.GiB, sector_size)
 
 	if filesystem_type == FilesystemType.BTRFS:
-		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?' + '\n', preset=True, allow_skip=False)
+		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?\n', preset=True, allow_skip=False)
 		mount_options = select_mount_options()
 	else:
 		using_subvolumes = False
@@ -172,7 +172,7 @@ def suggest_disk_layout(
 	elif separate_home:
 		using_home_partition = True
 	else:
-		using_home_partition = prompt_yes_no('Would you like to create a separate partition for /home?' + '\n', preset=False, allow_skip=False)
+		using_home_partition = prompt_yes_no('Would you like to create a separate partition for /home?\n', preset=False, allow_skip=False)
 
 	# root partition starts after last boot partition
 	last_boot = boot_partitions[-1]
@@ -240,7 +240,7 @@ def suggest_lvm_layout(
 		filesystem_type = select_main_filesystem_format()
 
 	if filesystem_type == FilesystemType.BTRFS:
-		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?' + '\n', preset=True, allow_skip=False)
+		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?\n', preset=True, allow_skip=False)
 		mount_options = select_mount_options()
 
 	if using_subvolumes:

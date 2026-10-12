@@ -38,19 +38,19 @@ class LocaleConfiguration:
 		}
 
 	def preview(self) -> str:
-		output = '{}: {}\n'.format('Keyboard layout', self.kb_layout)
-		output += '{}: {}\n'.format('Locale language', self.sys_lang)
-		output += '{}: {}\n'.format('Locale encoding', self.sys_enc)
-		output += '{}: {}'.format('Console font', self.console_font)
+		output = f'Keyboard layout: {self.kb_layout}\n'
+		output += f'Locale language: {self.sys_lang}\n'
+		output += f'Locale encoding: {self.sys_enc}\n'
+		output += f'Console font: {self.console_font}'
 		if self.xkb_layout:
 			xkb = self.xkb_layout
 			if self.xkb_variant:
 				xkb += f' ({self.xkb_variant})'
-			output += '\n' + '{}: {}'.format('Graphical layout', xkb)
+			output += f'\nGraphical layout: {xkb}'
 			if self.xkb_model:
-				output += '\n' + '{}: {}'.format('Keyboard model', self.xkb_model)
+				output += f'\nKeyboard model: {self.xkb_model}'
 			if self.xkb_options:
-				output += '\n' + '{}: {}'.format('XKB options', self.xkb_options)
+				output += f'\nXKB options: {self.xkb_options}'
 		return output
 
 	def _load_config(self, args: dict[str, str]) -> None:

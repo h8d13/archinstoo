@@ -169,13 +169,13 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 	def _prev_power_management(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: PowerManagementConfiguration = item.value
-			return f'{"Power management"}: {config.power_management.value}'
+			return f'Power management: {config.power_management.value}'
 		return None
 
 	def _prev_cpu_scheduler(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: CPUSchedulerConfiguration = item.value
-			return f'{"CPU scheduler"}: {config.scheduler.value}'
+			return f'CPU scheduler: {config.scheduler.value}'
 		return None
 
 	def _prev_bluetooth(self, item: MenuItem) -> str | None:
@@ -193,7 +193,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 	def _prev_audio(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: AudioConfiguration = item.value
-			return f'{"Audio"}: {config.audio.value}'
+			return f'Audio: {config.audio.value}'
 		return None
 
 	def _prev_print_service(self, item: MenuItem) -> str | None:
@@ -217,26 +217,26 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 	def _prev_firewall(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: FirewallConfiguration = item.value
-			return f'{"Firewall"}: {config.firewall.value}'
+			return f'Firewall: {config.firewall.value}'
 		return None
 
 	def _prev_management(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: ManagementConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
-			return f'{"Management"}: {tools}'
+			return f'Management: {tools}'
 		return None
 
 	def _prev_monitor(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: MonitorConfiguration = item.value
-			return f'{"Monitor"}: {config.monitor.value}'
+			return f'Monitor: {config.monitor.value}'
 		return None
 
 	def _prev_editor(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: EditorConfiguration = item.value
-			return f'{"Editor"}: {config.editor.value}'
+			return f'Editor: {config.editor.value}'
 		return None
 
 	def _prev_terminal(self, item: MenuItem) -> str | None:
@@ -249,7 +249,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		if item.value is not None:
 			config: SecurityConfiguration = item.value
 			tools = ', '.join([t.value for t in config.tools])
-			return f'{"Security"}: {tools}'
+			return f'Security: {tools}'
 		return None
 
 
@@ -275,7 +275,7 @@ def _enabled_text(label: str, enabled: bool) -> str:
 
 
 def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfiguration | None:
-	enabled = prompt_yes_no('Would you like to configure Bluetooth?' + '\n', preset.enabled if preset else False)
+	enabled = prompt_yes_no('Would you like to configure Bluetooth?\n', preset.enabled if preset else False)
 	return preset if enabled is None else BluetoothConfiguration(enabled)
 
 
@@ -290,17 +290,17 @@ def select_thunderbolt(preset: ThunderboltConfiguration | None) -> ThunderboltCo
 
 
 def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServiceConfiguration | None:
-	enabled = prompt_yes_no('Would you like to configure the print service?' + '\n', preset.enabled if preset else False)
+	enabled = prompt_yes_no('Would you like to configure the print service?\n', preset.enabled if preset else False)
 	return preset if enabled is None else PrintServiceConfiguration(enabled)
 
 
 def select_flatpak(preset: FlatpakConfiguration | None) -> FlatpakConfiguration | None:
-	enabled = prompt_yes_no('Install flatpak with the flathub remote and a portal fallback?' + '\n', preset.enabled if preset else False)
+	enabled = prompt_yes_no('Install flatpak with the flathub remote and a portal fallback?\n', preset.enabled if preset else False)
 	return preset if enabled is None else FlatpakConfiguration(enabled)
 
 
 def select_media_codecs(preset: MediaCodecsConfiguration | None) -> MediaCodecsConfiguration | None:
-	enabled = prompt_yes_no('Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?' + '\n', preset.enabled if preset else False)
+	enabled = prompt_yes_no('Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?\n', preset.enabled if preset else False)
 	return preset if enabled is None else MediaCodecsConfiguration(enabled)
 
 
@@ -322,7 +322,7 @@ def select_management(preset: ManagementConfiguration | None = None) -> Manageme
 	items = [MenuItem(m.value, value=m) for m in options]
 	group = MenuItemGroup(items)
 
-	header = 'Would you like to install management tools?' + '\n'
+	header = 'Would you like to install management tools?\n'
 
 	if preset:
 		group.set_selected_by_value(preset.tools)
@@ -352,14 +352,14 @@ def select_monitor(preset: MonitorConfiguration | None = None) -> MonitorConfigu
 
 
 def select_editor(preset: EditorConfiguration | None = None) -> EditorConfiguration | None:
-	header = 'Set an editor globally through /etc/environment?' + '\n'
+	header = 'Set an editor globally through /etc/environment?\n'
 	choice = prompt_choice(MenuItemGroup.from_enum(Editor), preset.editor if preset else None, header=header, frame='Editor', allow_reset=True)
 	return EditorConfiguration(choice) if choice else None
 
 
 def select_terminal(preset: TerminalConfiguration | None = None) -> TerminalConfiguration | None:
-	header = 'Set a terminal globally through /etc/environment?' + '\n'
-	header += 'Window manager profiles bind it too (foot is Wayland only)' + '\n'
+	header = 'Set a terminal globally through /etc/environment?\n'
+	header += 'Window manager profiles bind it too (foot is Wayland only)\n'
 	choice = prompt_choice(MenuItemGroup.from_enum(Terminal), preset.terminal if preset else None, header=header, frame='Terminal', allow_reset=True)
 	return TerminalConfiguration(choice) if choice else None
 
@@ -368,7 +368,7 @@ def select_security(preset: SecurityConfiguration | None = None) -> SecurityConf
 	items = [MenuItem(s.value, value=s) for s in Security]
 	group = MenuItemGroup(items)
 
-	header = 'Would you like to install security tools?' + '\n'
+	header = 'Would you like to install security tools?\n'
 
 	if preset:
 		group.set_selected_by_value(preset.tools)

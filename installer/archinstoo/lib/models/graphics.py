@@ -73,7 +73,7 @@ class GfxDriver(Enum):
 			return 'Packages are picked one by one in the next menu (hybrid GPUs, unlisted mixes)\n'
 
 		pkg_names = [p.value for p in self.gfx_packages(kernels)]
-		text = 'Installed packages' + ':\n'
+		text = 'Installed packages:\n'
 
 		for p in sorted(pkg_names):
 			text += f'\t- {p}\n'

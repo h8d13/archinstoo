@@ -487,7 +487,7 @@ class EditMenu(AbstractCurses[str]):
 		self._hide_input = hide_input
 
 		if self._interrupt_warning is None:
-			self._interrupt_warning = 'Are you sure you want to reset this setting?' + '\n'
+			self._interrupt_warning = 'Are you sure you want to reset this setting?\n'
 
 		title = f'* {title}' if not self._allow_skip else title
 		self._frame = FrameProperties(title, FrameStyle.MAX)
@@ -748,7 +748,7 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 			self._header_entries = self.get_header_entries(header)
 
 		if self._interrupt_warning is None:
-			self._interrupt_warning = 'Are you sure you want to reset this setting?' + '\n'
+			self._interrupt_warning = 'Are you sure you want to reset this setting?\n'
 
 		if self._orientation == Orientation.HORIZONTAL:
 			self._horizontal_cols = columns

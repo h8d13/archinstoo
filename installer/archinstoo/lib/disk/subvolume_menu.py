@@ -42,7 +42,7 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 		if name is None:
 			return preset
 
-		header = f'{"Subvolume name"}: {name}\n'
+		header = f'Subvolume name: {name}\n'
 
 		path = prompt_dir(
 			'Subvolume mountpoint',

@@ -139,8 +139,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return []
 
 	def _select_auto_unlock_root(self, preset: bool) -> bool:
-		prompt = 'Embed a keyfile in initramfs so root is auto-unlocked ?' + '\n'
-		prompt += 'This avoids entering encryption password twice on boot.' + '\n'
+		prompt = 'Embed a keyfile in initramfs so root is auto-unlocked ?\n'
+		prompt += 'This avoids entering encryption password twice on boot.\n'
 
 		choice = prompt_yes_no(prompt, preset)
 		return preset if choice is None else choice
@@ -164,8 +164,8 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return bool(Fido2.get_cryptenroll_devices()) and self._check_dep_enc_type()
 
 	def _select_fido2_device(self, preset: Fido2Device | None) -> Fido2Device | None:
-		header = 'Select a FIDO2 token to enroll as a LUKS keyslot' + '\n'
-		header += 'Passphrase keyslot stays as fallback.' + '\n'
+		header = 'Select a FIDO2 token to enroll as a LUKS keyslot\n'
+		header += 'Passphrase keyslot stays as fallback.\n'
 
 		devices = Fido2.get_cryptenroll_devices(reload=True)
 
@@ -251,13 +251,13 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def _prev_type(self) -> str | None:
 		if enc_type := self._item_group.find_by_key('encryption_type').value:
 			enc_text = enc_type.type_to_text()
-			return f'{"Encryption type"}: {enc_text}'
+			return f'Encryption type: {enc_text}'
 
 		return None
 
 	def _prev_password(self) -> str | None:
 		if enc_pwd := self._item_group.find_by_key('encryption_password').value:
-			return f'{"Encryption password"}: {enc_pwd.hidden()}'
+			return f'Encryption password: {enc_pwd.hidden()}'
 
 		return None
 
@@ -265,7 +265,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		partitions: list[PartitionModification] | None = self._item_group.find_by_key('partitions').value
 
 		if partitions:
-			output = 'Partitions to be encrypted' + '\n'
+			output = 'Partitions to be encrypted\n'
 			output += FormattedOutput.as_table(partitions)
 			return output.rstrip()
 
@@ -275,7 +275,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		volumes: list[PartitionModification] | None = self._item_group.find_by_key('lvm_volumes').value
 
 		if volumes:
-			output = 'LVM volumes to be encrypted' + '\n'
+			output = 'LVM volumes to be encrypted\n'
 			output += FormattedOutput.as_table(volumes)
 			return output.rstrip()
 
@@ -286,7 +286,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if pbkdf and enc_type != EncryptionType.NO_ENCRYPTION:
-			return f'{"Key derivation function"}: {pbkdf.display_name()}'
+			return f'Key derivation function: {pbkdf.display_name()}'
 
 		return None
 
@@ -295,7 +295,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if iter_time and enc_type != EncryptionType.NO_ENCRYPTION:
-			output = f'{"Iteration time"}: {iter_time}ms'
+			output = f'Iteration time: {iter_time}ms'
 			partitions = self._item_group.find_by_key('partitions').value
 			if partitions and any(p.is_boot() for p in partitions):
 				output += f' (/boot: {BOOT_ITER_TIME}ms for GRUB)'
@@ -308,7 +308,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		enc_type = self._item_group.find_by_key('encryption_type').value
 
 		if cipher and enc_type != EncryptionType.NO_ENCRYPTION:
-			return f'{"Encryption cipher"}: {cipher.value}'
+			return f'Encryption cipher: {cipher.value}'
 
 		return None
 
@@ -318,7 +318,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		if enc_type and enc_type != EncryptionType.NO_ENCRYPTION:
 			status = 'Enabled' if auto_unlock else 'Disabled'
-			return f'{"Auto unlock root"}: {status}'
+			return f'Auto unlock root: {status}'
 
 		return None
 
@@ -350,7 +350,7 @@ def select_encryption_type(
 
 
 def select_encrypted_password() -> Password | None:
-	header = 'Enter disk encryption password (leave blank for no encryption)' + '\n'
+	header = 'Enter disk encryption password (leave blank for no encryption)\n'
 	return get_password(
 		text='Disk encryption password',
 		header=header,
@@ -434,9 +434,9 @@ def select_cipher(preset: EncryptionCipher | None = None) -> EncryptionCipher | 
 
 
 def select_iteration_time(preset: int | None = None) -> int | None:
-	header = 'Enter iteration time for LUKS encryption (in milliseconds)' + '\n'
-	header += 'Higher values increase security but slow down boot time' + '\n'
-	header += f'Default: {DEFAULT_ITER_TIME}ms, Recommended range: 1000-60000' + '\n'
+	header = 'Enter iteration time for LUKS encryption (in milliseconds)\n'
+	header += 'Higher values increase security but slow down boot time\n'
+	header += f'Default: {DEFAULT_ITER_TIME}ms, Recommended range: 1000-60000\n'
 
 	def validate_iter_time(value: str | None) -> str | None:
 		if not value:

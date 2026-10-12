@@ -49,7 +49,7 @@ class UserList(ListManager[User]):
 			user = next(filter(lambda x: x == entry, data))
 			user.stash_urls = self._manage_stash_urls(user)
 		elif action == self._actions[2] and entry:  # change password
-			header = f'{"User"}: {entry.username}\n'
+			header = f'User: {entry.username}\n'
 			new_password = get_password('Password', header=header)
 
 			if new_password:
@@ -88,10 +88,8 @@ class UserList(ListManager[User]):
 		items = [MenuItem(url, url) for url in urls]
 		items.append(MenuItem('Add new stash URL', '__add__'))
 
-		if urls:
-			header = f'{"User"}: {user.username}\n{"Select URL to remove, or add new"}\n'
-		else:
-			header = f'{"User"}: {user.username}\n{"No stash URLs configured"}\n'
+		header = f'User: {user.username}\n'
+		header += 'Select URL to remove, or add new\n' if urls else 'No stash URLs configured\n'
 
 		group = MenuItemGroup(items)
 		result = SelectMenu[str](group, header=header, allow_skip=True, alignment=Alignment.CENTER).run()
@@ -112,7 +110,7 @@ class UserList(ListManager[User]):
 		return urls
 
 	def _get_stash_url(self) -> str | None:
-		header = f'{"Format"}: https://provider.com/user/repo#branch\n{"Branch is optional"}\n'
+		header = 'Format: https://provider.com/user/repo#branch\nBranch is optional\n'
 		return prompt_text('Stash URL', header, validator=self._validate_stash_url) or None
 
 	def _add_user(self) -> User | None:
@@ -120,14 +118,14 @@ class UserList(ListManager[User]):
 		if not username:
 			return None
 
-		header = f'{"Username"}: {username}\n'
+		header = f'Username: {username}\n'
 
 		password = get_password('Password', header=header, allow_skip=True)
 
 		if not password:
 			return None
 
-		header += f'{"Password"}: {password.hidden()}\n\n'
+		header += f'Password: {password.hidden()}\n\n'
 		header += f'Should "{username}" be a superuser?\n'
 
 		elev = prompt_yes_no(header, preset=True, allow_skip=False)

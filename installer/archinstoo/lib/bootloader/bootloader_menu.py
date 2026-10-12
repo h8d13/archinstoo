@@ -91,14 +91,14 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _prev_bootloader(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{"Bootloader"}: {item.value.display_name()}'
+			return f'Bootloader: {item.value.display_name()}'
 		return None
 
 	def _prev_uki(self, item: MenuItem) -> str | None:
-		uki_text = f'{"Unified kernel images"}'
+		uki_text = 'Unified kernel images'
 		if item.value:
-			return f'{uki_text}: {"Enabled"}'
-		return f'{uki_text}: {"Disabled"}'
+			return f'{uki_text}: Enabled'
+		return f'{uki_text}: Disabled'
 
 	def _prev_removable(self, item: MenuItem) -> str | None:
 		if item.value:
@@ -107,16 +107,16 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _prev_quiet(self, item: MenuItem) -> str | None:
 		state = 'Enabled' if item.value else 'Disabled'
-		return '{}: {}'.format('Quiet boot', state)
+		return f'Quiet boot: {state}'
 
 	def _prev_splash(self, item: MenuItem) -> str | None:
 		state = 'Enabled' if item.value else 'Disabled'
-		return '{}: {}'.format('Boot splash', state)
+		return f'Boot splash: {state}'
 
 	def _prev_serial_console(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{"Serial console"}: console={item.value}'
-		return '{}: {}'.format('Serial console', 'Disabled')
+			return f'Serial console: console={item.value}'
+		return 'Serial console: Disabled'
 
 	@override
 	def run(
@@ -151,7 +151,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return bootloader
 
 	def _select_quiet(self, preset: bool) -> bool:
-		prompt = 'Add "quiet" to the kernel command line for a quieter boot?' + '\n'
+		prompt = 'Add "quiet" to the kernel command line for a quieter boot?\n'
 
 		choice = prompt_yes_no(prompt, preset)
 		return preset if choice is None else choice
@@ -167,13 +167,13 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return value.strip() or None
 
 	def _select_splash(self, preset: bool) -> bool:
-		prompt = 'Embed the Arch logo splash image into the unified kernel image?' + '\n'
+		prompt = 'Embed the Arch logo splash image into the unified kernel image?\n'
 
 		choice = prompt_yes_no(prompt, preset)
 		return preset if choice is None else choice
 
 	def _select_uki(self, preset: bool) -> bool:
-		prompt = 'Would you like to use unified kernel images?' + '\n'
+		prompt = 'Would you like to use unified kernel images?\n'
 
 		choice = prompt_yes_no(prompt, preset)
 		uki = preset if choice is None else choice

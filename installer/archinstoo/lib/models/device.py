@@ -1380,7 +1380,7 @@ class LvmVolume:
 			'FS type': self.fs_type.value,
 			'Mountpoint': str(self.mountpoint) if self.mountpoint else '',
 			'Mount options': ', '.join(self.mount_options),
-			'Btrfs': '{} {}'.format(str(len(self.btrfs_subvols)), 'vol'),
+			'Btrfs': f'{len(self.btrfs_subvols)} vol',
 		}
 
 	def is_modify(self) -> bool:

@@ -94,7 +94,7 @@ class ProfileHandler:
 				invalid_sub_profiles.append(detail)
 
 		if invalid_sub_profiles:
-			info('No profile definition found: {}'.format(', '.join(invalid_sub_profiles)))
+			info(f'No profile definition found: {", ".join(invalid_sub_profiles)}')
 
 		custom_settings = profile_config.get('custom_settings', {})
 		profile.current_selection = valid_sub_profiles

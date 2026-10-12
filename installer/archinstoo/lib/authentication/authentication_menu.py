@@ -78,7 +78,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 	def _prev_root_pwd(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			password: Password = item.value
-			return f'{"Root password"}: {password.hidden()}'
+			return f'Root password: {password.hidden()}'
 		return None
 
 	def has_elevated_users(self) -> bool:
@@ -89,7 +89,7 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 	def _prev_priv_esc(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			priv_esc: PrivilegeEscalation = item.value
-			return f'{"Privilege escalation"}: {priv_esc.value}'
+			return f'Privilege escalation: {priv_esc.value}'
 		return None
 
 	def _prev_lock_root(self, item: MenuItem) -> str | None:
@@ -109,6 +109,6 @@ def select_privilege_escalation(preset: PrivilegeEscalation | None) -> Privilege
 
 
 def select_lock_root_account(preset: bool) -> bool:
-	header = 'Lock root account? Can be undone using passwd -u root later.\n' + 'Sudo users can still edit /etc/shadow or use sudo directly.\n'
+	header = 'Lock root account? Can be undone using passwd -u root later.\nSudo users can still edit /etc/shadow or use sudo directly.\n'
 	choice = prompt_yes_no(header, preset)
 	return preset if choice is None else choice

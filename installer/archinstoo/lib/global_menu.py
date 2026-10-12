@@ -368,7 +368,7 @@ class GlobalMenu(AbstractMenu[None]):
 			if network_config.type == NicType.MANUAL:
 				output = FormattedOutput.as_table(network_config.nics)
 			else:
-				output = f'{"Network configuration"}:\n{network_config.type.display_msg()}'
+				output = f'Network configuration:\n{network_config.type.display_msg()}'
 
 			if network_config.dns:
 				output += f'\nDNS: {network_config.dns.display_msg()}'
@@ -401,12 +401,12 @@ class GlobalMenu(AbstractMenu[None]):
 			output = ''
 
 			if auth_config.root_enc_password:
-				output += f'{"Root password"}: {auth_config.root_enc_password.hidden()}\n'
+				output += f'Root password: {auth_config.root_enc_password.hidden()}\n'
 
 			if auth_config.users:
 				output += FormattedOutput.as_table(auth_config.users) + '\n'
 				priv_esc = auth_config.privilege_escalation.value if auth_config.privilege_escalation else 'None'
-				output += f'{"Privilege esc"}: {priv_esc}\n'
+				output += f'Privilege esc: {priv_esc}\n'
 
 			return output
 
@@ -434,12 +434,12 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_tz(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{"Timezone"}: {item.value}'
+			return f'Timezone: {item.value}'
 		return None
 
 	def _prev_ntp(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			output = f'{"NTP"}: '
+			output = 'NTP: '
 			output += 'Enabled' if item.value else 'Disabled'
 			return output
 		return None
@@ -458,7 +458,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_custom_commands(self, item: MenuItem) -> str | None:
 		commands: list[str] = item.value or []
 		if commands:
-			output = f'{"Commands"}: {len(commands)}\n'
+			output = f'Commands: {len(commands)}\n'
 			for i, cmd in enumerate(commands[:5]):
 				display = cmd[:50] + '...' if len(cmd) > 50 else cmd
 				output += f'  {i + 1}. {display}\n'
@@ -485,21 +485,21 @@ class GlobalMenu(AbstractMenu[None]):
 		disk_layout_conf: DiskLayoutConfiguration | None = item.value
 
 		if disk_layout_conf:
-			output = f'Configuration type: {disk_layout_conf.config_type.display_msg()}' + '\n'
+			output = f'Configuration type: {disk_layout_conf.config_type.display_msg()}\n'
 
 			if disk_layout_conf.config_type == DiskLayoutType.Pre_mount:
-				output += 'Mountpoint' + ': ' + str(disk_layout_conf.mountpoint)
+				output += f'Mountpoint: {disk_layout_conf.mountpoint}'
 
 			if disk_layout_conf.lvm_config:
-				output += '{}: {}'.format('LVM configuration type', disk_layout_conf.lvm_config.config_type.display_msg()) + '\n'
+				output += f'LVM configuration type: {disk_layout_conf.lvm_config.config_type.display_msg()}\n'
 
 			if disk_layout_conf.disk_encryption:
-				output += 'Disk encryption' + ': ' + disk_layout_conf.disk_encryption.encryption_type.type_to_text() + '\n'
+				output += f'Disk encryption: {disk_layout_conf.disk_encryption.encryption_type.type_to_text()}\n'
 
 			if disk_layout_conf.btrfs_options:
 				btrfs_options = disk_layout_conf.btrfs_options
 				if btrfs_options.snapshot_config:
-					output += f'Btrfs snapshot type: {btrfs_options.snapshot_config.snapshot_type.display_name()}' + '\n'
+					output += f'Btrfs snapshot type: {btrfs_options.snapshot_config.snapshot_type.display_name()}\n'
 
 			return output
 
@@ -509,9 +509,9 @@ class GlobalMenu(AbstractMenu[None]):
 		if item.value is not None:
 			output = f'Swap on zram: {"Enabled" if item.value.zram else "Disabled"}'
 			if item.value.zram:
-				output += f'\n{"Compression algorithm"}: {item.value.algorithm.value}'
+				output += f'\nCompression algorithm: {item.value.algorithm.value}'
 				if item.value.recomp_algorithm:
-					output += f'\n{"Recompression algorithm"}: {item.value.recomp_algorithm.value}'
+					output += f'\nRecompression algorithm: {item.value.recomp_algorithm.value}'
 			output += f'\nHibernation: {"Enabled" if item.value.hibernation else "Disabled"}'
 			if item.value.hibernation:
 				size = f'{item.value.size_gib}GiB' if item.value.size_gib else 'RAM size'
@@ -521,7 +521,7 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_hostname(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			return f'{"Hostname"}: {item.value}'
+			return f'Hostname: {item.value}'
 		return None
 
 	def _select_kernel(self, preset: list[str]) -> list[str]:
@@ -530,9 +530,9 @@ class GlobalMenu(AbstractMenu[None]):
 
 		# Ask about kernel headers
 		current_headers = self._arch_config.kernel_headers
-		header_text = 'Install kernel headers?' + '\n\n'
-		header_text += 'Useful for building out-of-tree drivers or DKMS modules,' + '\n'
-		header_text += 'especially for non-standard kernel variants.' + '\n'
+		header_text = 'Install kernel headers?\n\n'
+		header_text += 'Useful for building out-of-tree drivers or DKMS modules,\n'
+		header_text += 'especially for non-standard kernel variants.\n'
 
 		if (headers := prompt_yes_no(header_text, current_headers)) is not None:
 			self._arch_config.kernel_headers = headers
@@ -542,9 +542,9 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_kernel(self, item: MenuItem) -> str | None:
 		if item.value:
 			kernel = ', '.join(item.value)
-			output = f'{"Kernels"}: {kernel}\n'
+			output = f'Kernels: {kernel}\n'
 			status = 'Enabled' if self._arch_config.kernel_headers else 'Disabled'
-			output += f'{"Headers"}: {status}'
+			output += f'Headers: {status}'
 			return output
 		return None
 
@@ -552,7 +552,7 @@ class GlobalMenu(AbstractMenu[None]):
 		config: FirmwareConfiguration | None = item.value
 		if not config:
 			return None
-		output = f'{"Firmware"}: {config.firmware_type.value}'
+		output = f'Firmware: {config.firmware_type.value}'
 		if config.vendors:
 			output += '\n' + ', '.join(v.value for v in config.vendors)
 		return output
@@ -589,7 +589,7 @@ class GlobalMenu(AbstractMenu[None]):
 		profile_config: ProfileConfiguration | None = item.value
 
 		if profile_config and profile_config.profiles:
-			output = 'Profiles' + ': '
+			output = 'Profiles: '
 			profile_names = [p.name for p in profile_config.profiles]
 			output += ', '.join(profile_names) + '\n'
 
@@ -599,7 +599,7 @@ class GlobalMenu(AbstractMenu[None]):
 					output += f'  {profile.name}: ' + ', '.join(sub_names) + '\n'
 
 			if profile_config.greeter:
-				output += 'Greeter' + ': ' + profile_config.greeter.value + '\n'
+				output += f'Greeter: {profile_config.greeter.value}\n'
 
 			return output
 
@@ -654,13 +654,13 @@ class GlobalMenu(AbstractMenu[None]):
 		if not driver:
 			return None
 		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
-		return f'{"Graphics driver"}: {driver.display_name()}\n{driver.packages_text(kernels)}'
+		return f'Graphics driver: {driver.display_name()}\n{driver.packages_text(kernels)}'
 
 	def _prev_gfx_packages(self, item: MenuItem) -> str | None:
 		packages: list[GfxPackage] = item.value or []
 		if not packages:
 			return 'No packages picked'
-		return 'Graphics packages' + ':\n' + ''.join(f'\t- {name}\n' for name in sorted(p.value for p in packages))
+		return 'Graphics packages:\n' + ''.join(f'\t- {name}\n' for name in sorted(p.value for p in packages))
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:
 		# repos come from the live pacman.conf, which _pacman_configuration has

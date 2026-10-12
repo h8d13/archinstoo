@@ -78,6 +78,6 @@ class PackageGroup:
 		return pkg_groups
 
 	def info(self) -> str:
-		output = 'Package group:' + '\n  - '
+		output = 'Package group:\n  - '
 		output += '\n  - '.join(self.packages)
 		return output

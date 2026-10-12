@@ -117,7 +117,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 
 			result = SelectMenu[str](
 				group,
-				header='Toggle packages to install' + '\n',
+				header='Toggle packages to install\n',
 				allow_skip=True,
 				alignment=Alignment.CENTER,
 				frame=FrameProperties.min(profile.name),
@@ -137,11 +137,11 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		)
 		if not excluded:
 			return 'No packages excluded'
-		return 'Excluded packages' + ':\n' + '\n'.join(f'\t- {pkg}' for pkg in excluded)
+		return 'Excluded packages:\n' + '\n'.join(f'\t- {pkg}' for pkg in excluded)
 
 	def _prev_greeter(self, item: MenuItem) -> str | None:
 		if item.value:
-			return f'{"Greeter"}: {item.value.value}'
+			return f'Greeter: {item.value.value}'
 		return None
 
 	def _preview_profiles(self, item: MenuItem) -> str | None:
@@ -167,7 +167,7 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 						all_packages.update(sub.packages)
 
 			if all_packages:
-				text += 'Installed packages' + ':\n'
+				text += 'Installed packages:\n'
 				for pkg in sorted(all_packages):
 					text += f'\t- {pkg}\n'
 
@@ -209,7 +209,7 @@ def select_profiles(
 	top_level_profiles = handler.get_top_level_profiles()
 
 	if header is None:
-		header = 'Select one or more profiles (Desktop + Server supported)' + '\n'
+		header = 'Select one or more profiles (Desktop + Server supported)\n'
 
 	items = [MenuItem(p.name, value=p) for p in top_level_profiles]
 	group = MenuItemGroup(items, sort_items=True)

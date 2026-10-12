@@ -126,7 +126,7 @@ class AbstractSubMenu[ValueT](AbstractMenu[ValueT]):
 		auto_cursor: bool = True,
 		allow_reset: bool = False,
 	) -> None:
-		back_text = f'{Chars.Right_arrow} ' + 'Back'
+		back_text = f'{Chars.Right_arrow} Back'
 		item_group.add_item(MenuItem(text=back_text))
 
 		super().__init__(

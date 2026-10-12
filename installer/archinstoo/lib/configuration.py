@@ -46,8 +46,8 @@ class ConfigStore:
 		debug(self.user_config_to_json())
 
 	def confirm_config(self) -> bool:
-		header = f'{"The specified configuration will be applied"}. '
-		header += 'Would you like to continue?' + '\n'
+		header = 'The specified configuration will be applied. '
+		header += 'Would you like to continue?\n'
 
 		with Tui():
 			group = MenuItemGroup.yes_no()
@@ -127,7 +127,7 @@ class ConfigStore:
 				MenuItem(text='resume from saved', value='resume'),
 				MenuItem(text='start fresh', value='fresh'),
 			]
-			choice: str = prompt_choice(items, header='Saved configuration found:' + '\n', allow_skip=False)
+			choice: str = prompt_choice(items, header='Saved configuration found:\n', allow_skip=False)
 
 			if choice == 'resume':
 				return cls.load_saved_config()

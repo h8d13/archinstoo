@@ -60,7 +60,7 @@ def select_kernel(preset: list[str] | None = None) -> list[str]:
 def _prompt_kernel_names() -> list[str]:
 	# re-asks until the repos carry every name, as the AUR menu does; the
 	# names that resolved are kept in the field. A skip types nothing
-	base_header = 'Kernel package names, space separated (e.g. linux-rpi5)' + '\n'
+	base_header = 'Kernel package names, space separated (e.g. linux-rpi5)\n'
 	header, text = base_header, None
 
 	while (text := prompt_text('Custom kernels', header, text, kernel_names_error)) is not None:
@@ -79,7 +79,7 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 	if preset is None:
 		preset = SwapConfiguration()
 
-	zram = prompt_yes_no('Would you like to use swap on zram?' + '\n', preset.zram, default=True)
+	zram = prompt_yes_no('Would you like to use swap on zram?\n', preset.zram, default=True)
 	if zram is None:
 		return preset
 
@@ -88,7 +88,7 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 	if zram:
 		algo_group = MenuItemGroup.from_enum(ZramAlgorithm)
 		algo = (
-			prompt_choice(algo_group, preset.algorithm, header='Select zram compression algorithm:' + '\n', default=ZramAlgorithm.Default)
+			prompt_choice(algo_group, preset.algorithm, header='Select zram compression algorithm:\n', default=ZramAlgorithm.Default)
 			or preset.algorithm
 		)
 
@@ -96,7 +96,7 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 		if algo != ZramAlgorithm.Default:
 			recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
 
-	hib_prompt = 'Enable hibernation? Creates a disk swap file sized to RAM.' + '\n'
+	hib_prompt = 'Enable hibernation? Creates a disk swap file sized to RAM.\n'
 	hibernation = prompt_yes_no(hib_prompt, preset.hibernation, default=False)
 	if hibernation is None:
 		hibernation = preset.hibernation
@@ -115,7 +115,7 @@ def select_sysctl(preset: SysctlConfiguration | None = None) -> SysctlConfigurat
 		preset = SysctlConfiguration()
 
 	try:
-		opt_prompt = 'Apply optimized defaults? Network, security and performance tunables.' + '\n'
+		opt_prompt = 'Apply optimized defaults? Network, security and performance tunables.\n'
 		optimized = prompt_yes_no(opt_prompt, preset.optimized, default=False)
 		if optimized is None:
 			optimized = preset.optimized
@@ -140,9 +140,9 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 	default = FirmwareConfiguration.default()
 	preset = preset or default
 
-	header = 'Full installs the linux-firmware meta package, plus picked optional firmware.' + '\n'
-	header += 'Minimal skips firmware entirely (safe for most VMs using virtio).' + '\n'
-	header += 'Vendor lets you pick only the firmware subpackages you need.' + '\n'
+	header = 'Full installs the linux-firmware meta package, plus picked optional firmware.\n'
+	header += 'Minimal skips firmware entirely (safe for most VMs using virtio).\n'
+	header += 'Vendor lets you pick only the firmware subpackages you need.\n'
 
 	type_items = [MenuItem(t.value, value=t) for t in FirmwareType]
 	type_group = MenuItemGroup(type_items, sort_items=False)
@@ -209,7 +209,7 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 
 
 def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | None:
-	prompt = 'Select idle recompression algorithm (skip for none):' + '\n'
+	prompt = 'Select idle recompression algorithm (skip for none):\n'
 
 	# Exclude Default since recompression needs a specific algorithm
 	recomp_items = [MenuItem(algo.value, value=algo) for algo in ZramAlgorithm if algo != ZramAlgorithm.Default]

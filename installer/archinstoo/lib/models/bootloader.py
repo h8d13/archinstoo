@@ -118,7 +118,7 @@ class BootloaderConfiguration:
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	def preview(self, uefi: bool) -> str:
-		text = f'{"Bootloader"}: {self.bootloader.display_name() if self.bootloader else "None"}'
+		text = f'Bootloader: {self.bootloader.display_name() if self.bootloader else "None"}'
 		text += '\n'
 		if self.bootloader is None:
 			return text
@@ -132,8 +132,8 @@ class BootloaderConfiguration:
 				text += '\n'
 		if uefi and self.bootloader.has_removable_support():
 			removable_string = 'Enabled' if self.removable else 'Disabled'
-			text += f'{"Removable"}: {removable_string}'
+			text += f'Removable: {removable_string}'
 			text += '\n'
-		text += '{}: {}\n'.format('Quiet boot', 'Enabled' if self.quiet else 'Disabled')
-		text += '{}: {}\n'.format('Serial console', self.serial_console or 'Disabled')
+		text += f'Quiet boot: {"Enabled" if self.quiet else "Disabled"}\n'
+		text += f'Serial console: {self.serial_console or "Disabled"}\n'
 		return text

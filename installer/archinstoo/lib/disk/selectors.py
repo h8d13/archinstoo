@@ -105,7 +105,7 @@ def select_main_filesystem_format(allow_lvm: bool = False) -> FilesystemType:
 
 
 def select_mount_options() -> list[str]:
-	prompt = 'Would you like to use compression or disable CoW?' + '\n'
+	prompt = 'Would you like to use compression or disable CoW?\n'
 	compression = 'Use compression'
 	disable_cow = 'Disable Copy-on-Write'
 

@@ -93,20 +93,20 @@ class ManualNetworkConfig(ListManager[Nic]):
 		modes = ['DHCP (auto detect)', 'IP (static)']
 		default_mode = 'DHCP (auto detect)'
 
-		header = f'Select which mode to configure for "{iface_name}"' + '\n'
+		header = f'Select which mode to configure for "{iface_name}"\n'
 		items = [MenuItem(m, value=m) for m in modes]
 		mode = prompt_choice(items, header=header, frame='Modes', default=default_mode, sort_items=True, allow_skip=False)
 
 		if mode == 'IP (static)':
-			header = f'Enter the IP and subnet for {iface_name} (example: 192.168.0.5/24): ' + '\n'
+			header = f'Enter the IP and subnet for {iface_name} (example: 192.168.0.5/24): \n'
 			ip = self._get_ip_address('IP address', header, False, False)
 
-			header = 'Enter your gateway (router) IP address (leave blank for none)' + '\n'
+			header = 'Enter your gateway (router) IP address (leave blank for none)\n'
 			gateway = self._get_ip_address('Gateway address', header, True, False)
 
 			display_dns = ' '.join(edit_nic.dns) if edit_nic.dns else None
 
-			header = 'Enter your DNS servers with space separated (leave blank for none)' + '\n'
+			header = 'Enter your DNS servers with space separated (leave blank for none)\n'
 			dns_servers = self._get_ip_address(
 				'DNS servers',
 				header,
@@ -156,7 +156,7 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 
 	result = SelectMenu[DnsProvider | None](
 		group,
-		header='DNS resolver for the whole system' + '\n',
+		header='DNS resolver for the whole system\n',
 		alignment=Alignment.CENTER,
 		frame=FrameProperties.min('DNS'),
 		allow_skip=True,
@@ -173,18 +173,18 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	custom = preset if preset and preset.provider is DnsProvider.CUSTOM else None
 	servers: list[str] = []
 	if provider is DnsProvider.CUSTOM:
-		text = prompt_text('DNS servers', 'Server addresses, space separated' + '\n', ' '.join(custom.servers) if custom else None, _valid_addresses)
+		text = prompt_text('DNS servers', 'Server addresses, space separated\n', ' '.join(custom.servers) if custom else None, _valid_addresses)
 		if text is None:
 			return preset
 		servers = text.split()
 
-	over_tls = prompt_yes_no('Encrypt lookups with DNS over TLS?' + '\n', preset.over_tls if preset else True)
+	over_tls = prompt_yes_no('Encrypt lookups with DNS over TLS?\n', preset.over_tls if preset else True)
 	if over_tls is None:
 		over_tls = True
 
 	tls_name = ''
 	if provider is DnsProvider.CUSTOM and over_tls:
-		name = prompt_text('Certificate name', 'Hostname the servers present over TLS' + '\n', custom.tls_name if custom else None, _valid_hostname)
+		name = prompt_text('Certificate name', 'Hostname the servers present over TLS\n', custom.tls_name if custom else None, _valid_hostname)
 		if name is None:
 			return preset
 		tls_name = name.lower()
@@ -194,7 +194,7 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 
 def _select_mac_address(preset: MacAddressPolicy) -> MacAddressPolicy:
 	items = [MenuItem(m.display_msg(), value=m) for m in MacAddressPolicy]
-	return prompt_choice(items, preset, header='MAC address randomization' + '\n', frame='MAC address') or preset
+	return prompt_choice(items, preset, header='MAC address randomization\n', frame='MAC address') or preset
 
 
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:

@@ -6,7 +6,7 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 def select_seat_access(name: str, default: str | list[str] | None) -> str:
 	header = f'{name} needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
-	header += '\n' + f'Choose an option to give {name} access to your hardware' + '\n'
+	header += '\n' + f'Choose an option to give {name} access to your hardware\n'
 
 	items = [MenuItem(s.label, value=s) for s in SeatAccess]
 	group = MenuItemGroup(items, sort_items=True)
@@ -28,7 +28,7 @@ def select_seat_access(name: str, default: str | list[str] | None) -> str:
 
 
 def select_compositor(name: str, options: list[str], default: str) -> str:
-	header = f'{name} runs on top of a Wayland compositor' + '\n'
+	header = f'{name} runs on top of a Wayland compositor\n'
 
 	items = [MenuItem(c, value=c) for c in options]
 	group = MenuItemGroup(items, sort_items=True)

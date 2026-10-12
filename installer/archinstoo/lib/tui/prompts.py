@@ -131,7 +131,7 @@ def prompt_text(
 
 
 def confirm_abort() -> None:
-	if prompt_yes_no('Do you really want to abort?' + '\n', allow_skip=False):
+	if prompt_yes_no('Do you really want to abort?\n', allow_skip=False):
 		raise SystemExit(0)
 
 

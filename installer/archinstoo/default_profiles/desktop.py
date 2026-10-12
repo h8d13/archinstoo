@@ -34,19 +34,16 @@ class DesktopProfile(Profile):
 	@property
 	@override
 	def default_greeter_type(self) -> GreeterType | None:
-		combined_greeters: dict[GreeterType, int] = {}
-		for profile in sorted(self.current_selection, key=lambda p: p.custom_settings.get('seat_access') != 'seatd'):
-			if profile.default_greeter_type:
-				combined_greeters.setdefault(profile.default_greeter_type, 0)
-				combined_greeters[profile.default_greeter_type] += 1
+		# seatd profiles sort first, so their greeter wins a clash
+		ordered = sorted(self.current_selection, key=lambda p: p.custom_settings.get('seat_access') != 'seatd')
+		greeters = list(dict.fromkeys(p.default_greeter_type for p in ordered if p.default_greeter_type))
 
-		if len(combined_greeters) >= 1:
-			chosen = next(iter(combined_greeters))
-			if len(combined_greeters) > 1:
-				debug(f'Multiple default greeters {[g.value for g in combined_greeters]}, using {chosen.value}')
-			return chosen
+		if not greeters:
+			return None
 
-		return None
+		if len(greeters) > 1:
+			debug(f'Multiple default greeters {[g.value for g in greeters]}, using {greeters[0].value}')
+		return greeters[0]
 
 	def _do_on_select_profiles(self) -> None:
 		for profile in self.current_selection:
