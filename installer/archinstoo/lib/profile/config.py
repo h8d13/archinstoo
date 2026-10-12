@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Self, TypedDict
+from typing import TYPE_CHECKING, NotRequired, Self, TypedDict
 
 from archinstoo.lib.output import warn
 from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class _ProfileConfigurationSerialization(TypedDict):
 	profiles: list[ProfileSerialization]
-	greeter: str | None
+	greeter: NotRequired[str | None]
 
 
 @dataclass

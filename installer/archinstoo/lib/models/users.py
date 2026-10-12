@@ -110,7 +110,7 @@ class PasswordStrength(Enum):
 class UserSerialization(TypedDict):
 	username: str
 	elev: bool
-	groups: list[str]
+	groups: NotRequired[list[str]]
 	enc_password: NotRequired[str | None]
 	stash_urls: NotRequired[list[str]]
 	shell: NotRequired[str]

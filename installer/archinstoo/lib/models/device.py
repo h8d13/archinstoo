@@ -992,12 +992,12 @@ class _PartitionModificationSerialization(TypedDict):
 	type: str
 	start: _SizeSerialization
 	size: _SizeSerialization
-	fs_type: str | None
-	mountpoint: str | None
+	fs_type: NotRequired[str | None]
+	mountpoint: NotRequired[str | None]
 	mount_options: list[str]
 	flags: list[str]
 	btrfs: list[_SubvolumeModificationSerialization]
-	dev_path: str | None
+	dev_path: NotRequired[str | None]
 
 
 def has_separate_boot(
@@ -1279,7 +1279,7 @@ class _LvmVolumeSerialization(TypedDict):
 	name: str
 	fs_type: str
 	length: _SizeSerialization
-	mountpoint: str | None
+	mountpoint: NotRequired[str | None]
 	mount_options: list[str]
 	btrfs: list[_SubvolumeModificationSerialization]
 
@@ -1475,7 +1475,7 @@ class LvmConfiguration:
 
 
 class _BtrfsOptionsSerialization(TypedDict):
-	snapshot_config: _SnapshotConfigSerialization | None
+	snapshot_config: NotRequired[_SnapshotConfigSerialization | None]
 
 
 class _SnapshotConfigSerialization(TypedDict):
