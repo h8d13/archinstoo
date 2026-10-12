@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from typing import Self, TypedDict
+from typing import NotRequired, Self, TypedDict
 
 
 class UserServiceSerialization(TypedDict):
 	unit: str
 	user: str
-	linger: bool
+	linger: NotRequired[bool]
 
 
 @dataclass(frozen=True)
@@ -22,9 +22,9 @@ class UserService:
 		}
 
 	@classmethod
-	def parse_arg(cls, arg: dict[str, object]) -> Self:
+	def parse_arg(cls, arg: UserServiceSerialization) -> Self:
 		return cls(
-			unit=str(arg['unit']),
-			user=str(arg['user']),
-			linger=bool(arg.get('linger', False)),
+			unit=arg['unit'],
+			user=arg['user'],
+			linger=arg.get('linger', False),
 		)

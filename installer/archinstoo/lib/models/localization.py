@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import Self
 
 from archinstoo.lib.localization.catalog import get_kb_layout
 
@@ -72,12 +72,7 @@ class LocaleConfiguration:
 			self.xkb_options = args['xkb_options']
 
 	@classmethod
-	def parse_arg(cls, args: dict[str, Any]) -> Self:
+	def parse_arg(cls, args: dict[str, str]) -> Self:
 		default = cls.default()
-
-		if 'locale_config' in args:
-			default._load_config(args['locale_config'])
-		else:
-			default._load_config(args)
-
+		default._load_config(args)
 		return default

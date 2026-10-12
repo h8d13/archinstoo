@@ -230,7 +230,6 @@
             {
                 "username": "myuser",
                 "elev": true,
-                "groups": null,
                 "shell": "bash"
             }
         ]

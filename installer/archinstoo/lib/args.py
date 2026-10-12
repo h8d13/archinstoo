@@ -149,7 +149,7 @@ class ArchConfig:
 
 		# Parse services: strings stay as-is, dicts become UserService
 		if raw_services := args_config.get('services'):
-			arch_config.services = [UserService.parse_arg(s) if isinstance(s, dict) else s for s in raw_services]
+			arch_config.services = [s if isinstance(s, str) else UserService.parse_arg(s) for s in raw_services]
 
 		_set_parsed(
 			arch_config,
@@ -165,7 +165,7 @@ class ArchConfig:
 		)
 
 		# Special cases that don't fit the pattern
-		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config)
+		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config.get('locale_config', {}))
 
 		if bootloader := args_config.get('bootloader_config'):
 			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader)
