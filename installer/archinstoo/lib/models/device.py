@@ -226,9 +226,8 @@ class DiskLayoutConfiguration:
 					type=PartitionType(partition['type']),
 					flags=flags,
 					btrfs_subvols=SubvolumeModification.parse_args(partition.get('btrfs', [])),
+					obj_id=str(partition['obj_id']),
 				)
-				# special 'invisible' attr to internally identify the part mod
-				device_partition._obj_id = str(partition['obj_id'])
 				device_partitions.append(device_partition)
 
 			device_modification.partitions = device_partitions
@@ -550,7 +549,7 @@ class Size:
 		return self >= Size(1, Unit.MiB, self.sector_size)
 
 	def align(self) -> Size:
-		align_norm = Size(1, Unit.MiB, self.sector_size)._normalize()
+		align_norm = Unit.MiB.value
 		src_norm = self._normalize()
 		return self - Size(abs(src_norm % align_norm), Unit.B, self.sector_size)
 
@@ -1007,7 +1006,7 @@ def has_separate_boot(
 	# BootloaderInstaller falls back to boot_partition = efi_partition when nothing
 	# is mounted at /boot, so both names can be one object. Both getters walk
 	# the same partition list, so identity is the whole question, and `!=`
-	# answered it only by accident: _obj_id is a per-instance uuid4 sitting in
+	# answered it only by accident: obj_id is a per-instance uuid4 sitting in
 	# the dataclass __eq__. Comparing dev_path instead reads tidier but is
 	# wrong before partitioning, where every dev_path is still None.
 	return efi_partition is not None and boot_partition is not efi_partition
@@ -1061,7 +1060,7 @@ class PartitionModification:
 	# per-instance identity for __hash__ and dict keys. str, not UUID: config
 	# restores this from json as a string, and __hash__ reads it raw, so
 	# mixing the two hashes one identity into two buckets
-	_obj_id: str = field(init=False, default_factory=lambda: str(uuid.uuid4()))
+	obj_id: str = field(kw_only=True, default_factory=lambda: str(uuid.uuid4()))
 
 	def __post_init__(self) -> None:
 		if self.is_exists_or_modify() and not self.dev_path:
@@ -1072,15 +1071,11 @@ class PartitionModification:
 
 	@override
 	def __hash__(self) -> int:
-		return hash(self._obj_id)
+		return hash(self.obj_id)
 
 	@property
 	def end(self) -> Size:
 		return self.start + self.length
-
-	@property
-	def obj_id(self) -> str:
-		return self._obj_id
 
 	@property
 	def safe_dev_path(self) -> Path:
@@ -1300,15 +1295,11 @@ class LvmVolume:
 	dev_path: Path | None = None
 
 	# per-instance identity for __hash__ and dict keys, see PartitionModification
-	_obj_id: str = field(init=False, default_factory=lambda: str(uuid.uuid4()))
+	obj_id: str = field(kw_only=True, default_factory=lambda: str(uuid.uuid4()))
 
 	@override
 	def __hash__(self) -> int:
-		return hash(self._obj_id)
-
-	@property
-	def obj_id(self) -> str:
-		return self._obj_id
+		return hash(self.obj_id)
 
 	@property
 	def mapper_name(self) -> str | None:
@@ -1346,7 +1337,7 @@ class LvmVolume:
 
 	@classmethod
 	def parse_arg(cls, arg: _LvmVolumeSerialization) -> Self:
-		volume = cls(
+		return cls(
 			status=ModificationStatus(arg['status']),
 			name=arg['name'],
 			fs_type=FilesystemType(arg['fs_type']),
@@ -1354,11 +1345,8 @@ class LvmVolume:
 			mountpoint=Path(mountpoint) if (mountpoint := arg.get('mountpoint')) else None,
 			mount_options=arg.get('mount_options', []),
 			btrfs_subvols=SubvolumeModification.parse_args(arg.get('btrfs', [])),
+			obj_id=str(arg['obj_id']),
 		)
-
-		volume._obj_id = str(arg['obj_id'])
-
-		return volume
 
 	def json(self) -> _LvmVolumeSerialization:
 		return {

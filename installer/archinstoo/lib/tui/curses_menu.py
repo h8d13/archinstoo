@@ -1319,7 +1319,7 @@ class Tui:
 	_abort_handler: ClassVar[Callable[[], None] | None] = None
 	_abort_active: ClassVar[bool] = False
 
-	# instance attrs assigned by init()/_main_loop(); curses setup is deferred past construction
+	# instance attrs assigned by init()/main_loop(); curses setup is deferred past construction
 	_screen: curses.window
 	_prev_sigwinch: Callable[[int, FrameType | None], object] | int | None
 	_component: AbstractCurses[Any]
@@ -1385,7 +1385,7 @@ class Tui:
 
 		if curses.has_colors():
 			curses.start_color()
-			self._set_up_colors()
+			self.set_up_colors()
 			self._screen.clear()
 
 		self._prev_sigwinch = signal.signal(signal.SIGWINCH, self._sig_win_resize)
@@ -1449,12 +1449,12 @@ class Tui:
 		if Tui._t is None:
 			tui = Tui().init()
 			tui.screen.clear()
-			results = tui._main_loop(component)
+			results = tui.main_loop(component)
 			Tui().stop()
 			return results
 		tui = Tui._t
 		tui.screen.clear()
-		return Tui.t()._main_loop(component)
+		return Tui.t().main_loop(component)
 
 	def _sig_win_resize(self, _signum: int, _frame: FrameType | None) -> None:
 		if Tui._t is None:
@@ -1470,7 +1470,7 @@ class Tui:
 		except curses.error:
 			pass
 
-	def _main_loop[ValueT](self, component: AbstractCurses[ValueT]) -> Result[ValueT]:
+	def main_loop[ValueT](self, component: AbstractCurses[ValueT]) -> Result[ValueT]:
 		self._component = component
 		self._screen.refresh()
 		result = component.kickoff(self._screen)
@@ -1500,11 +1500,11 @@ class Tui:
 		# is nothing to repaint, init builds the palette from them itself
 		if cls._t is None:
 			return
-		cls._t._set_up_colors()
+		cls._t.set_up_colors()
 		cls._t.screen.clear()
 		cls._t.screen.refresh()
 
-	def _set_up_colors(self) -> None:
+	def set_up_colors(self) -> None:
 		theme = _build_theme(Tui._mode, Tui._accent)
 		# Get background color from NORMAL style
 		_, bg_color = theme.get(STYLE.NORMAL, (curses.COLOR_WHITE, curses.COLOR_BLACK))

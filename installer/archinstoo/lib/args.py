@@ -179,7 +179,7 @@ class ArchConfig:
 		if gfx_driver := args_config.get('gfx_driver'):
 			arch_config.gfx_driver = GfxDriver(gfx_driver)
 		# unknown names are dropped, the same way kernels are parsed
-		arch_config.gfx_packages = [GfxPackage(p) for p in args_config.get('gfx_packages') or [] if p in GfxPackage._value2member_map_]
+		arch_config.gfx_packages = [GfxPackage(p) for p in args_config.get('gfx_packages') or [] if p in GfxPackage]
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 		if firmware := args_config.get('firmware'):

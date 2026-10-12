@@ -81,14 +81,14 @@ def test_has_separate_boot_without_esp() -> None:
 
 
 def test_obj_id_hash_survives_a_config_round_trip() -> None:
-	# __hash__ reads _obj_id raw. __post_init__ used to mint a UUID while
+	# __hash__ reads obj_id raw. __post_init__ used to mint a UUID while
 	# parse_arg restored the same identity from json as a str, so one
 	# partition hashed into two buckets depending on where it came from.
 	part = _part(*ESP_EFI)
 	restored = _part(*ESP_EFI)
-	restored._obj_id = part.obj_id  # what DiskLayoutConfiguration.parse_arg does
+	restored.obj_id = part.obj_id  # what DiskLayoutConfiguration.parse_arg does
 
-	assert isinstance(part._obj_id, str)
+	assert isinstance(part.obj_id, str)
 	assert part.obj_id == restored.obj_id
 	assert hash(part) == hash(restored)
 	assert {part: 'luks'}[restored] == 'luks'

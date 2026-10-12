@@ -26,7 +26,7 @@ def test_full_example_has_every_top_level_key() -> None:
 
 
 def test_full_example_has_every_app_section() -> None:
-	expected = set(ApplicationConfiguration._config_parsers)
+	expected = set(ApplicationConfiguration._config_parsers())
 	missing = expected - set(_load(FULL)['app_config'])
 	assert not missing, f'config_sample_full.json lacks app_config sections: {sorted(missing)}'
 

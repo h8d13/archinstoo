@@ -125,7 +125,6 @@ disable = [
     "R",                       # ruff covers refactors
     "broad-exception-caught",  # 25 sites, all log-and-continue boundaries
     "fixme",                   # tracked in-code on purpose
-    "protected-access",        # SysInfo._bitness & co are package-internal
     "unspecified-encoding",    # PEP 686: utf-8 is the default from 3.15
 ]
 
