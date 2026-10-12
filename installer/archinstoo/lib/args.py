@@ -1,9 +1,7 @@
-import argparse
 import json
 import sys
 import urllib.error
 import urllib.parse
-from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
@@ -13,7 +11,7 @@ from urllib.request import Request, urlopen
 if TYPE_CHECKING:
 	from collections.abc import Callable
 
-from archinstoo._version import __version__
+from archinstoo.lib.cli import DEFAULT_SCRIPT, build_parser
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.models.applications import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
@@ -30,8 +28,6 @@ from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.profile.config import ProfileConfiguration
-
-DEFAULT_SCRIPT = 'guided'
 
 
 def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) -> None:
@@ -191,7 +187,7 @@ class ArchConfig:
 
 class ArchConfigHandler:
 	def __init__(self) -> None:
-		self._parser: ArgumentParser = self._define_arguments()
+		self._parser = build_parser()
 		args: Arguments = self._parse_args()
 		self._args = args
 
@@ -223,102 +219,6 @@ class ArchConfigHandler:
 
 	def pass_args_to_subscript(self) -> None:
 		sys.argv = [sys.argv[0], *self._remaining]
-
-	def print_help(self) -> None:
-		self._parser.print_help()
-
-	def _define_arguments(self) -> ArgumentParser:
-		parser = ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False)
-		parser.add_argument(
-			'--script',
-			nargs='?',
-			default=DEFAULT_SCRIPT,
-			help='Script to run for installation',
-			type=str,
-		)
-		parser.add_argument(
-			'--config',
-			type=Path,
-			nargs='?',
-			default=None,
-			help='JSON configuration file',
-		)
-		parser.add_argument(
-			'--config-url',
-			type=str,
-			nargs='?',
-			default=None,
-			help='Url to a JSON configuration file',
-		)
-		parser.add_argument(
-			'--dry-run',
-			action='store_true',
-			default=False,
-			help='Generates a configuration file and then exits instead of performing an installation',
-		)
-		parser.add_argument(
-			'--mountpoint',
-			type=Path,
-			nargs='?',
-			default=Path('/mnt'),
-			help='Define an alternate mount point for installation',
-		)
-		parser.add_argument(
-			'--skip-ntp',
-			action='store_true',
-			help='Disables NTP checks during installation',
-			default=False,
-		)
-		parser.add_argument(
-			'--skip-wkd',
-			action='store_true',
-			help='Disables checking if archlinux keyring wkd sync is complete.',
-			default=False,
-		)
-		parser.add_argument(
-			'--skip-boot',
-			action='store_true',
-			help='Disables installation of a boot loader (note: only use this when problems arise with the boot loader step).',
-			default=False,
-		)
-		parser.add_argument(
-			'--debug',
-			action='store_true',
-			default=False,
-			help='Adds debug info into the log',
-		)
-		parser.add_argument(
-			'--offline',
-			action='store_true',
-			default=False,
-			help='Skip db refresh, bootstrap and keyring update.',
-		)
-		parser.add_argument(
-			'--advanced',
-			action='store_true',
-			default=False,
-			help='Enabled advanced options',
-		)
-		parser.add_argument(
-			'--clean',
-			action='store_true',
-			default=False,
-			help='Clean up the log directory on exit',
-		)
-		parser.add_argument(
-			'--silent',
-			action='store_true',
-			default=False,
-			help='Install straight from --config with no menus or prompts (unattended)',
-		)
-		parser.add_argument(
-			'--version',
-			action='version',
-			version=f'archinstoo {__version__}',
-			help='Show version and exit',
-		)
-
-		return parser
 
 	def _parse_args(self) -> Arguments:
 		# Use parse_known_args to ignore unknown arguments (e.g., from pytest)
@@ -368,7 +268,7 @@ class ArchConfigHandler:
 
 		return path.read_text()
 
-	def _cleanup_config(self, config: Namespace | dict[str, Any]) -> dict[str, Any]:
+	def _cleanup_config(self, config: dict[str, Any]) -> dict[str, Any]:
 		clean_args = {}
 		for key, raw in config.items():
 			val = self._cleanup_config(raw) if isinstance(raw, dict) else raw

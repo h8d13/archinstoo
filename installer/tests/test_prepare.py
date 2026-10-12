@@ -53,7 +53,7 @@ def test_prepare_skips_pacman_on_arch_host(
 	monkeypatch.setattr(Os, 'running_from_foreign', staticmethod(lambda: False))
 	monkeypatch.setattr(Pacman, 'run', staticmethod(lambda args, **_: calls.append(args)))
 
-	assert archinstoo._prepare() == 0
+	assert archinstoo._prepare(offline=False) == 0
 	assert ('-Syy' in calls) is synced
 	# the host still gets a read-only -T; only -S would touch it
 	assert any(call.startswith('-T') for call in calls)

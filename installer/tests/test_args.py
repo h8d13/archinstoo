@@ -121,7 +121,7 @@ def test_flags_match_man_page(monkeypatch: pytest.MonkeyPatch) -> None:
 	# Man page documents exactly the parser's flag set (docs drift guard).
 	monkeypatch.setattr('sys.argv', ['archinstoo'])
 	handler = ArchConfigHandler()
-	flags = {opt for action in handler._parser._actions for opt in action.option_strings}
+	flags = {opt for action in handler._parser._actions for opt in action.option_strings if opt.startswith('--')}
 
 	man_path = Path(__file__).parent.parent / 'docs' / 'archinstoo.1'
 	man = man_path.read_text().replace('\\-', '-')
