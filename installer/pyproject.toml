@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.urls]
-Home = "https://archlinux.org"
+Home = "https://archlinux.org/downloads"
 Source = "https://github.com/h8d13/archinstoo"
 
 [project.optional-dependencies]
@@ -57,7 +57,6 @@ archinstoo = "archinstoo"
 
 [tool.mypy]
 files = "."
-# relative to this file, not the cwd: CI runs mypy from the repo root
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 exclude = "^build/"
 disallow_any_explicit = false
@@ -98,7 +97,6 @@ type = "acyclic_siblings"
 ancestors = ["archinstoo", "archinstoo.**"]
 
 [tool.pytest]
-pythonpath = ["."]
 addopts = [
     "-s",
     "--strict",
@@ -123,7 +121,7 @@ max-line-length = 160
 disable = [
     "C",                       # ruff covers style
     "R",                       # ruff covers refactors
-    "broad-exception-caught",  # 25 sites, all log-and-continue boundaries
+    "broad-exception-caught",  # log-and-continue boundaries
     "fixme",                   # tracked in-code on purpose
     "unspecified-encoding",    # PEP 686: utf-8 is the default from 3.15
 ]

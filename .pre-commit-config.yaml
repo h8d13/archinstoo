@@ -41,11 +41,8 @@ repos:
     rev: v2.4.0
     hooks:
     - id: mypy
-      args: [
-        '--config-file=installer/pyproject.toml',
-        'installer/archinstoo',
-        'installer/tests'
-      ]
+      # no paths: `files` in the config is the scope, as in CI
+      args: ['--config-file=installer/pyproject.toml']
       pass_filenames: false
       files: ^installer/
       additional_dependencies:
