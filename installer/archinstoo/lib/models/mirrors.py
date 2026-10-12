@@ -54,7 +54,8 @@ class _MirrorList(TypedDict):
 	check_frequency: NotRequired[int]
 
 
-@dataclass
+# slotted: the archlinux.org status feed yields ~1k entries
+@dataclass(slots=True)
 class MirrorStatusEntryV3:
 	url: str
 	protocol: str

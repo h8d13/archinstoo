@@ -46,3 +46,12 @@ def test_mirror_status_v3_from_json() -> None:
 	assert entry.score == 2
 	# ISO strings are parsed into datetimes at the boundary
 	assert isinstance(entry.last_sync, datetime)
+
+
+def test_mirror_entry_is_slotted() -> None:
+	# ~1k entries per status feed; a __dict__ per entry would undo slots=True
+	entry = MirrorStatusListV3.from_json(_ORG_JSON).urls[0]
+
+	assert not hasattr(entry, '__dict__')
+	# lazy probes still write back into their slots
+	assert entry._hostname == 'mirror.example.org'

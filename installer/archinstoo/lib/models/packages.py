@@ -1,6 +1,5 @@
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from functools import cached_property
 from typing import Self
 
 
@@ -17,7 +16,8 @@ class Repository(Enum):
 	ExtraTesting = 'extra-testing'
 
 
-@dataclass
+# slotted: list_available_packages() holds one per sync-db package (~15k)
+@dataclass(slots=True)
 class AvailablePackage:
 	name: str
 	architecture: str
@@ -38,14 +38,12 @@ class AvailablePackage:
 	validated_by: str
 	version: str
 
-	@cached_property
-	def longest_key(self) -> int:
-		return max(len(key) for key in asdict(self))
-
 	def info(self) -> str:
+		values = asdict(self)
+		width = max(len(key) for key in values)
 		output = ''
-		for key, value in asdict(self).items():
-			label = key.replace('_', ' ').capitalize().ljust(self.longest_key)
+		for key, value in values.items():
+			label = key.replace('_', ' ').capitalize().ljust(width)
 			output += f'{label} : {value}\n'
 
 		return output

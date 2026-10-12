@@ -193,3 +193,13 @@ def test_stale_cache_hides_a_new_repo(conf: LPath) -> None:
 	assert 'lib32-glibc' not in packages.list_available_packages()
 	packages.list_available_packages.cache_clear()
 	assert 'lib32-glibc' in packages.list_available_packages()
+
+
+def test_package_stub_is_slotted(monkeypatch: pytest.MonkeyPatch) -> None:
+	# one stub per sync-db package (~15k); a __dict__ each would undo slots=True
+	_stub_pacman(monkeypatch, _SL_OUTPUT)
+
+	pkg = packages.list_available_packages()['linux']
+
+	assert not hasattr(pkg, '__dict__')
+	assert 'Validated by' in pkg.info()
