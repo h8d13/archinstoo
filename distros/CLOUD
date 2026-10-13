@@ -12,7 +12,8 @@
 #                                 cloud overlay is dropped, the target becomes vda)
 #   ./distros/CLOUD clean         remove overlays and seed (images stay cached)
 # then: ./TSER login -p test
-# Env: REL BUILD (fedora release/build), SEED_PORT, PASS, A2_RAM, A2_CPUS
+# or A2_SERIAL=tty: console in this terminal, log in as root/test there
+# Env: REL BUILD (fedora release/build), SEED_PORT, PASS, A2_SERIAL, A2_RAM, A2_CPUS
 
 set -euo pipefail
 
@@ -28,6 +29,7 @@ REL="${REL:-44}"
 BUILD="${BUILD:-1.7}"
 SEED_PORT="${SEED_PORT:-8731}"
 PASS="${PASS:-test}"
+A2_SERIAL="${A2_SERIAL:-1}"
 HTTP_PID=""
 
 err() {
@@ -117,9 +119,11 @@ boot() {
 	seed "$1"
 	trap teardown EXIT
 	serve
-	A2_SERIAL=1 A2_BIOS=1 \
+	A2_SERIAL=$A2_SERIAL A2_BIOS=1 \
 		A2_QEMU_EXTRA="-drive file=$TARGET,format=qcow2,if=virtio -smbios type=1,serial=ds=nocloud;s=http://10.0.2.2:$SEED_PORT/" \
 		"$PROJECT_DIR/TVM" boot
+	# tty: TVM held the terminal until the VM exited, nothing left to wait on
+	[ "$A2_SERIAL" = "1" ] || return 0
 	wait_cloud_init
 	echo "cloud-init done: ./TSER login -p $PASS (target disk is /dev/vdb)"
 }
@@ -128,7 +132,7 @@ boot_target() {
 	[ -s "$TARGET" ] || err "no $TARGET, run ./distros/CLOUD fed|deb and install first"
 	# fstab and grub name UUIDs, so vdb installing as vda boots the same
 	mv "$TARGET" "$DISK"
-	A2_SERIAL=1 A2_BIOS=1 "$PROJECT_DIR/TVM" boot
+	A2_SERIAL=$A2_SERIAL A2_BIOS=1 "$PROJECT_DIR/TVM" boot
 }
 
 case "${1:-}" in

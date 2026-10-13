@@ -52,6 +52,9 @@
 #                       typed input past a few hundred bytes, so both lines
 #                       ride a dual-port PCI 16550 instead: ttyS0/ttyS1 in
 #                       the guest, same as q35, same sockets on the host.
+#                       'tty' is the same boot, but ttyS0 is this terminal:
+#                       foreground, boot log and login right here, no TSER.
+#                       Ctrl-a x quits, Ctrl-a c toggles the QEMU monitor.
 #   A2_BIOS             '1' boots SeaBIOS instead of OVMF: no pflash, no
 #                       NVRAM. The installed disk must carry a BIOS-capable
 #                       bootloader (grub with a bios_grub partition).
@@ -104,6 +107,13 @@ CAPTURE_LOG="$PROJECT_DIR/.dev-capture.log"
 MON_SOCK="$PROJECT_DIR/.dev-monitor.sock"
 PIDFILE="$PROJECT_DIR/.dev-vm.pid"
 A2_SERIAL="${A2_SERIAL:-0}"
+case "$A2_SERIAL" in
+0 | 1 | tty) ;;
+*)
+	echo "ERROR: A2_SERIAL=$A2_SERIAL unsupported (0, 1, tty)" >&2
+	exit 1
+	;;
+esac
 A2_UKI="${A2_UKI:-}"
 A2_BIOS="${A2_BIOS:-0}"
 A2_DISK_SIZE="${A2_DISK_SIZE:-64G}"
@@ -185,9 +195,9 @@ check_host_deps() {
 		[ "$A2_BIOS" != "1" ] || err "A2_BIOS is x86_64 only (no SeaBIOS on virt)"
 		[ -z "$A2_UKI" ] || err "A2_UKI is x86_64 only (UKIMOD builds x86_64 images)"
 	fi
-	if [ "$A2_SERIAL" = "1" ] && [ -z "$A2_UKI" ]; then
+	if [ "$A2_SERIAL" != "0" ] && [ -z "$A2_UKI" ]; then
 		command -v bsdtar >/dev/null 2>&1 ||
-			err "A2_SERIAL=1 needs bsdtar to read the ISO (install libarchive)"
+			err "A2_SERIAL=$A2_SERIAL needs bsdtar to read the ISO (install libarchive)"
 	fi
 }
 
@@ -352,6 +362,20 @@ if [ "$A2_SERIAL" = "1" ]; then
 		-pidfile "$PIDFILE"
 		-daemonize
 	)
+elif [ "$A2_SERIAL" = "tty" ]; then
+	# ttyS0 and the monitor share stdio (mux), Ctrl-a switches between them
+	if [ "$A2_GL" = "1" ]; then
+		ensure_virgl
+		CONSOLE_ARGS=(-device "$GL_DEVICE" -display "$A2_DISPLAY_BACKEND,gl=on")
+	else
+		CONSOLE_ARGS=(-display none)
+	fi
+	CONSOLE_ARGS+=(-chardev stdio,id=ser0,mux=on,signal=off -mon chardev=ser0)
+	if [ "$A2_ARCH" = "x86_64" ]; then
+		CONSOLE_ARGS+=(-serial chardev:ser0)
+	else
+		CONSOLE_ARGS+=(-device pci-serial,chardev=ser0 -serial none)
+	fi
 else
 	if [ "$A2_GL" = "1" ]; then
 		ensure_virgl
@@ -424,7 +448,7 @@ elif [ "$ATTACH_ISO" = "true" ]; then
 			-device scsi-cd,drive=cd0,bootindex=0
 		)
 	fi
-	if [ "$A2_SERIAL" = "1" ]; then
+	if [ "$A2_SERIAL" != "0" ]; then
 		extract_iso_kernel "$ISO"
 		QEMU_ARGS+=(
 			-kernel "$BOOT_DIR/vmlinuz"
