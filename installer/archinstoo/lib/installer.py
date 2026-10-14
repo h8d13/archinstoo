@@ -295,6 +295,14 @@ class Installer:
 		if self._on_raid:
 			write_mdadm_conf(self.target)
 
+		# Fedora turns on LVM's devices file: list the install's PVs in it, as
+		# anaconda does, so the system does not activate VGs on disks added
+		# later (rhbz#2011329)
+		# https://github.com/rhinstaller/anaconda/blob/d6be1da760e15bc3b95e0aecd9defef28b69f3ca/pyanaconda/modules/storage/installation.py#L418-L444
+		if self._disk_config.lvm_config:
+			for vg in self._disk_config.lvm_config.vol_groups:
+				self.arch_chroot(['vgimportdevices', vg.name])
+
 		if hostname:
 			self.set_hostname(hostname)
 

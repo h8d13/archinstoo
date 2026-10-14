@@ -90,6 +90,20 @@ def _lvm_info_with_retry(
 	return None
 
 
+def free_vg_name(base: str = 'fedora') -> str:
+	# anaconda's name for the VG; a Fedora host installing to a second disk
+	# already has one, and vgcreate refuses a name in use, so number past it
+	try:
+		taken = set(SysCommand(['vgs', '--noheadings', '-o', 'vg_name']).decode().split())
+	except SysCallError as err:
+		debug(f'vgs failed, assuming no volume groups: {err}')
+		return base
+	name, n = base, 1
+	while name in taken:
+		name, n = f'{base}_{n}', n + 1
+	return name
+
+
 def lvm_vol_info(lv_name: str) -> LvmVolumeInfo | None:
 	cmd = f'lvs --reportformat json --unit B -S lv_name={lv_name}'
 

@@ -109,7 +109,7 @@
             "config_type": "default",
             "vol_groups": [
                 {
-                    "name": "ArchinstallVg",
+                    "name": "fedora",
                     "lvm_pvs": [
                         "6454f1e1-5744-40ce-93f3-1a746c3d4d74"
                     ],

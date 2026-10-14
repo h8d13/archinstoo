@@ -25,6 +25,7 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import warn
 from archinstoo.lib.tui.prompts import prompt_yes_no
 
+from .lvm import free_vg_name
 from .selectors import select_main_filesystem_format, select_mount_options, select_partition_table
 
 # https://github.com/archlinux/archinstall/issues/4769
@@ -223,7 +224,7 @@ def suggest_disk_layout(
 def suggest_lvm_layout(
 	disk_config: DiskLayoutConfiguration,
 	filesystem_type: FilesystemType | None = None,
-	vg_grp_name: str = 'ArchinstooVg',
+	vg_grp_name: str | None = None,
 	home_volume: bool = True,
 ) -> LvmConfiguration:
 	if disk_config.config_type not in (DiskLayoutType.Default, DiskLayoutType.Manual):
@@ -287,7 +288,7 @@ def suggest_lvm_layout(
 		root_vol_size = total_vol_available
 		home_vol_size = Size(0, Unit.B, SectorSize.default())
 
-	lvm_vol_group = LvmVolumeGroup(vg_grp_name, pvs=other_part)
+	lvm_vol_group = LvmVolumeGroup(vg_grp_name or free_vg_name(), pvs=other_part)
 
 	root_vol = LvmVolume(
 		status=ModificationStatus.CREATE,
