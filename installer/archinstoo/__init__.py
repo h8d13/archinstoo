@@ -98,6 +98,9 @@ host_depends = (
 	'libxcrypt',            # crypt.py dlopen
 	'dnf5',                 # strapping the target
 	'git',                  # Cloning stashes
+)
+# only what partitions and formats: the running-system scripts skip these
+disk_depends = (
 	'python3-pyparted',     # partitioning
 	'dosfstools',           # FAT EFI filesystem support
 	'btrfs-progs',          # btrfs filesystem support
@@ -162,7 +165,7 @@ def _check_online() -> int:
 		raise
 
 
-def _prepare(offline: bool) -> int:
+def _prepare(offline: bool, disk: bool) -> int:
 	# log python/host-2-target
 	_log_env_info()
 
@@ -180,7 +183,7 @@ def _prepare(offline: bool) -> int:
 
 	# read-only either way: BOOT installed these, a Fedora host installs them
 	# with its own dnf, so a miss stops here instead of mid-install
-	if missing := _missing_deps(host_depends):
+	if missing := _missing_deps(host_depends + disk_depends if disk else host_depends):
 		error(f'Missing host deps: {" ".join(missing)}')
 		info(f'Install them first: dnf install {" ".join(missing)}')
 		return 1
@@ -267,7 +270,7 @@ def run_as_a_module() -> int:
 
 	is_rootless = early.script in ROOTLESS_SCRIPTS
 	# skip bootstrap for rootless scripts or help requests
-	if not is_rootless and not is_help and (rc := _prepare(early.offline)):
+	if not is_rootless and not is_help and (rc := _prepare(early.offline, early.script not in NO_DISK_SCRIPTS)):
 		return rc
 
 	# now safe to import after bootstrap (or skipped for rootless)

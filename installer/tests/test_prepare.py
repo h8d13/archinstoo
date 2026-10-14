@@ -50,7 +50,23 @@ def _prepare_env(monkeypatch: pytest.MonkeyPatch, *, bootstrap: bool, fedora_hos
 def test_prepare(monkeypatch: pytest.MonkeyPatch, bootstrap: bool, fedora_host: bool, missing: list[str], rc: int) -> None:
 	_prepare_env(monkeypatch, bootstrap=bootstrap, fedora_host=fedora_host, missing=missing)
 
-	assert archinstoo._prepare(offline=False) == rc
+	assert archinstoo._prepare(offline=False, disk=True) == rc
+
+
+@pytest.mark.parametrize(('disk', 'checked'), [(True, True), (False, False)])
+def test_prepare_disk_deps(monkeypatch: pytest.MonkeyPatch, disk: bool, checked: bool) -> None:
+	# packages only touches the running system: no mkfs, mdadm, ...
+	_prepare_env(monkeypatch, bootstrap=False, fedora_host=True, missing=[])
+	asked: list[str] = []
+
+	def missing_deps(depends: tuple[str, ...]) -> list[str]:
+		asked.extend(depends)
+		return []
+
+	monkeypatch.setattr(archinstoo, '_missing_deps', missing_deps)
+
+	assert archinstoo._prepare(offline=False, disk=disk) == 0
+	assert ('mdadm' in asked) is checked
 
 
 def _rpm_exits(monkeypatch: pytest.MonkeyPatch, log: bytes) -> None:
@@ -89,4 +105,4 @@ def test_boot_installs_what_prepare_checks() -> None:
 		if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'DEPENDS' for t in node.targets)
 	)
 
-	assert set(archinstoo.host_depends) <= set(boot)
+	assert {*archinstoo.host_depends, *archinstoo.disk_depends} <= set(boot)
