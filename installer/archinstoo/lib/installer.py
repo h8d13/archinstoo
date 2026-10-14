@@ -279,6 +279,11 @@ class Installer:
 		# base boots without a system bus otherwise
 		self.dnf.strap(list(dict.fromkeys(self._base_packages)), mandatory_groups=True, weak_deps=True)
 		self.dnf.write_conf()
+		# the policy just arrived with @core. On an SELinux host every tool
+		# run in the chroot after this is confined by the host's policy
+		# (chpasswd as passwd_t), which may not write the unlabeled files
+		# the strap left; finalize() labels again for what comes later
+		selinux.label_target(self)
 
 		# Periodic TRIM may improve the performance and longevity of SSDs whilst
 		# having no adverse effect on other devices. Most distributions enable
@@ -384,11 +389,11 @@ class Installer:
 	) -> None:
 		accounts.create_users(self, users, privilege_escalation)
 
-	def set_user_password(self, user: User) -> bool:
-		return accounts.set_user_password(self, user)
+	def set_user_password(self, user: User) -> None:
+		accounts.set_user_password(self, user)
 
-	def lock_root_account(self) -> bool:
-		return accounts.lock_root_account(self)
+	def lock_root_account(self) -> None:
+		accounts.lock_root_account(self)
 
 	def chown_tree(self, username: str, path: str) -> None:
 		chroot.chown_tree(self, username, path)

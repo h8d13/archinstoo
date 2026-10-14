@@ -1,15 +1,13 @@
 import re
-from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.authentication.crypt import hash_password
 from archinstoo.lib.authentication.stash import clone_user_stash
 from archinstoo.lib.chroot import chroot_prefix
-from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import run
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.users import User
-from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.output import debug, info
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -123,31 +121,20 @@ def _create_user(
 		clone_user_stash(installation, user.username, stash_url)
 
 
-def set_user_password(installation: Installer, user: User) -> bool:
+def set_user_password(installation: Installer, user: User) -> None:
 	info(f'Setting password for {user.username}')
 
 	if not user.password:
 		debug('User password not set')
-		return False
+		return
 
+	# a failure here is an account nobody can log into: let it stop the install
 	enc_password = hash_password(user.password)
 	input_data = f'{user.username}:{enc_password}'.encode()
-	cmd = [*chroot_prefix(installation.target), 'chpasswd', '--encrypted']
-
-	try:
-		run(cmd, input_data=input_data)
-		return True
-	except CalledProcessError as err:
-		debug(f'Error setting user password: {err}')
-		return False
+	run([*chroot_prefix(installation.target), 'chpasswd', '--encrypted'], input_data=input_data)
 
 
-def lock_root_account(installation: Installer) -> bool:
+def lock_root_account(installation: Installer) -> None:
+	# a failure here leaves root open: let it stop the install
 	info('Locking root account')
-
-	try:
-		installation.arch_chroot('passwd -l root')
-		return True
-	except SysCallError as err:
-		error(f'Failed to lock root account: {err}')
-		return False
+	installation.arch_chroot('passwd -l root')
