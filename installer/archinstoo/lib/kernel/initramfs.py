@@ -18,6 +18,7 @@ class Initramfs:
 	# the image from it. Hostonly (Fedora's default) already picks up what
 	# the mounted layout needs; these pin it for the layouts it cannot see
 	# through a chroot (keyfile unlock, assembled arrays)
+	# anaconda/pyanaconda/modules/storage/bootloader/utils.py:265-268
 	def __init__(self) -> None:
 		self.modules: list[str] = []
 		self.drivers: list[str] = []
@@ -41,6 +42,12 @@ class Initramfs:
 
 	def add_fido2(self) -> None:
 		self._add_module('fido2')
+
+	def add_resume(self) -> None:
+		# hostonly only takes it when resume= is on the cmdline or the build
+		# host's /sys/power/resume is set; UEFI hibernation needs neither
+		# (systemd records the swapfile in HibernateLocation), so ask for it
+		self._add_module('resume')
 
 	def write_conf(self, target: Path) -> None:
 		lines = []

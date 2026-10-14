@@ -310,6 +310,7 @@ class Installer:
 		# the kernel's posttrans runs kernel-install, which reads both files:
 		# the cmdline into the boot entry or UKI, dracut.conf.d into the image.
 		# Without /etc/kernel/cmdline it falls back to the host's /proc/cmdline
+		# anaconda/pyanaconda/modules/storage/bootloader/utils.py:231-238
 		info(f'Installing kernels: {", ".join(self.kernels)}', step=True)
 		cmdline_path = self.target / 'etc/kernel/cmdline'
 		cmdline_path.parent.mkdir(parents=True, exist_ok=True)
@@ -338,6 +339,7 @@ class Installer:
 			else:
 				self._fstab_entries.append(fstab_entry)
 				self.add_kernel_param(kernel_params)
+				self.initramfs.add_resume()
 
 	def setup_sysctl(self, config: SysctlConfiguration) -> None:
 		setup_sysctl(self.target, config)
