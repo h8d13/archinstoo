@@ -1,15 +1,13 @@
 # kernel-install's layout decides where the kernels and entries land, and
 # each loader reads a different place
 
-from typing import TYPE_CHECKING
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from archinstoo.lib.bootloader.install import BootloaderInstaller
 from archinstoo.lib.models.bootloader import Bootloader
-
-if TYPE_CHECKING:
-	from pathlib import Path
 
 
 @pytest.mark.parametrize(
@@ -41,3 +39,19 @@ def test_grub_cmdline_carries_the_params(tmp_path: Path) -> None:
 	grub = (tmp_path / 'etc/default/grub').read_text()
 	assert 'GRUB_CMDLINE_LINUX="rd.luks.name=abc=root rootfstype=ext4 console=ttyS0,115200"\n' in grub
 	assert 'GRUB_ENABLE_BLSCFG=true\n' in grub
+
+
+@pytest.mark.parametrize(('removable', 'variables'), [(True, '--variables=no'), (False, '--variables=yes')])
+def test_systemd_boot_removable_leaves_nvram_alone(tmp_path: Path, removable: bool, variables: str) -> None:
+	# from an installed host, a registered entry (same title) replaces the
+	# host's own and goes first in BootOrder
+	calls: list[list[str]] = []
+	installer = BootloaderInstaller.__new__(BootloaderInstaller)
+	installer.target = tmp_path
+	installer.dnf = SimpleNamespace(strap=lambda pkgs: None)  # type: ignore[assignment]
+	installer._inst = SimpleNamespace(arch_chroot=calls.append)  # type: ignore[assignment]
+	esp = SimpleNamespace(mountpoint=Path('/boot'), relative_mountpoint=Path('boot'))
+
+	installer._add_systemd_bootloader(esp, esp, uki_enabled=False, removable=removable)  # type: ignore[arg-type]
+
+	assert calls == [['bootctl', variables, 'install']]

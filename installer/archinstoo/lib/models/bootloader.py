@@ -30,13 +30,16 @@ class Bootloader(Enum):
 				return ['systemd-boot-unsigned', *(['systemd-ukify'] if uki else [])]
 			case Bootloader.Grub:
 				if uefi:
-					# signed shim + grub, prebuilt: Secure Boot works as shipped
+					# signed shim + grub, prebuilt: Secure Boot works as shipped.
+					# anaconda's set adds grubby and grub2-tools-extra
+					# anaconda/pyanaconda/modules/storage/bootloader/efi.py:164-173
 					return ['grub2-efi-x64', 'shim-x64', 'grub2-tools', 'efibootmgr']
 				return ['grub2-pc', 'grub2-tools']
 
 	def has_removable_support(self) -> bool:
-		# shim-x64 ships EFI/BOOT/BOOTX64.EFI; bootctl always writes it
-		return self == Bootloader.Grub
+		# both land in EFI/BOOT/BOOTX64.EFI anyway (shim-x64 ships it, bootctl
+		# always writes it); removable means leaving the NVRAM alone
+		return True
 
 	def has_bios_support(self) -> bool:
 		return self == Bootloader.Grub

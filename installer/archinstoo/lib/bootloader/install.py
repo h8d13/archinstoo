@@ -114,7 +114,7 @@ class BootloaderInstaller:
 
 		match bootloader:
 			case Bootloader.Systemd:
-				self._add_systemd_bootloader(boot_partition, efi_partition, uki_enabled)
+				self._add_systemd_bootloader(boot_partition, efi_partition, uki_enabled, removable)
 				self._inst.install_kernels(self._get_kernel_params(root))
 			case Bootloader.Grub:
 				params = self._get_kernel_params(root)
@@ -216,6 +216,7 @@ class BootloaderInstaller:
 		boot_partition: PartitionModification,
 		efi_partition: PartitionModification | None,
 		uki_enabled: bool,
+		removable: bool,
 	) -> None:
 		debug('Installing systemd bootloader')
 		self.dnf.strap(Bootloader.Systemd.packages(uki=uki_enabled))
@@ -239,11 +240,16 @@ class BootloaderInstaller:
 		def _bootctl_install(variables: str) -> None:
 			self._inst.arch_chroot(['bootctl', variables, *bootctl_options, 'install'])
 
-		try:
-			_bootctl_install('--variables=yes')
-		except SysCallError as err:
-			warn(f'bootctl could not write EFI variables ({err}), retrying with --variables=no')
+		# removable keeps the NVRAM out of it: from an installed host the new
+		# entry (same title) replaces the host's own, first in BootOrder
+		if removable:
 			_bootctl_install('--variables=no')
+		else:
+			try:
+				_bootctl_install('--variables=yes')
+			except SysCallError as err:
+				warn(f'bootctl could not write EFI variables ({err}), retrying with --variables=no')
+				_bootctl_install('--variables=no')
 
 		# kernel-install names entries <machine-id>-<version>, so no default
 		# entry is pinned: systemd-boot picks the newest
