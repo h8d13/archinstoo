@@ -1,7 +1,7 @@
 from typing import override
 
 from archinstoo.default_profiles.xorg import XorgProfile
-from archinstoo.lib.profile.base import GreeterType, ProfileType
+from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType
 
 
 class QtileProfile(XorgProfile):
@@ -15,13 +15,17 @@ class QtileProfile(XorgProfile):
 	def packages(self) -> list[str]:
 		# ttf: bar renders as boxes without a scalable font
 		# dbus-fast: optdep qtile warns about on every start
-		# xwayland: the shipped "Qtile (Wayland)" session exits 1 without it
 		return [
 			'qtile',
 			'liberation-fonts-all',
 			'python3-dbus-fast',
-			'xorg-x11-server-Xwayland',
 		]
+
+	@override
+	def display_servers(self) -> set[DisplayServer]:
+		# the package ships a "Qtile (Wayland)" session next to the X11 one,
+		# which exits 1 without the Xwayland the wayland server brings
+		return {DisplayServer.X11, DisplayServer.Wayland}
 
 	@property
 	@override

@@ -28,6 +28,10 @@ class ProfileSerialization(TypedDict):
 	path: NotRequired[str]
 
 
+# the account Fedora's greetd package creates to run the greeter as
+GREETD_USER = 'greetd'
+
+
 class ProfileHandler:
 	def __init__(self) -> None:
 		self._profiles: list[Profile] | None = None
@@ -179,14 +183,14 @@ class ProfileHandler:
 
 					[default_session]
 					command = "{command}"
-					user = "greeter"
+					user = "{GREETD_USER}"
 				""")
 			)
 
 		# regreet runs the cage compositor as the greeter user; only seatd
 		# ships the seat group, logind needs no membership
 		if greeter == GreeterType.Regreet:
-			add_to_group(install_session, 'seat', ['greeter'])
+			add_to_group(install_session, 'seat', [GREETD_USER])
 
 	def install_gfx_driver(
 		self,

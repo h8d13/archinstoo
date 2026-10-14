@@ -16,6 +16,7 @@ from archinstoo.lib.applications.cat.terminal import TerminalApp
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.applications import DEFAULT_TERMINAL, ApplicationConfiguration, Terminal, TerminalConfiguration
 from archinstoo.lib.models.users import User
+from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.sysconfig import write_environment
@@ -100,8 +101,10 @@ def test_qtile_ships_a_scalable_font() -> None:
 
 def test_qtile_ships_xwayland() -> None:
 	# the package lists the wayland session entry alongside the X11 one, and
-	# that backend refuses to start without an Xwayland binary
-	assert 'xorg-x11-server-Xwayland' in QtileProfile().packages
+	# that backend refuses to start without an Xwayland binary, which every
+	# wayland session gets from its display server
+	assert DisplayServer.Wayland in QtileProfile().display_servers()
+	assert 'xorg-x11-server-Xwayland' in DisplayServer.Wayland.packages()
 
 
 def test_river_writes_an_executable_user_init(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
