@@ -22,6 +22,14 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.device import DiskLayoutConfiguration
 
 _GRUB_EFI_DIR = 'EFI/fedora'
+# efistub's fixed UKI, under $BOOT (the ESP), and the plugin keeping it current
+_EFISTUB_UKI = 'EFI/Linux/fedora.efi'
+_EFISTUB_PLUGIN = '95-fedinstoo-efistub.install'
+
+
+def _efi_fallback() -> str:
+	# what firmware boots with no entry pointing anywhere
+	return 'EFI/BOOT/BOOTAA64.EFI' if SysInfo.arch() == 'aarch64' else 'EFI/BOOT/BOOTX64.EFI'
 
 
 def _luks_uuid_from_mapper_dev(mapper_dev_path: Path) -> str:
@@ -121,11 +129,13 @@ class BootloaderInstaller:
 				self._add_grub_bootloader(boot_partition, efi_partition, removable, params)
 				self._inst.install_kernels(params)
 				self._grub_mkconfig()
+			case Bootloader.Efistub:
+				self._add_efistub_bootloader(efi_partition, root, removable)
 
 		# Seed /loader/random-seed so the very first boot isn't entropy-starved.
 		# Consumed by systemd-boot, or for a UKI by the embedded systemd-stub.
 		# systemd-boot-random-seed.service sets the EFI token on first boot
-		if efi_partition is not None and bootloader == Bootloader.Systemd:
+		if efi_partition is not None and bootloader != Bootloader.Grub:
 			seed_cmd = ['bootctl', '--graceful']
 			if has_separate_boot(boot_partition, efi_partition):
 				seed_cmd.append(f'--esp-path={efi_partition.mountpoint}')
@@ -257,6 +267,54 @@ class BootloaderInstaller:
 		loader_conf.parent.mkdir(parents=True, exist_ok=True)
 		loader_conf.write_text('timeout 5\n')
 		debug(f'Wrote {loader_conf}')
+
+	def _add_efistub_bootloader(self, efi_partition: PartitionModification | None, root: PartitionModification | LvmVolume, removable: bool) -> None:
+		# the firmware boots one file, so it has to keep its name across kernel
+		# updates: a kernel-install plugin copies each new UKI over it (what a
+		# fixed preset name gave on Arch). removable, or a firmware refusing
+		# the entry, puts that file at the fallback path instead
+		debug('Installing efistub bootloader')
+		self.dnf.strap(Bootloader.Efistub.packages())
+
+		if not efi_partition or not efi_partition.mountpoint:
+			raise ValueError('Could not detect a mounted EFI system partition')
+
+		if removable or not self._register_efistub(efi_partition):
+			self._write_efistub_plugin(_efi_fallback())
+		self._inst.install_kernels(self._get_kernel_params(root))
+
+	def _register_efistub(self, efi_partition: PartitionModification) -> bool:
+		# before the UKI exists: the entry only names a path, and an empty
+		# NVRAM slot is cheaper to find out about than a stale plugin
+		self._write_efistub_plugin(_EFISTUB_UKI)
+		parent_dev_path = get_parent_device_path(efi_partition.safe_dev_path)
+		loader = '\\' + _EFISTUB_UKI.replace('/', '\\')
+		try:
+			self._inst.arch_chroot([
+				'efibootmgr', '--create', '--disk', str(parent_dev_path), '--part', str(efi_partition.partn),
+				'--label', 'Fedora (efistub)', '--loader', loader,
+			])  # fmt: skip
+		except SysCallError as err:
+			warn(f'efibootmgr could not register the UKI, booting it from {_efi_fallback()} instead: {err}')
+			return False
+		return True
+
+	def _write_efistub_plugin(self, path: str) -> None:
+		plugin = self.target / 'etc/kernel/install.d' / _EFISTUB_PLUGIN
+		plugin.parent.mkdir(parents=True, exist_ok=True)
+		plugin.write_text(
+			textwrap.dedent(f"""\
+				#!/bin/sh
+				# written by fedinstoo: efistub boots one fixed file, keep it the
+				# newest UKI kernel-install built
+				[ "$1" = add ] || exit 0
+				[ "$KERNEL_INSTALL_LAYOUT" = uki ] || exit 0
+				mkdir -p "$KERNEL_INSTALL_BOOT_ROOT/{Path(path).parent}"
+				cp "$KERNEL_INSTALL_STAGING_AREA/uki.efi" "$KERNEL_INSTALL_BOOT_ROOT/{path}"
+			""")
+		)
+		plugin.chmod(0o755)
+		debug(f'Wrote {plugin} -> {path}')
 
 	def _add_grub_bootloader(
 		self,

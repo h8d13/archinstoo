@@ -81,6 +81,14 @@ def validate_bootloader(
 	if bootloader == Bootloader.Grub and uefi and efi_partition is not None and efi_partition.mountpoint != GRUB_ESP:
 		errors.append(f'GRUB on UEFI needs the ESP mounted at {GRUB_ESP} (found {efi_partition.mountpoint})')
 
+	if bootloader.requires_uki() and not bootloader_config.uki:
+		errors.append(f'{bootloader.display_name()} boots a unified kernel image: enable UKI')
+
+	# kernel-install puts UKIs on an XBOOTLDR /boot when there is one, where
+	# the firmware never looks
+	if bootloader == Bootloader.Efistub and boot_partition is not None and has_separate_boot(boot_partition, efi_partition):
+		errors.append('Efistub needs the UKIs on the ESP: no separate /boot partition')
+
 	if bootloader_config.uki and not bootloader.has_uki_support():
 		errors.append(f'{bootloader.display_name()} does not boot unified kernel images')
 

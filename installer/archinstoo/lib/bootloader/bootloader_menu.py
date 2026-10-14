@@ -123,6 +123,10 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			self._bootloader_conf.uki = False
 		else:
 			uki_item.enabled = True
+			# efistub has nothing else to boot
+			if bootloader.requires_uki():
+				uki_item.value = True
+				self._bootloader_conf.uki = True
 
 		removable_item = self._menu_item_group.find_by_key('removable')
 		if not self._uefi or bootloader is None or not bootloader.has_removable_support():

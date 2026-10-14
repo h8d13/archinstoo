@@ -188,3 +188,13 @@ def test_lvm_root_is_found() -> None:
 	)
 
 	assert validate_bootloader(BootloaderConfiguration(Bootloader.Systemd), disk_config, uefi=True) == []
+
+
+def test_efistub_needs_uki() -> None:
+	assert 'Efistub boots a unified kernel image: enable UKI' in _errors(Bootloader.Efistub, [ESP_BOOT, ROOT_BTRFS])
+	assert _errors(Bootloader.Efistub, [ESP_BOOT, ROOT_BTRFS], uki=True) == []
+
+
+def test_efistub_rejects_xbootldr() -> None:
+	errors = _errors(Bootloader.Efistub, [ESP_EFI, BOOT_XBOOTLDR, ROOT_BTRFS], uki=True)
+	assert 'Efistub needs the UKIs on the ESP: no separate /boot partition' in errors

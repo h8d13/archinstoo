@@ -13,6 +13,7 @@ GRUB_ESP = Path('/boot/efi')
 class Bootloader(Enum):
 	Systemd = 'systemd-boot'
 	Grub = 'grub'
+	Efistub = 'efistub'
 
 	def display_name(self) -> str:
 		match self:
@@ -20,6 +21,8 @@ class Bootloader(Enum):
 				return 'Systemd-boot'
 			case Bootloader.Grub:
 				return 'Grub'
+			case Bootloader.Efistub:
+				return 'Efistub'
 
 	def packages(self, uefi: bool = True, uki: bool = False) -> list[str]:
 		# what the bootloader step straps. The default is the UEFI set, the
@@ -35,6 +38,10 @@ class Bootloader(Enum):
 					# anaconda/pyanaconda/modules/storage/bootloader/efi.py:164-173
 					return ['grub2-efi-x64', 'shim-x64', 'grub2-tools', 'efibootmgr']
 				return ['grub2-pc', 'grub2-tools']
+			case Bootloader.Efistub:
+				# the firmware loads the UKI itself: ukify builds it around the
+				# stub systemd-boot-unsigned carries, efibootmgr registers it
+				return ['systemd-boot-unsigned', 'systemd-ukify', 'efibootmgr']
 
 	def has_removable_support(self) -> bool:
 		# both land in EFI/BOOT/BOOTX64.EFI anyway (shim-x64 ships it, bootctl
@@ -46,7 +53,11 @@ class Bootloader(Enum):
 
 	def has_uki_support(self) -> bool:
 		# GRUB's BLS entries name a kernel and an initrd, not a UKI
-		return self == Bootloader.Systemd
+		return self != Bootloader.Grub
+
+	def requires_uki(self) -> bool:
+		# one file for the firmware to load: kernel, initrd and cmdline in it
+		return self == Bootloader.Efistub
 
 	def json(self) -> str:
 		return self.value

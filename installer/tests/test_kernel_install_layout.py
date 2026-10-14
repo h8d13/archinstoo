@@ -55,3 +55,18 @@ def test_systemd_boot_removable_leaves_nvram_alone(tmp_path: Path, removable: bo
 	installer._add_systemd_bootloader(esp, esp, uki_enabled=False, removable=removable)  # type: ignore[arg-type]
 
 	assert calls == [['bootctl', variables, 'install']]
+
+
+@pytest.mark.parametrize('path', ['EFI/Linux/fedora.efi', 'EFI/BOOT/BOOTX64.EFI'])
+def test_efistub_plugin_keeps_one_file_current(tmp_path: Path, path: str) -> None:
+	# the firmware entry (or the fallback path) names one file across kernel
+	# updates: the plugin copies each new UKI over it, on add only
+	installer = BootloaderInstaller.__new__(BootloaderInstaller)
+	installer.target = tmp_path
+	installer._write_efistub_plugin(path)
+
+	plugin = tmp_path / 'etc/kernel/install.d/95-fedinstoo-efistub.install'
+	script = plugin.read_text()
+	assert plugin.stat().st_mode & 0o111
+	assert '[ "$1" = add ] || exit 0' in script
+	assert f'cp "$KERNEL_INSTALL_STAGING_AREA/uki.efi" "$KERNEL_INSTALL_BOOT_ROOT/{path}"' in script
