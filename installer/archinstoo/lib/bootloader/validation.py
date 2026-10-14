@@ -1,6 +1,7 @@
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.bootloader import GRUB_ESP, Bootloader, BootloaderConfiguration
-from archinstoo.lib.models.device import DiskLayoutConfiguration, PartitionFlag, PartitionTable, has_separate_boot
+from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, PartitionFlag, PartitionTable, has_separate_boot
+from archinstoo.lib.utils.env import Os
 
 
 def validate_bootloader(
@@ -19,6 +20,12 @@ def validate_bootloader(
 
 	if disk_config is None:
 		return ['No disk layout selected']
+
+	# lsblk only reports mounts inside the installer's root: under BOOT that
+	# is the host's /mnt alone, anything else looks empty
+	if disk_config.config_type == DiskLayoutType.Pre_mount and not disk_config.device_modifications:
+		hint = " (BOOT passes only the host's /mnt through)" if Os.running_from_bootstrap() else ''
+		return [f'Nothing mounted at {disk_config.mountpoint}{hint}']
 
 	# an LVM root is a volume, not a partition
 	root = disk_config.get_root()

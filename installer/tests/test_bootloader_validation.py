@@ -198,3 +198,14 @@ def test_efistub_needs_uki() -> None:
 def test_efistub_rejects_xbootldr() -> None:
 	errors = _errors(Bootloader.Efistub, [ESP_EFI, BOOT_XBOOTLDR, ROOT_BTRFS], uki=True)
 	assert 'Efistub needs the UKIs on the ESP: no separate /boot partition' in errors
+
+
+@pytest.mark.parametrize(('bootstrap', 'hint'), [('1', " (BOOT passes only the host's /mnt through)"), ('', '')])
+def test_pre_mount_with_nothing_mounted(monkeypatch: pytest.MonkeyPatch, bootstrap: str, hint: str) -> None:
+	# BOOT's chroot cannot see a host mount outside /mnt; say so instead of
+	# reporting a missing root and ESP
+	monkeypatch.setenv('A2_BOOTSTRAP', bootstrap)
+	disk = DiskLayoutConfiguration(config_type=DiskLayoutType.Pre_mount, mountpoint=Path('/target'))
+	config = BootloaderConfiguration(bootloader=Bootloader.Systemd)
+
+	assert validate_bootloader(config, disk, uefi=True) == [f'Nothing mounted at /target{hint}']
