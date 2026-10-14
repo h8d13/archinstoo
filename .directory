@@ -2,46 +2,38 @@
 Icon=folder-build
 # .
 # ├── architecture
-# ├── distros
-# │   └── assets
-# ├── installer
-# │   ├── archinstoo
-# │   │   ├── default_profiles
-# │   │   │   ├── desktops
-# │   │   │   │   └── noctalia_assets
-# │   │   │   │       ├── hyprland
-# │   │   │   │       ├── labwc
-# │   │   │   │       ├── niri
-# │   │   │   │       └── sway
-# │   │   │   └── servers
-# │   │   ├── lib
-# │   │   │   ├── applications
-# │   │   │   │   └── cat
-# │   │   │   ├── authentication
-# │   │   │   ├── bootloader
-# │   │   │   ├── disk
-# │   │   │   ├── interactions
-# │   │   │   ├── kernel
-# │   │   │   ├── localization
-# │   │   │   ├── menu
-# │   │   │   ├── models
-# │   │   │   ├── network
-# │   │   │   ├── pm
-# │   │   │   ├── profile
-# │   │   │   ├── tui
-# │   │   │   └── utils
-# │   │   └── scripts
-# │   ├── archinstoo.egg-info
-# │   ├── docs
-# │   ├── examples
-# │   ├── stubs
-# │   │   └── parted
-# │   └── tests
-# │       └── data
-# ├── isos
-# │   ├── a
-# │   ├── assets
-# │   └── mkosi
-# └── nvchecker
+# └── installer
+#     ├── archinstoo
+#     │   ├── default_profiles
+#     │   │   ├── desktops
+#     │   │   │   └── noctalia_assets
+#     │   │   │       ├── hyprland
+#     │   │   │       ├── labwc
+#     │   │   │       ├── niri
+#     │   │   │       └── sway
+#     │   │   └── servers
+#     │   ├── lib
+#     │   │   ├── applications
+#     │   │   │   └── cat
+#     │   │   ├── authentication
+#     │   │   ├── bootloader
+#     │   │   ├── disk
+#     │   │   ├── interactions
+#     │   │   ├── kernel
+#     │   │   ├── localization
+#     │   │   ├── menu
+#     │   │   ├── models
+#     │   │   ├── network
+#     │   │   ├── pm
+#     │   │   ├── profile
+#     │   │   ├── tui
+#     │   │   └── utils
+#     │   └── scripts
+#     ├── docs
+#     ├── examples
+#     ├── stubs
+#     │   └── parted
+#     └── tests
+#         └── data
 # 
-# 43 directories
+# 35 directories

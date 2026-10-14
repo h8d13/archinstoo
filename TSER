@@ -44,9 +44,6 @@
 # disk (A2_SERIAL=1 ./TVM boot) and log in straight away, no chpasswd needed:
 #   ./TSER login -p test           # root
 #   ./TSER login -u vm -p test     # user
-#
-# Foreign hosts for distros/: ./distros/CLOUD fed|deb boots a cloud image,
-# then ./TSER login -p test
 
 import argparse
 import os

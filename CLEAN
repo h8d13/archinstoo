@@ -15,7 +15,7 @@
 # ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 
 # ISOs stay: ignored by git but expensive to redownload
-keep=(-e '!*.iso' -e '!isos/a/')
+keep=(-e '!*.iso' -e '!.dev-iso/')
 
 git clean -Xnd "${keep[@]}"
 

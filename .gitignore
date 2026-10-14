@@ -62,7 +62,5 @@ uv.lock
 /site
 archinstall/
 partstoob/
-/isos/mkosi/mkosi.conf.d/
-/isos/mkosi/mkosi.cache/
 /upstream-issues/
 archinstall/

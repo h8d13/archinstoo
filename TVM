@@ -6,7 +6,7 @@
 # (A2_ARCH=aarch64 adds: qemu-system-aarch64 edk2-aarch64; qemu-hw-display-virtio-gpu{,-pci} for A2_VGA=virtio-gpu-pci)
 #
 # Dev test VM for archinstoo. Boots an ISO under QEMU.
-# ISO building is intentionally NOT done here, use isos/ISOMOD for that/default Arch ISO.
+# ISO building is intentionally NOT done here: drop a stock Arch ISO in .dev-iso/.
 # Credits to @Softer, modified for archinstoo.
 #
 # Host artifacts (created in repo root, git-ignored):
@@ -59,7 +59,7 @@
 #                       NVRAM. The installed disk must carry a BIOS-capable
 #                       bootloader (grub with a bios_grub partition).
 #   A2_DEV_ISO          explicit ISO path (skips discovery)
-#   A2_UKI              path to a live UKI (isos/UKIMOD output, isos/a/archinstoo.efi).
+#   A2_UKI              path to a live UKI.
 #                       Boots it via -kernel in place of an ISO: no cdrom, no
 #                       kernel extraction, its baked cmdline already has ttyS0.
 #                       Disk handling per mode is unchanged. OVMF only.
@@ -75,8 +75,6 @@
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
 #                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
-#                       a cloud image (distros/DEB, distros/FED) takes its
-#                       cloud-init config off the SMBIOS serial, see distros/CLOUD
 #   A2_DRY              '1' prints the assembled qemu command and exits (still
 #                       creates the disk/NVRAM the mode asks for)
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
@@ -98,7 +96,6 @@ QEMU="qemu-system-$A2_ARCH"
 HOST_ARCH="$(uname -m)"
 DISK="$PROJECT_DIR/.dev-disk$ARCH_SUFFIX.qcow2"
 OVMF_VARS="$PROJECT_DIR/.dev-ovmf-vars$ARCH_SUFFIX.fd"
-ISOMOD_OUT="$PROJECT_DIR/isos/a"
 DEV_ISO_DIR="$PROJECT_DIR/.dev-iso"
 BOOT_DIR="$PROJECT_DIR/.dev-boot"
 SERIAL_SOCK="$PROJECT_DIR/.dev-serial.sock"
@@ -193,7 +190,7 @@ check_host_deps() {
 	fi
 	if [ "$A2_ARCH" != "x86_64" ]; then
 		[ "$A2_BIOS" != "1" ] || err "A2_BIOS is x86_64 only (no SeaBIOS on virt)"
-		[ -z "$A2_UKI" ] || err "A2_UKI is x86_64 only (UKIMOD builds x86_64 images)"
+		[ -z "$A2_UKI" ] || err "A2_UKI is x86_64 only"
 	fi
 	if [ "$A2_SERIAL" != "0" ] && [ -z "$A2_UKI" ]; then
 		command -v bsdtar >/dev/null 2>&1 ||
@@ -255,7 +252,7 @@ find_iso() {
 	# newest first, then keep the guest arch: aarch64 ISOs carry it in the
 	# name (archlinux-*-aarch64.iso), x86_64 ones do not always (archlinux-*.iso)
 	local isos
-	isos="$(ls -t "$ISOMOD_OUT"/*.iso "$DEV_ISO_DIR"/*.iso 2>/dev/null || true)"
+	isos="$(ls -t "$DEV_ISO_DIR"/*.iso 2>/dev/null || true)"
 	if [ "$A2_ARCH" = "x86_64" ]; then
 		printf '%s\n' "$isos" | { grep -v "aarch64" || true; } | head -n1
 	else
@@ -267,7 +264,7 @@ require_iso() {
 	local iso
 	iso="$(find_iso)"
 	if [ -z "$iso" ]; then
-		err "No ISO found. Build one with isos/ISOMOD, drop one in $DEV_ISO_DIR/ or $ISOMOD_OUT, or set A2_DEV_ISO=/path/to.iso"
+		err "No ISO found. Drop one in $DEV_ISO_DIR/ or set A2_DEV_ISO=/path/to.iso"
 	fi
 	printf '%s\n' "$iso"
 }
@@ -275,7 +272,7 @@ require_iso() {
 # ISO by default, a UKI when asked for: both are "boot media" to the modes
 require_media() {
 	if [ -n "$A2_UKI" ]; then
-		[ -f "$A2_UKI" ] || err "A2_UKI=$A2_UKI not found (build one with isos/UKIMOD)"
+		[ -f "$A2_UKI" ] || err "A2_UKI=$A2_UKI not found"
 		[ "$A2_BIOS" != "1" ] || err "A2_UKI needs OVMF, unset A2_BIOS"
 		return
 	fi

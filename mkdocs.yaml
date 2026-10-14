@@ -81,8 +81,6 @@ nav:
   - Advanced:
       - ARM / aarch64 ports: ARM_SUPPORT.md
       - AUR / out-of-tree: OUT_OF_TREE.md
-      - Build ISOs: BUILD_ISOS.md
-      - Other Linux: DISTROS.md
   - Project:
       - Contributing: CONTRIBUTING.md
       - API Reference: API_REF.md
