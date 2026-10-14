@@ -13,6 +13,10 @@
 #
 # Usage:
 #   ./TSER read [-n LINES]        dump console output (default: last 50)
+#   ./TSER wait REGEX [-t SEC]    block until REGEX shows up on ttyS0 and
+#                                 print its line: boot prompts (LUKS
+#                                 passphrase, login) before send/login.
+#                                 --new ignores what is already logged
 #   ./TSER login                  log in as root, sane tty width
 #   ./TSER send TEXT              type TEXT + Enter on ttyS0
 #   ./TSER run CMD [-t SEC]       run CMD in the guest shell, print output,
@@ -209,6 +213,17 @@ def cmd_read(args: argparse.Namespace) -> None:
 	if args.lines > 0:
 		lines = lines[-args.lines :]
 	print('\n'.join(lines))
+
+
+def cmd_wait(args: argparse.Namespace) -> NoReturn:
+	# case-insensitive: prompts change capitalization between releases
+	text, match = wait_for(f'(?i){args.pattern}', args.timeout, log_size() if args.new else 0)
+	if not match:
+		die(f'timeout after {args.timeout}s waiting for {args.pattern!r}')
+	start = text.rfind('\n', 0, match.start()) + 1
+	end = text.find('\n', match.end())
+	print(text[start : end if end != -1 else len(text)].strip())
+	sys.exit(0)
 
 
 def cmd_send(args: argparse.Namespace) -> None:
@@ -486,6 +501,12 @@ def main() -> None:
 	p = sub.add_parser('read')
 	p.add_argument('-n', '--lines', type=int, default=50)
 	p.set_defaults(func=cmd_read)
+
+	p = sub.add_parser('wait')
+	p.add_argument('pattern')
+	p.add_argument('-t', '--timeout', type=float, default=180)
+	p.add_argument('--new', action='store_true')
+	p.set_defaults(func=cmd_wait)
 
 	p = sub.add_parser('send')
 	p.add_argument('text')
