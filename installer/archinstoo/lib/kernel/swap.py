@@ -3,6 +3,7 @@ import re
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING
 
+from archinstoo.lib import selinux
 from archinstoo.lib.exceptions import DiskError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
@@ -25,11 +26,17 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 		# nested subvolume: snapshots of the parent don't recurse into
 		# it, so root snapshots keep working with the swapfile in place
 		swapfile = '/swap/swapfile'
+		context = '/swap(/.*)?'
 		installation.arch_chroot(['btrfs', 'subvolume', 'create', '/swap'])
 		installation.arch_chroot(['btrfs', 'filesystem', 'mkswapfile', '--size', f'{size}g', '--uuid', 'clear', swapfile])
 	else:
 		swapfile = '/swapfile'
+		context = swapfile
 		installation.arch_chroot(['mkswap', '-U', 'clear', '--size', f'{size}G', '--file', swapfile])
+
+	# the policy labels no swapfile path swapfile_t, and logind may only
+	# read one that is to hibernate; Fedora's own guidance adds the rule
+	selinux.add_file_context(installation, context, 'swapfile_t')
 
 	fstab_entry = f'{swapfile}\tnone\tswap\tdefaults\t0\t0'
 	kernel_params: list[str] = []
