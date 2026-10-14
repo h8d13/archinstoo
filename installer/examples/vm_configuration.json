@@ -9,7 +9,7 @@
     },
     "bootloader_config": {
         "bootloader": "grub",
-        "uki": true,
+        "uki": false,
         "removable": true
     },
     "disk_config": null,

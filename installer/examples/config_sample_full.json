@@ -13,10 +13,9 @@
     },
     "bootloader_config": {
         "bootloader": "grub",
-        "uki": true,
+        "uki": false,
         "removable": true,
         "quiet": false,
-        "splash": false,
         "serial_console": null
     },
     "disk_config": {

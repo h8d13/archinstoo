@@ -9,6 +9,7 @@ import pytest
 
 from archinstoo.lib.args import ArchConfig
 from archinstoo.lib.models.applications import ApplicationConfiguration
+from archinstoo.lib.models.bootloader import BootloaderConfiguration
 
 EXAMPLES = Path(__file__).parent.parent / 'examples'
 FULL = EXAMPLES / 'config_sample_full.json'
@@ -41,3 +42,17 @@ def test_example_app_config_round_trips(path: Path) -> None:
 	# parse_arg raises ValueError on an enum value the code no longer knows
 	parsed = ApplicationConfiguration.parse_arg(raw)
 	assert parsed.json() == raw
+
+
+@pytest.mark.parametrize('path', sorted(EXAMPLES.glob('*.json')), ids=lambda p: p.name)
+def test_example_bootloader_config_is_current(path: Path) -> None:
+	# parse_arg skips keys it no longer knows, so a dropped option (splash)
+	# lingered in the examples unnoticed; and a pairing the menu refuses
+	# (GRUB + UKI) must not be what users copy
+	raw = _load(path).get('bootloader_config')
+	if raw is None:
+		pytest.skip('no bootloader_config section')
+	parsed = BootloaderConfiguration.parse_arg(raw)
+
+	assert set(raw) <= set(parsed.json()), f'unknown keys: {sorted(set(raw) - set(parsed.json()))}'
+	assert not (parsed.uki and parsed.bootloader and not parsed.bootloader.has_uki_support())
