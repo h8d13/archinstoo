@@ -129,11 +129,7 @@ def _create_user(
 
 	cmd.append(user.username)
 
-	try:
-		installation.arch_chroot(cmd)
-	except CalledProcessError:
-		# user may already exist (e.g. installing onto running system)
-		info(f'User {user.username} already exists, skipping creation')
+	installation.arch_chroot(cmd)
 
 	set_user_password(installation, user)
 
