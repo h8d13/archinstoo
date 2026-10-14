@@ -88,6 +88,7 @@
 │   │   │   └── validation
 │   │   ├── checkpoints
 │   │   ├── chroot
+│   │   ├── cli
 │   │   ├── configuration
 │   │   ├── detect
 │   │   ├── disk/
@@ -211,9 +212,10 @@
 │   └── vm_unattended.json
 ├── PKGBUILD
 ├── pyproject.toml
-└── stubs/
-    └── parted/
-        └── __init__
+├── stubs/
+│   └── parted/
+│       └── __init__
+└── uv.lock
 
-30 directories, 184 files
+30 directories, 186 files
 ```

@@ -2,7 +2,6 @@
 Icon=folder-build
 # .
 # ├── architecture
-# │   └── boards
 # ├── distros
 # │   └── assets
 # ├── installer
@@ -32,6 +31,7 @@ Icon=folder-build
 # │   │   │   ├── tui
 # │   │   │   └── utils
 # │   │   └── scripts
+# │   ├── archinstoo.egg-info
 # │   ├── docs
 # │   ├── examples
 # │   ├── stubs
