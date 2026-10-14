@@ -20,11 +20,12 @@ def validate_bootloader(
 	if disk_config is None:
 		return ['No disk layout selected']
 
-	root_partition = disk_config.get_root_partition()
+	# an LVM root is a volume, not a partition
+	root = disk_config.get_root()
 	boot_partition = disk_config.get_boot_partition()
 	efi_partition = disk_config.get_efi_partition() if uefi else None
 
-	if root_partition is None:
+	if root is None:
 		errors.append('Root partition not found')
 
 	# Legacy vs /efi newer standard

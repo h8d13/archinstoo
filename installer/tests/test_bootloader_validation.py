@@ -10,6 +10,10 @@ from archinstoo.lib.models.device import (
 	DiskLayoutConfiguration,
 	DiskLayoutType,
 	FilesystemType,
+	LvmConfiguration,
+	LvmLayoutType,
+	LvmVolume,
+	LvmVolumeGroup,
 	ModificationStatus,
 	PartitionFlag,
 	PartitionModification,
@@ -170,3 +174,17 @@ def test_gpt_partition_count_unrestricted() -> None:
 	swap_part = _part(None, '/dev/vda5', FilesystemType.LINUX_SWAP, [])
 	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4, swap_part], PartitionTable.GPT)
 	assert errors == []
+
+
+def test_lvm_root_is_found() -> None:
+	# the root is a volume, not a partition: unattended LVM installs used to
+	# fail pre-flight with 'Root partition not found'
+	pv = _part(None, '/dev/vda2', FilesystemType.LVM, [])
+	root = LvmVolume(ModificationStatus.CREATE, 'root', FilesystemType.EXT4, Size(8, Unit.GiB, SECTOR), Path('/'))
+	disk_config = DiskLayoutConfiguration(
+		config_type=DiskLayoutType.Manual,
+		device_modifications=[DeviceModification(device=None, wipe=True, partitions=[ESP_BOOT, pv])],  # type: ignore[arg-type]
+		lvm_config=LvmConfiguration(LvmLayoutType.Default, [LvmVolumeGroup('fedora', [pv], [root])]),
+	)
+
+	assert validate_bootloader(BootloaderConfiguration(Bootloader.Systemd), disk_config, uefi=True) == []
