@@ -18,8 +18,9 @@ def write_environment(target: Path, env_vars: dict[str, str]) -> None:
 	# included, which is the only path Wayland has for XKB_DEFAULT_* and
 	# the one $TERMINAL rides on. Callers own the keys they hand over, so a
 	# key already in the file is rewritten where it stands: a second pass
-	# over a live target (its own /etc) must neither stack a duplicate line
-	# nor leave the old value winning. Lines nobody claims stay untouched.
+	# over the running system (packages script) must neither stack a
+	# duplicate line nor leave the old value winning. Lines nobody claims
+	# stay untouched.
 	if not env_vars:
 		return
 
