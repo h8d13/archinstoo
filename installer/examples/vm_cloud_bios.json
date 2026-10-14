@@ -91,9 +91,7 @@
                     }
                 ]
             }
-        ],
-        "lvm_config": null,
-        "btrfs_options": null
+        ]
     },
     "swap": {
         "zram": true,
@@ -128,7 +126,6 @@
                 "username": "vm",
                 "enc_password": "$y$j9T$zsSREd.NOfMD.yX6651hM0$yZLZhZbP/KX7cg6JFgKGylju2Msy3xWnhpBFAiUUFg5",
                 "elev": true,
-                "groups": null,
                 "shell": "bash"
             }
         ]

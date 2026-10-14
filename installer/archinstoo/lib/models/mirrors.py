@@ -6,7 +6,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, NotRequired, Self, TypedDict
+from typing import NotRequired, Self, TypedDict
 
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug
@@ -260,7 +260,7 @@ class _CustomRepositorySerialization(TypedDict):
 	url: str
 	sign_check: str
 	sign_option: str
-	priority: bool
+	priority: NotRequired[bool]
 
 
 @dataclass
@@ -305,7 +305,7 @@ class CustomRepository:
 		return None
 
 	@classmethod
-	def parse_args(cls, args: list[dict[str, Any]]) -> list[Self]:
+	def parse_args(cls, args: list[_CustomRepositorySerialization]) -> list[Self]:
 		repos: list[Self] = []
 		for arg in args:
 			if error := cls.name_error(arg['name'], [r.name for r in repos]):
@@ -338,10 +338,10 @@ class CustomServer:
 
 
 class _PacmanConfigurationSerialization(TypedDict):
-	mirror_regions: dict[str, list[str]]
-	custom_servers: list[CustomServer]
-	optional_repositories: list[str]
-	custom_repositories: list[_CustomRepositorySerialization]
+	mirror_regions: NotRequired[dict[str, list[str]]]
+	custom_servers: NotRequired[list[dict[str, str]]]
+	optional_repositories: NotRequired[list[str]]
+	custom_repositories: NotRequired[list[_CustomRepositorySerialization]]
 	pacman_options: NotRequired[list[str]]
 	parallel_downloads: NotRequired[int]
 
@@ -374,7 +374,7 @@ class PacmanConfiguration:
 
 		config: _PacmanConfigurationSerialization = {
 			'mirror_regions': regions,
-			'custom_servers': self.custom_servers,
+			'custom_servers': [s.json() for s in self.custom_servers],
 			'optional_repositories': [r.value for r in self.optional_repositories],
 			'custom_repositories': [c.json() for c in self.custom_repositories],
 		}
@@ -400,11 +400,11 @@ class PacmanConfiguration:
 	@classmethod
 	def parse_args(
 		cls,
-		args: dict[str, Any],
+		args: _PacmanConfigurationSerialization,
 	) -> Self:
 		config = cls()
 
-		if mirror_regions := args.get('mirror_regions', []):
+		if mirror_regions := args.get('mirror_regions', {}):
 			for region, urls in mirror_regions.items():
 				config.mirror_regions.append(MirrorRegion(region, urls))
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from archinstoo import ROOTLESS_SCRIPTS
-from archinstoo.lib.args import DEFAULT_SCRIPT
+from archinstoo.lib.cli import DEFAULT_SCRIPT
 
 scripts = [p.stem for p in Path(__file__).parent.glob('*.py') if not p.stem.startswith('_') and p.stem != 'list']
 

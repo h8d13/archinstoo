@@ -35,12 +35,12 @@ def test_config_with_duplicate_names_rejected() -> None:
 	args = [_repo('vrch').json(), _repo('vrch').json()]
 
 	with pytest.raises(ValueError, match='already exists'):
-		CustomRepository.parse_args([dict(a) for a in args])
+		CustomRepository.parse_args(args)
 
 
 def test_config_with_reserved_name_rejected() -> None:
 	with pytest.raises(ValueError, match='reserved'):
-		CustomRepository.parse_args([dict(_repo('core').json())])
+		CustomRepository.parse_args([_repo('core').json()])
 
 
 def _menu(monkeypatch: pytest.MonkeyPatch, data: list[CustomRepository], result: CustomRepository) -> tuple[CustomMirrorRepositoriesList, list[list[str]]]:

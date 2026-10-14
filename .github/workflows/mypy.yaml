@@ -11,6 +11,9 @@ permissions: {}
 jobs:
     mypy:
         runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: installer
         container:
             image: archlinux/archlinux:latest@sha256:86092797e32aa19d3f45a831b2873cf557c21c5280e9d197ca7a43c8ea79bcd3
         steps:
@@ -26,8 +29,8 @@ jobs:
             - run: pip install --break-system-packages --upgrade pip
             # this will install the exact version of mypy that is in the pyproject.toml file
             - name: Install archinstoo dependencies
-              run: pip install --break-system-packages ./installer[dev]
+              run: pip install --break-system-packages .[dev]
             - run: python --version
             - run: mypy --version
             - name: run mypy
-              run: mypy --config-file installer/pyproject.toml installer/archinstoo
+              run: mypy

@@ -151,7 +151,7 @@ def test_existing_repo_position_survives_reread(tmp_path: Path, monkeypatch: pyt
 def test_priority_json_round_trip() -> None:
 	repo = CustomRepository('above', 'https://a.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
 
-	assert CustomRepository.parse_args([dict(repo.json())]) == [repo]
+	assert CustomRepository.parse_args([repo.json()]) == [repo]
 
 
 def test_priority_repos_first_then_the_rest_in_insertion_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

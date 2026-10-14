@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.urls]
-Home = "https://archlinux.org"
+Home = "https://archlinux.org/downloads"
 Source = "https://github.com/h8d13/archinstoo"
 
 [project.optional-dependencies]
@@ -56,8 +56,8 @@ include-package-data = true
 archinstoo = "archinstoo"
 
 [tool.mypy]
+cache_dir = "~/.cache/archinstoo/mypy"
 files = "."
-# relative to this file, not the cwd: CI runs mypy from the repo root
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 exclude = "^build/"
 disallow_any_explicit = false
@@ -98,7 +98,7 @@ type = "acyclic_siblings"
 ancestors = ["archinstoo", "archinstoo.**"]
 
 [tool.pytest]
-pythonpath = ["."]
+cache_dir = "~/.cache/archinstoo/pytest"
 addopts = [
     "-s",
     "--strict",
@@ -123,9 +123,8 @@ max-line-length = 160
 disable = [
     "C",                       # ruff covers style
     "R",                       # ruff covers refactors
-    "broad-exception-caught",  # 25 sites, all log-and-continue boundaries
-    "fixme",                   # TODOs are tracked in-code on purpose
-    "protected-access",        # SysInfo._bitness & co are package-internal
+    "broad-exception-caught",  # log-and-continue boundaries
+    "fixme",                   # tracked in-code on purpose
     "unspecified-encoding",    # PEP 686: utf-8 is the default from 3.15
 ]
 
@@ -139,6 +138,7 @@ init-import = true
 ignored-modules = ["parted"]
 
 [tool.ruff]
+cache-dir = "~/.cache/archinstoo/ruff"
 line-length = 160
 indent-width = 8
 exclude = ["**/lib/grimoire.py"]
@@ -216,11 +216,9 @@ ignore = [
     # `ruff format` under the tab + magic-trailing-comma style set above.
     "COM812",   # missing-trailing-comma
     "W191",     # tab-indentation
-
-    # deliberate architecture
     "PLC0415",  # import-outside-top-level: models/ -> hardware, disk breaks
-                # cycles; the rest defer optional/slow imports (parted, pty, tui)
-    "RUF067",   # non-empty-init-module: __init__ holds the dep tables and main()
+                # cycles; the rest defer optional/slow imports (parted, tui)
+    "RUF067",   # non-empty-init-module: init hacks are on purpose.
 
 ]
 

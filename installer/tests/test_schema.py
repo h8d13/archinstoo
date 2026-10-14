@@ -97,7 +97,7 @@ _PICKED = [s for s in schema_gen.SECTIONS if s.pick]
 
 def test_every_app_category_has_a_pick() -> None:
 	picked = {s.pick[0] for s in _PICKED}
-	categories = set(ApplicationConfiguration._config_parsers)
+	categories = set(ApplicationConfiguration._config_parsers())
 	assert picked == categories, f'categories with no pick: {sorted(categories - picked)}; picks with no category: {sorted(picked - categories)}'
 
 

@@ -11,6 +11,9 @@ permissions: {}
 jobs:
     pytest:
         runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: installer
         container:
             image: archlinux/archlinux:latest@sha256:86092797e32aa19d3f45a831b2873cf557c21c5280e9d197ca7a43c8ea79bcd3
             options: --privileged
@@ -26,6 +29,6 @@ jobs:
                 pacman --noconfirm -Sy python-pip python-pyparted pkgconfig gcc
             - run: pip install --break-system-packages --upgrade pip
             - name: Install archinstoo dependencies
-              run: pip install --break-system-packages ./installer[dev]
+              run: pip install --break-system-packages .[dev]
             - name: Test with pytest
-              run: pytest -c installer/pyproject.toml installer/tests
+              run: pytest

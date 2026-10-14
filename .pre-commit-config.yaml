@@ -41,11 +41,8 @@ repos:
     rev: v2.4.0
     hooks:
     - id: mypy
-      args: [
-        '--config-file=installer/pyproject.toml',
-        'installer/archinstoo',
-        'installer/tests'
-      ]
+      # no paths: `files` in the config is the scope, as in CI
+      args: ['--config-file=installer/pyproject.toml']
       pass_filenames: false
       files: ^installer/
       additional_dependencies:
@@ -64,19 +61,21 @@ repos:
     - id: lint-imports
       name: lint-imports
       # sibling-acyclicity contract in installer/pyproject.toml
-      entry: env PYTHONPATH=installer lint-imports --config installer/pyproject.toml
+      entry: env PYTHONPATH=installer lint-imports --config installer/pyproject.toml --no-cache
       language: python
       additional_dependencies:
         - import-linter==2.15
       pass_filenames: false
       files: ^installer/
       fail_fast: true
-    # system pylint (pacman python-pylint): pyparted is already importable there,
-    # a hook venv would have to compile it (pkgconf gcc parted)
+    # hook venv like the rest; pyparted is not needed, the rcfile
+    # lists parted under ignored-modules
     - id: pylint
       name: pylint
       entry: pylint
-      language: system
+      language: python
+      additional_dependencies:
+        - pylint==4.1.3
       args: ['--rcfile=installer/pyproject.toml', 'installer/archinstoo']
       pass_filenames: false
       files: ^installer/

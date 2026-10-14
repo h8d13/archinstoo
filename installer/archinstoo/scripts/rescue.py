@@ -1,4 +1,5 @@
 import contextlib
+import time
 from getpass import getpass
 from pathlib import Path
 
@@ -184,8 +185,6 @@ def unmount_all(mount_point: Path) -> None:
 		except SysCallError:
 			if attempt < max_attempts - 1:
 				warn(f'Unmount attempt {attempt + 1} failed, retrying...')
-				import time
-
 				time.sleep(1)
 			else:
 				error('Failed to unmount all filesystems. You may need to unmount manually.')

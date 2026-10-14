@@ -73,9 +73,7 @@
                     }
                 ]
             }
-        ],
-        "lvm_config": null,
-        "btrfs_options": null
+        ]
     },
     "swap": {
         "zram": false

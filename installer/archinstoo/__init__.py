@@ -72,6 +72,7 @@ from typing import TYPE_CHECKING
 from ._version import __gitstat__, __pkgver__, __version__
 from .lib import output
 from .lib.checkpoints import _run_script, clean_cache, clean_logs
+from .lib.cli import build_parser
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
@@ -107,9 +108,10 @@ disk_depends = (
 	'cryptsetup',  		# LUKS encryption support
 	'lvm2',  		# LVM layout support
 	'mdadm',		# RAID layout support
-)  # we only need to check this on bootstrap tarball paths.
-# since most are already expected on the default ISO.
+)
+# we only check these on bootstrap tarball.
 # https://gitlab.archlinux.org/archlinux/archiso/-/blob/master/configs/releng/packages.x86_64
+# mirror the PKGBUILDs in repo
 # fmt: on
 
 # main init file of archinstoo
@@ -127,10 +129,10 @@ disk_depends = (
 # scripts that don't need root
 # short-circuit all of the ini
 
-
-ROOTLESS_SCRIPTS = {'list', 'mirror', 'count', 'schema', 'detect'}
+# scripts that do not need root access
+ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect'})
 # scripts that only touch the running system
-NO_DISK_SCRIPTS = {'packages'}
+NO_DISK_SCRIPTS = frozenset({'packages'})
 
 
 def _log_env_info() -> None:
@@ -153,9 +155,7 @@ def _log_env_info() -> None:
 
 def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 	# -T prints only what is unsatisfied and honours `provides`, so a package
-	# the ISO already covers under another name is left alone. --needed skips
-	# reinstalls but not upgrades, and upgrading an ISO package into a newer
-	# split breaks the ISO's own tools (e.g. a package moving into a split).
+	# the ISO already covers under another name is left alone.
 	try:
 		Pacman.run(f'-T {" ".join(depends)}')
 	except SysCallError as err:
@@ -174,7 +174,7 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 
 
 def _depends() -> tuple[str, ...]:
-	# an Arch host/ISO already ships the disk tools; the distros/BOOT tarball
+	# an Arch host/ISO already ships the disk tools
 	if Os.running_from_bootstrap():
 		return base_depends + disk_depends
 	return base_depends
@@ -227,7 +227,7 @@ def _check_online() -> int:
 		raise
 
 
-def _prepare() -> int:
+def _prepare(offline: bool) -> int:
 	# log python/host-2-target
 	_log_env_info()
 
@@ -235,11 +235,10 @@ def _prepare() -> int:
 		return 0
 
 	# check online (or offline requested) before trying to fetch packages
-	if '--offline' not in sys.argv:
+	if not offline:
 		if rc := _check_online():
 			return rc
 		# note indent fully offlines installs should be possible
-		# instead of importing full handler use sys.argv directly
 		try:
 			# -Syy then -S without -u is a partial upgrade of the running system:
 			# fine on the ISO, not on the user's own Arch, which provides the deps
@@ -325,18 +324,6 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 	warn(text)
 
 
-def _script_from_argv() -> str | None:
-	# peek at sys.argv for --script value without full arg parsing.
-	# argparse takes both spellings, so a peek that only knows `--script x`
-	# reads `--script=x` as "no script" and falls back to the disk-heavy path
-	for i, arg in enumerate(sys.argv):
-		if arg.startswith('--script='):
-			return arg.split('=', 1)[1] or None
-		if arg == '--script':
-			return sys.argv[i + 1] if i + 1 < len(sys.argv) else None
-	return None
-
-
 def _is_foreign_blocked(script: str | None) -> bool:
 	# a foreign host gets its deps from its own package manager (see distros/)
 	# and pacstraps a separate target, which is fine. these scripts instead
@@ -347,34 +334,32 @@ def _is_foreign_blocked(script: str | None) -> bool:
 
 
 def run_as_a_module() -> int:
-	# short-circuit for version before any preparation
-	if '-v' in sys.argv or '--version' in sys.argv:
-		print(f'archinstoo {__version__}')
-		return 0
-
-	script_peek = _script_from_argv()
+	# the real grammar before any preparation (-v/--version exits here). No
+	# default for --script: the bare global help needs "not given" visible
+	parser = build_parser()
+	parser.set_defaults(script=None)
+	early, remaining = parser.parse_known_args()
+	# add_help=False: -h stays unparsed, for the global help or the script's
+	is_help = '-h' in remaining or '--help' in remaining
 
 	# short-circuit for global help (no --script) before any preparation
-	if ('-h' in sys.argv or '--help' in sys.argv) and script_peek is None:
-		from .lib.args import get_arch_config_handler
-
-		get_arch_config_handler().print_help()
+	if is_help and early.script is None:
+		build_parser().print_help()
 		return 0
 
-	# set debug early from sys.argv before heavy imports
-	if '--debug' in sys.argv:
+	# set debug early before heavy imports
+	if early.debug:
 		output.log_level = logging.DEBUG
 
-	if _is_foreign_blocked(script_peek):
+	if _is_foreign_blocked(early.script):
 		running = 'the distros/BOOT bootstrap root' if Os.running_from_bootstrap() else Os.running_from_who() or 'not Arch'
-		error(f'archinstoo {script_peek} configures the running system, which is {running}.')
+		error(f'archinstoo {early.script} configures the running system, which is {running}.')
 		error('Use a disk script from a foreign host (see distros/), or run this one from an Arch host/ISO.')
 		return 1
 
-	is_rootless = script_peek in ROOTLESS_SCRIPTS
-	is_help = '-h' in sys.argv or '--help' in sys.argv
+	is_rootless = early.script in ROOTLESS_SCRIPTS
 	# skip bootstrap for rootless scripts or help requests
-	if not is_rootless and not is_help and (rc := _prepare()):
+	if not is_rootless and not is_help and (rc := _prepare(early.offline)):
 		return rc
 
 	# now safe to import after bootstrap (or skipped for rootless)
@@ -427,7 +412,7 @@ def run_as_a_module() -> int:
 			# note this deletes all logs too
 			info(f'--clean: removing {logger.directory}')
 			clean_logs()
-		# note this removes any __pycache__ if possible
+		# removes any __pycache__ if possible
 		clean_cache(Path(__file__).parent.parent)
 
 
@@ -436,6 +421,7 @@ __all__ = [
 	'Pacman',
 	'SysInfo',
 	'Tui',
+	'__version__',
 	'debug',
 	'error',
 	'info',

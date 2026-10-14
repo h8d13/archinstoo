@@ -144,7 +144,7 @@ def _select_groups(preset: list[str] | None = None) -> list[str]:
 	group = MenuItemGroup.from_enum(SupplementaryGroup)
 
 	if preset:
-		group.set_selected_by_value([SupplementaryGroup(g) for g in preset if g in SupplementaryGroup._value2member_map_])
+		group.set_selected_by_value([SupplementaryGroup(g) for g in preset if g in SupplementaryGroup])
 
 	result = SelectMenu[SupplementaryGroup](
 		group,
