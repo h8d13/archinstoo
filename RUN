@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2154
-cd installer || exit 1
-(python3 -B -m archinstoo "$@") && cd ..
+# the caller's directory stays the cwd, so relative paths (--config) resolve
+# where they were typed; -P keeps that directory off sys.path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHONPATH="$SCRIPT_DIR/installer${PYTHONPATH:+:$PYTHONPATH}" exec python3 -B -P -m archinstoo "$@"
