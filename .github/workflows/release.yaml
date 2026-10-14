@@ -80,14 +80,14 @@ jobs:
       # chroot, so the pkg matches an AUR install and never touches this checkout.
       # extra-x86_64-build needs Arch + devtools + a privileged chroot, hence the
       # container. --tmpfs /run lets arch-nspawn clean up its mounts; the rest of
-      # the container workarounds live in build-pkg.sh. Output is
+      # the container workarounds live in hooks/build-pkg. Output is
       # archinstoo-git-r<count>.<sha>-any.pkg.tar.zst.
       - name: Build pacman package (clean chroot)
         run: |
           mkdir -p /tmp/pkgout
           docker run --rm --privileged \
             --tmpfs /run \
-            -v "$GITHUB_WORKSPACE/.github/build-pkg:/build-pkg:ro" \
+            -v "$GITHUB_WORKSPACE/.github/hooks/build-pkg:/build-pkg:ro" \
             -v "$GITHUB_WORKSPACE/installer/PKGBUILD:/pkg/PKGBUILD:ro" \
             -v /tmp/pkgout:/out \
             archlinux:base-devel bash /build-pkg

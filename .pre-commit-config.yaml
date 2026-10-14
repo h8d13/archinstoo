@@ -53,6 +53,12 @@ repos:
       fail_fast: true
   - repo: local
     hooks:
+    # 3+ \n-built text lines in one literal read better as a dedent block
+    - id: inline-newlines
+      name: inline-newlines
+      entry: python .github/hooks/inline_newlines.py
+      language: python
+      types: [python]
     - id: lint-imports
       name: lint-imports
       # sibling-acyclicity contract in installer/pyproject.toml
