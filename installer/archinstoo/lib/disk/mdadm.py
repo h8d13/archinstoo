@@ -19,8 +19,18 @@ def scan_arrays() -> str:
 		return ''
 
 
+def array_uuid(dev_path: Path) -> str:
+	# mdadm's own UUID notation (colon groups), the one rd.md.uuid= takes
+	out = SysCommand(['mdadm', '--detail', '--export', str(dev_path)]).output().decode()
+	for line in out.splitlines():
+		key, _, value = line.strip().partition('=')
+		if key == 'MD_UUID':
+			return value
+	raise SysCallError(f'No MD_UUID for {dev_path}')
+
+
 def write_mdadm_conf(target: Path) -> None:
-	# mdadm_udev assembles by metadata alone, but only arrays named here come
+	# udev assembles by metadata alone, but only arrays named here come
 	# back under their own name; without them the root is /dev/md127. MAILADDR
 	# too: `mdadm --monitor` exits 1 when neither it nor PROGRAM is set, and
 	# the packaged config leaves both commented, so mdmonitor.service would

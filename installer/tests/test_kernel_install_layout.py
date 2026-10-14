@@ -70,3 +70,22 @@ def test_efistub_plugin_keeps_one_file_current(tmp_path: Path, path: str) -> Non
 	assert plugin.stat().st_mode & 0o111
 	assert '[ "$1" = add ] || exit 0' in script
 	assert f'cp "$KERNEL_INSTALL_STAGING_AREA/uki.efi" "$KERNEL_INSTALL_BOOT_ROOT/{path}"' in script
+
+
+@pytest.mark.parametrize(
+	('partuuid', 'on_raid', 'expected'),
+	[
+		('pp-11', False, ['root=PARTUUID=pp-11']),
+		# a pre-mounted md array has no PARTUUID, and dracut only assembles
+		# the arrays rd.md.uuid names
+		(None, True, ['rd.md.uuid=aa:bb', 'root=UUID=ff-22']),
+	],
+)
+def test_root_params(monkeypatch: pytest.MonkeyPatch, partuuid: str | None, on_raid: bool, expected: list[str]) -> None:
+	monkeypatch.setattr('archinstoo.lib.bootloader.install.array_uuid', lambda _: 'aa:bb')
+	installer = BootloaderInstaller.__new__(BootloaderInstaller)
+	installer._enc = SimpleNamespace(partitions=[])  # type: ignore[assignment]
+	md = Path('/dev/md0')
+	root = SimpleNamespace(partuuid=partuuid, uuid='ff-22', on_raid=on_raid, dev_path=md, safe_dev_path=md)
+
+	assert installer._get_kernel_params_partition(root) == expected  # type: ignore[arg-type]

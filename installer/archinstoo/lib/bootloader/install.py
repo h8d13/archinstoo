@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.disk.lvm import lvm_pvseg_info
+from archinstoo.lib.disk.mdadm import array_uuid
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path
 from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
 from archinstoo.lib.general import SysCommand
@@ -165,12 +166,31 @@ class BootloaderInstaller:
 		debug(f'Wrote {conf}: {", ".join(lines)}')
 
 	def _get_kernel_params_partition(self, root_partition: PartitionModification) -> list[str]:
+		return [*self._md_params(root_partition), *self._root_params(root_partition)]
+
+	def _md_params(self, root_partition: PartitionModification) -> list[str]:
+		# dracut only assembles the arrays rd.md.uuid names; anaconda passes
+		# the root's from blivet's dracut_setup_args() the same way
+		# https://github.com/rhinstaller/anaconda/blob/d6be1da760e15bc3b95e0aecd9defef28b69f3ca/pyanaconda/modules/storage/bootloader/base.py#L860-L893
+		if not root_partition.on_raid:
+			return []
+		return [f'rd.md.uuid={array_uuid(root_partition.safe_dev_path)}']
+
+	def _root_params(self, root_partition: PartitionModification) -> list[str]:
 		if root_partition in self._enc.partitions:
 			debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
 			return [f'rd.luks.name={root_partition.uuid}=root', 'root=/dev/mapper/root']
 
-		debug(f'Identifying root partition by PARTUUID: {root_partition.partuuid}')
-		return [f'root=PARTUUID={root_partition.partuuid}']
+		if root_partition.partuuid:
+			debug(f'Identifying root partition by PARTUUID: {root_partition.partuuid}')
+			return [f'root=PARTUUID={root_partition.partuuid}']
+
+		# an md array has no partition entry to take a PARTUUID from
+		if root_partition.uuid:
+			debug(f'No PARTUUID on {root_partition.dev_path}, identifying root by UUID: {root_partition.uuid}')
+			return [f'root=UUID={root_partition.uuid}']
+
+		raise ValueError(f'Could not identify root on {root_partition.dev_path}: no PARTUUID or UUID')
 
 	def _get_kernel_params_lvm(self, lvm: LvmVolume) -> list[str]:
 		match self._enc.encryption_type:
