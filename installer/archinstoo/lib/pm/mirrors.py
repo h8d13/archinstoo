@@ -487,13 +487,11 @@ class MirrorListHandler:
 		# Or reflector potentially ran already
 		if _MirrorCache.is_remote and speed_sort:
 			# simple counter to show progress
-			# and current best to show another useful info
 			total = len(region_list)
-			best = 0.0
 			for i, mirror in enumerate(region_list, 1):
-				best = max(best, mirror.speed)
-				print(f'\rTesting mirror speeds {i}/{total} - best: {best / 1024 / 1024:.1f} MiB/s', end='', flush=True)
-				# do note that current best is based of a small db download and should get more bitrate on larger dls
+				# speed is lazy, access runs the test for this tick
+				_ = mirror.speed
+				print(f'\rTesting mirror speeds {i}/{total}', end='', flush=True)
 			print()
 
 			# Sort by speed descending (higher is better in bitrate form core.db download)
