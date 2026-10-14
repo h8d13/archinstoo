@@ -4,6 +4,7 @@ from archinstoo.lib.disk.fstab import fs_uuid
 from archinstoo.lib.disk.luks import Luks2, unlock_luks2_dev
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_vol_change
 from archinstoo.lib.disk.utils import mount, swapon
+from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
@@ -28,6 +29,7 @@ class LayoutMounter:
 
 	def mount(self) -> list[str]:
 		# returns the fstab entries the layout needs beyond its mounts (swap)
+		self._isolate()
 		luks_handlers: dict[PartitionModification | LvmVolume, Luks2] = {}
 
 		match self._disk_encryption.encryption_type:
@@ -167,6 +169,15 @@ class LayoutMounter:
 		elif part_mod.is_swap():
 			swapon(part_mod.dev_path)
 			self._fstab_entries.append(f'UUID={fs_uuid(part_mod.dev_path)}\tnone\tswap\tdefaults\t0\t0')
+
+	def _isolate(self) -> None:
+		# a private bind of the target onto itself, before anything lands
+		# under it: on an installed host, sandboxed services (logind,
+		# resolved, ...) hold slave copies of the mount tree, and whatever
+		# propagated into them outlived teardown and kept the disk busy.
+		# teardown_layout's umount -R takes this bind down last
+		self.target.mkdir(parents=True, exist_ok=True)
+		SysCommand(['mount', '--bind', '--make-private', str(self.target), str(self.target)])
 
 	def _mount_lvm_vol(self, volume: LvmVolume) -> None:
 		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and volume.dev_path:

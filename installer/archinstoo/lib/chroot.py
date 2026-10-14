@@ -27,11 +27,11 @@ KEEP_ENV = ('http_proxy', 'https_proxy', 'no_proxy', 'HTTP_PROXY', 'HTTPS_PROXY'
 # umount -R takes them down with the layout
 _API_MOUNTS = (
 	('proc', ['-t', 'proc', 'proc', '-o', 'nosuid,noexec,nodev']),
-	# rslave: unmounting the target must not propagate back to the host's
-	# /sys and /dev submounts
+	# rslave: the host's changes reach in, nothing here reaches back out
+	# (unmounting the target must leave the host's /sys, /dev, /run alone)
 	('sys', ['--rbind', '--make-rslave', '/sys']),
 	('dev', ['--rbind', '--make-rslave', '/dev']),
-	('run', ['--bind', '--make-private', '/run']),
+	('run', ['--bind', '--make-rslave', '/run']),
 	('tmp', ['-t', 'tmpfs', 'tmp', '-o', 'mode=1777,strictatime,nodev,nosuid']),
 )
 
