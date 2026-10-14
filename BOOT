@@ -263,6 +263,9 @@ def chroot_setup() -> None:
 	# and /dev submounts (arch-chroot gets this from its own namespace)
 	mount('--rbind', '--make-rslave', '/sys', f'{root}/sys')
 	mount('--rbind', '--make-rslave', '/dev', f'{root}/dev')
+	# a layout mounted by hand on the host (pre-mounted config) has to be
+	# where the installer looks; rslave for the same teardown reason
+	mount('--rbind', '--make-rslave', '/mnt', f'{root}/mnt')
 	# /run/udev: lsblk UUIDs, same reason as the udev check
 	mount('--bind', '--make-private', '/run', f'{root}/run')
 	mount('-t', 'tmpfs', 'tmp', f'{root}/tmp', '-o', 'mode=1777,strictatime,nodev,nosuid')  # noqa: S108 - the root's /tmp
