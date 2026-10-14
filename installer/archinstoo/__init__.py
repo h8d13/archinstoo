@@ -105,6 +105,7 @@ host_depends = (
 	'f2fs-tools',           # f2fs filesystem support
 	'xfsprogs',             # XFS filesystem support
 	'cryptsetup',           # LUKS encryption support
+	'cracklib-dicts',       # pwquality's dictionary, cryptsetup checks passphrases
 	'lvm2',                 # LVM layout support
 	'mdadm',                # RAID layout support
 )

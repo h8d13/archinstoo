@@ -1,6 +1,8 @@
 import secrets
 import shlex
+import shutil
 import string
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -20,6 +22,19 @@ if TYPE_CHECKING:
 # where sd-encrypt looks for <mapper>.key at boot; every keyfile writer
 # (auto-unlock slot, cryptenroll bootstrap) lands under it
 KEYFILE_DIR = Path('/etc/cryptsetup-keys.d')
+
+
+def passphrase_error(passphrase: str) -> str | None:
+	# the check luksFormat runs: Fedora links cryptsetup with libpwquality.
+	# Asked up front so a passphrase it would refuse fails before the wipe,
+	# with its reason. No pwscore means no policy to meet
+	if shutil.which('pwscore') is None:
+		return None
+	proc = subprocess.run(['pwscore'], input=passphrase, capture_output=True, text=True, check=False)  # noqa: S607 - pwscore from $PATH
+	if proc.returncode == 0:
+		return None
+	reasons = [ln.strip() for ln in (proc.stdout + proc.stderr).splitlines() if ln.strip() and 'quality check failed' not in ln]
+	return '; '.join(reasons) or 'rejected by the password quality policy'
 
 
 def generate_password(length: int = 64) -> str:

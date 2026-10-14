@@ -70,6 +70,7 @@ DEPENDS = (
 	'device-mapper',        # dm-* devices
 	'e2fsprogs',            # mkfs.ext4
 	'cryptsetup',           # luks
+	'cracklib-dicts',       # pwquality's dictionary, cryptsetup checks passphrases
 	'lvm2',                 # always checked
 	'mdadm',                # raid layouts
 	'btrfs-progs',          # optional FS supports

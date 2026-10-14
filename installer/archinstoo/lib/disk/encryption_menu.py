@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.authentication.password_prompt import get_password
 from archinstoo.lib.disk.fido import Fido2
+from archinstoo.lib.disk.luks import passphrase_error
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.menu.menu_helper import MenuHelper
 from archinstoo.lib.models.device import (
@@ -355,6 +356,7 @@ def select_encrypted_password() -> Password | None:
 		text='Disk encryption password',
 		header=header,
 		allow_skip=True,
+		validator=passphrase_error,
 	)
 
 

@@ -10,6 +10,7 @@ from archinstoo.lib.chroot import drop_to_shell, run_custom_user_commands
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
+from archinstoo.lib.disk.luks import passphrase_error
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.hardware import SysInfo
@@ -238,6 +239,12 @@ def _validate_silent(config: ArchConfig) -> None:
 	if bootloader_errors := validate_bootloader(config.bootloader_config, config.disk_config, SysInfo.has_uefi()):
 		for msg in bootloader_errors:
 			error(f'invalid bootloader configuration: {msg}')
+		raise SystemExit(1)
+
+	# luksFormat would refuse it after the disk is already wiped
+	enc = config.disk_config.disk_encryption
+	if enc and enc.encryption_password and (reason := passphrase_error(enc.encryption_password.plaintext)):
+		error(f'disk encryption password: {reason}')
 		raise SystemExit(1)
 
 

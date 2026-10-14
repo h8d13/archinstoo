@@ -1,6 +1,11 @@
+from typing import TYPE_CHECKING
+
 from archinstoo.lib.models.users import Password, PasswordStrength
 from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.types import Alignment
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
 
 def get_password(
@@ -9,6 +14,7 @@ def get_password(
 	allow_skip: bool = False,
 	preset: str | None = None,
 	skip_confirmation: bool = False,
+	validator: Callable[[str], str | None] | None = None,
 ) -> Password | None:
 	failure: str | None = None
 
@@ -30,6 +36,9 @@ def get_password(
 
 		if allow_skip and (not result.has_item() or not result.text()):
 			return None
+
+		if validator and (failure := validator(result.text())):
+			continue
 
 		password = Password(plaintext=result.text())
 		strength = PasswordStrength.strength(result.text())
