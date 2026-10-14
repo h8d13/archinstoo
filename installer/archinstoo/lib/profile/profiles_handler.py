@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.models.applications import terminal_for
-from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
+from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
@@ -196,16 +196,7 @@ class ProfileHandler:
 	) -> None:
 		debug(f'Installing GFX driver: {driver.value}')
 
-		if driver is GfxDriver.Custom:
-			driver_pkgs = dkms_packages(custom or [], install_session.kernels)
-		else:
-			driver_pkgs = driver.gfx_packages(install_session.kernels)
-
-		if GfxPackage.NvidiaOpenDkms in driver_pkgs:
-			debug(f'Non-standard kernel selected, installing DKMS variant of {driver.value}')
-			headers = [f'{kernel}-devel' for kernel in install_session.kernels]
-			install_session.add_additional_packages(headers)
-
+		driver_pkgs = (custom or []) if driver is GfxDriver.Custom else driver.gfx_packages()
 		install_session.add_additional_packages([p.value for p in driver_pkgs])
 
 	def install_profile_config(

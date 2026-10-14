@@ -232,9 +232,6 @@
         "power_management_config": {
             "power_management": "power-profiles-daemon"
         },
-        "cpu_scheduler_config": {
-            "scheduler": "scx_lavd"
-        },
         "print_service_config": {
             "enabled": true
         },
@@ -249,7 +246,7 @@
             ]
         },
         "monitor_config": {
-            "monitor": "bottom"
+            "monitor": "btop"
         },
         "editor_config": {
             "editor": "micro"

@@ -12,8 +12,7 @@ class BudgieProfile(WaylandProfile):
 	@override
 	def packages(self) -> list[str]:
 		return [
-			'materia-gtk-theme',
-			'budgie',
+			'budgie-desktop',
 			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), budgie-portals.conf names it, groups only optdep it
 			'konsole',
 			'dolphin',

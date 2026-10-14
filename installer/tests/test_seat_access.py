@@ -8,12 +8,8 @@ import pytest
 
 from archinstoo.default_profiles import desktops
 from archinstoo.default_profiles.desktops import select_seat_access
-from archinstoo.default_profiles.desktops.dms import DmsProfile
-from archinstoo.default_profiles.desktops.hyprland import HyprlandProfile
 from archinstoo.default_profiles.desktops.labwc import LabwcProfile
-from archinstoo.default_profiles.desktops.mangowm import MangowmProfile
 from archinstoo.default_profiles.desktops.niri import NiriProfile
-from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
 from archinstoo.lib.profile.base import SeatAccess, seat_services
@@ -24,12 +20,8 @@ if TYPE_CHECKING:
 	from archinstoo.lib.tui.menu_item import MenuItemGroup
 
 SEAT_PROFILES: list[type[WaylandProfile]] = [
-	DmsProfile,
-	HyprlandProfile,
 	LabwcProfile,
-	MangowmProfile,
 	NiriProfile,
-	NoctaliaProfile,
 	RiverProfile,
 	SwayProfile,
 ]

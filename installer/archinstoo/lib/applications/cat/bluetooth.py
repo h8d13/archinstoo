@@ -11,7 +11,6 @@ class BluetoothApp:
 	def packages(self) -> list[str]:
 		return [
 			'bluez',
-			'bluez-utils',
 		]
 
 	@property

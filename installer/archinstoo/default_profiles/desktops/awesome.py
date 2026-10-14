@@ -24,12 +24,12 @@ class AwesomeProfile(XorgProfile):
 			*super().packages,
 			'awesome',
 			'xterm',
-			'xorg-xrandr',
+			'xrandr',
 			'feh',
 			'slock',
-			'terminus-font',
-			'gnu-free-fonts',
-			'ttf-liberation',
+			'terminus-fonts',
+			'gnu-free-sans-fonts',
+			'liberation-fonts-all',
 			'xsel',
 		]
 

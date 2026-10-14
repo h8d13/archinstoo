@@ -13,8 +13,7 @@ class XmonadProfile(XorgProfile):
 	def packages(self) -> list[str]:
 		return [
 			'xmonad',
-			'xmonad-contrib',
-			'xmonad-extras',
+			'ghc-xmonad-contrib',
 			'xterm',
 			'dmenu',
 		]

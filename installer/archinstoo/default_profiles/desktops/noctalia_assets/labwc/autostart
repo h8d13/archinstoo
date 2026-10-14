@@ -1,2 +1,0 @@
-# labwc runs this file through sh; background long-lived processes
-noctalia &

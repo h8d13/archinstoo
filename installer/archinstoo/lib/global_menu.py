@@ -604,8 +604,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return ProfileMenu(preset=current_profile).run()
 
 	def _select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
-		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
-		driver = select_driver(preset=preset, kernels=kernels)
+		driver = select_driver(preset=preset)
 
 		# custom chains straight into the package list; any other driver
 		# owns its packages and the list item goes dark
@@ -619,8 +618,7 @@ class GlobalMenu(AbstractMenu[None]):
 		driver: GfxDriver | None = item.value
 		if not driver:
 			return None
-		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
-		return f'Graphics driver: {driver.display_name()}\n{driver.packages_text(kernels)}'
+		return f'Graphics driver: {driver.display_name()}\n{driver.packages_text()}'
 
 	def _prev_gfx_packages(self, item: MenuItem) -> str | None:
 		packages: list[GfxPackage] = item.value or []

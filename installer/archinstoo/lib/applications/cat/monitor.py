@@ -16,10 +16,6 @@ class MonitorApp:
 	def btop_package(self) -> list[str]:
 		return ['btop']
 
-	@property
-	def bottom_package(self) -> list[str]:
-		return ['bottom']
-
 	def install(
 		self,
 		install_session: Installer,
@@ -32,5 +28,3 @@ class MonitorApp:
 				install_session.add_additional_packages(self.htop_package)
 			case Monitor.BTOP:
 				install_session.add_additional_packages(self.btop_package)
-			case Monitor.BOTTOM:
-				install_session.add_additional_packages(self.bottom_package)

@@ -15,11 +15,11 @@ class LxqtProfile(XorgProfile):
 	@override
 	def packages(self) -> list[str]:
 		return [
-			'lxqt',
-			'breeze-icons',
-			'oxygen-icons',
+			'@lxqt-desktop',
+			'breeze-icon-theme',
+			'oxygen-icon-theme',
 			'xdg-utils',
-			'gnu-free-fonts',
+			'gnu-free-sans-fonts',
 			'l3afpad',
 			'slock',
 		]

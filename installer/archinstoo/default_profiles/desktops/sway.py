@@ -30,7 +30,7 @@ class SwayProfile(WaylandProfile):
 			'grim',
 			'slurp',
 			'pavucontrol',
-			'xorg-xwayland',
+			'xorg-x11-server-Xwayland',
 			*seat_packages(self.custom_settings.get('seat_access')),
 			'xdg-desktop-portal-gtk',  # sway-portals.conf: gtk default, wlr for screencast; sway pulls neither
 			'xdg-desktop-portal-wlr',

@@ -16,7 +16,7 @@ class DisplayServer(Enum):
 		# Wayland compositors pull their own deps, X11 needs the server itself
 		match self:
 			case DisplayServer.X11:
-				return ['xorg-server', 'xorg-xinit']
+				return ['xorg-x11-server-Xorg', 'xorg-x11-xinit']
 			case DisplayServer.Wayland:
 				return []
 
@@ -89,7 +89,7 @@ class GreeterType(Enum):
 	def packages(self) -> list[str]:
 		match self:
 			case GreeterType.Lightdm:
-				return ['lightdm', 'lightdm-gtk-greeter']
+				return ['lightdm', 'lightdm-gtk']
 			case GreeterType.LightdmSlick:
 				return ['lightdm', 'lightdm-slick-greeter']
 			case GreeterType.PlasmaLoginManager:

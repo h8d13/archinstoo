@@ -16,7 +16,7 @@ class PostgresqlProfile(Profile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return ['postgresql']
+		return ['postgresql-server']
 
 	@property
 	@override
@@ -25,4 +25,6 @@ class PostgresqlProfile(Profile):
 
 	@override
 	def post_install(self, install_session: Installer) -> None:
-		install_session.arch_chroot('initdb -D /var/lib/postgres/data', run_as='postgres')
+		# postgresql-setup asks systemd for PGDATA, which a chroot has not got;
+		# its default is this path
+		install_session.arch_chroot('initdb -D /var/lib/pgsql/data', run_as='postgres')

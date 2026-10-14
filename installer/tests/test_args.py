@@ -165,7 +165,7 @@ def test_config_file_parsing(
 			monitor_config=MonitorConfiguration(monitor=Monitor.HTOP),
 			editor_config=EditorConfiguration(editor=Editor.VIM),
 			power_management_config=PowerManagementConfiguration(power_management=PowerManagement.PPD),
-			security_config=SecurityConfiguration(tools=[Security.APPARMOR, Security.FIREJAIL]),
+			security_config=SecurityConfiguration(tools=[Security.FIREJAIL]),
 		),
 		auth_config=AuthenticationConfiguration(
 			users=[

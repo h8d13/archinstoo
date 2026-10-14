@@ -15,38 +15,6 @@ class PowerManagementConfigSerialization(TypedDict):
 	power_management: str
 
 
-class CPUScheduler(StrEnum):
-	# values match scx_loader's scheduler names (binaries in scx-scheds)
-	BEERLAND = 'scx_beerland'
-	BPFLAND = 'scx_bpfland'
-	CAKE = 'scx_cake'
-	COSMOS = 'scx_cosmos'
-	FLASH = 'scx_flash'
-	FLOW = 'scx_flow'
-	FORGE = 'scx_forge'
-	LAVD = 'scx_lavd'
-	P2DQ = 'scx_p2dq'
-	PANDEMONIUM = 'scx_pandemonium'
-	RUSTLAND = 'scx_rustland'
-	RUSTY = 'scx_rusty'
-	TICKLESS = 'scx_tickless'
-
-
-# per upstream sched-ext/scx maturity table; rest are production-ready
-EXPERIMENTAL_CPU_SCHEDULERS = frozenset(
-	{
-		CPUScheduler.CAKE,
-		CPUScheduler.FLOW,
-		CPUScheduler.FORGE,
-		CPUScheduler.TICKLESS,
-	}
-)
-
-
-class CPUSchedulerConfigSerialization(TypedDict):
-	scheduler: str
-
-
 class BluetoothConfigSerialization(TypedDict):
 	enabled: bool
 
@@ -105,7 +73,6 @@ class ManagementConfigSerialization(TypedDict):
 class Monitor(StrEnum):
 	HTOP = auto()
 	BTOP = auto()
-	BOTTOM = auto()
 
 
 class MonitorConfigSerialization(TypedDict):
@@ -122,8 +89,8 @@ class Editor(StrEnum):
 
 	@property
 	def packages(self) -> list[str]:
-		# vi is provided by a differently named package
-		return ['ex-vi-compat'] if self is Editor.VI else [self.value]
+		# Fedora splits vim: vi from the minimal build, vim the full one
+		return [{Editor.VI: 'vim-minimal', Editor.VIM: 'vim-enhanced'}.get(self, self.value)]
 
 	@property
 	def binary(self) -> str:
@@ -139,9 +106,7 @@ class Terminal(StrEnum):
 	ALACRITTY = auto()
 	FOOT = auto()
 	KITTY = auto()
-	GHOSTTY = auto()
 	KONSOLE = auto()
-	WEZTERM = auto()
 	XTERM = auto()
 	PTYXIS = auto()
 
@@ -159,12 +124,10 @@ class TerminalConfigSerialization(TypedDict):
 
 
 class Security(StrEnum):
-	APPARMOR = auto()
 	FIREJAIL = auto()
 	BUBBLEWRAP = auto()
 	FAIL2BAN = auto()
 	PAM_U2F = 'pam-u2f'
-	SBCTL = auto()
 	AUDIT = auto()
 
 
@@ -177,7 +140,6 @@ class ApplicationSerialization(TypedDict):
 	thunderbolt_config: NotRequired[ThunderboltConfigSerialization]
 	audio_config: NotRequired[AudioConfigSerialization]
 	power_management_config: NotRequired[PowerManagementConfigSerialization]
-	cpu_scheduler_config: NotRequired[CPUSchedulerConfigSerialization]
 	print_service_config: NotRequired[PrintServiceConfigSerialization]
 	media_codecs_config: NotRequired[MediaCodecsConfigSerialization]
 	flatpak_config: NotRequired[FlatpakConfigSerialization]
@@ -232,11 +194,6 @@ class PowerManagementConfiguration(_Category):
 
 
 @dataclass
-class CPUSchedulerConfiguration(_Category):
-	scheduler: CPUScheduler
-
-
-@dataclass
 class PrintServiceConfiguration(_Category):
 	enabled: bool
 
@@ -287,7 +244,6 @@ class ApplicationConfiguration:
 	thunderbolt_config: ThunderboltConfiguration | None = None
 	audio_config: AudioConfiguration | None = None
 	power_management_config: PowerManagementConfiguration | None = None
-	cpu_scheduler_config: CPUSchedulerConfiguration | None = None
 	print_service_config: PrintServiceConfiguration | None = None
 	media_codecs_config: MediaCodecsConfiguration | None = None
 	flatpak_config: FlatpakConfiguration | None = None

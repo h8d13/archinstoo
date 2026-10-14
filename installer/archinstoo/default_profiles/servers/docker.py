@@ -18,7 +18,8 @@ class DockerProfile(Profile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return ['docker', 'docker-compose']
+		# Fedora's build of the docker engine
+		return ['moby-engine', 'docker-compose']
 
 	@property
 	@override

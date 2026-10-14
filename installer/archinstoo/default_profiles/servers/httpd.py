@@ -13,7 +13,7 @@ class HttpdProfile(Profile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return ['apache']
+		return ['httpd']
 
 	@property
 	@override

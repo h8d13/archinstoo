@@ -18,9 +18,9 @@ class QtileProfile(XorgProfile):
 		# xwayland: the shipped "Qtile (Wayland)" session exits 1 without it
 		return [
 			'qtile',
-			'ttf-liberation',
-			'python-dbus-fast',
-			'xorg-xwayland',
+			'liberation-fonts-all',
+			'python3-dbus-fast',
+			'xorg-x11-server-Xwayland',
 		]
 
 	@property

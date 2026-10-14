@@ -9,24 +9,6 @@ if TYPE_CHECKING:
 
 class SecurityApp:
 	@property
-	def apparmor_packages(self) -> list[str]:
-		return [
-			'apparmor',
-		]
-
-	@property
-	def apparmor_services(self) -> list[str]:
-		return [
-			'apparmor',
-		]
-
-	@property
-	def apparmor_kernel_params(self) -> list[str]:
-		return [
-			'lsm=landlock,lockdown,yama,integrity,apparmor,bpf',
-		]
-
-	@property
 	def firejail_packages(self) -> list[str]:
 		return [
 			'firejail',
@@ -45,12 +27,6 @@ class SecurityApp:
 	) -> None:
 		for tool in security_config.tools:
 			match tool:
-				case Security.APPARMOR:
-					debug('Installing security: AppArmor')
-					install_session.add_additional_packages(self.apparmor_packages)
-					install_session.enable_service(self.apparmor_services)
-					install_session.add_kernel_param(self.apparmor_kernel_params)
-
 				case Security.FIREJAIL:
 					debug('Installing security: Firejail')
 					install_session.add_additional_packages(self.firejail_packages)
@@ -67,10 +43,6 @@ class SecurityApp:
 				case Security.PAM_U2F:
 					debug('Installing security: pam-u2f')
 					install_session.add_additional_packages(['pam-u2f'])
-
-				case Security.SBCTL:
-					debug('Installing security: sbctl')
-					install_session.add_additional_packages(['sbctl'])
 
 				case Security.AUDIT:
 					debug('Installing security: audit')

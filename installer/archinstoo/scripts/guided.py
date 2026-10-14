@@ -107,7 +107,7 @@ def perform_installation(
 			)
 			ShellApp().install(installation, config.auth_config.users)
 
-		# Install applications before bootloader so kernel params (e.g. AppArmor LSM) are included
+		# Install applications before bootloader so any kernel params they add are included
 		if app_config := config.app_config:
 			users = config.auth_config.users if config.auth_config else None
 			application_handler.install_applications(installation, app_config, users)

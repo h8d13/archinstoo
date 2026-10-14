@@ -21,10 +21,10 @@ class AudioApp:
 		return [
 			'pipewire',
 			'pipewire-alsa',
-			'pipewire-jack',
-			'pipewire-pulse',
-			'gst-plugin-pipewire',
-			'libpulse',
+			'pipewire-jack-audio-connection-kit',
+			'pipewire-pulseaudio',
+			'pipewire-gstreamer',
+			'pulseaudio-libs',
 			'wireplumber',
 			# realtime scheduling; only ever as optional (and in pulse-audio) but we pin it here.
 			'rtkit',
@@ -33,7 +33,7 @@ class AudioApp:
 	# both go in with either audio server, when the driver is loaded
 	@property
 	def sof_packages(self) -> list[str]:
-		return ['sof-firmware']
+		return ['alsa-sof-firmware']
 
 	@property
 	def alsa_packages(self) -> list[str]:

@@ -13,9 +13,9 @@ class TomcatProfile(Profile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return ['tomcat10']
+		return ['tomcat']
 
 	@property
 	@override
 	def services(self) -> list[str]:
-		return ['tomcat10']
+		return ['tomcat']

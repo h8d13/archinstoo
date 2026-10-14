@@ -29,7 +29,7 @@
           "power_management": "power-profiles-daemon"
       },
       "security_config": {
-          "tools": ["apparmor", "firejail"]
+          "tools": ["firejail"]
       }
   },
   "auth_config": {
@@ -192,7 +192,7 @@
     "profiles": [
       {
         "custom_settings": {
-          "hyprland": {
+          "niri": {
             "seat_access": "polkit"
           },
           "sway": {
@@ -201,7 +201,7 @@
         },
         "details": [
           "sway",
-          "hyprland"
+          "niri"
         ],
         "main": "desktop"
       }

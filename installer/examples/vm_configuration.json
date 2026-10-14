@@ -40,7 +40,7 @@
     "auth_config": null,
     "app_config": {
         "monitor_config": {
-            "monitor": "bottom"
+            "monitor": "btop"
         },
         "editor_config": {
             "editor": "vi"

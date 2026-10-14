@@ -4,13 +4,10 @@ from typing import override
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
 from archinstoo.lib.models.applications import (
-	EXPERIMENTAL_CPU_SCHEDULERS,
 	ApplicationConfiguration,
 	Audio,
 	AudioConfiguration,
 	BluetoothConfiguration,
-	CPUScheduler,
-	CPUSchedulerConfiguration,
 	Editor,
 	EditorConfiguration,
 	Firewall,
@@ -69,7 +66,7 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		return self._app_config
 
 	def _define_menu_options(self) -> list[MenuItem]:
-		items = [
+		return [
 			MenuItem(
 				text='Bluetooth',
 				action=select_bluetooth,
@@ -154,29 +151,10 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			),
 		]
 
-		# sched_ext is opt-in; only surfaced with --advanced
-		if self._advanced:
-			items.append(
-				MenuItem(
-					text='CPU scheduler',
-					action=select_cpu_scheduler,
-					preview_action=self._prev_cpu_scheduler,
-					key='cpu_scheduler_config',
-				),
-			)
-
-		return items
-
 	def _prev_power_management(self, item: MenuItem) -> str | None:
 		if item.value is not None:
 			config: PowerManagementConfiguration = item.value
 			return f'Power management: {config.power_management.value}'
-		return None
-
-	def _prev_cpu_scheduler(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: CPUSchedulerConfiguration = item.value
-			return f'CPU scheduler: {config.scheduler.value}'
 		return None
 
 	def _prev_bluetooth(self, item: MenuItem) -> str | None:
@@ -259,16 +237,6 @@ def select_power_management(preset: PowerManagementConfiguration | None = None) 
 		MenuItemGroup.from_enum(PowerManagement), preset.power_management if preset else None, frame='Power management', allow_reset=True
 	)
 	return PowerManagementConfiguration(choice) if choice else None
-
-
-def select_cpu_scheduler(preset: CPUSchedulerConfiguration | None = None) -> CPUSchedulerConfiguration | None:
-	items = [MenuItem(text='Stable', read_only=True)]
-	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s not in EXPERIMENTAL_CPU_SCHEDULERS]
-	items.append(MenuItem(text='Experimental', read_only=True))
-	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s in EXPERIMENTAL_CPU_SCHEDULERS]
-
-	choice = prompt_choice(items, preset.scheduler if preset else None, frame='CPU scheduler', allow_reset=True)
-	return CPUSchedulerConfiguration(choice) if choice else None
 
 
 def _enabled_text(label: str, enabled: bool) -> str:

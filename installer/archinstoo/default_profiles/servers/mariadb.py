@@ -1,9 +1,6 @@
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from archinstoo.lib.profile.base import Profile, ProfileType
-
-if TYPE_CHECKING:
-	from archinstoo.lib.installer import Installer
 
 
 class MariadbProfile(Profile):
@@ -16,13 +13,11 @@ class MariadbProfile(Profile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return ['mariadb']
+		return ['mariadb-server']
 
 	@property
 	@override
 	def services(self) -> list[str]:
 		return ['mariadb']
 
-	@override
-	def post_install(self, install_session: Installer) -> None:
-		install_session.arch_chroot('mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql')
+	# no post_install: mariadb.service prepares the data dir on first start

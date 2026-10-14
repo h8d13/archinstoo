@@ -13,4 +13,4 @@ class JavaProfile(Profile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return ['jre-openjdk-headless']
+		return ['java-latest-openjdk-headless']

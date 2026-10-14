@@ -1,17 +1,14 @@
 # A terminal choice is a package plus TERMINAL in /etc/environment, nothing
 # more: shipped WM configs keep their upstream terminal and the profile
-# installs it, only our own noctalia assets launch $TERMINAL.
+# installs it.
 
 import textwrap
-from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.default_profiles.desktops import noctalia
 from archinstoo.default_profiles.desktops.awesome import AwesomeProfile
-from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.default_profiles.desktops.qtile import QtileProfile
 from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.lib import args
@@ -24,6 +21,8 @@ from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.sysconfig import write_environment
 
 if TYPE_CHECKING:
+	from pathlib import Path
+
 	from archinstoo.lib.profile.base import Profile
 
 
@@ -96,13 +95,13 @@ def test_terminal_app_installs_and_exports(tmp_path: Path, monkeypatch: pytest.M
 def test_qtile_ships_a_scalable_font() -> None:
 	# the default config's widget_defaults ask pango for "sans"; nothing in
 	# qtile's dep chain pulls a font, and a greeter that does is optional
-	assert 'ttf-liberation' in QtileProfile().packages
+	assert 'liberation-fonts-all' in QtileProfile().packages
 
 
 def test_qtile_ships_xwayland() -> None:
 	# the package lists the wayland session entry alongside the X11 one, and
 	# that backend refuses to start without an Xwayland binary
-	assert 'xorg-xwayland' in QtileProfile().packages
+	assert 'xorg-x11-server-Xwayland' in QtileProfile().packages
 
 
 def test_river_writes_an_executable_user_init(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -165,16 +164,12 @@ _SHIPPED_TERMINAL = {
 	'i3-wm': None,
 	'qtile': None,
 	'labwc': None,
-	'noctalia': None,
 	'niri': 'alacritty',
-	'dms': 'alacritty',
-	'hyprland': 'kitty',
 	'sway': 'foot',
 	'river': 'foot',
-	'mangowm': 'foot',
 	'awesome': 'xterm',
 }
-_TERMINALS = {'ghostty', 'alacritty', 'foot', 'kitty', 'xterm'}
+_TERMINALS = {'alacritty', 'foot', 'kitty', 'xterm'}
 
 
 @pytest.mark.parametrize(('name', 'shipped'), _SHIPPED_TERMINAL.items())
@@ -185,7 +180,7 @@ def test_profiles_ship_the_terminal_their_config_launches(name: str, shipped: st
 	assert _TERMINALS & set(profile.packages) == ({shipped} if shipped else set())
 
 
-@pytest.mark.parametrize(('pick', 'expected'), [(Terminal.GHOSTTY, 'ghostty'), (None, DEFAULT_TERMINAL)])
+@pytest.mark.parametrize(('pick', 'expected'), [(Terminal.KITTY, 'kitty'), (None, DEFAULT_TERMINAL)])
 def test_install_adds_the_choice_once(pick: Terminal | None, expected: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	# a skipped menu entry still has to leave those profiles with a terminal
 	app_config = _pin_terminal(monkeypatch, pick)
@@ -198,12 +193,3 @@ def test_install_adds_the_choice_once(pick: Terminal | None, expected: str, tmp_
 	handler.install_profile_config(session, ProfileConfiguration(profiles=[sway]), app_config)
 
 	assert installed.count(expected) == 1
-
-
-@pytest.mark.parametrize('compositor', list(NoctaliaProfile.compositor_packages))
-def test_noctalia_assets_launch_the_exported_terminal(compositor: str) -> None:
-	assets = Path(noctalia.__file__).parent / 'noctalia_assets' / compositor
-	text = ''.join(f.read_text() for f in assets.iterdir())
-
-	assert '$TERMINAL' in text
-	assert '{{' not in text, 'leftover template placeholder'

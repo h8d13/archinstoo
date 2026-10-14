@@ -1,95 +1,42 @@
-# The custom graphics driver: a hand-picked package list in place of a preset.
-# Covers the one derived step (the nvidia-open dkms swap) on both the install
-# path and the count mirror, and the config round trip that drops unknowns.
+# The custom graphics driver: a hand-picked package list in place of a preset,
+# the per-arch presets, and the config round trip that drops unknowns.
 from types import SimpleNamespace
 
 import pytest
 
 from archinstoo.lib.args import ArchConfig
-from archinstoo.lib.models.graphics import (
-	GFX_CUSTOM_CHOICES,
-	GFX_PACKAGES,
-	GfxDriver,
-	GfxPackage,
-	dkms_packages,
-	gfx_custom_choices,
-	gfx_drivers,
-)
+from archinstoo.lib.models.graphics import GFX_PACKAGES, GfxDriver, GfxPackage, gfx_custom_choices, gfx_drivers
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
-HYBRID = [GfxPackage.NvidiaOpen, GfxPackage.VulkanIntel, GfxPackage.Mesa]
-
-
-def test_custom_choices_leave_out_derived_packages() -> None:
-	derived = {GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms}
-	assert not derived & set(GFX_CUSTOM_CHOICES)
-	assert set(GFX_CUSTOM_CHOICES) | derived == set(GfxPackage)
 
 
 def test_custom_choices_per_arch() -> None:
 	x86 = set(gfx_custom_choices('x86_64'))
 	arm = set(gfx_custom_choices('aarch64'))
 
-	assert {GfxPackage.VulkanPanfrost, GfxPackage.VulkanFreedreno} <= arm - x86
-	assert {GfxPackage.IntelMediaDriver, GfxPackage.VplGpuRt} <= x86 - arm
-	# PCIe cards work on both: nvidia-open is prebuilt for ports' linux too
-	assert {GfxPackage.NvidiaOpen, GfxPackage.VulkanRadeon} <= x86 & arm
-	# both are slices of the pool the count mirror validates against
-	assert x86 | arm == set(GFX_CUSTOM_CHOICES)
-
-
-def test_drivers_per_arch() -> None:
-	assert gfx_drivers('aarch64') == [
-		GfxDriver.AmdOpenSource,
-		GfxDriver.NvidiaOpenKernel,
-		GfxDriver.NvidiaOpenSource,
-		GfxDriver.MesaOpenSource,
-		GfxDriver.VMSoftware,
-		GfxDriver.VMVirtio,
-		GfxDriver.Custom,
-	]
-	assert GfxDriver.MesaOpenSource not in gfx_drivers('x86_64')
-	assert {GfxDriver.AllOpenSource, GfxDriver.IntelOpenSource} <= set(gfx_drivers('x86_64'))
+	assert x86 == set(GfxPackage)
+	assert {GfxPackage.IntelMediaDriver, GfxPackage.IntelVplGpuRt} <= x86 - arm
 
 
 @pytest.mark.parametrize('arch', ['x86_64', 'aarch64'])
 def test_offered_presets_fit_the_arch(arch: str) -> None:
-	# a preset never installs what the custom list hides on that arch
-	choices = set(gfx_custom_choices(arch))
+	hidden = set(GfxPackage) - set(gfx_custom_choices(arch))
 	for driver in gfx_drivers(arch):
-		assert set(GFX_PACKAGES[driver]) <= choices, driver
+		assert hidden.isdisjoint(GFX_PACKAGES[driver]), driver
 
 
-@pytest.mark.parametrize(
-	('kernels', 'expected'),
-	[
-		(['linux'], HYBRID),
-		(None, HYBRID),
-		(['linux-zen'], [GfxPackage.NvidiaOpenDkms, GfxPackage.VulkanIntel, GfxPackage.Mesa, GfxPackage.Dkms]),
-	],
-)
-def test_dkms_swap_only_touches_nvidia_open(kernels: list[str] | None, expected: list[GfxPackage]) -> None:
-	assert dkms_packages(HYBRID, kernels) == expected
-	# nothing to swap: the list comes back as-is, not with a stray dkms
-	assert dkms_packages([GfxPackage.Mesa], ['linux-zen']) == [GfxPackage.Mesa]
-
-
-def test_presets_still_resolve_through_the_shared_swap() -> None:
-	assert GfxDriver.NvidiaOpenKernel.gfx_packages(['linux-lts']) == [
-		GfxPackage.NvidiaOpenDkms,
-		GfxPackage.LibvaNvidiaDriver,
-		GfxPackage.Dkms,
-	]
-	assert GfxDriver.Custom.gfx_packages(['linux-lts']) == []
+def test_every_preset_is_mesa_based() -> None:
+	for driver, packages in GFX_PACKAGES.items():
+		if driver is not GfxDriver.Custom:
+			assert {GfxPackage.MesaDri, GfxPackage.MesaVulkan} <= set(packages), driver
 
 
 def test_config_round_trip_drops_unknown_names() -> None:
-	parsed = ArchConfig.from_config({'gfx_driver': 'custom', 'gfx_packages': ['mesa', 'vulkan-intel', 'not-a-package']})
+	parsed = ArchConfig.from_config({'gfx_driver': 'custom', 'gfx_packages': ['mesa-dri-drivers', 'libva-intel-media-driver', 'not-a-package']})
 	assert parsed.gfx_driver is GfxDriver.Custom
-	assert parsed.gfx_packages == [GfxPackage.Mesa, GfxPackage.VulkanIntel]
-	assert parsed.safe_json()['gfx_packages'] == ['mesa', 'vulkan-intel']
+	assert parsed.gfx_packages == [GfxPackage.MesaDri, GfxPackage.IntelMediaDriver]
+	assert parsed.safe_json()['gfx_packages'] == ['mesa-dri-drivers', 'libva-intel-media-driver']
 
 	# a preset driver carries no list, an absent key parses as none
 	plain = ArchConfig.from_config({'gfx_driver': 'mesa-open-source'})
@@ -98,22 +45,21 @@ def test_config_round_trip_drops_unknown_names() -> None:
 
 def test_custom_install_takes_the_picks_as_given() -> None:
 	installed: list[str] = []
-	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend)
+	session = SimpleNamespace(add_additional_packages=installed.extend)
 
-	handler = ProfileHandler()
-	handler.install_gfx_driver(session, GfxDriver.Custom, [GfxPackage.Mesa, GfxPackage.VulkanMesaLayers])  # type: ignore[arg-type]
-	assert installed == ['mesa', 'vulkan-mesa-layers']
+	ProfileHandler().install_gfx_driver(session, GfxDriver.Custom, [GfxPackage.MesaDri, GfxPackage.XorgNouveau])  # type: ignore[arg-type]
+	assert installed == ['mesa-dri-drivers', 'xorg-x11-drv-nouveau']
 
 
 def test_driver_installs_only_its_own_packages() -> None:
-	# a headless box running CUDA picks a driver and never selects a profile:
-	# no display server packages ride along with the driver
+	# a headless box picks a driver and never selects a profile: no display
+	# server packages ride along with the driver
 	installed: list[str] = []
-	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend)
+	session = SimpleNamespace(add_additional_packages=installed.extend)
 
 	ProfileHandler().install_gfx_driver(session, GfxDriver.IntelOpenSource)  # type: ignore[arg-type]
 
-	assert installed == [p.value for p in GfxDriver.IntelOpenSource.gfx_packages(['linux'])]
+	assert installed == [p.value for p in GfxDriver.IntelOpenSource.gfx_packages()]
 
 
 @pytest.mark.parametrize(('name', 'server'), [('xorg', DisplayServer.X11), ('sway', DisplayServer.Wayland)])

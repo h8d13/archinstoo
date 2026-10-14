@@ -9,15 +9,13 @@ if TYPE_CHECKING:
 class MediaCodecsApp:
 	@property
 	def packages(self) -> list[str]:
-		# the codec half of EndeavourOS' eos-base-group. gstreamer core, base
-		# and good plus ffmpeg arrive as deps of these
-		# https://github.com/endeavouros-team/EndeavourOS-packages-lists/blob/master/eos-base-group
+		# what Fedora's own repos carry: the -free builds and ffmpeg-free's
+		# libav. Patent-encumbered codecs (and libdvdcss) are RPM Fusion's
 		return [
-			'gst-libav',
-			'gst-plugins-bad',
-			'gst-plugins-ugly',
-			'gst-plugin-pipewire',
-			'libdvdcss',
+			'gstreamer1-plugin-libav',
+			'gstreamer1-plugins-bad-free',
+			'gstreamer1-plugins-ugly-free',
+			'pipewire-gstreamer',
 			'libopenraw',
 		]
 
