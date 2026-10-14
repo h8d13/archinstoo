@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+
+# Any-host bootstrap for fedinstoo, the Fedora counterpart of the Arch
+# bootstrap tarball: the Fedora Container Base image (OCI, single layer)
+# unpacked as a chroot the installer runs from.
+# https://docs.fedoraproject.org/en-US/fedora/latest/preparing-boot-media/#_verify_your_download
+
+# Stdlib only, no installer imports: runs on the host's python3 (>= 3.9),
+# before anything of ours is installed. The host only needs:
+#   python3 util-linux coreutils udev gnupg
+# gnupg is optional (checksum only without it, trusting TLS)
+# Alpine (mdev by default): apk add python3 util-linux coreutils gnupg eudev
+#   && setup-devd udev
+
+# ./BOOT [fedinstoo args...]
+# BOOT_DIR     where the root lives, reused across runs (default /tmp;
+#              override for persistent storage or non-tmpfs location)
+# BOOT_MIRROR  Fedora mirror base the image is fetched from (listings and
+#              the signed CHECKSUM always come from MASTER)
+# BOOT_RELEASE Fedora release (default: newest under releases/)
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import platform
+import re
+import shutil
+import signal
+import subprocess
+import sys
+import tarfile
+import time
+import urllib.request
+from pathlib import Path
+
+BOOT_DIR = Path(os.environ.get('BOOT_DIR', '/tmp/F2-boot'))  # noqa: S108 - root-only, BOOT_DIR overrides
+BOOT_MIRROR = os.environ.get('BOOT_MIRROR', 'https://download.fedoraproject.org/pub/fedora/linux')
+# one index format to parse: mirrors each render their own (absolute hrefs,
+# custom themes)
+MASTER = 'https://dl.fedoraproject.org/pub/fedora/linux'
+KEY_URL = 'https://fedoraproject.org/fedora.gpg'
+ARCHES = ('x86_64', 'aarch64')
+
+ARCH = platform.machine()
+ROOT = BOOT_DIR / f'root.{ARCH}'
+OCI = BOOT_DIR / 'oci'
+REPO = Path(__file__).resolve().parent
+
+# installer runtime inside the root, Fedora package names
+# comment columns are read as a table, ruff would collapse them
+# fmt: off
+DEPENDS = (
+	'python3',              # interpreter, the release's own
+	'python3-pyparted',     # prebuilt parted bindings
+	'parted',               # partition cli + libparted runtime
+	'dnf5',                 # strapping the target (already in the image)
+	'systemd',              # systemctl, bootctl, kernel-install
+	'systemd-udev',         # udevadm
+	'coreutils',            # gnu core utils
+	'util-linux',           # lsblk, blkid, etc
+	'pciutils',             # lspci
+	'tzdata',               # timezone data
+	'kbd',                  # loadkeys/setfont + /usr/lib/kbd data
+	'xkeyboard-config',     # X11/Wayland keymap lists
+	'libxcrypt',            # crypt.py dlopen
+	'git',                  # cloning stashes
+	'dosfstools',           # mkfs.fat
+	'device-mapper',        # dm-* devices
+	'e2fsprogs',            # mkfs.ext4
+	'cryptsetup',           # luks
+	'lvm2',                 # always checked
+	'mdadm',                # raid layouts
+	'btrfs-progs',          # optional FS supports
+	'f2fs-tools',           # ...
+	'xfsprogs',             # ...
+)
+# fmt: on
+
+
+class BootError(RuntimeError):
+	pass
+
+
+def info(msg: str) -> None:
+	print(f'==> {msg}', file=sys.stderr, flush=True)
+
+
+def run(*argv: str, check: bool = True, **kw: object) -> subprocess.CompletedProcess[str]:
+	# every host/chroot tool goes through here, resolved from $PATH
+	return subprocess.run(argv, check=check, text=True, **kw)  # type: ignore[call-overload]  # noqa: S603 - fixed argv, no shell
+
+
+def _download(url: str, dest: Path | None) -> bytes:
+	# BOOT_MIRROR is user input: no file:// or other schemes urllib accepts
+	if not url.startswith('https://'):
+		raise BootError(f'{url}: only https:// is fetched')
+	with urllib.request.urlopen(url, timeout=30) as resp:  # noqa: S310 - https checked above
+		if dest is None:
+			return resp.read()
+		info(f'Fetching {url}')
+		with dest.open('wb') as f:
+			shutil.copyfileobj(resp, f, 1 << 20)
+		return b''
+
+
+def fetch(url: str, dest: Path | None = None, retries: int = 3) -> bytes:
+	# urllib follows the download.fedoraproject.org mirror redirect itself
+	for attempt in range(1, retries):
+		try:
+			return _download(url, dest)
+		except OSError as err:
+			info(f'{url}: {err}, retry {attempt}/{retries - 1}')
+			time.sleep(2 * attempt)
+	try:
+		return _download(url, dest)
+	except OSError as err:
+		raise BootError(f'{url}: {err}') from err
+
+
+def sha256(path: Path) -> str:
+	h = hashlib.sha256()
+	with path.open('rb') as f:
+		for chunk in iter(lambda: f.read(1 << 20), b''):
+			h.update(chunk)
+	return h.hexdigest()
+
+
+def latest_release() -> str:
+	# betas sit under releases/test/, so the highest number here is stable
+	page = fetch(f'{MASTER}/releases/').decode()
+	found = [int(n) for n in re.findall(r'href="(\d+)/"', page)]
+	if not found:
+		raise BootError(f'no release found under {MASTER}/releases/')
+	return str(max(found))
+
+
+def checksum_name(images: str, release: str) -> str:
+	# the compose id (44-1.7) is only known from the listing; its content is
+	# verified below, the name is not trusted for anything else
+	page = fetch(f'{MASTER}/{images}/').decode()
+	pattern = rf'href="(Fedora-Container-{release}-[\d.]+-{ARCH}-CHECKSUM)"'
+	if not (m := re.search(pattern, page)):
+		raise BootError(f'no CHECKSUM for {release} under {MASTER}/{images}')
+	return m.group(1)
+
+
+def gpg(gnupg: Path, *args: str, **kw: object) -> subprocess.CompletedProcess[str]:
+	return run('gpg', '--homedir', str(gnupg), *args, **kw)
+
+
+def verified_sums(checksum: Path, release: str) -> str:
+	# signed text only: a clearsigned file can carry unsigned lines around the
+	# signature, so sums are read from what gpg verified
+	if shutil.which('gpg') is None:
+		info(f'WARNING: no gpg, checksum only, trusting TLS to {MASTER}')
+		return checksum.read_text()
+
+	gnupg = BOOT_DIR / 'gnupg'
+	gnupg.mkdir(mode=0o700, exist_ok=True)
+	key = BOOT_DIR / 'fedora.gpg'
+	fetch(KEY_URL, key)
+	gpg(gnupg, '--import', str(key))
+	key.unlink()
+
+	# pin the release's own primary key, not any key in fedora.gpg
+	uid = f'fedora-{release}-primary@fedoraproject.org'
+	listing = gpg(gnupg, '--with-colons', '--list-keys', uid, capture_output=True).stdout
+	fprs = [line.split(':')[9] for line in listing.splitlines() if line.startswith('fpr:')]
+	if not fprs:
+		raise BootError(f'no {uid} key in {KEY_URL}')
+	fpr = fprs[0]
+
+	status = BOOT_DIR / f'{checksum.name}.status'
+	sums = BOOT_DIR / f'{checksum.name}.verified'
+	sums.unlink(missing_ok=True)
+	gpg(gnupg, '--trusted-key', fpr, '--status-file', str(status), '--output', str(sums), '--decrypt', str(checksum))
+	# VALIDSIG is the real check, --trusted-key only quiets the trust warning
+	if not re.search(rf'^\[GNUPG:\] VALIDSIG {fpr} ', status.read_text(), re.MULTILINE):
+		raise BootError(f'{checksum.name} not signed by {fpr}')
+	text = sums.read_text()
+	status.unlink()
+	sums.unlink()
+	return text
+
+
+def base_image(sums: str, release: str) -> tuple[str, str]:
+	# BSD-tag lines: SHA256 (name) = hash
+	pattern = rf'^SHA256 \((Fedora-Container-Base-Generic-{release}-[\d.]+\.{ARCH}\.oci\.tar\.xz)\) = ([0-9a-f]{{64}})$'
+	if not (m := re.search(pattern, sums, re.MULTILINE)):
+		raise BootError('no Base-Generic image listed in the CHECKSUM')
+	return m.group(1), m.group(2)
+
+
+def blob(digest: str) -> Path:
+	# OCI blobs are named by their sha256, check that holds
+	algo, _, hexdigest = digest.partition(':')
+	path = OCI / 'blobs' / algo / hexdigest
+	if algo != 'sha256' or sha256(path) != hexdigest:
+		raise BootError(f'blob {digest} does not match its digest')
+	return path
+
+
+def extract(archive: Path, dest: Path) -> None:
+	# setuid bits and root ownership have to survive (su, mount, ...): only
+	# blobs that passed their digest get here, so full trust is fine. Older
+	# pythons without filters extract like this by default
+	kw = {'filter': 'fully_trusted'} if hasattr(tarfile, 'fully_trusted_filter') else {}
+	with tarfile.open(archive) as t:
+		t.extractall(dest, numeric_owner=True, **kw)  # noqa: S202 - digest verified above
+
+
+def unpack(image: Path) -> None:
+	OCI.mkdir(exist_ok=True)
+	extract(image, OCI)
+	index = json.loads((OCI / 'index.json').read_text())
+	manifest = json.loads(blob(index['manifests'][0]['digest']).read_text())
+	# a second layer would need whiteout handling
+	if len(layers := manifest['layers']) != 1:
+		raise BootError(f'{image.name} has {len(layers)} layers, expected 1')
+	ROOT.mkdir(exist_ok=True)
+	extract(blob(layers[0]['digest']), ROOT)
+	shutil.rmtree(OCI)
+	image.unlink()
+
+
+def bootstrap() -> None:
+	release = os.environ.get('BOOT_RELEASE') or latest_release()
+	images = f'releases/{release}/Container/{ARCH}/images'
+	checksum = BOOT_DIR / checksum_name(images, release)
+	fetch(f'{MASTER}/{images}/{checksum.name}', checksum)
+	sums = verified_sums(checksum, release)
+	checksum.unlink()
+
+	name, digest = base_image(sums, release)
+	image = BOOT_DIR / name
+	fetch(f'{BOOT_MIRROR}/{images}/{name}', image)
+	if sha256(image) != digest:
+		raise BootError(f'{name} does not match its CHECKSUM')
+	info(f'{name}: OK')
+	unpack(image)
+
+
+def mount(*args: str) -> None:
+	run('mount', *args)
+
+
+def teardown() -> None:
+	# also catches what a killed run left mounted
+	if run('mountpoint', '-q', str(ROOT), check=False).returncode == 0:
+		run('umount', '-R', str(ROOT))
+
+
+def chroot_setup() -> None:
+	# arch-chroot's set (proc, sys, dev, run, tmp) by hand: the image ships no
+	# arch-chroot, it gets installed below for the target side
+	root = str(ROOT)
+	mount('--bind', '--make-private', root, root)
+	mount('-t', 'proc', 'proc', f'{root}/proc', '-o', 'nosuid,noexec,nodev')
+	# rslave: teardown's umount -R must not propagate back to the host's /sys
+	# and /dev submounts (arch-chroot gets this from its own namespace)
+	mount('--rbind', '--make-rslave', '/sys', f'{root}/sys')
+	mount('--rbind', '--make-rslave', '/dev', f'{root}/dev')
+	# /run/udev: lsblk UUIDs, same reason as the udev check
+	mount('--bind', '--make-private', '/run', f'{root}/run')
+	mount('-t', 'tmpfs', 'tmp', f'{root}/tmp', '-o', 'mode=1777,strictatime,nodev,nosuid')  # noqa: S108 - the root's /tmp
+	# the image has no resolv.conf to bind over; a host without one has no
+	# DNS to hand in either (arch-chroot skips it the same way)
+	if Path('/etc/resolv.conf').exists():
+		resolv = ROOT / 'etc/resolv.conf'
+		resolv.touch()
+		mount('--bind', '/etc/resolv.conf', str(resolv))
+	target = ROOT / 'root/fedinstoo'
+	target.mkdir(exist_ok=True)
+	mount('--bind', str(REPO), str(target))
+
+
+def run_installer(args: list[str]) -> int:
+	script = f"""
+		set -e
+		dnf -y --refresh --setopt=install_weak_deps=False install {' '.join(DEPENDS)}
+		cd /root/fedinstoo
+		exec ./RUN "$@"
+	"""
+	# A2_BOOTSTRAP: '/' is this throwaway root, the installer blocks live/packages
+	env = {**os.environ, 'A2_BOOTSTRAP': '1'}
+	return run('chroot', str(ROOT), '/bin/bash', '-c', script, 'boot', *args, env=env, check=False).returncode
+
+
+def preflight() -> None:
+	if os.geteuid() != 0:
+		raise BootError('must run as root')
+	if ARCH not in ARCHES:
+		raise BootError(f'no container image for {ARCH} ({", ".join(ARCHES)})')
+	# without it lsblk has no UUIDs and genfstab silently writes /dev/vdaN
+	if not Path('/run/udev/control').is_socket():
+		raise BootError('no udev (alpine: apk add eudev && setup-devd udev)')
+
+
+def _interrupted(signum: int, _frame: object) -> None:
+	# TERM/HUP unwind like ^C, so teardown still runs
+	raise SystemExit(128 + signum)
+
+
+def main(args: list[str]) -> int:
+	preflight()
+	BOOT_DIR.mkdir(parents=True, exist_ok=True)
+	if not (ROOT / 'usr/bin/dnf').exists():
+		bootstrap()
+
+	# rm -rf the root only after this exits: a live run has /dev mounted inside
+	teardown()
+	signal.signal(signal.SIGTERM, _interrupted)
+	signal.signal(signal.SIGHUP, _interrupted)
+	try:
+		chroot_setup()
+		return run_installer(args)
+	except KeyboardInterrupt:
+		return 130
+	finally:
+		teardown()
+
+
+if __name__ == '__main__':
+	try:
+		sys.exit(main(sys.argv[1:]))
+	except (BootError, subprocess.CalledProcessError) as err:
+		print(f'==> ERROR: {err}', file=sys.stderr)
+		sys.exit(1)
+	except KeyboardInterrupt:
+		# ^C before the chroot (download, unpack): no traceback
+		sys.exit(130)

@@ -29,7 +29,7 @@ case "$1" in
 	} >.directory
 	;;
 -b | --bootstrap)
-	go_to "distros"
+	cd "$SCRIPT_DIR" || exit 1
 	./BOOT
 	;;
 -ul | --up-logs)
