@@ -1,3 +1,4 @@
+import textwrap
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
@@ -85,8 +86,15 @@ def set_keyboard(installation: Installer, locale_config: LocaleConfiguration) ->
 	)
 	settings += [(opt, key, val) for opt, key, val in optional if val]
 
-	opt_lines = '\n'.join(f'    Option "{opt}" "{val}"' for opt, _, val in settings)
-	content = f'Section "InputClass"\n    Identifier "system-keyboard"\n    MatchIsKeyboard "on"\n{opt_lines}\nEndSection\n'
+	opt_lines = '\n'.join(f'\tOption "{opt}" "{val}"' for opt, _, val in settings)
+	# format after dedent: opt_lines' own indent would shrink the margin
+	content = textwrap.dedent("""\
+		Section "InputClass"
+			Identifier "system-keyboard"
+			MatchIsKeyboard "on"
+		{opt_lines}
+		EndSection
+	""").format(opt_lines=opt_lines)
 
 	xorg_conf_dir = installation.target / 'etc/X11/xorg.conf.d'
 	xorg_conf_dir.mkdir(parents=True, exist_ok=True)

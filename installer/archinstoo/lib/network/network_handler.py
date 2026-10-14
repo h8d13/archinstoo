@@ -1,3 +1,4 @@
+import textwrap
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -81,7 +82,15 @@ def _configure_iwd_standalone(installation: Installer) -> None:
 	# iwd manages wireless only; systemd-networkd handles wired DHCP.
 	iwd_conf_dir = installation.target / 'etc/iwd'
 	iwd_conf_dir.mkdir(parents=True, exist_ok=True)
-	(iwd_conf_dir / 'main.conf').write_text('[General]\nEnableNetworkConfiguration=true\n\n[Network]\nNameResolvingService=systemd\n')
+	(iwd_conf_dir / 'main.conf').write_text(
+		textwrap.dedent("""\
+			[General]
+			EnableNetworkConfiguration=true
+
+			[Network]
+			NameResolvingService=systemd
+		""")
+	)
 	debug(f'Wrote {iwd_conf_dir / "main.conf"}')
 
 	_write_wired_dhcp(installation)
@@ -92,7 +101,16 @@ def _write_wired_dhcp(installation: Installer) -> None:
 	# keeps virtual devices (bridges, veth, ...) out of it
 	networkd_dir = installation.target / 'etc/systemd/network'
 	networkd_dir.mkdir(parents=True, exist_ok=True)
-	(networkd_dir / '20-wired.network').write_text('[Match]\nType=ether\nKind=!*\n\n[Network]\nDHCP=yes\n')
+	(networkd_dir / '20-wired.network').write_text(
+		textwrap.dedent("""\
+			[Match]
+			Type=ether
+			Kind=!*
+
+			[Network]
+			DHCP=yes
+		""")
+	)
 	debug(f'Wrote {networkd_dir / "20-wired.network"}')
 
 
