@@ -1,6 +1,7 @@
 # Flag string literals spelling 3+ text lines with \n escapes: a dedent()'ed
 # triple-quoted block reads better. Blank lines don't count, so '\n\n'
-# spacers pass. Directories are scanned whole, so any hit fails the commit.
+# spacers pass. Takes files (pre-commit passes staged ones) or directories,
+# scanned whole for a manual full run.
 import ast
 import sys
 from pathlib import Path
