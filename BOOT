@@ -275,6 +275,13 @@ def chroot_setup() -> None:
 		resolv = ROOT / 'etc/resolv.conf'
 		resolv.touch()
 		mount('--bind', '/etc/resolv.conf', str(resolv))
+	# the iso network type copies what the live host was set up with (iwd
+	# PSKs, networkd units); the image's own are empty
+	for host_dir in (Path('/var/lib/iwd'), Path('/etc/systemd/network')):
+		if host_dir.is_dir():
+			inside = ROOT / host_dir.relative_to('/')
+			inside.mkdir(parents=True, exist_ok=True)
+			mount('--bind', str(host_dir), str(inside))
 	target = ROOT / 'root/fedinstoo'
 	target.mkdir(exist_ok=True)
 	mount('--bind', str(REPO), str(target))
