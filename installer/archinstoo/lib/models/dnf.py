@@ -18,6 +18,7 @@ class DnfConfiguration:
 	# kernel straps pin weak deps themselves (Installer). Defaults are dnf5's
 	# own: weak deps on, parallel downloads left to dnf (3)
 	# https://dnf5.readthedocs.io/en/latest/dnf5.conf.5.html#install-weak-deps-options-label
+	# anaconda/pyanaconda/modules/payloads/payload/dnf/dnf_manager.py:242-245
 	install_weak_deps: bool = True
 	max_parallel_downloads: int | None = None
 

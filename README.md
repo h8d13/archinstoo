@@ -6,7 +6,6 @@ A port of [`archinstoo`](https://github.com/h8d13/archinstoo) that installs [Fed
 instead of Arch Linux: same menus, same config files, same steps, with `dnf`, `dracut`
 and `kernel-install` underneath.
 
-The Python package is still named `archinstoo` while the port settles.
 
 ## Setup / Usage
 
@@ -30,40 +29,13 @@ sudo ./BOOT [args]   # try --help; some options are behind --advanced
 
 From an installed Fedora, `./RUN` works directly (host-to-target): its own `dnf` provides the deps.
 
-## How an install goes
-
-1. Disk layout is partitioned, formatted and mounted under `/mnt`.
-2. `dnf --installroot` straps `@core` (mandatory tier only), `dracut` and the picked firmware.
-3. Locale (`glibc-langpack-*`), console, hostname, timezone, users, network, apps.
-4. The bootloader goes in, then the kernel: its `kernel-install` run builds the initramfs and
-   the boot entry (or UKI) from `/etc/kernel/cmdline`.
-5. The tree is labeled for SELinux with the target's own `setfiles`, so it boots enforcing.
-
-Bootloaders: GRUB (shim-signed, ESP at `/boot/efi`; BIOS too) and systemd-boot (BLS or UKI).
-
-## Testing
-
-Every change is tested the same way, from `BOOT` inside a VM ([`TVM`](TVM) + [`TSER`](TSER)):
-
-```shell
-A2_SERIAL=1 ./TVM                    # an Arch ISO from .dev-iso/ as the host
-./TSER login && ./TSER push installer /root/fedinstoo/installer
-./TSER push BOOT /root/fedinstoo/BOOT && ./TSER push RUN /root/fedinstoo/RUN
-./TSER run 'cd /root/fedinstoo && ./BOOT --config <config> --silent'
-./TSER quit && A2_SERIAL=1 ./TVM boot && ./TSER login -p test
-```
-
-Unit tests: `pytest -c installer/pyproject.toml installer/tests`
-
-## Status
-
-Ported and booted in QEMU (UEFI): minimal installs with GRUB and systemd-boot, ext4,
-networkd/resolved, chrony, SELinux enforcing.
-
-Not ported yet: desktop/server profile package names, graphics drivers (RPM Fusion),
-disk encryption keyfiles, snapshots, packaging (the PKGBUILDs and release CI are still Arch's).
-
 ---
 
-See [`archinstall`](https://github.com/archlinux/archinstall) and [`archinstoo`](https://github.com/h8d13/archinstoo),
-which this builds on.
+See [`archinstall`](https://github.com/archlinux/archinstall) and [`anaconda`](https://github.com/rhinstaller/anaconda),
+which this project builds upon.
+
+> It aims to fix two of my problems at once. One, arch linux as a whole lacks enough trusted maintainers/reporters.
+> Which mostly impacts packaging efforts. But their installer is one of my favorite projects...
+> and two, `anaconda` forcing too many defaults on official install mediums, instead of handing back to the user.
+
+

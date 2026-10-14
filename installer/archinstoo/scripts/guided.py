@@ -168,6 +168,7 @@ def perform_installation(
 		if config.ntp:
 			# Fedora's time sync is chrony, not timesyncd
 			# https://fedoraproject.org/wiki/Features/ChronyDefaultNTP#Summary
+			# anaconda/pyanaconda/modules/timezone/installation.py:179-188
 			installation.add_additional_packages('chrony')
 			installation.enable_service('chronyd')
 

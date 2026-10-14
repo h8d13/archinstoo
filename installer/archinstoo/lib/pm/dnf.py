@@ -59,6 +59,8 @@ class Dnf:
 			# a group's default tier makes choices (NetworkManager, firewalld,
 			# zram) that the install's own steps make instead
 			# https://dnf5.readthedocs.io/en/latest/dnf5.conf.5.html#group-package-types-options-label
+			# anaconda's kickstart form: @group/mandatory
+			# anaconda/pyanaconda/modules/payloads/payload/dnf/utils.py:156-169
 			cmd.append('--setopt=group_package_types=mandatory')
 		if weak_deps is not None:
 			# after the config's own setopt, so this one wins

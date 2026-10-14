@@ -18,7 +18,10 @@ if TYPE_CHECKING:
 
 
 def langpack_package(sys_lang: str) -> str | None:
-	# glibc only carries the locales a langpack ships; C.UTF-8 is built in
+	# glibc only carries the locales a langpack ships; C.UTF-8 is built in.
+	# anaconda installs the langpacks-<lang> meta instead (adds fonts,
+	# translations), this keeps to the locale itself
+	# anaconda/pyanaconda/modules/payloads/payload/dnf/requirements.py:63-81
 	lang = split_locale_name(sys_lang)[0].split('_')[0]
 	if lang in ('C', 'POSIX'):
 		return None

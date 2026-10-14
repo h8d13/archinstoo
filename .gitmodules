@@ -1,0 +1,4 @@
+[submodule "anaconda"]
+	path = anaconda
+	url = https://github.com/rhinstaller/anaconda.git
+	shallow = true
