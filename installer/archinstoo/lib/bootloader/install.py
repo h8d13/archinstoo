@@ -290,9 +290,9 @@ class BootloaderInstaller:
 
 	def _add_efistub_bootloader(self, efi_partition: PartitionModification | None, root: PartitionModification | LvmVolume, removable: bool) -> None:
 		# the firmware boots one file, so it has to keep its name across kernel
-		# updates: a kernel-install plugin copies each new UKI over it (what a
-		# fixed preset name gave on Arch). removable, or a firmware refusing
-		# the entry, puts that file at the fallback path instead
+		# updates: a kernel-install plugin copies each new UKI over it.
+		# removable, or a firmware refusing the entry, puts that file at the
+		# fallback path instead
 		debug('Installing efistub bootloader')
 		self.dnf.strap(Bootloader.Efistub.packages())
 

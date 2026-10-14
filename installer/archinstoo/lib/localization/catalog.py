@@ -259,7 +259,7 @@ def _kbd_model_map() -> dict[str, tuple[str, str]]:
 	# console keymap -> (layout, variant), first row wins the way localed reads
 	# it. Model and options columns are dropped on purpose: the model column
 	# carries 'pc105+inet', which xkeyboard-config does not list, and every row
-	# sets terminate:ctrl_alt_bksp, a policy Arch does not ship
+	# sets terminate:ctrl_alt_bksp, a policy the user never picked
 	table: dict[str, tuple[str, str]] = {}
 	path = _kbd_model_map_path()
 	if path is None:

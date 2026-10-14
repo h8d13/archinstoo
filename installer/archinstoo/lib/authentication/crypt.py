@@ -89,7 +89,7 @@ def crypt_gen_salt(prefix: str | bytes, rounds: int) -> bytes:
 
 def _sha512_salt() -> bytes:
 	# SHA-512 crypt ($6$) is supported by both glibc and musl and accepted by
-	# the target Arch; 16 random salt chars from the crypt(3) alphabet
+	# the target; 16 random salt chars from the crypt(3) alphabet
 	rand = ''.join(secrets.choice(_CRYPT_B64) for _ in range(16))
 	return f'$6${rand}'.encode()
 
@@ -111,7 +111,7 @@ def _crypt_with(plaintext: bytes, salt: bytes, prefix: str) -> str | None:
 
 
 def crypt_yescrypt(plaintext: str) -> str:
-	# By default chpasswd in Arch uses PAM to hash the password with crypt_yescrypt
+	# chpasswd hashes through PAM, whose pam_unix line (authselect) asks for yescrypt
 	# the PAM code https://github.com/linux-pam/linux-pam/blob/master/modules/pam_unix/support.c
 	# shows that the hashing rounds are determined from YESCRYPT_COST_FACTOR in /etc/login.defs
 	# If no value was specified (or commented out) a default of 5 is chosen
