@@ -59,7 +59,8 @@ archinstoo = "archinstoo"
 cache_dir = "~/.cache/archinstoo/mypy"
 files = "."
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
-exclude = "^build/"
+# anaconda/: the reference submodule, not ours to type-check
+exclude = "^(build|anaconda)/"
 disallow_any_explicit = false
 disallow_any_expr = false
 disallow_any_unimported = true
