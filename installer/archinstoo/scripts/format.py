@@ -48,9 +48,10 @@ def perform_installation(
 		handler=handler,
 		device_handler=device_handler,
 	) as installation:
-		# format mode stops at a mounted layout: there is no base step to miss,
-		# so claim it rather than let the exit summary report it as skipped
+		# format mode stops at a mounted layout: there is no base or kernel step
+		# to miss, so claim them rather than let the exit summary report them
 		installation.set_helper_flag('base', True)
+		installation.set_helper_flag('kernel', True)
 
 		# Mount all the drives to the desired mountpoint
 		# This *can* be done outside of the installation, but the installer can deal with it.

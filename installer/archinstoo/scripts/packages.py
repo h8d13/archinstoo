@@ -49,8 +49,9 @@ def perform_installation(
 		kernels=[],
 		handler=handler,
 	) as installation:
-		# base is already there, we're on a running system
+		# base and kernel are already there, we're on a running system
 		installation.set_helper_flag('base', True)
+		installation.set_helper_flag('kernel', True)
 
 		# Applications
 		if app_config := config.app_config:
