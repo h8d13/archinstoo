@@ -10,7 +10,7 @@ set -e
 # shellcheck disable=SC2046
 dnf install -y $(
 	awk '{print $1}' <<'EOF'
-	python3                     # interpreter (3.14 on f44)
+	python3.15                  # interpreter
 	python3-pyparted            # prebuilt parted bindings
 	parted                      # partition cli + libparted runtime
 	pacman                      # arch package manager

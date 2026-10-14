@@ -124,6 +124,10 @@ Historical changes/commits before I went rogue:
 		  `disk_encryption` drops `tpm2_unlock`/`tpm2_pcrs`/`tpm2_pin`
 		- `firmware.vendors` is kept for `full` as well (the picked
 		  optional firmware), not only for `vendor`
+		- `network_config.mac_address` is gone: randomization is a
+		  per-connection setting the NM front-ends (DE) already own, and
+		  the networkd `.link` replaced `99-default.link` naming. An
+		  old key is ignored on load
 
 ## 0.1.16-0
 

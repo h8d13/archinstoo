@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, NicType
+from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, NicType
 from archinstoo.lib.network import network_handler
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.utils.env import Os
@@ -91,49 +91,6 @@ def test_dns_round_trips_through_json() -> None:
 	# absent stays absent, and a manual type with no interfaces is still nothing
 	assert NetworkConfiguration.parse_arg({'type': 'nm'}) == NetworkConfiguration(NicType.NM)
 	assert NetworkConfiguration.parse_arg({'type': 'manual'}) is None
-
-
-@pytest.mark.parametrize('nic_type', [NicType.IWD, NicType.MANUAL])
-def test_random_mac_link_keeps_predictable_names(nic_type: NicType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	# the .link matches every interface and sorts before 99-default.link, so
-	# it replaces it: without the naming policies the NIC boots as eth0 and a
-	# manual Name=enp0s2 match never applies (seen on the VM, 2026-09-07)
-	(tmp_path / 'etc').mkdir()
-	installation, _ = _session(tmp_path, monkeypatch)
-
-	config = NetworkConfiguration(nic_type, mac_address=MacAddressPolicy.RANDOM)
-	NetworkHandler().install_network_config(config, installation)
-
-	link = (tmp_path / 'etc/systemd/network/00-mac-address.link').read_text()
-	assert 'NamePolicy=keep kernel database onboard slot path' in link
-	assert 'AlternativeNamesPolicy=database onboard slot path' in link
-	# "mac" would mint a fresh enx<mac> altname on every boot under a random
-	# address; 99-default.link only carries it next to MACAddressPolicy=persistent
-	assert 'AlternativeNamesPolicy=database onboard slot path mac' not in link
-	assert 'MACAddressPolicy=random' in link
-
-
-@pytest.mark.parametrize(('mac', 'mode'), [(MacAddressPolicy.STABLE, 'network'), (MacAddressPolicy.RANDOM, 'once')])
-def test_nm_iwd_mac_lands_in_iwd_conf(mac: MacAddressPolicy, mode: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	# NM's iwd backend ignores cloned-mac-address for wireless, so the choice
-	# has to reach /etc/iwd/main.conf as well as the NM drop-in
-	(tmp_path / 'etc').mkdir()
-	installation, _ = _session(tmp_path, monkeypatch)
-
-	NetworkHandler().install_network_config(NetworkConfiguration(NicType.NM_IWD, mac_address=mac), installation)
-
-	assert (tmp_path / 'etc/iwd/main.conf').read_text() == f'[General]\nAddressRandomization={mode}\n'
-	assert f'wifi.cloned-mac-address={mac.value}' in (tmp_path / 'etc/NetworkManager/conf.d/mac_address.conf').read_text()
-	assert not (tmp_path / 'etc/systemd/network/00-mac-address.link').exists()
-
-
-def test_stable_mac_without_nm_writes_no_link(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	(tmp_path / 'etc').mkdir()
-	installation, _ = _session(tmp_path, monkeypatch)
-
-	NetworkHandler().install_network_config(NetworkConfiguration(NicType.MANUAL, mac_address=MacAddressPolicy.STABLE), installation)
-
-	assert not (tmp_path / 'etc/systemd/network/00-mac-address.link').exists()
 
 
 # A foreign host (alpine, debian) keeps nothing the target can read: busybox

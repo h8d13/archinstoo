@@ -143,49 +143,6 @@ class DnsConfiguration:
 		return '\n'.join(lines) + '\n'
 
 
-class MacAddressPolicy(StrEnum):
-	# keep: hardware address. stable: one address per network, so DHCP leases
-	# and captive portals still recognise the machine. random: new address per
-	# connection (per boot on the networkd paths)
-	KEEP = auto()
-	STABLE = auto()
-	RANDOM = auto()
-
-	def display_msg(self) -> str:
-		match self:
-			case MacAddressPolicy.KEEP:
-				return 'Keep the hardware address'
-			case MacAddressPolicy.STABLE:
-				return 'Stable per network (recommended)'
-			case MacAddressPolicy.RANDOM:
-				return 'Random per connection'
-
-	def as_nm_config(self) -> str:
-		# scan randomisation is already NM's default, this is the connection
-		# https://wiki.archlinux.org/title/NetworkManager#Configuring_MAC_address_randomization
-		return f'[connection]\nwifi.cloned-mac-address={self.value}\nethernet.cloned-mac-address={self.value}\n'
-
-	def as_iwd_config(self) -> str:
-		# iwd's own knob for wireless; per-network is what NM calls stable
-		mode = 'network' if self is MacAddressPolicy.STABLE else 'once'
-		return f'AddressRandomization={mode}\n'
-
-	def as_link_config(self) -> str:
-		# https://wiki.archlinux.org/title/MAC_address_spoofing#systemd-networkd
-		# a .link matching every interface replaces 99-default.link outright, so
-		# it has to carry the naming policies too or the NIC stays eth0 and a
-		# manual Name=enp0s2 match never applies.
-		# "mac" is dropped from the altname policy that 99-default.link carries
-		# since v256: it derives an enx<mac> name, which under a per-boot random
-		# address is a new altname every boot
-		return (
-			'[Match]\nOriginalName=*\n\n[Link]\n'
-			'NamePolicy=keep kernel database onboard slot path\n'
-			'AlternativeNamesPolicy=database onboard slot path\n'
-			'MACAddressPolicy=random\n'
-		)
-
-
 class _NicSerialization(TypedDict):
 	iface: str | None
 	ip: str | None
@@ -261,7 +218,6 @@ class _NetworkConfigurationSerialization(TypedDict):
 	type: str
 	nics: NotRequired[list[_NicSerialization]]
 	dns: NotRequired[_DnsSerialization]
-	mac_address: NotRequired[str]
 
 
 @dataclass
@@ -270,7 +226,6 @@ class NetworkConfiguration:
 	nics: list[Nic] = field(default_factory=list)
 	# system-wide resolver, any type: every path runs systemd-resolved
 	dns: DnsConfiguration | None = None
-	mac_address: MacAddressPolicy = MacAddressPolicy.KEEP
 
 	def json(self) -> _NetworkConfigurationSerialization:
 		config: _NetworkConfigurationSerialization = {'type': self.type.value}
@@ -278,8 +233,6 @@ class NetworkConfiguration:
 			config['nics'] = [n.json() for n in self.nics]
 		if self.dns:
 			config['dns'] = self.dns.json()
-		if self.mac_address is not MacAddressPolicy.KEEP:
-			config['mac_address'] = self.mac_address.value
 
 		return config
 
@@ -297,6 +250,5 @@ class NetworkConfiguration:
 				return None
 
 		dns = DnsConfiguration.parse_arg(dns_arg) if (dns_arg := config.get('dns')) else None
-		mac = MacAddressPolicy(config.get('mac_address', MacAddressPolicy.KEEP.value))
 
-		return cls(NicType(nic_type), nics, dns, mac)
+		return cls(NicType(nic_type), nics, dns)

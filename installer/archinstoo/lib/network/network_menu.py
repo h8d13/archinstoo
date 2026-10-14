@@ -3,7 +3,7 @@ import re
 from typing import override
 
 from archinstoo.lib.menu.list_manager import ListManager
-from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, MacAddressPolicy, NetworkConfiguration, Nic, NicType
+from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, Nic, NicType
 from archinstoo.lib.network.interfaces import list_interfaces
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -192,11 +192,6 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	return DnsConfiguration(provider, over_tls, servers, tls_name)
 
 
-def _select_mac_address(preset: MacAddressPolicy) -> MacAddressPolicy:
-	items = [MenuItem(m.display_msg(), value=m) for m in MacAddressPolicy]
-	return prompt_choice(items, preset, header='MAC address randomization\n', frame='MAC address') or preset
-
-
 def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration | None:
 	# Configure the network on the newly installed system
 	items = [MenuItem(n.display_msg(), value=n) for n in NicType]
@@ -234,5 +229,4 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 					return preset
 
 			dns = _select_dns(preset.dns if preset else None)
-			mac = _select_mac_address(preset.mac_address if preset else MacAddressPolicy.KEEP)
-			return NetworkConfiguration(config, nics, dns, mac)
+			return NetworkConfiguration(config, nics, dns)
