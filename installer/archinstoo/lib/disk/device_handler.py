@@ -56,6 +56,7 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import debug, error, info
 
 from .luks import Luks2, unlock_luks2_dev
+from .mdadm import stop_arrays_on
 from .utils import (
 	find_lsblk_info,
 	get_all_lsblk_info,
@@ -966,6 +967,8 @@ class DeviceHandler:
 		# This is not intended to be secure, but rather to ensure that
 		# auto-discovery tools don't recognize anything here.
 		info(f'Wiping partitions and metadata: {block_device.device_info.path}')
+
+		stop_arrays_on(block_device.device_info.path)
 
 		# Wipe filesystem signatures first to prevent auto-discovery tools
 		# from recognizing stale FS types during teardown (e.g. btrfs mount attempts)

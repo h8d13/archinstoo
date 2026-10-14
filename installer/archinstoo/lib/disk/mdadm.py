@@ -1,11 +1,10 @@
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, info, warn
 
-if TYPE_CHECKING:
-	from pathlib import Path
+SYS_BLOCK = Path('/sys/class/block')
 
 
 def scan_arrays() -> str:
@@ -17,6 +16,19 @@ def scan_arrays() -> str:
 	except SysCallError as err:
 		debug(f'mdadm --detail --scan failed: {err}')
 		return ''
+
+
+def stop_arrays_on(device: Path) -> None:
+	# a live system's udev assembles every array it finds members of; while
+	# one runs its members stay busy, so wipefs cannot open them and the
+	# kernel keeps the old partition table. The kernel's partitions, not the
+	# on-disk table: after a failed commit the two disagree
+	node = SYS_BLOCK / device.name
+	holders = [*node.glob('holders/md*'), *node.glob(f'{device.name}*/holders/md*')]
+	arrays = sorted({h.name for h in holders})
+	for md in arrays:
+		info(f'Stopping md array /dev/{md}')
+		SysCommand(['mdadm', '--stop', f'/dev/{md}'])
 
 
 def array_uuid(dev_path: Path) -> str:
