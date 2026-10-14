@@ -2,6 +2,7 @@
 # more: shipped WM configs keep their upstream terminal and the profile
 # installs it, only our own noctalia assets launch $TERMINAL.
 
+import textwrap
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
@@ -53,16 +54,30 @@ def test_write_environment_replaces_in_place(tmp_path: Path) -> None:
 	write_environment(tmp_path, {'TERMINAL': 'foot'})
 	write_environment(tmp_path, {'TERMINAL': 'kitty', 'LANG': 'C'})
 
-	assert (tmp_path / 'etc/environment').read_text() == 'EDITOR=nano\nTERMINAL=kitty\nLANG=C\n'
+	assert (tmp_path / 'etc/environment').read_text() == textwrap.dedent("""\
+		EDITOR=nano
+		TERMINAL=kitty
+		LANG=C
+	""")
 
 
 def test_write_environment_leaves_unclaimed_lines_alone(tmp_path: Path) -> None:
 	(tmp_path / 'etc').mkdir()
-	(tmp_path / 'etc/environment').write_text('# set by hand\nEDITOR=nano\nXKB_DEFAULT_LAYOUT=be\n')
+	(tmp_path / 'etc/environment').write_text(
+		textwrap.dedent("""\
+			# set by hand
+			EDITOR=nano
+			XKB_DEFAULT_LAYOUT=be
+		""")
+	)
 
 	write_environment(tmp_path, {'XKB_DEFAULT_LAYOUT': 'de'})
 
-	assert (tmp_path / 'etc/environment').read_text() == '# set by hand\nEDITOR=nano\nXKB_DEFAULT_LAYOUT=de\n'
+	assert (tmp_path / 'etc/environment').read_text() == textwrap.dedent("""\
+		# set by hand
+		EDITOR=nano
+		XKB_DEFAULT_LAYOUT=de
+	""")
 
 
 def test_terminal_app_installs_and_exports(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

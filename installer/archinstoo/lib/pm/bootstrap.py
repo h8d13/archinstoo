@@ -2,6 +2,7 @@ import json
 import re
 import tarfile
 import tempfile
+import textwrap
 from compression.zstd import ZstdFile
 from pathlib import Path
 from typing import NamedTuple
@@ -101,7 +102,13 @@ def pacman_conf() -> None:
 	conf = conf.replace('@CARCH@', SysInfo.arch())
 	if SysInfo.arch() != 'x86_64':
 		# upstream conf knows core/extra; the port adds forge ahead of them
-		conf = conf.replace('[core]\n', f'[forge]\nInclude = {MIRRORLIST}\n\n[core]\n', 1)
+		forge = textwrap.dedent(f"""\
+			[forge]
+			Include = {MIRRORLIST}
+
+			[core]
+		""")
+		conf = conf.replace('[core]\n', forge, 1)
 	PACMAN_CONF.write_text(conf)
 
 

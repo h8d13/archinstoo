@@ -1,4 +1,5 @@
 import subprocess
+import textwrap
 from typing import TYPE_CHECKING
 
 import pytest
@@ -35,10 +36,15 @@ def _stub(
 
 
 def test_conf_carries_only_the_asked_repos() -> None:
-	assert tmpdb.render_conf(['DatabaseOptional'], {'core': MIRRORS}) == (
-		'[options]\nArchitecture = auto\nSigLevel = DatabaseOptional\n\n[core]\n'
-		'Server = https://a.example/core/os/x86_64\nServer = https://b.example/core/os/x86_64\n'
-	)
+	assert tmpdb.render_conf(['DatabaseOptional'], {'core': MIRRORS}) == textwrap.dedent("""\
+		[options]
+		Architecture = auto
+		SigLevel = DatabaseOptional
+
+		[core]
+		Server = https://a.example/core/os/x86_64
+		Server = https://b.example/core/os/x86_64
+	""")
 
 
 def test_conf_falls_back_to_arch_siglevel() -> None:
@@ -46,7 +52,11 @@ def test_conf_falls_back_to_arch_siglevel() -> None:
 
 
 def test_listing_skips_directories() -> None:
-	text = 'amd-ucode usr/lib/firmware/\namd-ucode usr/lib/firmware/amd-ucode/README.zst\nlinux-firmware-ti usr/lib/firmware/ti_3410.fw.zst\n'
+	text = textwrap.dedent("""\
+		amd-ucode usr/lib/firmware/
+		amd-ucode usr/lib/firmware/amd-ucode/README.zst
+		linux-firmware-ti usr/lib/firmware/ti_3410.fw.zst
+	""")
 	assert tmpdb.parse_files(text) == [
 		('amd-ucode', 'usr/lib/firmware/amd-ucode/README.zst'),
 		('linux-firmware-ti', 'usr/lib/firmware/ti_3410.fw.zst'),

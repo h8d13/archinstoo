@@ -1,3 +1,4 @@
+import textwrap
 from typing import override
 
 from archinstoo.lib.hardware import SysInfo
@@ -281,9 +282,11 @@ def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfigur
 
 def select_thunderbolt(preset: ThunderboltConfiguration | None) -> ThunderboltConfiguration | None:
 	enabled = prompt_yes_no(
-		'Would you like to configure Thunderbolt device authorization (bolt)?\n'
-		'New devices are auto-enrolled when the desktop asks or IOMMU DMA protection is on,\n'
-		'otherwise once with: boltctl enroll --policy auto <uuid>\n',
+		textwrap.dedent("""\
+			Would you like to configure Thunderbolt device authorization (bolt)?
+			New devices are auto-enrolled when the desktop asks or IOMMU DMA protection is on,
+			otherwise once with: boltctl enroll --policy auto <uuid>
+		"""),
 		preset.enabled if preset else False,
 	)
 	return preset if enabled is None else ThunderboltConfiguration(enabled)

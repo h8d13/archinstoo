@@ -1,12 +1,13 @@
 # Flag string literals spelling 3+ text lines with \n escapes: a dedent()'ed
 # triple-quoted block reads better. Blank lines don't count, so '\n\n'
-# spacers pass. Opt out with a trailing '# dedent: skip'.
+# spacers pass. Directories are scanned whole, so any hit fails the commit.
 import ast
 import sys
 from pathlib import Path
 
 MIN_LINES = 3
-SKIP = '# dedent: skip'
+# synced from upstream, ruff skips it too
+EXCLUDE = {'grimoire.py'}
 
 
 def _text(node: ast.AST) -> str | None:
@@ -28,10 +29,15 @@ def is_inline_block(src: str, node: ast.expr) -> bool:
 	return sum(1 for line in text.split('\n') if line.strip()) >= MIN_LINES
 
 
-def main(paths: list[str]) -> int:
+def _sources(args: list[str]) -> list[Path]:
+	paths = [p for arg in args for p in (Path(arg).rglob('*.py') if Path(arg).is_dir() else [Path(arg)])]
+	return [p for p in paths if p.name not in EXCLUDE]
+
+
+def main(args: list[str]) -> int:
 	hits = set()
-	for path in paths:
-		src = Path(path).read_text()
+	for path in _sources(args):
+		src = path.read_text()
 		lines = src.splitlines()
 		nodes = list(ast.walk(ast.parse(src, path)))
 		# f-string parts have no quotes of their own, judge the whole
@@ -39,11 +45,8 @@ def main(paths: list[str]) -> int:
 		for node in nodes:
 			if id(node) in parts or not isinstance(node, ast.expr):
 				continue
-			if not is_inline_block(src, node):
-				continue
-			if SKIP in lines[(node.end_lineno or node.lineno) - 1]:
-				continue
-			hits.add((path, node.lineno, lines[node.lineno - 1].strip()))
+			if is_inline_block(src, node):
+				hits.add((str(path), node.lineno, lines[node.lineno - 1].strip()))
 	for path, lineno, line in sorted(hits):
 		print(f'{path}:{lineno}: {line}')
 	return 1 if hits else 0

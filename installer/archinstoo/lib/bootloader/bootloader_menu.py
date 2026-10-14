@@ -190,23 +190,22 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return uki
 
 	def _select_removable(self, preset: bool) -> bool:
-		prompt = (
-			(
-				'Would you like to install the bootloader to the default removable media search location?'
-				'\n\n'
-				'This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is useful for:'
-				'\n\n  • '
-				'Firmware that does not properly support NVRAM boot entries like most MSI motherboards,'
-				'\n    '
-				'most Apple Macs, many laptops...'
-				'\n  • '
-				'USB drives or other portable external media.'
-				'\n  • '
-				'Systems where you want the disk to be bootable on any computer.'
-				'\n\n'
+		uses = '\n'.join(
+			f'  • {use}'
+			for use in (
+				'Firmware that does not properly support NVRAM boot entries like most MSI motherboards,\n    most Apple Macs, many laptops...',
+				'USB drives or other portable external media.',
+				'Systems where you want the disk to be bootable on any computer.',
 			)
-			+ textwrap.dedent(
-				"""\
+		)
+		# format after dedent: the bullets' space indent would shrink the margin
+		prompt = textwrap.dedent("""\
+			Would you like to install the bootloader to the default removable media search location?
+
+			This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is useful for:
+
+			{uses}
+
 			If you do not know what this means, LEAVE THIS OPTION ENABLED, as it is the safe default.
 
 			It is suggested to disable this if none of the above apply, as it makes installing multiple
@@ -216,10 +215,8 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			It may also make the installation more resilient in case of dual-booting with Windows,
 			as Windows is known to sometimes erase or replace the bootloader installed at the removable
 			location.
-			"""
-			)
-			+ '\n'
-		)
+
+		""").format(uses=uses)
 
 		choice = prompt_yes_no(prompt, preset)
 		return preset if choice is None else choice

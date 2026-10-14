@@ -50,6 +50,10 @@ if TYPE_CHECKING:
 	from .models.mirrors import PacmanConfiguration
 
 
+def _section(title: str, body: str) -> str:
+	return '\n'.join((title, '-' * len(title), body))
+
+
 class GlobalMenu(AbstractMenu[None]):
 	def __init__(
 		self,
@@ -378,18 +382,12 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_additional_pkgs(self, item: MenuItem) -> str | None:
 		if item.value:
-			title = 'Additionals'
-			divider = '-' * len(title)
-			packages = '\n'.join(sorted(item.value))
-			return f'{title}\n{divider}\n{packages}'
+			return _section('Additionals', '\n'.join(sorted(item.value)))
 		return None
 
 	def _prev_aur_packages(self, item: MenuItem) -> str | None:
 		if item.value:
-			title = 'AUR packages'
-			divider = '-' * len(title)
-			packages = '\n'.join(sorted(item.value))
-			return f'{title}\n{divider}\n{packages}'
+			return _section('AUR packages', '\n'.join(sorted(item.value)))
 		return None
 
 	def _prev_authentication(self, item: MenuItem) -> str | None:
@@ -692,31 +690,22 @@ class GlobalMenu(AbstractMenu[None]):
 
 		config: PacmanConfiguration = item.value
 
-		output = ''
+		sections = []
 		if config.mirror_regions:
-			title = 'Selected mirror regions'
-			divider = '-' * len(title)
-			regions = config.region_names
-			output += f'{title}\n{divider}\n{regions}\n\n'
+			sections.append(_section('Selected mirror regions', config.region_names))
 
 		if config.custom_servers:
-			title = 'Custom servers'
-			divider = '-' * len(title)
-			servers = config.custom_server_urls
-			output += f'{title}\n{divider}\n{servers}\n\n'
+			sections.append(_section('Custom servers', config.custom_server_urls))
 
 		if config.optional_repositories:
-			title = 'Optional repositories'
-			divider = '-' * len(title)
 			repos = ', '.join([r.value for r in config.optional_repositories])
-			output += f'{title}\n{divider}\n{repos}\n\n'
+			sections.append(_section('Optional repositories', repos))
 
 		if config.custom_repositories:
-			title = 'Custom repositories'
 			table = FormattedOutput.as_table(config.custom_repositories)
-			output += f'{title}:\n\n{table}'
+			sections.append(f'Custom repositories:\n\n{table}')
 
-		return output.strip()
+		return '\n\n'.join(sections).strip()
 
 	def _handle_abort(self, _preset: None) -> None:
 		items = []

@@ -1,4 +1,5 @@
 import importlib
+import textwrap
 from pathlib import Path
 from shutil import rmtree
 
@@ -68,6 +69,10 @@ def report_outcome(target: Path, steps: dict[str, bool]) -> None:
 
 	closing = 'Changes are live on the running system.' if target == Path('/') else 'You may reboot when ready.'
 	log(
-		f'Installation completed without any errors.\nLog files available at {logger.directory} and in target {TARGET_STATE_DIR}.\n{closing}\n',
+		textwrap.dedent(f"""\
+			Installation completed without any errors.
+			Log files available at {logger.directory} and in target {TARGET_STATE_DIR}.
+			{closing}
+		"""),
 		fg='green',
 	)

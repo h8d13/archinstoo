@@ -56,9 +56,11 @@ repos:
     # 3+ \n-built text lines in one literal read better as a dedent block
     - id: inline-newlines
       name: inline-newlines
-      entry: python .github/hooks/inline_newlines.py
+      entry: python .github/hooks/inline_newlines.py installer/archinstoo
       language: python
-      types: [python]
+      # whole tree every commit, a hit fails even if its file isn't staged
+      pass_filenames: false
+      always_run: true
     - id: lint-imports
       name: lint-imports
       # sibling-acyclicity contract in installer/pyproject.toml
