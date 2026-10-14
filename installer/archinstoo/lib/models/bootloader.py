@@ -1,19 +1,18 @@
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Any, Self
 
 from archinstoo.lib.output import warn
 
-# writes the EFI boot entry, for every bootloader that does not manage its own
-EFIBOOTMGR = 'efibootmgr'
+# where Fedora's shim and signed grub RPMs put themselves: the ESP has to be
+# mounted here for GRUB on UEFI
+GRUB_ESP = Path('/boot/efi')
 
 
 class Bootloader(Enum):
 	Systemd = 'systemd-boot'
 	Grub = 'grub'
-	Efistub = 'efistub'
-	Limine = 'limine'
-	Refind = 'refind'
 
 	def display_name(self) -> str:
 		match self:
@@ -21,40 +20,30 @@ class Bootloader(Enum):
 				return 'Systemd-boot'
 			case Bootloader.Grub:
 				return 'Grub'
-			case Bootloader.Efistub:
-				return 'Efistub'
-			case Bootloader.Limine:
-				return 'Limine'
-			case Bootloader.Refind:
-				return 'Refind'
 
-	def packages(self, uefi: bool = True) -> list[str]:
-		# what _add_<name>_bootloader() straps. the default is the UEFI set,
-		# the upper bound an estimate wants: a BIOS install has no EFI entry to
-		# write, and refind-install writes its own
+	def packages(self, uefi: bool = True, uki: bool = False) -> list[str]:
+		# what the bootloader step straps. The default is the UEFI set, the
+		# upper bound an estimate wants
 		match self:
-			case Bootloader.Grub | Bootloader.Limine:
-				return [self.value, *([EFIBOOTMGR] if uefi else [])]
-			case Bootloader.Refind:
-				return [self.value]
-			case _:
-				# systemd-boot ships with systemd, efistub is a kernel feature
-				return [EFIBOOTMGR] if uefi else []
+			case Bootloader.Systemd:
+				# systemd-boot-unsigned carries the stub ukify wraps a UKI in
+				return ['systemd-boot-unsigned', *(['systemd-ukify'] if uki else [])]
+			case Bootloader.Grub:
+				if uefi:
+					# signed shim + grub, prebuilt: Secure Boot works as shipped
+					return ['grub2-efi-x64', 'shim-x64', 'grub2-tools', 'efibootmgr']
+				return ['grub2-pc', 'grub2-tools']
 
 	def has_removable_support(self) -> bool:
-		match self:
-			case Bootloader.Grub | Bootloader.Limine:
-				return True
-			case _:
-				return False
+		# shim-x64 ships EFI/BOOT/BOOTX64.EFI; bootctl always writes it
+		return self == Bootloader.Grub
 
 	def has_bios_support(self) -> bool:
-		# the rest are EFI applications, or the kernel booted as one
-		match self:
-			case Bootloader.Grub | Bootloader.Limine:
-				return True
-			case _:
-				return False
+		return self == Bootloader.Grub
+
+	def has_uki_support(self) -> bool:
+		# GRUB's BLS entries name a kernel and an initrd, not a UKI
+		return self == Bootloader.Systemd
 
 	def json(self) -> str:
 		return self.value
@@ -77,8 +66,6 @@ class BootloaderConfiguration:
 	uki: bool = False
 	removable: bool = True
 	quiet: bool = False
-	# embeds the Arch splash bmp into the UKI; only meaningful with uki=True
-	splash: bool = False
 	# kernel 'console=' value (e.g. 'ttyS0,115200'); None = no serial console
 	serial_console: str | None = None
 
@@ -88,7 +75,6 @@ class BootloaderConfiguration:
 			'uki': self.uki,
 			'removable': self.removable,
 			'quiet': self.quiet,
-			'splash': self.splash,
 			'serial_console': self.serial_console,
 		}
 
@@ -99,22 +85,21 @@ class BootloaderConfiguration:
 		uki = config.get('uki', False)
 		removable = config.get('removable', True)
 		quiet = config.get('quiet', False)
-		splash = config.get('splash', False)
 		serial_console = config.get('serial_console') or None
 		return cls(
 			bootloader=bootloader,
 			uki=uki,
 			removable=removable,
 			quiet=quiet,
-			splash=splash,
 			serial_console=serial_console,
 		)
 
 	@classmethod
 	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
+		# Fedora's own default: shim-signed GRUB over BLS entries
 		bootloader = None if skip_boot else Bootloader.Grub
 		removable = uefi and bootloader is not None and bootloader.has_removable_support()
-		uki = uefi and bootloader is not None
+		uki = uefi and bootloader is not None and bootloader.has_uki_support()
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	def preview(self, uefi: bool) -> str:
@@ -122,14 +107,10 @@ class BootloaderConfiguration:
 		text += '\n'
 		if self.bootloader is None:
 			return text
-		if uefi:
+		if uefi and self.bootloader.has_uki_support():
 			uki_string = 'Enabled' if self.uki else 'Disabled'
 			text += f'UKI: {uki_string}'
 			text += '\n'
-			if self.uki:
-				splash_string = 'Enabled' if self.splash else 'Disabled'
-				text += f'Boot splash: {splash_string}'
-				text += '\n'
 		if uefi and self.bootloader.has_removable_support():
 			removable_string = 'Enabled' if self.removable else 'Disabled'
 			text += f'Removable: {removable_string}'

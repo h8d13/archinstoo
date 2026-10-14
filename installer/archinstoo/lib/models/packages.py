@@ -1,42 +1,20 @@
-from dataclasses import asdict, dataclass, field
-from enum import Enum
-from typing import Self
+from dataclasses import asdict, dataclass
 
 
-class Repository(Enum):
-	Core = 'core'
-	Extra = 'extra'
-	# Arch Ports (aarch64): board kernels, firmware and archports-keyring;
-	# always enabled in the port's pacman.conf, listed so it is not custom
-	Forge = 'forge'
-	Multilib = 'multilib'
-	Testing = 'testing'
-	MultilibTesting = 'multilib-testing'
-	CoreTesting = 'core-testing'
-	ExtraTesting = 'extra-testing'
-
-
-# slotted: list_available_packages() holds one per sync-db package (~15k)
+# slotted: list_available_packages() holds one per repo package (~70k)
 @dataclass(slots=True)
 class AvailablePackage:
 	name: str
-	architecture: str
-	build_date: str
-	conflicts_with: str
-	depends_on: str
-	description: str
-	download_size: str
-	groups: str
-	installed_size: str
-	licenses: str
-	optional_deps: str
-	packager: str
-	provides: str
-	replaces: str
-	repository: str
-	url: str
-	validated_by: str
 	version: str
+	release: str
+	architecture: str
+	repository: str
+	summary: str
+	description: str
+	url: str
+	license: str
+	download_size: str
+	installed_size: str
 
 	def info(self) -> str:
 		values = asdict(self)
@@ -51,33 +29,9 @@ class AvailablePackage:
 
 @dataclass
 class PackageGroup:
+	# a comps group, installed as @<id>; dnf resolves its members at install
 	name: str
-	packages: list[str] = field(default_factory=list)
-
-	@classmethod
-	def from_available_packages(
-		cls,
-		packages: dict[str, AvailablePackage],
-	) -> dict[str, Self]:
-		pkg_groups: dict[str, Self] = {}
-
-		for pkg in packages.values():
-			if 'None' in pkg.groups:
-				continue
-
-			groups = pkg.groups.split(' ')
-
-			for group in groups:
-				# same group names have multiple spaces in between
-				if len(group) == 0:
-					continue
-
-				pkg_groups.setdefault(group, cls(group))
-				pkg_groups[group].packages.append(pkg.name)
-
-		return pkg_groups
+	description: str = ''
 
 	def info(self) -> str:
-		output = 'Package group:\n  - '
-		output += '\n  - '.join(self.packages)
-		return output
+		return f'Package group: {self.description}\nMembers are resolved by dnf at install time.'

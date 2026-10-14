@@ -18,7 +18,6 @@ from archinstoo.lib.models.graphics import (
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
-from archinstoo.scripts import _resolve
 
 HYBRID = [GfxPackage.NvidiaOpen, GfxPackage.VulkanIntel, GfxPackage.Mesa]
 
@@ -86,20 +85,6 @@ def test_presets_still_resolve_through_the_shared_swap() -> None:
 	assert GfxDriver.Custom.gfx_packages(['linux-lts']) == []
 
 
-def test_resolve_mirrors_the_install_path() -> None:
-	custom = [p.value for p in HYBRID]
-	assert _resolve._gfx_packages('custom', custom, ['linux']) == set(custom)
-	assert _resolve._gfx_packages('custom', custom, ['linux-zen']) == {
-		'nvidia-open-dkms',
-		'dkms',
-		'linux-zen-headers',
-		'vulkan-intel',
-		'mesa',
-	}
-	# a name outside the pool never reaches pacman, and dkms cannot be forced by hand
-	assert _resolve._gfx_packages('custom', ['mesa', 'nvidia-390xx', 'dkms'], ['linux']) == {'mesa'}
-
-
 def test_config_round_trip_drops_unknown_names() -> None:
 	parsed = ArchConfig.from_config({'gfx_driver': 'custom', 'gfx_packages': ['mesa', 'vulkan-intel', 'not-a-package']})
 	assert parsed.gfx_driver is GfxDriver.Custom
@@ -109,17 +94,6 @@ def test_config_round_trip_drops_unknown_names() -> None:
 	# a preset driver carries no list, an absent key parses as none
 	plain = ArchConfig.from_config({'gfx_driver': 'mesa-open-source'})
 	assert plain.gfx_packages == []
-
-
-@pytest.mark.parametrize('driver', [d for d in GfxDriver if d is not GfxDriver.Custom])
-@pytest.mark.parametrize('kernels', [['linux'], ['linux-zen']])
-def test_presets_match_the_count_mirror(driver: GfxDriver, kernels: list[str]) -> None:
-	# no host input: the install set and the counted set are the same table
-	installed = {p.value for p in driver.gfx_packages(kernels)}
-	if GfxPackage.NvidiaOpenDkms in driver.gfx_packages(kernels):
-		installed |= {f'{k}-headers' for k in kernels}
-
-	assert _resolve._gfx_packages(driver.value, [], kernels) == installed
 
 
 def test_custom_install_takes_the_picks_as_given() -> None:

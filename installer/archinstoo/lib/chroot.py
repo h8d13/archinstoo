@@ -7,7 +7,6 @@ from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, info, warn
-from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
 	from subprocess import CompletedProcess
@@ -18,21 +17,42 @@ if TYPE_CHECKING:
 # the host as is
 
 # su - resets the environment; proxies set for the install must still reach
-# git/curl in AUR builds
+# git/curl in custom commands
 KEEP_ENV = ('http_proxy', 'https_proxy', 'no_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY')
 
 
-def chroot_prefix(target: Path, systemd_mode: bool = False) -> list[str]:
-	# plain chroot(1) inherits our environment (proxies); -S goes through
-	# systemd-run + setpriv --reset-env, which drops it but gives systemd
-	# tools the real system view (bootctl resolves the ESP for NVRAM).
-	# -S needs a booted systemd >= 257 outside any chroot, which only an
-	# Arch host/ISO guarantees
-	prefix = ['arch-chroot']
-	if systemd_mode and Os.running_from_arch() and Os.has_systemd():
-		prefix.append('-S')
-	prefix.append(str(target))
-	return prefix
+# arch-chroot's set, mounted once per target instead of per command. /run
+# is the host's: udev's database there is what dracut's hostonly detection
+# and grub2-probe resolve the root device through. teardown_layout's
+# umount -R takes them down with the layout
+_API_MOUNTS = (
+	('proc', ['-t', 'proc', 'proc', '-o', 'nosuid,noexec,nodev']),
+	# rslave: unmounting the target must not propagate back to the host's
+	# /sys and /dev submounts
+	('sys', ['--rbind', '--make-rslave', '/sys']),
+	('dev', ['--rbind', '--make-rslave', '/dev']),
+	('run', ['--bind', '--make-private', '/run']),
+	('tmp', ['-t', 'tmpfs', 'tmp', '-o', 'mode=1777,strictatime,nodev,nosuid']),
+)
+
+
+def mount_api(target: Path) -> None:
+	# idempotent: every chroot entry calls it, the first one mounts
+	if target == Path('/'):
+		return
+	for name, args in _API_MOUNTS:
+		path = target / name
+		path.mkdir(exist_ok=True)
+		if path.is_mount():
+			continue
+		debug(f'Mounting {name} at {path}')
+		SysCommand(['mount', *args, str(path)])
+
+
+def chroot_prefix(target: Path) -> list[str]:
+	# plain chroot(1) inherits our environment (proxies)
+	mount_api(target)
+	return ['chroot', str(target)]
 
 
 def su_prefix(run_as: str) -> list[str]:
@@ -45,7 +65,6 @@ def run_in_target(
 	run_as: str | None = None,
 	peek_output: bool = False,
 	env: dict[str, str] | None = None,
-	systemd_mode: bool = False,
 ) -> SysCommand | CompletedProcess[bytes]:
 	on_host = target == Path('/')
 
@@ -53,13 +72,13 @@ def run_in_target(
 	if isinstance(cmd, list):
 		if run_as:
 			cmd = [*su_prefix(run_as), shlex.join(cmd)]
-		argv = cmd if on_host else [*chroot_prefix(target, systemd_mode), *cmd]
+		argv = cmd if on_host else [*chroot_prefix(target), *cmd]
 		return run(argv, env=env)  # env: secrets (NEWPIN) stay off argv and out of cmd_history
 
 	if run_as:
 		cmd = f'{shlex.join(su_prefix(run_as))} {shlex.quote(cmd)}'
 	if not on_host:
-		cmd = f'{" ".join(chroot_prefix(target, systemd_mode))} {cmd}'
+		cmd = f'{shlex.join(chroot_prefix(target))} {cmd}'
 	return SysCommand(cmd, peek_output=peek_output)
 
 
@@ -67,10 +86,10 @@ def drop_to_shell(target: Path) -> None:
 	# inherit this console rather than run under SysCommand's pty: that one
 	# captures output but never feeds our stdin back in, so the shell would
 	# sit there taking no input
-	proc = subprocess.run(['arch-chroot', str(target)], check=False)  # noqa: S603,S607 - fixed argv, arch-chroot from $PATH
+	proc = subprocess.run([*chroot_prefix(target), '/bin/bash'], check=False)  # noqa: S603 - fixed argv, chroot from $PATH
 	if proc.returncode:
 		# non-zero is normal: it carries out whatever the user last ran
-		debug(f'arch-chroot exited {proc.returncode}')
+		debug(f'chroot shell exited {proc.returncode}')
 
 
 def chown_tree(installation: Installer, username: str, path: str) -> None:

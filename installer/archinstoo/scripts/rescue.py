@@ -104,7 +104,7 @@ def mount_partition(partition: LsblkInfo, mount_point: Path) -> bool:
 		return False
 
 
-# fstab names a device by tag as often as by path, and genfstab -U writes
+# fstab names a device by tag as often as by path, and the installer writes
 # nothing but tags. udev keeps a symlink farm for each one, so resolving
 # here costs no blkid call
 _FSTAB_TAG_DIRS = {
@@ -416,7 +416,7 @@ def rescue() -> None:
 	# Display information
 	info(f'Installation mounted at: {mount_point}')
 	info('Entering chroot environment...')
-	info('Note: arch-chroot will automatically mount /dev, /proc, /sys, and handle DNS.')
+	info('Note: /dev, /proc, /sys and /run are mounted into the chroot for you.')
 	info('Type "exit" to leave the chroot and return to the live environment.')
 
 	try:

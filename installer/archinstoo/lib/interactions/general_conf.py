@@ -3,8 +3,8 @@ from enum import Enum
 
 from archinstoo.lib.localization.catalog import list_timezones
 from archinstoo.lib.models.packages import AvailablePackage, PackageGroup
-from archinstoo.lib.pm import enrich_package_info, list_available_packages
-from archinstoo.lib.tui.curses_menu import EditMenu, SelectMenu, Tui
+from archinstoo.lib.pm import enrich_package_info, list_available_packages, list_package_groups
+from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
@@ -22,7 +22,7 @@ def select_ntp(preset: bool = True) -> bool:
 	header = 'Would you like to use automatic time synchronization (NTP) with the default time servers?\n\n'
 	header += (
 		'Hardware time and other post-configuration steps might be required in order for NTP to work.\n'
-		'For more information, please check the Arch wiki\n'
+		'For more information, see the systemd-timesyncd documentation\n'
 	)
 
 	choice = prompt_yes_no(header, preset)
@@ -51,20 +51,20 @@ def select_additional_packages(preset: list[str] | None = None) -> list[str]:
 	Tui.print('Loading packages...', clear_screen=True)
 
 	packages = list_available_packages()
-	package_groups = PackageGroup.from_available_packages(packages)
+	package_groups = list_package_groups()
 
-	# repos the packages actually came from, not the ones we asked for: a repo
-	# enabled in pacman.conf whose db failed to sync must not be advertised.
-	# dict.fromkeys dedupes while holding conf order
+	# repos the packages actually came from, not the ones we asked for: an
+	# enabled repo whose metadata failed to load must not be advertised.
+	# dict.fromkeys dedupes while holding listing order
 	repos_text = ', '.join(dict.fromkeys(p.repository for p in packages.values()))
 
 	# Additional packages (with some light weight error handling for invalid package names)
 	header = f'Repositories: {repos_text}\n\n'
-	header += 'Only packages such as base, linux, some firmware, efibootmgr and optional profile packages are installed.\n'
-	header += 'Note: base-devel is no longer installed by default. Add it here if you need build tools + devtools for tooling..\n'
+	header += 'Only @core, the kernel, some firmware and optional profile packages are installed.\n'
+	header += 'Groups (@development-tools, ...) install with their default members.\n'
 	header += 'Select any packages from the below list that should be installed additionally\n'
 
-	# there are over 15k packages so this needs to be quick
+	# there are over 70k packages so this needs to be quick
 	preset_packages: list[AvailablePackage | PackageGroup] = []
 	for p in preset:
 		if p in packages:
@@ -153,56 +153,6 @@ def select_additional_packages(preset: list[str] | None = None) -> list[str]:
 		case ResultType.Selection:
 			selected_pacakges = result.get_values()
 			return [pkg.name for pkg in selected_pacakges]
-
-
-def select_aur_packages(preset: list[str] | None = None) -> list[str]:
-	from archinstoo.lib.grimoire import exists_in_aur_mirror
-
-	if preset is None:
-		preset = []
-
-	base_header = 'Enter AUR package names separated by commas\n'
-	base_header += 'git and the makepkg toolchain (base-devel minus sudo) will be installed automatically\n'
-
-	error_msg = ''
-	current_text = ', '.join(preset) if preset else ''
-
-	while True:
-		header = base_header
-		if error_msg:
-			header += '\n' + error_msg
-
-		result = EditMenu(
-			'AUR packages',
-			header=header,
-			alignment=Alignment.CENTER,
-			allow_skip=True,
-			allow_reset=True,
-			default_text=current_text,
-		).input()
-
-		match result.type_:
-			case ResultType.Skip:
-				return preset
-			case ResultType.Reset:
-				return []
-			case ResultType.Selection:
-				raw = result.text().strip()
-				if not raw:
-					return []
-
-				names = [name.strip() for name in raw.split(',') if name.strip()]
-				if not names:
-					return []
-
-				Tui.print('Validating AUR packages...', clear_screen=True)
-				invalid = [n for n in names if not exists_in_aur_mirror(n)]
-
-				if not invalid:
-					return names
-
-				current_text = ', '.join(n for n in names if n not in invalid)
-				error_msg = 'Not found in AUR: ' + ', '.join(invalid) + '\n'
 
 
 def select_post_installation(elapsed_time: float | None = None) -> PostInstallationAction:

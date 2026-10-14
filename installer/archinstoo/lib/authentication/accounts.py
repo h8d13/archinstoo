@@ -9,7 +9,7 @@ from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import run
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.users import User
-from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.output import debug, error, info
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -82,37 +82,10 @@ def create_users(
 
 	# Install the privilege escalation package
 	if privilege_escalation is not None and User.any_elevated(users):
-		installation.pacman.strap(privilege_escalation.packages())
-
-	_configure_makepkg(installation, privilege_escalation)
+		installation.dnf.strap(privilege_escalation.packages())
 
 	for user in users:
 		_create_user(installation, user, privilege_escalation)
-
-
-def _configure_makepkg(installation: Installer, privilege_escalation: PrivilegeEscalation | None) -> None:
-	# makepkg tries sudo then su by default, only doas/run0 need an override
-	if privilege_escalation is None:
-		return
-
-	auth_binary = {
-		PrivilegeEscalation.Doas: 'doas',
-		PrivilegeEscalation.Run0: 'run0',
-	}.get(privilege_escalation)
-
-	if auth_binary is None:
-		debug(f'{privilege_escalation.value} uses makepkg default PACMAN_AUTH, nothing to set')
-		return
-
-	makepkg_conf = installation.target / 'etc/makepkg.conf'
-	if not makepkg_conf.exists():
-		warn(f'{makepkg_conf} missing, PACMAN_AUTH not set for {auth_binary}')
-		return
-
-	content = makepkg_conf.read_text()
-	content = content.replace('#PACMAN_AUTH=()', f'PACMAN_AUTH=({auth_binary})')
-	makepkg_conf.write_text(content)
-	debug(f'Set PACMAN_AUTH=({auth_binary}) in makepkg.conf')
 
 
 def _create_user(

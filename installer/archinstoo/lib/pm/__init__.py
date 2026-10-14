@@ -1,11 +1,10 @@
-from .config import PacmanConfig
-from .packages import enrich_package_info, list_available_packages, missing_packages
-from .pacman import Pacman
+from .dnf import Dnf
+from .packages import enrich_package_info, list_available_packages, list_package_groups, missing_packages
 
 __all__ = [
-	'Pacman',
-	'PacmanConfig',
+	'Dnf',
 	'enrich_package_info',
 	'list_available_packages',
+	'list_package_groups',
 	'missing_packages',
 ]

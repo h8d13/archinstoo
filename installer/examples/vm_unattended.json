@@ -7,18 +7,6 @@
         "sys_enc": "UTF-8",
         "console_font": "default8x16"
     },
-    "pacman_config": {
-        "mirror_regions": {},
-        "custom_servers": [],
-        "optional_repositories": [],
-        "custom_repositories": [],
-        "pacman_options": [
-            "Color",
-            "VerbosePkgLists",
-            "ILoveCandy"
-        ],
-        "parallel_downloads": 10
-    },
     "bootloader_config": {
         "bootloader": "systemd-boot",
         "uki": false,
@@ -98,7 +86,7 @@
         "hibernation": true
     },
     "kernels": [
-        "linux"
+        "kernel"
     ],
     "kernel_headers": false,
     "firmware": {
@@ -151,8 +139,10 @@
     "timezone": "Europe/Paris",
     "ntp": true,
     "packages": [],
-    "aur_packages": [],
     "services": [],
-    "sysctl": {"optimized": false, "entries": []},
+    "sysctl": {
+        "optimized": false,
+        "entries": []
+    },
     "custom_commands": []
 }

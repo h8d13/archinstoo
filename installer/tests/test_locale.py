@@ -3,7 +3,8 @@
 # bare to locale.conf, tools sniffing LANG for "UTF-8" (tmux et al.) drop to
 # legacy charsets. set_locale writes the fully qualified name to locale.conf;
 # it resolves against the bare compiled locale because localedef registers a
-# normalized-codeset alias for codeset-less names (glibc locarchive.c).
+# normalized-codeset alias for codeset-less names (glibc locarchive.c), which
+# is what `locale -a` lists on the target.
 # All entries below are verbatim from /usr/share/i18n/SUPPORTED.
 
 import shutil
@@ -14,10 +15,10 @@ import pytest
 
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.localization import catalog
+from archinstoo.lib.localization import catalog, configure
 from archinstoo.lib.menu import locale_menu
 from archinstoo.lib.models.localization import LocaleConfiguration
-from archinstoo.lib.utils.env import Os, data_paths
+from archinstoo.lib.utils.env import data_paths
 
 _DATA_PATHS = 'archinstoo.lib.localization.catalog.data_paths'
 
@@ -26,28 +27,8 @@ if TYPE_CHECKING:
 	from pathlib import Path
 
 
-# Arch's generated /etc/locale.gen keeps the trailing spaces from SUPPORTED.
-# ca_AD carries ISO-8859-15 and no ISO-8859-1; de_DE@euro is one of the 22
-# languages that exist under no UTF-8 entry at all.
-_LOCALE_GEN = (
-	'#be_BY.UTF-8 UTF-8  \n'
-	'#be_BY CP1251  \n'
-	'#be_BY@latin UTF-8  \n'
-	'#ca_AD.UTF-8 UTF-8  \n'
-	'#ca_AD ISO-8859-15  \n'
-	'#de_DE.UTF-8 UTF-8  \n'
-	'#de_DE ISO-8859-1  \n'
-	'#de_DE@euro ISO-8859-15  \n'
-	'#en_GB.UTF-8 UTF-8  \n'
-	'#en_GB ISO-8859-1  \n'
-	'#en_IL UTF-8  \n'
-	'#en_US.UTF-8 UTF-8  \n'
-	'#en_US ISO-8859-1  \n'
-)
-
-
-# /usr/share/i18n/SUPPORTED as glibc ships it: the same entries uncommented and
-# without trailing spaces, plus the compiled-in C.UTF-8 locale.gen never carries
+# /usr/share/i18n/SUPPORTED flattened to "<locale> <charset>", as some
+# distros ship it; glibc's own form is _GLIBC_SUPPORTED below
 _DISK_SUPPORTED = (
 	'C.UTF-8 UTF-8\n'
 	'be_BY.UTF-8 UTF-8\n'
@@ -86,6 +67,7 @@ _GLIBC_SUPPORTED = (
 )
 
 _EXPECTED_LOCALES = [
+	'C.UTF-8 UTF-8',
 	'be_BY.UTF-8 UTF-8',
 	'be_BY CP1251',
 	'be_BY@latin UTF-8',
@@ -102,62 +84,83 @@ _EXPECTED_LOCALES = [
 ]
 
 
+def _locale_a(entries: list[str]) -> str:
+	# what `locale -a` prints once the langpacks carry these: the name as
+	# compiled, plus the normalized-codeset alias for codeset-less names
+	names = []
+	for entry in entries:
+		name, charset = entry.split()
+		names.append(name)
+		lang, codeset, modifier = catalog.split_locale_name(name)
+		if not codeset:
+			names.append(f'{lang}.{charset.lower().replace("-", "")}{modifier}')
+	return '\n'.join(names) + '\n'
+
+
+class _Out:
+	def __init__(self, text: str) -> None:
+		self._text = text
+
+	def decode(self) -> str:
+		return self._text
+
+
 def _run_set_locale(
 	target: Path,
 	sys_lang: str,
 	sys_enc: str,
 	monkeypatch: pytest.MonkeyPatch,
-	locale_gen: str = _LOCALE_GEN,
-) -> tuple[str, str]:
+	entries: list[str] = _EXPECTED_LOCALES,
+) -> str | None:
 	(target / 'etc').mkdir(parents=True)
-	(target / 'etc/locale.gen').write_text(locale_gen)
 
 	installation = Installer.__new__(Installer)
 	installation.target = target
-	# skip the locale-gen run in chroot
-	monkeypatch.setattr(installation, 'arch_chroot', lambda cmd: None, raising=False)
+	monkeypatch.setattr(configure, 'chroot_prefix', lambda target: ['chroot', str(target)])
+	monkeypatch.setattr(configure, 'SysCommand', lambda cmd: _Out(_locale_a(entries)))
 
-	assert installation.set_locale(LocaleConfiguration('us', sys_lang, sys_enc))
-	return (
-		(target / 'etc/locale.conf').read_text(),
-		(target / 'etc/locale.gen').read_text(),
-	)
+	if not installation.set_locale(LocaleConfiguration('us', sys_lang, sys_enc)):
+		return None
+	return (target / 'etc/locale.conf').read_text()
 
 
-def test_set_locale_bare_utf8_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_IL', 'UTF-8', monkeypatch)
-
-	assert locale_conf == 'LANG=en_IL.UTF-8\n'
-	# entry only uncommented, name left as SUPPORTED lists it
-	assert 'en_IL UTF-8' in locale_gen
-	assert '#en_IL' not in locale_gen
-
-
-def test_set_locale_suffix_lands_before_modifier(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'be_BY@latin', 'UTF-8', monkeypatch)
-
-	assert locale_conf == 'LANG=be_BY.UTF-8@latin\n'
-	assert 'be_BY@latin UTF-8' in locale_gen
-	assert '#be_BY@latin' not in locale_gen
-	# sibling charset entries untouched
-	assert '#be_BY.UTF-8 UTF-8' in locale_gen
-	assert '#be_BY CP1251' in locale_gen
+@pytest.mark.parametrize(
+	('sys_lang', 'sys_enc', 'expected'),
+	[
+		# bare UTF-8-only name: qualified in locale.conf, the alias resolves it
+		('en_IL', 'UTF-8', 'LANG=en_IL.UTF-8\n'),
+		# the suffix lands before the modifier
+		('be_BY@latin', 'UTF-8', 'LANG=be_BY.UTF-8@latin\n'),
+		('en_GB.UTF-8', 'UTF-8', 'LANG=en_GB.UTF-8\n'),
+		('en_US', 'ISO-8859-1', 'LANG=en_US.ISO-8859-1\n'),
+		('de_DE@euro', 'ISO-8859-15', 'LANG=de_DE.ISO-8859-15@euro\n'),
+		('C.UTF-8', 'UTF-8', 'LANG=C.UTF-8\n'),
+	],
+)
+def test_set_locale(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, sys_lang: str, sys_enc: str, expected: str) -> None:
+	assert _run_set_locale(tmp_path, sys_lang, sys_enc, monkeypatch) == expected
 
 
-def test_set_locale_suffixed_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_GB.UTF-8', 'UTF-8', monkeypatch)
+def test_set_locale_unknown_entry_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	# not in the langpack: no locale.conf naming a locale glibc cannot load
+	assert _run_set_locale(tmp_path, 'xx_XX', 'UTF-8', monkeypatch) is None
+	assert not (tmp_path / 'etc/locale.conf').exists()
 
-	assert locale_conf == 'LANG=en_GB.UTF-8\n'
-	assert '#en_GB ISO-8859-1' in locale_gen
 
+@pytest.mark.parametrize(
+	('sys_lang', 'package'),
+	[
+		('en_US.UTF-8', 'glibc-langpack-en'),
+		('be_BY@latin', 'glibc-langpack-be'),
+		('de_DE@euro', 'glibc-langpack-de'),
+		# compiled into glibc
+		('C.UTF-8', None),
+	],
+)
+def test_langpack_package(sys_lang: str, package: str | None) -> None:
+	from archinstoo.lib.localization.configure import langpack_package
 
-def test_set_locale_non_utf8_fully_qualified(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_US', 'ISO-8859-1', monkeypatch)
-
-	assert locale_conf == 'LANG=en_US.ISO-8859-1\n'
-	assert 'en_US ISO-8859-1' in locale_gen
-	# the UTF-8 sibling is the always-on fallback now, not collateral
-	assert '#en_US.UTF-8 UTF-8' not in locale_gen
+	assert langpack_package(sys_lang) == package
 
 
 def _use_disk_supported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -175,8 +178,6 @@ def _use_upstream_supported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tex
 def test_list_locales_from_disk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	_use_disk_supported(tmp_path, monkeypatch)
 
-	# C.UTF-8 is compiled into glibc and absent from locale.gen, so it must not
-	# reach the menu even though SUPPORTED lists it
 	assert catalog.list_locales() == _EXPECTED_LOCALES
 
 
@@ -197,19 +198,6 @@ def test_list_locales_offline_falls_back_to_minimum(tmp_path: Path, monkeypatch:
 	assert catalog.list_locales() == catalog._MIN_LOCALES
 
 
-def test_offered_locales_have_a_locale_gen_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	# every locale the menu offers must uncomment a line in the target's
-	# locale.gen; a builtin like C.UTF-8 leaking through fails here
-	_use_upstream_supported(tmp_path, monkeypatch)
-	offered = catalog.list_locales() + catalog._MIN_LOCALES
-	locale_gen = ''.join(f'#{entry}  \n' for entry in offered)
-
-	for index, entry in enumerate(offered):
-		sys_lang, sys_enc = entry.split()
-		locale_conf, _ = _run_set_locale(tmp_path / f'root{index}', sys_lang, sys_enc, monkeypatch, locale_gen)
-		assert locale_conf.startswith('LANG=')
-
-
 def test_encodings_are_scoped_to_the_language(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	_use_disk_supported(tmp_path, monkeypatch)
 
@@ -226,8 +214,8 @@ def test_encodings_are_scoped_to_the_language(tmp_path: Path, monkeypatch: pytes
 
 def test_every_scoped_pair_resolves(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	# the invariant the split language/encoding menus have to hold: every pair
-	# they can produce names a locale.gen entry. Unscoped, only 866 of the
-	# 15030 pairs the two menus could form did.
+	# they can produce names a locale the langpack compiled. Unscoped, only
+	# 866 of the 15030 pairs the two menus could form did.
 	_use_disk_supported(tmp_path, monkeypatch)
 	langs = [locale.split()[0] for locale in catalog.list_locales()]
 
@@ -235,7 +223,8 @@ def test_every_scoped_pair_resolves(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 	for sys_lang in langs:
 		for sys_enc in catalog.list_locale_encodings(sys_lang):
 			index += 1
-			locale_conf, _ = _run_set_locale(tmp_path / f'root{index}', sys_lang, sys_enc, monkeypatch)
+			locale_conf = _run_set_locale(tmp_path / f'root{index}', sys_lang, sys_enc, monkeypatch)
+			assert locale_conf, (sys_lang, sys_enc)
 			assert locale_conf.startswith('LANG=')
 
 
@@ -259,62 +248,6 @@ def test_language_change_keeps_a_compatible_encoding(tmp_path: Path, monkeypatch
 	assert menu._menu_item_group.find_by_key('sys_enc').value == 'ISO-8859-1'
 
 
-def test_set_locale_euro_modifier_without_utf8(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	# de_DE@euro exists only as ISO-8859-15; the menu now hands over that
-	# charset instead of the UTF-8 default it used to carry across
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'de_DE@euro', 'ISO-8859-15', monkeypatch)
-
-	assert locale_conf == 'LANG=de_DE.ISO-8859-15@euro\n'
-	assert 'de_DE@euro ISO-8859-15' in locale_gen
-	assert '#de_DE@euro' not in locale_gen
-	assert '#de_DE ISO-8859-1  ' in locale_gen
-
-
-def test_set_locale_charset_prefix_is_not_a_match(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	# ca_AD ships ISO-8859-15 only; asking for ISO-8859-1 must fail rather
-	# than uncomment the ISO-8859-15 line its name is a prefix of
-	(tmp_path / 'etc').mkdir()
-	(tmp_path / 'etc/locale.gen').write_text(_LOCALE_GEN)
-
-	installation = Installer.__new__(Installer)
-	installation.target = tmp_path
-	monkeypatch.setattr(installation, 'arch_chroot', lambda cmd: None, raising=False)
-
-	assert not installation.set_locale(LocaleConfiguration('us', 'ca_AD', 'ISO-8859-1'))
-	assert '#ca_AD ISO-8859-15' in (tmp_path / 'etc/locale.gen').read_text()
-
-
-def test_set_locale_unknown_entry_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	(tmp_path / 'etc').mkdir()
-	(tmp_path / 'etc/locale.gen').write_text(_LOCALE_GEN)
-
-	installation = Installer.__new__(Installer)
-	installation.target = tmp_path
-	monkeypatch.setattr(installation, 'arch_chroot', lambda cmd: None, raising=False)
-
-	assert not installation.set_locale(LocaleConfiguration('us', 'xx_XX', 'UTF-8'))
-	assert not (tmp_path / 'etc/locale.conf').exists()
-
-
-# https://github.com/archlinux/archinstall/issues/3764: en_US.UTF-8 is the
-# fallback tools hardcode, so it gets generated alongside any other choice
-def test_set_locale_generates_en_us_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_GB', 'UTF-8', monkeypatch)
-	assert locale_conf == 'LANG=en_GB.UTF-8\n'
-	assert '\nen_GB.UTF-8 UTF-8' in '\n' + locale_gen
-	assert '\nen_US.UTF-8 UTF-8' in '\n' + locale_gen
-	assert '#en_US ISO-8859-1' in locale_gen
-
-
-def test_set_locale_en_us_only_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	_, locale_gen = _run_set_locale(tmp_path, 'en_US', 'UTF-8', monkeypatch)
-	assert locale_gen.count('en_US.UTF-8 UTF-8') == 1
-	assert '#en_US.UTF-8' not in locale_gen
-
-
-# kbd ships docs and a partialfonts/ subdirectory next to the fonts. Offering
-# either writes a FONT= the sd-vconsole hook cannot resolve, and that hook
-# errors out rather than warning, so the initramfs build fails.
 def test_list_console_fonts_skips_non_fonts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [tmp_path])
 	(tmp_path / 'partialfonts').mkdir()
@@ -519,7 +452,6 @@ def test_xkb_from_keymap_skips_what_a_single_field_cannot_hold() -> None:
 @pytest.mark.usefixtures('model_map')
 def test_keymap_choice_preselects_the_graphical_layout(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1')
-	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
 	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8'))
 	assert menu._select_kb_layout('us') == 'be-latin1'
@@ -532,7 +464,6 @@ def test_keymap_choice_preselects_the_graphical_layout(monkeypatch: pytest.Monke
 @pytest.mark.usefixtures('model_map')
 def test_keymap_choice_keeps_a_layout_the_user_picked(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1')
-	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
 	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8', xkb_layout='dvorak'))
 	assert menu._select_kb_layout('us') == 'be-latin1'
@@ -544,7 +475,6 @@ def test_keymap_choice_keeps_a_layout_the_user_picked(monkeypatch: pytest.Monkey
 @pytest.mark.usefixtures('model_map')
 def test_keymap_change_follows_a_derived_layout(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'uk')
-	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
 	# 'de' is exactly what the previous keymap derived, so the user never
 	# touched it and it follows the new keymap instead of going stale
@@ -557,7 +487,6 @@ def test_keymap_change_follows_a_derived_layout(monkeypatch: pytest.MonkeyPatch)
 @pytest.mark.usefixtures('model_map')
 def test_uncovered_keymap_clears_a_derived_layout(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'ru')
-	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
 	menu = locale_menu.LocaleMenu(LocaleConfiguration('de', 'en_US.UTF-8', 'UTF-8', xkb_layout='de'))
 	assert menu._select_kb_layout('de') == 'ru'
@@ -631,29 +560,6 @@ def test_host_keymap_probe_is_cached(monkeypatch: pytest.MonkeyPatch) -> None:
 	assert not catalog.get_kb_layout()
 	assert LocaleConfiguration.default().kb_layout == 'us'
 	assert len(calls) == 1
-
-	catalog.get_kb_layout.cache_clear()
-
-
-def test_setting_the_host_keymap_drops_the_cached_probe(monkeypatch: pytest.MonkeyPatch) -> None:
-	calls: list[str] = []
-
-	def fake_syscommand(cmd: str, **_kwargs: object) -> None:
-		calls.append(cmd)
-		if 'status' in cmd:
-			raise SysCallError('no localectl here')
-
-	monkeypatch.setattr(catalog, 'SysCommand', fake_syscommand)
-	monkeypatch.setattr(Os, 'running_from_host', lambda: False)
-	monkeypatch.setattr(catalog, 'verify_keyboard_layout', lambda layout: True)
-	catalog.get_kb_layout.cache_clear()
-
-	catalog.get_kb_layout()
-	assert catalog.set_kb_layout('be-latin1')
-	catalog.get_kb_layout()
-
-	# probe, set-keymap, probe again: the second read is not the stale one
-	assert [c.split()[1] for c in calls] == ['--no-pager', 'set-keymap', '--no-pager']
 
 	catalog.get_kb_layout.cache_clear()
 

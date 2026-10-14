@@ -81,8 +81,8 @@ class FormattedOutput:
 
 
 def restore_perms(path: Path, recursive: bool = False) -> None:
-	# no-ops if ISO or run as root directly
-	if not Os.running_from_host():
+	# the BOOT root has no account for the invoking user
+	if Os.running_from_bootstrap():
 		return
 
 	orig_user = Os.invoking_username()
@@ -157,8 +157,7 @@ class Logger:
 logger = Logger()
 log_level = logging.INFO
 
-# target-side dir for what the install leaves behind: run log, config,
-# and the pacman hook scripts the bootloaders drop
+# target-side dir for what the install leaves behind: run log and config
 TARGET_STATE_DIR = LPath('/etc/archinstoo.d')
 
 

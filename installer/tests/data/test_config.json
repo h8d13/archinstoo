@@ -48,6 +48,7 @@
     "bootloader": "systemd-boot",
     "uki": false,
     "removable": false,
+    "quiet": false,
     "serial_console": "ttyS0,115200"
   },
   "services": [
@@ -156,7 +157,7 @@
   },
   "hostname": "archy",
   "kernels": [
-    "linux-zen"
+    "kernel"
   ],
   "kernel_headers": false,
   "locale_config": {
@@ -164,35 +165,6 @@
     "sys_enc": "UTF-8",
     "sys_lang": "en_US",
     "console_font": "ter-v16b"
-  },
-  "pacman_config": {
-    "custom_servers": [
-        {
-          "url": "https://mymirror.com/$repo/os/$arch"
-        }
-    ],
-    "mirror_regions": {
-      "Australia": [
-        "http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch"
-      ]
-    },
-    "optional_repositories": [
-      "testing"
-    ],
-    "custom_repositories": [
-      {
-        "name": "myrepo",
-        "url": "https://myrepo.com/$repo/os/$arch",
-        "sign_check": "Required",
-        "sign_option": "TrustAll",
-        "priority": false
-      }
-    ],
-    "pacman_options": [
-      "Color",
-      "ILoveCandy"
-    ],
-    "parallel_downloads": 66
   },
   "network_config": {
     "type": "manual",

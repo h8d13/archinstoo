@@ -9,7 +9,6 @@ from archinstoo.lib.localization.catalog import (
 	list_x11_keyboard_models,
 	list_x11_keyboard_options,
 	list_x11_keyboard_variants,
-	set_kb_layout,
 	xkb_from_keymap,
 )
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
@@ -146,7 +145,6 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		if not kb_lang:
 			return kb_lang
 
-		set_kb_layout(kb_lang)
 		self._derive_xkb_layout(preset, kb_lang)
 		return kb_lang
 

@@ -54,8 +54,8 @@ class ProfileConfiguration:
 		)
 
 		# the menu gates this on the selection; a hand-written config does not,
-		# and install_profile_config would drop it without a word after pacstrap
-		# had already run
+		# and install_profile_config would drop it without a word after the
+		# base had already gone in
 		if config.greeter and not config.is_greeter_supported():
 			warn(f'Greeter {config.greeter.value} in the config: no selected profile supports one, it will be skipped')
 

@@ -13,8 +13,10 @@ __zram_packages__ = ['zram-generator']
 
 def setup_zram(installation: Installer, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
 	info('Setting up swap on zram')
-	installation.pacman.strap(__zram_packages__)
+	installation.dnf.strap(__zram_packages__)
 
+	# /etc wins over zram-generator-defaults' /usr/lib config
+	# https://fedoraproject.org/wiki/Changes/SwapOnZRAM#How_can_it_be_disabled?
 	with (installation.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
 		zram_conf.write('[zram0]\n')
 		zram_conf.write('zram-size = ram / 2\n')

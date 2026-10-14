@@ -1,205 +1,112 @@
-import re
+# the package menu's view of the repos, from dnf's own output formats
+
 from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.lib.linux_path import LPath
-from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
-from archinstoo.lib.models.packages import Repository
-from archinstoo.lib.pm import config, packages
-from archinstoo.lib.pm.config import PacmanConfig
-from archinstoo.lib.pm.pacman import Pacman
+from archinstoo.lib.pm import packages
+from archinstoo.lib.pm.dnf import Dnf
 
 if TYPE_CHECKING:
-	from pathlib import Path
+	from collections.abc import Iterator
 
-# `pacman -Sl` on a host with multilib and third-party repos enabled. Repo order
-# is conf order; `nano` deliberately appears in two repos.
-_SL_OUTPUT = [
-	b'core linux 6.19.1.arch1-1\n',
-	b'core nano 8.7-1\n',
-	b'extra neovim 0.12.2-1\n',
-	b'multilib lib32-glibc 2.43-2 [installed]\n',
-	b'cachyos nano 8.7-1.1\n',
-	b'cachyos ananicy-cpp 1.1.1-3\n',
-	b'\n',
-]
+_REPOQUERY = b"""fedora bash 5.3.0-2.fc44
+updates bash 5.3.3-1.fc44
+fedora kernel 6.19.5-300.fc44
+not-a-row
+"""
+
+_INFO = b"""Available packages
+Name            : bash
+Epoch           : 0
+Version         : 5.3.3
+Release         : 1.fc44
+Architecture    : x86_64
+Download size   : 1.9 MiB
+Installed size  : 8.4 MiB
+Source          : bash-5.3.3-1.fc44.src.rpm
+Repository      : updates
+Summary         : The GNU Bourne Again shell
+URL             : https://www.gnu.org/software/bash
+License         : GPL-3.0-or-later
+Description     : The GNU Bourne Again shell (Bash) is a shell and command
+                : language interpreter.
+Vendor          : Fedora Project
+"""
+
+_GROUPS = b"""ID                                   Name                                Installed
+core                                 Core                                       no
+development-tools                    Development Tools                          no
+kde-desktop                          KDE                                       yes
+"""
+
+
+class _Out:
+	def __init__(self, data: bytes) -> None:
+		self._data = data
+
+	def decode(self) -> str:
+		return self._data.decode()
 
 
 @pytest.fixture(autouse=True)
-def _clear_cache() -> None:
+def _fresh() -> Iterator[None]:
 	packages.list_available_packages.cache_clear()
+	packages.list_package_groups.cache_clear()
+	yield
+	packages.list_available_packages.cache_clear()
+	packages.list_package_groups.cache_clear()
 
 
-def _stub_pacman(monkeypatch: pytest.MonkeyPatch, output: list[bytes]) -> list[str]:
-	calls: list[str] = []
+def _dnf(monkeypatch: pytest.MonkeyPatch, outputs: dict[str, bytes]) -> list[list[str]]:
+	calls: list[list[str]] = []
 
-	def run(args: str, **kwargs: object) -> list[bytes]:
+	def run(args: list[str], **_: object) -> _Out:
 		calls.append(args)
-		return output if args == '-Sl' else []
+		return _Out(outputs[args[0]])
 
-	monkeypatch.setattr(Pacman, 'run', staticmethod(run))
+	monkeypatch.setattr(Dnf, 'run', staticmethod(run))
 	return calls
 
 
-def test_lists_every_repo_in_the_conf(monkeypatch: pytest.MonkeyPatch) -> None:
-	calls = _stub_pacman(monkeypatch, _SL_OUTPUT)
-
+def test_listing_keeps_first_row_per_name(monkeypatch: pytest.MonkeyPatch) -> None:
+	_dnf(monkeypatch, {'repoquery': _REPOQUERY})
 	available = packages.list_available_packages()
 
-	# no repo names passed to pacman: the conf decides
-	assert calls == ['-Sy', '-Sl']
-	assert set(available) == {'linux', 'nano', 'neovim', 'lib32-glibc', 'ananicy-cpp'}
-	assert available['lib32-glibc'].repository == 'multilib'
-	assert available['ananicy-cpp'].version == '1.1.1-3'
+	assert set(available) == {'bash', 'kernel'}
+	assert available['bash'].repository == 'fedora'
+	assert available['kernel'].version == '6.19.5-300.fc44'
 
 
-def test_duplicate_name_resolves_to_first_repo(monkeypatch: pytest.MonkeyPatch) -> None:
-	_stub_pacman(monkeypatch, _SL_OUTPUT)
+def test_listing_failure_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+	def run(args: list[str], **_: object) -> None:
+		raise OSError('no network')
 
-	available = packages.list_available_packages()
-
-	# pacman resolves by conf order, so core wins over the later cachyos entry
-	assert available['nano'].repository == 'core'
-	assert available['nano'].version == '8.7-1'
-
-
-def test_repo_order_follows_the_conf(monkeypatch: pytest.MonkeyPatch) -> None:
-	_stub_pacman(monkeypatch, _SL_OUTPUT)
-
-	available = packages.list_available_packages()
-	repos = list(dict.fromkeys(p.repository for p in available.values()))
-
-	assert repos == ['core', 'extra', 'multilib', 'cachyos']
-
-
-def test_sync_failure_still_lists_packages(monkeypatch: pytest.MonkeyPatch) -> None:
-	def run(args: str, **kwargs: object) -> list[bytes]:
-		if args == '-Sy':
-			raise OSError('no network')
-		return _SL_OUTPUT
-
-	monkeypatch.setattr(Pacman, 'run', staticmethod(run))
-
-	assert 'linux' in packages.list_available_packages()
-
-
-def test_list_failure_yields_empty(monkeypatch: pytest.MonkeyPatch) -> None:
-	def run(args: str, **kwargs: object) -> list[bytes]:
-		raise OSError('pacman missing')
-
-	monkeypatch.setattr(Pacman, 'run', staticmethod(run))
-
+	monkeypatch.setattr(Dnf, 'run', staticmethod(run))
 	assert packages.list_available_packages() == {}
+	assert packages.missing_packages(['nope']) == []
 
 
-# --- enable a repo, then see its packages -------------------------------------
-#
-# The half above stubs `pacman -Sl` outright. These drive the real loop instead:
-# PacmanConfig.apply() edits a pacman.conf, and the fake pacman answers from
-# whatever sections that file ends up with. A repo that stops reaching the menu
-# fails here rather than on someone's install.
+def test_enrich_fills_from_info(monkeypatch: pytest.MonkeyPatch) -> None:
+	_dnf(monkeypatch, {'repoquery': _REPOQUERY, 'info': _INFO})
+	bash = packages.list_available_packages()['bash']
+	packages.enrich_package_info(bash)
 
-_STOCK_CONF = """\
-[options]
-HoldPkg = pacman glibc
-Architecture = auto
-
-[core]
-Include = /etc/pacman.d/mirrorlist
-
-[extra]
-Include = /etc/pacman.d/mirrorlist
-
-#[multilib]
-#Include = /etc/pacman.d/mirrorlist
-"""
-
-_FAKE_DB = {
-	'core': [('linux', '6.19.1.arch1-1')],
-	'extra': [('neovim', '0.12.2-1')],
-	'multilib': [('lib32-glibc', '2.43-2')],
-	'cachyos': [('ananicy-cpp', '1.1.1-3')],
-}
+	assert bash.summary == 'The GNU Bourne Again shell'
+	assert bash.release == '1.fc44'
+	assert bash.description == 'The GNU Bourne Again shell (Bash) is a shell and command language interpreter.'
+	assert bash.license == 'GPL-3.0-or-later'
 
 
-@pytest.fixture
-def conf(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> LPath:
-	# a pacman.conf we own, plus a pacman that reads it the way the real one does
-	pacman_conf = LPath(tmp_path / 'pacman.conf')
-	pacman_conf.write_text(_STOCK_CONF)
-	monkeypatch.setattr(config, 'PACMAN_CONF', pacman_conf)
+def test_groups_are_install_names(monkeypatch: pytest.MonkeyPatch) -> None:
+	_dnf(monkeypatch, {'group': _GROUPS})
+	groups = packages.list_package_groups()
 
-	def run(args: str, **kwargs: object) -> list[bytes]:
-		if args != '-Sl':
-			return []
-
-		lines = []
-		for repo in re.findall(r'^\[([^\]]+)\]', pacman_conf.read_text(), re.MULTILINE):
-			for name, version in _FAKE_DB.get(repo, []):
-				lines.append(f'{repo} {name} {version}\n'.encode())
-
-		return lines
-
-	monkeypatch.setattr(Pacman, 'run', staticmethod(run))
-	return pacman_conf
+	assert set(groups) == {'@core', '@development-tools', '@kde-desktop'}
+	assert groups['@development-tools'].description == 'Development Tools'
 
 
-def test_enabling_multilib_surfaces_its_packages(conf: LPath) -> None:
-	assert 'lib32-glibc' not in packages.list_available_packages()
+def test_missing_accepts_groups(monkeypatch: pytest.MonkeyPatch) -> None:
+	_dnf(monkeypatch, {'repoquery': _REPOQUERY, 'group': _GROUPS})
 
-	pacman = PacmanConfig(None)
-	pacman.enable([Repository.Multilib])
-	pacman.apply()
-	packages.list_available_packages.cache_clear()
-
-	available = packages.list_available_packages()
-	assert available['lib32-glibc'].repository == 'multilib'
-
-
-def test_adding_a_custom_repo_surfaces_its_packages(conf: LPath) -> None:
-	assert 'ananicy-cpp' not in packages.list_available_packages()
-
-	pacman = PacmanConfig(None)
-	pacman.enable_custom(
-		[
-			CustomRepository(
-				'cachyos',
-				'https://mirror.cachyos.org/repo/x86_64/cachyos',
-				SignCheck.Required,
-				SignOption.TrustedOnly,
-			)
-		]
-	)
-	pacman.apply()
-	packages.list_available_packages.cache_clear()
-
-	available = packages.list_available_packages()
-	assert available['ananicy-cpp'].repository == 'cachyos'
-	# appended after the stock repos, so it loses a name clash with core/extra
-	repos = list(dict.fromkeys(p.repository for p in available.values()))
-	assert repos == ['core', 'extra', 'cachyos']
-
-
-def test_stale_cache_hides_a_new_repo(conf: LPath) -> None:
-	# why global_menu clears the cache on every pass through the pacman menu and
-	# not only when the config looks changed: nothing else invalidates this
-	packages.list_available_packages()
-
-	pacman = PacmanConfig(None)
-	pacman.enable([Repository.Multilib])
-	pacman.apply()
-
-	assert 'lib32-glibc' not in packages.list_available_packages()
-	packages.list_available_packages.cache_clear()
-	assert 'lib32-glibc' in packages.list_available_packages()
-
-
-def test_package_stub_is_slotted(monkeypatch: pytest.MonkeyPatch) -> None:
-	# one stub per sync-db package (~15k); a __dict__ each would undo slots=True
-	_stub_pacman(monkeypatch, _SL_OUTPUT)
-
-	pkg = packages.list_available_packages()['linux']
-
-	assert not hasattr(pkg, '__dict__')
-	assert 'Validated by' in pkg.info()
+	assert packages.missing_packages(['bash', '@core', 'linux', '@nope']) == ['linux', '@nope']

@@ -12,39 +12,30 @@ if TYPE_CHECKING:
 	from pathlib import Path
 
 
-def _si_field(text: str, key: str) -> set[str]:
-	# 'Key   : a  b', continuation lines indented, optdeps as 'name: description'
-	values: set[str] = set()
-	current = ''
-	for line in text.splitlines():
-		head, sep, rest = line.partition(' : ')
-		if sep and not line.startswith(' '):
-			current = head.strip()
-		if current == key:
-			values.update(token.rstrip(':') for token in (rest if sep else line).split())
-	return {v for v in values if v.startswith('linux-firmware-')}
-
-
-def test_enum_matches_arch_metadata() -> None:
-	# the enum is hand kept, a split Arch adds (amd, ti) fails here
-	if not shutil.which('pacman'):
-		pytest.skip('no pacman')
-	# C locale: the field labels are translated otherwise
-	proc = subprocess.run(
-		['pacman', '-Si', 'linux-firmware'],  # noqa: S607 - pacman from $PATH
+def _repoquery(*args: str) -> set[str] | None:
+	proc = subprocess.run(  # noqa: S603 - fixed argv
+		['dnf', 'repoquery', '-q', *args],  # noqa: S607 - dnf from $PATH
 		capture_output=True,
 		text=True,
 		check=False,
 		env={**os.environ, 'LC_ALL': 'C'},
 	)
 	if proc.returncode != 0:
-		pytest.skip(f'no synced db: {proc.stderr.strip()}')
+		return None
+	return {line.split()[0] for line in proc.stdout.splitlines() if line.strip()}
 
-	depends = _si_field(proc.stdout, 'Depends On') - {'linux-firmware-whence'}
-	optdeps = _si_field(proc.stdout, 'Optional Deps')
 
-	assert {v.value for v in FIRMWARE_OPTDEPS} == optdeps
-	assert {v.value for v in FirmwareVendor} == depends | optdeps
+def test_enum_matches_fedora_metadata() -> None:
+	# the enum is hand kept, a split Fedora adds or retires fails here
+	if not shutil.which('dnf'):
+		pytest.skip('no dnf')
+	recommends = _repoquery('--recommends', 'linux-firmware')
+	splits = _repoquery('--qf', '%{name}\\n', *(v.value for v in FirmwareVendor))
+	if recommends is None or splits is None:
+		pytest.skip('no repo metadata')
+
+	assert {v.value for v in FirmwareVendor} == splits
+	assert {v.value for v in FirmwareVendor if v not in FIRMWARE_OPTDEPS} == recommends & splits
 
 
 # -- hardware probes -------------------------------------------------------------
@@ -111,14 +102,14 @@ def test_firmware_default_per_host(monkeypatch: pytest.MonkeyPatch, is_vm: bool,
 	[
 		(FirmwareConfiguration(), ['linux-firmware']),
 		(
-			FirmwareConfiguration(vendors=[FirmwareVendor.MARVELL]),
-			['linux-firmware', 'linux-firmware-marvell'],
+			FirmwareConfiguration(vendors=[FirmwareVendor.QCOM]),
+			['linux-firmware', 'qcom-firmware'],
 		),
 		# MINIMAL is an explicit opt-out, a stale pick does not leak through
-		(FirmwareConfiguration(firmware_type=FirmwareType.MINIMAL, vendors=[FirmwareVendor.MARVELL]), []),
+		(FirmwareConfiguration(firmware_type=FirmwareType.MINIMAL, vendors=[FirmwareVendor.QCOM]), []),
 		(
-			FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=[FirmwareVendor.INTEL]),
-			['linux-firmware-intel'],
+			FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=[FirmwareVendor.IWLWIFI_MVM]),
+			['iwlwifi-mvm-firmware'],
 		),
 	],
 )
@@ -131,7 +122,7 @@ def test_firmware_packages(config: FirmwareConfiguration, expected: list[str]) -
 	[
 		FirmwareConfiguration(),
 		FirmwareConfiguration(vendors=[FirmwareVendor.QCOM]),
-		FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=[FirmwareVendor.INTEL, FirmwareVendor.REALTEK]),
+		FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=[FirmwareVendor.IWLWIFI_MVM, FirmwareVendor.REALTEK]),
 	],
 )
 def test_config_round_trip(config: FirmwareConfiguration) -> None:

@@ -9,7 +9,6 @@ from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, NicType
 from archinstoo.lib.network import network_handler
 from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.utils.env import Os
 
 STUB = '/run/systemd/resolve/stub-resolv.conf'
 
@@ -21,7 +20,6 @@ def _session(target: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Installer, 
 	monkeypatch.setattr(installation, 'enable_service', lambda s: enabled.extend([s] if isinstance(s, str) else s), raising=False)
 	monkeypatch.setattr(installation, 'disable_service', lambda s: None, raising=False)
 	monkeypatch.setattr(installation, 'add_additional_packages', lambda pkgs: None, raising=False)
-	monkeypatch.setattr(Os, 'running_from_foreign', lambda: False)
 	return installation, enabled
 
 
@@ -93,9 +91,9 @@ def test_dns_round_trips_through_json() -> None:
 	assert NetworkConfiguration.parse_arg({'type': 'manual'}) is None
 
 
-# A foreign host (alpine, debian) keeps nothing the target can read: busybox
-# udhcpc holds its lease in memory and writes no config, so 'copy from ISO'
-# copied nothing and the install ended with no DHCP client and no .network.
+# BOOT's root carries none of the host's network state, so 'copy from ISO'
+# copies nothing and the install must not end with no DHCP client and no
+# .network.
 def _iso_sources(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 	empty = tmp_path / 'empty-host'
 	empty.mkdir()

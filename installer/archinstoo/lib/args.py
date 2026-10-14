@@ -17,11 +17,11 @@ from archinstoo.lib.models.applications import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
+from archinstoo.lib.models.dnf import DnfConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.localization import LocaleConfiguration
-from archinstoo.lib.models.mirrors import PacmanConfiguration
 from archinstoo.lib.models.network import NetworkConfiguration
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
@@ -53,8 +53,6 @@ class Arguments:
 	dry_run: bool = False
 	script: str | None = None
 	mountpoint: Path = Path('/mnt')
-	skip_ntp: bool = False
-	skip_wkd: bool = False
 	skip_boot: bool = False
 	debug: bool = False
 	offline: bool = False
@@ -72,19 +70,18 @@ class ArchConfig:
 	profile_config: ProfileConfiguration | None = None
 	gfx_driver: GfxDriver | None = None
 	gfx_packages: list[GfxPackage] = field(default_factory=list)
-	pacman_config: PacmanConfiguration | None = None
+	dnf_config: DnfConfiguration | None = None
 	network_config: NetworkConfiguration | None = None
 	bootloader_config: BootloaderConfiguration | None = None
 	app_config: ApplicationConfiguration | None = None
 	auth_config: AuthenticationConfiguration | None = None
 	swap: SwapConfiguration | None = None
-	hostname: str = 'archlinux'
+	hostname: str = 'fedora'
 	kernels: list[str] = field(default_factory=lambda: [DEFAULT_KERNEL.value])
 	kernel_headers: bool = False
 	firmware: FirmwareConfiguration = field(default_factory=FirmwareConfiguration.default)
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
-	aur_packages: list[str] = field(default_factory=list)
 	timezone: str | None = None
 	services: list[str | UserService] = field(default_factory=list)
 	sysctl: SysctlConfiguration | None = None
@@ -96,7 +93,7 @@ class ArchConfig:
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
 			'locale_config': self.locale_config.json() if self.locale_config else None,
-			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
+			'dnf_config': self.dnf_config.json() if self.dnf_config else None,
 			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
 			'disk_config': self.disk_config.json() if self.disk_config else None,
 			'swap': self.swap,
@@ -113,7 +110,6 @@ class ArchConfig:
 			'timezone': self.timezone,
 			'ntp': self.ntp,
 			'packages': self.packages,
-			'aur_packages': self.aur_packages,
 			'services': [s.json() if isinstance(s, UserService) else s for s in self.services],
 			'sysctl': self.sysctl,
 			'custom_commands': self.custom_commands,
@@ -135,12 +131,11 @@ class ArchConfig:
 				'timezone': 'timezone',
 				'kernels': 'kernels',
 				'packages': 'packages',
-				'aur_packages': 'aur_packages',
 				'custom_commands': 'custom_commands',
 			},
 		)
 
-		# a hand-written "packages": [""] reached pacman as an empty name
+		# a hand-written "packages": [""] reached dnf as an empty name
 		arch_config.packages = [p for p in arch_config.packages if p]
 
 		# Parse services: strings stay as-is, dicts become UserService
@@ -151,8 +146,8 @@ class ArchConfig:
 			arch_config,
 			args_config,
 			{
-				'pacman_config': PacmanConfiguration.parse_args,
 				'disk_config': lambda arg: DiskLayoutConfiguration.parse_arg(arg, DeviceHandler()),
+				'dnf_config': DnfConfiguration.parse_arg,
 				'profile_config': ProfileConfiguration.parse_arg,
 				'auth_config': AuthenticationConfiguration.parse_arg,
 				'app_config': ApplicationConfiguration.parse_arg,

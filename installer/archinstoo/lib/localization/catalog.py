@@ -3,17 +3,12 @@ import re
 import xml.etree.ElementTree as ET
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from archinstoo.lib.exceptions import RequirementError, ServiceError, SysCallError
+from archinstoo.lib.exceptions import RequirementError, SysCallError
 from archinstoo.lib.general import SysCommand
-from archinstoo.lib.output import debug, error, warn
+from archinstoo.lib.output import debug, warn
 from archinstoo.lib.utils.env import Os, data_paths
 from archinstoo.lib.utils.net import fetch_data_from_url
-
-if TYPE_CHECKING:
-	from collections.abc import Iterable
-
 
 # last resort so a menu is never empty; both exist on the target, which is
 # what the choice configures
@@ -62,49 +57,40 @@ _GLIBC_SUPPORTED_URL = 'https://raw.githubusercontent.com/bminor/glibc/master/lo
 # host copy of the same list, shipped by glibc
 _SUPPORTED_PATH = Path('/usr/share/i18n/SUPPORTED')
 
-# glibc >= 2.35 compiles these in, so Arch's /etc/locale.gen omits them even
-# though SUPPORTED lists them. Offering one means Installer.set_locale finds no
-# matching locale.gen entry and the install ends with no locale.conf.
-_BUILTIN_LOCALES = frozenset({'C.UTF-8 UTF-8'})
-
 # last-resort set if disk and network both fail, so the menu is never empty
 _MIN_LOCALES = ['en_US.UTF-8 UTF-8']
 
 
-def _generatable(locales: Iterable[str]) -> list[str]:
-	# every list_locales source runs through here: menu entries must map 1:1
-	# onto commented /etc/locale.gen lines on the target
-	return [locale for locale in locales if locale and locale not in _BUILTIN_LOCALES]
+def _parse_supported(text: str) -> list[str]:
+	# glibc's own form is "<locale>/<charset> \\", some distros flatten it to
+	# "<locale> <charset>"; the menu wants the latter
+	locales = []
+	for raw in text.splitlines():
+		line = raw.strip().rstrip('\\').strip()
+		if not line or line.startswith(('#', 'SUPPORTED-LOCALES')):
+			continue
+		locale, _, charset = line.replace('/', ' ').rpartition(' ')
+		if locale:
+			locales.append(f'{locale} {charset}')
+	return locales
 
 
 def _fetch_glibc_supported() -> list[str]:
-	# upstream lists each locale as "<locale>/<charset> \"; convert to the
-	# space-separated "<locale> <charset>" form the menu expects
 	try:
 		text = fetch_data_from_url(_GLIBC_SUPPORTED_URL)
 	except ValueError as e:
 		debug(f'Fetch failed for {_GLIBC_SUPPORTED_URL}: {e}')
 		return []
-
-	locales = []
-	for raw in text.splitlines():
-		line = raw.strip().rstrip('\\').strip()
-		if not line or line.startswith(('#', 'SUPPORTED-LOCALES')) or '/' not in line:
-			continue
-		locale, charset = line.rsplit('/', 1)
-		locales.append(f'{locale} {charset}')
-
-	return _generatable(locales)
+	return _parse_supported(text)
 
 
 def list_locales() -> list[str]:
 	# glibc hosts enumerate from i18n/SUPPORTED
 	if _SUPPORTED_PATH.is_file():
-		with _SUPPORTED_PATH.open() as file:
-			return _generatable(line.rstrip() for line in file)
+		return _parse_supported(_SUPPORTED_PATH.read_text())
 
-	# non-glibc host (musl/alpine): no SUPPORTED on disk, pull the canonical
-	# list glibc ships upstream so the target (Arch/glibc) choices are accurate
+	# no SUPPORTED on disk (it ships in glibc-locale-source): pull the list
+	# glibc keeps upstream, which the langpacks are built from
 	if locales := _fetch_glibc_supported():
 		return locales
 	warn('Could not fetch the glibc locale list, offering en_US.UTF-8 only')
@@ -139,15 +125,6 @@ def locale_entry_re(sys_lang: str, sys_enc: str) -> re.Pattern[str]:
 	lang, _, modifier = split_locale_name(sys_lang)
 	enc = locale_encoding(sys_lang, sys_enc)
 	return re.compile(rf'{re.escape(lang)}(\.{re.escape(enc)})?{re.escape(modifier)} {re.escape(enc)}')
-
-
-def uncomment_locale(lines: list[str], sys_lang: str, sys_enc: str) -> bool:
-	entry_re = locale_entry_re(sys_lang, sys_enc)
-	for index, line in enumerate(lines):
-		if entry_re.fullmatch(line.removeprefix('#').strip()):
-			lines[index] = line.removeprefix('#')
-			return True
-	return False
 
 
 def list_locale_encodings(sys_lang: str) -> list[str]:
@@ -318,7 +295,7 @@ def get_kb_layout() -> str:
 	# cached: LocaleConfiguration.default() calls this, and the locale menu
 	# builds a default per preview redraw, so an uncached probe forks
 	# localectl on every keystroke (and on a host without one, logs the same
-	# failure that many times). set_kb_layout() clears it when it moves
+	# failure that many times)
 	try:
 		lines = (
 			SysCommand(
@@ -346,29 +323,6 @@ def get_kb_layout() -> str:
 		return ''
 
 	return layout
-
-
-def set_kb_layout(locale: str) -> bool:
-	if Os.running_from_host():
-		# Skip when running from host - no need to change host keymap
-		# The target installation keymap is set via installer.set_vconsole()
-		return True
-
-	if len(locale.strip()):
-		if not verify_keyboard_layout(locale):
-			error(f'Invalid keyboard locale specified: {locale}')
-			return False
-
-		try:
-			SysCommand(f'localectl set-keymap {locale}')
-		except SysCallError as err:
-			raise ServiceError(f"Unable to set locale '{locale}' for console: {err}") from err
-
-		# the host keymap just moved, so the cached probe above is stale
-		get_kb_layout.cache_clear()
-		return True
-
-	return False
 
 
 _FONT_DIRS = ('kbd/consolefonts', 'consolefonts')

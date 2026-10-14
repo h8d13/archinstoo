@@ -1,8 +1,10 @@
 import textwrap
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.chroot import chroot_prefix
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.localization.catalog import locale_encoding, split_locale_name, uncomment_locale
+from archinstoo.lib.general import SysCommand
+from archinstoo.lib.localization.catalog import locale_encoding, split_locale_name
 from archinstoo.lib.output import debug, error, info, warn
 
 if TYPE_CHECKING:
@@ -15,35 +17,38 @@ if TYPE_CHECKING:
 # listings and validation the menus use live in catalog.py
 
 
+def langpack_package(sys_lang: str) -> str | None:
+	# glibc only carries the locales a langpack ships; C.UTF-8 is built in
+	lang = split_locale_name(sys_lang)[0].split('_')[0]
+	if lang in ('C', 'POSIX'):
+		return None
+	return f'glibc-langpack-{lang}'
+
+
+def _normalized(name: str) -> str:
+	# locale -a prints en_US.utf8 for en_US.UTF-8
+	return name.lower().replace('-', '')
+
+
 def set_locale(installation: Installer, locale_config: LocaleConfiguration) -> bool:
-	# the menu keeps language and encoding apart; locale.gen names them
-	# together, so the same splitting the encoding menu scopes itself by
+	# the langpack went in with the base (langpack_package), so the locale is
+	# compiled already: check it is there, then point locale.conf at it
 	lang, _, modifier = split_locale_name(locale_config.sys_lang)
 	encoding = locale_encoding(locale_config.sys_lang, locale_config.sys_enc)
-
-	locale_gen = installation.target / 'etc/locale.gen'
-	locale_gen_lines = locale_gen.read_text().splitlines(True)
-
-	if not uncomment_locale(locale_gen_lines, locale_config.sys_lang, locale_config.sys_enc):
-		error(f"Invalid locale: language '{locale_config.sys_lang}', encoding '{locale_config.sys_enc}'")
-		return False
-	# tools hardcoding LC_ALL=en_US.UTF-8 warn on every non-US system otherwise
-	# https://github.com/archlinux/archinstall/issues/3764
-	uncomment_locale(locale_gen_lines, 'en_US.UTF-8', 'UTF-8')
-	locale_gen.write_text(''.join(locale_gen_lines))
+	name = f'{lang}.{encoding}{modifier}'
 
 	try:
-		installation.arch_chroot('locale-gen')
+		available = SysCommand([*chroot_prefix(installation.target), 'locale', '-a']).decode().split()
 	except SysCallError as e:
-		error(f'Failed to run locale-gen on target: {e}')
+		error(f'Failed to list locales on target: {e}')
 		return False
 
-	# always fully qualified: bare SUPPORTED entries ("en_IL UTF-8") compile
-	# under the bare name, but localedef also registers a normalized-codeset
-	# alias (locarchive.c), so LANG=en_IL.UTF-8 resolves and UTF-8 stays
-	# visible to tools sniffing LANG (tmux et al.)
-	(installation.target / 'etc/locale.conf').write_text(f'LANG={lang}.{encoding}{modifier}\n')
-	info(f'Set locale LANG={lang}.{encoding}{modifier}')
+	if _normalized(name) not in {_normalized(a) for a in available}:
+		error(f"Invalid locale: language '{locale_config.sys_lang}', encoding '{locale_config.sys_enc}' ({name} not installed)")
+		return False
+
+	(installation.target / 'etc/locale.conf').write_text(f'LANG={name}\n')
+	info(f'Set locale LANG={name}')
 	return True
 
 

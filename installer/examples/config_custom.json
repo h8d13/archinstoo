@@ -7,24 +7,6 @@
         "sys_enc": "UTF-8",
         "console_font": "default8x16"
     },
-    "pacman_config": {
-        "mirror_regions": {
-            "United States": [
-                "https://mirrors.mit.edu/archlinux/$repo/os/$arch",
-                "https://mirrors.kernel.org/archlinux/$repo/os/$arch"
-            ]
-        },
-        "custom_servers": [],
-        "optional_repositories": [
-            "multilib"
-        ],
-        "custom_repositories": [],
-        "pacman_options": [
-            "Color",
-            "ILoveCandy"
-        ],
-        "parallel_downloads": 5
-    },
     "bootloader_config": {
         "bootloader": "grub",
         "uki": false,
@@ -35,7 +17,7 @@
         "algorithm": "zstd"
     },
     "kernels": [
-        "linux"
+        "kernel"
     ],
     "profile_config": {
         "profiles": [
@@ -53,7 +35,7 @@
     },
     "gfx_driver": "all-open-source",
     "gfx_packages": [],
-    "hostname": "archlinux",
+    "hostname": "fedora",
     "auth_config": {},
     "app_config": {
         "bluetooth_config": {

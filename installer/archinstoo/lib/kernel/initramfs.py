@@ -1,8 +1,6 @@
-import re
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import debug, info, log, warn
 
 if TYPE_CHECKING:
@@ -10,78 +8,64 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.installer import Installer
 
-LVM = 'lvm2'  # package and mkinitcpio hook share the name
-RAID = 'mdadm_udev'  # hook only; the package it needs is mdadm
+LVM = 'lvm2'  # the package; its dracut module is 'lvm'
+DRACUT_CONF = 'etc/dracut.conf.d/90-fedinstoo.conf'
 
 
 class Initramfs:
-	# what the install puts into mkinitcpio.conf before building the image.
-	# The add_*/drop_* methods reorder the lists as the layout demands
-	# (sd-encrypt, lvm2, mdadm_udev); keyfiles append to files directly.
-	# build() writes them and runs mkinitcpio
+	# what the install puts into dracut.conf.d before the kernel is installed:
+	# the kernel's posttrans runs kernel-install, whose dracut plugin builds
+	# the image from it. Hostonly (Fedora's default) already picks up what
+	# the mounted layout needs; these pin it for the layouts it cannot see
+	# through a chroot (keyfile unlock, assembled arrays)
 	def __init__(self) -> None:
 		self.modules: list[str] = []
-		self.binaries: list[str] = []
+		self.drivers: list[str] = []
 		self.files: list[str] = []
-		# systemd flavour of the stock hook order
-		self.hooks: list[str] = [
-			'base',
-			'systemd',
-			'autodetect',
-			'microcode',
-			'modconf',
-			'kms',
-			'keyboard',
-			'sd-vconsole',
-			'block',
-			'filesystems',
-			'fsck',
-		]
-		# the hook only knows x86 vendors and warns its way out elsewhere
-		if SysInfo.arch() != 'x86_64':
-			self.hooks.remove('microcode')
+
+	def _add_module(self, module: str) -> None:
+		if module not in self.modules:
+			debug(f'Adding dracut module {module}')
+			self.modules.append(module)
 
 	def add_lvm(self) -> None:
-		# after block so the volume group's device is online before lvm2
-		# activates it; add_encrypt(before=LVM) then slots sd-encrypt in
-		# between, the order the wiki gives for LVM on LUKS
-		debug(f'Inserting {LVM} hook before filesystems')
-		self.hooks.insert(self.hooks.index('filesystems'), LVM)
+		self._add_module('lvm')
 
 	def add_raid(self) -> None:
-		# after block so the member devices are online, before sd-encrypt and
-		# filesystems: both need /dev/mdN to already exist
-		if RAID not in self.hooks:
-			debug(f'Inserting {RAID} hook after block')
-			self.hooks.insert(self.hooks.index('block') + 1, RAID)
+		self._add_module('mdraid')
 
-	def add_encrypt(self, before: str = 'filesystems') -> None:
-		if 'sd-encrypt' not in self.hooks:
-			debug(f'Inserting sd-encrypt hook before {before}')
-			self.hooks.insert(self.hooks.index(before), 'sd-encrypt')
+	def add_encrypt(self) -> None:
+		# systemd-cryptsetup in the initramfs: reads /etc/crypttab, which the
+		# crypt module copies in alongside
+		self._add_module('crypt')
+
+	def add_fido2(self) -> None:
+		self._add_module('fido2')
 
 	def write_conf(self, target: Path) -> None:
-		with (target / 'etc/mkinitcpio.conf').open('r+') as mkinit:
-			content = mkinit.read()
-			content = re.sub(r'\nMODULES=(.*)', f'\nMODULES=({" ".join(self.modules)})', content)
-			content = re.sub(r'\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self.binaries)})', content)
-			content = re.sub(r'\nFILES=(.*)', f'\nFILES=({" ".join(self.files)})', content)
-			content = re.sub(r'\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self.hooks)})', content)
-			mkinit.seek(0)
-			mkinit.truncate()
-			mkinit.write(content)
+		lines = []
+		if self.modules:
+			lines.append(f'add_dracutmodules+=" {" ".join(self.modules)} "')
+		if self.drivers:
+			lines.append(f'add_drivers+=" {" ".join(self.drivers)} "')
+		if self.files:
+			lines.append(f'install_items+=" {" ".join(self.files)} "')
 
-		debug(f'mkinitcpio.conf HOOKS=({" ".join(self.hooks)}) MODULES=({" ".join(self.modules)}) FILES=({" ".join(self.files)})')
+		conf = target / DRACUT_CONF
+		conf.parent.mkdir(parents=True, exist_ok=True)
+		conf.write_text(''.join(f'{line}\n' for line in lines))
+		debug(f'{conf}:\n' + '\n'.join(lines))
 
-	def build(self, installation: Installer, flags: list[str]) -> bool:
+	def build(self, installation: Installer) -> bool:
+		# every installed kernel, same as its posttrans would
 		self.write_conf(installation.target)
 		info('Building initramfs...', step=True)
 
 		try:
-			installation.arch_chroot(f'mkinitcpio {" ".join(flags)}', peek_output=True)
+			installation.arch_chroot('dracut --regenerate-all --force', peek_output=True)
 			return True
 		except SysCallError as e:
-			warn(f'mkinitcpio failed: {e}')
+			warn(f'dracut failed: {e}')
 			if e.worker_log:
 				log(e.worker_log.decode())
 			return False

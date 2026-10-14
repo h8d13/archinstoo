@@ -17,8 +17,8 @@ _TYPE_KERNEL = ''
 
 
 def select_kernel(preset: list[str] | None = None) -> list[str]:
-	# stock kernels, then names typed on an earlier visit so they stay
-	# tickable, then the escape hatch for board kernels (linux-rpi5)
+	# stock kernel, then names typed on an earlier visit so they stay
+	# tickable, then the escape hatch for COPR kernels (kernel-cachyos)
 	preset = preset or []
 	stock = [k.value for k in Kernel]
 	typed = sorted(k for k in preset if k not in stock)
@@ -58,9 +58,9 @@ def select_kernel(preset: list[str] | None = None) -> list[str]:
 
 
 def _prompt_kernel_names() -> list[str]:
-	# re-asks until the repos carry every name, as the AUR menu does; the
-	# names that resolved are kept in the field. A skip types nothing
-	base_header = 'Kernel package names, space separated (e.g. linux-rpi5)\n'
+	# re-asks until the repos carry every name; the names that resolved
+	# are kept in the field. A skip types nothing
+	base_header = 'Kernel package names, space separated (e.g. kernel-longterm from an enabled COPR)\n'
 	header, text = base_header, None
 
 	while (text := prompt_text('Custom kernels', header, text, kernel_names_error)) is not None:
@@ -171,7 +171,7 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 		return FirmwareConfiguration(firmware_type=firmware_type)
 
 	if firmware_type == FirmwareType.FULL:
-		# linux-firmware leaves its optdeps out, so they are opt-in here
+		# linux-firmware only recommends some splits, the rest are opt-in here
 		choices = sorted(FIRMWARE_OPTDEPS)
 		title = 'Optional firmware'
 		vendor_header = 'Select optional firmware (none are pulled in by linux-firmware):'

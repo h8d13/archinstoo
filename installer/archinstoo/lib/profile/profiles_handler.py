@@ -203,7 +203,7 @@ class ProfileHandler:
 
 		if GfxPackage.NvidiaOpenDkms in driver_pkgs:
 			debug(f'Non-standard kernel selected, installing DKMS variant of {driver.value}')
-			headers = [f'{kernel}-headers' for kernel in install_session.kernels]
+			headers = [f'{kernel}-devel' for kernel in install_session.kernels]
 			install_session.add_additional_packages(headers)
 
 		install_session.add_additional_packages([p.value for p in driver_pkgs])

@@ -4,18 +4,15 @@ from typing import Final
 
 
 class Kernel(StrEnum):
-	LINUX = auto()
-	LINUX_LTS = 'linux-lts'
-	LINUX_ZEN = 'linux-zen'
-	LINUX_HARDENED = 'linux-hardened'
-	LINUX_RT = 'linux-rt'
-	LINUX_RT_LTS = 'linux-rt-lts'
+	# Fedora builds one; anything else (COPR kernels) is a custom name
+	KERNEL = auto()
 
 
-DEFAULT_KERNEL: Final = Kernel.LINUX
+DEFAULT_KERNEL: Final = Kernel.KERNEL
 
-# pacman's package name charset: lowercase alnum and @._+-, no leading - or .
-_PACKAGE_NAME = re.compile(r'[a-z0-9@_+][a-z0-9@._+-]*')
+# rpm names: alnum and ._+-, mixed case allowed (NetworkManager), no
+# leading - or .
+_PACKAGE_NAME = re.compile(r'[A-Za-z0-9_+][A-Za-z0-9._+-]*')
 
 
 def kernel_names_error(text: str | None) -> str | None:

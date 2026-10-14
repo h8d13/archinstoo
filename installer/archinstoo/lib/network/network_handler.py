@@ -1,11 +1,9 @@
 import textwrap
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.linux_path import LPath
-from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
+from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, RESOLVED_PACKAGES, NicType
 from archinstoo.lib.output import debug, info, warn
-from archinstoo.lib.utils.env import Os
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -29,6 +27,7 @@ class NetworkHandler:
 		info('Writing network configuration...')
 		match network_config.type:
 			case NicType.ISO:
+				installation.add_additional_packages(network_config.type.packages)
 				_copy_iso_network_config(installation, enable_services=True)
 			case NicType.NM | NicType.NM_IWD:
 				installation.add_additional_packages(network_config.type.packages)
@@ -49,6 +48,7 @@ class NetworkHandler:
 				installation.enable_service('systemd-networkd')
 
 			case NicType.MANUAL:
+				installation.add_additional_packages(network_config.type.packages)
 				for nic in network_config.nics:
 					_configure_nic(installation, nic)
 				installation.enable_service('systemd-networkd')
@@ -60,11 +60,6 @@ class NetworkHandler:
 
 
 def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:
-	# on a foreign host use_resolved() left a copied resolv.conf, not the stub,
-	# so NetworkManager stays in default mode and writes past resolved
-	if Os.running_from_foreign():
-		warn('NetworkManager will not use the DNS choice: /etc/resolv.conf is not the resolved stub')
-
 	conf_dir = installation.target / 'etc/systemd/resolved.conf.d'
 	conf_dir.mkdir(parents=True, exist_ok=True)
 	(conf_dir / 'dns.conf').write_text(dns.as_resolved_config())
@@ -150,11 +145,10 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 	if not enable_services:
 		return
 
-	# a foreign host keeps nothing the target can read: alpine's udhcpc holds
-	# its lease in memory and writes no config at all, debian's ifupdown names
-	# an interface file Arch has no reader for. Copying is not on the table, so
-	# translate the one thing that host was doing (DHCP on the wire) instead of
-	# handing over an install with no client and no .network
+	# BOOT's root carries none of the host's network state, and a Fedora host
+	# keeps it in NetworkManager rather than iwd/networkd. Copying is not on
+	# the table, so translate the one thing the host was doing (DHCP on the
+	# wire) instead of handing over an install with no client and no .network
 	warn('Nothing to copy from this host, giving the target wired DHCP instead')
 	_write_wired_dhcp(installation)
 	installation.enable_service('systemd-networkd')
@@ -170,23 +164,13 @@ def _configure_nic(installation: Installer, nic: Nic) -> None:
 
 def _use_resolved(installation: Installer) -> None:
 	# every network type; the stub symlink is what switches NetworkManager
-	# to dns=systemd-resolved https://wiki.archlinux.org/title/Systemd-resolved#DNS
+	# to dns=systemd-resolved
+	# https://fedoraproject.org/wiki/Changes/systemd-resolved#Detailed_Description
+	installation.add_additional_packages(RESOLVED_PACKAGES)
 	installation.enable_service('systemd-resolved')
 
 	resolv = installation.target / 'etc/resolv.conf'
 	resolv.unlink(missing_ok=True)
-
-	# the stub only resolves once systemd-resolved runs on the target. From a
-	# foreign (non-systemd) host that flow isn't guaranteed, so copy the
-	# host's working resolv.conf content instead of a dangling symlink.
-	if Os.running_from_foreign():
-		host_resolv = Path('/etc/resolv.conf')
-		if host_resolv.is_file():  # follows symlink, False if dangling
-			resolv.write_text(host_resolv.read_text())
-			debug(f'Copied host {host_resolv} to target (foreign host)')
-		else:
-			debug('No host /etc/resolv.conf to copy, leaving target unset')
-		return
 
 	resolv.symlink_to('/run/systemd/resolve/stub-resolv.conf')
 	debug(f'Linked {resolv} to systemd-resolved stub')

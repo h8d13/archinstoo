@@ -1,5 +1,5 @@
-# The kernel menu's escape hatch: a typed package name (a board kernel such as
-# linux-rpi5) joins the stock picks, and stays selectable on the next visit.
+# The kernel menu's escape hatch: a typed package name (a COPR kernel such as
+# kernel-cachyos) joins the stock pick, and stays selectable on the next visit.
 from typing import TYPE_CHECKING
 
 import pytest
@@ -32,7 +32,7 @@ class FakeMenu:
 
 
 # what the fake repos carry
-_REPOS = {'linux', 'linux-lts', 'linux-zen', 'linux-rpi5', 'linux-mainline'}
+_REPOS = {'kernel', 'kernel-longterm', 'kernel-cachyos', 'kernel-mainline'}
 
 
 def _pick(monkeypatch: pytest.MonkeyPatch, picks: list[str], answers: list[str | None] | None = None) -> list[tuple[str, str | None]]:
@@ -53,54 +53,55 @@ def _pick(monkeypatch: pytest.MonkeyPatch, picks: list[str], answers: list[str |
 
 
 def test_stock_pick_skips_the_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
-	prompts = _pick(monkeypatch, ['linux', 'linux-lts'])
+	prompts = _pick(monkeypatch, ['kernel'])
 
-	assert system_conf.select_kernel(['linux']) == ['linux', 'linux-lts']
+	assert system_conf.select_kernel(['kernel']) == ['kernel']
 	assert prompts == []
 
 
 def test_typed_names_join_the_picks(monkeypatch: pytest.MonkeyPatch) -> None:
-	_pick(monkeypatch, ['linux', system_conf._TYPE_KERNEL], ['linux-rpi5 linux'])
+	_pick(monkeypatch, ['kernel', system_conf._TYPE_KERNEL], ['kernel-cachyos kernel'])
 
-	assert system_conf.select_kernel([]) == ['linux', 'linux-rpi5']
+	assert system_conf.select_kernel([]) == ['kernel', 'kernel-cachyos']
 
 
 def test_skipped_prompt_keeps_the_ticked(monkeypatch: pytest.MonkeyPatch) -> None:
-	_pick(monkeypatch, ['linux-zen', system_conf._TYPE_KERNEL], [None])
+	_pick(monkeypatch, ['kernel', system_conf._TYPE_KERNEL], [None])
 
-	assert system_conf.select_kernel([]) == ['linux-zen']
+	assert system_conf.select_kernel([]) == ['kernel']
 
 
 def test_unknown_name_is_asked_again(monkeypatch: pytest.MonkeyPatch) -> None:
-	# a typo never reaches pacstrap: the found names stay in the field
-	prompts = _pick(monkeypatch, [system_conf._TYPE_KERNEL], ['linux-rpi5 linux-rpi6', 'linux-rpi5 linux-mainline'])
+	# a typo never reaches dnf: the found names stay in the field
+	prompts = _pick(monkeypatch, [system_conf._TYPE_KERNEL], ['kernel-cachyos kernel-cachy', 'kernel-cachyos kernel-mainline'])
 
-	assert system_conf.select_kernel([]) == ['linux-rpi5', 'linux-mainline']
+	assert system_conf.select_kernel([]) == ['kernel-cachyos', 'kernel-mainline']
 	(_, first), (header, second) = prompts
 	assert first is None
-	assert second == 'linux-rpi5'
-	assert 'Not found in the repositories: linux-rpi6' in header
+	assert second == 'kernel-cachyos'
+	assert 'Not found in the repositories: kernel-cachy' in header
 
 
 def test_typed_name_stays_tickable(monkeypatch: pytest.MonkeyPatch) -> None:
-	# a config's board kernel used to be dropped on reopening the menu
-	_pick(monkeypatch, ['linux-rpi5'])
+	# a config's custom kernel used to be dropped on reopening the menu
+	_pick(monkeypatch, ['kernel-longterm'])
 
-	assert system_conf.select_kernel(['linux-rpi5']) == ['linux-rpi5']
-	assert [i.value for i in FakeMenu.group.selected_items] == ['linux-rpi5']
+	assert system_conf.select_kernel(['kernel-longterm']) == ['kernel-longterm']
+	assert [i.value for i in FakeMenu.group.selected_items] == ['kernel-longterm']
 
 
 @pytest.mark.parametrize(
 	('text', 'ok'),
 	[
-		('linux-rpi5', True),
-		('linux-mainline linux-rpi5', True),
-		('linux-g14 linux_custom+1', True),
+		('kernel-cachyos', True),
+		('kernel-mainline kernel-longterm', True),
+		('kernel-g14 kernel_custom+1', True),
+		# rpm names may carry capitals (NetworkManager)
+		('Kernel-Custom', True),
 		('', False),
 		('   ', False),
-		('Linux-RPi5', False),
-		('-linux', False),
-		('linux;rm', False),
+		('-kernel', False),
+		('kernel;rm', False),
 	],
 )
 def test_kernel_name_check(text: str, ok: bool) -> None:
@@ -110,12 +111,13 @@ def test_kernel_name_check(text: str, ok: bool) -> None:
 @pytest.mark.parametrize(
 	('listing', 'missing'),
 	[
-		({'linux': None, 'linux-rpi5': None}, ['linux-rpi6']),
-		# offline or a failed sync lists nothing: nothing to check against
+		({'kernel': None, 'kernel-cachyos': None}, ['kernel-cachy']),
+		# offline or a failed refresh lists nothing: nothing to check against
 		({}, []),
 	],
 )
 def test_missing_packages(monkeypatch: pytest.MonkeyPatch, listing: dict[str, None], missing: list[str]) -> None:
 	monkeypatch.setattr(packages, 'list_available_packages', lambda: listing)
+	monkeypatch.setattr(packages, 'list_package_groups', dict)
 
-	assert packages.missing_packages(['linux', 'linux-rpi5', 'linux-rpi6']) == missing
+	assert packages.missing_packages(['kernel', 'kernel-cachyos', 'kernel-cachy']) == missing

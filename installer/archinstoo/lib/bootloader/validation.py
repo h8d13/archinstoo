@@ -1,5 +1,5 @@
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
+from archinstoo.lib.models.bootloader import GRUB_ESP, Bootloader, BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, PartitionFlag, PartitionTable, has_separate_boot
 
 
@@ -44,15 +44,15 @@ def validate_bootloader(
 		has_bios_grub = any(PartitionFlag.BIOS_GRUB in p.flags for p in layout.partitions)
 		if not gpt and has_bios_grub:
 			errors.append('bios_grub flag requires a GPT partition table (msdos label selected)')
-		if not uefi and bootloader in (Bootloader.Grub, Bootloader.Limine) and gpt and not has_bios_grub:
+		if not uefi and bootloader == Bootloader.Grub and gpt and not has_bios_grub:
 			errors.append('BIOS boot from a GPT disk needs a 1MiB bios_grub partition')
 		if layout.wipe and not gpt and len(layout.partitions) > 3:
 			errors.append('Too many partitions on disk, MBR disks can only have 3 primary partitions')
 
-	if disk_config.disk_encryption and bootloader != Bootloader.Grub:
-		enc = disk_config.disk_encryption
-		if any(p.is_boot() for p in enc.partitions):
-			errors.append('Encrypted /boot is only supported with GRUB')
+	# signed GRUB only opens LUKS1 or pbkdf2 LUKS2, and the containers here
+	# are argon2 LUKS2, so /boot stays in the clear for every loader
+	if disk_config.disk_encryption and any(p.is_boot() for p in disk_config.disk_encryption.partitions):
+		errors.append('Encrypted /boot is not supported')
 
 	# When ESP is at /efi with no separate /boot (e.g. btrfs subvolumes),
 	# systemd-boot has no partition to find the kernel/initramfs;
@@ -74,24 +74,13 @@ def validate_bootloader(
 	if not bootloader.has_bios_support() and not SysInfo.has_uefi():
 		errors.append(f'{bootloader.display_name()} requires a UEFI system')
 
-	# Firmware reads the kernel directly from the boot partition, which must be FAT.
-	if bootloader == Bootloader.Efistub and boot_partition is not None and (boot_partition.fs_type is None or not boot_partition.fs_type.is_fat()):
-		errors.append('Efistub does not support booting with a non-FAT boot partition')
+	# Fedora's shim and signed grubx64.efi install into /boot/efi/EFI/fedora
+	# from the RPMs themselves; an ESP mounted anywhere else never sees them
+	# https://docs.fedoraproject.org/en-US/quick-docs/grub2-bootloader/#create-a-grub-2-configuration
+	if bootloader == Bootloader.Grub and uefi and efi_partition is not None and efi_partition.mountpoint != GRUB_ESP:
+		errors.append(f'GRUB on UEFI needs the ESP mounted at {GRUB_ESP} (found {efi_partition.mountpoint})')
 
-	if bootloader == Bootloader.Limine:
-		limine_boot = boot_partition or efi_partition
-		if limine_boot is not None and (limine_boot.fs_type is None or not limine_boot.fs_type.is_fat()):
-			errors.append('Limine does not support booting with a non-FAT boot partition')
-
-		# Nothing mounted at /boot means the kernels sit on the root
-		# filesystem, which limine cannot read (FAT12/16/32 and ISO9660 only).
-		# The old form asked `efi == boot and efi.mountpoint != /boot`, which
-		# is self-contradictory: get_boot_partition() matches on mountpoint
-		# == /boot, so that never fired.
-		if not bootloader_config.uki and efi_partition is not None and boot_partition is None:
-			errors.append(
-				f'Limine requires kernels on a FAT partition. The ESP is mounted at {efi_partition.mountpoint}, '
-				'enable UKI or add a separate /boot partition to install Limine.'
-			)
+	if bootloader_config.uki and not bootloader.has_uki_support():
+		errors.append(f'{bootloader.display_name()} does not boot unified kernel images')
 
 	return errors

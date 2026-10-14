@@ -35,10 +35,5 @@ def test_user_config_roundtrip(
 	result['disk_config']['config_type'] = expected['disk_config']['config_type']
 	result['disk_config']['device_modifications'] = expected['disk_config']['device_modifications']
 
-	assert json.dumps(
-		result['pacman_config'],
-		sort_keys=True,
-	) == json.dumps(
-		expected['pacman_config'],
-		sort_keys=True,
-	)
+	for key in ('bootloader_config', 'locale_config', 'kernels', 'hostname'):
+		assert json.dumps(result[key], sort_keys=True) == json.dumps(expected[key], sort_keys=True), key

@@ -1,5 +1,4 @@
-# dms/noctalia take one compositor from the menu, and the profile and the
-# resolver have to agree on what it installs.
+# dms/noctalia take one compositor from the menu.
 
 from typing import TYPE_CHECKING
 
@@ -9,16 +8,11 @@ from archinstoo.default_profiles.desktops.dms import DmsProfile
 from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.users import User
-from archinstoo.scripts._resolve import _profile_packages
 
 if TYPE_CHECKING:
 	from pathlib import Path
 
 _COMPOSITOR_PROFILES = [DmsProfile, NoctaliaProfile]
-
-# every (profile, compositor) pair the menu offers
-_CHOICES = [(cls, c) for cls in _COMPOSITOR_PROFILES for c in cls.compositor_packages]
-_IDS = [f'{cls.__name__}-{c}' for cls, c in _CHOICES]
 
 
 @pytest.mark.parametrize('profile_cls', _COMPOSITOR_PROFILES)
@@ -29,16 +23,6 @@ def test_known_compositor_is_kept_alone(profile_cls: type[DmsProfile | NoctaliaP
 	assert profile.compositor == 'hyprland'
 	assert set(profile.compositor_packages['hyprland']) <= set(profile.packages)
 	assert 'niri' not in profile.packages
-
-
-@pytest.mark.parametrize(('profile_cls', 'setting'), _CHOICES, ids=_IDS)
-def test_resolver_agrees_with_profile(profile_cls: type[DmsProfile | NoctaliaProfile], setting: str) -> None:
-	# scripts count expands a saved config without the runtime profile
-	profile = profile_cls()
-	key = f'{profile.name}_compositor'
-	profile.custom_settings[key] = setting
-
-	assert _profile_packages(profile.name, {key: setting}) == set(profile.packages)
 
 
 @pytest.mark.parametrize('compositor', list(DmsProfile.compositor_packages))

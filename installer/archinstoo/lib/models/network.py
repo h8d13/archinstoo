@@ -9,6 +9,10 @@ NM_DESKTOP_EXTRA = ['network-manager-applet']
 # and the target needs iwd to read them back
 ISO_PSK_EXTRA = ['iwd']
 
+# split out of systemd on Fedora, and outside @core's mandatory tier
+NETWORKD_PACKAGES = ['systemd-networkd']
+RESOLVED_PACKAGES = ['systemd-resolved']
+
 
 class NicType(Enum):
 	ISO = 'iso'
@@ -21,16 +25,15 @@ class NicType(Enum):
 	def packages(self) -> list[str]:
 		match self:
 			case NicType.NM:
-				# legacy backend
-				return ['networkmanager', 'wpa_supplicant']
+				# wpa_supplicant backend, pulled in by the wifi plugin
+				return ['NetworkManager', 'NetworkManager-wifi']
 			case NicType.NM_IWD:
 				# iwd backend, usually for intel devices
-				return ['networkmanager', 'iwd']
+				return ['NetworkManager', 'NetworkManager-wifi', 'iwd']
 			case NicType.IWD:
-				return ['iwd']
+				return ['iwd', *NETWORKD_PACKAGES]
 			case NicType.ISO | NicType.MANUAL:
-				# systemd-networkd/resolved only, both part of base
-				return []
+				return NETWORKD_PACKAGES
 
 	def display_msg(self) -> str:
 		match self:

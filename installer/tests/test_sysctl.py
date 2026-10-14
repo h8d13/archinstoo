@@ -48,7 +48,7 @@ def test_zram_setup_ships_its_tuning(tmp_path: Path) -> None:
 	(tmp_path / 'etc/systemd').mkdir(parents=True)
 	installation = SimpleNamespace(
 		target=tmp_path,
-		pacman=SimpleNamespace(strap=lambda _pkgs: None),
+		dnf=SimpleNamespace(strap=lambda _pkgs: None),
 		enable_service=lambda _unit: None,
 	)
 

@@ -31,9 +31,7 @@ from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, Size
 from archinstoo.lib.models.graphics import GfxDriver
 from archinstoo.lib.models.localization import LocaleConfiguration
-from archinstoo.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
-from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.users import Password, Shell, User
@@ -53,8 +51,6 @@ def test_default_args(monkeypatch: pytest.MonkeyPatch) -> None:
 		dry_run=False,
 		script='guided',
 		mountpoint=Path('/mnt'),
-		skip_ntp=False,
-		skip_wkd=False,
 		skip_boot=False,
 		debug=False,
 		offline=False,
@@ -78,8 +74,6 @@ def test_correct_parsing_args(
 			'execution_script',
 			'--mountpoint',
 			'/tmp',
-			'--skip-ntp',
-			'--skip-wkd',
 			'--skip-boot',
 			'--debug',
 			'--offline',
@@ -97,8 +91,6 @@ def test_correct_parsing_args(
 		dry_run=True,
 		script='execution_script',
 		mountpoint=Path('/tmp'),
-		skip_ntp=True,
-		skip_wkd=True,
 		skip_boot=True,
 		debug=True,
 		offline=True,
@@ -200,26 +192,6 @@ def test_config_file_parsing(
 			mountpoint=None,
 		),
 		profile_config=None,
-		pacman_config=PacmanConfiguration(
-			mirror_regions=[
-				MirrorRegion(
-					name='Australia',
-					urls=['http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch'],
-				),
-			],
-			custom_servers=[CustomServer('https://mymirror.com/$repo/os/$arch')],
-			optional_repositories=[Repository.Testing],
-			custom_repositories=[
-				CustomRepository(
-					name='myrepo',
-					url='https://myrepo.com/$repo/os/$arch',
-					sign_check=SignCheck.Required,
-					sign_option=SignOption.TrustAll,
-				),
-			],
-			pacman_options=['Color', 'ILoveCandy'],
-			parallel_downloads=66,
-		),
 		network_config=NetworkConfiguration(
 			type=NicType.MANUAL,
 			nics=[
@@ -242,7 +214,7 @@ def test_config_file_parsing(
 			serial_console='ttyS0,115200',
 		),
 		hostname='archy',
-		kernels=['linux-zen'],
+		kernels=['kernel'],
 		ntp=True,
 		packages=['firefox'],
 		swap=SwapConfiguration(zram=False, hibernation=False),

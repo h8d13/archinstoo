@@ -22,7 +22,6 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.users import User
 from archinstoo.lib.network.network_handler import NetworkHandler
 from archinstoo.lib.output import debug, error, info
-from archinstoo.lib.pm.aur import run_grimoire_installation
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.tui import Tui
@@ -36,7 +35,6 @@ def show_menu(config: ArchConfig, args: Arguments) -> None:
 		global_menu = GlobalMenu(config, args.skip_boot, advanced=args.advanced)
 
 		if not args.advanced:
-			global_menu.set_enabled('aur_packages', False)
 			global_menu.set_enabled('custom_commands', False)
 
 		global_menu.run(additional_title='- Guided mode')
@@ -63,9 +61,7 @@ def perform_installation(
 		return
 
 	disk_config = config.disk_config
-	run_mkinitcpio = not config.bootloader_config or not config.bootloader_config.uki
 	locale_config = config.locale_config
-	optional_repositories = config.pacman_config.optional_repositories if config.pacman_config else []
 	mountpoint = disk_config.mountpoint or args.mountpoint
 
 	with Installer(
@@ -78,8 +74,6 @@ def perform_installation(
 		# Mount all the drives to the desired mountpoint
 		if disk_config.config_type != DiskLayoutType.Pre_mount:
 			installation.mount_ordered_layout()
-		# checks services (ntp, keyring sync)
-		installation.sanity_check()
 
 		if (
 			disk_config.config_type != DiskLayoutType.Pre_mount
@@ -92,19 +86,11 @@ def perform_installation(
 		# early, while the user is still watching: the token wants a touch
 		installation.enroll_fido2()
 
-		if pacman_config := config.pacman_config:
-			installation.set_mirrors(pacman_config, on_target=False)
-
 		installation.minimal_installation(
-			optional_repositories=optional_repositories,
-			mkinitcpio=run_mkinitcpio,
 			hostname=config.hostname,
 			locale_config=locale_config,
 			timezone=config.timezone,
 		)
-
-		if pacman_config := config.pacman_config:
-			installation.set_mirrors(pacman_config, on_target=True)
 
 		if config.swap and config.swap.enabled:
 			installation.setup_swap(config.swap)
@@ -125,26 +111,22 @@ def perform_installation(
 			users = config.auth_config.users if config.auth_config else None
 			application_handler.install_applications(installation, app_config, users)
 
-		# before the bootloader: grub-btrfs ships /etc/grub.d/41_snapshots-btrfs,
-		# and grub-mkconfig only runs once, so the snapshots submenu is
-		# in grub.cfg from the first boot (and in every rolled-back grub.cfg)
 		if disk_config.has_default_btrfs_vols():
 			btrfs_options = disk_config.btrfs_options
 			snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
-			snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
-			if snapshot_type:
-				bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
-				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
+			if snapshot_config and snapshot_config.snapshot_type is not None:
+				installation.setup_btrfs_snapshot(snapshot_config.snapshot_type)
 
-		if config.bootloader_config and config.bootloader_config.bootloader is not None:
-			installation.add_bootloader(
-				config.bootloader_config.bootloader,
-				config.bootloader_config.uki,
-				config.bootloader_config.removable,
-				config.bootloader_config.quiet,
-				config.bootloader_config.splash,
-				config.bootloader_config.serial_console,
-			)
+		# also with no bootloader: the kernels go in here, once their command
+		# line is complete
+		boot = config.bootloader_config
+		installation.add_bootloader(
+			boot.bootloader if boot else None,
+			uki_enabled=bool(boot and boot.uki),
+			removable=bool(boot and boot.removable),
+			quiet=bool(boot and boot.quiet),
+			serial_console=boot.serial_console if boot else None,
+		)
 
 		# If user selected to copy the current ISO network configuration
 		# Perform a copy of the config
@@ -157,7 +139,7 @@ def perform_installation(
 
 		# note we add these before profiles as they might affect vulkan-driver
 		if config.kernel_headers:
-			headers = [f'{kernel}-headers' for kernel in config.kernels]
+			headers = [f'{kernel}-devel' for kernel in config.kernels]
 			installation.add_additional_packages(headers)
 
 		# before the profiles, as some desktops need the driver to satisfy deps
@@ -183,7 +165,10 @@ def perform_installation(
 			installation.add_additional_packages(config.packages)
 
 		if config.ntp:
-			installation.enable_service('systemd-timesyncd')
+			# Fedora's time sync is chrony, not timesyncd
+			# https://fedoraproject.org/wiki/Features/ChronyDefaultNTP#Summary
+			installation.add_additional_packages('chrony')
+			installation.enable_service('chronyd')
 
 		if accessibility_tools_in_use():
 			installation.enable_service('espeakup')
@@ -195,10 +180,6 @@ def perform_installation(
 			if config.auth_config.lock_root_account:
 				installation.lock_root_account()
 
-		# We run the next defs last because they might depend on anything above
-		if config.aur_packages and config.auth_config:
-			run_grimoire_installation(config.aur_packages, installation, config.auth_config)
-
 		# If the user provided a list of services to be enabled
 		# This might include system wide services or user specific
 		if services := config.services:
@@ -208,7 +189,7 @@ def perform_installation(
 		if args.advanced and (cc := config.custom_commands):
 			run_custom_user_commands(installation, cc)
 
-		installation.genfstab()
+		installation.write_fstab()
 
 		debug(f'Disk states after installing:\n{disk_layouts()}')
 
@@ -226,7 +207,7 @@ def perform_installation(
 
 		# after the menu so the log captures everything up to the action, and
 		# before reboot/poweroff since those kill the process before __exit__
-		installation.sync_artifacts()
+		installation.finalize()
 
 		match action:
 			case PostInstallationAction.EXIT:
@@ -253,7 +234,7 @@ def _validate_silent(config: ArchConfig) -> None:
 
 	# the menu runs these before it lets you start; unattended skipped them
 	# entirely, so a bad pairing only showed up as a failed bootloader
-	# install after pacstrap, or a system that installs and never boots
+	# install after the base strap, or a system that installs and never boots
 	if bootloader_errors := validate_bootloader(config.bootloader_config, config.disk_config, SysInfo.has_uefi()):
 		for msg in bootloader_errors:
 			error(f'invalid bootloader configuration: {msg}')

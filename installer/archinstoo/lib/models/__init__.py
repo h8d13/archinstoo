@@ -27,9 +27,7 @@ from .device import (
 )
 from .kernel import DEFAULT_KERNEL, Kernel
 from .localization import LocaleConfiguration
-from .mirrors import CustomRepository, MirrorRegion, PacmanConfiguration
 from .network import NetworkConfiguration, Nic, NicType
-from .packages import Repository
 from .service import UserService
 from .swap import SwapConfiguration, ZramAlgorithm
 from .users import PasswordStrength, User
@@ -42,7 +40,6 @@ __all__ = [
 	'BDevice',
 	'BluetoothConfiguration',
 	'Bootloader',
-	'CustomRepository',
 	'DeviceGeometry',
 	'DeviceModification',
 	'DiskEncryption',
@@ -57,19 +54,16 @@ __all__ = [
 	'LvmLayoutType',
 	'LvmVolume',
 	'LvmVolumeGroup',
-	'MirrorRegion',
 	'ModificationStatus',
 	'NetworkConfiguration',
 	'Nic',
 	'NicType',
-	'PacmanConfiguration',
 	'PartitionFlag',
 	'PartitionModification',
 	'PartitionTable',
 	'PartitionType',
 	'PasswordStrength',
 	'PrintServiceConfiguration',
-	'Repository',
 	'SectorSize',
 	'Size',
 	'SubvolumeModification',

@@ -1,4 +1,4 @@
-# udev waits under distros/BOOT: settle, queue poll, lsblk retry.
+# udev waits under BOOT: settle, queue poll, lsblk retry.
 # A fake clock keeps the deadlines testable without sleeping.
 
 from pathlib import Path

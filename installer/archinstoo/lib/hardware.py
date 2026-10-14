@@ -20,17 +20,16 @@ class CpuVendor(Enum):
 		debug(f"Unknown CPU vendor '{name}' detected.")
 		return cls._Unknown
 
-	def _has_microcode(self) -> bool:
+	def ucode_package(self) -> str | None:
+		# dracut prepends the early microcode image itself; the package only
+		# has to be there
 		match self:
-			case CpuVendor.AuthenticAMD | CpuVendor.GenuineIntel:
-				return True
+			case CpuVendor.GenuineIntel:
+				return 'microcode_ctl'
+			case CpuVendor.AuthenticAMD:
+				return 'amd-ucode-firmware'
 			case _:
-				return False
-
-	def get_ucode(self) -> Path | None:
-		if self._has_microcode():
-			return Path(self.value + '-ucode.img')
-		return None
+				return None
 
 
 _DMI_ID = Path('/sys/class/dmi/id')
@@ -185,11 +184,11 @@ class SysInfo:
 		return None
 
 	@staticmethod
-	def ucode() -> Path | None:
+	def ucode() -> str | None:
 		# a VM gets its microcode from the hypervisor, the image would only
-		# be dead weight in /boot
+		# be dead weight in the initramfs
 		if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
-			return vendor.get_ucode()
+			return vendor.ucode_package()
 		return None
 
 	@staticmethod

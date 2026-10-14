@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.models.bootloader import Bootloader
+from archinstoo.lib.models.bootloader import GRUB_ESP, Bootloader
 from archinstoo.lib.models.device import (
 	BDevice,
 	DeviceModification,
@@ -43,11 +43,11 @@ def _boot_partition(
 	start = Size(1, Unit.MiB, sector_size)
 
 	if uefi:
-		# UEFI: ESP, mount at /efi for btrfs subvolumes so /boot stays in @.
-		# Limine is the exception: it reads FAT only, so leaving the kernels
-		# on the root filesystem makes them unreachable and it panics at boot.
-		esp_at_efi = using_subvolumes and bootloader != Bootloader.Limine
-		mountpoint = Path('/efi') if esp_at_efi else Path('/boot')
+		# UEFI: GRUB's RPMs install into /boot/efi and it reads the kernels
+		# from /boot on the root fs. systemd-boot reads FAT only: the ESP is
+		# /boot, or /efi for btrfs subvolumes so /boot stays in @ (UKI)
+		fat_boot = Path('/efi') if using_subvolumes else Path('/boot')
+		mountpoint = GRUB_ESP if bootloader == Bootloader.Grub else fat_boot
 		partitions.append(
 			PartitionModification(
 				status=ModificationStatus.CREATE,
@@ -61,9 +61,8 @@ def _boot_partition(
 		)
 	else:
 		# BIOS+GPT: small ef02 partition for the stage that will not fit in the
-		# MBR gap. Only MBR leaves that gap, so both loaders need this on GPT:
-		# `limine bios-install` refuses a GPT device without one, same as grub
-		if using_gpt and bootloader in (Bootloader.Grub, Bootloader.Limine):
+		# MBR gap. Only MBR leaves that gap, so GRUB needs this on GPT
+		if using_gpt and bootloader == Bootloader.Grub:
 			partitions.append(
 				PartitionModification(
 					status=ModificationStatus.CREATE,
@@ -77,8 +76,8 @@ def _boot_partition(
 			)
 			start = Size(2, Unit.MiB, sector_size)
 
-		# BIOS: /boot GRUB can read the user's chosen fs, Limine only supports FAT
-		boot_fs = FilesystemType.FAT32 if bootloader == Bootloader.Limine else filesystem_type
+		# BIOS: GRUB reads /boot from the user's chosen fs
+		boot_fs = filesystem_type
 		partitions.append(
 			PartitionModification(
 				status=ModificationStatus.CREATE,
@@ -116,7 +115,7 @@ def get_default_btrfs_subvols(home_volume: bool = True) -> list[SubvolumeModific
 		SubvolumeModification(Path('@'), Path('/')),
 		SubvolumeModification(Path('@home'), Path('/home')),
 		SubvolumeModification(Path('@log'), Path('/var/log')),
-		SubvolumeModification(Path('@pkg'), Path('/var/cache/pacman/pkg')),
+		SubvolumeModification(Path('@pkg'), Path('/var/cache/libdnf5')),
 	]
 
 	if not home_volume:

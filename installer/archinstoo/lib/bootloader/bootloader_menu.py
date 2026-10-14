@@ -31,7 +31,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		bootloader = self._bootloader_conf.bootloader
 
 		# UKI availability
-		uki_enabled = self._uefi and bootloader is not None
+		uki_enabled = self._uefi and bootloader is not None and bootloader.has_uki_support()
 		if not uki_enabled:
 			self._bootloader_conf.uki = False
 
@@ -55,15 +55,6 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 				preview_action=self._prev_uki,
 				key='uki',
 				enabled=uki_enabled,
-			),
-			MenuItem(
-				text='Boot splash',
-				action=self._select_splash,
-				value=self._bootloader_conf.splash,
-				preview_action=self._prev_splash,
-				key='splash',
-				# only relevant when a UKI is actually being built
-				enabled=uki_enabled and self._bootloader_conf.uki,
 			),
 			MenuItem(
 				text='Removable location',
@@ -109,10 +100,6 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		state = 'Enabled' if item.value else 'Disabled'
 		return f'Quiet boot: {state}'
 
-	def _prev_splash(self, item: MenuItem) -> str | None:
-		state = 'Enabled' if item.value else 'Disabled'
-		return f'Boot splash: {state}'
-
 	def _prev_serial_console(self, item: MenuItem) -> str | None:
 		if item.value:
 			return f'Serial console: console={item.value}'
@@ -130,7 +117,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		bootloader = select_bootloader(preset, self._uefi, self._skip_boot)
 
 		uki_item = self._menu_item_group.find_by_key('uki')
-		if not self._uefi or bootloader is None:
+		if not self._uefi or bootloader is None or not bootloader.has_uki_support():
 			uki_item.enabled = False
 			uki_item.value = False
 			self._bootloader_conf.uki = False
@@ -166,28 +153,11 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			return preset
 		return value.strip() or None
 
-	def _select_splash(self, preset: bool) -> bool:
-		prompt = 'Embed the Arch logo splash image into the unified kernel image?\n'
-
-		choice = prompt_yes_no(prompt, preset)
-		return preset if choice is None else choice
-
 	def _select_uki(self, preset: bool) -> bool:
 		prompt = 'Would you like to use unified kernel images?\n'
 
 		choice = prompt_yes_no(prompt, preset)
-		uki = preset if choice is None else choice
-
-		# splash only applies to UKI: gate it on the current uki choice
-		splash_item = self._menu_item_group.find_by_key('splash')
-		if uki:
-			splash_item.enabled = True
-		else:
-			splash_item.enabled = False
-			splash_item.value = False
-			self._bootloader_conf.splash = False
-
-		return uki
+		return preset if choice is None else choice
 
 	def _select_removable(self, preset: bool) -> bool:
 		uses = '\n'.join(

@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
-from archinstoo.lib import checkpoints, chroot, sysconfig, systemd
+from archinstoo.lib import checkpoints, chroot, selinux, sysconfig, systemd
 from archinstoo.lib.authentication import accounts
 from archinstoo.lib.bootloader.install import BootloaderInstaller
 from archinstoo.lib.disk import snapshots
@@ -28,12 +29,10 @@ from archinstoo.lib.models.device import (
 	SnapshotType,
 )
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
-from archinstoo.lib.output import copy_artifacts, debug, error, info, warn
-from archinstoo.lib.pm import Pacman, mirrors
-from archinstoo.lib.pm.config import PacmanConfig
+from archinstoo.lib.output import copy_artifacts, debug, info, warn
+from archinstoo.lib.pm import Dnf
 
 if TYPE_CHECKING:
-	from pathlib import Path
 	from subprocess import CompletedProcess
 	from types import TracebackType
 
@@ -41,37 +40,27 @@ if TYPE_CHECKING:
 	from archinstoo.lib.general import SysCommand
 	from archinstoo.lib.models.bootloader import Bootloader
 	from archinstoo.lib.models.localization import LocaleConfiguration
-	from archinstoo.lib.models.mirrors import PacmanConfiguration
-	from archinstoo.lib.models.packages import Repository
 	from archinstoo.lib.models.service import UserService
 	from archinstoo.lib.models.swap import SwapConfiguration
 	from archinstoo.lib.models.sysctl import SysctlConfiguration
 	from archinstoo.lib.models.users import User
 
-# Base packages installed by default (firmware added based on FirmwareConfiguration)
-# mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
-# pacman picks the first initramfs provider from the host's pacman.conf, which on non-Arch
-# hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
-# UKI presets, both of which assume mkinitcpio is present in the chroot.
-__base_packages__ = ['base', 'mkinitcpio']
-# Arch Ports (aarch64) ships its keyring from forge, not as a pacman dependency
-__archports_packages__ = ['archports-keyring']
+# @core's mandatory tier (see Dnf.strap) plus what boots it; the kernel goes in
+# later, with install_kernels(), once its command line is known
+# (firmware added based on FirmwareConfiguration)
+__base_packages__ = ['@core', 'dracut', 'systemd-udev']
 
-# Package sets minimal_installation() and the steps after it add conditionally.
-# Named rather than inlined so schema_gen can read the same list the installer
-# straps, instead of a transcription of it.
+# Package sets minimal_installation() and the steps after it add conditionally
 __lvm_packages__ = [LVM]
-# sd-encrypt only bundles the fido2 dlopen libs if this is present when the
-# initramfs is built
+# systemd-cryptsetup only reaches the fido2 libs in the initramfs if this is
+# present when dracut runs
 __fido2_packages__ = ['libfido2']
 # the array has to be assembled before the root is reachable, so this goes
 # into base rather than the post-install package list
 __raid_packages__ = ['mdadm']
-# fonts that are in the ISO but won't be on target unless requested before base,
-# otherwise mkinitcpio will be screaming at you
-__ter_font_packages__ = ['terminus-font']
-
-# Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
+# the console font has to be on the target before dracut copies vconsole in
+__ter_font_packages__ = ['terminus-fonts-console']
+# Additional packages that are installed if the host runs accessibility tools
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
 
 
@@ -105,11 +94,9 @@ class Installer:
 		# not here: a flow may legitimately have none
 		self._helper_flags: dict[str, bool] = {
 			'base': False,
+			'kernel': False,
 		}
-		self._artifacts_synced = False
-
-		for kernel in self.kernels:
-			self._base_packages.append(kernel)
+		self._finalized = False
 
 		# If using accessibility tools in the live environment, append those to the packages list
 		if systemd.accessibility_tools_in_use():
@@ -124,7 +111,7 @@ class Installer:
 		self._on_raid = False
 		self._layout_teardown_required = False
 
-		self.pacman = Pacman(self.target)
+		self.dnf = Dnf(self.target, handler.config.dnf_config)
 
 	@property
 	def handler(self) -> ArchConfigHandler:
@@ -140,14 +127,17 @@ class Installer:
 		# flows that never run a step claim it so the exit summary stays true
 		self._helper_flags[key] = value
 
-	def sync_artifacts(self) -> None:
-		# log + saved config into the target's /etc/archinstoo.d. __exit__ does
+	def finalize(self) -> None:
+		# log + saved config into the target's /etc/archinstoo.d, then the
+		# SELinux labels, last so they cover every file written. __exit__ does
 		# it on a clean exit; guided calls it first because reboot/poweroff
 		# kill the process before __exit__ runs
-		if self._artifacts_synced:
+		if self._finalized:
 			return
 		copy_artifacts(self.target)
-		self._artifacts_synced = True
+		if self._helper_flags['base'] and self.target != Path('/'):
+			selinux.label_target(self)
+		self._finalized = True
 
 	def __enter__(self) -> Self:
 		return self
@@ -157,9 +147,9 @@ class Installer:
 		# once for every script. Only a clean exit has a verdict to give.
 		try:
 			if exc_type is None:
+				self.finalize()
 				info('Syncing the system...')
 				os.sync()
-				self.sync_artifacts()
 				checkpoints.report_outcome(self.target, self._helper_flags)
 		finally:
 			try:
@@ -180,9 +170,6 @@ class Installer:
 		)
 		self._layout_teardown_required = False
 
-	def sanity_check(self) -> None:
-		systemd.wait_iso_services(self._handler.args.skip_ntp, self._handler.args.skip_wkd)
-
 	def mount_ordered_layout(self) -> None:
 		info(f'Mounting ordered layout at {self.target} (encryption: {self._disk_encryption.encryption_type.value})', step=True)
 		self._layout_teardown_required = True
@@ -196,11 +183,8 @@ class Installer:
 		# no-op unless a token was picked for an encrypted layout
 		enroll_fido2(self.target, self._disk_encryption)
 
-	def set_mirrors(self, pacman_configuration: PacmanConfiguration, on_target: bool = False) -> None:
-		mirrors.set_mirrors(self, pacman_configuration, on_target)
-
-	def genfstab(self, flags: str = '-pU') -> None:
-		write_fstab(self.target, self._fstab_entries, flags)
+	def write_fstab(self) -> None:
+		write_fstab(self.target, self._fstab_entries)
 
 	def set_hostname(self, hostname: str) -> None:
 		sysconfig.write_hostname(self.target, hostname)
@@ -223,12 +207,11 @@ class Installer:
 		run_as: str | None = None,
 		peek_output: bool = False,
 		env: dict[str, str] | None = None,
-		systemd_mode: bool = False,
 	) -> SysCommand | CompletedProcess[bytes]:
-		return chroot.run_in_target(self.target, cmd, run_as, peek_output, env, systemd_mode)
+		return chroot.run_in_target(self.target, cmd, run_as, peek_output, env)
 
-	def mkinitcpio(self, flags: list[str]) -> bool:
-		return self.initramfs.build(self, flags)
+	def rebuild_initramfs(self) -> bool:
+		return self.initramfs.build(self)
 
 	def _prepare_fs_type(self, fs_type: FilesystemType) -> None:
 		if (pkg := fs_type.installation_pkg) is not None:
@@ -240,16 +223,11 @@ class Installer:
 
 	def minimal_installation(
 		self,
-		optional_repositories: list[Repository] | None = None,
-		mkinitcpio: bool = True,
 		hostname: str | None = None,
 		locale_config: LocaleConfiguration | None = None,
 		timezone: str | None = None,
 	) -> None:
-		if optional_repositories is None:
-			optional_repositories = []
-
-		info(f'Installing base system: kernels={", ".join(self.kernels)}, hostname={hostname or "(unset)"}', step=True)
+		info(f'Installing base system: hostname={hostname or "(unset)"}', step=True)
 
 		if self._disk_config.lvm_config:
 			self._base_packages.extend(__lvm_packages__)
@@ -262,7 +240,7 @@ class Installer:
 
 			types = (EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM)
 			if self._disk_encryption.encryption_type in types:
-				self.initramfs.add_encrypt(before=LVM)
+				self.initramfs.add_encrypt()
 		else:
 			for mod in self._disk_config.device_modifications:
 				for part in mod.partitions:
@@ -281,37 +259,26 @@ class Installer:
 
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(__fido2_packages__)
+			self.initramfs.add_fido2()
 
 		if ucode := SysInfo.ucode():
-			# the ucode package owns its image in /boot: an unowned copy left
-			# on a reused /boot fails pacstrap with "exists in filesystem"
-			(self.target / 'boot' / ucode).unlink(missing_ok=True)
-			debug(f'Adding microcode package {ucode.stem}')
-			self._base_packages.append(ucode.stem)
+			debug(f'Adding microcode package {ucode}')
+			self._base_packages.append(ucode)
 		else:
-			debug('Archinstoo will not install any ucode.')
-
-		if SysInfo.arch() == 'aarch64':
-			self._base_packages.extend(__archports_packages__)
-
-		debug(f'Optional repositories: {optional_repositories}')
-
-		# pacstrap resolves packages through the live conf, so the repos have
-		# to be enabled there before it runs
-		live_conf = PacmanConfig(None)
-		live_conf.enable(optional_repositories)
-		live_conf.apply()
+			debug('No microcode package for this CPU (or a VM)')
 
 		if locale_config:
 			self.set_vconsole(locale_config)
 			if locale_config.console_font.startswith('ter-'):
 				self._base_packages.extend(__ter_font_packages__)
+			if langpack := configure.langpack_package(locale_config.sys_lang):
+				self._base_packages.append(langpack)
 
-		self.pacman.strap(list(dict.fromkeys(self._base_packages)))
-		# same repos again, on the stock conf pacstrap just installed
-		target_conf = PacmanConfig(self.target)
-		target_conf.enable(optional_repositories)
-		target_conf.apply()
+		# weak deps on whatever the dnf config says: systemd only recommends
+		# dbus and the libs it dlopens (kmod, cryptsetup, pwquality), so the
+		# base boots without a system bus otherwise
+		self.dnf.strap(list(dict.fromkeys(self._base_packages)), mandatory_groups=True, weak_deps=True)
+		self.dnf.write_conf()
 
 		# Periodic TRIM may improve the performance and longevity of SSDs whilst
 		# having no adverse effect on other devices. Most distributions enable
@@ -324,7 +291,7 @@ class Installer:
 			# fstrim is owned by util-linux, a dependency of both base and systemd.
 			self.enable_service('fstrim.timer')
 
-		# appends to the mdadm.conf the package ships, so after pacstrap
+		# appends to the mdadm.conf the package ships, so after the strap
 		if self._on_raid:
 			write_mdadm_conf(self.target)
 
@@ -337,13 +304,27 @@ class Installer:
 		if timezone and not self.set_timezone(timezone):
 			warn(f'Failed to set timezone: {timezone}')
 
-		if mkinitcpio and not self.mkinitcpio(['-P']):
-			error('Error generating initramfs (continuing anyway)')
-
 		self._helper_flags['base'] = True
 
-	def setup_btrfs_snapshot(self, snapshot_type: SnapshotType, bootloader: Bootloader | None = None) -> None:
-		snapshots.setup_btrfs_snapshot(self, snapshot_type, bootloader)
+	def install_kernels(self, cmdline: list[str]) -> None:
+		# the kernel's posttrans runs kernel-install, which reads both files:
+		# the cmdline into the boot entry or UKI, dracut.conf.d into the image.
+		# Without /etc/kernel/cmdline it falls back to the host's /proc/cmdline
+		info(f'Installing kernels: {", ".join(self.kernels)}', step=True)
+		cmdline_path = self.target / 'etc/kernel/cmdline'
+		cmdline_path.parent.mkdir(parents=True, exist_ok=True)
+		cmdline_path.write_text(' '.join(cmdline) + '\n')
+		debug(f'Wrote {cmdline_path}: {" ".join(cmdline)}')
+		self.initramfs.write_conf(self.target)
+
+		# kernel-core requires linux-firmware, whose recommends are every
+		# vendor split (~400 MiB): the firmware choice already went in with
+		# the base, so the kernel brings only what it requires
+		self.dnf.strap(self.kernels, weak_deps=False)
+		self._helper_flags['kernel'] = True
+
+	def setup_btrfs_snapshot(self, snapshot_type: SnapshotType) -> None:
+		snapshots.setup_btrfs_snapshot(self, snapshot_type)
 
 	def setup_swap(self, config: SwapConfiguration) -> None:
 		if config.zram:
@@ -363,11 +344,10 @@ class Installer:
 
 	def add_bootloader(
 		self,
-		bootloader: Bootloader,
+		bootloader: Bootloader | None,
 		uki_enabled: bool = False,
 		removable: bool = False,
 		quiet: bool = False,
-		splash: bool = False,
 		serial_console: str | None = None,
 	) -> None:
 		BootloaderInstaller(self, self._disk_config, self._disk_encryption, self._kernel_params, self._zram_enabled).install(
@@ -375,12 +355,11 @@ class Installer:
 			uki_enabled=uki_enabled,
 			removable=removable,
 			quiet=quiet,
-			splash=splash,
 			serial_console=serial_console,
 		)
 
 	def add_additional_packages(self, packages: str | list[str]) -> None:
-		self.pacman.strap(packages)
+		self.dnf.strap(packages)
 
 	def add_kernel_param(self, params: str | list[str]) -> None:
 		if isinstance(params, str):

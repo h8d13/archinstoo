@@ -46,18 +46,6 @@ def build_parser() -> argparse.ArgumentParser:
 		help='Define an alternate mount point for installation',
 	)
 	parser.add_argument(
-		'--skip-ntp',
-		action='store_true',
-		help='Disables NTP checks during installation',
-		default=False,
-	)
-	parser.add_argument(
-		'--skip-wkd',
-		action='store_true',
-		help='Disables checking if archlinux keyring wkd sync is complete.',
-		default=False,
-	)
-	parser.add_argument(
 		'--skip-boot',
 		action='store_true',
 		help='Disables installation of a boot loader (note: only use this when problems arise with the boot loader step).',

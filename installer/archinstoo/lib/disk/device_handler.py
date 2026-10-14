@@ -149,7 +149,7 @@ class DeviceHandler:
 			if dev_lsblk_info.type == 'rom':
 				continue
 
-			# exclude archiso loop device
+			# the Arch ISO's own squashfs loop, when BOOT runs from one
 			if dev_lsblk_info.mountpoint == Path('/run/archiso/airootfs'):
 				continue
 
@@ -987,7 +987,7 @@ class DeviceHandler:
 	@staticmethod
 	def udev_sync() -> None:
 		try:
-			# arch-chroot (distros/BOOT) exports SYSTEMD_IN_CHROOT=1: no settle
+			# under BOOT we run chrooted, and udevadm skips settle there
 			env = {'SYSTEMD_IN_CHROOT': '0'}
 			SysCommand('udevadm settle', environment_vars=env)
 		except SysCallError as err:

@@ -2,11 +2,12 @@ from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType
+from archinstoo.lib.models.dnf import DnfConfiguration
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
-from archinstoo.lib.pm import list_available_packages
+from archinstoo.lib.pm.dnf_menu import DnfMenu
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
 from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
@@ -23,7 +24,6 @@ from .configuration import ConfigStore
 from .hardware import SysInfo
 from .interactions.general_conf import (
 	select_additional_packages,
-	select_aur_packages,
 	select_hostname,
 	select_ntp,
 	select_timezone,
@@ -38,8 +38,6 @@ from .models.localization import LocaleConfiguration
 from .models.network import NetworkConfiguration, NicType
 from .network.network_menu import select_network
 from .output import FormattedOutput
-from .pm.config import PacmanConfig
-from .pm.mirrors import PMenu
 from .profile.config import ProfileConfiguration
 
 if TYPE_CHECKING:
@@ -47,7 +45,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
 
 	from .args import ArchConfig
-	from .models.mirrors import PacmanConfiguration
 
 
 def _section(title: str, body: str) -> str:
@@ -79,10 +76,6 @@ class GlobalMenu(AbstractMenu[None]):
 
 		# make the abort menu (save / abort / cancel) reachable via Ctrl+Q from any submenu
 		Tui.set_abort_handler(lambda: self._handle_abort(None))
-
-		# Apply pacman config if loaded from file
-		if arch_config.pacman_config:
-			PacmanConfig.apply_config(arch_config.pacman_config)
 
 	def _get_menu_options(self) -> list[MenuItem]:
 		return [
@@ -124,13 +117,11 @@ class GlobalMenu(AbstractMenu[None]):
 				key='locale_config',
 			),
 			MenuItem(
-				text='Pacman config',
-				action=self._pacman_configuration,
-				preview_action=self._prev_pacman_config,
-				key='pacman_config',
-				value_validator=lambda c: bool(
-					c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options
-				),
+				text='Dnf config',
+				value=DnfConfiguration(),
+				action=lambda preset: DnfMenu(preset).run(),
+				preview_action=lambda item: item.value.preview() if item.value else None,
+				key='dnf_config',
 			),
 			MenuItem(
 				text='Swap',
@@ -180,7 +171,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text='Hostname',
-				value='archlinux',
+				value='fedora',
 				action=select_hostname,
 				preview_action=self._prev_hostname,
 				key='hostname',
@@ -220,14 +211,6 @@ class GlobalMenu(AbstractMenu[None]):
 				value=[],
 				preview_action=self._prev_additional_pkgs,
 				key='packages',
-			),
-			MenuItem(
-				text='AUR packages',
-				action=select_aur_packages,
-				value=[],
-				preview_action=self._prev_aur_packages,
-				dependencies=[self._has_elevated_users],
-				key='aur_packages',
 			),
 			MenuItem(
 				text='Sysctl',
@@ -278,13 +261,6 @@ class GlobalMenu(AbstractMenu[None]):
 
 		if profile_config and profile_config.greeter == GreeterType.Sddm and not (auth_config and auth_config.users):
 			missing.add('SDDM requires at least one regular user to log in')
-
-		aur_packages_item = self._item_group.find_by_key('aur_packages')
-		if aur_packages_item.has_value() and aur_packages_item.value:
-			from archinstoo.lib.models.authentication import PrivilegeEscalation
-
-			if not auth_config or auth_config.privilege_escalation == PrivilegeEscalation.Run0:
-				missing.add('AUR packages require Sudo or Doas privilege escalation (Run0 requires booted environment)')
 
 		for item in self._item_group.items:
 			if item.mandatory:
@@ -383,11 +359,6 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_additional_pkgs(self, item: MenuItem) -> str | None:
 		if item.value:
 			return _section('Additionals', '\n'.join(sorted(item.value)))
-		return None
-
-	def _prev_aur_packages(self, item: MenuItem) -> str | None:
-		if item.value:
-			return _section('AUR packages', '\n'.join(sorted(item.value)))
 		return None
 
 	def _prev_authentication(self, item: MenuItem) -> str | None:
@@ -658,54 +629,7 @@ class GlobalMenu(AbstractMenu[None]):
 		return 'Graphics packages:\n' + ''.join(f'\t- {name}\n' for name in sorted(p.value for p in packages))
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:
-		# repos come from the live pacman.conf, which _pacman_configuration has
-		# already written by the time this runs
 		return select_additional_packages(preset)
-
-	def _pacman_configuration(self, preset: PacmanConfiguration | None = None) -> PacmanConfiguration:
-		pacman_configuration = PMenu(preset=preset).run()
-
-		needs_apply = pacman_configuration.optional_repositories or pacman_configuration.custom_repositories or pacman_configuration.pacman_options
-
-		# the package list is keyed on nothing but the conf now, so any pass
-		# through this menu invalidates it
-		list_available_packages.cache_clear()
-
-		if needs_apply:
-			# enable the repositories and options in the config
-			pacman_config = PacmanConfig(None)
-			if pacman_configuration.optional_repositories:
-				pacman_config.enable(pacman_configuration.optional_repositories)
-			if pacman_configuration.custom_repositories:
-				pacman_config.enable_custom(pacman_configuration.custom_repositories)
-			if pacman_configuration.pacman_options:
-				pacman_config.enable_options(pacman_configuration.pacman_options)
-			pacman_config.apply()
-
-		return pacman_configuration
-
-	def _prev_pacman_config(self, item: MenuItem) -> str | None:
-		if not item.value:
-			return None
-
-		config: PacmanConfiguration = item.value
-
-		sections = []
-		if config.mirror_regions:
-			sections.append(_section('Selected mirror regions', config.region_names))
-
-		if config.custom_servers:
-			sections.append(_section('Custom servers', config.custom_server_urls))
-
-		if config.optional_repositories:
-			repos = ', '.join([r.value for r in config.optional_repositories])
-			sections.append(_section('Optional repositories', repos))
-
-		if config.custom_repositories:
-			table = FormattedOutput.as_table(config.custom_repositories)
-			sections.append(f'Custom repositories:\n\n{table}')
-
-		return '\n\n'.join(sections).strip()
 
 	def _handle_abort(self, _preset: None) -> None:
 		items = []

@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pytest
 
-from archinstoo.lib.bootloader.install import refind_kernel_dir
 from archinstoo.lib.models.device import (
 	FilesystemType,
 	ModificationStatus,
@@ -11,7 +10,6 @@ from archinstoo.lib.models.device import (
 	PartitionType,
 	SectorSize,
 	Size,
-	SubvolumeModification,
 	Unit,
 	has_separate_boot,
 )
@@ -92,46 +90,3 @@ def test_obj_id_hash_survives_a_config_round_trip() -> None:
 	assert part.obj_id == restored.obj_id
 	assert hash(part) == hash(restored)
 	assert {part: 'luks'}[restored] == 'luks'
-
-
-DEFAULT_SUBVOLS = [('@', '/'), ('@home', '/home'), ('@log', '/var/log'), ('@pkg', '/var/cache/pacman/pkg')]
-
-
-def _btrfs_root(subvols: list[tuple[str, str]] | None) -> PartitionModification:
-	part = PartitionModification(
-		status=ModificationStatus.CREATE,
-		type=PartitionType.PRIMARY,
-		start=Size(1, Unit.MiB, SECTOR),
-		length=Size(8, Unit.GiB, SECTOR),
-		mountpoint=Path('/'),
-		fs_type=FilesystemType.BTRFS,
-		flags=[],
-		dev_path=Path('/dev/vda2'),
-	)
-	if subvols is not None:
-		part.btrfs_subvols = [SubvolumeModification(Path(name), Path(mp)) for name, mp in subvols]
-	return part
-
-
-@pytest.mark.parametrize(
-	('boot_on_root', 'subvols', 'expected'),
-	[
-		# ESP at /boot or a separate /boot partition: kernels at the top
-		(False, DEFAULT_SUBVOLS, '\\'),
-		(False, None, '\\'),
-		# btrfs root, no default subvolume is ever set, so @ is in the path
-		(True, DEFAULT_SUBVOLS, '@\\boot\\'),
-		(True, [('@root', '/'), ('@home', '/home')], '@root\\boot\\'),
-		# btrfs with nothing mounted at /, and non-btrfs roots
-		(True, [('@home', '/home')], '\\boot\\'),
-		(True, None, '\\boot\\'),
-	],
-)
-def test_refind_kernel_dir(boot_on_root: bool, subvols: list[tuple[str, str]] | None, expected: str) -> None:
-	assert refind_kernel_dir(_btrfs_root(subvols), boot_on_root=boot_on_root) == expected
-
-
-def test_refind_initrd_matches_installed_system() -> None:
-	# byte-for-byte what a real refind + ESP-at-/efi + btrfs install wrote
-	kernel_dir = refind_kernel_dir(_btrfs_root(DEFAULT_SUBVOLS), boot_on_root=True)
-	assert f'initrd={kernel_dir}initramfs-linux.img' == 'initrd=@\\boot\\initramfs-linux.img'

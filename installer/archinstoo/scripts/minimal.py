@@ -65,7 +65,7 @@ def perform_installation(
 		# some other minor details as specified by this profile and user.
 		installation.mount_ordered_layout()
 		installation.minimal_installation(locale_config=LocaleConfiguration.default())
-		installation.set_hostname('minimal-arch')
+		installation.set_hostname('minimal-fedora')
 		installation.enroll_fido2()
 		installation.add_bootloader(Bootloader.Systemd)
 
@@ -85,9 +85,9 @@ def perform_installation(
 		installation.create_users(user)
 
 		# gpt-auto finds root and the ESP by partition type, so this installs
-		# and boots without one: everything else (mkinitcpio and the bootloader
-		# writing to a mounted /boot, rescue, swap) expects the real thing
-		installation.genfstab()
+		# and boots without one: everything else (kernel-install writing to a
+		# mounted /boot, rescue, swap) expects the real thing
+		installation.write_fstab()
 
 	debug(f'Disk states after installing:\n{disk_layouts()}')
 	info(f'Minimal installation completed in {time.monotonic() - start_time:.0f}s')

@@ -21,40 +21,23 @@ class Os:
 		return key in os.environ
 
 	@staticmethod
-	def running_from_host() -> bool:
-		# returns True when not on the ISO
-		return not Path('/run/archiso').exists()
-
-	@staticmethod
-	def running_from_who() -> str:
-		# distro ID from os-release; stdlib parse handles quoting and the
-		# /usr/lib/os-release fallback (no systemd needed, plain file read)
+	def os_release(key: str) -> str:
+		# stdlib parse handles quoting and the /usr/lib/os-release fallback
 		try:
-			return platform.freedesktop_os_release().get('ID', '')
+			return platform.freedesktop_os_release().get(key, '')
 		except OSError:
 			return ''
 
 	@staticmethod
-	def running_from_arch() -> bool:
-		# distinguishes an Arch host/ISO from a foreign host (Debian, Alpine, ...)
-		# archarm is Arch Linux ARM, native for our purposes
-		return Os.running_from_who() in ('arch', 'archarm')
-
-	@staticmethod
-	def running_from_foreign() -> bool:
-		# installed non-Arch host (not the ISO, not an Arch install)
-		return Os.running_from_host() and not Os.running_from_arch()
-
-	@staticmethod
-	def running_from_arch_host() -> bool:
-		# H2T on an installed Arch: '/' is the user's own system, not a live or
-		# throwaway root, so archinstoo must not sync or install into it
-		return Os.running_from_host() and Os.running_from_arch() and not Os.running_from_bootstrap()
-
-	@staticmethod
 	def running_from_bootstrap() -> bool:
-		# distros/BOOT: Arch, but a throwaway root (set through arch-chroot)
+		# BOOT: a throwaway Fedora root, chrooted into from whatever host ran it
 		return Os.get_env('A2_BOOTSTRAP') == '1'
+
+	@staticmethod
+	def running_from_fedora_host() -> bool:
+		# H2T on an installed Fedora: '/' is the user's own system, so nothing
+		# gets synced or installed into it
+		return not Os.running_from_bootstrap() and Os.os_release('ID') == 'fedora'
 
 	@staticmethod
 	def running_in_chroot() -> bool:
@@ -66,7 +49,7 @@ class Os:
 
 	@staticmethod
 	def has_systemd() -> bool:
-		# sd_booted(), except chroots: arch-chroot binds the host /run in
+		# sd_booted(), except chroots: BOOT binds the host /run in
 		return Path('/run/systemd/system').is_dir() and not Os.running_in_chroot()
 
 	@staticmethod

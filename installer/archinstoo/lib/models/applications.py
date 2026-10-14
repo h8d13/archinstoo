@@ -87,14 +87,14 @@ class FirewallConfigSerialization(TypedDict):
 
 class Management(StrEnum):
 	GIT = 'git'
-	OPENSSH = 'openssh'
+	OPENSSH = 'openssh-server'
 	WGET = 'wget'
-	BASE_DEVEL = 'base-devel'
+	DEVELOPMENT_TOOLS = '@development-tools'
 	MAN = 'man-db'
-	PACMAN_CONTRIB = 'pacman-contrib'
-	REFLECTOR = 'reflector'
+	DNF_PLUGINS = 'dnf5-plugins'
 	# modules-load.d entry so wine finds /dev/ntsync (kernels ship the module
-	# but nothing autoloads it) docs.kernel.org/userspace-api/ntsync.html
+	# but nothing autoloads it) docs.kernel.org/userspace-api/ntsync.html.
+	# Not a package on Fedora: ManagementApp writes the file
 	NTSYNC = 'ntsync-autoload'
 
 

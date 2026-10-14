@@ -56,6 +56,7 @@ def _part(
 
 ESP_EFI = _part('/efi', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.ESP])
 ESP_BOOT = _part('/boot', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.ESP, PartitionFlag.BOOT])
+ESP_BOOT_EFI = _part('/boot/efi', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.ESP])
 BOOT_FLAGGED = _part('/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.BOOT])
 BOOT_XBOOTLDR = _part('/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.XBOOTLDR])
 BOOT_EXT4 = _part('/boot', '/dev/vda2', FilesystemType.EXT4, [PartitionFlag.XBOOTLDR])
@@ -98,30 +99,20 @@ def test_systemd_esp_at_efi_without_boot_needs_uki() -> None:
 	assert 'systemd-boot with ESP at /efi requires UKI or a separate XBOOTLDR /boot partition' in errors
 
 
-def test_limine_esp_at_boot_accepted() -> None:
-	# row O: kernels land on the FAT ESP, which is all limine can read
-	assert _errors(Bootloader.Limine, [ESP_BOOT, ROOT_BTRFS]) == []
+def test_grub_esp_at_efi_rejected() -> None:
+	# shim and grubx64.efi install into /boot/efi from the RPMs: an ESP at
+	# /efi never receives them
+	errors = _errors(Bootloader.Grub, [ESP_EFI, ROOT_BTRFS])
+	assert 'GRUB on UEFI needs the ESP mounted at /boot/efi (found /efi)' in errors
 
 
-def test_limine_separate_fat_boot_accepted() -> None:
-	# row M
-	assert _errors(Bootloader.Limine, [ESP_EFI, BOOT_XBOOTLDR, ROOT_BTRFS]) == []
+def test_grub_esp_at_boot_efi_accepted() -> None:
+	assert _errors(Bootloader.Grub, [ESP_BOOT_EFI, ROOT_BTRFS]) == []
 
 
-def test_limine_esp_at_efi_rejected() -> None:
-	# row P: nothing at /boot means the kernels are on btrfs and limine
-	# panics at first boot. The previous condition could never fire.
-	errors = _errors(Bootloader.Limine, [ESP_EFI, ROOT_BTRFS])
-	assert any('Limine requires kernels on a FAT partition' in e for e in errors)
-
-
-def test_limine_esp_at_efi_allowed_under_uki() -> None:
-	assert _errors(Bootloader.Limine, [ESP_EFI, ROOT_BTRFS], uki=True) == []
-
-
-def test_grub_esp_at_efi_accepted() -> None:
-	# rows A/D/E: grub reads btrfs, so /boot staying in @ is fine
-	assert _errors(Bootloader.Grub, [ESP_EFI, ROOT_BTRFS]) == []
+def test_grub_rejects_uki() -> None:
+	errors = _errors(Bootloader.Grub, [ESP_BOOT_EFI, ROOT_BTRFS], uki=True)
+	assert 'Grub does not boot unified kernel images' in errors
 
 
 # table-vs-firmware pre-flight: these used to surface as a parted
@@ -162,18 +153,6 @@ def test_bios_gpt_grub_without_bios_grub_rejected() -> None:
 
 def test_bios_gpt_grub_with_bios_grub_accepted() -> None:
 	assert _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.GPT) == []
-
-
-def test_bios_gpt_limine_without_bios_grub_rejected() -> None:
-	# limine 12.x fails this at bios-install, a whole install too late
-	boot_fat = _part('/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.BOOT])
-	errors = _bios_errors([boot_fat, ROOT_EXT4], PartitionTable.GPT, Bootloader.Limine)
-	assert 'BIOS boot from a GPT disk needs a 1MiB bios_grub partition' in errors
-
-
-def test_bios_mbr_limine_accepted() -> None:
-	boot_fat = _part('/boot', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.BOOT])
-	assert _bios_errors([boot_fat, ROOT_EXT4], PartitionTable.MBR, Bootloader.Limine) == []
 
 
 def test_bios_mbr_grub_accepted() -> None:

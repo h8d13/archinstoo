@@ -18,7 +18,7 @@ class KeyFileGenerator:
 		self._files: list[str] = []
 
 	def generate(self) -> list[str]:
-		# returns the in-target keyfile paths mkinitcpio FILES must embed
+		# returns the in-target keyfile paths dracut's install_items must embed
 		match self._disk_encryption.encryption_type:
 			case EncryptionType.LUKS:
 				self._generate_key_files_partitions()

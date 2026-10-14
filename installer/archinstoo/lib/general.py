@@ -202,8 +202,8 @@ class SysCommandWorker:
 		if self.peek_output:
 			if isinstance(output, str):
 				output = output.encode('UTF-8')
-			# the pty makes the child think it has a terminal, so pacman-key
-			# colours and pacman hides the cursor; only a real terminal wants
+			# the pty makes the child think it has a terminal, so dnf colours
+			# and draws progress bars; only a real terminal wants
 			# those bytes, a log (CI, redirect, cmd_output.txt) wants the text
 			plain = clear_vt100_escape_codes(output)
 			try:

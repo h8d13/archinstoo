@@ -10,37 +10,55 @@ class FirmwareType(StrEnum):
 
 
 class FirmwareVendor(StrEnum):
-	AMD = 'linux-firmware-amd'  # non-GPU AMD devices, GPUs are AMDGPU/RADEON
-	AMDGPU = 'linux-firmware-amdgpu'
-	ATHEROS = 'linux-firmware-atheros'
-	BROADCOM = 'linux-firmware-broadcom'
-	CIRRUS = 'linux-firmware-cirrus'
-	INTEL = 'linux-firmware-intel'
-	LIQUIDIO = 'linux-firmware-liquidio'
-	MARVELL = 'linux-firmware-marvell'
-	MEDIATEK = 'linux-firmware-mediatek'
-	MELLANOX = 'linux-firmware-mellanox'
-	NFP = 'linux-firmware-nfp'
-	NVIDIA = 'linux-firmware-nvidia'
-	OTHER = 'linux-firmware-other'
-	QCOM = 'linux-firmware-qcom'
-	QLOGIC = 'linux-firmware-qlogic'
-	RADEON = 'linux-firmware-radeon'
-	REALTEK = 'linux-firmware-realtek'
-	TI = 'linux-firmware-ti'
+	# Fedora's linux-firmware splits
+	AMDGPU = 'amd-gpu-firmware'
+	ATHEROS = 'atheros-firmware'
+	BROADCOM = 'brcmfmac-firmware'
+	CIRRUS = 'cirrus-audio-firmware'
+	INTEL_AUDIO = 'intel-audio-firmware'
+	INTEL_GPU = 'intel-gpu-firmware'
+	INTEL_NPU = 'intel-npu-firmware'
+	INTEL_VSC = 'intel-vsc-firmware'
+	IWLBLUETOOTH = 'iwlbluetooth-firmware'
+	IWLEGACY = 'iwlegacy-firmware'
+	IWLWIFI_DVM = 'iwlwifi-dvm-firmware'
+	IWLWIFI_MLD = 'iwlwifi-mld-firmware'
+	IWLWIFI_MVM = 'iwlwifi-mvm-firmware'
+	LIBERTAS = 'libertas-firmware'
+	LIQUIDIO = 'liquidio-firmware'
+	MEDIATEK = 'mediatek-firmware'
+	MLXSW = 'mlxsw_spectrum-firmware'
+	MRVLPRESTERA = 'mrvlprestera-firmware'
+	MT7XXX = 'mt7xxx-firmware'
+	NETRONOME = 'netronome-firmware'
+	NVIDIA = 'nvidia-gpu-firmware'
+	NXPWIRELESS = 'nxpwireless-firmware'
+	QCOM = 'qcom-firmware'
+	QCOM_WWAN = 'qcom-wwan-firmware'
+	QED = 'qed-firmware'
+	REALTEK = 'realtek-firmware'
+	TIWILINK = 'tiwilink-firmware'
 
 
-# linux-firmware's optdeps, test_firmware.py checks the enum against `pacman -Si`
-FIRMWARE_OPTDEPS = frozenset(
+# what linux-firmware only Recommends, so a FULL install gets it anyway; the
+# rest stay opt-in (test_firmware.py checks the set against the repos)
+_RECOMMENDED = frozenset(
 	{
-		FirmwareVendor.LIQUIDIO,
-		FirmwareVendor.MARVELL,
-		FirmwareVendor.MELLANOX,
-		FirmwareVendor.NFP,
-		FirmwareVendor.QCOM,
-		FirmwareVendor.QLOGIC,
+		FirmwareVendor.AMDGPU,
+		FirmwareVendor.ATHEROS,
+		FirmwareVendor.BROADCOM,
+		FirmwareVendor.CIRRUS,
+		FirmwareVendor.INTEL_AUDIO,
+		FirmwareVendor.INTEL_GPU,
+		FirmwareVendor.MT7XXX,
+		FirmwareVendor.NVIDIA,
+		FirmwareVendor.NXPWIRELESS,
+		FirmwareVendor.QCOM_WWAN,
+		FirmwareVendor.REALTEK,
+		FirmwareVendor.TIWILINK,
 	}
 )
+FIRMWARE_OPTDEPS = frozenset(FirmwareVendor) - _RECOMMENDED
 
 FULL_FIRMWARE = ['linux-firmware']
 
