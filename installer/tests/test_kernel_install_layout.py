@@ -36,7 +36,7 @@ def test_grub_cmdline_carries_the_params(tmp_path: Path) -> None:
 	# its own root=UUID=... ro: anything left out never reaches the kernel
 	installer = BootloaderInstaller.__new__(BootloaderInstaller)
 	installer.target = tmp_path
-	installer._write_grub_default(['rd.luks.name=abc=root', 'root=/dev/mapper/root', 'rw', 'rootfstype=ext4', 'console=ttyS0,115200'])
+	installer._write_grub_default(['rd.luks.name=abc=root', 'root=/dev/mapper/root', 'rootflags=subvol=@', 'rw', 'rootfstype=ext4', 'console=ttyS0,115200'])
 
 	grub = (tmp_path / 'etc/default/grub').read_text()
 	assert 'GRUB_CMDLINE_LINUX="rd.luks.name=abc=root rootfstype=ext4 console=ttyS0,115200"\n' in grub

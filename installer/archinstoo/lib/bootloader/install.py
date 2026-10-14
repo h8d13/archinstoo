@@ -233,7 +233,9 @@ class BootloaderInstaller:
 
 		# bootctl detects the chroot as a container and skips the EFI boot
 		# variables unless told; --variables=yes forces them. It also writes
-		# EFI/BOOT/BOOTX64.EFI, which boots when the NVRAM refuses an entry
+		# EFI/BOOT/BOOTX64.EFI, which boots when the NVRAM refuses an entry.
+		# anaconda's bootctl call, ESP at /boot/efi there
+		# anaconda/pyanaconda/modules/storage/bootloader/systemd.py:150-166
 		def _bootctl_install(variables: str) -> None:
 			self._inst.arch_chroot(['bootctl', variables, *bootctl_options, 'install'])
 
@@ -287,6 +289,9 @@ class BootloaderInstaller:
 		if removable:
 			return
 
+		# TODO: anaconda deletes earlier "Fedora" entries before creating
+		# its own; a reinstall here stacks another one in NVRAM
+		# anaconda/pyanaconda/modules/storage/bootloader/efi.py:119-159
 		parent_dev_path = get_parent_device_path(efi_partition.safe_dev_path)
 		loader = r'\EFI\fedora\shimx64.efi'
 		try:
@@ -303,7 +308,11 @@ class BootloaderInstaller:
 		# every BLS entry's options as root=UUID=<fs> ro + GRUB_CMDLINE_LINUX,
 		# so the kernel params go here, minus what it adds itself
 		# https://fedoraproject.org/wiki/Changes/BootLoaderSpecByDefault#Config_files_provided_by_kernel,_grub2-switch-to-blscfg,_and_zipl-switch-to-blscfg
-		cmdline = ' '.join(p for p in params if not p.startswith('root=') and p != 'rw')
+		# same keys as anaconda's, minus its serial console and Xen cases
+		# anaconda/pyanaconda/modules/storage/bootloader/grub2.py:243-276
+		# on btrfs it adds rootflags=subvol= as well
+		owned = ('root=', 'rootflags=subvol=')
+		cmdline = ' '.join(p for p in params if not p.startswith(owned) and p != 'rw')
 		content = textwrap.dedent(f"""\
 			GRUB_TIMEOUT=5
 			GRUB_DISTRIBUTOR="$(sed 's, release .*$,,g' /etc/system-release)"
@@ -322,7 +331,9 @@ class BootloaderInstaller:
 	def _write_grub_efi_stub(self) -> None:
 		# grub2 reads its real config from the filesystem holding /boot: a
 		# separate one is its own root, otherwise /boot sits in the root fs,
-		# under the root subvolume on btrfs (FSROOT)
+		# under the root subvolume on btrfs (FSROOT). Same stub grub2's
+		# gen_grub_cfgstub writes, which anaconda runs
+		# anaconda/pyanaconda/modules/storage/bootloader/efi.py:195-205
 		boot = self.target / 'boot'
 		out = SysCommand(['findmnt', '-n', '-o', 'UUID,FSROOT,TARGET', '--target', str(boot)]).decode().split()
 		uuid, fsroot, mountpoint = out[0], out[1].rstrip('/'), Path(out[2])
@@ -341,6 +352,8 @@ class BootloaderInstaller:
 		debug(f'Wrote {stub}')
 
 	def _grub_mkconfig(self) -> None:
+		# grubenv, then grub.cfg, as anaconda orders them
+		# anaconda/pyanaconda/modules/storage/bootloader/grub2.py:325-373
 		grubenv = self.target / 'boot/grub2/grubenv'
 		try:
 			if not grubenv.exists():
