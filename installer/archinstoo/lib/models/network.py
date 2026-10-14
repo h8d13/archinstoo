@@ -28,7 +28,8 @@ class NicType(Enum):
 				# wpa_supplicant backend, pulled in by the wifi plugin
 				return ['NetworkManager', 'NetworkManager-wifi']
 			case NicType.NM_IWD:
-				# iwd backend, usually for intel devices
+				# iwd backend; the wifi plugin needs (wpa_supplicant or iwd),
+				# iwd in the same transaction keeps wpa_supplicant out
 				return ['NetworkManager', 'NetworkManager-wifi', 'iwd']
 			case NicType.IWD:
 				return ['iwd', *NETWORKD_PACKAGES]
