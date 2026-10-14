@@ -13,7 +13,6 @@ class BudgieProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'budgie-desktop',
-			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), budgie-portals.conf names it, groups only optdep it
 			'konsole',
 			'dolphin',
 			'papirus-icon-theme',

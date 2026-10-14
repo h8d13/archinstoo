@@ -11,10 +11,8 @@ class CosmicProfile(WaylandProfile):
 	@property
 	@override
 	def packages(self) -> list[str]:
-		return [
-			'@cosmic-desktop',
-			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), cosmic-portals.conf names it, groups only optdep it
-		]
+		# the group's gnome-keyring-pam brings the Secret portal backend
+		return ['@cosmic-desktop']
 
 	@property
 	@override

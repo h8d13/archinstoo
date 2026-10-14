@@ -14,11 +14,9 @@ class QtileProfile(XorgProfile):
 	@override
 	def packages(self) -> list[str]:
 		# ttf: bar renders as boxes without a scalable font
-		# dbus-fast: optdep qtile warns about on every start
 		return [
 			'qtile',
 			'liberation-fonts-all',
-			'python3-dbus-fast',
 		]
 
 	@override

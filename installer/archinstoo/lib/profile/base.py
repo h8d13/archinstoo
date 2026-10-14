@@ -47,9 +47,9 @@ class ProfileType(Enum):
 class SeatAccess(StrEnum):
 	# value is the package to install, label is the mechanism it provides.
 	# polkit grants no seat access on its own: the real choice is
-	# systemd-logind or seatd. Arch builds logind with polkit support, so
-	# logind needs polkit at runtime for its permission checks (pacman only
-	# lists it as an optdep of systemd, the requirement is functional).
+	# systemd-logind or seatd. logind is built with polkit support and needs
+	# it at runtime for its permission checks, yet systemd does not require
+	# the package.
 	# https://github.com/archlinux/archinstall/issues/3467
 	#
 	# StrEnum so the saved string compares equal to the member: the menus
