@@ -6,10 +6,9 @@ from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
-from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.base import GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
 
@@ -154,26 +153,12 @@ class ProfileHandler:
 		if disable := greeter.disabled_services:
 			install_session.disable_service(disable)
 
-		# slick-greeter requires a config change
-		if greeter == GreeterType.LightdmSlick:
-			path = install_session.target.joinpath('etc/lightdm/lightdm.conf')
-			filedata = path.read_text()
-
-			if '#greeter-session=example-gtk-gnome' not in filedata:
-				warn(f'{path}: greeter-session marker not found, slick-greeter not activated')
-			else:
-				debug(f'Setting greeter-session in {path}')
-				path.write_text(filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter'))
-
-		# greetd's stock config.toml runs the tty agreety greeter, so every
-		# front-end here replaces it wholesale. tuigreet reads the sessions
-		# each compositor ships and remembers the pick; regreet has no default
-		# config at all and needs the cage kiosk compositor around it
-		greetd_session = {
-			GreeterType.Tuigreet: 'tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions',
-			GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
-		}
-		if command := greetd_session.get(greeter):
+		# lightdm's greeters each ship a lightdm.conf.d drop-in naming
+		# themselves, nothing to set. greetd's stock config.toml runs the tty
+		# agreety greeter; tuigreet replaces it, reading the sessions each
+		# compositor ships and remembering the pick
+		if greeter == GreeterType.Tuigreet:
+			command = 'tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions'
 			debug(f'Writing greetd session config: {command}')
 			path = install_session.target.joinpath('etc/greetd/config.toml')
 			path.write_text(
@@ -186,11 +171,6 @@ class ProfileHandler:
 					user = "{GREETD_USER}"
 				""")
 			)
-
-		# regreet runs the cage compositor as the greeter user; only seatd
-		# ships the seat group, logind needs no membership
-		if greeter == GreeterType.Regreet:
-			add_to_group(install_session, 'seat', [GREETD_USER])
 
 	def install_gfx_driver(
 		self,
