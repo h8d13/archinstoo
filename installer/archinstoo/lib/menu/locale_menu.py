@@ -202,7 +202,7 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 
 		# a language carries its own set of encodings, so a stale one (the
 		# UTF-8 default against an ISO-8859-15-only language like de_DE@euro)
-		# would name a locale.gen entry that does not exist. Fall to the
+		# would name a SUPPORTED entry that does not exist. Fall to the
 		# language's own first choice instead of failing at install time.
 		if lang and lang != preset:
 			encodings = list_locale_encodings(lang)

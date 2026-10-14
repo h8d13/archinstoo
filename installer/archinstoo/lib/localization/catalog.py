@@ -118,7 +118,7 @@ def locale_encoding(sys_lang: str, sys_enc: str) -> str:
 
 
 def locale_entry_re(sys_lang: str, sys_enc: str) -> re.Pattern[str]:
-	# matches the SUPPORTED/locale.gen entry a selection needs. The first
+	# matches the glibc SUPPORTED entry a selection needs. The first
 	# column names the codeset only sometimes ('en_IL UTF-8' vs 'en_GB.UTF-8
 	# UTF-8'), so both spellings match; anchor with fullmatch, else the
 	# ISO-8859-1 pattern also swallows 'xx_XX ISO-8859-15'.
