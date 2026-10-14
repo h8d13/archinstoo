@@ -1,142 +1,69 @@
-# Alpha - Archinstoo
+# Alpha - Fedinstoo
 
-<img width="1920" height="1080" alt="Group 1" src="https://github.com/user-attachments/assets/7f54d725-d10d-4447-983c-a01d44b9f915" />
+## What is `fedinstoo`
 
-## What is `archinstoo`
+A port of [`archinstoo`](https://github.com/h8d13/archinstoo) that installs [Fedora](https://fedoraproject.org)
+instead of Arch Linux: same menus, same config files, same steps, with `dnf`, `dracut`
+and `kernel-install` underneath.
 
-An operating system installer (and tools) for [archlinux](https://archlinux.org).
-
-> [!TIP]
-> In the [ISO](https://archlinux.org/download/), you are root by default.
-> Use `sudo` or equivalent, *when from an existing system.*
-
-Or also works from many [`distros/`](https://github.com/h8d13/archinstoo/tree/master/distros)
+The Python package is still named `archinstoo` while the port settles.
 
 ## Setup / Usage
 
-### 0. Keymap
+The installer runs from a Fedora root. [`BOOT`](BOOT) provides one on any Linux host
+(an Arch ISO, Debian, Alpine, ...): it fetches the Fedora Container Base image, checks
+it against Fedora's signed `CHECKSUM`, unpacks it and runs the installer inside.
 
-Select a layout: `loadkeys <somekblayout>`
-
-Can also check available ones:
-
-`localectl list-keymaps` otherwise defaults to `us`.
-
-### **1. Get internet access**
-> [!NOTE]
-> Ethernet cable is plug and play. *You can then skip wifi setup below*
-
-Test: `ping -c 3 google.com` if this returns `ttl=109 time=10.1 ms` 3 times...
-
-**For Wifi**:
-```shell
-# check devices
-$ ip link
-
-$ iwctl station wlan0 connect "SSID"
-# where SSID is the name of your wifi
-# where wlan0 is your device name
-# case sensitive and will prompt for password
-
-$ nmcli dev wifi connect "SSID" -a
-# alternative
-```
-
-### **2. Prep**
-
-*If on the ISO instead of a live system*
-```shell
-pacman-key --init
-pacman -Syy git python
-```
-
-> [!NOTE]
-> The ISO has limited `cow_spacesize` (256M by default).
-> Optionally, if you need space in the temporary environment, simply: `mount -o remount,size=1G /run/archiso/cowspace`
-
-### **3. Get the source code**
+A host only needs `python3 util-linux coreutils udev`, plus `gnupg` for the signature check.
 
 ```shell
-git clone https://github.com/h8d13/archinstoo
+git clone https://github.com/h8d13/fedinstoo
+cd fedinstoo
+sudo ./BOOT [args]   # try --help; some options are behind --advanced
 ```
 
-### **4. Run the code**
+| Env | Default | |
+|-----|---------|-|
+| `BOOT_DIR` | `/tmp/F2-boot` | where the root lives, reused across runs |
+| `BOOT_RELEASE` | newest under `releases/` | Fedora release to install |
+| `BOOT_MIRROR` | `download.fedoraproject.org` | mirror the image comes from |
+
+From an installed Fedora, `./RUN` works directly (host-to-target): its own `dnf` provides the deps.
+
+## How an install goes
+
+1. Disk layout is partitioned, formatted and mounted under `/mnt`.
+2. `dnf --installroot` straps `@core` (mandatory tier only), `dracut` and the picked firmware.
+3. Locale (`glibc-langpack-*`), console, hostname, timezone, users, network, apps.
+4. The bootloader goes in, then the kernel: its `kernel-install` run builds the initramfs and
+   the boot entry (or UKI) from `/etc/kernel/cmdline`.
+5. The tree is labeled for SELinux with the target's own `setfiles`, so it boots enforcing.
+
+Bootloaders: GRUB (shim-signed, ESP at `/boot/efi`; BIOS too) and systemd-boot (BLS or UKI).
+
+## Testing
+
+Every change is tested the same way, from `BOOT` inside a VM ([`TVM`](TVM) + [`TSER`](TSER)):
 
 ```shell
-cd archinstoo/installer
-python -m archinstoo [args] # try -h or --help
-# some options are behind --advanced
+A2_SERIAL=1 ./TVM                    # an Arch ISO from .dev-iso/ as the host
+./TSER login && ./TSER push installer /root/fedinstoo/installer
+./TSER push BOOT /root/fedinstoo/BOOT && ./TSER push RUN /root/fedinstoo/RUN
+./TSER run 'cd /root/fedinstoo && ./BOOT --config <config> --silent'
+./TSER quit && A2_SERIAL=1 ./TVM boot && ./TSER login -p test
 ```
 
-### **5. Enjoy your new system(s)**
+Unit tests: `pytest -c installer/pyproject.toml installer/tests`
 
-<img width="1278" height="800" alt="Screenshot_20260608_165700" src="https://github.com/user-attachments/assets/3ac69a5c-31f6-4132-93e5-26bc0555768d" />
+## Status
 
-Make your pizzas. *Una pizza con funghi e prosciutto.*
+Ported and booted in QEMU (UEFI): minimal installs with GRUB and systemd-boot, ext4,
+networkd/resolved, chrony, SELinux enforcing.
 
-See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md) if you're just starting out with Arch.
-
-> [!TIP]
-> **Alternatively:** There are wrappers/helpers (which perform similar step to 4) from the **repo root**:
-
-```shell
-./RUN # regular
-./DEV # advanced
-```
+Not ported yet: desktop/server profile package names, graphics drivers (RPM Fusion),
+disk encryption keyfiles, snapshots, packaging (the PKGBUILDs and release CI are still Arch's).
 
 ---
 
-## Modify/Extend
-
-> You can create any profile in [`archinstoo/default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles) following convention, which will be imported automatically.
-Or modify existing ones directly. Can also see here for [examples](https://github.com/h8d13/archinstoo/tree/master/installer/examples)
-
-You can make plugins easily `--script list` for `archinstoo`, anything inside [`scripts/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/scripts) is also imported.
-
-The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/installer)
-
-Install steps are ordered in [`installer.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py) here search/find/replace is your friend.
-
-A `man` page is also available `man -l installer/docs/archinstoo.1`
-
-### Use cases / Docs
-
-See the full documentation on [mkdocs](https://h8d13.github.io/archinstoo/) generated from this repo.
-
-### Testing
-
-**Host-to-target:** testing (without ISOs) here you will need more [dependencies](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD).
-
-See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/blob/master/.github/CHANGELOG.md)
-
-The process would be the same with `git clone -b <branch> <url>` to test a specific fix. Usually reproduced then tested on **actual/appropriate hardware.**
-
-> Any help in this regard is deeply appreciated, as testing/digging takes just as long as writing code. Accurate reports/PRs will be addressed in a timely manner:
-> [PRs](https://github.com/h8d13/archinstoo/pulls), [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
-
-**Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing).
-[More...](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md)
-
----
-
-## Building sources
-
->[!NOTE]
-> For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
-> For **non-dev** see [`installer/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD) uses the repo without its top part from git.
-
-But it is recommended to use latest from git `master` instead.
-
-See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [arch-wiki](https://wiki.archlinux.org/title/Main_page).
-
-See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not hosted on GitHub.
-
----
-
-<div align="center" markdown>
-
-Made with ♡
-
-[Documentation](https://h8d13.github.io/archinstoo/) · [Star this repo](https://github.com/h8d13/archinstoo) · [Bugs/Features](https://github.com/h8d13/archinstoo/issues/new) · [Discussions](https://github.com/h8d13/archinstoo/discussions)
-
-</div>
+See [`archinstall`](https://github.com/archlinux/archinstall) and [`archinstoo`](https://github.com/h8d13/archinstoo),
+which this builds on.
