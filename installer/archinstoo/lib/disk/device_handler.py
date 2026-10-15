@@ -147,11 +147,10 @@ class DeviceHandler:
 				debug(f'Device lsblk info not found: {device.path}')
 				continue
 
-			if dev_lsblk_info.type == 'rom':
-				continue
-
-			# the Arch ISO's own squashfs loop, when BOOT runs from one
-			if dev_lsblk_info.mountpoint == Path('/run/archiso/airootfs'):
+			# nothing installs onto these: optical drives (an empty one reports
+			# RO=0) and the live medium's read-only squashfs loops (archiso,
+			# Fedora live and netinstall), whose mounts sit outside BOOT's root
+			if dev_lsblk_info.type == 'rom' or dev_lsblk_info.ro:
 				continue
 
 			try:
