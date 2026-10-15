@@ -135,7 +135,7 @@ def _log_env_info() -> None:
 		info(f'Running from Host (H2T Mode) on {Os.os_release("ID") or "unknown"}...')
 
 	info(f'Kernel: {kernel_info()}')
-	info(f'Logger path: {logger.path}')
+	info(f'Logger path: {logger.host_path}')
 
 
 def _missing_deps(depends: tuple[str, ...]) -> list[str]:
@@ -230,10 +230,10 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 
 	text = textwrap.dedent(f"""\
 		Archinstoo experienced the above error. If you think this is a bug, please report it to
-		{handler.config.bug_report_url} and include the log file "{logger.path}".
+		{handler.config.bug_report_url} and include the log file "{logger.host_path}".
 
 		Hint: To extract the log from a live ISO
-		curl --data-binary @{logger.path} https://paste.rs
+		curl --data-binary @{logger.host_path} https://paste.rs
 	""")
 
 	warn(text)

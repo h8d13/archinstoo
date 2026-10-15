@@ -295,7 +295,8 @@ def run_installer(args: list[str]) -> int:
 		exec ./RUN "$@"
 	"""
 	# A2_BOOTSTRAP: '/' is this throwaway root, the installer blocks live/packages
-	env = {**os.environ, 'A2_BOOTSTRAP': '1'}
+	# A2_BOOT_ROOT: the installer names its log by the path the host sees
+	env = {**os.environ, 'A2_BOOTSTRAP': '1', 'A2_BOOT_ROOT': str(ROOT)}
 	return run('chroot', str(ROOT), '/bin/bash', '-c', script, 'boot', *args, env=env, check=False).returncode
 
 

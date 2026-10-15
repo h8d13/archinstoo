@@ -69,7 +69,7 @@ class Dnf:
 		try:
 			self.run(cmd, peek_output=True)
 		except SysCallError as err:
-			raise RequirementError(f'Package installation failed. See {logger.path} or above message for error details: {err}') from err
+			raise RequirementError(f'Package installation failed. See {logger.host_path} or above message for error details: {err}') from err
 
 	def write_conf(self) -> None:
 		# the installed system keeps resolving the way its install did; keys
