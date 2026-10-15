@@ -8,12 +8,14 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, Pr
 
 from .general import JSON
 from .output import debug, error, info, logger, restore_perms, warn
+lazy from .args import ArchConfig, get_arch_config_handler
+lazy from .tui.prompts import prompt_choice
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
 	from pathlib import Path
 
-	from .args import ArchConfig, ArchConfigHandler, Arguments
+	from .args import ArchConfigHandler, Arguments
 
 
 class ConfigStore:
@@ -31,8 +33,6 @@ class ConfigStore:
 		return logger.directory / cls._USER_CONFIG_FILENAME
 
 	def user_config_to_json(self) -> str:
-		from .args import get_arch_config_handler
-
 		# stamp what is running, not what a loaded config claimed: the label
 		# is how a replay knows which script produced the file, and every
 		# script saves through here
@@ -117,8 +117,6 @@ class ConfigStore:
 	@classmethod
 	def prompt_resume(cls) -> dict[str, Any] | None:
 		# Prompt user to resume from saved config. Returns config dict or None.
-		from .tui.prompts import prompt_choice
-
 		if not cls.has_saved_config():
 			return None
 
@@ -145,8 +143,6 @@ def resolve_config(
 	show_menu: Callable[[ArchConfig, Arguments], None],
 	validate_silent: Callable[[ArchConfig], None] | None = None,
 ) -> ArchConfig:
-	from .args import ArchConfig
-
 	args = handler.args
 
 	if args.silent:

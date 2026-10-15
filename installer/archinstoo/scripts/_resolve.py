@@ -22,6 +22,8 @@ from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.utils.env import Os
+lazy from archinstoo.lib.profile.profiles_handler import ProfileHandler
+lazy from archinstoo.lib.schema_gen import SECTIONS
 
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
@@ -120,8 +122,6 @@ def _named_profiles(names: list[str]) -> list[Profile]:
 	# server, whether a terminal is shipped
 	if not names:
 		return []
-	from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
 	return [p for p in ProfileHandler().profiles if p.name in names]
 
 
@@ -131,8 +131,6 @@ def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	entries = [tp for tp in top_profiles if tp.get('path')]
 	if not entries:
 		return []
-	from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
 	handler = ProfileHandler()
 	return [profile for tp in entries if (profile := handler.parse_profile_config(tp))]
 
@@ -186,8 +184,6 @@ def _application_packages(app: dict[str, Any], selected: list[Profile]) -> set[s
 	# every app_config category is a section with a pick; what follows is the
 	# part a pick alone cannot say. schema_gen drags the installer in, so it
 	# stays a function-local import like installer above
-	from archinstoo.lib.schema_gen import SECTIONS
-
 	pkgs: set[str] = set()
 	for section in SECTIONS:
 		if section.pick:

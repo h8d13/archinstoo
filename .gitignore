@@ -51,7 +51,7 @@ a/
 logs/
 /guided.py
 venv
-.venv
+.venv*
 .DS_Store
 requirements.txt
 /.gitconfig

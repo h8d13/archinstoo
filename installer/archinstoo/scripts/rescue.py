@@ -19,14 +19,16 @@ from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment
 
 # Filesystem types that could contain a Linux root
-LINUX_FILESYSTEMS = {
-	FilesystemType.EXT2,
-	FilesystemType.EXT3,
-	FilesystemType.EXT4,
-	FilesystemType.BTRFS,
-	FilesystemType.XFS,
-	FilesystemType.F2FS,
-}
+LINUX_FILESYSTEMS = frozenset(
+	{
+		FilesystemType.EXT2,
+		FilesystemType.EXT3,
+		FilesystemType.EXT4,
+		FilesystemType.BTRFS,
+		FilesystemType.XFS,
+		FilesystemType.F2FS,
+	}
+)
 
 
 def activate_lvm_volumes() -> None:
@@ -107,13 +109,13 @@ def mount_partition(partition: LsblkInfo, mount_point: Path) -> bool:
 # fstab names a device by tag as often as by path, and genfstab -U writes
 # nothing but tags. udev keeps a symlink farm for each one, so resolving
 # here costs no blkid call
-_FSTAB_TAG_DIRS = {
-	'UUID': 'by-uuid',
-	'PARTUUID': 'by-partuuid',
-	'LABEL': 'by-label',
-	'PARTLABEL': 'by-partlabel',
-	'ID': 'by-id',
-}
+_FSTAB_TAG_DIRS = frozendict(
+	UUID='by-uuid',
+	PARTUUID='by-partuuid',
+	LABEL='by-label',
+	PARTLABEL='by-partlabel',
+	ID='by-id',
+)
 
 
 def fstab_device(spec: str) -> Path:

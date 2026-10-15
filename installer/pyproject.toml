@@ -11,7 +11,7 @@ authors = [
     {name = "Hadean Eon", email = "hadean-eon-dev@proton.me"},
 ]
 license = "GPL-3.0-only"
-requires-python = ">=3.14"  # renovate: arch=python
+requires-python = ">=3.15"  # renovate: arch=python
 keywords = ["linux", "arch", "archinstoo", "installer"]
 classifiers = [
     "Operating System :: POSIX :: Linux",
@@ -125,7 +125,6 @@ disable = [
     "R",                       # ruff covers refactors
     "broad-exception-caught",  # log-and-continue boundaries
     "fixme",                   # tracked in-code on purpose
-    "unspecified-encoding",    # PEP 686: utf-8 is the default from 3.15
 ]
 
 [tool.pylint.refactoring]
@@ -216,8 +215,6 @@ ignore = [
     # `ruff format` under the tab + magic-trailing-comma style set above.
     "COM812",   # missing-trailing-comma
     "W191",     # tab-indentation
-    "PLC0415",  # import-outside-top-level: models/ -> hardware, disk breaks
-                # cycles; the rest defer optional/slow imports (parted, tui)
     "RUF067",   # non-empty-init-module: init hacks are on purpose.
 
 ]

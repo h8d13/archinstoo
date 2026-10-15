@@ -6,13 +6,12 @@ from dataclasses import dataclass, field
 from json import JSONDecodeError
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self
-from urllib.request import Request, urlopen
+lazy from urllib.request import Request, urlopen
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
 
 from archinstoo.lib.cli import DEFAULT_SCRIPT, build_parser
-from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.models.applications import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
@@ -28,6 +27,7 @@ from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.profile.config import ProfileConfiguration
+lazy from archinstoo.lib.disk.device_handler import DeviceHandler
 
 
 def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) -> None:
@@ -252,7 +252,7 @@ class ArchConfigHandler:
 			try:
 				req = Request(url, headers={'User-Agent': 'ArchInstoo'})  # noqa: S310 - scheme restricted above
 				with urlopen(req) as resp:  # noqa: S310 - scheme restricted above
-					content: str = resp.read().decode('utf-8')
+					content: str = resp.read().decode()
 					return content
 			except urllib.error.HTTPError as err:
 				error(f'Could not fetch JSON from {url}: {err}')

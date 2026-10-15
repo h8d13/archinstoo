@@ -71,16 +71,19 @@ from typing import TYPE_CHECKING
 
 from ._version import __gitstat__, __pkgver__, __version__
 from .lib import output
-from .lib.checkpoints import _run_script, clean_cache, clean_logs
 from .lib.cli import build_parser
 from .lib.exceptions import SysCallError
-from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
-from .lib.pm.bootstrap import keyring_init, pacman_conf
-from .lib.pm.pacman import Pacman
-from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Os, is_root, is_venv, kernel_info
-from .lib.utils.net import ping
+lazy from .lib.args import get_arch_config_handler  # _prepare() may install its deps first
+lazy from .lib.checkpoints import _run_script, clean_cache, clean_logs
+lazy from .lib.disk.utils import disk_layouts
+lazy from .lib.hardware import SysInfo
+lazy from .lib.pm.bootstrap import keyring_init, pacman_conf
+lazy from .lib.pm.config import guard_host_conf
+lazy from .lib.pm.pacman import Pacman
+lazy from .lib.tui.curses_menu import Tui
+lazy from .lib.utils.net import ping
 
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
@@ -164,7 +167,7 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 		debug(f'pacman -T exited {err.exit_code}: {err}')
 		if err.exit_code != 127:
 			raise
-		out = err.worker_log.decode('utf-8', errors='ignore')
+		out = err.worker_log.decode(errors='ignore')
 		missing = [line.strip() for line in out.splitlines() if line.strip() in depends]
 		if not missing:
 			raise
@@ -279,8 +282,6 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 
 	if args.debug:
-		from .lib.disk.utils import disk_layouts
-
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 
 
@@ -299,8 +300,6 @@ def main(script: str, handler: ArchConfigHandler) -> int:
 
 	# On host, snapshot /etc/pacman.conf and restore it on exit so an H2T run never leaves
 	# the running system with a modified pacman.conf (heals a prior crashed run too).
-	from .lib.pm.config import guard_host_conf
-
 	guard_host_conf()
 
 	# usually 'guided' from default lib/args
@@ -362,9 +361,7 @@ def run_as_a_module() -> int:
 	if not is_rootless and not is_help and (rc := _prepare(early.offline)):
 		return rc
 
-	# now safe to import after bootstrap (or skipped for rootless)
-	from .lib.args import get_arch_config_handler
-
+	# first lib.args load: after bootstrap (or skipped for rootless)
 	handler = get_arch_config_handler()
 	script = handler.get_script()
 	source = handler.args.config or handler.args.config_url or 'menu'

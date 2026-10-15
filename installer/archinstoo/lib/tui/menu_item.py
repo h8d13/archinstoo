@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from archinstoo.lib.utils.unicode import unicode_ljust
 
+lazy from .types import Chars
+
 if TYPE_CHECKING:
 	from collections.abc import Callable, Iterable
 	from enum import Enum
@@ -210,8 +212,6 @@ class MenuItemGroup:
 		if display_text:
 			text = f'{text}{spacing}{display_text}'
 		elif self._checkmarks:
-			from .types import Chars
-
 			if item.has_value():
 				text = f'{text}{spacing}{Chars.Check}' if item.get_value() is not False else f'{text}{spacing}{Chars.Empty}'
 			else:

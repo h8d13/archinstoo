@@ -9,6 +9,7 @@ from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, error, info, logger, warn
+lazy from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -25,8 +26,6 @@ def reset_conf() -> bool:
 	try:
 		default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
 		info('Fetching default pacman.conf from upstream...')
-		from archinstoo.lib.utils.net import fetch_data_from_url
-
 		conf_data = fetch_data_from_url(default_pm_conf)
 		Path('/etc/pacman.conf').write_text(conf_data)
 		info('Replaced /etc/pacman.conf with upstream default.')

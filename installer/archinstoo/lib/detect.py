@@ -14,8 +14,8 @@ from archinstoo.lib.pm.tmpdb import TmpDB
 _PCI_VENDOR_AMD = 0x1002  # ATI's ID, every AMD GPU still carries it
 _PCI_VENDOR_INTEL = 0x8086
 _PCI_VENDOR_NVIDIA = 0x10DE
-_GFX_BY_VENDOR: dict[int, GfxDriver] = {_PCI_VENDOR_AMD: GfxDriver.AmdOpenSource, _PCI_VENDOR_INTEL: GfxDriver.IntelOpenSource}
-_GPU_VENDORS: dict[int, str] = {_PCI_VENDOR_AMD: 'amd', _PCI_VENDOR_INTEL: 'intel', _PCI_VENDOR_NVIDIA: 'nvidia'}
+_GFX_BY_VENDOR: frozendict[int, GfxDriver] = frozendict({_PCI_VENDOR_AMD: GfxDriver.AmdOpenSource, _PCI_VENDOR_INTEL: GfxDriver.IntelOpenSource})
+_GPU_VENDORS: frozendict[int, str] = frozendict({_PCI_VENDOR_AMD: 'amd', _PCI_VENDOR_INTEL: 'intel', _PCI_VENDOR_NVIDIA: 'nvidia'})
 # nvidia-open needs the GSP, so Turing on: TU102 opens at 0x1e02 and every
 # later generation numbers higher. Volta (GV100, 0x1d81) stays below
 _NVIDIA_TURING_FIRST = 0x1E00

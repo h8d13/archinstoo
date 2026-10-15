@@ -8,9 +8,9 @@
 
 import ast
 import importlib.machinery
-import importlib.util
 import tomllib
 from pathlib import Path
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, get_type_hints
 
 import pytest
@@ -36,7 +36,6 @@ from archinstoo.scripts import _resolve
 
 if TYPE_CHECKING:
 	from enum import Enum
-	from types import ModuleType
 
 
 def test_committed_schema_is_current() -> None:
@@ -244,10 +243,10 @@ def _load_nvgen() -> ModuleType:
 	if not path.is_file():
 		pytest.skip('nvchecker/NVGEN not present')
 
+	# no spec: typeshed's LoaderProtocol still wants load_module, gone in 3.15
 	loader = importlib.machinery.SourceFileLoader('nvgen', str(path))
-	spec = importlib.util.spec_from_loader('nvgen', loader)
-	assert spec is not None
-	module = importlib.util.module_from_spec(spec)
+	module = ModuleType('nvgen')
+	module.__file__ = str(path)
 	loader.exec_module(module)
 	return module
 

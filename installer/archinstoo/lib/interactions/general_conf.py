@@ -9,6 +9,7 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties, PreviewStyle
+lazy from archinstoo.lib.grimoire import exists_in_aur_mirror
 
 
 class PostInstallationAction(Enum):
@@ -156,8 +157,6 @@ def select_additional_packages(preset: list[str] | None = None) -> list[str]:
 
 
 def select_aur_packages(preset: list[str] | None = None) -> list[str]:
-	from archinstoo.lib.grimoire import exists_in_aur_mirror
-
 	if preset is None:
 		preset = []
 

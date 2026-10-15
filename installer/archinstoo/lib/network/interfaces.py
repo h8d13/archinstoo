@@ -5,7 +5,7 @@ import struct
 
 def get_hw_addr(ifname: str) -> str:
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	ret = fcntl.ioctl(s.fileno(), 0x8927, struct.pack('256s', bytes(ifname, 'utf-8')[:15]))
+	ret = fcntl.ioctl(s.fileno(), 0x8927, struct.pack('256s', ifname.encode()[:15]))
 	return ':'.join(f'{b:02x}' for b in ret[18:24])
 
 

@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from archinstoo import NO_DISK_SCRIPTS
+from archinstoo.lib.models import device
 
 _PKG_ROOT = Path(__file__).parent.parent
 _SCRIPTS = _PKG_ROOT / 'archinstoo' / 'scripts'
@@ -98,8 +99,6 @@ def test_device_handler_requires_parted() -> None:
 
 def test_ped_constants_match_pyparted() -> None:
 	parted = pytest.importorskip('parted')
-
-	from archinstoo.lib.models import device
 
 	assert device._PED_PARTITION_NORMAL == parted.PARTITION_NORMAL
 	assert device._PED_PARTITION_BOOT == parted.PARTITION_BOOT

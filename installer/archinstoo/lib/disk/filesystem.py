@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 	from .luks import Luks2
 
 
-_CHANGE_LABEL = {ModificationStatus.CREATE: 'create', ModificationStatus.MODIFY: 'format', ModificationStatus.DELETE: 'delete'}
+_CHANGE_LABEL = frozendict({ModificationStatus.CREATE: 'create', ModificationStatus.MODIFY: 'format', ModificationStatus.DELETE: 'delete'})
 
 
 def pending_changes(device_mods: list[DeviceModification]) -> list[str]:

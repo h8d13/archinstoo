@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from typing import NotRequired, Self, TypedDict
 
+lazy from archinstoo.lib.hardware import SysInfo
+
 
 class FirmwareType(StrEnum):
 	FULL = auto()
@@ -59,8 +61,6 @@ class FirmwareConfiguration:
 	def default(cls) -> Self:
 		# Guests boot on virtio/emulated devices that ship no blobs. Bare metal keeps
 		# FULL: a missed blob can cost the only NIC, with no network left to fix it.
-		from archinstoo.lib.hardware import SysInfo
-
 		if SysInfo.is_vm():
 			return cls(firmware_type=FirmwareType.MINIMAL)
 		return cls()

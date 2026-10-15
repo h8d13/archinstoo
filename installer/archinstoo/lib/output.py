@@ -7,6 +7,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, TypeIs, runtime_checkable
 
+lazy from archinstoo.lib.tui.curses_menu import Tui
+
 if TYPE_CHECKING:
 	from collections.abc import Sequence
 
@@ -316,6 +318,4 @@ def log(
 		text = _stylize_output(text, fg, bg, reset)
 
 	if level != logging.DEBUG:
-		from archinstoo.lib.tui.curses_menu import Tui
-
 		Tui.print(text)
