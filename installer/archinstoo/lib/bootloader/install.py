@@ -1,3 +1,4 @@
+import json
 import textwrap
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -418,9 +419,13 @@ class BootloaderInstaller:
 		# under the root subvolume on btrfs (FSROOT). Same stub grub2's
 		# gen_grub_cfgstub writes, which anaconda runs
 		# anaconda/pyanaconda/modules/storage/bootloader/efi.py:195-205
+		# JSON: the target's own self-bind stacks under the root fs with no
+		# UUID, and splitting plain columns shifted its FSROOT into the UUID
+		# slot. Mountinfo order puts the visible (topmost) mount last
 		boot = self.target / 'boot'
-		out = SysCommand(['findmnt', '-n', '-o', 'UUID,FSROOT,TARGET', '--target', str(boot)]).decode().split()
-		uuid, fsroot, mountpoint = out[0], out[1].rstrip('/'), Path(out[2])
+		out = SysCommand(['findmnt', '-J', '-l', '-o', 'UUID,FSROOT,TARGET', '--target', str(boot)]).decode()
+		fs = json.loads(out)['filesystems'][-1]
+		uuid, fsroot, mountpoint = fs['uuid'], fs['fsroot'].rstrip('/'), Path(fs['target'])
 		prefix = f'{fsroot}/grub2' if mountpoint == boot else f'{fsroot}/boot/grub2'
 
 		stub = self.target / GRUB_ESP.relative_to('/') / _GRUB_EFI_DIR / 'grub.cfg'
