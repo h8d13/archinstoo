@@ -14,7 +14,7 @@ from archinstoo.lib.disk.luks import passphrase_error
 from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.installer import Installer
+from archinstoo.lib.installer import Installer, __ntp_packages__
 from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
 from archinstoo.lib.models.device import (
 	DiskLayoutType,
@@ -169,7 +169,7 @@ def perform_installation(
 			# Fedora's time sync is chrony, not timesyncd
 			# https://fedoraproject.org/wiki/Features/ChronyDefaultNTP#Summary
 			# anaconda/pyanaconda/modules/timezone/installation.py:179-188
-			installation.add_additional_packages('chrony')
+			installation.add_additional_packages(__ntp_packages__)
 			installation.enable_service('chronyd')
 
 		if accessibility_tools_in_use():

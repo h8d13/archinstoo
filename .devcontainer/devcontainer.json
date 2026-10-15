@@ -1,6 +1,6 @@
 {
-	"name": "archinstoo",
-	"build": { "dockerfile": "Dockerfile", "context": "../installer" },
+	"name": "fedinstoo",
+	"build": { "dockerfile": "../Containerfile", "context": ".." },
 	"remoteUser": "root",
 	"customizations": {
 		"vscode": {

@@ -60,6 +60,8 @@ __fido2_packages__ = ['libfido2']
 __raid_packages__ = ['mdadm']
 # the console font has to be on the target before dracut copies vconsole in
 __ter_font_packages__ = ['terminus-fonts-console']
+# Fedora's time sync is chrony, not timesyncd
+__ntp_packages__ = ['chrony']
 # Additional packages that are installed if the host runs accessibility tools
 __accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
 

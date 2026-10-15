@@ -1,0 +1,251 @@
+# schema.toml - generated, do not edit.
+#
+# The package sets an install can pull, flattened out of the code that
+# installs them: the one inventory to check against Fedora's repos.
+#
+# Sections follow the order the install runs them, banners naming the call in
+# scripts/guided.py:perform_installation. Every section is a table so
+# that order survives: a top-level `key = [...]` after the first [header] would
+# silently nest under it. A section that is one flat list holds it under
+# `packages`.
+#
+# To change what a section holds, change the code under the banner above it, then:
+#
+#     python -m archinstoo --script schema
+
+# -- Installer --
+[base]
+packages = ["@core", "dracut", "systemd-udev"]
+
+[firmware]
+full = ["linux-firmware"]
+minimal = []
+vendor = ["amd-gpu-firmware", "atheros-firmware", "brcmfmac-firmware", "cirrus-audio-firmware", "intel-audio-firmware", "intel-gpu-firmware", "intel-npu-firmware", "intel-vsc-firmware", "iwlbluetooth-firmware", "iwlegacy-firmware", "iwlwifi-dvm-firmware", "iwlwifi-mld-firmware", "iwlwifi-mvm-firmware", "libertas-firmware", "liquidio-firmware", "mediatek-firmware", "mlxsw_spectrum-firmware", "mrvlprestera-firmware", "mt7xxx-firmware", "netronome-firmware", "nvidia-gpu-firmware", "nxpwireless-firmware", "qcom-firmware", "qcom-wwan-firmware", "qed-firmware", "realtek-firmware", "tiwilink-firmware"]
+
+[accessibility]
+packages = ["brltty", "espeakup", "alsa-utils"]
+
+# -- installation.minimal_installation --
+[lvm]
+packages = ["lvm2"]
+
+[raid]
+packages = ["mdadm"]
+
+[filesystem_tools]
+btrfs = ["btrfs-progs"]
+f2fs = ["f2fs-tools"]
+xfs = ["xfsprogs"]
+
+[fido2]
+packages = ["libfido2"]
+
+[microcode]
+amd = ["amd-ucode-firmware"]
+intel = ["microcode_ctl"]
+
+[ter_fonts]
+packages = ["terminus-fonts-console"]
+
+# -- installation.setup_swap --
+[swap]
+zram = ["zram-generator"]
+swapfile = ["policycoreutils-python-utils"]
+
+# -- installation.create_users --
+[privilege_escalation]
+sudo = ["sudo"]
+doas = ["opendoas"]
+run0 = ["polkit"]
+
+[stash]
+packages = ["git"]
+
+# -- ShellApp().install --
+[shells]
+bash = []
+zsh = ["zsh"]
+fish = ["fish"]
+rbash = []
+
+# -- application_handler.install_applications --
+[bluetooth]
+packages = ["bluez"]
+
+[thunderbolt]
+packages = ["bolt"]
+
+[audio_firmware]
+sof = ["alsa-sof-firmware"]
+alsa = ["alsa-firmware"]
+
+[audio]
+pipewire = ["pipewire", "pipewire-alsa", "pipewire-jack-audio-connection-kit", "pipewire-pulseaudio", "pipewire-gstreamer", "pulseaudio-libs", "wireplumber", "rtkit"]
+pulseaudio = ["pulseaudio"]
+
+[media_codecs]
+packages = ["gstreamer1-plugin-libav", "gstreamer1-plugins-bad-free", "gstreamer1-plugins-ugly-free", "pipewire-gstreamer", "libopenraw"]
+
+[flatpak]
+packages = ["flatpak", "xdg-desktop-portal-gtk"]
+
+[power_management]
+power-profiles-daemon = ["power-profiles-daemon"]
+tuned = ["tuned", "tuned-ppd"]
+
+[printing]
+packages = ["cups", "system-config-printer", "cups-pk-helper", "ghostscript"]
+
+[firewalls]
+ufw = ["ufw"]
+firewalld = ["firewalld"]
+
+[management]
+git = ["git"]
+openssh-server = ["openssh-server"]
+wget = ["wget"]
+"@development-tools" = ["@development-tools"]
+man-db = ["man-db"]
+dnf5-plugins = ["dnf5-plugins"]
+
+[monitors]
+htop = ["htop"]
+btop = ["btop"]
+
+[editors]
+vi = ["vim-minimal"]
+nano = ["nano"]
+micro = ["micro"]
+vim = ["vim-enhanced"]
+neovim = ["neovim"]
+emacs = ["emacs"]
+
+[terminals]
+alacritty = ["alacritty"]
+foot = ["foot"]
+kitty = ["kitty"]
+konsole = ["konsole"]
+xterm = ["xterm"]
+ptyxis = ["ptyxis"]
+
+[security]
+firejail = ["firejail"]
+bubblewrap = ["bubblewrap"]
+fail2ban = ["fail2ban"]
+pam-u2f = ["pam-u2f"]
+audit = ["audit"]
+
+# -- installation.setup_btrfs_snapshot --
+[snapshots]
+snapper = ["snapper"]
+timeshift = ["timeshift", "cronie"]
+
+# -- installation.add_bootloader --
+[bootloaders]
+systemd-boot = ["systemd-boot-unsigned"]
+grub = ["grub2-efi-x64", "shim-x64", "grub2-tools", "efibootmgr"]
+efistub = ["systemd-boot-unsigned", "systemd-ukify", "efibootmgr"]
+
+[bootloaders_uki]
+systemd-boot = ["systemd-boot-unsigned", "systemd-ukify"]
+efistub = ["systemd-boot-unsigned", "systemd-ukify", "efibootmgr"]
+
+[bootloaders_bios]
+grub = ["grub2-pc", "grub2-tools"]
+
+[kernels]
+kernel = ["kernel"]
+
+# -- network_handler.install_network_config --
+[network_iso_extra]
+packages = ["iwd"]
+
+[network]
+iso = ["systemd-networkd"]
+nm = ["NetworkManager", "NetworkManager-wifi"]
+nm-iwd = ["NetworkManager", "NetworkManager-wifi", "iwd"]
+iwd = ["iwd", "systemd-networkd"]
+manual = ["systemd-networkd"]
+
+[network_desktop_extra]
+packages = ["network-manager-applet"]
+
+[resolved]
+packages = ["systemd-resolved"]
+
+# -- installation.add_additional_packages --
+[kernel_headers]
+kernel = ["kernel-devel"]
+
+[ntp]
+packages = ["chrony"]
+
+# -- profile_handler.install_gfx_driver --
+[gfx_drivers]
+all-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers", "xorg-x11-drv-amdgpu", "xorg-x11-drv-ati", "xorg-x11-drv-nouveau", "libva-intel-media-driver", "intel-vpl-gpu-rt", "libvpl"]
+amd-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers", "xorg-x11-drv-amdgpu", "xorg-x11-drv-ati"]
+intel-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers", "libva-intel-media-driver", "intel-vpl-gpu-rt", "libvpl"]
+nvidia-open-nouveau = ["mesa-dri-drivers", "mesa-vulkan-drivers", "xorg-x11-drv-nouveau"]
+mesa-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers"]
+custom = []
+
+[gfx_custom_choices]
+packages = ["mesa-dri-drivers", "mesa-vulkan-drivers", "libva-intel-media-driver", "intel-vpl-gpu-rt", "libvpl", "xorg-x11-drv-amdgpu", "xorg-x11-drv-ati", "xorg-x11-drv-nouveau"]
+
+# -- profile_handler.install_profile_config --
+[display_servers]
+x11 = ["xorg-x11-server-Xorg", "xorg-x11-xinit"]
+wayland = ["xorg-x11-server-Xwayland"]
+
+[profile_base]
+desktop = ["smartmontools", "xdg-utils", "xdg-user-dirs"]
+server = ["smartmontools"]
+
+[profiles]
+awesome = ["awesome", "xterm", "xrandr", "feh", "slock", "terminus-fonts", "gnu-free-sans-fonts", "liberation-fonts-all", "xsel"]
+bspwm = ["bspwm", "sxhkd", "dmenu", "xdotool", "rxvt-unicode"]
+budgie = ["budgie-desktop", "konsole", "dolphin", "papirus-icon-theme"]
+cinnamon = ["cinnamon", "system-config-printer", "gnome-keyring", "gnome-terminal", "engrampa", "gnome-screenshot", "gvfs-smb", "xed"]
+cosmic = ["@cosmic-desktop"]
+deepin = ["@deepin-desktop", "deepin-terminal"]
+enlightenment = ["enlightenment", "terminology"]
+gnome = ["gnome-shell", "gnome-session", "gnome-terminal", "gnome-control-center", "gnome-settings-daemon", "nautilus", "xdg-desktop-portal-gnome", "gnome-keyring", "gnome-tweaks"]
+i3-wm = ["i3", "i3lock", "i3status", "i3blocks", "xss-lock", "lightdm-gtk-greeter", "lightdm", "dmenu"]
+labwc = ["labwc", "xdg-desktop-portal-wlr"]
+lxqt = ["@lxqt-desktop", "breeze-icon-theme", "oxygen-icon-theme", "xdg-utils", "gnu-free-sans-fonts", "l3afpad", "slock"]
+mate = ["@mate-desktop", "gnome-keyring", "xdg-desktop-portal-gtk", "xdg-desktop-portal-xapp"]
+niri = ["niri", "alacritty", "fuzzel", "mako", "xwayland-satellite", "waybar", "swaybg", "swayidle", "swaylock", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk"]
+kde-plasma = ["plasma-desktop", "plasma-pa", "kscreen", "konsole", "kate", "dolphin", "ark", "bluedevil", "plasma-thunderbolt", "xdg-desktop-portal-kde"]
+qtile = ["qtile", "liberation-fonts-all"]
+river = ["xdg-desktop-portal-wlr", "river-classic", "foot", "pamixer", "playerctl", "brightnessctl"]
+sway = ["sway", "foot", "swaybg", "swaylock", "swayidle", "wmenu", "brightnessctl", "grim", "slurp", "pavucontrol", "xdg-desktop-portal-gtk", "xdg-desktop-portal-wlr"]
+xfce4 = ["@xfce-desktop", "@xfce-extra-plugins", "pavucontrol", "gvfs", "xarchiver", "xdg-desktop-portal-gtk", "xdg-desktop-portal-xapp"]
+xmonad = ["xmonad", "ghc-xmonad-contrib", "xterm", "dmenu"]
+cockpit = ["cockpit", "cockpit-storaged", "cockpit-packagekit"]
+docker = ["moby-engine", "docker-compose"]
+httpd = ["httpd"]
+java = ["java-latest-openjdk-headless"]
+lighttpd = ["lighttpd"]
+mariadb = ["mariadb-server"]
+nginx = ["nginx"]
+postgresql = ["postgresql-server"]
+sshd = ["openssh-server"]
+tailscale = ["tailscale"]
+tomcat = ["tomcat"]
+
+[compositors]
+
+[seat_access]
+seatd = ["seatd"]
+logind = ["polkit"]
+
+[greeters]
+lightdm-gtk-greeter = ["lightdm", "lightdm-gtk"]
+lightdm-slick-greeter = ["lightdm", "slick-greeter"]
+plasma-login-manager = ["plasma-login-manager"]
+sddm = ["sddm"]
+gdm = ["gdm"]
+ly = ["ly"]
+greetd = ["greetd"]
+tuigreet = ["greetd", "tuigreet"]
+cosmic-greeter = ["cosmic-greeter"]

@@ -215,7 +215,7 @@ ensure_no_running_vm() {
 # console=ttyS0 appended. The ISO stays attached as a cdrom: the archiso hook
 # still finds the squashfs on it.
 extract_iso_kernel() {
-	local iso="$1" stamp="$BOOT_DIR/.stamp" want kernel initrd
+	local iso="$1" stamp="$BOOT_DIR/.stamp" want kernel initrd grub_cfg
 	want="$iso:$(stat -c %Y "$iso")"
 	mkdir -p "$BOOT_DIR"
 	# a missing output re-extracts too: a stamp can outlive the file names
@@ -228,8 +228,13 @@ extract_iso_kernel() {
 			bsdtar -xOf "$iso" loader/entries/01-archiso-linux.conf |
 				sed -n 's/^options[[:space:]]\+//p' >"$BOOT_DIR/cmdline"
 		else
-			# other live ISOs (alpine): first grub entry has kernel, cmdline, initrd
-			bsdtar -xOf "$iso" boot/grub/grub.cfg >"$BOOT_DIR/grub.cfg"
+			# other ISOs: first grub entry has kernel, cmdline, initrd. Fedora
+			# (lorax) keeps its config with the EFI loader, alpine in boot/grub
+			grub_cfg="boot/grub/grub.cfg"
+			if bsdtar -tf "$iso" EFI/BOOT/grub.cfg >/dev/null 2>&1; then
+				grub_cfg="EFI/BOOT/grub.cfg"
+			fi
+			bsdtar -xOf "$iso" "$grub_cfg" >"$BOOT_DIR/grub.cfg"
 			kernel="$(awk '$1 == "linux" { sub("^/", "", $2); print $2; exit }' "$BOOT_DIR/grub.cfg")"
 			initrd="$(awk '$1 == "initrd" { sub("^/", "", $2); print $2; exit }' "$BOOT_DIR/grub.cfg")"
 			awk '$1 == "linux" { $1 = $2 = ""; sub("^ +", ""); print; exit }' \

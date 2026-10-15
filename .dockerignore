@@ -1,0 +1,3 @@
+# build context is the repo root (dev VM disks live here): only send BOOT
+*
+!BOOT

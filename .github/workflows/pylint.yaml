@@ -15,20 +15,16 @@ jobs:
             run:
                 working-directory: installer
         container:
-            image: archlinux/archlinux:latest@sha256:86092797e32aa19d3f45a831b2873cf557c21c5280e9d197ca7a43c8ea79bcd3
+            image: registry.fedoraproject.org/fedora:44@sha256:52740d9b1b9d04f1b325ef9625361b3260e992c84b1fe693365f6a188358e5ca
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                 persist-credentials: false
-            - name: Prepare arch
-              run: |
-                pacman-key --init
-                pacman --noconfirm -Sy archlinux-keyring
-                pacman --noconfirm -Syyu
-                pacman --noconfirm -Sy python-pip python-pyparted pkgconfig gcc
-            - run: pip install --break-system-packages --upgrade pip
+            - name: Prepare fedora
+              run: dnf -y install python3-pip python3-pyparted util-linux
+            - run: pip install --upgrade pip
             - name: Install Pylint
-              run: pip install --break-system-packages .[dev]
+              run: pip install .[dev]
             - run: python --version
             - run: pylint --version
             - name: Lint with Pylint

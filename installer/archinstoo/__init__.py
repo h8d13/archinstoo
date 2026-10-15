@@ -115,7 +115,7 @@ disk_depends = (
 # fmt: on
 
 # scripts that do not need root access
-ROOTLESS_SCRIPTS = frozenset({'list'})
+ROOTLESS_SCRIPTS = frozenset({'list', 'schema'})
 # scripts that only touch the running system
 NO_DISK_SCRIPTS = frozenset({'packages'})
 

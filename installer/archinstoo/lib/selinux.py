@@ -22,6 +22,8 @@ CONFIG = 'etc/selinux/config'
 _API_DIRS = ('/proc', '/sys', '/dev', '/run', '/tmp')  # noqa: S108 - the target's own tmpfs, excluded
 # no xattrs to hold a context: labeled by mount option, not by setfiles
 _NO_XATTR = ('vfat', 'exfat')
+# semanage, for local file context rules; outside @core
+__semanage_packages__ = ['policycoreutils-python-utils']
 
 
 def _policy(target: Path) -> str | None:
@@ -78,7 +80,7 @@ def add_file_context(installation: Installer, pattern: str, setype: str) -> None
 	# lives in policycoreutils-python-utils, outside @core
 	if _policy(installation.target) is None:
 		return
-	installation.add_additional_packages('policycoreutils-python-utils')
+	installation.add_additional_packages(__semanage_packages__)
 	installation.arch_chroot(['semanage', 'fcontext', '-a', '-t', setype, pattern])
 	debug(f'SELinux file context {pattern} -> {setype}')
 
