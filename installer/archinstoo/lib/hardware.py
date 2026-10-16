@@ -38,7 +38,9 @@ _PROC_MODULES = Path('/proc/modules')
 
 def _read_dmi(attr: str) -> str | None:
 	try:
-		return (_DMI_ID / attr).read_text().strip()
+		# vendors fill SMBIOS strings with non-UTF-8 bytes, a bad one
+		# would raise UnicodeDecodeError past OSError at startup
+		return (_DMI_ID / attr).read_text(errors='replace').strip()
 	except OSError:
 		return None
 
