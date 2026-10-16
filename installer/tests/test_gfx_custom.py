@@ -73,3 +73,25 @@ def test_profile_install_adds_its_display_server(name: str, server: DisplayServe
 	handler.install_profile_config(session, ProfileConfiguration(profiles=[profile]), None)  # type: ignore[arg-type]
 
 	assert set(server.packages()) <= set(installed)
+
+
+def test_nvidia_proprietary_runs_the_rpmfusion_steps(monkeypatch: pytest.MonkeyPatch) -> None:
+	# Fedora's own packages strap first, then RPM Fusion's howto steps run in
+	# the target, in order: the release rpms, then each driver package
+	monkeypatch.setattr('archinstoo.lib.profile.profiles_handler.releasever', lambda: '44')
+	installed: list[str] = []
+	chrooted: list[list[str]] = []
+	session = SimpleNamespace(add_additional_packages=installed.extend, arch_chroot=chrooted.append)
+
+	ProfileHandler().install_gfx_driver(session, GfxDriver.NvidiaProprietary)  # type: ignore[arg-type]
+
+	assert installed == ['mesa-dri-drivers', 'mesa-vulkan-drivers']
+	assert chrooted == [
+		[
+			'dnf', 'install', '-y',
+			'https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-44.noarch.rpm',
+			'https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-44.noarch.rpm',
+		],
+		['dnf', 'install', '-y', 'akmod-nvidia'],
+		['dnf', 'install', '-y', 'xorg-x11-drv-nvidia-cuda'],
+	]  # fmt: skip

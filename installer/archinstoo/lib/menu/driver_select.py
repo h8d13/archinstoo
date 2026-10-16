@@ -64,7 +64,7 @@ def select_driver(
 	if preset is not None:
 		group.set_focus_by_value(preset)
 
-	header = "Nvidia: nouveau/nvk here; the proprietary module is RPM Fusion's akmod-nvidia.\n"
+	header = 'Nvidia proprietary: Turing+ only, needs Secure Boot off (unsigned akmod).\n'
 	header += 'Hybrid laptops: use Custom to pick packages for both GPUs.\n'
 
 	result = SelectMenu[GfxDriver](

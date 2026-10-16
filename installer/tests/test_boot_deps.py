@@ -5,9 +5,12 @@ import importlib.machinery
 import importlib.util
 import subprocess
 from pathlib import Path
-from types import ModuleType
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+	from types import ModuleType
 
 
 def _load_boot() -> ModuleType:
@@ -33,7 +36,7 @@ def test_dnf_only_when_deps_missing(tmp_path: Path, rpm_exit: int, dnf_runs: boo
 	_fake_bin(tmp_path, 'rpm', f'exit {rpm_exit}')
 	_fake_bin(tmp_path, 'dnf', f'echo "$@" > {calls}')
 
-	subprocess.run(['/bin/sh', '-c', boot.install_deps_cmd()], env={'PATH': str(tmp_path)}, check=True)
+	subprocess.run(['/bin/sh', '-c', boot.install_deps_cmd()], env={'PATH': str(tmp_path)}, check=True)  # noqa: S603 - BOOT's own command
 
 	assert calls.exists() is dnf_runs
 	if dnf_runs:

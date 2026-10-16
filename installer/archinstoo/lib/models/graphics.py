@@ -15,11 +15,11 @@ class GfxPackage(Enum):
 
 
 class GfxDriver(Enum):
-	# NVIDIA's own module is RPM Fusion's akmod-nvidia, not in Fedora's repos
 	AllOpenSource = 'all-open-source'
 	AmdOpenSource = 'amd-open-source'
 	IntelOpenSource = 'intel-open-source'
 	NvidiaOpenSource = 'nvidia-open-nouveau'
+	NvidiaProprietary = 'nvidia-proprietary'
 	MesaOpenSource = 'mesa-open-source'
 	Custom = 'custom'
 
@@ -33,6 +33,8 @@ class GfxDriver(Enum):
 				return 'Intel (open-source)'
 			case GfxDriver.NvidiaOpenSource:
 				return 'Nvidia (open-source nouveau/nvk)'
+			case GfxDriver.NvidiaProprietary:
+				return 'Nvidia (proprietary, RPM Fusion)'
 			case GfxDriver.MesaOpenSource:
 				return 'Mesa (VMs, generic GPUs)'
 			case GfxDriver.Custom:
@@ -45,6 +47,10 @@ class GfxDriver(Enum):
 		text = 'Installed packages:\n'
 		for p in sorted(p.value for p in self.gfx_packages()):
 			text += f'\t- {p}\n'
+		if self is GfxDriver.NvidiaProprietary:
+			text += 'Then from RPM Fusion (free + nonfree enabled):\n'
+			text += ''.join(f'\t- {p}\n' for p in NVIDIA_PROPRIETARY)
+			text += 'Turing+ (GTX 16xx, RTX 20xx and newer). Secure Boot off.\n'
 		return text
 
 	def gfx_packages(self) -> list[GfxPackage]:
@@ -67,9 +73,20 @@ GFX_PACKAGES: dict[GfxDriver, list[GfxPackage]] = {
 	GfxDriver.AmdOpenSource: [*_MESA, GfxPackage.XorgAmdgpu, GfxPackage.XorgAti],
 	GfxDriver.IntelOpenSource: [*_MESA, *_INTEL],
 	GfxDriver.NvidiaOpenSource: [*_MESA, GfxPackage.XorgNouveau],
+	GfxDriver.NvidiaProprietary: _MESA,
 	GfxDriver.MesaOpenSource: _MESA,
 	GfxDriver.Custom: [],
 }
+
+# NVIDIA's own module is not in Fedora's repos: RPM Fusion's howto steps,
+# installed in the target after Fedora's own packages
+# https://rpmfusion.org/Howto/NVIDIA#Current_GeForce.2FQuadro.2FTesla
+NVIDIA_PROPRIETARY = ['akmod-nvidia', 'xorg-x11-drv-nvidia-cuda']
+
+
+def rpmfusion_release_urls(release: str) -> list[str]:
+	# https://rpmfusion.org/Configuration
+	return [f'https://mirrors.rpmfusion.org/{repo}/fedora/rpmfusion-{repo}-release-{release}.noarch.rpm' for repo in ('free', 'nonfree')]
 
 
 def gfx_custom_choices(arch: str) -> list[GfxPackage]:

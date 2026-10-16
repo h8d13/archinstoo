@@ -7,8 +7,9 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.models.applications import terminal_for
-from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
+from archinstoo.lib.models.graphics import NVIDIA_PROPRIETARY, GfxDriver, GfxPackage, rpmfusion_release_urls
 from archinstoo.lib.output import debug, error, info
+from archinstoo.lib.pm.dnf import releasever
 from archinstoo.lib.profile.base import GreeterType, Profile
 from archinstoo.lib.utils.net import fetch_data_from_url
 
@@ -182,6 +183,13 @@ class ProfileHandler:
 
 		driver_pkgs = (custom or []) if driver is GfxDriver.Custom else driver.gfx_packages()
 		install_session.add_additional_packages([p.value for p in driver_pkgs])
+
+		if driver is GfxDriver.NvidiaProprietary:
+			# chrooted, not --installroot: that one reads the host's repo
+			# files, so the RPM Fusion ones the first step drops would be unseen
+			install_session.arch_chroot(['dnf', 'install', '-y', *rpmfusion_release_urls(releasever())])
+			for pkg in NVIDIA_PROPRIETARY:
+				install_session.arch_chroot(['dnf', 'install', '-y', pkg])
 
 	def install_profile_config(
 		self,

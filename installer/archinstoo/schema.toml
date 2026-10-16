@@ -186,6 +186,7 @@ all-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers", "xorg-x11-drv-amdg
 amd-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers", "xorg-x11-drv-amdgpu", "xorg-x11-drv-ati"]
 intel-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers", "libva-intel-media-driver", "intel-vpl-gpu-rt", "libvpl"]
 nvidia-open-nouveau = ["mesa-dri-drivers", "mesa-vulkan-drivers", "xorg-x11-drv-nouveau"]
+nvidia-proprietary = ["mesa-dri-drivers", "mesa-vulkan-drivers"]
 mesa-open-source = ["mesa-dri-drivers", "mesa-vulkan-drivers"]
 custom = []
 
