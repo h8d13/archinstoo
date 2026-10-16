@@ -77,6 +77,11 @@ DEPENDS = (
 	'f2fs-tools',           # ...
 	'xfsprogs',             # ...
 )
+DNF_OPTS = (
+	'--setopt=install_weak_deps=False',
+	'--setopt=fastestmirror=True',          # latency-ranked, not geo alone
+	'--disablerepo=fedora-cisco-openh264',  # nothing in DEPENDS comes from it
+)
 # fmt: on
 
 
@@ -287,10 +292,17 @@ def chroot_setup() -> None:
 	mount('--bind', str(REPO), str(target))
 
 
+def install_deps_cmd() -> str:
+	# the root is reused across runs: once the deps are in, skip loading repo
+	# metadata at all. No --refresh, the repos' metadata_expire decides
+	deps = ' '.join(DEPENDS)
+	return f'rpm -q --quiet {deps} || dnf -y {" ".join(DNF_OPTS)} install {deps}'
+
+
 def run_installer(args: list[str]) -> int:
 	script = f"""
 		set -e
-		dnf -y --refresh --setopt=install_weak_deps=False install {' '.join(DEPENDS)}
+		{install_deps_cmd()}
 		cd /root/fedinstoo
 		exec ./RUN "$@"
 	"""
