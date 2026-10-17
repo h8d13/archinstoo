@@ -3,7 +3,7 @@
 # Build a minimal live UKI (kernel + initrd + rootfs in one .efi) carrying
 # archinstoo, via mkosi. Faster and smaller than ISOMOD, no archiso.
 # Requires 'mkosi' and 'systemd-ukify'. Output: isos/a/archinstoo.efi
-# Boot it: A2_UKI=isos/a/archinstoo.efi ./RUN --script dev.tvm
+# Boot it: A2_UKI=isos/a/archinstoo.efi ./RUN --script dev.vm fresh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

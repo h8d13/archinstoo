@@ -71,7 +71,7 @@ from typing import TYPE_CHECKING
 
 from ._version import __gitstat__, __pkgver__, __version__
 from .lib import output
-from .lib.checkpoints import _run_script, clean_cache, clean_logs
+from .lib.checkpoints import _run_script, _script_parts, clean_cache, clean_logs
 from .lib.cli import build_parser
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
@@ -131,7 +131,7 @@ disk_depends = (
 # short-circuit all of the ini
 
 # scripts that do not need root access
-ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect', 'dev.tser', 'dev.tvm'})
+ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect', 'dev.vm'})
 # scripts that only touch the running system
 NO_DISK_SCRIPTS = frozenset({'packages'})
 
@@ -351,6 +351,10 @@ def run_as_a_module() -> int:
 	# set debug early before heavy imports
 	if early.debug:
 		output.log_level = logging.DEBUG
+
+	# a malformed name (dev/vm) fails here, not after root checks and bootstrap
+	if early.script is not None:
+		_script_parts(early.script)
 
 	if _is_foreign_blocked(early.script):
 		running = 'the distros/BOOT bootstrap root' if Host.running_from_bootstrap() else Host.running_from_who() or 'not Arch'

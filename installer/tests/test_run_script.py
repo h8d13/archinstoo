@@ -27,20 +27,19 @@ def test_missing_import_inside_script_propagates() -> None:
 		checkpoints._run_script('guided')
 
 
-@pytest.mark.parametrize('script', ['dev/tser', 'dev.tser'])
-def test_nested_script_resolves_to_subpackage(script: str) -> None:
+def test_nested_script_resolves_to_subpackage() -> None:
 	with mock.patch('importlib.import_module') as import_module:
-		checkpoints._run_script(script)
-	import_module.assert_called_once_with('archinstoo.scripts.dev.tser')
+		checkpoints._run_script('dev.vm')
+	import_module.assert_called_once_with('archinstoo.scripts.dev.vm')
 
 
-@pytest.mark.parametrize('missing', ['archinstoo.scripts.dev', 'archinstoo.scripts.dev.tser'])
+@pytest.mark.parametrize('missing', ['archinstoo.scripts.dev', 'archinstoo.scripts.dev.vm'])
 def test_missing_namespace_or_nested_script_exits_with_hint(missing: str) -> None:
 	def import_module(_name: str) -> None:
 		_raise_missing(missing)
 
 	with mock.patch('importlib.import_module', import_module), pytest.raises(SystemExit) as exc:
-		checkpoints._run_script('dev/tser')
+		checkpoints._run_script('dev.vm')
 	assert exc.value.code == 1
 
 
@@ -49,10 +48,10 @@ def test_missing_import_inside_nested_script_propagates() -> None:
 		_raise_missing('archinstoo.scripts.other')
 
 	with mock.patch('importlib.import_module', import_module), pytest.raises(ModuleNotFoundError):
-		checkpoints._run_script('dev/tser')
+		checkpoints._run_script('dev.vm')
 
 
-@pytest.mark.parametrize('script', ['', '.', 'dev/', '../guided', 'dev..tser', 'my-script'])
+@pytest.mark.parametrize('script', ['', '.', 'dev/', 'dev/vm', '../guided', 'dev..vm', 'my-script'])
 def test_malformed_name_exits_with_hint(script: str) -> None:
 	with mock.patch('importlib.import_module') as import_module, pytest.raises(SystemExit) as exc:
 		checkpoints._run_script(script)

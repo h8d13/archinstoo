@@ -21,13 +21,17 @@ def _script_not_found(script: str) -> SystemExit:
 	return SystemExit(1)
 
 
-def _run_script(script: str) -> None:
-	# subfolders are namespaces: dev/tser and dev.tser both load scripts/dev/tser.py
-	parts = script.replace('/', '.').split('.')
-	# '', '..' or '-x' would reach import_module as a relative or bogus name
+def _script_parts(script: str) -> list[str]:
+	# subfolders are namespaces: dev.vm loads scripts/dev/vm.py
+	parts = script.split('.')
+	# '', '..', 'dev/vm' or '-x' would reach import_module as a relative or bogus name
 	if not all(part.isidentifier() for part in parts):
 		raise _script_not_found(script)
+	return parts
 
+
+def _run_script(script: str) -> None:
+	parts = _script_parts(script)
 	module = '.'.join(('archinstoo.scripts', *parts))
 	try:
 		# by importing we automatically run it

@@ -1,85 +1,3 @@
-# sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
-# (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set A2_DISPLAY_BACKEND to match)
-# (audio backend is a separate pkg: qemu-audio-pipewire (default), qemu-audio-pa, qemu-audio-alsa; set A2_AUDIO_BACKEND to match)
-# (A2_ARCH=aarch64 adds: qemu-system-aarch64 edk2-aarch64; qemu-hw-display-virtio-gpu{,-pci} for A2_VGA=virtio-gpu-pci)
-#
-# Dev test VM for archinstoo. Boots an ISO under QEMU.
-# ISO building is intentionally NOT done here, use isos/ISOMOD for that/default Arch ISO.
-# Credits to @Softer, modified for archinstoo.
-#
-# Host artifacts (created in repo root, git-ignored):
-#   .dev-disk.qcow2     VM disk image (qemu-img)
-#   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
-#                       (both get a -<arch> suffix when A2_ARCH is not x86_64,
-#                       so an aarch64 install never clobbers the x86_64 one)
-#   A2_SERIAL=1 only:
-#   .dev-boot/          kernel + initramfs pulled out of the ISO
-#   .dev-serial.sock    guest ttyS0, .dev-serial.log its full transcript
-#   .dev-capture.log    guest ttyS1, byte-exact (tser capture)
-#   .dev-monitor.sock   QEMU HMP monitor, .dev-vm.pid the daemon pid
-#
-# Usage (from the repo root, tvm = ./RUN --script dev.tvm, tser = ./RUN --script dev.tser):
-#   tvm            - fresh disk, boot ISO
-#   tvm keep   | k - reuse disk, boot ISO
-#   tvm boot   | b - boot from installed disk (no ISO)
-#   tvm clean  | c - remove disk and NVRAM (ISOs untouched)
-#   tvm help   | h - show this help
-# Env overrides (on/off ones take 1/yes/true/on, anything else is off):
-#   A2_ARCH             guest architecture: 'x86_64' (default) or 'aarch64'.
-#                       aarch64 boots -machine virt with edk2-aarch64 pflash,
-#                       KVM only when the host is aarch64 too (TCG -cpu max
-#                       otherwise: slow, expect minutes to a shell). ISO
-#                       discovery filters on the arch in the filename. No
-#                       -cdrom on virt: the ISO rides virtio-scsi, boot order
-#                       goes through bootindex. Input is USB (xhci kbd+tablet).
-#                       A2_BIOS and A2_UKI are x86_64 only.
-#   A2_SERIAL           '1' boots headless with the console on ttyS0 and
-#                       detaches (no window, no stdio monitor). Composes with
-#                       every mode above. Drive it with tser (attach, or login/run).
-#                       With A2_GL=1 the virgl window stays: sockets still
-#                       detach, so a real session is on screen while the
-#                       guest is driven over serial (tser type/keys for the
-#                       greeter, screendump via mon).
-#                       ISO modes direct-boot the ISO's own kernel via -kernel so
-#                       console=ttyS0 can be forced; OVMF still boots it EFI-stub,
-#                       so the guest keeps a real UEFI environment. Needs bsdtar.
-#                       'boot' mode has no such hook: the installed system only
-#                       talks to ttyS0 if its own cmdline says console=ttyS0.
-#                       aarch64 extracts the same way (arch/boot/aarch64/).
-#                       virt's own UART is a pl011 whose QEMU model stalls on
-#                       typed input past a few hundred bytes, so both lines
-#                       ride a dual-port PCI 16550 instead: ttyS0/ttyS1 in
-#                       the guest, same as q35, same sockets on the host.
-#                       'tty' is the same boot, but ttyS0 is this terminal:
-#                       foreground, boot log and login right here, no tser.
-#                       Ctrl-a x quits, Ctrl-a c toggles the QEMU monitor.
-#   A2_BIOS             '1' boots SeaBIOS instead of OVMF: no pflash, no
-#                       NVRAM. The installed disk must carry a BIOS-capable
-#                       bootloader (grub with a bios_grub partition).
-#   A2_DEV_ISO          explicit ISO path (skips discovery)
-#   A2_UKI              path to a live UKI (isos/UKIMOD output, isos/a/archinstoo.efi).
-#                       Boots it via -kernel in place of an ISO: no cdrom, no
-#                       kernel extraction, its baked cmdline already has ttyS0.
-#                       Disk handling per mode is unchanged. OVMF only.
-#   A2_RAM, A2_CPUS     VM resources (default 4G, 4)
-#   A2_DISK_SIZE        new disk size (default 64G)
-#   A2_DISPLAY_BACKEND  qemu -display value (default 'gtk,zoom-to-fit=off')
-#   A2_VGA              qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
-#                       On aarch64 it is a -device name instead (default 'ramfb',
-#                       built in; 'virtio-gpu-pci' needs qemu-hw-display-virtio-gpu{,-pci})
-#   A2_GL               '1' swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
-#                       Overrides A2_VGA. niri/DMS have no software fallback, black-screen
-#                       without this. Needs the full module chain (vga-gl alone won't load):
-#                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
-#                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
-#   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
-#                       a cloud image (distros/DEB, distros/FED) takes its
-#                       cloud-init config off the SMBIOS serial, see distros/CLOUD
-#   A2_DRY              '1' prints the assembled qemu command and exits (still
-#                       creates the disk/NVRAM the mode asks for)
-#   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
-
-import argparse
 import platform
 import re
 import shutil
@@ -90,7 +8,7 @@ from pathlib import Path
 
 from archinstoo.lib.output import error, info
 from archinstoo.lib.utils.env import Env
-from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, PIDFILE, ROOT, SERIAL, vm_pid
+from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, PIDFILE, ROOT, SERIAL, STATE, VM, vm_console, vm_pid
 
 ISOMOD_OUT = ROOT / 'isos' / 'a'
 DEV_ISO_DIR = ROOT / '.dev-iso'
@@ -120,14 +38,11 @@ FIRMWARE = {
 	),
 }
 
-# short aliases, same as the modes they stand for
-MODES = {'default': 'default', 'keep': 'keep', 'k': 'keep', 'boot': 'boot', 'b': 'boot', 'clean': 'clean', 'c': 'clean', 'help': 'help', 'h': 'help'}
-
 
 @dataclass(frozen=True)
 class Opts:
 	arch: str
-	serial: str
+	console: str
 	bios: bool
 	gl: bool
 	dry: bool
@@ -166,20 +81,22 @@ class Opts:
 		return 'virtio-vga-gl' if self.x86 else 'virtio-gpu-gl-pci'
 
 
-def read_opts() -> Opts:
+def read_opts(console: str | None = None) -> Opts:
 	arch = Env.get_value('A2_ARCH', 'x86_64')
 	if arch not in FIRMWARE:
 		error(f'A2_ARCH={arch} unsupported (x86_64, aarch64)')
 		raise SystemExit(1)
 
+	# --console wins; A2_SERIAL is its env form for scripts (distros/CLOUD):
 	# 'tty' is its own mode, anything else is a boolean like A2_BIOS/A2_GL
-	serial = Env.get_value('A2_SERIAL', '').strip().lower()
-	if serial != 'tty':
-		serial = '1' if Env.get_bool('A2_SERIAL') else '0'
+	if not console and Env.get_value('A2_SERIAL', '').strip().lower() == 'tty':
+		console = 'tty'
+	elif not console:
+		console = 'serial' if Env.get_bool('A2_SERIAL') else 'window'
 
 	return Opts(
 		arch=arch,
-		serial=serial,
+		console=console,
 		bios=Env.get_bool('A2_BIOS'),
 		gl=Env.get_bool('A2_GL'),
 		dry=Env.get_bool('A2_DRY'),
@@ -199,16 +116,6 @@ def read_opts() -> Opts:
 	)
 
 
-def header() -> str:
-	# --help is the comment block this file opens with
-	lines = []
-	for line in Path(__file__).read_text().splitlines():
-		if not line.startswith('#'):
-			break
-		lines.append(line.removeprefix('#').removeprefix(' '))
-	return '\n'.join(lines)
-
-
 def probe_ovmf(opts: Opts) -> tuple[Path, Path] | None:
 	if opts.bios:
 		return None
@@ -218,6 +125,23 @@ def probe_ovmf(opts: Opts) -> tuple[Path, Path] | None:
 			return Path(code), Path(nvram)
 	error(f"UEFI firmware for {opts.arch} not found. Install '{pkg}' or similar on your distro.")
 	raise SystemExit(1)
+
+
+def serial_log_args() -> list[str]:
+	# ttyS0 as chardev ser0: the socket dev.vm talks to, plus the log it reads.
+	# The socket's own logfile= logs a chunk when a write to a busy or
+	# hanging-up client fails, then again when the 16550 retries it: one
+	# doubled byte per hiccup. A hub (QEMU >= 10.0) fans the output out
+	# instead, and the log is a plain file chardev, which never takes a
+	# short write.
+	return [
+		'-chardev',
+		f'socket,id=sock0,path={SERIAL},server=on,wait=off',
+		'-chardev',
+		f'file,id=log0,path={LOG},append=on',
+		'-chardev',
+		'hub,id=ser0,chardevs.0=sock0,chardevs.1=log0',
+	]
 
 
 def ensure_virgl(opts: Opts) -> None:
@@ -240,16 +164,17 @@ def check_host_deps(opts: Opts, attach_iso: bool) -> None:
 		error('A2_UKI is x86_64 only (UKIMOD builds x86_64 images)')
 		raise SystemExit(1)
 	# bsdtar reads the kernel out of the ISO, no mount (and no root) needed
-	if attach_iso and opts.serial != '0' and not opts.uki and not shutil.which('bsdtar'):
-		error(f'A2_SERIAL={opts.serial} needs bsdtar to read the ISO (install libarchive)')
+	if attach_iso and opts.console != 'window' and not opts.uki and not shutil.which('bsdtar'):
+		error(f'--console {opts.console} needs bsdtar to read the ISO (install libarchive)')
 		raise SystemExit(1)
 
 
 def ensure_no_running_vm() -> None:
 	if pid := vm_pid():
-		error(f'VM already running (pid {pid}), stop it with ./RUN --script dev.tser quit')
+		error(f'VM already running (pid {pid}, --console {vm_console()}), stop it with {VM} quit')
 		raise SystemExit(1)
 	PIDFILE.unlink(missing_ok=True)
+	STATE.unlink(missing_ok=True)
 
 
 def bsdtar_x(iso: Path, member: str, dest: Path) -> None:
@@ -352,13 +277,13 @@ def require_media(opts: Opts) -> None:
 
 def require_disk(opts: Opts) -> None:
 	if not opts.disk.is_file():
-		error('Disk missing, run without args first')
+		error(f'Disk missing, start with {VM} fresh first')
 		raise SystemExit(1)
 
 
 def clean(opts: Opts) -> None:
 	ensure_no_running_vm()
-	for path in (opts.disk, opts.ovmf_vars, SERIAL, LOG, CAPTURE, MONITOR):
+	for path in (opts.disk, opts.ovmf_vars, SERIAL, LOG, CAPTURE, MONITOR, STATE):
 		if path.exists() or path.is_symlink():
 			path.unlink()
 			info(f"removed '{path}'")
@@ -371,28 +296,21 @@ def console_args(opts: Opts) -> list[str]:
 	# commas are qemu device/chardev value syntax throughout
 	if opts.gl:
 		video = ['-device', opts.gl_device, '-display', f'{opts.display},gl=on']
-	elif opts.serial != '0':
+	elif opts.console != 'window':
 		video = ['-display', 'none']
 	elif opts.x86:
 		video = ['-vga', opts.vga, '-display', opts.display]
 	else:
 		video = ['-device', opts.vga, '-display', opts.display]
 
-	if opts.serial == '1':
-		# Headless and detached: the console is a unix socket with a logfile, so
-		# tser can connect, act and exit instead of holding a session open.
+	if opts.console == 'serial':
+		# Headless and detached: the console is a unix socket plus a log, so
+		# dev.vm can connect, act and exit instead of holding a session open.
 		# Audio is dropped, no session to play into.
-		# ttyS1 is a plain file chardev, and that is the point: the socket's
-		# logfile duplicates bytes replayed after a partial write, so guest
-		# output redirected to /dev/ttyS1 is the only byte-exact transcript
-		# (tser capture). ttyS0 stays the interactive end.
-		args = [
-			*video,
-			'-chardev',
-			f'socket,id=ser0,path={SERIAL},server=on,wait=off,logfile={LOG},logappend=on',
-			'-chardev',
-			f'file,id=cap0,path={CAPTURE}',
-		]
+		# ttyS1 is a plain file chardev: guest output redirected to /dev/ttyS1
+		# is a byte-exact transcript of one command (dev.vm capture). ttyS0
+		# stays the interactive end.
+		args = [*video, *serial_log_args(), '-chardev', f'file,id=cap0,path={CAPTURE}']
 		if opts.x86:
 			args += ['-serial', 'chardev:ser0', '-serial', 'chardev:cap0']
 		else:
@@ -400,9 +318,9 @@ def console_args(opts: Opts) -> list[str]:
 			# guest still sees ttyS0/ttyS1. The pl011 stays off the sockets: its
 			# QEMU model stops taking input after ~280 bytes in one line.
 			args += ['-device', 'pci-serial-2x,chardev1=ser0,chardev2=cap0', '-serial', 'none']
-		return [*args, '-monitor', f'unix:{MONITOR},server=on,wait=off', '-pidfile', str(PIDFILE), '-daemonize']
+		return [*args, '-monitor', f'unix:{MONITOR},server=on,wait=off', '-daemonize']
 
-	if opts.serial == 'tty':
+	if opts.console == 'tty':
 		# ttyS0 and the monitor share stdio (mux), Ctrl-a switches between them
 		args = [*video, '-chardev', 'stdio,id=ser0,mux=on,signal=off', '-mon', 'chardev=ser0']
 		if opts.x86:
@@ -459,7 +377,7 @@ def media_args(opts: Opts) -> list[str]:
 		args = ['-cdrom', str(iso)]
 	else:
 		args = ['-drive', f'file={iso},media=cdrom,if=none,id=cd0,readonly=on', '-device', 'scsi-cd,drive=cd0,bootindex=0']
-	if opts.serial != '0':
+	if opts.console != 'window':
 		cmdline = extract_iso_kernel(opts, iso)
 		args += ['-kernel', str(BOOT_DIR / 'vmlinuz'), '-initrd', str(BOOT_DIR / 'initrd'), '-append', f'{cmdline} console=ttyS0,115200']
 	return args
@@ -479,26 +397,9 @@ def run_foreground(cmd: list[str]) -> int:
 			subprocess.run(['stty', 'sane'], check=False)
 
 
-def tvm() -> None:
-	parser = argparse.ArgumentParser(
-		prog='python -m archinstoo --script dev.tvm',
-		description=header(),
-		formatter_class=argparse.RawDescriptionHelpFormatter,
-	)
-	parser.add_argument('mode', nargs='?', default='default', choices=MODES, metavar='{default,keep,boot,clean,help}')
-	args = parser.parse_args()
-	mode = MODES[args.mode]
-
-	opts = read_opts()
-
-	if mode == 'help':
-		parser.print_help()
-		raise SystemExit(0)
-
-	if mode == 'clean':
-		clean(opts)
-		raise SystemExit(0)
-
+def start(mode: str, console: str | None) -> None:
+	# mode: fresh (new disk + ISO), keep (disk + ISO) or boot (disk only)
+	opts = read_opts(console)
 	attach_iso = mode != 'boot'
 	boot_order = 'd' if attach_iso else 'c'
 
@@ -521,7 +422,7 @@ def tvm() -> None:
 	if firmware and not opts.ovmf_vars.exists():
 		shutil.copy(firmware[1], opts.ovmf_vars)
 
-	if opts.serial == '1':
+	if opts.console == 'serial':
 		for path in (SERIAL, MONITOR, LOG, CAPTURE):
 			path.unlink(missing_ok=True)
 	if opts.gl:
@@ -540,6 +441,9 @@ def tvm() -> None:
 		'-netdev',
 		'user,id=net0',
 		*console_args(opts),
+		# every console writes one, so status/quit see a window VM too
+		'-pidfile',
+		str(PIDFILE),
 	]
 	if firmware:
 		cmd += ['-drive', f'if=pflash,format=raw,readonly=on,file={firmware[0]}', '-drive', f'if=pflash,format=raw,file={opts.ovmf_vars}']
@@ -552,15 +456,18 @@ def tvm() -> None:
 		print('\n'.join(cmd))
 		raise SystemExit(0)
 
-	if opts.serial == '1':
+	STATE.write_text(f'{opts.console}\n')
+
+	if opts.console == 'serial':
 		if rc := subprocess.run(cmd, check=False).returncode:
 			raise SystemExit(rc)
 		info(f'VM detached, pid {PIDFILE.read_text().strip()}')
-		info('drive it interactively: ./RUN --script dev.tser attach (Ctrl-] detaches)')
-		info("or sequenced: ./RUN --script dev.tser login && ./RUN --script dev.tser run 'ls /'")
+		info(f'drive it interactively: {VM} attach (Ctrl-] detaches)')
+		info(f"or sequenced: {VM} login && {VM} run 'ls /'")
 		raise SystemExit(0)
 
+	if opts.console == 'tty':
+		info('ttyS0 is this terminal: Ctrl-a x quits, Ctrl-a c toggles the QEMU monitor')
+	else:
+		info('VM in a window. (qemu) below is the monitor, not the guest: quit or Ctrl-C stops the VM')
 	raise SystemExit(run_foreground(cmd))
-
-
-tvm()

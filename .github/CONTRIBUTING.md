@@ -131,11 +131,11 @@ Currently, questions, bugs and suggestions should be reported through [GitHub is
 
 ### Testing
 
-Early tests for repro I mostly use [tvm](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/dev/tvm.py)
+Early tests for repro I mostly use [dev.vm](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/dev/vm.py) (`./RUN --script dev.vm help` for all of it)
 ```shell
-./RUN --script dev.tvm clean
-./RUN --script dev.tvm #install
-./RUN --script dev.tvm boot #check stuff
+./RUN --script dev.vm clean
+./RUN --script dev.vm fresh #install
+./RUN --script dev.vm boot #check stuff
 ```
 
 Similarly tested on actual hardware, once VM testing passes.

@@ -1,60 +1,8 @@
-# Serial console driver for the headless dev VM (A2_SERIAL=1 ./RUN --script dev.tvm).
-#
-# QEMU exposes two unix sockets and two growing log files:
-#   .dev-serial.sock    guest ttyS0 (write keystrokes here)
-#   .dev-serial.log     everything the guest ever printed on ttyS0
-#   .dev-capture.log    guest ttyS1, byte-exact (see 'capture' below)
-#   .dev-monitor.sock   QEMU HMP monitor (sendkey, quit, info ...)
-#
-# Reads come from the log, not the socket: the log survives across
-# invocations, so each command here is a short-lived connect/act/exit
-# instead of an interactive session that has to stay attached.
-#
-# Usage (from the repo root, tser = ./RUN --script dev.tser):
-#     tser attach                 interactive ttyS0 in this terminal, Ctrl-]
-#                                 detaches (the VM keeps running). One
-#                                 client at a time: other modes wait on it
-#     tser read [-n LINES]        dump console output (default: last 50)
-#     tser login                  log in as root, sane tty width
-#     tser send TEXT              type TEXT + Enter on ttyS0
-#     tser run CMD [-t SEC]       run CMD in the guest shell, print output,
-#                                 exit with the guest's return code
-#     tser capture CMD [-t SEC]   same, but via ttyS1: exact bytes, safe to
-#                                 pipe into jq/diff
-#     tser push SRC [DEST]        copy a host file or directory into the
-#                                 guest over http (a directory arrives as a
-#                                 tree, DEST defaults to /root/<name>)
-#     tser ctrl KEY [KEY ...]     raw bytes on ttyS0: ctrl-<letter>, esc,
-#                                 ret, tab, space, up/down/left/right.
-#                                 Steers a curses menu, interrupts a
-#                                 running script, ends a chrooted shell
-#     tser keys KEY [KEY ...]     monitor sendkey (bootloader menus: up/ret)
-#     tser type TEXT              TEXT + Enter as sendkeys: greeter or VT
-#                                 login when the guest has no serial getty
-#     tser mon CMD                raw HMP monitor command
-#     tser status                 is the VM alive, how big is the log
-#     tser quit                   kill the VM
-
-# Example:
-#     tser run 'pacman -Sy --noconfirm git'
-#     tser run 'git clone --depth 1 <url>/archinstoo /root/archinstoo'
-# craft a config, reference found in repo (credentials go in as crypt hashes)
-#     tser send 'python3 -B -m archinstoo --script guided \
-#       --config examples/vm_unattended.json --silent --advanced --debug'
-# examples/vm_unattended.json ships root and user 'vm' both with password
-# 'test' (yescrypt hashes in auth_config). After a guided install, boot the
-# disk (A2_SERIAL=1 ./RUN --script dev.tvm boot) and log in straight away, no chpasswd needed:
-#     tser login -p test           # root
-#     tser login -u vm -p test     # user
-#
-# Foreign hosts for distros/: ./distros/CLOUD fed|deb boots a cloud image,
-# then tser login -p test
-
-import argparse
 import os
 import re
 import select
 import shutil
+import signal
 import socket
 import sys
 import tarfile
@@ -66,10 +14,13 @@ import tty
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import NoReturn
+from typing import TYPE_CHECKING, NoReturn
 
 from archinstoo.lib.output import error, info
-from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, SERIAL, vm_pid
+from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, ROOT, SERIAL, VM, vm_console, vm_pid
+
+if TYPE_CHECKING:
+	import argparse
 
 # terminal control noise: CSI from agetty, pacman progress bars, the
 # installer TUI; DCS and OSC from systemd, which resets the tty (ESC[!p,
@@ -79,10 +30,7 @@ from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, SERIAL, vm_pid
 # host terminal answer into the shell instead. Payloads stop at ESC/BEL
 # so a truncated sequence at the tail of the log cannot swallow the rest
 ANSI = re.compile(
-	# busybox ash's prompt cursor query (ESC[6n), any byte doubled (see
-	# fuzzy): a leftover 'n' hides the prompt from wait_idle
-	r'\x1b+\[+6+n+'
-	r'|\x1b\[[0-9;?<=>]*[ -/]*[@-~]'  # CSI: params, intermediates (ESC[!p), final
+	r'\x1b\[[0-9;?<=>]*[ -/]*[@-~]'  # CSI: params, intermediates (ESC[!p), final
 	r'|\x1bP[^\x1b\x07]*\x1b\\'  # DCS ... ST
 	r'|\x1b[\]_^X][^\x1b\x07]*(?:\x07|\x1b\\)'  # OSC/APC/PM/SOS ... BEL or ST
 	r'|\x1b[ -/]*[0-~]'  # two/three byte escapes: charset selects, ESC7/ESC8
@@ -93,14 +41,6 @@ PROMPT = re.compile(r'#|\S+@\S+ .* #')
 # ~ #' on the ISO, '[root@host ~]#' once installed
 # grml appends ' :(' to the prompt after a nonzero exit
 IDLE = re.compile(r'[#$](\s*:\()?$')
-
-
-def fuzzy(text: str) -> str:
-	# QEMU logs a chardev buffer before writing it, so bytes replayed after
-	# a partial socket write land in the log twice ('Swap' -> 'Swaap').
-	# Harmless in prose, fatal for an exact marker match, so let every
-	# character of the marker repeat.
-	return ''.join(re.escape(char) + '+' for char in text)
 
 
 def log_size() -> int:
@@ -116,7 +56,7 @@ def log_read(offset: int = 0) -> bytes:
 			fh.seek(offset)
 			return fh.read()
 	except FileNotFoundError as e:
-		error(f'{LOG} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
+		error(f'{LOG} missing: no VM ran with --console serial since the last clean')
 		raise SystemExit(1) from e
 
 
@@ -144,9 +84,6 @@ def paced_send(sock: socket.socket, payload: bytes) -> None:
 
 
 def serial_write(data: bytes, kill_line: bool = True) -> None:
-	if not SERIAL.exists():
-		error(f'{SERIAL} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
-		raise SystemExit(1)
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.connect(str(SERIAL))
 		# ^U first: anything the guest left half-typed (zsh refusing to run
@@ -159,9 +96,6 @@ def serial_write(data: bytes, kill_line: bool = True) -> None:
 
 
 def monitor_cmd(cmd: str, timeout: float = 5.0) -> str:
-	if not MONITOR.exists():
-		error(f'{MONITOR} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
-		raise SystemExit(1)
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.settimeout(timeout)
 		sock.connect(str(MONITOR))
@@ -201,9 +135,6 @@ DETACH = b'\x1d'
 
 
 def cmd_attach(_args: argparse.Namespace) -> None:
-	if not SERIAL.exists():
-		error(f'{SERIAL} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
-		raise SystemExit(1)
 	if not sys.stdin.isatty():
 		error('attach needs a terminal, use send/run when scripting')
 		raise SystemExit(1)
@@ -251,7 +182,7 @@ def cmd_send(args: argparse.Namespace) -> None:
 def wait_idle(timeout: float) -> bool:
 	# Typing while the guest is mid-command loses the leading bytes of the
 	# new line ('systemctl' arrived as 'stemctl'), so wait for a prompt to
-	# be the last thing on the console. An interrupted TSER leaves the guest
+	# be the last thing on the console. An interrupted run leaves the guest
 	# running: the VM is a daemon, it never noticed we walked away.
 	deadline = time.time() + timeout
 	while True:
@@ -267,15 +198,13 @@ def marked_run(cmd: str, timeout: float) -> tuple[str, int | None]:
 	# marker carries the exit status back out of the guest; the log
 	# offset makes it unique per invocation without needing state
 	if not wait_idle(timeout):
-		error(f'guest still busy after {timeout}s, see ./RUN --script dev.tser read')
+		error(f'guest still busy after {timeout}s, see {VM} read')
 		raise SystemExit(1)
 	offset = log_size()
-	marker = f'TSER{offset}'
+	marker = f'A2VM{offset}'
 	serial_write(f'{cmd}; echo {marker}rc=$?\n'.encode())
 	# 'rc=$?' in the echoed command line can't match 'rc=<digits>'
-	# same duplication can inflate a nonzero status ('1' -> '11'); zero
-	# survives it ('00' is still 0), so pass/fail stays trustworthy
-	text, match = wait_for(fuzzy(marker) + r'rc=(\d+)', timeout, offset)
+	text, match = wait_for(re.escape(marker) + r'rc=(\d+)', timeout, offset)
 	# the match lands while the shell is still writing what follows the
 	# marker (systemd's OSC 3008 end tag, the next prompt): cut there, a
 	# half-written sequence would otherwise leak through as text
@@ -296,15 +225,15 @@ def cmd_run(args: argparse.Namespace) -> NoReturn:
 
 
 def cmd_capture(args: argparse.Namespace) -> NoReturn:
-	# ttyS1 is a file chardev, so what the guest writes there lands on
-	# disk verbatim: no socket, no partial-write replay, no dup bytes.
+	# ttyS1 carries only what the command wrote, verbatim: no echo of what
+	# we typed, no prompt, no escape noise, no kernel messages in between.
 	# ttyS0 still carries the marker that says when the command finished.
 	cap_offset = CAPTURE.stat().st_size if CAPTURE.exists() else 0
 	offset = log_size()
-	marker = f'TSER{offset}'
+	marker = f'A2VM{offset}'
 	# subshell, so a 'a; b; c' command redirects all of it and not just c
 	serial_write(f'({args.cmd}) >/dev/ttyS1 2>&1; echo {marker}rc=$?\n'.encode())
-	_, match = wait_for(fuzzy(marker) + r'rc=(\d+)', args.timeout, offset)
+	_, match = wait_for(re.escape(marker) + r'rc=(\d+)', args.timeout, offset)
 	with CAPTURE.open('rb') as fh:
 		fh.seek(cap_offset)
 		sys.stdout.write(fh.read().decode('utf-8', 'replace'))
@@ -360,7 +289,8 @@ def cmd_push(args: argparse.Namespace) -> None:
 	# qemu's user networking maps the host's loopback to 10.0.2.2 in the
 	# guest, so a server bound to 127.0.0.1 is reachable there and nowhere
 	# else on the network. Beats typing a payload in over a 16550.
-	src = Path(args.src).expanduser().resolve()
+	# ./RUN cds into installer/, so a relative path means the repo root
+	src = (ROOT / Path(args.src).expanduser()).resolve()
 	if not src.exists():
 		error(f'{src} does not exist')
 		raise SystemExit(1)
@@ -505,7 +435,7 @@ def cmd_mon(args: argparse.Namespace) -> None:
 
 def cmd_status(_args: argparse.Namespace) -> NoReturn:
 	pid = vm_pid()
-	print(f'vm:      {"running pid " + str(pid) if pid else "not running"}')
+	print(f'vm:      {f"running pid {pid}, --console {vm_console()}" if pid else "not running"}')
 	print(f'serial:  {SERIAL} {"ok" if SERIAL.exists() else "missing"}')
 	print(f'monitor: {MONITOR} {"ok" if MONITOR.exists() else "missing"}')
 	print(f'log:     {LOG} {log_size()} bytes')
@@ -513,10 +443,14 @@ def cmd_status(_args: argparse.Namespace) -> NoReturn:
 
 
 def cmd_quit(_args: argparse.Namespace) -> None:
-	if not vm_pid():
+	if not (pid := vm_pid()):
 		info('not running')
 		return
-	monitor_cmd('quit', timeout=2.0)
+	# a window/tty VM has no monitor socket, but stops cleanly on SIGTERM too
+	if vm_console() == 'serial':
+		monitor_cmd('quit', timeout=2.0)
+	else:
+		os.kill(pid, signal.SIGTERM)
 	for _ in range(20):
 		if not vm_pid():
 			info('vm stopped')
@@ -524,69 +458,3 @@ def cmd_quit(_args: argparse.Namespace) -> None:
 		time.sleep(0.25)
 	error('vm still running, kill it by hand')
 	raise SystemExit(1)
-
-
-def tser() -> None:
-	parser = argparse.ArgumentParser(
-		prog='python -m archinstoo --script dev.tser',
-		description='Serial console driver for the headless dev VM (A2_SERIAL=1 ./RUN --script dev.tvm)',
-	)
-	sub = parser.add_subparsers(dest='mode', required=True)
-
-	sub.add_parser('attach').set_defaults(func=cmd_attach)
-
-	p = sub.add_parser('read')
-	p.add_argument('-n', '--lines', type=int, default=50)
-	p.set_defaults(func=cmd_read)
-
-	p = sub.add_parser('send')
-	p.add_argument('text')
-	p.set_defaults(func=cmd_send)
-
-	p = sub.add_parser('run')
-	p.add_argument('cmd')
-	p.add_argument('-t', '--timeout', type=float, default=120)
-	p.set_defaults(func=cmd_run)
-
-	p = sub.add_parser('capture')
-	p.add_argument('cmd')
-	p.add_argument('-t', '--timeout', type=float, default=120)
-	p.set_defaults(func=cmd_capture)
-
-	p = sub.add_parser('login')
-	p.add_argument('-u', '--user', default='root')
-	p.add_argument('-p', '--password', default='')
-	p.add_argument('-t', '--timeout', type=float, default=180)
-	p.set_defaults(func=cmd_login)
-
-	p = sub.add_parser('push')
-	p.add_argument('src')
-	p.add_argument('dest', nargs='?')
-	p.add_argument('-t', '--timeout', type=float, default=300)
-	p.set_defaults(func=cmd_push)
-
-	p = sub.add_parser('ctrl')
-	p.add_argument('keys', nargs='+')
-	p.add_argument('-d', '--delay', type=float, default=0.5)
-	p.set_defaults(func=cmd_ctrl)
-
-	p = sub.add_parser('keys')
-	p.add_argument('keys', nargs='+')
-	p.set_defaults(func=cmd_keys)
-
-	p = sub.add_parser('type')
-	p.add_argument('text')
-	p.set_defaults(func=cmd_type)
-
-	p = sub.add_parser('mon')
-	p.add_argument('cmd', nargs='+')
-	p.set_defaults(func=cmd_mon)
-
-	sub.add_parser('status').set_defaults(func=cmd_status)
-	sub.add_parser('quit').set_defaults(func=cmd_quit)
-
-	args = parser.parse_args()
-	args.func(args)
-
-
-tser()
