@@ -57,3 +57,18 @@ def test_malformed_name_exits_with_hint(script: str) -> None:
 		checkpoints._run_script(script)
 	assert exc.value.code == 1
 	import_module.assert_not_called()
+
+
+@pytest.mark.parametrize('script', ['guided', 'list', 'dev.vm'])
+def test_check_script_finds_real_scripts(script: str) -> None:
+	with mock.patch('importlib.import_module') as import_module:
+		checkpoints._check_script(script)
+	# found by spec alone: importing would run it
+	import_module.assert_not_called()
+
+
+@pytest.mark.parametrize('script', ['nope', 'dev.nope', 'nope.vm', 'dev', 'dev/vm'])
+def test_check_script_rejects_missing_names(script: str) -> None:
+	with pytest.raises(SystemExit) as exc:
+		checkpoints._check_script(script)
+	assert exc.value.code == 1

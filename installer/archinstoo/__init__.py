@@ -71,7 +71,7 @@ from typing import TYPE_CHECKING
 
 from ._version import __gitstat__, __pkgver__, __version__
 from .lib import output
-from .lib.checkpoints import _run_script, _script_parts, clean_cache, clean_logs
+from .lib.checkpoints import _check_script, _run_script, clean_cache, clean_logs
 from .lib.cli import build_parser
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
@@ -352,9 +352,10 @@ def run_as_a_module() -> int:
 	if early.debug:
 		output.log_level = logging.DEBUG
 
-	# a malformed name (dev/vm) fails here, not after root checks and bootstrap
+	# a missing or malformed name (nope, dev/vm) fails here, not after root
+	# checks and bootstrap
 	if early.script is not None:
-		_script_parts(early.script)
+		_check_script(early.script)
 
 	if _is_foreign_blocked(early.script):
 		running = 'the distros/BOOT bootstrap root' if Host.running_from_bootstrap() else Host.running_from_who() or 'not Arch'

@@ -1,4 +1,5 @@
 import importlib
+import importlib.util
 import textwrap
 from pathlib import Path
 from shutil import rmtree
@@ -17,7 +18,7 @@ def clean_logs() -> None:
 
 
 def _script_not_found(script: str) -> SystemExit:
-	error(f'Script: {script} does not exist. Try `--script list` to see your options.')
+	error(f'No such script: {script}. Try `--script list` to see your options.')
 	return SystemExit(1)
 
 
@@ -28,6 +29,18 @@ def _script_parts(script: str) -> list[str]:
 	if not all(part.isidentifier() for part in parts):
 		raise _script_not_found(script)
 	return parts
+
+
+def _check_script(script: str) -> None:
+	# find it without importing it (importing runs it), so a missing name or a
+	# bare namespace (dev) fails before root checks and bootstrap
+	module = '.'.join(('archinstoo.scripts', *_script_parts(script)))
+	try:
+		spec = importlib.util.find_spec(module)
+	except ModuleNotFoundError:
+		spec = None
+	if spec is None or spec.submodule_search_locations is not None:
+		raise _script_not_found(script)
 
 
 def _run_script(script: str) -> None:
