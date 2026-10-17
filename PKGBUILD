@@ -24,7 +24,6 @@ depends=(
 	'util-linux'           #For partition utilities
 	'pciutils'             #For PCI device detection
 	'kbd'                  #For keyboard layout configuration
-	'libxcrypt'            #For password hashing
 	'pacman'
 	'git'
 	'dosfstools' #For FAT/EFI support

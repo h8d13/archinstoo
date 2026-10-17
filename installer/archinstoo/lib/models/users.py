@@ -117,7 +117,7 @@ class UserSerialization(TypedDict):
 class Password:
 	# one secret, two forms: the menu hands over plaintext, a config the hash.
 	# Hashing happens where the hash is consumed (chpasswd), so LUKS
-	# passphrases and PINs never pay for a yescrypt they do not use
+	# passphrases and PINs never pay for a hash they do not use
 	def __init__(
 		self,
 		plaintext: str = '',

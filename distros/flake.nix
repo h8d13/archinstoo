@@ -39,16 +39,11 @@
 					util-linux
 					pciutils
 					kbd
-					libxcrypt
 					tzdata
 					xkeyboard-config
 				];
 
-				# libxcrypt is dlopen'd by crypt.py via ctypes; buildInputs only
-				# wires link-time, so expose it on the runtime linker path for
-				# the .so lookup.
 				shellHook = ''
-					export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.libxcrypt ]}:$LD_LIBRARY_PATH
 					export TZDIR=${pkgs.tzdata}/share/zoneinfo
 					# xkeyboard-config ships no binary, so the keymap lists have
 					# nothing to find it by; libxkbcommon's own variable is how

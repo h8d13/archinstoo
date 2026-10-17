@@ -60,6 +60,11 @@ class Env:
 		path = Path(value).expanduser()
 		return base / path if base else path
 
+	# copy of the current envir, extras override. for child processes
+	@staticmethod
+	def get_envir(extra: dict[str, str] | None = None) -> dict[str, str]:
+		return {**os.environ, **(extra or {})}
+
 	# misc
 	# this is not thread safe. inherits from the python process
 	# should be used only as such, for the current process envir

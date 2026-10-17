@@ -174,7 +174,6 @@ if [ "$A2_MINIMAL" = "1" ]; then
 		echo "util-linux"
 		echo "pciutils"
 		echo "kbd"
-		echo "libxcrypt"
 		echo "pacman"
 		echo "git"
 		# filesystem tools (from PKGBUILD optdepends=)

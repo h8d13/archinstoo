@@ -1,4 +1,3 @@
-import os
 import subprocess
 from contextlib import contextmanager
 from subprocess import CalledProcessError
@@ -7,6 +6,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.disk.luks import KEYFILE_DIR
 from archinstoo.lib.models.device import DiskEncryption, EncryptionType
 from archinstoo.lib.output import info, warn
+from archinstoo.lib.utils.env import Env
 
 if TYPE_CHECKING:
 	from collections.abc import Iterator
@@ -42,7 +42,7 @@ def enroll_fido2(target: Path, enc: DiskEncryption) -> None:
 
 	with _bootstrap_key(target, '.fido2-bootstrap.key', password.plaintext) as key:
 		# inherited by cryptenroll below: keep PIN/touch prompts plain text
-		os.environ['SYSTEMD_EMOJI'] = '0'
+		Env.put_value('SYSTEMD_EMOJI', '0')
 
 		info(f'FIDO2 token: {token.path} ({token.manufacturer} {token.product})')
 		# Touch/PIN prompts are easy to miss in the install output;

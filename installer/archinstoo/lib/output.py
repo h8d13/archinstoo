@@ -122,8 +122,8 @@ def _default_log_dir() -> Path:
 			pass
 
 	# not elevated, or elevated from real root (ISO, su -): the env is ours
-	state = os.environ.get('XDG_STATE_HOME') or Path.home() / '.local' / 'state'
-	return Path(state) / 'archinstoo'
+	state = Env.get_path('XDG_STATE_HOME') or Path.home() / '.local' / 'state'
+	return state / 'archinstoo'
 
 
 class Logger:
