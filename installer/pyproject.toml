@@ -177,7 +177,7 @@ select = [
     "ICN",    # flake8-import-conventions
     "ISC",    # flake8-implicit-str-concat
     "LOG",    # flake8-logging
-    "N818",   # error-suffix-on-exception-name
+    "N",      # pep8-naming
     "PERF",   # perflint
     "PGH",    # pygrep-hooks
     "PIE",    # flake8-pie
@@ -232,7 +232,7 @@ known-first-party = ["archinstoo"]
 "typing.cast".msg = "avoid cast(); annotate the binding or validate at the boundary (add # noqa: TID251 with a reason if truly needed)"
 
 [tool.ruff.lint.per-file-ignores]
-"**/stubs/**" = ["N818"] # names mirror pyparted's own exceptions
+"**/stubs/**" = ["N"] # names mirror pyparted's own API
 "**/NVGEN" = [
     "S603",   # dev tooling runs fixed local commands, not untrusted input
     "S607",   # nvchecker/pacman helpers resolved from $PATH by design
