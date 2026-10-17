@@ -338,9 +338,7 @@ def select_encryption_type(
 	lvm_config: LvmConfiguration | None = None,
 	preset: EncryptionType | None = None,
 ) -> EncryptionType | None:
-	options: list[EncryptionType] = []
-
-	options = [EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM] if lvm_config else [EncryptionType.LUKS]
+	options: list[EncryptionType] = [EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM] if lvm_config else [EncryptionType.LUKS]
 
 	if not preset:
 		preset = options[0]
