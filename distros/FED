@@ -21,7 +21,6 @@ dnf install -y $(
 	tzdata                      # timezone data
 	kbd                         # loadkeys/setfont + /usr/lib/kbd data
 	xkeyboard-config            # X11/Wayland keymap lists, fetched when absent
-	libxcrypt                   # crypt.py dlopen
 	git                         # cloning stashes
 	dosfstools                  # mkfs.fat
 	device-mapper               # dm-* devices

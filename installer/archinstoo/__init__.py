@@ -94,7 +94,6 @@ base_depends = (
 	'util-linux',  	        # For partition utilities
 	'pciutils',  	        # For PCI device detection
 	'kbd',  	        # For keyboard layout configuration
-	'libxcrypt',
 	'pacman',
 	'git',  	        # Cloning stashes
 	'arch-install-scripts', # For pacstrap, genfstab, chroot

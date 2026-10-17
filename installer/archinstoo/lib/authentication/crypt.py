@@ -1,152 +1,96 @@
-import ctypes
+import hashlib
 import secrets
-from ctypes.util import find_library
-from pathlib import Path
 from typing import TYPE_CHECKING
-
-from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
 
+# SHA-512 crypt ($6$), written from Ulrich Drepper's public domain
+# spec: https://www.akkadia.org/drepper/SHA-crypt.txt
+# Same output as glibc/libxcrypt/musl crypt(), need no libcrypt on hosts:
+# `passwd` or `chpasswd` on the target rehashes using it regardless.
 
-def _load_libcrypt() -> ctypes.CDLL:
-	# Resolve via the linker (find_library / soname) rather than a fixed path,
-	# so any host that exposes libcrypt on the dynamic-linker path just works:
-	# find_library adapts to the distro specific soname
-	for name in (find_library('crypt'), 'libcrypt.so', 'libcrypt.so.1', 'libcrypt.so.2'):
-		if name:
-			try:
-				return ctypes.CDLL(name)
-			except OSError:
-				continue
+# crypt(3) base64 alphabet, not the RFC 4648 one
+B64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
-	# musl (Alpine) folds crypt() into libc with no standalone libcrypt soname,
-	# and without a toolchain find_library('crypt') returns None. CDLL(None) opens
-	# the running process image, which has libc loaded and exposes crypt directly.
-	try:
-		lib = ctypes.CDLL(None)
-	except OSError:
-		lib = None
+ROUNDS_DEFAULT = 5000
+ROUNDS_MIN = 1000
+ROUNDS_MAX = 999_999_999
+SALT_MAX = 16
 
-	# hasattr forces symbol resolution and swallows the AttributeError musl
-	# raises when crypt is absent, so it doubles as the existence probe
-	if lib is not None and hasattr(lib, 'crypt'):
-		return lib
-
-	raise OSError('libcrypt/libc crypt not found on the dynamic-linker path')
+# well above the spec default of 5000 ~0.3s on a intel i5
+# same figure passlib picked for sha512_crypt
+ROUNDS_INSTALL = 656_000
 
 
-libcrypt = _load_libcrypt()
-
-libcrypt.crypt.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-libcrypt.crypt.restype = ctypes.c_char_p
-
-# crypt_gensalt is a libxcrypt symbol. glibc hosts have it; musl (Alpine) folds
-# crypt() into libc but ships no gensalt, so accessing it raises. Detect once and
-# fall back to a hand-built SHA-512 setting below when it is missing.
-try:
-	libcrypt.crypt_gensalt.argtypes = [ctypes.c_char_p, ctypes.c_ulong, ctypes.c_char_p, ctypes.c_int]
-	libcrypt.crypt_gensalt.restype = ctypes.c_char_p
-	HAVE_GENSALT = True
-except AttributeError:
-	HAVE_GENSALT = False
-
-# crypt(3) salt alphabet, used only for the musl SHA-512 fallback
-_CRYPT_B64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-
-LOGIN_DEFS = Path('/etc/login.defs')
+def _repeat(digest: bytes, length: int) -> bytes:
+	# digest repeated to fill exactly length bytes
+	return (digest * (length // len(digest) + 1))[:length]
 
 
-def _search_login_defs(key: str) -> str | None:
-	# host may not ship /etc/login.defs (alpine without shadow); fall back to
-	# the caller's default cost factor instead of crashing
-	if not LOGIN_DEFS.is_file():
-		return None
-
-	defs = LOGIN_DEFS.read_text()
-	for line in map(str.strip, defs.split('\n')):
-		if line.startswith('#'):
-			continue
-
-		if line.startswith(key):
-			return line.split(' ')[1]
-
-	return None
+def _b64_from_24bit(b2: int, b1: int, b0: int, n: int) -> str:
+	w = (b2 << 16) | (b1 << 8) | b0
+	out = ''
+	for _ in range(n):
+		out += B64[w & 0x3F]
+		w >>= 6
+	return out
 
 
-def crypt_gen_salt(prefix: str | bytes, rounds: int) -> bytes:
-	if isinstance(prefix, str):
-		prefix = prefix.encode('utf-8')
-
-	setting: bytes | None = libcrypt.crypt_gensalt(prefix, rounds, None, 0)
-
-	if setting is None:
-		raise ValueError(f'crypt_gensalt() returned NULL for prefix {prefix!r} and rounds {rounds}')
-
-	return setting
-
-
-def _sha512_salt() -> bytes:
-	# SHA-512 crypt ($6$) is supported by both glibc and musl and accepted by
-	# the target Arch; 16 random salt chars from the crypt(3) alphabet
-	rand = ''.join(secrets.choice(_CRYPT_B64) for _ in range(16))
-	return f'$6${rand}'.encode()
+def _encode(dc: bytes) -> str:
+	# spec step 22: 21 byte triples i, i+21, i+42 rotated by i % 3,
+	# then the lone last byte as 2 chars
+	out = ''
+	for i in range(21):
+		t = (dc[i], dc[i + 21], dc[i + 42])
+		r = i % 3
+		out += _b64_from_24bit(t[r], t[(r + 1) % 3], t[(r + 2) % 3], 4)
+	return out + _b64_from_24bit(0, 0, dc[63], 2)
 
 
-def _crypt_with(plaintext: bytes, salt: bytes, prefix: str) -> str | None:
-	# crypt() signals "algorithm unsupported" in three ways: NULL, a sentinel
-	# that does not start with the requested prefix (glibc "*0"/"*1"), or a
-	# silent fallthrough to a 13-char DES hash. A result that doesn't begin with
-	# the prefix we asked for means the hash isn't what we requested.
-	result: bytes | None = libcrypt.crypt(plaintext, salt)
-	if result is None:
-		return None
-
-	decoded = result.decode('utf-8')
-	if not decoded.startswith(prefix):
-		return None
-
-	return decoded
+def gen_salt() -> str:
+	return ''.join(secrets.choice(B64) for _ in range(SALT_MAX))
 
 
-def crypt_yescrypt(plaintext: str) -> str:
-	# By default chpasswd in Arch uses PAM to hash the password with crypt_yescrypt
-	# the PAM code https://github.com/linux-pam/linux-pam/blob/master/modules/pam_unix/support.c
-	# shows that the hashing rounds are determined from YESCRYPT_COST_FACTOR in /etc/login.defs
-	# If no value was specified (or commented out) a default of 5 is chosen
-	if (value := _search_login_defs('YESCRYPT_COST_FACTOR')) is not None:
-		rounds = int(value)
-		if rounds < 3:
-			rounds = 3
-		elif rounds > 11:
-			rounds = 11
-	else:
-		rounds = 5
+def sha512_crypt(password: bytes, salt: str | None = None, rounds: int = ROUNDS_DEFAULT) -> str:
+	salt_b = (salt if salt is not None else gen_salt()).encode()[:SALT_MAX]
+	# spec clamps out of range rounds instead of failing
+	rounds = min(max(rounds, ROUNDS_MIN), ROUNDS_MAX)
+	pw_len = len(password)
 
-	debug(f'Creating yescrypt hash with rounds {rounds}')
+	# digest B, fed into digest A
+	db = hashlib.sha512(password + salt_b + password).digest()
 
-	enc_plaintext = plaintext.encode('utf-8')
+	# digest A: pw + salt, B stretched to pw length, then B or pw per bit of pw length
+	ctx = hashlib.sha512(password + salt_b + _repeat(db, pw_len))
+	i = pw_len
+	while i:
+		ctx.update(db if i & 1 else password)
+		i >>= 1
+	da = ctx.digest()
 
-	# try yescrypt when the host can build a $y$ salt; the result is validated so
-	# a host that has crypt_gensalt but whose crypt() can't actually do yescrypt
-	# (sentinel/DES) still falls through to SHA-512 rather than returning junk
-	if HAVE_GENSALT:
-		yescrypt = _crypt_with(enc_plaintext, crypt_gen_salt('$y$', rounds), '$y$')
-		if yescrypt is not None:
-			return yescrypt
-		debug('crypt() did not honor yescrypt, falling back to SHA-512')
-	else:
-		# musl libc: no yescrypt and no crypt_gensalt at all
-		debug('crypt_gensalt unavailable (musl), using SHA-512 crypt')
+	# P and S sequences stand in for the password and salt in the rounds
+	ctx = hashlib.sha512()
+	for _ in range(pw_len):
+		ctx.update(password)
+	dp = _repeat(ctx.digest(), pw_len)
+	ds = _repeat(hashlib.sha512(salt_b * (16 + da[0])).digest(), len(salt_b))
 
-	sha512 = _crypt_with(enc_plaintext, _sha512_salt(), '$6$')
-	if sha512 is None:
-		raise ValueError('crypt() failed for both yescrypt and SHA-512')
+	dc = da
+	for r in range(rounds):
+		ctx = hashlib.sha512(dp if r & 1 else dc)
+		if r % 3:
+			ctx.update(ds)
+		if r % 7:
+			ctx.update(dp)
+		ctx.update(dc if r & 1 else dp)
+		dc = ctx.digest()
 
-	return sha512
+	# default rounds are implicit, anything else is spelled out in the setting
+	setting = '$6$' if rounds == ROUNDS_DEFAULT else f'$6$rounds={rounds}$'
+	return f'{setting}{salt_b.decode()}${_encode(dc)}'
 
 
 def hash_password(password: Password) -> str:
 	# a config already carries the hash, the menu only the plaintext
-	return password.enc_password or crypt_yescrypt(password.plaintext)
+	return password.enc_password or sha512_crypt(password.plaintext.encode('utf-8'), rounds=ROUNDS_INSTALL)

@@ -15,7 +15,6 @@ apt-get install --no-install-recommends -y $(
 	python3.14                  # runtime (already the default on forky)
 	python3-parted              # parted bindings, built against the default 3.14
 	parted                      # partition cli + libparted runtime
-	libcrypt-dev                # libcrypt.so symlink (crypt.py dlopen)
 	pacman-package-manager      # arch package manager
 	makepkg                     # pacman-key depends on makepkg utils
 	arch-install-scripts        # pacstrap, genfstab, etc
