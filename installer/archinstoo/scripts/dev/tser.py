@@ -11,6 +11,9 @@
 # instead of an interactive session that has to stay attached.
 #
 # Usage (from the repo root, tser = ./RUN --script dev.tser):
+#     tser attach                 interactive ttyS0 in this terminal, Ctrl-]
+#                                 detaches (the VM keeps running). One
+#                                 client at a time: other modes wait on it
 #     tser read [-n LINES]        dump console output (default: last 50)
 #     tser login                  log in as root, sane tty width
 #     tser send TEXT              type TEXT + Enter on ttyS0
@@ -48,14 +51,18 @@
 # then tser login -p test
 
 import argparse
+import os
 import re
+import select
 import shutil
 import socket
 import sys
 import tarfile
 import tempfile
+import termios
 import threading
 import time
+import tty
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -126,6 +133,16 @@ def clean(raw: bytes) -> str:
 	return ANSI.sub('', text).replace('\x1b', '').replace('\x07', '').replace('\r', '\n')
 
 
+def paced_send(sock: socket.socket, payload: bytes) -> None:
+	# Pace it. The emulated 16550 takes 16 bytes at a time, so a big
+	# write is always partial, and QEMU's retry re-sends a byte it
+	# already delivered ('git' arriving as 'gitt'). Small writes with a
+	# gap keep the FIFO from ever being the thing that truncates us.
+	for start in range(0, len(payload), 8):
+		sock.sendall(payload[start : start + 8])
+		time.sleep(0.015)
+
+
 def serial_write(data: bytes, kill_line: bool = True) -> None:
 	if not SERIAL.exists():
 		error(f'{SERIAL} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
@@ -136,14 +153,7 @@ def serial_write(data: bytes, kill_line: bool = True) -> None:
 		# a missing binary, an aborted paste) would otherwise get this
 		# command appended to it, and neither line would ever execute.
 		# Raw keys skip it: ^U is itself input to whatever is reading.
-		payload = b'\x15' + data if kill_line else data
-		# Pace it. The emulated 16550 takes 16 bytes at a time, so a big
-		# write is always partial, and QEMU's retry re-sends a byte it
-		# already delivered ('git' arriving as 'gitt'). Small writes with a
-		# gap keep the FIFO from ever being the thing that truncates us.
-		for start in range(0, len(payload), 8):
-			sock.sendall(payload[start : start + 8])
-			time.sleep(0.015)
+		paced_send(sock, b'\x15' + data if kill_line else data)
 		# chardev drops buffered input on hangup, let QEMU drain first
 		time.sleep(0.2)
 
@@ -184,6 +194,46 @@ def wait_for(pattern: str, timeout: float, offset: int = 0) -> tuple[str, re.Mat
 		if time.time() >= deadline:
 			return text, None
 		time.sleep(0.25)
+
+
+# Ctrl-], telnet's escape: not a key any guest program wants
+DETACH = b'\x1d'
+
+
+def cmd_attach(_args: argparse.Namespace) -> None:
+	if not SERIAL.exists():
+		error(f'{SERIAL} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
+		raise SystemExit(1)
+	if not sys.stdin.isatty():
+		error('attach needs a terminal, use send/run when scripting')
+		raise SystemExit(1)
+
+	info('attached to ttyS0, Ctrl-] detaches (the VM keeps running)')
+	fd = sys.stdin.fileno()
+	saved = termios.tcgetattr(fd)
+	detach = b''
+	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+		sock.connect(str(SERIAL))
+		# raw: keys (^C, ^D, arrows) go to the guest, not to this process
+		tty.setraw(fd)
+		try:
+			while True:
+				ready, _, _ = select.select([fd, sock], [], [])
+				if sock in ready:
+					if not (data := sock.recv(4096)):
+						break
+					sys.stdout.buffer.write(data)
+					sys.stdout.buffer.flush()
+				if fd in ready:
+					keys, detach, _ = os.read(fd, 1024).partition(DETACH)
+					paced_send(sock, keys)
+					if detach:
+						break
+		finally:
+			termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+	# a raw-mode line never got its carriage return
+	print()
+	info('detached' if detach else 'VM closed the console')
 
 
 def cmd_read(args: argparse.Namespace) -> None:
@@ -482,6 +532,8 @@ def tser() -> None:
 		description='Serial console driver for the headless dev VM (A2_SERIAL=1 ./RUN --script dev.tvm)',
 	)
 	sub = parser.add_subparsers(dest='mode', required=True)
+
+	sub.add_parser('attach').set_defaults(func=cmd_attach)
 
 	p = sub.add_parser('read')
 	p.add_argument('-n', '--lines', type=int, default=50)

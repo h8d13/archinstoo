@@ -24,7 +24,7 @@
 #   tvm boot   | b - boot from installed disk (no ISO)
 #   tvm clean  | c - remove disk and NVRAM (ISOs untouched)
 #   tvm help   | h - show this help
-# Env overrides:
+# Env overrides (on/off ones take 1/yes/true/on, anything else is off):
 #   A2_ARCH             guest architecture: 'x86_64' (default) or 'aarch64'.
 #                       aarch64 boots -machine virt with edk2-aarch64 pflash,
 #                       KVM only when the host is aarch64 too (TCG -cpu max
@@ -35,7 +35,7 @@
 #                       A2_BIOS and A2_UKI are x86_64 only.
 #   A2_SERIAL           '1' boots headless with the console on ttyS0 and
 #                       detaches (no window, no stdio monitor). Composes with
-#                       every mode above. Drive it with tser (login/run).
+#                       every mode above. Drive it with tser (attach, or login/run).
 #                       With A2_GL=1 the virgl window stays: sockets still
 #                       detach, so a real session is on screen while the
 #                       guest is driven over serial (tser type/keys for the
@@ -172,10 +172,10 @@ def read_opts() -> Opts:
 		error(f'A2_ARCH={arch} unsupported (x86_64, aarch64)')
 		raise SystemExit(1)
 
-	serial = Env.get_value('A2_SERIAL', '0')
-	if serial not in ('0', '1', 'tty'):
-		error(f'A2_SERIAL={serial} unsupported (0, 1, tty)')
-		raise SystemExit(1)
+	# 'tty' is its own mode, anything else is a boolean like A2_BIOS/A2_GL
+	serial = Env.get_value('A2_SERIAL', '').strip().lower()
+	if serial != 'tty':
+		serial = '1' if Env.get_bool('A2_SERIAL') else '0'
 
 	return Opts(
 		arch=arch,
@@ -556,7 +556,8 @@ def tvm() -> None:
 		if rc := subprocess.run(cmd, check=False).returncode:
 			raise SystemExit(rc)
 		info(f'VM detached, pid {PIDFILE.read_text().strip()}')
-		info("drive it: ./RUN --script dev.tser login && ./RUN --script dev.tser run 'ls /'")
+		info('drive it interactively: ./RUN --script dev.tser attach (Ctrl-] detaches)')
+		info("or sequenced: ./RUN --script dev.tser login && ./RUN --script dev.tser run 'ls /'")
 		raise SystemExit(0)
 
 	raise SystemExit(run_foreground(cmd))
