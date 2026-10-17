@@ -5,7 +5,7 @@
 import pytest
 
 import archinstoo
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.host import Host
 
 
 @pytest.mark.parametrize(
@@ -34,8 +34,8 @@ def test_foreign_blocked(
 	blocked: bool,
 ) -> None:
 	monkeypatch.setattr('platform.freedesktop_os_release', lambda: {'ID': distro_id})
-	monkeypatch.setattr(Os, 'running_from_host', staticmethod(lambda: not on_iso))
-	monkeypatch.setattr(Os, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
+	monkeypatch.setattr(Host, 'running_from_host', staticmethod(lambda: not on_iso))
+	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
 
 	assert archinstoo._is_foreign_blocked(script) is blocked
 
@@ -43,7 +43,7 @@ def test_foreign_blocked(
 @pytest.mark.parametrize('bootstrap', [False, True])
 def test_disk_depends_only_on_bootstrap(monkeypatch: pytest.MonkeyPatch, bootstrap: bool) -> None:
 	# Arch host/ISO ship the disk tools; the BOOT tarball root ships only python
-	monkeypatch.setattr(Os, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
+	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
 	depends = set(archinstoo._depends())
 
 	assert set(archinstoo.base_depends) <= depends

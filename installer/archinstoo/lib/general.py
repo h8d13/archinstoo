@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 
 from .exceptions import SysCallError
 from .output import HasJson, debug, error, logger
-from .utils.env import Os
+from .utils.paths import locate_binary
 
 if TYPE_CHECKING:
 	from collections.abc import Iterator
@@ -89,7 +89,7 @@ class SysCommandWorker:
 			cmd = shlex.split(cmd)
 
 		if cmd and not cmd[0].startswith(('/', './')):  # Path() does not work well
-			cmd[0] = Os.locate_binary(cmd[0])
+			cmd[0] = locate_binary(cmd[0])
 
 		self.cmd = cmd
 		self.peek_output = peek_output

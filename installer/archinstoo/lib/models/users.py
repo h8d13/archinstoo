@@ -2,8 +2,6 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
-from archinstoo.lib.utils.env import Os
-
 
 class Shell(StrEnum):
 	BASH = auto()
@@ -215,12 +213,3 @@ class User:
 			users.append(user)
 
 		return users
-
-
-# with no auth config the person driving the install through sudo/doas is
-# the provision target, so profile group wiring (seat/docker) reaches their
-# account, not every account.
-def invoking_user() -> User | None:
-	if name := Os.invoking_username():
-		return User(name, None, False)
-	return None

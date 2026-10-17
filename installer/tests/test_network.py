@@ -9,7 +9,7 @@ from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, NicType
 from archinstoo.lib.network import network_handler
 from archinstoo.lib.network.network_handler import NetworkHandler
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.host import Host
 
 STUB = '/run/systemd/resolve/stub-resolv.conf'
 
@@ -21,7 +21,7 @@ def _session(target: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Installer, 
 	monkeypatch.setattr(installation, 'enable_service', lambda s: enabled.extend([s] if isinstance(s, str) else s), raising=False)
 	monkeypatch.setattr(installation, 'disable_service', lambda s: None, raising=False)
 	monkeypatch.setattr(installation, 'add_additional_packages', lambda pkgs: None, raising=False)
-	monkeypatch.setattr(Os, 'running_from_foreign', lambda: False)
+	monkeypatch.setattr(Host, 'running_from_foreign', lambda: False)
 	return installation, enabled
 
 

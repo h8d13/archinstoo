@@ -10,7 +10,8 @@ import pytest
 import archinstoo
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.pm.pacman import Pacman
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.env import Env
+from archinstoo.lib.utils.host import Host
 
 
 @pytest.mark.parametrize(
@@ -31,10 +32,10 @@ def test_arch_host(
 	arch_host: bool,
 ) -> None:
 	monkeypatch.setattr('platform.freedesktop_os_release', lambda: {'ID': distro_id})
-	monkeypatch.setattr(Os, 'running_from_host', staticmethod(lambda: not on_iso))
-	monkeypatch.setattr(Os, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
+	monkeypatch.setattr(Host, 'running_from_host', staticmethod(lambda: not on_iso))
+	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
 
-	assert Os.running_from_arch_host() is arch_host
+	assert Host.running_from_arch_host() is arch_host
 
 
 @pytest.mark.parametrize(('arch_host', 'synced'), [(True, False), (False, True)])
@@ -49,8 +50,8 @@ def test_prepare_skips_pacman_on_arch_host(
 	monkeypatch.setattr(archinstoo, 'is_root', lambda: True)
 	monkeypatch.setattr(archinstoo, '_log_env_info', lambda: None)
 	monkeypatch.setattr(archinstoo, '_check_online', lambda: 0)
-	monkeypatch.setattr(Os, 'running_from_arch_host', staticmethod(lambda: arch_host))
-	monkeypatch.setattr(Os, 'running_from_foreign', staticmethod(lambda: False))
+	monkeypatch.setattr(Host, 'running_from_arch_host', staticmethod(lambda: arch_host))
+	monkeypatch.setattr(Host, 'running_from_foreign', staticmethod(lambda: False))
 	monkeypatch.setattr(Pacman, 'run', staticmethod(lambda args, **_: calls.append(args)))
 
 	assert archinstoo._prepare(offline=False) == 0
@@ -100,7 +101,7 @@ def test_bootstrap_fails_on_broken_deptest(monkeypatch: pytest.MonkeyPatch) -> N
 	monkeypatch.delenv('A2_DEPS_FETCHED', raising=False)
 
 	assert archinstoo._bootstrap() == 1
-	assert not Os.has_env('A2_DEPS_FETCHED')
+	assert not Env.has_value('A2_DEPS_FETCHED')
 
 
 def test_arch_host_missing_deps_stops(monkeypatch: pytest.MonkeyPatch) -> None:

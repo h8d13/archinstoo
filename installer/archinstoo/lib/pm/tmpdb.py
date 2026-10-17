@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 from archinstoo.lib.output import debug
-from archinstoo.lib.utils.env import is_root
+from archinstoo.lib.utils.host import is_root
 
 TMPDB_ROOT = Path(tempfile.gettempdir()) / f'archinstoo-db-{os.getuid()}'
 

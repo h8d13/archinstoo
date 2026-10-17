@@ -7,10 +7,11 @@ from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.device import DiskLayoutConfiguration
-from archinstoo.lib.models.users import invoking_user
+from archinstoo.lib.models.users import User
 from archinstoo.lib.output import info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
+from archinstoo.lib.utils.host import Host
 
 
 def show_menu(config: ArchConfig, _args: Arguments) -> None:
@@ -60,10 +61,11 @@ def perform_installation(
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(installation, profile_config, config.app_config)
 
-			# Post-install profile hooks; no auth config here, so provision
-			# targets whoever is driving the install (see invoking_user)
+			# Post-install profile hooks; no auth config here, so the person
+			# driving the install through sudo/doas is the provision target and
+			# profile group wiring (seat/docker) reaches their account only
 			if profile_config.profiles:
-				users = [user] if (user := invoking_user()) else []
+				users = [User(name, None, False)] if (name := Host.invoking_username()) else []
 				for profile in profile_config.profiles:
 					profile.post_install(installation)
 					profile.provision(installation, users)

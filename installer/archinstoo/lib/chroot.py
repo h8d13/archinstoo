@@ -7,7 +7,7 @@ from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.general import SysCommand, run
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, info, warn
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.host import Host
 
 if TYPE_CHECKING:
 	from subprocess import CompletedProcess
@@ -29,7 +29,7 @@ def chroot_prefix(target: Path, systemd_mode: bool = False) -> list[str]:
 	# -S needs a booted systemd >= 257 outside any chroot, which only an
 	# Arch host/ISO guarantees
 	prefix = ['arch-chroot']
-	if systemd_mode and Os.running_from_arch() and Os.has_systemd():
+	if systemd_mode and Host.running_from_arch() and Host.has_systemd():
 		prefix.append('-S')
 	prefix.append(str(target))
 	return prefix

@@ -1,115 +1,48 @@
 import os
-import platform
-import sys
-from pathlib import Path
-from shutil import which
 
-from archinstoo.lib.exceptions import RequirementError
+# consts
+_TRUTHY_VALS = frozenset({'y', 'yes', '1', 'true', 't', 'on'})
+# anything else will be considered false...
 
 
-class Os:
+# helpers
+def _normalize(value: str) -> str:
+	return value.strip().lower()
+
+
+class Env:
+	# setters
 	@staticmethod
-	def set_env(key: str, value: str) -> None:
+	def put_value(key: str, value: str) -> None:
 		os.environ[key] = value
 
 	@staticmethod
-	def get_env(key: str, default: str | None = None) -> str | None:
-		return os.environ.get(key, default)
+	def del_value(key: str) -> None:
+		# no-op when unset
+		os.environ.pop(key, None)
 
+	# getters
 	@staticmethod
-	def has_env(key: str) -> bool:
+	def has_value(key: str) -> bool:
 		return key in os.environ
 
+	# if is missing, set a default. or don't.
 	@staticmethod
-	def running_from_host() -> bool:
-		# returns True when not on the ISO
-		return not Path('/run/archiso').exists()
+	def get_value(key: str, default: str | None = None) -> str | None:
+		return os.environ.get(key, default)
 
+	# useful for cli tool invocations
 	@staticmethod
-	def running_from_who() -> str:
-		# distro ID from os-release; stdlib parse handles quoting and the
-		# /usr/lib/os-release fallback (no systemd needed, plain file read)
-		try:
-			return platform.freedesktop_os_release().get('ID', '')
-		except OSError:
-			return ''
+	def get_bool(key: str, default: bool = False) -> bool:
+		# set but empty counts as unset, like shell ${FOO:-default}
+		if not (value := _normalize(os.environ.get(key, ''))):
+			return default
 
+		return value in _TRUTHY_VALS
+
+	# misc
+	# this is not thread safe. inherits from the python process
+	# should be used only as such, for the current process envir
 	@staticmethod
-	def running_from_arch() -> bool:
-		# distinguishes an Arch host/ISO from a foreign host (Debian, Alpine, ...)
-		# archarm is Arch Linux ARM, native for our purposes
-		return Os.running_from_who() in ('arch', 'archarm')
-
-	@staticmethod
-	def running_from_foreign() -> bool:
-		# installed non-Arch host (not the ISO, not an Arch install)
-		return Os.running_from_host() and not Os.running_from_arch()
-
-	@staticmethod
-	def running_from_arch_host() -> bool:
-		# H2T on an installed Arch: '/' is the user's own system, not a live or
-		# throwaway root, so archinstoo must not sync or install into it
-		return Os.running_from_host() and Os.running_from_arch() and not Os.running_from_bootstrap()
-
-	@staticmethod
-	def running_from_bootstrap() -> bool:
-		# distros/BOOT: Arch, but a throwaway root (set through arch-chroot)
-		return Os.get_env('A2_BOOTSTRAP') == '1'
-
-	@staticmethod
-	def running_in_chroot() -> bool:
-		# systemd's own test: PID1 sits on another root
-		try:
-			return not Path('/proc/1/root').samefile('/')
-		except OSError:
-			return False
-
-	@staticmethod
-	def has_systemd() -> bool:
-		# sd_booted(), except chroots: arch-chroot binds the host /run in
-		return Path('/run/systemd/system').is_dir() and not Os.running_in_chroot()
-
-	@staticmethod
-	def invoking_username() -> str | None:
-		# the human behind sudo/doas; None when running as real root (su -, autologin)
-		name = os.environ.get('SUDO_USER') or os.environ.get('DOAS_USER')
-		if not name or name == 'root':
-			return None
-		return name
-
-	@staticmethod
-	def locate_binary(name: str) -> str:
-		if path := which(name):
-			return path
-		raise RequirementError(f'Binary {name} does not exist.')
-
-	# to avoid using shutil.which everywhere
-
-
-# where a package's own data sits under its prefix: share/ on most distros,
-# lib/ on fedora, which keeps kbd keymaps and fonts in /usr/lib/kbd
-_DATA_DIRS = ('share', 'lib')
-
-
-def data_paths(anchor: str, *relative: str) -> list[Path]:
-	# Data a package ships next to its binaries. /usr on an FHS host, plus the
-	# prefix the anchor binary resolves into, which is the only root a store
-	# based distro has (NixOS keeps no /usr/share whatsoever). Callers get the
-	# candidates in preference order and pick the ones that exist.
-	roots = [Path('/usr')]
-	if binary := which(anchor):
-		roots.append(Path(binary).resolve().parent.parent)
-
-	return [root / data / rel for root in roots for data in _DATA_DIRS for rel in relative]
-
-
-def is_venv() -> bool:
-	return sys.prefix != getattr(sys, 'base_prefix', sys.prefix)
-
-
-def is_root() -> bool:
-	return os.getuid() == 0
-
-
-def kernel_info() -> str:
-	return f'{platform.release()} built {platform.version()}'
+	def rel_envir() -> None:
+		os.reload_environ()

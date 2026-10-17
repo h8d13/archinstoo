@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.output import debug, info, warn
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.host import Host
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -62,7 +62,7 @@ class NetworkHandler:
 def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:
 	# on a foreign host use_resolved() left a copied resolv.conf, not the stub,
 	# so NetworkManager stays in default mode and writes past resolved
-	if Os.running_from_foreign():
+	if Host.running_from_foreign():
 		warn('NetworkManager will not use the DNS choice: /etc/resolv.conf is not the resolved stub')
 
 	conf_dir = installation.target / 'etc/systemd/resolved.conf.d'
@@ -179,7 +179,7 @@ def _use_resolved(installation: Installer) -> None:
 	# the stub only resolves once systemd-resolved runs on the target. From a
 	# foreign (non-systemd) host that flow isn't guaranteed, so copy the
 	# host's working resolv.conf content instead of a dangling symlink.
-	if Os.running_from_foreign():
+	if Host.running_from_foreign():
 		host_resolv = Path('/etc/resolv.conf')
 		if host_resolv.is_file():  # follows symlink, False if dangling
 			resolv.write_text(host_resolv.read_text())

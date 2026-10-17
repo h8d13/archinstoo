@@ -17,7 +17,8 @@ from archinstoo.lib.installer import Installer
 from archinstoo.lib.localization import catalog
 from archinstoo.lib.menu import locale_menu
 from archinstoo.lib.models.localization import LocaleConfiguration
-from archinstoo.lib.utils.env import Os, data_paths
+from archinstoo.lib.utils.host import Host
+from archinstoo.lib.utils.paths import data_paths
 
 _DATA_PATHS = 'archinstoo.lib.localization.catalog.data_paths'
 
@@ -644,7 +645,7 @@ def test_setting_the_host_keymap_drops_the_cached_probe(monkeypatch: pytest.Monk
 			raise SysCallError('no localectl here')
 
 	monkeypatch.setattr(catalog, 'SysCommand', fake_syscommand)
-	monkeypatch.setattr(Os, 'running_from_host', lambda: False)
+	monkeypatch.setattr(Host, 'running_from_host', lambda: False)
 	monkeypatch.setattr(catalog, 'verify_keyboard_layout', lambda layout: True)
 	catalog.get_kb_layout.cache_clear()
 

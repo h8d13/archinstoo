@@ -79,7 +79,8 @@ from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.bootstrap import keyring_init, pacman_conf
 from .lib.pm.pacman import Pacman
 from .lib.tui.curses_menu import Tui
-from .lib.utils.env import Os, is_root, is_venv, kernel_info
+from .lib.utils.env import Env
+from .lib.utils.host import Host, is_root, is_venv, kernel_info
 from .lib.utils.net import ping
 
 if TYPE_CHECKING:
@@ -144,8 +145,8 @@ def _log_env_info() -> None:
 	# log which mode we are using
 	info(f'Python path: {sys.executable} is_venv={is_venv()}')
 
-	if Os.running_from_host():
-		info(f'Running from Host (H2T Mode) on {Os.running_from_who()}...')
+	if Host.running_from_host():
+		info(f'Running from Host (H2T Mode) on {Host.running_from_who()}...')
 	else:
 		info('Running from ISO (USB Mode)...')
 
@@ -175,13 +176,13 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 
 def _depends() -> tuple[str, ...]:
 	# an Arch host/ISO already ships the disk tools
-	if Os.running_from_bootstrap():
+	if Host.running_from_bootstrap():
 		return base_depends + disk_depends
 	return base_depends
 
 
 def _bootstrap() -> int:
-	if Os.get_env('A2_DEPS_FETCHED'):
+	if Env.get_value('A2_DEPS_FETCHED'):
 		info('Already fetched.')
 		return 0
 	try:
@@ -191,12 +192,12 @@ def _bootstrap() -> int:
 		if not missing:
 			# nothing installed
 			info('Deps already satisfied...')
-			Os.set_env('A2_DEPS_FETCHED', '1')
+			Env.put_value('A2_DEPS_FETCHED', '1')
 			return 0
 
 		info(f'Fetching {len(missing)} missing dep(s): {" ".join(missing)}')
 		Pacman.run(f'-S --needed --noconfirm {" ".join(missing)}', peek_output=True)
-		Os.set_env('A2_DEPS_FETCHED', '1')
+		Env.put_value('A2_DEPS_FETCHED', '1')
 	except Exception as e:
 		error(f'Failed to fetch deps: {e}')
 		return 1
@@ -242,11 +243,11 @@ def _prepare(offline: bool) -> int:
 		try:
 			# -Syy then -S without -u is a partial upgrade of the running system:
 			# fine on the ISO, not on the user's own Arch, which provides the deps
-			if Os.running_from_arch_host():
+			if Host.running_from_arch_host():
 				return _ensure_host_deps()
 			# a foreign host ships pacman but none of its config/keyring; build
 			# it first (conf before keyring: pacman-key reads pacman.conf).
-			foreign_host = Os.running_from_foreign()
+			foreign_host = Host.running_from_foreign()
 			if foreign_host:
 				pacman_conf()
 				keyring_init()
@@ -330,7 +331,7 @@ def _is_foreign_blocked(script: str | None) -> bool:
 	# install onto the running system: target '/' means `pacman -S` straight
 	# into the Debian/Alpine root, never a chroot. distros/BOOT's Arch root
 	# is thrown away after, same outcome.
-	return script in NO_DISK_SCRIPTS and (Os.running_from_foreign() or Os.running_from_bootstrap())
+	return script in NO_DISK_SCRIPTS and (Host.running_from_foreign() or Host.running_from_bootstrap())
 
 
 def run_as_a_module() -> int:
@@ -352,7 +353,7 @@ def run_as_a_module() -> int:
 		output.log_level = logging.DEBUG
 
 	if _is_foreign_blocked(early.script):
-		running = 'the distros/BOOT bootstrap root' if Os.running_from_bootstrap() else Os.running_from_who() or 'not Arch'
+		running = 'the distros/BOOT bootstrap root' if Host.running_from_bootstrap() else Host.running_from_who() or 'not Arch'
 		error(f'archinstoo {early.script} configures the running system, which is {running}.')
 		error('Use a disk script from a foreign host (see distros/), or run this one from an Arch host/ISO.')
 		return 1

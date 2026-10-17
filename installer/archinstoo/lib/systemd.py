@@ -8,7 +8,7 @@ from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.output import debug, info, warn
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.host import Host
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -26,7 +26,7 @@ def _unit(service_name: str) -> str:
 
 
 def _service_started(service_name: str) -> str | None:
-	if not Os.has_systemd():
+	if not Host.has_systemd():
 		# no running pid1 to ask (non-systemd host, or a chroot)
 		return None
 
@@ -43,7 +43,7 @@ def _service_started(service_name: str) -> str | None:
 
 
 def _service_state(service_name: str) -> str:
-	if not Os.has_systemd():
+	if not Host.has_systemd():
 		# nothing to poll, report inert so waits exit
 		return 'dead'
 
@@ -57,7 +57,7 @@ def accessibility_tools_in_use() -> bool:
 	# espeakup is a live-ISO accessibility unit. In a chroot systemctl
 	# answers is-active with "Running in chroot, ignoring command" and
 	# exit 0, which would read as active
-	if not Os.has_systemd():
+	if not Host.has_systemd():
 		return False
 
 	try:
@@ -77,7 +77,7 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 	# architecture and parse results for prints
 	# https://github.com/archlinux/archinstall/issues/3688
 	# be more descriptive about status in code + what user sees
-	if Os.running_from_host() or Os.running_from_bootstrap():
+	if Host.running_from_host() or Host.running_from_bootstrap():
 		# NTP/keyring-wkd-sync are live-ISO startup units: archiso boots
 		# with an untrusted RTC and an empty trustdb and starts both. An
 		# installed host runs whatever it runs; an idle timesyncd there

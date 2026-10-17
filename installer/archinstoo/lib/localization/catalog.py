@@ -8,8 +8,10 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.exceptions import RequirementError, ServiceError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, error, warn
-from archinstoo.lib.utils.env import Os, data_paths
+from archinstoo.lib.utils.env import Env
+from archinstoo.lib.utils.host import Host
 from archinstoo.lib.utils.net import fetch_data_from_url
+from archinstoo.lib.utils.paths import data_paths
 
 if TYPE_CHECKING:
 	from collections.abc import Iterable
@@ -181,7 +183,7 @@ _XKB_ROOT_ENV = 'XKB_CONFIG_ROOT'
 
 
 def _x11_rules_paths() -> list[Path]:
-	if xkb_root := Os.get_env(_XKB_ROOT_ENV):
+	if xkb_root := Env.get_value(_XKB_ROOT_ENV):
 		return [Path(xkb_root) / 'rules' / name for name in ('evdev.xml', 'base.xml')]
 	return data_paths('setxkbmap', *_X11_RULES)
 
@@ -349,7 +351,7 @@ def get_kb_layout() -> str:
 
 
 def set_kb_layout(locale: str) -> bool:
-	if Os.running_from_host():
+	if Host.running_from_host():
 		# Skip when running from host - no need to change host keymap
 		# The target installation keymap is set via installer.set_vconsole()
 		return True

@@ -5,7 +5,7 @@ import pytest
 
 from archinstoo.lib import chroot
 from archinstoo.lib.chroot import chroot_prefix, run_in_target
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.host import Host
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ from archinstoo.lib.utils.env import Os
 def test_running_from_arch(monkeypatch: pytest.MonkeyPatch, distro_id: str, is_arch: bool) -> None:
 	monkeypatch.setattr('platform.freedesktop_os_release', lambda: {'ID': distro_id})
 
-	assert Os.running_from_arch() is is_arch
+	assert Host.running_from_arch() is is_arch
 
 
 @pytest.mark.parametrize(
@@ -41,7 +41,7 @@ def test_running_in_chroot(monkeypatch: pytest.MonkeyPatch, same_root: bool | OS
 
 	monkeypatch.setattr(Path, 'samefile', samefile)
 
-	assert Os.running_in_chroot() is in_chroot
+	assert Host.running_in_chroot() is in_chroot
 
 
 def test_chroot_prefix_inherits_env() -> None:

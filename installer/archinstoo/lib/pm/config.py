@@ -9,7 +9,7 @@ from archinstoo.lib.output import debug, info
 from archinstoo.lib.pm.pacman import PACMAN_CONF
 from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.host import Host
 
 # On a running host (not the ISO) /etc/pacman.conf is permanent, so anything we change to
 # drive pacstrap must be reverted. Snapshot lives at a stable, namespaced path so a user's
@@ -29,7 +29,7 @@ def guard_host_conf() -> None:
 	# was modified but never reverted), then snapshot the clean conf and restore it on exit.
 	# No-op on the ISO where /etc/pacman.conf is discarded on reboot, and on a foreign host
 	# where pm/bootstrap.py writes the conf on purpose (before this runs) to get repos at all.
-	if not (Os.running_from_host() and Os.running_from_arch()):
+	if not (Host.running_from_host() and Host.running_from_arch()):
 		debug('Not an Arch host install: skipping pacman.conf snapshot')
 		return
 

@@ -21,7 +21,7 @@ from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.systemd import accessibility_tools_in_use
-from archinstoo.lib.utils.env import Os
+from archinstoo.lib.utils.paths import locate_binary
 
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
@@ -39,7 +39,7 @@ def _flat(key: str) -> list[str]:
 def _requirements(*binaries: str) -> bool:
 	try:
 		for name in binaries:
-			Os.locate_binary(name)
+			locate_binary(name)
 		return True
 	except RequirementError:
 		return False
