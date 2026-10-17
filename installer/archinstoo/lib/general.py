@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 
 from .exceptions import SysCallError
 from .output import HasJson, debug, error, logger
+from .utils.env import Env
 from .utils.paths import locate_binary
 
 if TYPE_CHECKING:
@@ -286,7 +287,7 @@ class SysCommandWorker:
 			_cmd_history(self.cmd)
 
 			try:
-				os.execve(self.cmd[0], list(self.cmd), {**os.environ, **self.environment_vars})  # noqa: S606 - SysCommand intentionally runs without a shell
+				os.execve(self.cmd[0], list(self.cmd), Env.get_envir(self.environment_vars))  # noqa: S606 - SysCommand intentionally runs without a shell
 			except FileNotFoundError:
 				error(f'{self.cmd[0]} does not exist.')
 				self.exit_code = 1
@@ -500,7 +501,7 @@ def run(
 			stdin=None if input_data is not None else subprocess.DEVNULL,
 			capture_output=True,
 			check=True,
-			env={**os.environ, **env} if env else None,
+			env=Env.get_envir(env) if env else None,
 		)
 	except subprocess.CalledProcessError as err:
 		# normalize to the SysCommand path's type so handlers written
