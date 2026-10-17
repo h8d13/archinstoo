@@ -131,7 +131,7 @@ disk_depends = (
 # short-circuit all of the ini
 
 # scripts that do not need root access
-ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect'})
+ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect', 'dev.tser', 'dev.tvm'})
 # scripts that only touch the running system
 NO_DISK_SCRIPTS = frozenset({'packages'})
 

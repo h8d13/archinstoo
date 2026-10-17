@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+from typing import overload
 
 # consts
 _TRUTHY_VALS = frozenset({'y', 'yes', '1', 'true', 't', 'on'})
@@ -27,9 +29,18 @@ class Env:
 		return key in os.environ
 
 	# if is missing, set a default. or don't.
+	# set but empty counts as unset, like shell ${FOO:-default}
+	@overload
+	@staticmethod
+	def get_value(key: str) -> str | None: ...
+
+	@overload
+	@staticmethod
+	def get_value(key: str, default: str) -> str: ...
+
 	@staticmethod
 	def get_value(key: str, default: str | None = None) -> str | None:
-		return os.environ.get(key, default)
+		return os.environ.get(key) or default
 
 	# useful for cli tool invocations
 	@staticmethod
@@ -39,6 +50,15 @@ class Env:
 			return default
 
 		return value in _TRUTHY_VALS
+
+	# ~ expands, a relative path is taken from base (when given)
+	@staticmethod
+	def get_path(key: str, base: Path | None = None) -> Path | None:
+		if not (value := os.environ.get(key)):
+			return None
+
+		path = Path(value).expanduser()
+		return base / path if base else path
 
 	# misc
 	# this is not thread safe. inherits from the python process

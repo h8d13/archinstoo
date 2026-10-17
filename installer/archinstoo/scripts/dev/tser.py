@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# Serial console driver for the headless dev VM (A2_SERIAL=1 ./TVM).
+# Serial console driver for the headless dev VM (A2_SERIAL=1 ./RUN --script dev.tvm).
 #
 # QEMU exposes two unix sockets and two growing log files:
 #   .dev-serial.sock    guest ttyS0 (write keystrokes here)
@@ -11,45 +10,44 @@
 # invocations, so each command here is a short-lived connect/act/exit
 # instead of an interactive session that has to stay attached.
 #
-# Usage:
-#   ./TSER read [-n LINES]        dump console output (default: last 50)
-#   ./TSER login                  log in as root, sane tty width
-#   ./TSER send TEXT              type TEXT + Enter on ttyS0
-#   ./TSER run CMD [-t SEC]       run CMD in the guest shell, print output,
+# Usage (from the repo root, tser = ./RUN --script dev.tser):
+#     tser read [-n LINES]        dump console output (default: last 50)
+#     tser login                  log in as root, sane tty width
+#     tser send TEXT              type TEXT + Enter on ttyS0
+#     tser run CMD [-t SEC]       run CMD in the guest shell, print output,
 #                                 exit with the guest's return code
-#   ./TSER capture CMD [-t SEC]   same, but via ttyS1: exact bytes, safe to
+#     tser capture CMD [-t SEC]   same, but via ttyS1: exact bytes, safe to
 #                                 pipe into jq/diff
-#   ./TSER push SRC [DEST]        copy a host file or directory into the
+#     tser push SRC [DEST]        copy a host file or directory into the
 #                                 guest over http (a directory arrives as a
 #                                 tree, DEST defaults to /root/<name>)
-#   ./TSER ctrl KEY [KEY ...]     raw bytes on ttyS0: ctrl-<letter>, esc,
+#     tser ctrl KEY [KEY ...]     raw bytes on ttyS0: ctrl-<letter>, esc,
 #                                 ret, tab, space, up/down/left/right.
 #                                 Steers a curses menu, interrupts a
 #                                 running script, ends a chrooted shell
-#   ./TSER keys KEY [KEY ...]     monitor sendkey (bootloader menus: up/ret)
-#   ./TSER type TEXT              TEXT + Enter as sendkeys: greeter or VT
+#     tser keys KEY [KEY ...]     monitor sendkey (bootloader menus: up/ret)
+#     tser type TEXT              TEXT + Enter as sendkeys: greeter or VT
 #                                 login when the guest has no serial getty
-#   ./TSER mon CMD                raw HMP monitor command
-#   ./TSER status                 is the VM alive, how big is the log
-#   ./TSER quit                   kill the VM
+#     tser mon CMD                raw HMP monitor command
+#     tser status                 is the VM alive, how big is the log
+#     tser quit                   kill the VM
 
 # Example:
-#   ./TSER run 'pacman -Sy --noconfirm git'
-#   ./TSER run 'git clone --depth 1 <url>/archinstoo /root/archinstoo'
+#     tser run 'pacman -Sy --noconfirm git'
+#     tser run 'git clone --depth 1 <url>/archinstoo /root/archinstoo'
 # craft a config, reference found in repo (credentials go in as crypt hashes)
-#   ./TSER send 'python3 -B -m archinstoo --script guided \
+#     tser send 'python3 -B -m archinstoo --script guided \
 #       --config examples/vm_unattended.json --silent --advanced --debug'
 # examples/vm_unattended.json ships root and user 'vm' both with password
 # 'test' (yescrypt hashes in auth_config). After a guided install, boot the
-# disk (A2_SERIAL=1 ./TVM boot) and log in straight away, no chpasswd needed:
-#   ./TSER login -p test           # root
-#   ./TSER login -u vm -p test     # user
+# disk (A2_SERIAL=1 ./RUN --script dev.tvm boot) and log in straight away, no chpasswd needed:
+#     tser login -p test           # root
+#     tser login -u vm -p test     # user
 #
 # Foreign hosts for distros/: ./distros/CLOUD fed|deb boots a cloud image,
-# then ./TSER login -p test
+# then tser login -p test
 
 import argparse
-import os
 import re
 import shutil
 import socket
@@ -63,12 +61,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import NoReturn
 
-ROOT = Path(__file__).resolve().parent
-SERIAL = ROOT / '.dev-serial.sock'
-MONITOR = ROOT / '.dev-monitor.sock'
-LOG = ROOT / '.dev-serial.log'
-CAPTURE = ROOT / '.dev-capture.log'
-PIDFILE = ROOT / '.dev-vm.pid'
+from archinstoo.lib.output import error, info
+from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, SERIAL, vm_pid
 
 # terminal control noise: CSI from agetty, pacman progress bars, the
 # installer TUI; DCS and OSC from systemd, which resets the tty (ESC[!p,
@@ -102,11 +96,6 @@ def fuzzy(text: str) -> str:
 	return ''.join(re.escape(char) + '+' for char in text)
 
 
-def die(msg: str) -> NoReturn:
-	print(f'ERROR: {msg}', file=sys.stderr)
-	sys.exit(1)
-
-
 def log_size() -> int:
 	try:
 		return LOG.stat().st_size
@@ -119,8 +108,9 @@ def log_read(offset: int = 0) -> bytes:
 		with LOG.open('rb') as fh:
 			fh.seek(offset)
 			return fh.read()
-	except FileNotFoundError:
-		die(f'{LOG} missing, is the VM running? (A2_SERIAL=1 ./TVM)')
+	except FileNotFoundError as e:
+		error(f'{LOG} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
+		raise SystemExit(1) from e
 
 
 def clean(raw: bytes) -> str:
@@ -136,21 +126,10 @@ def clean(raw: bytes) -> str:
 	return ANSI.sub('', text).replace('\x1b', '').replace('\x07', '').replace('\r', '\n')
 
 
-def vm_pid() -> int | None:
-	try:
-		pid = int(PIDFILE.read_text().strip())
-	except FileNotFoundError, ValueError:
-		return None
-	try:
-		os.kill(pid, 0)
-	except OSError:
-		return None
-	return pid
-
-
 def serial_write(data: bytes, kill_line: bool = True) -> None:
 	if not SERIAL.exists():
-		die(f'{SERIAL} missing, is the VM running? (A2_SERIAL=1 ./TVM)')
+		error(f'{SERIAL} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
+		raise SystemExit(1)
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.connect(str(SERIAL))
 		# ^U first: anything the guest left half-typed (zsh refusing to run
@@ -171,7 +150,8 @@ def serial_write(data: bytes, kill_line: bool = True) -> None:
 
 def monitor_cmd(cmd: str, timeout: float = 5.0) -> str:
 	if not MONITOR.exists():
-		die(f'{MONITOR} missing, is the VM running? (A2_SERIAL=1 ./TVM)')
+		error(f'{MONITOR} missing, is the VM running? (A2_SERIAL=1 ./RUN --script dev.tvm)')
+		raise SystemExit(1)
 	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
 		sock.settimeout(timeout)
 		sock.connect(str(MONITOR))
@@ -237,7 +217,8 @@ def marked_run(cmd: str, timeout: float) -> tuple[str, int | None]:
 	# marker carries the exit status back out of the guest; the log
 	# offset makes it unique per invocation without needing state
 	if not wait_idle(timeout):
-		die(f'guest still busy after {timeout}s, see ./TSER read')
+		error(f'guest still busy after {timeout}s, see ./RUN --script dev.tser read')
+		raise SystemExit(1)
 	offset = log_size()
 	marker = f'TSER{offset}'
 	serial_write(f'{cmd}; echo {marker}rc=$?\n'.encode())
@@ -259,8 +240,9 @@ def cmd_run(args: argparse.Namespace) -> NoReturn:
 	body, rc = marked_run(args.cmd, args.timeout)
 	print(body)
 	if rc is None:
-		die(f'timeout after {args.timeout}s running {args.cmd!r}')
-	sys.exit(rc)
+		error(f'timeout after {args.timeout}s running {args.cmd!r}')
+		raise SystemExit(1)
+	raise SystemExit(rc)
 
 
 def cmd_capture(args: argparse.Namespace) -> NoReturn:
@@ -277,8 +259,9 @@ def cmd_capture(args: argparse.Namespace) -> NoReturn:
 		fh.seek(cap_offset)
 		sys.stdout.write(fh.read().decode('utf-8', 'replace'))
 	if not match:
-		die(f'timeout after {args.timeout}s capturing {args.cmd!r}')
-	sys.exit(int(match.group(1)))
+		error(f'timeout after {args.timeout}s capturing {args.cmd!r}')
+		raise SystemExit(1)
+	raise SystemExit(int(match.group(1)))
 
 
 def cmd_login(args: argparse.Namespace) -> None:
@@ -288,20 +271,23 @@ def cmd_login(args: argparse.Namespace) -> None:
 	text, match = wait_for(r'login:', args.timeout)
 	if not match:
 		print('\n'.join(text.splitlines()[-10:]))
-		die('no login prompt on ttyS0')
+		error('no login prompt on ttyS0')
+		raise SystemExit(1)
 	offset = log_size()
 	serial_write(args.user.encode() + b'\n')
 	if args.password:
 		_, match = wait_for(r'[Pp]assword:', args.timeout, offset)
 		if not match:
-			die('no password prompt')
+			error('no password prompt')
+			raise SystemExit(1)
 		serial_write(args.password.encode() + b'\n')
 	# bash/zsh announce the shell as user@host, busybox ash as 'host:~#', and
 	# a guest that logs in without either is a guest we cannot drive anyway
 	text, match = wait_for(rf'{args.user}@\S+|\S+:~\s*[#$]', args.timeout, offset)
 	if not match:
 		print('\n'.join(text.splitlines()[-10:]))
-		die('no shell prompt after login')
+		error('no shell prompt after login')
+		raise SystemExit(1)
 	# ttyS0 defaults to 80 cols, which chops long command echoes into
 	# garbage mid-token; widen so 'run' output stays parseable
 	serial_write(b'stty cols 400 rows 100\n')
@@ -311,11 +297,13 @@ def cmd_login(args: argparse.Namespace) -> None:
 	# Wait for the prompt in between: a TCG guest is still chewing on stty
 	# when the next line lands and loses its tail ('unsetopt corre').
 	if not wait_idle(args.timeout):
-		die('no prompt after stty')
+		error('no prompt after stty')
+		raise SystemExit(1)
 	serial_write(b'[ -n "$ZSH_VERSION" ] && unsetopt correct\n')
 	if not wait_idle(args.timeout):
-		die('no prompt after unsetopt')
-	print('logged in as root')
+		error('no prompt after unsetopt')
+		raise SystemExit(1)
+	info('logged in as root')
 
 
 def cmd_push(args: argparse.Namespace) -> None:
@@ -324,7 +312,8 @@ def cmd_push(args: argparse.Namespace) -> None:
 	# else on the network. Beats typing a payload in over a 16550.
 	src = Path(args.src).expanduser().resolve()
 	if not src.exists():
-		die(f'{src} does not exist')
+		error(f'{src} does not exist')
+		raise SystemExit(1)
 
 	dest = args.dest or f'/root/{src.name}'
 
@@ -354,10 +343,12 @@ def cmd_push(args: argparse.Namespace) -> None:
 	if body:
 		print(body)
 	if rc is None:
-		die(f'timeout after {args.timeout}s pushing {src}')
+		error(f'timeout after {args.timeout}s pushing {src}')
+		raise SystemExit(1)
 	if rc != 0:
-		die(f'guest fetch failed (rc {rc}): {fetch}')
-	print(f'{src} -> {dest}')
+		error(f'guest fetch failed (rc {rc}): {fetch}')
+		raise SystemExit(1)
+	info(f'{src} -> {dest}')
 
 
 # ttyS0 carries these as bytes, and `send` cannot: it kills the line first
@@ -382,7 +373,8 @@ def raw_key(key: str) -> bytes:
 	letter = key.removeprefix('ctrl-')
 	if key.startswith('ctrl-') and len(letter) == 1 and letter.isalpha():
 		return bytes([ord(letter.lower()) - ord('a') + 1])
-	die(f'unknown key {key!r}: ctrl-<letter> or one of {", ".join(RAW_KEYS)}')
+	error(f'unknown key {key!r}: ctrl-<letter> or one of {", ".join(RAW_KEYS)}')
+	raise SystemExit(1)
 
 
 def cmd_ctrl(args: argparse.Namespace) -> None:
@@ -446,7 +438,8 @@ def keyname(char: str) -> str:
 		return f'shift-{SHIFTED[char]}'
 	if char in PLAIN:
 		return PLAIN[char]
-	die(f'no sendkey name for {char!r}')
+	error(f'no sendkey name for {char!r}')
+	raise SystemExit(1)
 
 
 def cmd_type(args: argparse.Namespace) -> None:
@@ -460,30 +453,34 @@ def cmd_mon(args: argparse.Namespace) -> None:
 	print(monitor_cmd(' '.join(args.cmd)), end='')
 
 
-def cmd_status(args: argparse.Namespace) -> NoReturn:
+def cmd_status(_args: argparse.Namespace) -> NoReturn:
 	pid = vm_pid()
 	print(f'vm:      {"running pid " + str(pid) if pid else "not running"}')
 	print(f'serial:  {SERIAL} {"ok" if SERIAL.exists() else "missing"}')
 	print(f'monitor: {MONITOR} {"ok" if MONITOR.exists() else "missing"}')
 	print(f'log:     {LOG} {log_size()} bytes')
-	sys.exit(0 if pid else 1)
+	raise SystemExit(0 if pid else 1)
 
 
-def cmd_quit(args: argparse.Namespace) -> None:
+def cmd_quit(_args: argparse.Namespace) -> None:
 	if not vm_pid():
-		print('not running')
+		info('not running')
 		return
 	monitor_cmd('quit', timeout=2.0)
 	for _ in range(20):
 		if not vm_pid():
-			print('vm stopped')
+			info('vm stopped')
 			return
 		time.sleep(0.25)
-	die('vm still running, kill it by hand')
+	error('vm still running, kill it by hand')
+	raise SystemExit(1)
 
 
-def main() -> None:
-	parser = argparse.ArgumentParser(prog='TSER', description=__doc__)
+def tser() -> None:
+	parser = argparse.ArgumentParser(
+		prog='python -m archinstoo --script dev.tser',
+		description='Serial console driver for the headless dev VM (A2_SERIAL=1 ./RUN --script dev.tvm)',
+	)
 	sub = parser.add_subparsers(dest='mode', required=True)
 
 	p = sub.add_parser('read')
@@ -540,5 +537,4 @@ def main() -> None:
 	args.func(args)
 
 
-if __name__ == '__main__':
-	main()
+tser()

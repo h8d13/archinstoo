@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Boots a distro cloud image as a foreign host under TVM, for testing
+# Boots a distro cloud image as a foreign host under tvm, for testing
 # distros/BOOT (and the native distros/ ports) from a real non-Arch system.
 #
 # The cloud image, as a throwaway overlay, is the boot disk (/dev/vda) and an
@@ -11,17 +11,17 @@
 #   ./distros/CLOUD target        boot what got installed on the target disk (the
 #                                 cloud overlay is dropped, the target becomes vda)
 #   ./distros/CLOUD clean         remove overlays and seed (images stay cached)
-# then: ./TSER login -p test
+# then: ./RUN --script dev.tser login -p test
 # or A2_SERIAL=tty: console in this terminal, log in as root/test there
 # Env: REL BUILD (fedora release/build), SEED_PORT, PASS, A2_SERIAL, A2_RAM, A2_CPUS
 
 set -euo pipefail
 
-# repo root: TVM and its .dev-* files live there
+# repo root: the dev VM keeps its .dev-* files there
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CLOUD_DIR="$PROJECT_DIR/.dev-cloud"
 SEED="$CLOUD_DIR/seed"
-# TVM boots this one; the target is ours
+# tvm boots this one; the target is ours
 DISK="$PROJECT_DIR/.dev-disk.qcow2"
 TARGET="$PROJECT_DIR/.dev-target.qcow2"
 LOG="$PROJECT_DIR/.dev-serial.log"
@@ -103,7 +103,7 @@ wait_cloud_init() {
 	# cloud-init prints its summary line on the console once every stage ran
 	local deadline=$((SECONDS + 600))
 	until grep -aq 'Cloud-init v\. .* finished' "$LOG" 2>/dev/null; do
-		[ "$SECONDS" -lt "$deadline" ] || err "cloud-init not done after 600s, see ./TSER read"
+		[ "$SECONDS" -lt "$deadline" ] || err "cloud-init not done after 600s, see ./RUN --script dev.tser read"
 		sleep 2
 	done
 }
@@ -119,20 +119,20 @@ boot() {
 	seed "$1"
 	trap teardown EXIT
 	serve
-	A2_SERIAL=$A2_SERIAL A2_BIOS=1 \
+	(cd "$PROJECT_DIR/installer" && A2_SERIAL=$A2_SERIAL A2_BIOS=1 \
 		A2_QEMU_EXTRA="-drive file=$TARGET,format=qcow2,if=virtio -smbios type=1,serial=ds=nocloud;s=http://10.0.2.2:$SEED_PORT/" \
-		"$PROJECT_DIR/TVM" boot
-	# tty: TVM held the terminal until the VM exited, nothing left to wait on
+		python3 -B -m archinstoo --script dev.tvm boot)
+	# tty: tvm held the terminal until the VM exited, nothing left to wait on
 	[ "$A2_SERIAL" = "1" ] || return 0
 	wait_cloud_init
-	echo "cloud-init done: ./TSER login -p $PASS (target disk is /dev/vdb)"
+	echo "cloud-init done: ./RUN --script dev.tser login -p $PASS (target disk is /dev/vdb)"
 }
 
 boot_target() {
 	[ -s "$TARGET" ] || err "no $TARGET, run ./distros/CLOUD fed|deb and install first"
 	# fstab and grub name UUIDs, so vdb installing as vda boots the same
 	mv "$TARGET" "$DISK"
-	A2_SERIAL=$A2_SERIAL A2_BIOS=1 "$PROJECT_DIR/TVM" boot
+	(cd "$PROJECT_DIR/installer" && A2_SERIAL=$A2_SERIAL A2_BIOS=1 python3 -B -m archinstoo --script dev.tvm boot)
 }
 
 case "${1:-}" in

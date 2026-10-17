@@ -237,6 +237,10 @@ known-first-party = ["archinstoo"]
     "S603",   # dev tooling runs fixed local commands, not untrusted input
     "S607",   # nvchecker/pacman helpers resolved from $PATH by design
 ]
+"**/scripts/dev/**" = [
+    "S603",   # dev tooling runs fixed local commands, not untrusted input
+    "S607",   # qemu/bsdtar/stty resolved from $PATH by design
+]
 "**/tests/**" = [
     "S101",   # pytest uses assert
     "S106",   # test fixtures use placeholder passwords

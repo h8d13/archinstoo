@@ -16,18 +16,30 @@ def clean_logs() -> None:
 			item.unlink()
 
 
+def _script_not_found(script: str) -> SystemExit:
+	error(f'Script: {script} does not exist. Try `--script list` to see your options.')
+	return SystemExit(1)
+
+
 def _run_script(script: str) -> None:
+	# subfolders are namespaces: dev/tser and dev.tser both load scripts/dev/tser.py
+	parts = script.replace('/', '.').split('.')
+	# '', '..' or '-x' would reach import_module as a relative or bogus name
+	if not all(part.isidentifier() for part in parts):
+		raise _script_not_found(script)
+
+	module = '.'.join(('archinstoo.scripts', *parts))
 	try:
 		# by importing we automatically run it
-		importlib.import_module(f'archinstoo.scripts.{script}')
+		importlib.import_module(module)
 	except ModuleNotFoundError as e:
-		# only the script itself missing is a usage error; a bad import inside
-		# the script (`e.name` is the module it asked for) must surface as the
-		# crash it is, or `--script` exits 0 having done nothing
-		if e.name != f'archinstoo.scripts.{script}':
+		# only the script or one of its namespaces missing is a usage error; a
+		# bad import inside the script (`e.name` is the module it asked for)
+		# must surface as the crash it is, or `--script` exits 0 having done nothing
+		namespaces = {'.'.join(('archinstoo.scripts', *parts[:i])) for i in range(1, len(parts) + 1)}
+		if e.name not in namespaces:
 			raise
-		error(f'Script: {script} does not exist. Try `--script list` to see your options.')
-		raise SystemExit(1) from e
+		raise _script_not_found(script) from e
 
 
 def clean_cache(root: Path) -> None:
