@@ -18,11 +18,6 @@ class Env:
 	def put_value(key: str, value: str) -> None:
 		os.environ[key] = value
 
-	@staticmethod
-	def del_value(key: str) -> None:
-		# no-op when unset
-		os.environ.pop(key, None)
-
 	# getters
 	@staticmethod
 	def has_value(key: str) -> bool:
@@ -64,10 +59,3 @@ class Env:
 	@staticmethod
 	def get_envir(extra: dict[str, str] | None = None) -> dict[str, str]:
 		return {**os.environ, **(extra or {})}
-
-	# misc
-	# this is not thread safe. inherits from the python process
-	# should be used only as such, for the current process envir
-	@staticmethod
-	def rel_envir() -> None:
-		os.reload_environ()

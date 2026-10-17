@@ -75,15 +75,13 @@ class MirrorStatusEntryV3:
 	_latency: float | None = field(default=None, repr=False)
 	_speed: float | None = field(default=None, repr=False)
 	_hostname: str | None = field(default=None, repr=False)
-	_port: int | None = field(default=None, repr=False)
 	_speedtest_retries: int | None = field(default=None, repr=False)
 
 	def __post_init__(self) -> None:
 		if self.score is not None:
 			self.score = round(self.score)
 
-		self._hostname, *port = urllib.parse.urlparse(self.url).netloc.split(':', 1)
-		self._port = int(port[0]) if port else None
+		self._hostname = urllib.parse.urlparse(self.url).netloc.split(':', 1)[0]
 
 		debug(f'Loaded mirror {self._hostname}' + (f' with score {self.score}' if self.score else ''))
 

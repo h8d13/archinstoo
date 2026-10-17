@@ -6,7 +6,6 @@ class HelpTextGroupId(Enum):
 	GENERAL = 'General'
 	NAVIGATION = 'Navigation'
 	SELECTION = 'Selection'
-	SEARCH = 'Search'
 
 
 @dataclass

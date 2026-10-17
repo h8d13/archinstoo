@@ -505,7 +505,6 @@ class EditMenu(AbstractCurses[str]):
 		self._last_state: Result[str] | None = None
 		self._help_active = False
 
-		self._current_text = default_text or ''
 		self._real_input = default_text or ''
 		self._cursor_pos = len(self._real_input)
 
@@ -636,7 +635,6 @@ class EditMenu(AbstractCurses[str]):
 
 		# Ctrl-H: help
 		if key == 8:
-			self._current_text = self._real_input
 			self._clear_all()
 			self._help_active = True
 			self._show_help()
@@ -739,7 +737,6 @@ class SelectMenu[ValueT](AbstractCurses[ValueT]):
 		self._alignment = alignment
 		self._frame = frame
 		self._interrupt_warning = reset_warning_msg
-		self._header = header
 		self._additional_title = additional_title
 		self._preview_size: float | Literal['auto'] = preview_size
 
