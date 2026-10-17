@@ -72,7 +72,7 @@ jobs:
       - name: Build stamped wheel
         run: |
           sed -i "s/^version = \"0.0.0\"/version = \"${PKGVER}\"/" installer/pyproject.toml
-          sed -i "s/^__pkgstamp__ = '[^']*'/__pkgstamp__ = '${PKGVER}-${PKGREL}'/" installer/archinstoo/_version.py
+          sed -i "s/^PKGSTAMP = '[^']*'/PKGSTAMP = '${PKGVER}-${PKGREL}'/" installer/archinstoo/_version.py
           pip install build
           python -m build --wheel installer
 

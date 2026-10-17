@@ -69,7 +69,7 @@ import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ._version import __gitstat__, __pkgver__, __version__
+from ._version import GITSTAT, PKGVER, VERSION
 from .lib import output
 from .lib.checkpoints import _check_script, _run_script, clean_cache, clean_logs
 from .lib.cli import build_parser
@@ -139,7 +139,7 @@ def _log_env_info() -> None:
 	# install.log is appended to, so consecutive runs land in one file and
 	# read as duplicated output. Open each one with a line that says which
 	# run it is
-	info(f'Ver: {__name__} {__pkgver__} ({__gitstat__})')
+	info(f'Ver: {__name__} {PKGVER} ({GITSTAT})')
 
 	# log which mode we are using
 	info(f'Python path: {sys.executable} is_venv={is_venv()}')
@@ -422,11 +422,11 @@ def run_as_a_module() -> int:
 
 
 __all__ = [
+	'VERSION',
 	'FormattedOutput',
 	'Pacman',
 	'SysInfo',
 	'Tui',
-	'__version__',
 	'debug',
 	'error',
 	'info',

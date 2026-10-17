@@ -81,7 +81,7 @@ build() {
 	cd "$srcdir/installer" || exit
 
 	# wheel has no PKGBUILD to read at runtime: stamp the fallback
-	sed -i "s/^__pkgstamp__ = '[^']*'/__pkgstamp__ = '$pkgver-$pkgrel'/" archinstoo/_version.py
+	sed -i "s/^PKGSTAMP = '[^']*'/PKGSTAMP = '$pkgver-$pkgrel'/" archinstoo/_version.py
 	python -m build --wheel --no-isolation
 }
 

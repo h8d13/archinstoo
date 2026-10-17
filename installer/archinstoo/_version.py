@@ -5,7 +5,7 @@ from pathlib import Path
 # read it directly, so nothing here can drift; the stamp below is only what an
 # installed wheel falls back to (no PKGBUILD next to site-packages), and
 # PKGBUILD build() rewrites it via sed before building.
-__pkgstamp__ = '0.0.0-0'
+PKGSTAMP = '0.0.0-0'
 
 _PKGBUILD = Path(__file__).parents[2] / 'PKGBUILD'
 
@@ -57,7 +57,7 @@ def resolve_gitstat(has_pkgbuild: bool) -> str:
 
 
 _from_pkgbuild = read_pkgbuild_version()
-__gitstat__ = resolve_gitstat(_from_pkgbuild is not None)
-__pkgver__ = _from_pkgbuild or __pkgstamp__
-__license__ = '- Copyright (C) 2026 - Hadean Eon'
-__version__ = f'{__pkgver__} ({__gitstat__}) {__license__}'
+GITSTAT = resolve_gitstat(_from_pkgbuild is not None)
+PKGVER = _from_pkgbuild or PKGSTAMP
+LICENSE = '- Copyright (C) 2026 - Hadean Eon'
+VERSION = f'{PKGVER} ({GITSTAT}) {LICENSE}'

@@ -8,12 +8,12 @@ from archinstoo.lib.output import info
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 
-__zram_packages__ = ['zram-generator']
+ZRAM_PACKAGES = ['zram-generator']
 
 
 def setup_zram(installation: Installer, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
 	info('Setting up swap on zram')
-	installation.pacman.strap(__zram_packages__)
+	installation.pacman.strap(ZRAM_PACKAGES)
 
 	with (installation.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
 		zram_conf.write('[zram0]\n')

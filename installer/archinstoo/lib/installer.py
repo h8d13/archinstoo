@@ -53,26 +53,26 @@ if TYPE_CHECKING:
 # pacman picks the first initramfs provider from the host's pacman.conf, which on non-Arch
 # hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
 # UKI presets, both of which assume mkinitcpio is present in the chroot.
-__base_packages__ = ['base', 'mkinitcpio']
+BASE_PACKAGES = ['base', 'mkinitcpio']
 # Arch Ports (aarch64) ships its keyring from forge, not as a pacman dependency
-__archports_packages__ = ['archports-keyring']
+ARCHPORTS_PACKAGES = ['archports-keyring']
 
 # Package sets minimal_installation() and the steps after it add conditionally.
 # Named rather than inlined so schema_gen can read the same list the installer
 # straps, instead of a transcription of it.
-__lvm_packages__ = [LVM]
+LVM_PACKAGES = [LVM]
 # sd-encrypt only bundles the fido2 dlopen libs if this is present when the
 # initramfs is built
-__fido2_packages__ = ['libfido2']
+FIDO2_PACKAGES = ['libfido2']
 # the array has to be assembled before the root is reachable, so this goes
 # into base rather than the post-install package list
-__raid_packages__ = ['mdadm']
+RAID_PACKAGES = ['mdadm']
 # fonts that are in the ISO but won't be on target unless requested before base,
 # otherwise mkinitcpio will be screaming at you
-__ter_font_packages__ = ['terminus-font']
+TER_FONT_PACKAGES = ['terminus-font']
 
 # Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
-__accessibility_packages__ = ['brltty', 'espeakup', 'alsa-utils']
+ACCESSIBILITY_PACKAGES = ['brltty', 'espeakup', 'alsa-utils']
 
 
 class Installer:
@@ -93,7 +93,7 @@ class Installer:
 		# neither wanted for no-disk-ops runs
 		self._device_handler = device_handler
 
-		self._base_packages = list(base_packages or __base_packages__)
+		self._base_packages = list(base_packages or BASE_PACKAGES)
 		self._base_packages.extend(handler.config.firmware.packages())
 		self.kernels = kernels or [DEFAULT_KERNEL.value]
 		self._disk_config = disk_config
@@ -113,7 +113,7 @@ class Installer:
 
 		# If using accessibility tools in the live environment, append those to the packages list
 		if systemd.accessibility_tools_in_use():
-			self._base_packages.extend(__accessibility_packages__)
+			self._base_packages.extend(ACCESSIBILITY_PACKAGES)
 
 		self.initramfs = Initramfs()
 		self._kernel_params: list[str] = []
@@ -252,7 +252,7 @@ class Installer:
 		info(f'Installing base system: kernels={", ".join(self.kernels)}, hostname={hostname or "(unset)"}', step=True)
 
 		if self._disk_config.lvm_config:
-			self._base_packages.extend(__lvm_packages__)
+			self._base_packages.extend(LVM_PACKAGES)
 			self.initramfs.add_lvm()
 
 			for vg in self._disk_config.lvm_config.vol_groups:
@@ -276,11 +276,11 @@ class Installer:
 
 					if part.on_raid:
 						self._on_raid = True
-						self._base_packages.extend(__raid_packages__)
+						self._base_packages.extend(RAID_PACKAGES)
 						self.initramfs.add_raid()
 
 		if self._disk_encryption.fido2_device:
-			self._base_packages.extend(__fido2_packages__)
+			self._base_packages.extend(FIDO2_PACKAGES)
 
 		if ucode := SysInfo.ucode():
 			# the ucode package owns its image in /boot: an unowned copy left
@@ -292,7 +292,7 @@ class Installer:
 			debug('Archinstoo will not install any ucode.')
 
 		if SysInfo.arch() == 'aarch64':
-			self._base_packages.extend(__archports_packages__)
+			self._base_packages.extend(ARCHPORTS_PACKAGES)
 
 		debug(f'Optional repositories: {optional_repositories}')
 
@@ -305,7 +305,7 @@ class Installer:
 		if locale_config:
 			self.set_vconsole(locale_config)
 			if locale_config.console_font.startswith('ter-'):
-				self._base_packages.extend(__ter_font_packages__)
+				self._base_packages.extend(TER_FONT_PACKAGES)
 
 		self.pacman.strap(list(dict.fromkeys(self._base_packages)))
 		# same repos again, on the stock conf pacstrap just installed

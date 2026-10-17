@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
 
 # grub integration for either snapshot tool
-__grub_snapshot_packages__ = ['grub-btrfs', 'inotify-tools']
+GRUB_SNAPSHOT_PACKAGES = ['grub-btrfs', 'inotify-tools']
 
 
 def setup_btrfs_snapshot(
@@ -64,7 +64,7 @@ def setup_btrfs_snapshot(
 
 	if bootloader and bootloader == Bootloader.Grub:
 		debug('Setting up grub integration for either')
-		installation.pacman.strap(__grub_snapshot_packages__)
+		installation.pacman.strap(GRUB_SNAPSHOT_PACKAGES)
 		_configure_grub_btrfsd(installation.target, snapshot_type)
 		installation.enable_service('grub-btrfsd')
 

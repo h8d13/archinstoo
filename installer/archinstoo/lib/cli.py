@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 
-from archinstoo._version import __version__
+from archinstoo._version import VERSION
 
 DEFAULT_SCRIPT = 'guided'
 
@@ -97,7 +97,7 @@ def build_parser() -> argparse.ArgumentParser:
 		'--version',
 		'-v',
 		action='version',
-		version=f'archinstoo {__version__}',
+		version=f'archinstoo {VERSION}',
 		help='Show version and exit',
 	)
 

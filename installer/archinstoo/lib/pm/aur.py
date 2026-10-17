@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 # what grimoire needs on the target before it can build anything from the AUR.
 # base-devel spelled out (its member list minus sudo) so a doas install does
 # not drag sudo in as a side effect of wanting a toolchain
-__aur_bootstrap_packages__ = [
+AUR_BOOTSTRAP_PACKAGES = [
 	'git',
 	'archlinux-keyring',
 	'autoconf',
@@ -73,7 +73,7 @@ def run_grimoire_installation(
 		warn('No elevated user found, skipping AUR packages')
 		return
 
-	installation.add_additional_packages(__aur_bootstrap_packages__)
+	installation.add_additional_packages(AUR_BOOTSTRAP_PACKAGES)
 
 	grimoire_src = Path(__file__).parents[1] / 'grimoire.py'
 	grimoire_dest = installation.target / 'usr/local/bin/grimoire'

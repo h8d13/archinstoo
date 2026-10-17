@@ -102,7 +102,7 @@ class Section:
 
 
 SECTIONS: tuple[Section, ...] = (
-	Section('base', lambda: installer.__base_packages__, site='Installer'),
+	Section('base', lambda: installer.BASE_PACKAGES, site='Installer'),
 	Section(
 		'firmware',
 		lambda: {
@@ -114,10 +114,10 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'accessibility',
-		lambda: installer.__accessibility_packages__,
+		lambda: installer.ACCESSIBILITY_PACKAGES,
 		site='Installer',
 	),
-	Section('lvm', lambda: installer.__lvm_packages__, site='installation.minimal_installation'),
+	Section('lvm', lambda: installer.LVM_PACKAGES, site='installation.minimal_installation'),
 	Section(
 		'filesystem_tools',
 		lambda: {fs.value: [pkg] for fs in FilesystemType if (pkg := fs.installation_pkg)},
@@ -125,12 +125,12 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'fido2',
-		lambda: installer.__fido2_packages__,
+		lambda: installer.FIDO2_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
 		'archports',
-		lambda: installer.__archports_packages__,
+		lambda: installer.ARCHPORTS_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
@@ -138,10 +138,10 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: {v.value: [ucode.stem] for v in CpuVendor if (ucode := v.get_ucode())},
 		site='installation.minimal_installation',
 	),
-	Section('ter_fonts', lambda: installer.__ter_font_packages__, site='installation.minimal_installation'),
+	Section('ter_fonts', lambda: installer.TER_FONT_PACKAGES, site='installation.minimal_installation'),
 	Section(
 		'swap',
-		lambda: {'zram': zram.__zram_packages__},
+		lambda: {'zram': zram.ZRAM_PACKAGES},
 		site='installation.setup_swap',
 	),
 	Section(
@@ -149,7 +149,7 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
 		site='installation.create_users',
 	),
-	Section('stash', lambda: stash.__stash_packages__, site='installation.create_users'),
+	Section('stash', lambda: stash.STASH_PACKAGES, site='installation.create_users'),
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
@@ -244,7 +244,7 @@ SECTIONS: tuple[Section, ...] = (
 		site='application_handler.install_applications',
 	),
 	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='installation.setup_btrfs_snapshot'),
-	Section('grub_extra', lambda: snapshots.__grub_snapshot_packages__, site='installation.setup_btrfs_snapshot'),
+	Section('grub_extra', lambda: snapshots.GRUB_SNAPSHOT_PACKAGES, site='installation.setup_btrfs_snapshot'),
 	Section(
 		'bootloaders',
 		lambda: {b.value: b.packages() for b in Bootloader},
@@ -317,7 +317,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'aur_bootstrap',
-		lambda: aur.__aur_bootstrap_packages__,
+		lambda: aur.AUR_BOOTSTRAP_PACKAGES,
 		site='run_grimoire_installation',
 	),
 )

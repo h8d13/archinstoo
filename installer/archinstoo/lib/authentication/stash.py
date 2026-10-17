@@ -8,13 +8,13 @@ if TYPE_CHECKING:
 
 # a user's dotfiles repo, cloned into ~/.stash right after useradd
 # cloning a user stash
-__stash_packages__ = ['git']
+STASH_PACKAGES = ['git']
 
 
 def clone_user_stash(installation: Installer, username: str, stash_url: str) -> None:
 	info(f'Cloning {stash_url} for {username}')
 
-	installation.add_additional_packages(__stash_packages__)
+	installation.add_additional_packages(STASH_PACKAGES)
 
 	url, _, branch = stash_url.partition('#')
 	repo_name = url.rstrip('/').split('/')[-1].removesuffix('.git')
