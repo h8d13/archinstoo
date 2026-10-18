@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.lib.exceptions import SysCallError
+from archinstoo.lib.exceptions import FetchError, SysCallError
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.localization import catalog
 from archinstoo.lib.menu import locale_menu
@@ -190,7 +190,7 @@ def test_list_locales_fetch_matches_disk(tmp_path: Path, monkeypatch: pytest.Mon
 
 def test_list_locales_offline_falls_back_to_minimum(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	def _no_network(url: str, **kwargs: object) -> str:
-		raise ValueError(f'Unable to fetch data from url: {url}')
+		raise FetchError(f'Unable to fetch data from url: {url}')
 
 	monkeypatch.setattr(catalog, '_SUPPORTED_PATH', tmp_path / 'absent')
 	monkeypatch.setattr(catalog, 'fetch_data_from_url', _no_network)

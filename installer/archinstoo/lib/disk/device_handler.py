@@ -539,7 +539,7 @@ class DeviceHandler:
 	) -> None:
 		# when we require a delete and the partition to be (re)created
 		# already exists then we have to delete it first
-		if requires_delete and part_mod.status in [ModificationStatus.MODIFY, ModificationStatus.DELETE]:
+		if requires_delete and part_mod.status in {ModificationStatus.MODIFY, ModificationStatus.DELETE}:
 			info(f'Delete existing partition: {part_mod.safe_dev_path}')
 			# resolve on the disk being committed: cached partition objects can
 			# belong to another Disk instance and parted refuses cross-disk deletes

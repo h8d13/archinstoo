@@ -20,7 +20,7 @@ def read_pkgbuild_version() -> str | None:
 
 	for line in lines:
 		key, sep, value = line.partition('=')
-		if sep and key in ('pkgname', 'pkgver', 'pkgrel'):
+		if sep and key in {'pkgname', 'pkgver', 'pkgrel'}:
 			fields.setdefault(key, value.strip())
 
 	# guard against picking up an unrelated PKGBUILD that happens to sit there

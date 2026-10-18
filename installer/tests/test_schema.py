@@ -174,8 +174,8 @@ def _installed_literals() -> dict[str, set[str]]:
 		for node in ast.walk(tree):
 			# install calls
 			if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-				installs = node.func.attr in ('add_additional_packages', 'strap') or (
-					node.func.attr in ('append', 'extend') and getattr(node.func.value, 'attr', '') == '_base_packages'
+				installs = node.func.attr in {'add_additional_packages', 'strap'} or (
+					node.func.attr in {'append', 'extend'} and getattr(node.func.value, 'attr', '') == '_base_packages'
 				)
 				if installs:
 					for arg in node.args:

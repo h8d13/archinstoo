@@ -63,7 +63,7 @@ def _boot_partition(
 		# BIOS+GPT: small ef02 partition for the stage that will not fit in the
 		# MBR gap. Only MBR leaves that gap, so both loaders need this on GPT:
 		# `limine bios-install` refuses a GPT device without one, same as grub
-		if using_gpt and bootloader in (Bootloader.Grub, Bootloader.Limine):
+		if using_gpt and bootloader in {Bootloader.Grub, Bootloader.Limine}:
 			partitions.append(
 				PartitionModification(
 					status=ModificationStatus.CREATE,
@@ -227,7 +227,7 @@ def suggest_lvm_layout(
 	vg_grp_name: str = 'ArchinstooVg',
 	home_volume: bool = True,
 ) -> LvmConfiguration:
-	if disk_config.config_type not in (DiskLayoutType.Default, DiskLayoutType.Manual):
+	if disk_config.config_type not in {DiskLayoutType.Default, DiskLayoutType.Manual}:
 		raise ValueError('LVM suggested volumes are only available for default or manual partitioning')
 
 	root_only = not home_volume  # user intent, captured before the subvolume path flips home_volume

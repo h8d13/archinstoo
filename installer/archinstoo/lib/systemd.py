@@ -127,13 +127,13 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 
 		# Wait for the service to enter a finished state
 		keyring_state = _service_state(service)
-		while keyring_state not in ('dead', 'failed', 'exited') and time.monotonic() < deadline:
+		while keyring_state not in {'dead', 'failed', 'exited'} and time.monotonic() < deadline:
 			time.sleep(1)
 			keyring_state = _service_state(service)
 
 		if keyring_state == 'failed':
 			warn('Arch Linux keyring sync failed')
-		elif keyring_state not in ('dead', 'exited'):
+		elif keyring_state not in {'dead', 'exited'}:
 			warn('Keyring sync did not finish within 60 seconds, continuing anyway (or use --skip-wkd)')
 		else:
 			info('Arch Linux keyring sync completed')

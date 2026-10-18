@@ -114,7 +114,7 @@ class ContentEditor:
 		self._error_msg = None
 		current_line = self._lines[self._cursor_y]
 
-		if key in (27, curses.KEY_F10):  # ESC or F10 - cancel
+		if key in {27, curses.KEY_F10}:  # ESC or F10 - cancel
 			self._running = False
 		elif key == 17:  # Ctrl+Q - abort menu; restore editor cursor after it closes
 			Tui.trigger_abort()
@@ -149,7 +149,7 @@ class ContentEditor:
 			self._cursor_x = 0
 		elif key == curses.KEY_END:
 			self._cursor_x = len(current_line)
-		elif key in (curses.KEY_BACKSPACE, 127, 8):  # Backspace
+		elif key in {curses.KEY_BACKSPACE, 127, 8}:  # Backspace
 			if self._cursor_x > 0:
 				self._lines[self._cursor_y] = current_line[: self._cursor_x - 1] + current_line[self._cursor_x :]
 				self._cursor_x -= 1
@@ -167,7 +167,7 @@ class ContentEditor:
 				# Join with next line
 				self._lines[self._cursor_y] += self._lines[self._cursor_y + 1]
 				self._lines.pop(self._cursor_y + 1)
-		elif key in (curses.KEY_ENTER, 10, 13):  # Enter
+		elif key in {curses.KEY_ENTER, 10, 13}:  # Enter
 			# Split line
 			before = current_line[: self._cursor_x]
 			after = current_line[self._cursor_x :]

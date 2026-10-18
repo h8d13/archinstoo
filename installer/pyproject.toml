@@ -172,6 +172,7 @@ select = [
     "FA",     # flake8-future-annotations
     "FLY",    # flynt
     "FURB",   # refurb
+    "FURB142", # for-loop-set-mutations (preview)
     "G",      # flake8-logging-format
     "I",      # isort
     "ICN",    # flake8-import-conventions
@@ -188,6 +189,8 @@ select = [
     "PLR1714", # repeated-equality-comparison
     "PLR1730", # if-stmt-min-max
     "PLR5501", # collapsible-else-if
+    "PLR6104", # non-augmented-assignment (preview)
+    "PLR6201", # literal-membership (preview)
     "PLW",    # Pylint warnings
     "PT",     # flake8-pytest-style
     "PTH",    # flake8-use-pathlib

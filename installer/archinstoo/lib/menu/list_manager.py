@@ -1,4 +1,5 @@
 import copy
+from abc import ABC, abstractmethod
 from typing import cast  # noqa: TID251 - generic menu value type
 
 from archinstoo.lib.menu.menu_helper import MenuHelper
@@ -8,7 +9,7 @@ from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment
 
 
-class ListManager[ValueT]:
+class ListManager[ValueT](ABC):
 	def __init__(
 		self,
 		entries: list[ValueT],
@@ -136,15 +137,17 @@ class ListManager[ValueT]:
 		if value != self._back_action:
 			self._data = self.handle_action(value, entry, self._data)
 
+	@abstractmethod
 	def selected_action_display(self, selection: ValueT) -> str:
 		# this will return the value to be displayed in the
 		# "Select an action for '{}'" string
-		raise NotImplementedError('Please implement me in the child class')
+		...
 
+	@abstractmethod
 	def handle_action(self, action: str, entry: ValueT | None, data: list[ValueT]) -> list[ValueT]:
 		# this function is called when a base action or
 		# a specific action for an entry is triggered
-		raise NotImplementedError('Please implement me in the child class')
+		...
 
 	# hook: subclasses filter on selection, args are the contract
 	def filter_options(self, selection: ValueT, options: list[str]) -> list[str]:  # pylint: disable=unused-argument

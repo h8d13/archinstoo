@@ -18,6 +18,12 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import debug
 
 
+# lvs/vgs report nothing until a fresh volume settles: the only failure
+# worth waiting out. Parse errors are bugs and surface as is
+class _EmptyReportError(Exception):
+	pass
+
+
 def _lvm_info(
 	cmd: str,
 	info_type: Literal['lv', 'vg', 'pvseg'],
@@ -34,7 +40,7 @@ def _lvm_info(
 
 	for report in reports['report']:
 		if len(report[info_type]) != 1:
-			raise ValueError('Report does not contain any entry')
+			raise _EmptyReportError('Report does not contain any entry')
 
 		entry = report[info_type][0]
 
@@ -81,7 +87,7 @@ def _lvm_info_with_retry(
 	for attempt in range(max_retries):
 		try:
 			return _lvm_info(cmd, info_type)
-		except ValueError:
+		except _EmptyReportError:
 			if attempt < max_retries - 1:
 				debug(f'LVM info query failed (attempt {attempt + 1}/{max_retries}), retrying in 3 seconds...')
 				time.sleep(3)

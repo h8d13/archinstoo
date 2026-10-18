@@ -665,13 +665,13 @@ class EditMenu(AbstractCurses[str]):
 		elif key == curses.KEY_RIGHT:
 			if self._cursor_pos < len(self._real_input):
 				self._cursor_pos += 1
-		elif key in (curses.KEY_HOME, 1):  # Home or Ctrl-A
+		elif key in {curses.KEY_HOME, 1}:  # Home or Ctrl-A
 			self._cursor_pos = 0
-		elif key in (curses.KEY_END, 5):  # End or Ctrl-E
+		elif key in {curses.KEY_END, 5}:  # End or Ctrl-E
 			self._cursor_pos = len(self._real_input)
 
 		# Backspace
-		elif key in (curses.KEY_BACKSPACE, 127):
+		elif key in {curses.KEY_BACKSPACE, 127}:
 			if self._cursor_pos > 0:
 				self._real_input = self._real_input[: self._cursor_pos - 1] + self._real_input[self._cursor_pos :]
 				self._cursor_pos -= 1

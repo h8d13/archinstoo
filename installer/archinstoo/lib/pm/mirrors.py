@@ -527,7 +527,7 @@ class MirrorListHandler:
 			if mirror.url.startswith('http'):
 				sorting_placeholder.setdefault(mirror.country, []).append(mirror)
 
-		sorted_by_regions: dict[str, list[MirrorStatusEntryV3]] = dict(sorted(sorting_placeholder.items(), key=lambda item: item[0]))
+		sorted_by_regions: dict[str, list[MirrorStatusEntryV3]] = dict(sorted(sorting_placeholder.items()))
 
 		return sorted_by_regions
 

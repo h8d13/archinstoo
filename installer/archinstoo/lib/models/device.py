@@ -904,7 +904,7 @@ class PartitionFlag(PartitionFlagDataMixin, Enum):
 		s = s.lower()
 
 		for partition_flag in cls:
-			if s in (partition_flag.name.lower(), partition_flag.alias):
+			if s in {partition_flag.name.lower(), partition_flag.alias}:
 				return partition_flag
 
 		debug(f'Partition flag not supported: {s}')
@@ -951,7 +951,7 @@ class FilesystemType(StrEnum):
 	LVM = 'lvm'
 
 	def is_fat(self) -> bool:
-		return self in (FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32)
+		return self in {FilesystemType.FAT12, FilesystemType.FAT16, FilesystemType.FAT32}
 
 	@property
 	def fs_type_mount(self) -> str:
@@ -1030,7 +1030,7 @@ def harden_boot_options(part_mod: PartitionModification, options: list[str]) -> 
 	for opt in boot_opts:
 		# mount takes the last occurrence, so appending over an option the
 		# config already sets ('exec', 'fmask=0022') would override it
-		if any(o in (opt.name, opt.value) or o.startswith(f'{opt.name}=') for o in options):
+		if any(o in {opt.name, opt.value} or o.startswith(f'{opt.name}=') for o in options):
 			continue
 		options.append(opt.value)
 
@@ -1156,14 +1156,14 @@ class PartitionModification:
 		return self.status == ModificationStatus.EXIST
 
 	def is_exists_or_modify(self) -> bool:
-		return self.status in [
+		return self.status in {
 			ModificationStatus.EXIST,
 			ModificationStatus.DELETE,
 			ModificationStatus.MODIFY,
-		]
+		}
 
 	def is_create_or_modify(self) -> bool:
-		return self.status in [ModificationStatus.CREATE, ModificationStatus.MODIFY]
+		return self.status in {ModificationStatus.CREATE, ModificationStatus.MODIFY}
 
 	@property
 	def mapper_name(self) -> str | None:
@@ -1378,7 +1378,7 @@ class LvmVolume:
 		return self.status == ModificationStatus.EXIST
 
 	def is_exists_or_modify(self) -> bool:
-		return self.status in [ModificationStatus.EXIST, ModificationStatus.MODIFY]
+		return self.status in {ModificationStatus.EXIST, ModificationStatus.MODIFY}
 
 	def is_root(self) -> bool:
 		if self.mountpoint is not None:
@@ -1628,7 +1628,7 @@ class DiskEncryption:
 	fido2_device: Fido2Device | None = None
 
 	def __post_init__(self) -> None:
-		if self.encryption_type in [EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS] and not self.partitions:
+		if self.encryption_type in {EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS} and not self.partitions:
 			raise ValueError('Luks or LvmOnLuks encryption require partitions to be defined')
 
 		if self.encryption_type == EncryptionType.LUKS_ON_LVM and not self.lvm_volumes:

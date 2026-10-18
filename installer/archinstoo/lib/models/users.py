@@ -12,7 +12,7 @@ class Shell(StrEnum):
 	@property
 	def packages(self) -> list[str]:
 		# bash is part of base and rbash is bash in restricted mode
-		return [] if self in (Shell.BASH, Shell.RBASH) else [self.value]
+		return [] if self in {Shell.BASH, Shell.RBASH} else [self.value]
 
 
 class SupplementaryGroup(StrEnum):

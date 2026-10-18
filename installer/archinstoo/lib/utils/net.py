@@ -10,7 +10,7 @@ from urllib.error import URLError
 from urllib.parse import urlencode, urlparse
 from urllib.request import urlopen
 
-from archinstoo.lib.exceptions import DownloadTimeoutError
+from archinstoo.lib.exceptions import DownloadTimeoutError, FetchError
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -108,8 +108,8 @@ class DownloadTimer:
 def _urlopen_checked(url: str, timeout: int) -> HTTPResponse:
 	# scheme guard for every outbound fetch: urlopen would otherwise accept
 	# file:// and friends. default context verifies TLS.
-	if urlparse(url).scheme not in ('http', 'https'):
-		raise ValueError(f'Refusing to fetch non-http(s) url: {url}')
+	if urlparse(url).scheme not in {'http', 'https'}:
+		raise FetchError(f'Refusing to fetch non-http(s) url: {url}')
 	resp: HTTPResponse = urlopen(url, timeout=timeout)  # noqa: S310 - scheme restricted above
 	return resp
 
@@ -125,10 +125,12 @@ def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout:
 		response = _urlopen_checked(full_url, timeout)
 		data: str = response.read().decode('UTF-8')
 		return data
+	except FetchError:
+		raise
 	except URLError as e:
-		raise ValueError(f'Unable to fetch data from url: {url}\n{e}') from e
+		raise FetchError(f'Unable to fetch data from url: {url}\n{e}') from e
 	except Exception as e:
-		raise ValueError(f'Unexpected error when parsing response: {e}') from e
+		raise FetchError(f'Unexpected error when parsing response: {e}') from e
 
 
 def download_file_from_url(url: str, dest: Path, timeout: int = 30) -> None:
@@ -138,4 +140,4 @@ def download_file_from_url(url: str, dest: Path, timeout: int = 30) -> None:
 		with _urlopen_checked(url, timeout) as resp, dest.open('wb') as out:
 			shutil.copyfileobj(resp, out)
 	except URLError as e:
-		raise ValueError(f'Unable to download from url: {url}\n{e}') from e
+		raise FetchError(f'Unable to download from url: {url}\n{e}') from e

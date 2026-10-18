@@ -89,12 +89,10 @@ def _filesystem_packages(disk: dict[str, Any]) -> set[str]:
 
 	if lvm_config:
 		for group in lvm_config.get('vol_groups', []) or []:
-			for vol in group.get('volumes', []) or []:
-				fs_types.add(vol.get('fs_type', ''))
+			fs_types.update(vol.get('fs_type', '') for vol in group.get('volumes') or [])
 	else:
 		for dev in disk.get('device_modifications', []) or []:
-			for part in dev.get('partitions', []) or []:
-				fs_types.add(part.get('fs_type', ''))
+			fs_types.update(part.get('fs_type', '') for part in dev.get('partitions') or [])
 
 	pkgs = {p for fs in fs_types if fs in fs_tools for p in fs_tools[fs]}
 
@@ -300,7 +298,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	net_type = net.get('type', '')
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
-		if has_desktop and net_type in (NicType.NM.value, NicType.NM_IWD.value):
+		if has_desktop and net_type in {NicType.NM.value, NicType.NM_IWD.value}:
 			pkgs.update(_flat('network_desktop_extra'))
 		# copy_iso_network_config() only adds iwd when the ISO has PSKs to carry
 		if net_type == NicType.ISO.value and _iso_has_psks():

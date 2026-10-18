@@ -68,7 +68,7 @@ def _build_mirrorlist() -> str:
 	info(f'Fetching mirror status from {_MIRROR_STATUS_URL}...')
 	data = json.loads(fetch_data_from_url(_MIRROR_STATUS_URL, timeout=15))
 	# Emit every active http/https mirror; ranking happens later, not here.
-	servers = [f'Server = {m["url"]}$repo/os/$arch' for m in data.get('urls', []) if m.get('active') and m.get('protocol') in ('https', 'http')]
+	servers = [f'Server = {m["url"]}$repo/os/$arch' for m in data.get('urls', []) if m.get('active') and m.get('protocol') in {'https', 'http'}]
 	# but lead with the geo CDN: the status list is in no useful order, and a
 	# foreign host has no ranked mirrorlist of its own to fall back on, so the
 	# first pacstrap can otherwise spend its retries on the far side of the

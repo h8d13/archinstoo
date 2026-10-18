@@ -238,7 +238,7 @@ SECTIONS: tuple[Section, ...] = (
 			Security.APPARMOR.value: SecurityApp().apparmor_packages,
 			Security.FIREJAIL.value: SecurityApp().firejail_packages,
 			Security.BUBBLEWRAP.value: SecurityApp().bubblewrap_packages,
-			**{s.value: [s.value] for s in Security if s not in (Security.APPARMOR, Security.FIREJAIL, Security.BUBBLEWRAP)},
+			**{s.value: [s.value] for s in Security if s not in {Security.APPARMOR, Security.FIREJAIL, Security.BUBBLEWRAP}},
 		},
 		pick=('security_config', 'tools'),
 		site='application_handler.install_applications',
@@ -292,7 +292,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'profile_base',
-		lambda: {p.name: p.packages for p in ProfileHandler().profiles if p.profile_type in (ProfileType.Desktop, ProfileType.Server)},
+		lambda: {p.name: p.packages for p in ProfileHandler().profiles if p.profile_type in {ProfileType.Desktop, ProfileType.Server}},
 		site='profile_handler.install_profile_config',
 	),
 	Section(

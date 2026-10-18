@@ -1,4 +1,5 @@
 import shlex
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -8,6 +9,8 @@ from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.output import debug, info, warn
 
 if TYPE_CHECKING:
+	from collections.abc import Iterator
+
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
 
@@ -58,6 +61,36 @@ def doas_aur_rules(username: str) -> str:
 	return ''.join(f'permit nopass setenv {{ {keep} }} {username} as root cmd {cmd}\n' for cmd in ('pacman', '/usr/bin/pacman'))
 
 
+# appended to the user's doas.conf, so cleanup strips only our lines
+@contextmanager
+def _doas_rule(target: Path, username: str) -> Iterator[None]:
+	conf = target / 'etc/doas.conf'
+	rules = doas_aur_rules(username)
+	debug(f'Adding temporary doas rules for AUR build: permit nopass {username} as root cmd pacman')
+	try:
+		with conf.open('a') as doas:
+			doas.write(rules)
+		conf.chmod(0o644)
+		yield
+	finally:
+		if conf.exists():
+			debug(f'Removing temporary doas rule for {username}')
+			added = set(rules.splitlines(keepends=True))
+			lines = conf.read_text().splitlines(keepends=True)
+			conf.write_text(''.join(line for line in lines if line not in added))
+
+
+@contextmanager
+def _sudo_rule(target: Path, username: str) -> Iterator[None]:
+	rule = target / 'etc/sudoers.d/99-aur-build'
+	try:
+		rule.write_text(sudo_aur_rule(username))
+		rule.chmod(0o440)
+		yield
+	finally:
+		rule.unlink(missing_ok=True)
+
+
 def run_grimoire_installation(
 	packages: list[str],
 	installation: Installer,
@@ -81,25 +114,9 @@ def run_grimoire_installation(
 	grimoire_dest.chmod(0o755)
 	debug(f'Installed grimoire helper to {grimoire_dest}')
 
-	priv_esc = auth_config.privilege_escalation
-	aur_rule = None
+	temp_rule = _doas_rule if auth_config.privilege_escalation == PrivilegeEscalation.Doas else _sudo_rule
 
-	try:
-		if priv_esc == PrivilegeEscalation.Doas:
-			doas_conf = installation.target / 'etc/doas.conf'
-			aur_rule = doas_conf
-			if not doas_conf.exists():
-				doas_conf.write_text('')
-			debug(f'Adding temporary doas rules for AUR build: permit nopass {build_user.username} as root cmd pacman')
-			with doas_conf.open('a') as doas:
-				doas.write(doas_aur_rules(build_user.username))
-			doas_conf.chmod(0o644)
-		else:
-			sudoers_dir = installation.target / 'etc/sudoers.d'
-			aur_rule = sudoers_dir / '99-aur-build'
-			aur_rule.write_text(sudo_aur_rule(build_user.username))
-			aur_rule.chmod(0o440)
-
+	with temp_rule(installation.target, build_user.username):
 		for pkg in packages:
 			info(f'Installing AUR package: {pkg}')
 			try:
@@ -110,11 +127,3 @@ def run_grimoire_installation(
 				)
 			except SysCallError as e:
 				warn(f'AUR package "{pkg}" failed: {e}')
-	finally:
-		if priv_esc == PrivilegeEscalation.Doas and aur_rule is not None and aur_rule.exists():
-			debug(f'Removing temporary doas rule for {build_user.username}')
-			added = set(doas_aur_rules(build_user.username).splitlines(keepends=True))
-			lines = aur_rule.read_text().splitlines(keepends=True)
-			aur_rule.write_text(''.join(line for line in lines if line not in added))
-		elif priv_esc != PrivilegeEscalation.Doas and aur_rule is not None:
-			aur_rule.unlink(missing_ok=True)

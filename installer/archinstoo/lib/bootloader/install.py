@@ -529,8 +529,8 @@ class BootloaderInstaller:
 				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'
 				efi_dir_path_target = efi_partition.mountpoint / 'EFI'
 				subdir = 'BOOT' if removable else 'arch-limine'
-				efi_dir_path = efi_dir_path / subdir
-				efi_dir_path_target = efi_dir_path_target / subdir
+				efi_dir_path /= subdir
+				efi_dir_path_target /= subdir
 				config_path = efi_dir_path / 'limine.conf'
 
 				efi_dir_path.mkdir(parents=True, exist_ok=True)

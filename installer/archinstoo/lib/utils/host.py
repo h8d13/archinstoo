@@ -37,7 +37,7 @@ class Host:
 	def running_from_arch() -> bool:
 		# distinguishes an Arch host/ISO from a foreign host (Debian, Alpine, ...)
 		# archarm is Arch Linux ARM, native for our purposes
-		return Host.running_from_who() in ('arch', 'archarm')
+		return Host.running_from_who() in {'arch', 'archarm'}
 
 	@staticmethod
 	def running_from_foreign() -> bool:

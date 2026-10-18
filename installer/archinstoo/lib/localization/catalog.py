@@ -4,7 +4,7 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.exceptions import RequirementError, ServiceError, SysCallError
+from archinstoo.lib.exceptions import FetchError, RequirementError, ServiceError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.utils.env import Env
@@ -83,7 +83,7 @@ def _fetch_glibc_supported() -> list[str]:
 	# space-separated "<locale> <charset>" form the menu expects
 	try:
 		text = fetch_data_from_url(_GLIBC_SUPPORTED_URL)
-	except ValueError as e:
+	except FetchError as e:
 		debug(f'Fetch failed for {_GLIBC_SUPPORTED_URL}: {e}')
 		return []
 
@@ -221,7 +221,7 @@ def _fetch_x11_registry() -> ET.Element | None:
 	# upstream xkeyboard-config rules registry, for hosts carrying none
 	try:
 		text = fetch_data_from_url(_X11_BASE_XML_URL)
-	except ValueError as e:
+	except FetchError as e:
 		warn(f'Could not fetch the xkeyboard-config registry: {e}')
 		return None
 	try:

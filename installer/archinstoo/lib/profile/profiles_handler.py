@@ -7,6 +7,7 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.authentication.accounts import add_to_group
+from archinstoo.lib.exceptions import FetchError
 from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.output import debug, error, info, warn
@@ -238,18 +239,18 @@ class ProfileHandler:
 		# Import default_profiles from a url path
 		try:
 			data = fetch_data_from_url(url)
+		except FetchError:
+			error(f'Unable to fetch profile from specified url: {url}')
+			return
 
-			with NamedTemporaryFile(delete=False, suffix='.py') as fp:
-				fp.write(data.encode())
-				filepath = Path(fp.name)
+		with NamedTemporaryFile(delete=False, suffix='.py') as fp:
+			fp.write(data.encode())
+			filepath = Path(fp.name)
 
-			profiles = self._process_profile_file(filepath)
-			self.remove_custom_profiles(profiles)
-			self.add_custom_profiles(profiles)
-			info(f'Loaded {len(profiles)} custom profile(s) from {url}')
-		except ValueError:
-			err = f'Unable to fetch profile from specified url: {url}'
-			error(err)
+		profiles = self._process_profile_file(filepath)
+		self.remove_custom_profiles(profiles)
+		self.add_custom_profiles(profiles)
+		info(f'Loaded {len(profiles)} custom profile(s) from {url}')
 
 	def _load_profile_class(self, module: ModuleType) -> list[Profile]:
 		# Load all default_profiles defined in a module
@@ -307,7 +308,7 @@ class ProfileHandler:
 		for file in sorted(profiles_path.glob('**/*.py')):
 			# ignore the abstract default_profiles classes
 			# and wayland standalone
-			if file.name in ('profile.py', 'wayland.py'):
+			if file.name in {'profile.py', 'wayland.py'}:
 				continue
 			profiles += self._process_profile_file(file)
 

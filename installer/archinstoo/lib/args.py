@@ -248,7 +248,7 @@ class ArchConfigHandler:
 		return self._cleanup_config(config)
 
 	def _fetch_from_url(self, url: str) -> str:
-		if urllib.parse.urlparse(url).scheme in ('http', 'https'):
+		if urllib.parse.urlparse(url).scheme in {'http', 'https'}:
 			try:
 				req = Request(url, headers={'User-Agent': 'ArchInstoo'})  # noqa: S310 - scheme restricted above
 				with urlopen(req) as resp:  # noqa: S310 - scheme restricted above

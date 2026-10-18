@@ -121,7 +121,7 @@ class Pacman:
 				except Exception as retry_err:
 					raise RequirementError(f'{bail_message}: {retry_err}') from retry_err
 
-			if input('Would you like to re-try this download? (Y/n): ').lower().strip() in ('', 'y'):
+			if input('Would you like to re-try this download? (Y/n): ').lower().strip() in {'', 'y'}:
 				try:
 					func(*args, **kwargs)
 					return

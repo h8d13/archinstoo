@@ -151,7 +151,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 	def _check_dep_partitions(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		return bool(enc_type and enc_type in [EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS])
+		return bool(enc_type and enc_type in {EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS})
 
 	def _check_dep_lvm_vols(self) -> bool:
 		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
@@ -192,7 +192,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
 			return None
 
-		if enc_type in [EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS] and enc_partitions:
+		if enc_type in {EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS} and enc_partitions:
 			enc_lvm_vols = []
 
 		if enc_type == EncryptionType.LUKS_ON_LVM:

@@ -10,6 +10,10 @@ from archinstoo.lib.models.device import (
 	DiskLayoutConfiguration,
 	DiskLayoutType,
 	FilesystemType,
+	LvmConfiguration,
+	LvmLayoutType,
+	LvmVolume,
+	LvmVolumeGroup,
 	ModificationStatus,
 	PartitionFlag,
 	PartitionModification,
@@ -73,6 +77,18 @@ def _errors(bootloader: Bootloader, parts: list[PartitionModification], *, uki: 
 def test_systemd_xbootldr_accepted() -> None:
 	# row I: the only layout that legitimately gets --boot-path
 	assert _errors(Bootloader.Systemd, [ESP_EFI, BOOT_XBOOTLDR, ROOT_BTRFS]) == []
+
+
+def test_lvm_root_volume_accepted() -> None:
+	# an LVM root is a volume, the partition under it is a bare PV
+	pv = _part(None, '/dev/vda2', FilesystemType.EXT4, [])
+	root = LvmVolume(ModificationStatus.CREATE, 'root', FilesystemType.EXT4, Size(10, Unit.GiB, SECTOR), Path('/'))
+	disk_config = DiskLayoutConfiguration(
+		config_type=DiskLayoutType.Manual,
+		device_modifications=[DeviceModification(device=None, wipe=True, partitions=[ESP_BOOT, pv])],  # type: ignore[arg-type]
+		lvm_config=LvmConfiguration(LvmLayoutType.Default, [LvmVolumeGroup('vg', [pv], [root])]),
+	)
+	assert validate_bootloader(BootloaderConfiguration(Bootloader.Systemd), disk_config, uefi=True) == []
 
 
 def test_systemd_boot_flagged_rejected() -> None:

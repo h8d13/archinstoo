@@ -63,7 +63,7 @@ def find_linux_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:
 	def _check_partition(lsblk_info: LsblkInfo) -> None:
 		# Check if it's a partition or LVM volume with a Linux filesystem
 		# Include partitions that are not mounted or mounted elsewhere (not on /mnt or /)
-		if lsblk_info.fstype in fs_values and (not lsblk_info.mountpoints or all(str(mp) not in ['/', '/mnt'] for mp in lsblk_info.mountpoints)):
+		if lsblk_info.fstype in fs_values and (not lsblk_info.mountpoints or all(str(mp) not in {'/', '/mnt'} for mp in lsblk_info.mountpoints)):
 			linux_partitions.append(lsblk_info)
 
 		# Recursively check children (for LVM, etc.)
@@ -146,7 +146,7 @@ def mount_additional_filesystems(mount_point: Path) -> None:
 				device, mountpoint, fstype = parts[0], parts[1], parts[2]
 
 				# Skip the root filesystem and special filesystems
-				if mountpoint in ['/', 'none', 'swap'] or mountpoint.startswith(('/proc', '/sys', '/dev', '/run')):
+				if mountpoint in {'/', 'none', 'swap'} or mountpoint.startswith(('/proc', '/sys', '/dev', '/run')):
 					continue
 
 				# Skip swap

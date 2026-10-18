@@ -50,3 +50,9 @@ class ServiceError(Exception):
 class DownloadTimeoutError(Exception):
 	# Stub from installer/archinstoo/lib/utils/net.py
 	pass
+
+
+# network fetch failed: its own type so offline fallbacks do not also
+# swallow unrelated ValueErrors raised next to the fetch
+class FetchError(Exception):
+	pass
