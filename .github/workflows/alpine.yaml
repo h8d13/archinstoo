@@ -9,7 +9,7 @@ on:
 name: Alpine minimal
 permissions: {}
 jobs:
-    # steps in alpine.sh, which also runs locally under podman (see its header)
+    # steps in ALPINE, which also runs locally under podman (see its header)
     # arm64 runner: alpine's aarch64 image, so the bootstrap takes the Arch
     # Linux Ports tarball (gpg-only, port key) and pacstraps an aarch64 target
     minimal:
@@ -27,4 +27,4 @@ jobs:
               with:
                 persist-credentials: false
             - name: Bootstrap install, verify target
-              run: sh .github/workflows/alpine.sh
+              run: sh .github/workflows/ALPINE

@@ -1,0 +1,69 @@
+#!/bin/sh
+# The alpine.yaml job: a foreign host through --script bootstrap, archinstoo
+# pacstraps a real Arch target onto a loop disk. No bootloader: no EFI vars
+# in a container, nothing boots the disk.
+#
+# Locally, from the repo root, same steps as CI:
+#   sudo podman run --rm --privileged --network host --arch amd64 \
+#     -v "$PWD":/repo -w /repo alpine:edge sh .github/workflows/ALPINE
+# --network host: rootful podman's own DNS can fail to reach the host's
+# resolver (apk: "DNS: transient error"); CI keeps its default network.
+# --arch arm64 takes the Arch Linux Ports path (needs the host's qemu-user
+# binfmt with the F flag: the bootstrap root's binaries run emulated too).
+# Keep --arch on both: one alpine:edge tag holds whichever arch came last.
+# --privileged and devtmpfs: /dev here is the host's, and udevd below runs
+# rules against real devices; a throwaway VM keeps the host out of it.
+
+set -eu
+
+LOOPDEV=
+MOUNTED=
+CONFIG=installer/examples/ci_run.json
+LOG_GLOB='/tmp/A2-boot/root.*/root/.local/state/archinstoo/install.log'
+
+# undo only what got set up: an early exit (apk failing) still has busybox's
+# umount, which knows no -R
+teardown() {
+	if [ -n "$MOUNTED" ]; then
+		umount -R /mnt || true
+	fi
+	if [ -n "$LOOPDEV" ]; then
+		losetup -d "$LOOPDEV" || true
+	fi
+	# the checkout is the host's under podman: leave nothing in it
+	rm -f "$CONFIG"
+}
+trap teardown EXIT
+
+apk add python3 util-linux coreutils libarchive-tools gnupg eudev
+
+# docker/podman /dev is a static tmpfs: partition nodes (loopNpM) never show
+# up on it. devtmpfs tracks the kernel, so swap it in. The swap shadows the
+# pts/shm submounts; SysCommand runs everything under a pty, so bring devpts back
+mount -t devtmpfs none /dev
+mount -t devpts devpts /dev/pts
+mount -t tmpfs shm /dev/shm
+# no openrc here for setup-devd: start udevd by hand, the bootstrap needs its
+# control socket (lsblk UUIDs)
+udevd --daemon
+udevadm trigger
+udevadm settle
+
+truncate -s 8G /tmp/disk.img
+LOOPDEV=$(losetup -f --show /tmp/disk.img)
+# inside installer/: the bootstrap root has its own /tmp, installer/ is bound in
+sed "s|/dev/LOOPDEV|$LOOPDEV|" installer/examples/ci_minimal.json >"$CONFIG"
+
+rc=0
+sh RUN --script bootstrap -- --script guided --config examples/ci_run.json --silent --debug || rc=$?
+# shellcheck disable=SC2086 # the glob picks root.<arch>
+cat $LOG_GLOB || true
+[ "$rc" -eq 0 ] || exit "$rc"
+
+# the installer tears the layout down on exit, mount it back
+MOUNTED=1
+mount "${LOOPDEV}p2" /mnt
+mount "${LOOPDEV}p1" /mnt/boot
+cat /mnt/etc/hostname /mnt/etc/fstab
+ls /mnt/boot
+chroot /mnt pacman -Q base linux
