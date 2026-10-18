@@ -393,7 +393,12 @@ class SysCommand:
 		if not self.session:
 			raise ValueError('No session available to decode')
 
-		val = self.session.trace_log.decode(encoding, errors=errors)
+		# the pty makes systemd tools emit OSC/colour sequences that
+		# SYSTEMD_COLORS=0 does not cover; they leaked into menu entries
+		log = self.session.trace_log
+		if self.remove_vt100_escape_codes_from_lines:
+			log = clear_vt100_escape_codes(log)
+		val = log.decode(encoding, errors=errors)
 
 		if strip:
 			return val.strip()
