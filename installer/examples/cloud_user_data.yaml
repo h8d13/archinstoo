@@ -1,0 +1,14 @@
+#cloud-config
+# ./RUN --script dev.vm cloud fed --user-data installer/examples/cloud_user_data.yaml
+# root/test as by default, plus what --script bootstrap wants on the Fedora
+# host: bsdtar (libarchive-tools on Debian)
+disable_root: false
+chpasswd:
+  expire: false
+  users:
+    - {name: root, password: test, type: text}
+users:
+  - default
+  - name: root
+packages:
+  - bsdtar

@@ -11,6 +11,8 @@ from archinstoo.lib.utils.env import Env
 from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, PIDFILE, ROOT, SERIAL, STATE, VM, vm_console, vm_pid
 
 ISOMOD_OUT = ROOT / 'isos' / 'a'
+# vm cloud: the install target riding along a cloud image's boot disk
+TARGET = ROOT / '.dev-target.qcow2'
 DEV_ISO_DIR = ROOT / '.dev-iso'
 BOOT_DIR = ROOT / '.dev-boot'
 ARCHISO_ENTRY = 'loader/entries/01-archiso-linux.conf'
@@ -87,7 +89,7 @@ def read_opts(console: str | None = None) -> Opts:
 		error(f'A2_ARCH={arch} unsupported (x86_64, aarch64)')
 		raise SystemExit(1)
 
-	# --console wins; A2_SERIAL is its env form for scripts (./CLOUD):
+	# --console wins; A2_SERIAL is its env form for scripts:
 	# 'tty' is its own mode, anything else is a boolean like A2_BIOS/A2_GL
 	if not console and Env.get_value('A2_SERIAL', '').strip().lower() == 'tty':
 		console = 'tty'
@@ -283,7 +285,8 @@ def require_disk(opts: Opts) -> None:
 
 def clean(opts: Opts) -> None:
 	ensure_no_running_vm()
-	for path in (opts.disk, opts.ovmf_vars, SERIAL, LOG, CAPTURE, MONITOR, STATE):
+	# cloud images stay cached in CLOUD_DIR, like ISOs
+	for path in (opts.disk, opts.ovmf_vars, TARGET, SERIAL, LOG, CAPTURE, MONITOR, STATE):
 		if path.exists() or path.is_symlink():
 			path.unlink()
 			info(f"removed '{path}'")
@@ -398,8 +401,13 @@ def run_foreground(cmd: list[str]) -> int:
 
 
 def start(mode: str, console: str | None) -> None:
-	# mode: fresh (new disk + ISO), keep (disk + ISO) or boot (disk only)
-	opts = read_opts(console)
+	raise SystemExit(launch(read_opts(console), mode))
+
+
+def launch(opts: Opts, mode: str) -> int:
+	# mode: fresh (new disk + ISO), keep (disk + ISO) or boot (disk only).
+	# Returns once a serial VM is detached or a foreground one exits, so a
+	# caller (cloud) can keep serving it
 	attach_iso = mode != 'boot'
 	boot_order = 'd' if attach_iso else 'c'
 
@@ -417,7 +425,7 @@ def start(mode: str, console: str | None) -> None:
 		opts.disk.unlink(missing_ok=True)
 		if rc := subprocess.run(['qemu-img', 'create', '-f', 'qcow2', str(opts.disk), opts.disk_size], check=False).returncode:
 			error(f'qemu-img could not create {opts.disk}')
-			raise SystemExit(rc)
+			return rc
 
 	if firmware and not opts.ovmf_vars.exists():
 		shutil.copy(firmware[1], opts.ovmf_vars)
@@ -454,20 +462,20 @@ def start(mode: str, console: str | None) -> None:
 	# print the assembled command instead of running it, one arg per line
 	if opts.dry:
 		print('\n'.join(cmd))
-		raise SystemExit(0)
+		return 0
 
 	STATE.write_text(f'{opts.console}\n')
 
 	if opts.console == 'serial':
 		if rc := subprocess.run(cmd, check=False).returncode:
-			raise SystemExit(rc)
+			return rc
 		info(f'VM detached, pid {PIDFILE.read_text().strip()}')
 		info(f'drive it interactively: {VM} attach (Ctrl-] detaches)')
 		info(f"or sequenced: {VM} login && {VM} run 'ls /'")
-		raise SystemExit(0)
+		return 0
 
 	if opts.console == 'tty':
 		info('ttyS0 is this terminal: Ctrl-a x quits, Ctrl-a c toggles the QEMU monitor')
 	else:
 		info('VM in a window. (qemu) below is the monitor, not the guest: quit or Ctrl-C stops the VM')
-	raise SystemExit(run_foreground(cmd))
+	return run_foreground(cmd)

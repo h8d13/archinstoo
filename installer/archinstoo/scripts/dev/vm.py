@@ -16,7 +16,17 @@
 #     vm fresh [--console C]    new disk, boot ISO
 #     vm keep  [--console C]    reuse disk, boot ISO              (alias k)
 #     vm boot  [--console C]    boot the installed disk, no ISO   (alias b)
-#     vm clean                  remove disk, NVRAM and logs, ISOs untouched (alias c)
+#     vm cloud fed|deb [--console C] [--user-data FILE]
+#                               a distro cloud image as the host (overlay on
+#                               vda, empty install target on vdb), SeaBIOS,
+#                               waits for cloud-init (default serial).
+#                               --user-data: cloud-init config served as is,
+#                               else root gets A2_CLOUD_PASS
+#     vm cloud target [--console C]
+#                               boot what got installed on vdb (the overlay
+#                               is dropped, the target becomes vda)
+#     vm clean                  remove disk, NVRAM, target and logs, ISOs and
+#                               cloud images untouched (alias c)
 #   Consoles:
 #     window   graphical window; (qemu) in this terminal is the QEMU monitor,
 #              not the guest: 'quit' there or Ctrl-C stops the VM
@@ -66,11 +76,19 @@
 #     vm login -p test           # root; 'vm login -u vm -p test' for the user
 # examples/vm_unattended.json ships root and user 'vm' both with password
 # 'test' (yescrypt hashes in auth_config), no chpasswd needed.
-# Foreign hosts for --script bootstrap: ./CLOUD fed|deb boots a cloud image,
-# then vm login -p test
+# A foreign host for --script bootstrap (or the distros/ ports). fed: the
+# bootstrap wants python >= 3.14 on the host, debian 13 ships 3.13:
+#     vm cloud fed --user-data installer/examples/cloud_user_data.yaml
+#     vm login -p test && vm push installer
+#     vm run 'cd /root/installer && python3 -B -m archinstoo --script \
+#       bootstrap -- --script guided --config examples/vm_cloud_bios.json \
+#       --silent' -t 3600
+#     vm quit && vm cloud target
 #
 # Host artifacts (created in repo root, git-ignored):
-#   .dev-disk.qcow2     VM disk image (qemu-img)
+#   .dev-disk.qcow2     VM disk image (qemu-img), the overlay under vm cloud
+#   .dev-target.qcow2   vm cloud's install target (vdb)
+#   .dev-cloud/         cached cloud images
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
 #                       (both get a -<arch> suffix when A2_ARCH is not x86_64,
 #                       so an aarch64 install never clobbers the x86_64 one)
@@ -121,8 +139,9 @@
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
 #                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
-#                       a cloud image takes its cloud-init config off
-#                       the SMBIOS serial, see ./CLOUD
+#   A2_CLOUD_REL, A2_CLOUD_BUILD
+#                       vm cloud fed's release and compose (default 44, 1.7)
+#   A2_CLOUD_PASS       root password cloud-init sets (default 'test')
 #   A2_DRY              on prints the assembled qemu command and exits (still
 #                       creates the disk/NVRAM the mode asks for)
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
@@ -131,6 +150,7 @@ import argparse
 from pathlib import Path
 
 from archinstoo.lib.cli import script_help
+from archinstoo.scripts.dev import _cloud as cloud
 from archinstoo.scripts.dev import _drive as drive
 from archinstoo.scripts.dev import _launch as launch
 from archinstoo.scripts.dev._vm import CONSOLES, need_serial
@@ -150,6 +170,10 @@ def vm() -> None:
 	for mode, aliases in (('fresh', []), ('keep', ['k']), ('boot', ['b'])):
 		p = sub.add_parser(mode, aliases=aliases, parents=[console])
 		p.set_defaults(func=lambda args, mode=mode: launch.start(mode, args.console))
+	p = sub.add_parser('cloud', parents=[console])
+	p.add_argument('which', choices=('fed', 'deb', 'target'))
+	p.add_argument('--user-data', metavar='FILE', help='cloud-init user-data served as is (default: root with A2_CLOUD_PASS)')
+	p.set_defaults(func=lambda args: cloud.start(args.which, args.console, args.user_data))
 	sub.add_parser('clean', aliases=['c']).set_defaults(func=lambda _args: launch.clean(launch.read_opts()))
 
 	# drive a --console serial VM
