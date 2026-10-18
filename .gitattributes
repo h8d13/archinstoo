@@ -1,2 +1,1 @@
 installer/docs/*.1 linguist-documentation
-distros/flake.nix linguist-vendored

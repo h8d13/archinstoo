@@ -146,11 +146,10 @@ class DeviceHandler:
 				debug(f'Device lsblk info not found: {device.path}')
 				continue
 
-			if dev_lsblk_info.type == 'rom':
-				continue
-
-			# exclude archiso loop device
-			if dev_lsblk_info.mountpoint == Path('/run/archiso/airootfs'):
+			# nothing installs onto these: optical drives (an empty one reports
+			# RO=0) and the live medium's read-only squashfs loop, whose mount
+			# sits outside the bootstrap root
+			if dev_lsblk_info.type == 'rom' or dev_lsblk_info.ro:
 				continue
 
 			try:
@@ -987,7 +986,7 @@ class DeviceHandler:
 	@staticmethod
 	def udev_sync() -> None:
 		try:
-			# arch-chroot (distros/BOOT) exports SYSTEMD_IN_CHROOT=1: no settle
+			# a chroot (the bootstrap root) reads as one to udevadm, which skips settle
 			env = {'SYSTEMD_IN_CHROOT': '0'}
 			SysCommand('udevadm settle', environment_vars=env)
 		except SysCallError as err:

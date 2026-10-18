@@ -138,6 +138,18 @@ class Logger:
 	def directory(self) -> Path:
 		return self._path
 
+	@property
+	def host_directory(self) -> Path:
+		# where the user finds it: under --script bootstrap archinstoo runs
+		# chrooted, so its /root sits under the bootstrap root on the host
+		if boot_root := Env.get_path('A2_BOOT_ROOT'):
+			return boot_root / self._path.relative_to('/')
+		return self._path
+
+	@property
+	def host_path(self) -> Path:
+		return self.host_directory / 'install.log'
+
 	def _ensure_log_file(self) -> None:
 		self._path.mkdir(exist_ok=True, parents=True)
 		self.path.touch(exist_ok=True)

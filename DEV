@@ -29,8 +29,7 @@ case "$1" in
 	} >.directory
 	;;
 -b | --bootstrap)
-	go_to "distros"
-	./BOOT
+	./RUN --script bootstrap -- "${@:2}"
 	;;
 -ul | --up-logs)
 	log=$(log_path)

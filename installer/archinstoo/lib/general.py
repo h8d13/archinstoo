@@ -4,9 +4,11 @@ import os
 import pty
 import re
 import shlex
+import shutil
 import stat
 import subprocess
 import sys
+import termios
 import time
 from datetime import date, datetime
 from enum import Enum
@@ -280,10 +282,14 @@ class SysCommandWorker:
 		#   stdout of the child_fd object. `os.read(self.child_fd, 8192)` is the
 		#   only way to get the traceback without losing it.
 
+		# a fresh pty is 0x0, and progress bars size their redraws from it.
+		# Read ours before the fork, after it the child's stdout is that pty
+		size = shutil.get_terminal_size()
 		self.pid, self.child_fd = pty.fork()
 
 		# https://stackoverflow.com/questions/4022600/python-pty-fork-how-does-it-work
 		if not self.pid:
+			termios.tcsetwinsize(0, (size.lines, size.columns))
 			_cmd_history(self.cmd)
 
 			try:

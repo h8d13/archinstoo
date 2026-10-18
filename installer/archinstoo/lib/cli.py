@@ -9,6 +9,16 @@ from archinstoo._version import VERSION
 DEFAULT_SCRIPT = 'guided'
 
 
+def script_help(path: Path) -> str:
+	# a script's --help is the comment block its file opens with
+	lines = []
+	for line in path.read_text().splitlines():
+		if not line.startswith('#'):
+			break
+		lines.append(line.removeprefix('#').removeprefix(' '))
+	return '\n'.join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False)
 	parser.add_argument(

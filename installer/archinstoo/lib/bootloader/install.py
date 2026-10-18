@@ -20,6 +20,7 @@ from archinstoo.lib.models.device import (
 	has_separate_boot,
 )
 from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.utils.host import Host
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -134,7 +135,7 @@ class BootloaderInstaller:
 
 		match bootloader:
 			case Bootloader.Systemd:
-				self._add_systemd_bootloader(boot_partition, root, efi_partition, uki_enabled)
+				self._add_systemd_bootloader(boot_partition, root, efi_partition, uki_enabled, removable)
 			case Bootloader.Grub:
 				self._add_grub_bootloader(boot_partition, root, efi_partition, uki_enabled, removable)
 			case Bootloader.Efistub:
@@ -175,7 +176,8 @@ class BootloaderInstaller:
 			if id_root:
 				kernel_parameters.append('root=/dev/mapper/root')
 		elif id_root:
-			if partuuid:
+			# an md array has no partition entry to take a PARTUUID from
+			if partuuid and root_partition.partuuid:
 				debug(f'Identifying root partition by PARTUUID: {root_partition.partuuid}')
 				kernel_parameters.append(f'root=PARTUUID={root_partition.partuuid}')
 			else:
@@ -283,12 +285,34 @@ class BootloaderInstaller:
 			entry_conf.write_text(entry_template.format(kernel=kernel))
 			debug(f'Wrote {entry_conf}')
 
+	def _register_systemd_boot(self, efi_partition: PartitionModification) -> None:
+		# same entry bootctl writes; EFI/BOOT/BOOT*.EFI stays as the fallback
+		suffix = 'aa64' if SysInfo.arch() == 'aarch64' else 'ia32' if SysInfo.bitness() == 32 else 'x64'
+		cmd = [
+			'efibootmgr',
+			'--create',
+			'--disk',
+			str(get_parent_device_path(efi_partition.safe_dev_path)),
+			'--part',
+			str(efi_partition.partn),
+			'--label',
+			'Linux Boot Manager',
+			'--loader',
+			f'\\EFI\\systemd\\systemd-boot{suffix}.efi',
+			'--unicode',
+		]
+		try:
+			SysCommand(cmd)
+		except SysCallError as err:
+			warn(f'efibootmgr could not register systemd-boot, booting through EFI/BOOT instead: {err}')
+
 	def _add_systemd_bootloader(
 		self,
 		boot_partition: PartitionModification,
 		root: PartitionModification | LvmVolume,
 		efi_partition: PartitionModification | None,
 		uki_enabled: bool = False,
+		removable: bool = False,
 	) -> None:
 		debug('Installing systemd bootloader')
 
@@ -319,12 +343,23 @@ class BootloaderInstaller:
 			argv = ' '.join(('bootctl', variables, *bootctl_options, 'install'))
 			self._inst.arch_chroot(argv, systemd_mode=True)
 
-		try:
-			_bootctl_install('--variables=yes')
-		except SysCallError as err:
-			# retry leaving the EFI variables untouched (e.g. vars not writable)
-			warn(f'bootctl could not write EFI variables ({err}), retrying with --variables=no')
+		# removable keeps the NVRAM out of it: from an installed host the new
+		# entry (same title) replaces the host's own, first in BootOrder
+		if removable:
 			_bootctl_install('--variables=no')
+		elif not Host.has_systemd():
+			# plain chroot (the bootstrap root): bootctl takes the system for
+			# offline and writes the entry with a zeroed ESP GUID, efibootmgr
+			# reads it off the disk
+			_bootctl_install('--variables=no')
+			self._register_systemd_boot(efi_partition)
+		else:
+			try:
+				_bootctl_install('--variables=yes')
+			except SysCallError as err:
+				# retry leaving the EFI variables untouched (e.g. vars not writable)
+				warn(f'bootctl could not write EFI variables ({err}), retrying with --variables=no')
+				_bootctl_install('--variables=no')
 
 		# Loader configuration is stored in ESP/loader:
 		# https://man.archlinux.org/man/loader.conf.5

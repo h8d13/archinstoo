@@ -2,8 +2,6 @@
 Icon=folder-build
 # .
 # ├── architecture
-# ├── distros
-# │   └── assets
 # ├── installer
 # │   ├── archinstoo
 # │   │   ├── default_profiles
@@ -43,4 +41,4 @@ Icon=folder-build
 # │   └── mkosi
 # └── nvchecker
 # 
-# 42 directories
+# 40 directories

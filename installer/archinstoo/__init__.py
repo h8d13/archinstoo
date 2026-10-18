@@ -69,6 +69,7 @@ import traceback
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from . import deps
 from ._version import GITSTAT, PKGVER, VERSION
 from .lib import output
 from .lib.checkpoints import _check_script, _run_script, clean_cache, clean_logs
@@ -76,7 +77,6 @@ from .lib.cli import build_parser
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
-from .lib.pm.bootstrap import keyring_init, pacman_conf
 from .lib.pm.pacman import Pacman
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Env
@@ -85,49 +85,6 @@ from .lib.utils.net import ping
 
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
-
-# comment columns are read as a table, ruff would collapse them
-# fmt: off
-base_depends = (
-	'systemd',  	        # For systemd-based operations
-	'coreutils',  	        # Basic utilities
-	'util-linux',  	        # For partition utilities
-	'pciutils',  	        # For PCI device detection
-	'kbd',  	        # For keyboard layout configuration
-	'pacman',
-	'git',  	        # Cloning stashes
-	'arch-install-scripts', # For pacstrap, genfstab, chroot
-	'python-pyparted',
-	'dosfstools',  	        # FAT EFI filesystem support
-)
-disk_depends = (
-	'btrfs-progs', 		# btrfs filesystem support
-	'e2fsprogs',  		# ext4 filesystem support
-	'f2fs-tools',  		# f2fs filesystem support
-	'xfsprogs',  		# XFS filesystem support
-	'cryptsetup',  		# LUKS encryption support
-	'lvm2',  		# LVM layout support
-	'mdadm',		# RAID layout support
-)
-# we only check these on bootstrap tarball.
-# https://gitlab.archlinux.org/archlinux/archiso/-/blob/master/configs/releng/packages.x86_64
-# mirror the PKGBUILDs in repo
-# fmt: on
-
-# main init file of archinstoo
-# we will log some useful info
-# checks launch pre-conditions
-# and bootstrap the lib's deps
-# handle default guided script
-# rootless/needsroot utilities
-
-# 2 different bootstrap paths.
-# arch host/ISO vs ext distros
-# fetch deps directly on arch.
-# assume host sided pkg others
-
-# scripts that don't need root
-# short-circuit all of the ini
 
 # scripts that do not need root access
 ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect', 'dev.vm'})
@@ -144,13 +101,15 @@ def _log_env_info() -> None:
 	# log which mode we are using
 	info(f'Python path: {sys.executable} is_venv={is_venv()}')
 
-	if Host.running_from_host():
+	if Host.running_from_bootstrap():
+		info('Running from the bootstrap root...')
+	elif Host.running_from_host():
 		info(f'Running from Host (H2T Mode) on {Host.running_from_who()}...')
 	else:
 		info('Running from ISO (USB Mode)...')
 
 	info(f'Kernel: {kernel_info()}')
-	info(f'Logger path: {logger.path}')
+	info(f'Logger path: {logger.host_path}')
 
 
 def _missing_deps(depends: tuple[str, ...]) -> list[str]:
@@ -176,11 +135,11 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 def _depends() -> tuple[str, ...]:
 	# an Arch host/ISO already ships the disk tools
 	if Host.running_from_bootstrap():
-		return base_depends + disk_depends
-	return base_depends
+		return deps.BASE + deps.DISK
+	return deps.BASE
 
 
-def _bootstrap() -> int:
+def _fetch_deps() -> int:
 	if Env.get_value('A2_DEPS_FETCHED'):
 		info('Already fetched.')
 		return 0
@@ -205,9 +164,9 @@ def _bootstrap() -> int:
 
 
 def _ensure_host_deps() -> int:
-	# read-only: an H2T host installs these with its own pacman, so a miss
-	# stops here instead of as a traceback mid-install
-	if missing := _missing_deps(base_depends):
+	# read-only: --script bootstrap installed these into its root, an H2T
+	# Arch installs them with its own pacman; a miss stops here, not mid-install
+	if missing := _missing_deps(_depends()):
 		error(f'Missing host deps: {" ".join(missing)}')
 		info(f'Install them first: pacman -Syu --needed {" ".join(missing)}')
 		return 1
@@ -234,40 +193,36 @@ def _prepare(offline: bool) -> int:
 	if not is_root():
 		return 0
 
-	# check online (or offline requested) before trying to fetch packages
-	if not offline:
-		if rc := _check_online():
-			return rc
-		# note indent fully offlines installs should be possible
-		try:
-			# -Syy then -S without -u is a partial upgrade of the running system:
-			# fine on the ISO, not on the user's own Arch, which provides the deps
-			if Host.running_from_arch_host():
-				return _ensure_host_deps()
-			# a foreign host ships pacman but none of its config/keyring; build
-			# it first (conf before keyring: pacman-key reads pacman.conf).
-			foreign_host = Host.running_from_foreign()
-			if foreign_host:
-				pacman_conf()
-				keyring_init()
-			info('Fetching db...')
-			Pacman.run('-Syy', peek_output=True)
-			# python deps come from the host package manager on a foreign host
-			# we only bootstrap pacman related files: ex Alpine ISOs
-			if not foreign_host and (rc := _bootstrap()):
-				return rc
-			# however if in a bootstrap tarball we need to install disk depends.
-		except Exception as e:
-			error('Failed to prepare app.')
-			if 'could not resolve host' in str(e).lower():
-				error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
+	# pacman, its config and keyring only exist on Arch: any other host runs
+	# archinstoo inside the bootstrap script's Arch root instead
+	if Host.running_from_foreign():
+		error(f'Running on {Host.running_from_who() or "an unknown host"}: start through --script bootstrap, which runs from any Linux host.')
+		return 1
 
-			error(f'Run archinstoo --debug and check {logger.path} for details.')
+	if not offline and (rc := _check_online()):
+		return rc
 
-			debug(f'Failed to prepare app: {e}')
-			return 1
+	if Host.running_from_bootstrap() or Host.running_from_arch_host():
+		return _ensure_host_deps()
 
-	return 0
+	# the ISO from here: fully offline installs should be possible
+	if offline:
+		return 0
+
+	# -Syy then -S without -u is a partial upgrade: fine on a live system
+	try:
+		info('Fetching db...')
+		Pacman.run('-Syy', peek_output=True)
+		return _fetch_deps()
+	except Exception as e:
+		error('Failed to prepare app.')
+		if 'could not resolve host' in str(e).lower():
+			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
+
+		error(f'Run archinstoo --debug and check {logger.host_path} for details.')
+
+		debug(f'Failed to prepare app: {e}')
+		return 1
 
 
 def _log_sys_info(args: Arguments) -> None:
@@ -315,22 +270,36 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 
 	text = textwrap.dedent(f"""\
 		Archinstoo experienced the above error. If you think this is a bug, please report it to
-		{handler.config.bug_report_url} and include the log file "{logger.path}".
+		{handler.config.bug_report_url} and include the log file "{logger.host_path}".
 
 		Hint: To extract the log from a live ISO
-		curl --data-binary @{logger.path} https://paste.rs
+		curl --data-binary @{logger.host_path} https://paste.rs
 	""")
 
 	warn(text)
 
 
-def _is_foreign_blocked(script: str | None) -> bool:
-	# a foreign host gets its deps from its own package manager (see distros/)
-	# and pacstraps a separate target, which is fine. these scripts instead
-	# install onto the running system: target '/' means `pacman -S` straight
-	# into the Debian/Alpine root, never a chroot. distros/BOOT's Arch root
-	# is thrown away after, same outcome.
-	return script in NO_DISK_SCRIPTS and (Host.running_from_foreign() or Host.running_from_bootstrap())
+def _is_bootstrap_blocked(script: str | None) -> bool:
+	# these install onto the running system (target '/'), which under
+	# --script bootstrap is the throwaway root: the work would vanish with it
+	return script in NO_DISK_SCRIPTS and Host.running_from_bootstrap()
+
+
+def _run_bootstrap() -> int:
+	if Host.running_from_bootstrap():
+		error('archinstoo --script bootstrap: already inside the bootstrap root')
+		return 1
+	argv = sys.argv[1:]
+	split = argv.index('--') if '--' in argv else len(argv)
+	head = argv[:split]
+	own = [a for a in head if a in {'-h', '--help'}]
+	# options before -- would be parsed here and never reach the root
+	if extra := [a for a in head if a not in {'--script', 'bootstrap', '--script=bootstrap', '--debug', *own}]:
+		error(f'archinstoo --script bootstrap: pass {" ".join(extra)} after --, it runs inside the root')
+		return 1
+	sys.argv = [sys.argv[0], *own, '--', *argv[split + 1 :]]
+	_run_script('bootstrap')
+	return 0
 
 
 def run_as_a_module() -> int:
@@ -356,10 +325,14 @@ def run_as_a_module() -> int:
 	if early.script is not None:
 		_check_script(early.script)
 
-	if _is_foreign_blocked(early.script):
-		running = 'the distros/BOOT bootstrap root' if Host.running_from_bootstrap() else Host.running_from_who() or 'not Arch'
-		error(f'archinstoo {early.script} configures the running system, which is {running}.')
-		error('Use a disk script from a foreign host (see distros/), or run this one from an Arch host/ISO.')
+	# runs on the host's python before any dep exists: everything else
+	# happens inside its root, with the args given after --
+	if early.script == 'bootstrap':
+		return _run_bootstrap()
+
+	if _is_bootstrap_blocked(early.script):
+		error(f'archinstoo {early.script} configures the running system, which is the bootstrap root.')
+		error('Run it on the installed system instead.')
 		return 1
 
 	is_rootless = early.script in ROOTLESS_SCRIPTS

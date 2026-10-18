@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from archinstoo.lib.disk.fstab import fs_uuid
 from archinstoo.lib.disk.luks import Luks2, unlock_luks2_dev
 from archinstoo.lib.disk.lvm import lvm_import_vg, lvm_vol_change
 from archinstoo.lib.disk.utils import mount, swapon
@@ -26,7 +27,7 @@ class LayoutMounter:
 		self._fstab_entries: list[str] = []
 
 	def mount(self) -> list[str]:
-		# returns the fstab entries the layout needs beyond genfstab (encrypted swap)
+		# returns the fstab entries the layout needs beyond its mounts (swap)
 		luks_handlers: dict[PartitionModification | LvmVolume, Luks2] = {}
 
 		match self._disk_encryption.encryption_type:
@@ -165,6 +166,7 @@ class LayoutMounter:
 			mount(part_mod.dev_path, target, mount_fs=mount_fs, options=options)
 		elif part_mod.is_swap():
 			swapon(part_mod.dev_path)
+			self._fstab_entries.append(f'UUID={fs_uuid(part_mod.dev_path)}\tnone\tswap\tdefaults\t0\t0')
 
 	def _mount_lvm_vol(self, volume: LvmVolume) -> None:
 		if volume.fs_type != FilesystemType.BTRFS and volume.mountpoint and volume.dev_path:

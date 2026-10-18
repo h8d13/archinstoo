@@ -87,7 +87,7 @@ def read_opts(console: str | None = None) -> Opts:
 		error(f'A2_ARCH={arch} unsupported (x86_64, aarch64)')
 		raise SystemExit(1)
 
-	# --console wins; A2_SERIAL is its env form for scripts (distros/CLOUD):
+	# --console wins; A2_SERIAL is its env form for scripts (./CLOUD):
 	# 'tty' is its own mode, anything else is a boolean like A2_BIOS/A2_GL
 	if not console and Env.get_value('A2_SERIAL', '').strip().lower() == 'tty':
 		console = 'tty'

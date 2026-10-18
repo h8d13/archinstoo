@@ -207,3 +207,14 @@ def test_gpt_partition_count_unrestricted() -> None:
 	swap_part = _part(None, '/dev/vda5', FilesystemType.LINUX_SWAP, [])
 	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4, swap_part], PartitionTable.GPT)
 	assert errors == []
+
+
+@pytest.mark.parametrize(('bootstrap', 'hint'), [('1', " (the bootstrap root sees only the host's /mnt)"), ('', '')])
+def test_pre_mount_with_nothing_mounted(monkeypatch: pytest.MonkeyPatch, bootstrap: str, hint: str) -> None:
+	# the bootstrap root cannot see a host mount outside /mnt; say so instead of
+	# reporting a missing root and ESP
+	monkeypatch.setenv('A2_BOOTSTRAP', bootstrap)
+	disk = DiskLayoutConfiguration(config_type=DiskLayoutType.Pre_mount, mountpoint=Path('/target'))
+	config = BootloaderConfiguration(bootloader=Bootloader.Systemd)
+
+	assert validate_bootloader(config, disk, uefi=True) == [f'Nothing mounted at /target{hint}']

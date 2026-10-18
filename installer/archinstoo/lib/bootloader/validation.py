@@ -1,6 +1,7 @@
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
-from archinstoo.lib.models.device import DiskLayoutConfiguration, PartitionFlag, PartitionTable, has_separate_boot
+from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, PartitionFlag, PartitionTable, has_separate_boot
+from archinstoo.lib.utils.host import Host
 
 
 def validate_bootloader(
@@ -19,6 +20,12 @@ def validate_bootloader(
 
 	if disk_config is None:
 		return ['No disk layout selected']
+
+	# lsblk only reports mounts inside archinstoo's root: under the bootstrap
+	# root that is the host's /mnt alone, anything else looks empty
+	if disk_config.config_type == DiskLayoutType.Pre_mount and not disk_config.device_modifications:
+		hint = " (the bootstrap root sees only the host's /mnt)" if Host.running_from_bootstrap() else ''
+		return [f'Nothing mounted at {disk_config.mountpoint}{hint}']
 
 	boot_partition = disk_config.get_boot_partition()
 	efi_partition = disk_config.get_efi_partition() if uefi else None

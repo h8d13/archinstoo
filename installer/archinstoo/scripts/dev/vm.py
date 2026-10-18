@@ -66,7 +66,7 @@
 #     vm login -p test           # root; 'vm login -u vm -p test' for the user
 # examples/vm_unattended.json ships root and user 'vm' both with password
 # 'test' (yescrypt hashes in auth_config), no chpasswd needed.
-# Foreign hosts for distros/: ./distros/CLOUD fed|deb boots a cloud image,
+# Foreign hosts for --script bootstrap: ./CLOUD fed|deb boots a cloud image,
 # then vm login -p test
 #
 # Host artifacts (created in repo root, git-ignored):
@@ -121,8 +121,8 @@
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
 #                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
-#                       a cloud image (distros/DEB, distros/FED) takes its
-#                       cloud-init config off the SMBIOS serial, see distros/CLOUD
+#                       a cloud image takes its cloud-init config off
+#                       the SMBIOS serial, see ./CLOUD
 #   A2_DRY              on prints the assembled qemu command and exits (still
 #                       creates the disk/NVRAM the mode asks for)
 #   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
@@ -130,25 +130,16 @@
 import argparse
 from pathlib import Path
 
+from archinstoo.lib.cli import script_help
 from archinstoo.scripts.dev import _drive as drive
 from archinstoo.scripts.dev import _launch as launch
 from archinstoo.scripts.dev._vm import CONSOLES, need_serial
 
 
-def header() -> str:
-	# --help is the comment block this file opens with
-	lines = []
-	for line in Path(__file__).read_text().splitlines():
-		if not line.startswith('#'):
-			break
-		lines.append(line.removeprefix('#').removeprefix(' '))
-	return '\n'.join(lines)
-
-
 def vm() -> None:
 	parser = argparse.ArgumentParser(
 		prog='python -m archinstoo --script dev.vm',
-		description=header(),
+		description=script_help(Path(__file__)),
 		formatter_class=argparse.RawDescriptionHelpFormatter,
 	)
 	sub = parser.add_subparsers(dest='command', required=True, metavar='COMMAND')

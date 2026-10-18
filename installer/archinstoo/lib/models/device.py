@@ -1723,6 +1723,7 @@ class LsblkInfo:
 	pttype: str | None
 	ptuuid: str | None
 	rota: bool
+	ro: bool
 	tran: str | None
 	partn: int | None
 	partuuid: str | None
@@ -1762,6 +1763,7 @@ class LsblkInfo:
 			pttype=data.get('pttype'),
 			ptuuid=data.get('ptuuid'),
 			rota=data.get('rota', False),
+			ro=data.get('ro', False),
 			tran=data.get('tran'),
 			partn=data.get('partn'),
 			partuuid=data.get('partuuid'),
@@ -1792,6 +1794,7 @@ class LsblkInfo:
 			'pttype': self.pttype,
 			'ptuuid': self.ptuuid,
 			'rota': self.rota,
+			'ro': self.ro,
 			'tran': self.tran,
 			'partn': self.partn,
 			'partuuid': self.partuuid,
@@ -1821,6 +1824,7 @@ class LsblkInfo:
 			'pttype',
 			'ptuuid',
 			'rota',
+			'ro',
 			'tran',
 			'partn',
 			'partuuid',

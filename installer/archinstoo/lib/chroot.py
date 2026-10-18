@@ -26,10 +26,9 @@ def chroot_prefix(target: Path, systemd_mode: bool = False) -> list[str]:
 	# plain chroot(1) inherits our environment (proxies); -S goes through
 	# systemd-run + setpriv --reset-env, which drops it but gives systemd
 	# tools the real system view (bootctl resolves the ESP for NVRAM).
-	# -S needs a booted systemd >= 257 outside any chroot, which only an
-	# Arch host/ISO guarantees
+	# -S needs a booted systemd outside any chroot: never the bootstrap root
 	prefix = ['arch-chroot']
-	if systemd_mode and Host.running_from_arch() and Host.has_systemd():
+	if systemd_mode and Host.has_systemd():
 		prefix.append('-S')
 	prefix.append(str(target))
 	return prefix

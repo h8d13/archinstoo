@@ -93,14 +93,14 @@ def report_outcome(target: Path, steps: dict[str, bool]) -> None:
 		warn('Some required steps were not reached before leaving the installer:')
 		for step in missing:
 			warn(f' - {step}')
-		warn(f'Detailed error logs can be found at: {logger.directory}')
+		warn(f'Detailed error logs can be found at: {logger.host_directory}')
 		return
 
 	closing = 'Changes are live on the running system.' if target == Path('/') else 'You may reboot when ready.'
 	log(
 		textwrap.dedent(f"""\
 			Installation completed without any errors.
-			Log files available at {logger.directory} and in target {TARGET_STATE_DIR}.
+			Log files available at {logger.host_directory} and in target {TARGET_STATE_DIR}.
 			{closing}
 		"""),
 		fg='green',

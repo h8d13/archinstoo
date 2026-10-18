@@ -199,8 +199,8 @@ class Installer:
 	def set_mirrors(self, pacman_configuration: PacmanConfiguration, on_target: bool = False) -> None:
 		mirrors.set_mirrors(self, pacman_configuration, on_target)
 
-	def genfstab(self, flags: str = '-pU') -> None:
-		write_fstab(self.target, self._fstab_entries, flags)
+	def genfstab(self) -> None:
+		write_fstab(self.target, self._fstab_entries)
 
 	def set_hostname(self, hostname: str) -> None:
 		sysconfig.write_hostname(self.target, hostname)

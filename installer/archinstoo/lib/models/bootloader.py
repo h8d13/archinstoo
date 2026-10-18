@@ -42,8 +42,10 @@ class Bootloader(Enum):
 				return [EFIBOOTMGR] if uefi else []
 
 	def has_removable_support(self) -> bool:
+		# systemd-boot: bootctl always writes EFI/BOOT/BOOTX64.EFI, removable
+		# only means leaving the NVRAM alone
 		match self:
-			case Bootloader.Grub | Bootloader.Limine:
+			case Bootloader.Grub | Bootloader.Limine | Bootloader.Systemd:
 				return True
 			case _:
 				return False

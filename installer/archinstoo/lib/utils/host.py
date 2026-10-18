@@ -52,7 +52,7 @@ class Host:
 
 	@staticmethod
 	def running_from_bootstrap() -> bool:
-		# distros/BOOT: Arch, but a throwaway root (set through arch-chroot)
+		# --script bootstrap: Arch, but a throwaway root it chroots into
 		return Env.get_value('A2_BOOTSTRAP') == '1'
 
 	@staticmethod

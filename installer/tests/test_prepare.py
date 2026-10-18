@@ -1,6 +1,6 @@
 # _prepare syncs the db and fetches deps before argparse exists. On an Arch
 # host (H2T) that pair is a partial upgrade of the user's own system, so it
-# must not run there; the ISO and the distros/BOOT root are throwaway.
+# must not run there; --script bootstrap installs them into its root itself.
 
 import re
 from pathlib import Path
@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import archinstoo
+from archinstoo import deps
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.pm.pacman import Pacman
 from archinstoo.lib.utils.env import Env
@@ -38,10 +39,11 @@ def test_arch_host(
 	assert Host.running_from_arch_host() is arch_host
 
 
-@pytest.mark.parametrize(('arch_host', 'synced'), [(True, False), (False, True)])
+@pytest.mark.parametrize(('arch_host', 'bootstrap', 'synced'), [(True, False, False), (False, True, False), (False, False, True)])
 def test_prepare_skips_pacman_on_arch_host(
 	monkeypatch: pytest.MonkeyPatch,
 	arch_host: bool,
+	bootstrap: bool,
 	synced: bool,
 ) -> None:
 	calls: list[str] = []
@@ -52,6 +54,7 @@ def test_prepare_skips_pacman_on_arch_host(
 	monkeypatch.setattr(archinstoo, '_check_online', lambda: 0)
 	monkeypatch.setattr(Host, 'running_from_arch_host', staticmethod(lambda: arch_host))
 	monkeypatch.setattr(Host, 'running_from_foreign', staticmethod(lambda: False))
+	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
 	monkeypatch.setattr(Pacman, 'run', staticmethod(lambda args, **_: calls.append(args)))
 
 	assert archinstoo._prepare(offline=False) == 0
@@ -100,7 +103,7 @@ def test_bootstrap_fails_on_broken_deptest(monkeypatch: pytest.MonkeyPatch) -> N
 	_deptest_exits(monkeypatch, 1, b'error: failed to initialize alpm library\r\n')
 	monkeypatch.delenv('A2_DEPS_FETCHED', raising=False)
 
-	assert archinstoo._bootstrap() == 1
+	assert archinstoo._fetch_deps() == 1
 	assert not Env.has_value('A2_DEPS_FETCHED')
 
 
@@ -115,9 +118,9 @@ def test_arch_host_missing_deps_stops(monkeypatch: pytest.MonkeyPatch) -> None:
 	('pkgbuild', 'expected'),
 	[
 		# dev PKGBUILD: what _ensure_host_deps checks on an H2T host
-		('PKGBUILD', archinstoo.base_depends),
-		# release PKGBUILD: every disk tool too, same as the BOOT root fetches
-		('installer/PKGBUILD', archinstoo.base_depends + archinstoo.disk_depends),
+		('PKGBUILD', deps.BASE),
+		# release PKGBUILD: every disk tool too, same as the bootstrap root fetches
+		('installer/PKGBUILD', deps.BASE + deps.DISK),
 	],
 )
 def test_depends_match_pkgbuild(pkgbuild: str, expected: tuple[str, ...]) -> None:

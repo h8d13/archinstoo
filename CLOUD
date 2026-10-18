@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Boots a distro cloud image as a foreign host under dev.vm, for testing
-# distros/BOOT (and the native distros/ ports) from a real non-Arch system.
+# --script bootstrap from a real non-Arch system.
 #
 # The cloud image, as a throwaway overlay, is the boot disk (/dev/vda) and an
 # empty disk rides along as the install target (/dev/vdb, see
 # installer/examples/vm_cloud_bios.json). SeaBIOS, so the target installs grub on MBR.
 #
 # Usage:
-#   ./distros/CLOUD fed|deb       fresh overlay + target, boot, wait for cloud-init
-#   ./distros/CLOUD target        boot what got installed on the target disk (the
-#                                 cloud overlay is dropped, the target becomes vda)
-#   ./distros/CLOUD clean         remove overlays and seed (images stay cached)
+#   ./CLOUD fed|deb       fresh overlay + target, boot, wait for cloud-init
+#   ./CLOUD target        boot what got installed on the target disk (the
+#                         cloud overlay is dropped, the target becomes vda)
+#   ./CLOUD clean         remove overlays and seed (images stay cached)
 # then: ./RUN --script dev.vm login -p test
 # or A2_SERIAL=tty: console in this terminal, log in as root/test there
 # Env: REL BUILD (fedora release/build), SEED_PORT, PASS, A2_SERIAL, A2_RAM, A2_CPUS
@@ -18,7 +18,7 @@
 set -euo pipefail
 
 # repo root: the dev VM keeps its .dev-* files there
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLOUD_DIR="$PROJECT_DIR/.dev-cloud"
 SEED="$CLOUD_DIR/seed"
 # dev.vm boots this one; the target is ours
@@ -129,7 +129,7 @@ boot() {
 }
 
 boot_target() {
-	[ -s "$TARGET" ] || err "no $TARGET, run ./distros/CLOUD fed|deb and install first"
+	[ -s "$TARGET" ] || err "no $TARGET, run ./CLOUD fed|deb and install first"
 	# fstab and grub name UUIDs, so vdb installing as vda boots the same
 	mv "$TARGET" "$DISK"
 	(cd "$PROJECT_DIR/installer" && A2_SERIAL=$A2_SERIAL A2_BIOS=1 python3 -B -m archinstoo --script dev.vm boot)
