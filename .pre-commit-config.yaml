@@ -45,6 +45,9 @@ repos:
       args: ['--config-file=installer/pyproject.toml']
       pass_filenames: false
       files: ^installer/
+      # whole-tree hooks: code, stubs, or the pyproject they read, not any
+      # installer/ file (examples, docs, PKGBUILD)
+      types_or: [python, pyi, toml]
       additional_dependencies:
         - pytest  # hook venv has none, tests type-check against it
       fail_fast: true
@@ -66,6 +69,7 @@ repos:
         - import-linter==2.15
       pass_filenames: false
       files: ^installer/
+      types_or: [python, pyi, toml]
       fail_fast: true
     # hook venv like the rest; pyparted is not needed, the rcfile
     # lists parted under ignored-modules
@@ -78,5 +82,6 @@ repos:
       args: ['--rcfile=installer/pyproject.toml', 'installer/archinstoo']
       pass_filenames: false
       files: ^installer/
+      types_or: [python, pyi, toml]
       fail_fast: true
       require_serial: true
