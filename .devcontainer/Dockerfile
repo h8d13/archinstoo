@@ -1,4 +1,4 @@
-FROM archlinux/archlinux:latest
+FROM docker.io/archlinux/archlinux:latest
 
 # usage: docker build -t archinstoo-dev -f .devcontainer/Dockerfile installer
 

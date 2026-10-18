@@ -89,9 +89,6 @@ def perform_installation(
 			# generate encryption key files for the mounted luks devices
 			installation.generate_key_files()
 
-		# early, while the user is still watching: the token wants a touch
-		installation.enroll_fido2()
-
 		if pacman_config := config.pacman_config:
 			installation.set_mirrors(pacman_config, on_target=False)
 
@@ -102,6 +99,10 @@ def perform_installation(
 			locale_config=locale_config,
 			timezone=config.timezone,
 		)
+
+		# right after base: the target's cryptenroll and libfido2 do it, and
+		# the user is still watching for the touch prompt
+		installation.enroll_fido2()
 
 		if pacman_config := config.pacman_config:
 			installation.set_mirrors(pacman_config, on_target=True)

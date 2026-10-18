@@ -1,8 +1,7 @@
-import subprocess
 from contextlib import contextmanager
-from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.chroot import run_attached
 from archinstoo.lib.disk.luks import KEYFILE_DIR
 from archinstoo.lib.models.device import DiskEncryption, EncryptionType
 from archinstoo.lib.output import info, warn
@@ -16,6 +15,8 @@ if TYPE_CHECKING:
 # stays as the fallback. It needs the existing passphrase to unlock the slot it
 # extends, handed over as a transient keyfile under the standard LUKS
 # keyfile dir (same convention as the root auto-unlock keyfile).
+# Runs inside the target, which has systemd from base and libfido2 from
+# FIDO2_PACKAGES, so the host needs neither.
 
 
 @contextmanager
@@ -52,19 +53,13 @@ def enroll_fido2(target: Path, enc: DiskEncryption) -> None:
 		for dev in devices:
 			info(f'Enrolling FIDO2 keyslot for {dev}')
 			info('Touch the token when it blinks; a PIN prompt may appear first')
-			try:
-				# stdio stays inherited: the PIN/touch prompts are interactive
-				subprocess.run(  # noqa: S603 - cmd is project-controlled list, not user input
-					[  # noqa: S607 - systemd-cryptenroll from $PATH on the live ISO
-						'systemd-cryptenroll',
-						f'--unlock-key-file={key}',
-						f'--fido2-device={token.path}',
-						str(dev),
-					],
-					check=True,
-				)
-			except CalledProcessError as e:
-				# stdio is inherited, cryptenroll's own error is already on screen
-				warn(f'FIDO2 enrollment failed for {dev} (exit {e.returncode})')
-			except FileNotFoundError as e:
-				warn(f'FIDO2 enrollment failed for {dev}: {e}')
+			# the target's own cryptenroll, key path as seen from inside it
+			cmd = [
+				'systemd-cryptenroll',
+				f'--unlock-key-file={KEYFILE_DIR / key.name}',
+				f'--fido2-device={token.path}',
+				str(dev),
+			]
+			# stdio is inherited, cryptenroll's own error is already on screen
+			if returncode := run_attached(target, cmd):
+				warn(f'FIDO2 enrollment failed for {dev} (exit {returncode})')

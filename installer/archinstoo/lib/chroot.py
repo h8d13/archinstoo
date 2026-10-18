@@ -62,6 +62,13 @@ def run_in_target(
 	return SysCommand(cmd, peek_output=peek_output)
 
 
+def run_attached(target: Path, cmd: list[str]) -> int:
+	# console inherited like drop_to_shell, for interactive prompts (FIDO2
+	# PIN/touch). Plain chroot, not -S: systemd-run detaches stdio from it
+	argv = cmd if target == Path('/') else [*chroot_prefix(target), *cmd]
+	return subprocess.run(argv, check=False).returncode  # noqa: S603 - project-controlled argv
+
+
 def drop_to_shell(target: Path) -> None:
 	# inherit this console rather than run under SysCommand's pty: that one
 	# captures output but never feeds our stdin back in, so the shell would

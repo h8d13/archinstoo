@@ -989,7 +989,7 @@ class DeviceHandler:
 			# a chroot (the bootstrap root) reads as one to udevadm, which skips settle
 			env = {'SYSTEMD_IN_CHROOT': '0'}
 			SysCommand('udevadm settle', environment_vars=env)
-		except SysCallError as err:
+		except (SysCallError, RequirementError) as err:
 			debug(f'Failed to synchronize with udev: {err}')
 
 		# settle skips a udevd without varlink (eudev, Debian 13), but

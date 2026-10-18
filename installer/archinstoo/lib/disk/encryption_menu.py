@@ -47,7 +47,7 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 		# refresh token list once per menu entry; dep checks and the
 		# selector hit the cache on every redraw afterwards
-		Fido2.get_cryptenroll_devices(reload=True)
+		Fido2.get_devices(reload=True)
 
 		menu_options = self._define_menu_options()
 		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
@@ -161,13 +161,13 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return self._allow_auto_unlock and self._check_dep_enc_type()
 
 	def _check_dep_fido2(self) -> bool:
-		return bool(Fido2.get_cryptenroll_devices()) and self._check_dep_enc_type()
+		return bool(Fido2.get_devices()) and self._check_dep_enc_type()
 
 	def _select_fido2_device(self, preset: Fido2Device | None) -> Fido2Device | None:
 		header = 'Select a FIDO2 token to enroll as a LUKS keyslot\n'
 		header += 'Passphrase keyslot stays as fallback.\n'
 
-		devices = Fido2.get_cryptenroll_devices(reload=True)
+		devices = Fido2.get_devices(reload=True)
 
 		if not devices:
 			return preset
