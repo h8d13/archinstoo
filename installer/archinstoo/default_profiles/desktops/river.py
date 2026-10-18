@@ -49,10 +49,17 @@ class RiverProfile(WaylandProfile):
 		# no init means no bindings and no layout, a black screen
 		shipped = install_session.target / 'usr/share/river-classic/example/init'
 
+		# xdg-desktop-portal-wlr only starts once the systemd user session knows the
+		# compositor; river sets no XDG_CURRENT_DESKTOP (no DesktopNames) nor imports
+		# anything, river matches the UseIn of wlr.portal
+		env = 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=river\n'
+
 		for user in users:
 			init = install_session.target / 'home' / user.username / '.config/river/init'
 			init.parent.mkdir(parents=True, exist_ok=True)
 			shutil.copy(shipped, init)
+			with init.open('a') as f:
+				f.write(env)
 			# river runs init as a program, a 0644 copy is silently skipped
 			init.chmod(0o755)
 

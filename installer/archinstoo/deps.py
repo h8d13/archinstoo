@@ -7,7 +7,6 @@
 # comment columns are read as a table, ruff would collapse them
 # fmt: off
 BASE = (
-	'systemd',  	        # For systemd-based operations
 	'coreutils',  	        # Basic utilities
 	'util-linux',  	        # For partition utilities
 	'pciutils',  	        # For PCI device detection

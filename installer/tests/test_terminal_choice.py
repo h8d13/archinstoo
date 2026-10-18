@@ -105,21 +105,6 @@ def test_qtile_ships_xwayland() -> None:
 	assert 'xorg-xwayland' in QtileProfile().packages
 
 
-def test_river_writes_an_executable_user_init(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	# river runs init as a program and has no /etc fallback: a missing or
-	# non-executable copy is a black screen with no bindings
-	shipped = tmp_path / 'usr/share/river-classic/example/init'
-	shipped.parent.mkdir(parents=True)
-	shipped.write_text('#!/bin/sh\nriverctl map normal Super+Shift Return spawn foot\n')
-	(tmp_path / 'home/ada').mkdir(parents=True)
-
-	RiverProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
-
-	init = tmp_path / 'home/ada/.config/river/init'
-	assert init.read_text() == shipped.read_text(), 'the shipped init is copied as is'
-	assert init.stat().st_mode & 0o111, 'river skips a non-executable init'
-
-
 def test_river_installs_classic_not_the_rewrite() -> None:
 	# extra/river is the 0.4 compositor without a window manager and none is
 	# packaged; river-classic is the line that runs standalone

@@ -19,7 +19,6 @@ depends=(
 	'python-pyparted'
 	'python'
 	'arch-install-scripts' #For pacstrap, genfstab, chroot
-	'systemd'              #For systemd-based operations
 	'coreutils'            #Basic utilities
 	'util-linux'           #For partition utilities
 	'pciutils'             #For PCI device detection
@@ -44,6 +43,7 @@ makedepends=(
 # in a 'stable' state of release
 # you should obviously feel free to only select the ones you need
 optdepends=(
+	'systemd'          #For systemd-based operations (fallback otherwise)
 	'xkeyboard-config' #For offline X11/Wayland keymap lists (fetched otherwise)
 	'e2fsprogs'        #For ext4 support
 	'btrfs-progs'      #For btrfs support

@@ -16,7 +16,6 @@ depends=(
 	'python-pyparted'
 	'python'
 	'arch-install-scripts' #For pacstrap, genfstab, chroot
-	'systemd'              #For systemd-based operations
 	'coreutils'            #Basic utilities
 	'util-linux'           #For partition utilities
 	'pciutils'             #For PCI device detection
@@ -36,6 +35,7 @@ depends=(
 # data upstream, these only keep that off the network
 optdepends=(
 	'xkeyboard-config' #X11/Wayland keymap lists, fetched otherwise
+	'systemd'          #For systemd-based operations, fallback otherwise
 )
 makedepends=(
 	'git' #VCS source fetch
