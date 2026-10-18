@@ -1,5 +1,5 @@
-# under distros/BOOT archinstoo runs chrooted: its /root/... log sits under
-# BOOT's root on the host, and the path printed has to be one the user can open
+# under --script bootstrap archinstoo runs chrooted: its /root/... log sits under
+# the bootstrap root on the host, and the path printed has to be one the user can open
 
 from pathlib import Path
 from typing import TYPE_CHECKING
