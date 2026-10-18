@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# dnf install -y git
+# git clone <url>
+# cd archinstoo
+# ./distros/FED
+# ./RUN
+set -e
+
+# shellcheck disable=SC2046
+dnf install -y $(
+	awk '{print $1}' <<'EOF'
+	python3.15                  # interpreter
+	python3-pyparted            # prebuilt parted bindings
+	parted                      # partition cli + libparted runtime
+	pacman                      # arch package manager
+	arch-install-scripts        # pacstrap, genfstab, arch-chroot
+	coreutils                   # gnu core utils
+	util-linux                  # lsblk, blkid, etc
+	pciutils                    # lspci
+	tzdata                      # timezone data
+	kbd                         # loadkeys/setfont + /usr/lib/kbd data
+	xkeyboard-config            # X11/Wayland keymap lists, fetched when absent
+	git                         # cloning stashes
+	dosfstools                  # mkfs.fat
+	device-mapper               # dm-* devices
+	e2fsprogs                   # mkfs.ext4
+	cryptsetup                  # luks
+	lvm2                        # always checked
+	btrfs-progs                 # optional FS supports
+	f2fs-tools                  # ...
+	xfsprogs                    # ...
+EOF
+)
+
+# Its installer ISO carries no package manager at all, so test
+# from the Cloud Base qcow2 instead (needs cloud-init bit) similar to DEB.
