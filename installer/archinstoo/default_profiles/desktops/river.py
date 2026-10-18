@@ -28,6 +28,9 @@ class RiverProfile(WaylandProfile):
 			'xdg-desktop-portal-wlr',
 			'river-classic',
 			'foot',
+			# neither river-classic nor foot pulls a font (sway does via
+			# ttf-font): without one foot exits at spawn, the binding looks dead
+			'ttf-liberation',
 			# the shipped init binds the media keys to these three; eject is
 			# util-linux. nothing else in it spawns a program
 			'pamixer',
