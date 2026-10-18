@@ -9,7 +9,9 @@ on:
 name: Alpine minimal
 permissions: {}
 jobs:
-    # steps in ALPINE, which also runs locally under podman (see its header)
+    # steps in ALPINE, run in a privileged alpine container: the same command
+    # as locally under podman (see its header). Not a job-level container:
+    # JavaScript actions (checkout) run in Alpine containers on x64 runners only
     # arm64 runner: alpine's aarch64 image, so the bootstrap takes the Arch
     # Linux Ports tarball (gpg-only, port key) and pacstraps an aarch64 target
     minimal:
@@ -19,12 +21,9 @@ jobs:
             matrix:
                 runner: [ubuntu-latest, ubuntu-24.04-arm]
         runs-on: ${{ matrix.runner }}
-        container:
-            image: alpine:edge
-            options: --privileged
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                 persist-credentials: false
             - name: Bootstrap install, verify target
-              run: sh .github/workflows/ALPINE
+              run: docker run --rm --privileged -v "$PWD":/repo -w /repo alpine:edge sh .github/workflows/ALPINE

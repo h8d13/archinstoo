@@ -3,7 +3,7 @@
 # pacstraps a real Arch target onto a loop disk. No bootloader: no EFI vars
 # in a container, nothing boots the disk.
 #
-# Locally, from the repo root, same steps as CI:
+# Locally, from the repo root, as CI runs it (docker there):
 #   sudo podman run --rm --privileged --network host --arch amd64 \
 #     -v "$PWD":/repo -w /repo alpine:edge sh .github/workflows/ALPINE
 # --network host: rootful podman's own DNS can fail to reach the host's
