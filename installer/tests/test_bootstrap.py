@@ -3,7 +3,7 @@
 
 import subprocess
 import sys
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
 
@@ -12,9 +12,6 @@ from archinstoo import deps
 from archinstoo.lib import bootstrap
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.utils.host import Host
-
-if TYPE_CHECKING:
-	from pathlib import Path
 
 
 def _fake_bin(bin_dir: Path, name: str, body: str) -> None:
@@ -84,7 +81,8 @@ def test_checksum(tmp_path: Path) -> None:
 		bootstrap.verify_sum(tarball, sums)
 
 
-def test_root_self_bind_private_first(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.parametrize('host_mnt_mounted', [True, False])
+def test_root_self_bind_private_first(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, host_mnt_mounted: bool) -> None:
 	# a shared self-bind (/tmp is shared on the ISO) copied every mount below
 	# it into the parent, where teardown never looked: the host's layout
 	# stayed mounted twice
@@ -92,12 +90,15 @@ def test_root_self_bind_private_first(monkeypatch: pytest.MonkeyPatch, tmp_path:
 	(tmp_path / 'root/etc').mkdir(parents=True)
 	monkeypatch.setattr(bootstrap, 'ROOT', tmp_path / 'root')
 	monkeypatch.setattr(bootstrap, 'mount', lambda *args: mounts.append(args))
+	monkeypatch.setattr(bootstrap, 'is_mounted', lambda path: host_mnt_mounted and path == Path('/mnt'))
 
 	bootstrap.chroot_setup()
 
 	root = str(tmp_path / 'root')
 	assert mounts[0] == ('--bind', '--make-private', root, root)
-	assert ('--rbind', '--make-rslave', '/mnt', f'{root}/mnt') in mounts
+	# a bare /mnt is the host's root fs: bound in, the target stacked on it
+	# and fstab took the host's filesystem for / (a Fedora host's btrfs)
+	assert (('--rbind', '--make-rslave', '/mnt', f'{root}/mnt') in mounts) is host_mnt_mounted
 
 
 def test_not_nested(monkeypatch: pytest.MonkeyPatch) -> None:

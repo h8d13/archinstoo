@@ -212,8 +212,11 @@ def chroot_setup() -> None:
 	bind_into_root(Path('/sys'), '--rbind', '--make-rslave')
 	bind_into_root(Path('/dev'), '--rbind', '--make-rslave')
 	# a layout mounted by hand on the host (pre-mounted config) has to be
-	# where the installer looks; rslave for the same teardown reason
-	bind_into_root(Path('/mnt'), '--rbind', '--make-rslave')
+	# where the installer looks; rslave for the same teardown reason. Only
+	# then: a bare /mnt bound in is the host's root fs, which the target then
+	# stacks on and fstab/resume= picked up as /
+	if is_mounted(Path('/mnt')):
+		bind_into_root(Path('/mnt'), '--rbind', '--make-rslave')
 	# /run/udev: lsblk UUIDs, same reason as the udev check
 	bind_into_root(Path('/run'), '--bind', '--make-private')
 	mount('-t', 'tmpfs', 'tmp', str(ROOT / 'tmp'), '-o', 'mode=1777,strictatime,nodev,nosuid')
