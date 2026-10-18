@@ -36,6 +36,19 @@ if TYPE_CHECKING:
 _CHANGE_LABEL = {ModificationStatus.CREATE: 'create', ModificationStatus.MODIFY: 'format', ModificationStatus.DELETE: 'delete'}
 
 
+# the VG is smaller than the PVs (metadata), so volumes sized off the PVs ask
+# for more than it holds: the largest volume gives that back. Size.__sub__ is
+# abs(), so the direction is checked here, a VG with room to spare needs none.
+# Rounded up to a 4 MiB physical extent so lvcreate's own rounding does not
+# eat into space the next volume needs
+def lvm_overcommit_offset(desired: Size, avail: Size) -> Size | None:
+	if not avail < desired:
+		return None
+	pe_bytes = Size(4, Unit.MiB, SectorSize.default()).convert(Unit.B).value
+	pe_count = math.ceil((desired - avail).convert(Unit.B).value / pe_bytes)
+	return Size(pe_count * pe_bytes, Unit.B, SectorSize.default())
+
+
 def pending_changes(device_mods: list[DeviceModification]) -> list[str]:
 	# "Starting device modifications" read as a whole-disk wipe to people keeping Windows
 	# on the same SSD; spell out what is touched https://github.com/archlinux/archinstall/issues/2334
@@ -223,25 +236,8 @@ class FilesystemHandler:
 			if not vg_info:
 				raise ValueError('Unable to fetch VG info')
 
-			# the actual available LVM Group size will be smaller than the
-			# total PVs size due to reserved metadata storage etc.
-			# so we'll have a look at the total avail. size, check the delta
-			# to the desired sizes and subtract some equally from the actually
-			# created volume
-			avail_size = vg_info.vg_size
 			desired_size = sum((vol.length for vol in vg.volumes), Size(0, Unit.B, SectorSize.default()))
-
-			delta = desired_size - avail_size
-			delta_bytes = delta.convert(Unit.B)
-
-			# Round the offset up to the next physical extent (PE, 4 MiB by default)
-			# to ensure lvcreate`s internal rounding doesn`t consume space reserved
-			# for subsequent logical volumes.
-			pe_bytes = Size(4, Unit.MiB, SectorSize.default()).convert(Unit.B)
-			pe_count = math.ceil(delta_bytes.value / pe_bytes.value)
-			rounded_offset = pe_count * pe_bytes.value
-			max_vol_offset = Size(rounded_offset, Unit.B, SectorSize.default())
-
+			max_vol_offset = lvm_overcommit_offset(desired_size, vg_info.vg_size)
 			max_vol = max(vg.volumes, key=lambda x: x.length)
 
 			for lv in vg.volumes:

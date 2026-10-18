@@ -31,7 +31,7 @@ Icon=folder-build
 # │   │   │   ├── tui
 # │   │   │   └── utils
 # │   │   └── scripts
-# │   ├── archinstoo.egg-info
+# │   │       └── dev
 # │   ├── docs
 # │   ├── examples
 # │   ├── stubs
@@ -39,9 +39,8 @@ Icon=folder-build
 # │   └── tests
 # │       └── data
 # ├── isos
-# │   ├── a
 # │   ├── assets
 # │   └── mkosi
 # └── nvchecker
 # 
-# 43 directories
+# 42 directories

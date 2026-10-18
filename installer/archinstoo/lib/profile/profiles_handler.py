@@ -2,17 +2,14 @@ import importlib.util
 import inspect
 from collections import Counter
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.authentication.accounts import add_to_group
-from archinstoo.lib.exceptions import FetchError
 from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import GreeterType, Profile
-from archinstoo.lib.utils.net import fetch_data_from_url
 
 if TYPE_CHECKING:
 	from types import ModuleType
@@ -33,10 +30,9 @@ class ProfileHandler:
 	def __init__(self) -> None:
 		self._profiles: list[Profile] | None = None
 
-		# special variable to keep track of a profile url configuration
-		# it is merely used to be able to export the path again when a user
-		# wants to save the configuration
-		self._url_path: str | None = None
+		# custom profile file from the config, kept to export it again when
+		# the user saves the configuration
+		self._custom_path: str | None = None
 
 	def to_json(self, profile: Profile | None) -> ProfileSerialization:
 		# Serialize the selected profile setting to JSON
@@ -49,8 +45,8 @@ class ProfileHandler:
 				'custom_settings': {profile.name: profile.custom_settings for profile in profile.current_selection},
 			}
 
-		if self._url_path is not None:
-			data['path'] = self._url_path
+		if self._custom_path is not None:
+			data['path'] = self._custom_path
 
 		return data
 
@@ -59,22 +55,23 @@ class ProfileHandler:
 		profile: Profile | None = None
 
 		# the order of these is important, we want to
-		# load all the default_profiles from url and custom
-		# so that we can then apply whatever was specified
-		# in the main/detail sections
+		# load the custom profile file first so that we can then apply
+		# whatever was specified in the main/detail sections
 		custom_profiles: list[Profile] = []
 
-		if url_path := profile_config.get('path', None):
-			self._url_path = url_path
-			local_path = Path(url_path)
+		if custom_path := profile_config.get('path', None):
+			self._custom_path = custom_path
+			local_path = Path(custom_path)
 
+			# local files only: a profile is code run as root, fetch and
+			# read it yourself first (see examples/custom.py)
 			if local_path.is_file():
 				custom_profiles = self._process_profile_file(local_path)
 				self.remove_custom_profiles(custom_profiles)
 				self.add_custom_profiles(custom_profiles)
 				info(f'Loaded {len(custom_profiles)} custom profile(s) from {local_path}')
 			else:
-				self._import_profile_from_url(url_path)
+				error(f'Custom profile file not found: {local_path}')
 
 		if main := profile_config.get('main', None):
 			profile = self.get_profile_by_name(main)
@@ -234,23 +231,6 @@ class ProfileHandler:
 		# Install greeter if any profile supports it
 		if profile_config.greeter and profile_config.is_greeter_supported():
 			self.install_greeter(install_session, profile_config.greeter)
-
-	def _import_profile_from_url(self, url: str) -> None:
-		# Import default_profiles from a url path
-		try:
-			data = fetch_data_from_url(url)
-		except FetchError:
-			error(f'Unable to fetch profile from specified url: {url}')
-			return
-
-		with NamedTemporaryFile(delete=False, suffix='.py') as fp:
-			fp.write(data.encode())
-			filepath = Path(fp.name)
-
-		profiles = self._process_profile_file(filepath)
-		self.remove_custom_profiles(profiles)
-		self.add_custom_profiles(profiles)
-		info(f'Loaded {len(profiles)} custom profile(s) from {url}')
 
 	def _load_profile_class(self, module: ModuleType) -> list[Profile]:
 		# Load all default_profiles defined in a module
