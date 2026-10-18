@@ -5,6 +5,7 @@ import pty
 import re
 import shlex
 import shutil
+import signal
 import stat
 import subprocess
 import sys
@@ -289,6 +290,9 @@ class SysCommandWorker:
 
 		# https://stackoverflow.com/questions/4022600/python-pty-fork-how-does-it-work
 		if not self.pid:
+			# resizing our own pty SIGWINCHes us, and the forked child still
+			# carries the menu's handler: it would redraw curses into the pty
+			signal.signal(signal.SIGWINCH, signal.SIG_DFL)
 			termios.tcsetwinsize(0, (size.lines, size.columns))
 			_cmd_history(self.cmd)
 
