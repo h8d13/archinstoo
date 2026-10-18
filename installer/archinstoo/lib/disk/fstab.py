@@ -40,8 +40,12 @@ def _mount_entries(target: Path) -> list[str]:
 	while stack:
 		fs = stack.pop(0)
 		# depth first, parents before children: mount order
-		stack[:0] = fs.get('children', [])
-		if not fs['uuid']:
+		children = fs.get('children', [])
+		stack[:0] = children
+		# a mount stacked on it at the same path hides it (a bind of the
+		# directory underneath, the host's fs below a pre-mounted target):
+		# only the top one is what boots
+		if not fs['uuid'] or any(child['target'] == fs['target'] for child in children):
 			continue
 		mountpoint = '/' + fs['target'].removeprefix(str(target)).lstrip('/')
 		fstype = fs['fstype']
@@ -49,6 +53,13 @@ def _mount_entries(target: Path) -> list[str]:
 		line = f'UUID={fs["uuid"]}\t{mountpoint}\t{fstype}\t{_options(fs["options"])}\t0\t{_fsck_pass(fstype, mountpoint)}'
 		entries.append(f'# {fs["source"]}\n{line}\n')
 	return entries
+
+
+def mounted_at(target: Path) -> dict[str, str]:
+	# what is visible at target: mountinfo order, the topmost mount comes last
+	out = SysCommand(['findmnt', '-J', '-l', '-o', 'UUID,FSTYPE', '--mountpoint', str(target)]).decode()
+	fs: dict[str, str] = json.loads(out)['filesystems'][-1]
+	return fs
 
 
 def write_fstab(target: Path, extra_entries: list[str]) -> None:

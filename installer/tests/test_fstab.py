@@ -66,3 +66,19 @@ def test_no_root_mounted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 	tree = {'filesystems': [_fs(str(tmp_path), 'tmpfs', 'rw', None)]}
 	with pytest.raises(RequirementError, match='No root filesystem'):
 		_write(monkeypatch, tmp_path, tree)
+
+
+def test_stacked_mount_hidden(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# the bootstrap bound the host's bare /mnt (its root fs) and the target
+	# mounted on top: the host's btrfs landed in fstab as / and the install
+	# waited on it at boot
+	target = str(tmp_path)
+	tree = {
+		'filesystems': [
+			_fs(target, 'btrfs', 'rw,subvol=/root', 'host-uuid', [_fs(target, 'ext4', 'rw,relatime', 'root-uuid')]),
+		],
+	}
+	assert _write(monkeypatch, tmp_path, tree) == [
+		'UUID=root-uuid\t/\text4\trw,relatime\t0\t1',
+		'/swapfile\tnone\tswap\tdefaults\t0\t0',
+	]

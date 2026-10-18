@@ -22,14 +22,7 @@ def _session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fs_type: str) -> t
 	monkeypatch.setattr(installation, 'arch_chroot', chroot.append, raising=False)
 	monkeypatch.setattr(installer_mod, 'setup_zram', lambda *_: None)
 
-	class FakeCmd:
-		def __init__(self, cmd: list[str]) -> None:
-			assert cmd[:2] == ['findmnt', '-no']
-
-		def decode(self) -> str:
-			return fs_type + '\n'
-
-	monkeypatch.setattr(swap_mod, 'SysCommand', FakeCmd)
+	monkeypatch.setattr(swap_mod, 'mounted_at', lambda _target: {'fstype': fs_type, 'uuid': 'root-uuid'})
 	monkeypatch.setattr(hardware.SysInfo, 'has_uefi', staticmethod(lambda: True))
 	return installation, chroot
 

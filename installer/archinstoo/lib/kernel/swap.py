@@ -3,8 +3,8 @@ import re
 from subprocess import CompletedProcess
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.disk.fstab import mounted_at
 from archinstoo.lib.exceptions import DiskError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import info
 
@@ -18,7 +18,8 @@ if TYPE_CHECKING:
 def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[str]]:
 	# ceil MemTotal (kB) to GiB: the image must fit even on a full RAM
 	size = size_gib or -(-SysInfo.mem_total() // 2**20)
-	fs_type = SysCommand(['findmnt', '-no', 'FSTYPE', str(installation.target)]).decode().strip()
+	root_fs = mounted_at(installation.target)
+	fs_type = root_fs['fstype']
 	info(f'Setting up {size}GiB swap file on {fs_type}')
 
 	if fs_type == 'btrfs':
@@ -35,7 +36,7 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 	kernel_params: list[str] = []
 
 	if not SysInfo.has_uefi():
-		fs_uuid = SysCommand(['findmnt', '-no', 'UUID', str(installation.target)]).decode().strip()
+		fs_uuid = root_fs['uuid']
 		if fs_type == 'btrfs':
 			result = installation.arch_chroot(['btrfs', 'inspect-internal', 'map-swapfile', '-r', swapfile])
 			offset = result.stdout.decode().strip() if isinstance(result, CompletedProcess) else str(result).strip()
