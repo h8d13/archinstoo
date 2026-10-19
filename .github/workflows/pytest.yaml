@@ -26,9 +26,7 @@ jobs:
                 pacman-key --init
                 pacman --noconfirm -Sy archlinux-keyring
                 pacman --noconfirm -Syyu
-                pacman --noconfirm -Sy python-pip python-pyparted pkgconfig gcc
-            - run: pip install --break-system-packages --upgrade pip
-            - name: Install archinstoo dependencies
-              run: pip install --break-system-packages .[dev]
+                pacman --noconfirm -S --needed python-pyparted python-pytest
+            # python -m: installer/ on sys.path, nothing to pip install
             - name: Test with pytest
-              run: pytest
+              run: python -m pytest

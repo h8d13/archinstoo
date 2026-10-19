@@ -1,0 +1,36 @@
+on:
+    push:
+        # docs-only pushes, docs.yaml covers those
+        paths-ignore:
+            - '**.md'
+            - mkdocs.yaml
+            - .github/overrides/**
+            - .github/docs-requirements.txt
+name: Pre-commit hooks
+permissions: {}
+jobs:
+    # every hook at the version .pre-commit-config.yaml pins, in its own
+    # venv: CI and a local commit run the same ruff, mypy, pylint, ...
+    pre-commit:
+        runs-on: ubuntu-latest
+        container:
+            image: archlinux/archlinux:latest@sha256:f9e436f35af0ca4fcd33839ae6138030342625473db4b4d1da4c6b158b37a0f9
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                persist-credentials: false
+            - name: Prepare arch
+              run: |
+                pacman-key --init
+                pacman --noconfirm -Sy archlinux-keyring
+                pacman --noconfirm -Syyu
+                pacman --noconfirm -S --needed git pre-commit
+            # the checkout belongs to another uid than the container's root
+            - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+            # hook venvs, rebuilt whenever a rev or pin changes
+            - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                path: ~/.cache/pre-commit
+                key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+            - name: Run every hook
+              run: pre-commit run --all-files --show-diff-on-failure --color always

@@ -25,13 +25,14 @@ Home = "https://archlinux.org/downloads"
 Source = "https://github.com/h8d13/archinstoo"
 
 [project.optional-dependencies]
-# floors, not pins: repo versions satisfy them, pre-commit revs pin the hooks
+# floors at the Arch repo versions: renovate moves each with its package,
+# pre-commit revs pin the hooks
 dev = [
-    "mypy>=2.3.0",
-    "pre-commit>=4.6.1",
-    "ruff>=0.16.2",
-    "pylint>=4.0.7",
-    "pytest>=9.1.0",
+    "mypy>=2.4.0",  # renovate: arch=mypy
+    "pre-commit>=4.7.0",  # renovate: arch=pre-commit
+    "ruff>=0.17.1",  # renovate: arch=ruff
+    "pylint>=4.0.7",  # renovate: arch=python-pylint
+    "pytest>=9.1.1",  # renovate: arch=python-pytest
 ]
 
 [project.scripts]

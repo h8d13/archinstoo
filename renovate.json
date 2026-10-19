@@ -30,22 +30,20 @@
       "datasourceTemplate": "custom.archlinux",
       "versioningTemplate": "loose",
       "packageNameTemplate": "{{{depName}}}"
+    },
+    {
+      "customType": "regex",
+      "description": "Pinned python deps of repo: local pre-commit hooks (pylint, import-linter), the pre-commit manager skips local hooks",
+      "managerFilePatterns": [
+        "/^\\.pre-commit-config\\.yaml$/"
+      ],
+      "matchStrings": [
+        "-\\s+(?<depName>[A-Za-z0-9][A-Za-z0-9._-]*)==(?<currentValue>[^\\s#]+)"
+      ],
+      "datasourceTemplate": "pypi"
     }
   ],
   "packageRules": [
-    {
-      "matchDepTypes": [
-        "devDependencies"
-      ],
-      "matchPackageNames": [
-        "mypy",
-        "ruff",
-        "pre-commit",
-        "pre-commit/pre-commit-hooks",
-        "pre-commit/mirrors-mypy",
-        "astral-sh/ruff-pre-commit"
-      ]
-    },
     {
       "description": "Python floor moves with Arch minor releases, not point releases",
       "matchDepNames": [
@@ -54,14 +52,19 @@
       "extractVersion": "^(?<version>\\d+\\.\\d+)"
     },
     {
-      "description": "Disable upstream updates for versions tracked via Arch repos",
+      "description": "Versions tracked via Arch repos (# renovate: arch=), never PyPI",
       "matchDatasources": [
         "pypi",
         "python-version"
       ],
       "matchPackageNames": [
         "pyparted",
-        "python"
+        "python",
+        "mypy",
+        "pre-commit",
+        "ruff",
+        "pylint",
+        "pytest"
       ],
       "enabled": false
     }
