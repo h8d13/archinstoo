@@ -15,6 +15,12 @@ Different trackers, different review, different lifetimes.
 
 Issues tracker:
 
+- Namcap "lots-of-docs"
+
+Reported [here](https://gitlab.archlinux.org/pacman/namcap/-/work_items/108)
+
+Fixed same week [here](https://gitlab.archlinux.org/pacman/namcap/-/commit/23ea8d6b44a8ee2050b77ed73cf43352a1dca169)
+
 - `CONFIG_DUMMY_CONSOLE_{COLUMNS,ROWS}` on `systemd` type hooks vs `busybox`
 
 Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/work_items/214)
