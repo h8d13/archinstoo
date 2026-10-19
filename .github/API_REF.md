@@ -35,10 +35,9 @@ scripts, not scripts (`_resolve.py`).
 - Only `--script` picks the code path. `ArchConfig.script` in the saved
   JSON is a label so a resume knows what produced it (`get_script()`).
 - Rootless (no root needed): `ROOTLESS_SCRIPTS` in
-  [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/__init__.py)
-  = `list`, `size`, `mirror`, `count`, `schema`. `NO_DISK_SCRIPTS`
-  (`live`, `packages`) skip the disk deps and are refused on a foreign
-  host: their target is `/`.
+  [`cli.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/cli.py).
+  `NO_DISK_SCRIPTS` (same file) skip the disk deps and are refused under
+  `--script bootstrap`: their target is `/`.
 - New script = new file in `scripts/` that defines + calls an entry fn.
   Reuse `get_arch_config_handler()` from
   [args.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/args.py)

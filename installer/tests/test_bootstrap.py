@@ -2,7 +2,6 @@
 # Each case is one that broke or would break silently in a VM run.
 
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -10,6 +9,7 @@ import pytest
 import archinstoo
 from archinstoo import deps
 from archinstoo.lib import bootstrap
+from archinstoo.lib.cli import bootstrap_argv
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.utils.host import Host
 
@@ -53,7 +53,7 @@ def test_python_and_both_dep_sets_inside() -> None:
 
 
 @pytest.mark.parametrize(
-	('argv', 'inner', 'rc'),
+	('argv', 'inner', 'extra'),
 	[
 		# what follows -- reaches the root as given
 		(
@@ -66,12 +66,12 @@ def test_python_and_both_dep_sets_inside() -> None:
 				'--silent',
 			],
 			['--', '--script', 'minimal', '--silent'],
-			0,
+			[],
 		),
-		(['--script=bootstrap', '--debug'], ['--'], 0),
+		(['--script=bootstrap', '--debug'], ['--'], []),
 		# the script's own help, before anything is fetched
-		(['--script', 'bootstrap', '-h'], ['-h', '--'], 0),
-		# parsed by the host run and never forwarded: refused, nothing runs
+		(['--script', 'bootstrap', '-h'], ['-h', '--'], []),
+		# parsed by the host run and never forwarded
 		(
 			[
 				'--script',
@@ -81,28 +81,27 @@ def test_python_and_both_dep_sets_inside() -> None:
 				'--script',
 				'guided',
 			],
-			None,
-			1,
+			['--', '--script', 'guided'],
+			['--silent'],
 		),
 	],
 )
 def test_args_after_dashdash(
-	monkeypatch: pytest.MonkeyPatch,
-	argv: list[str],
-	inner: list[str] | None,
-	rc: int,
+	argv: list[str], inner: list[str], extra: list[str]
 ) -> None:
-	ran: list[list[str]] = []
-	monkeypatch.setattr('sys.argv', ['archinstoo', *argv])
-	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: False))
-	monkeypatch.setattr(
-		archinstoo,
-		'_run_script',
-		lambda _script: ran.append(list(sys.argv[1:])),
-	)
+	assert bootstrap_argv(argv) == (inner, extra)
 
-	assert archinstoo._run_bootstrap() == rc
-	assert ran == ([] if inner is None else [inner])
+
+def test_misplaced_args_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+	ran: list[str] = []
+	monkeypatch.setattr(
+		'sys.argv', ['archinstoo', '--script', 'bootstrap', '--silent']
+	)
+	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: False))
+	monkeypatch.setattr(archinstoo, '_run_script', ran.append)
+
+	assert archinstoo._run_bootstrap() == 1
+	assert ran == []
 
 
 def test_checksum(tmp_path: Path) -> None:

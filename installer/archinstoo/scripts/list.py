@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from archinstoo import ROOTLESS_SCRIPTS
-from archinstoo.lib.cli import DEFAULT_SCRIPT
+from archinstoo.lib.cli import DEFAULT_SCRIPT, ROOTLESS_SCRIPTS
 
 here = Path(__file__).parent
 # subfolders are namespaces (dev/vm.py runs as dev.vm); anything under a

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from archinstoo import NO_DISK_SCRIPTS
+from archinstoo.lib.cli import NO_DISK_SCRIPTS
 
 _PKG_ROOT = Path(__file__).parent.parent
 _SCRIPTS = _PKG_ROOT / 'archinstoo' / 'scripts'

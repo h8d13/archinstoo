@@ -76,7 +76,13 @@ from . import deps
 from ._version import GITSTAT, PKGVER, VERSION
 from .lib import output
 from .lib.checkpoints import _check_script, _run_script, clean_cache, clean_logs
-from .lib.cli import build_parser
+from .lib.cli import (
+	NO_DISK_SCRIPTS,
+	ROOTLESS_SCRIPTS,
+	bootstrap_argv,
+	build_parser,
+	parse_early,
+)
 from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
@@ -88,11 +94,6 @@ from .lib.utils.net import ping
 
 if TYPE_CHECKING:
 	from .lib.args import ArchConfigHandler, Arguments
-
-# scripts that do not need root access
-ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect', 'dev.vm'})
-# scripts that only touch the running system
-NO_DISK_SCRIPTS = frozenset({'packages'})
 
 
 def _log_env_info() -> None:
@@ -316,37 +317,23 @@ def _run_bootstrap() -> int:
 			'bootstrap root'
 		)
 		return 1
-	argv = sys.argv[1:]
-	split = argv.index('--') if '--' in argv else len(argv)
-	head = argv[:split]
-	own = [a for a in head if a in {'-h', '--help'}]
-	# options before -- would be parsed here and never reach the root
-	if extra := [
-		a
-		for a in head
-		if a
-		not in {'--script', 'bootstrap', '--script=bootstrap', '--debug', *own}
-	]:
+	inner, extra = bootstrap_argv(sys.argv[1:])
+	if extra:
 		error(
 			'archinstoo --script bootstrap: pass '
 			f'{" ".join(extra)} after --, it runs inside the root'
 		)
 		return 1
-	sys.argv = [sys.argv[0], *own, '--', *argv[split + 1 :]]
+	sys.argv = [sys.argv[0], *inner]
 	_run_script('bootstrap')
 	return 0
 
 
 def run_as_a_module() -> int:
-	# the real grammar before any preparation (-v/--version exits here). No
-	# default for --script: the bare global help needs "not given" visible
-	parser = build_parser()
-	parser.set_defaults(script=None)
-	early, remaining = parser.parse_known_args()
-	# add_help=False: -h stays unparsed, for the global help or the script's
-	is_help = '-h' in remaining or '--help' in remaining
+	early, is_help = parse_early()
 
-	# short-circuit for global help (no --script) before any preparation
+	# short-circuit for global help (no --script) before any preparation.
+	# A fresh parser: help shows the real --script default, not None
 	if is_help and early.script is None:
 		build_parser().print_help()
 		return 0

@@ -1,4 +1,4 @@
-# The command line, stdlib only: run_as_a_module parses it before bootstrap
+# The command line, stdlib only: parse_early reads it before bootstrap
 # installs what lib.args needs, ArchConfigHandler parses it again after.
 
 import argparse
@@ -7,6 +7,16 @@ from pathlib import Path
 from archinstoo._version import VERSION
 
 DEFAULT_SCRIPT = 'guided'
+# scripts that do not need root access
+ROOTLESS_SCRIPTS = frozenset({'list', 'mirror', 'count', 'schema', 'detect', 'dev.vm'})
+# scripts that only touch the running system
+NO_DISK_SCRIPTS = frozenset({'packages'})
+
+_HELP_FLAGS = frozenset({'-h', '--help'})
+# what the host run of --script bootstrap reads itself
+_BOOTSTRAP_HOST_ARGS = frozenset(
+	{'--script', 'bootstrap', '--script=bootstrap', '--debug'}
+)
 
 
 def script_help(path: Path) -> str:
@@ -123,3 +133,24 @@ def build_parser() -> argparse.ArgumentParser:
 	)
 
 	return parser
+
+
+def parse_early() -> tuple[argparse.Namespace, bool]:
+	# the real grammar before any preparation (-v/--version exits here). No
+	# default for --script: the bare global help needs "not given" visible
+	parser = build_parser()
+	parser.set_defaults(script=None)
+	early, remaining = parser.parse_known_args()
+	# add_help=False: -h stays unparsed, for the global help or the script's
+	return early, not _HELP_FLAGS.isdisjoint(remaining)
+
+
+def bootstrap_argv(argv: list[str]) -> tuple[list[str], list[str]]:
+	# (argv for the root, options misplaced before --). What follows --
+	# reaches the root as given; before it only -h is forwarded, anything
+	# else would be parsed by the host run and never reach the root
+	split = argv.index('--') if '--' in argv else len(argv)
+	head = argv[:split]
+	own = [a for a in head if a in _HELP_FLAGS]
+	extra = [a for a in head if a not in _BOOTSTRAP_HOST_ARGS | _HELP_FLAGS]
+	return [*own, '--', *argv[split + 1 :]], extra
