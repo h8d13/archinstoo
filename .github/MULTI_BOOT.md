@@ -2,9 +2,11 @@
 
 ## With GRUB
 
-> Easiest way is to use **separate disks** (this limits cases of over-writing important data)
+> Easiest way is to use **separate disks**
+> (this limits cases of over-writing important data)
 
-Second is to check that your hardware supports `Other OS` secure boot options if planning to use with Windows 11.
+Second is to check that your hardware supports `Other OS` secure boot options
+if planning to use with Windows 11.
 
 Then simply: follow this section of the [wiki](https://wiki.archlinux.org/title/GRUB#Detecting_other_operating_systems)
 
@@ -14,7 +16,8 @@ Make sure you have `os-prober` package installed
 
 2. Regen `grub-mkconfig -o /boot/grub/grub.cfg`
 
-This can also be achieved through custom entries using `blkid` in `/etc/grub.d/40_custom`
+This can also be achieved through custom entries
+using `blkid` in `/etc/grub.d/40_custom`
 
 *Other bootloaders* have their own ways of doing this.
 
@@ -24,6 +27,9 @@ This can also be achieved through custom entries using `blkid` in `/etc/grub.d/4
 
 For same disks, you might be using another app to format, resize, etc before-hand.
 
-Then you can use `Manual Partitioning`, anything left marked as `Existing` will not be formatted.
+Then you can use `Manual Partitioning`,
+anything left marked as `Existing` will not be formatted.
 
-Already have a bootloader: `--skip-boot` will allow you to skip BL selection in the menu and `None` will do the same.
+Already have a bootloader:
+`--skip-boot` will allow you to skip BL selection in the menu
+and `None` will do the same.

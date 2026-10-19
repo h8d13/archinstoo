@@ -4,7 +4,12 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.exceptions import FetchError, RequirementError, ServiceError, SysCallError
+from archinstoo.lib.exceptions import (
+	FetchError,
+	RequirementError,
+	ServiceError,
+	SysCallError,
+)
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.utils.env import Env
@@ -46,7 +51,9 @@ def _scan_keymaps() -> list[str]:
 
 		for path in root.rglob('*'):
 			stem = path.name.removesuffix('.gz')
-			suffix = next((s for s in _KEYMAP_SUFFIXES if stem.endswith(s)), None)
+			suffix = next(
+				(s for s in _KEYMAP_SUFFIXES if stem.endswith(s)), None
+			)
 			if suffix and path.is_file():
 				names.add(stem.removesuffix(suffix))
 
@@ -58,7 +65,9 @@ _X11_BASE_XML_URL = 'https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-c
 
 
 # glibc lists every locale it can generate here; fetched only on non-glibc hosts
-_GLIBC_SUPPORTED_URL = 'https://raw.githubusercontent.com/bminor/glibc/master/localedata/SUPPORTED'
+_GLIBC_SUPPORTED_URL = (
+	'https://raw.githubusercontent.com/bminor/glibc/master/localedata/SUPPORTED'
+)
 
 # host copy of the same list, shipped by glibc
 _SUPPORTED_PATH = Path('/usr/share/i18n/SUPPORTED')
@@ -75,7 +84,11 @@ _MIN_LOCALES = ['en_US.UTF-8 UTF-8']
 def _generatable(locales: Iterable[str]) -> list[str]:
 	# every list_locales source runs through here: menu entries must map 1:1
 	# onto commented /etc/locale.gen lines on the target
-	return [locale for locale in locales if locale and locale not in _BUILTIN_LOCALES]
+	return [
+		locale
+		for locale in locales
+		if locale and locale not in _BUILTIN_LOCALES
+	]
 
 
 def _fetch_glibc_supported() -> list[str]:
@@ -90,7 +103,11 @@ def _fetch_glibc_supported() -> list[str]:
 	locales = []
 	for raw in text.splitlines():
 		line = raw.strip().rstrip('\\').strip()
-		if not line or line.startswith(('#', 'SUPPORTED-LOCALES')) or '/' not in line:
+		if (
+			not line
+			or line.startswith(('#', 'SUPPORTED-LOCALES'))
+			or '/' not in line
+		):
 			continue
 		locale, charset = line.rsplit('/', 1)
 		locales.append(f'{locale} {charset}')
@@ -139,7 +156,10 @@ def locale_entry_re(sys_lang: str, sys_enc: str) -> re.Pattern[str]:
 	# ISO-8859-1 pattern also swallows 'xx_XX ISO-8859-15'.
 	lang, _, modifier = split_locale_name(sys_lang)
 	enc = locale_encoding(sys_lang, sys_enc)
-	return re.compile(rf'{re.escape(lang)}(\.{re.escape(enc)})?{re.escape(modifier)} {re.escape(enc)}')
+	return re.compile(
+		rf'{re.escape(lang)}(\.{re.escape(enc)})?{re.escape(modifier)} '
+		rf'{re.escape(enc)}'
+	)
 
 
 def uncomment_locale(lines: list[str], sys_lang: str, sys_enc: str) -> bool:
@@ -163,12 +183,22 @@ def list_locale_encodings(sys_lang: str) -> list[str]:
 
 	entries = [entry.strip() for entry in list_locales()]
 	charsets = {entry.split()[1] for entry in entries}
-	scoped = [enc for enc in charsets if any(locale_entry_re(sys_lang, enc).fullmatch(entry) for entry in entries)]
+	scoped = [
+		enc
+		for enc in charsets
+		if any(
+			locale_entry_re(sys_lang, enc).fullmatch(entry)
+			for entry in entries
+		)
+	]
 	return sorted(scoped, key=lambda enc: (enc != 'UTF-8', enc))
 
 
 def verify_keyboard_layout(layout: str) -> bool:
-	return any(layout.lower() == language.lower() for language in list_keyboard_languages())
+	return any(
+		layout.lower() == language.lower()
+		for language in list_keyboard_languages()
+	)
 
 
 # xkeyboard-config's registry is what localectl serves its X11 lists from, so
@@ -183,7 +213,10 @@ _XKB_ROOT_ENV = 'XKB_CONFIG_ROOT'
 
 def _x11_rules_paths() -> list[Path]:
 	if xkb_root := Env.get_value(_XKB_ROOT_ENV):
-		return [Path(xkb_root) / 'rules' / name for name in ('evdev.xml', 'base.xml')]
+		return [
+			Path(xkb_root) / 'rules' / name
+			for name in ('evdev.xml', 'base.xml')
+		]
 	return data_paths('setxkbmap', *_X11_RULES)
 
 
@@ -205,7 +238,9 @@ def _load_x11_registry() -> ET.Element:
 	# host ships no xkeyboard-config (alpine, minimal foreign hosts)
 	debug('No local xkeyboard-config registry, fetching the upstream one')
 	if (root := _fetch_x11_registry()) is None:
-		raise RequirementError('no xkeyboard-config registry on disk or upstream')
+		raise RequirementError(
+			'no xkeyboard-config registry on disk or upstream'
+		)
 	return root
 
 
@@ -263,7 +298,13 @@ def list_x11_keyboard_variants(layout: str) -> list[str]:
 	for lay in root.findall('./layoutList/layout'):
 		name_el = lay.find('./configItem/name')
 		if name_el is not None and name_el.text == layout:
-			return [n.text for n in lay.findall('./variantList/variant/configItem/name') if n.text]
+			return [
+				n.text
+				for n in lay.findall(
+					'./variantList/variant/configItem/name'
+				)
+				if n.text
+			]
 	return []
 
 
@@ -275,7 +316,10 @@ _KBD_MODEL_MAP = 'systemd/kbd-model-map'
 
 def _kbd_model_map_path() -> Path | None:
 	# systemd ships it, so localectl anchors the store based case
-	return next((p for p in data_paths('localectl', _KBD_MODEL_MAP) if p.is_file()), None)
+	return next(
+		(p for p in data_paths('localectl', _KBD_MODEL_MAP) if p.is_file()),
+		None,
+	)
 
 
 @cache
@@ -287,7 +331,10 @@ def _kbd_model_map() -> dict[str, tuple[str, str]]:
 	table: dict[str, tuple[str, str]] = {}
 	path = _kbd_model_map_path()
 	if path is None:
-		debug('No kbd-model-map on this host, graphical layout stays unset until chosen')
+		debug(
+			'No kbd-model-map on this host, graphical layout '
+			'stays unset until chosen'
+		)
 		return table
 
 	for line in path.read_text().splitlines():
@@ -311,7 +358,10 @@ def xkb_from_keymap(keymap: str) -> tuple[str, str] | None:
 
 
 def verify_x11_keyboard_layout(layout: str) -> bool:
-	return any(layout.lower() == language.lower() for language in list_x11_keyboard_languages())
+	return any(
+		layout.lower() == language.lower()
+		for language in list_x11_keyboard_languages()
+	)
 
 
 @cache
@@ -363,7 +413,9 @@ def set_kb_layout(locale: str) -> bool:
 		try:
 			SysCommand(f'localectl set-keymap {locale}')
 		except SysCallError as err:
-			raise ServiceError(f"Unable to set locale '{locale}' for console: {err}") from err
+			raise ServiceError(
+				f"Unable to set locale '{locale}' for console: {err}"
+			) from err
 
 		# the host keymap just moved, so the cached probe above is stale
 		get_kb_layout.cache_clear()
@@ -399,8 +451,15 @@ def list_console_fonts() -> list[str]:
 	for font_dir in data_paths('setfont', *_FONT_DIRS):
 		if not font_dir.is_dir():
 			continue
-		# README.psfu passes _is_font_name, so the prefix check still earns its keep
-		fonts = [_strip_font_suffix(f.name) for f in font_dir.iterdir() if f.is_file() and not f.name.startswith('README') and _is_font_name(f.name)]
+		# README.psfu passes _is_font_name, so the prefix check
+		# still earns its keep
+		fonts = [
+			_strip_font_suffix(f.name)
+			for f in font_dir.iterdir()
+			if f.is_file()
+			and not f.name.startswith('README')
+			and _is_font_name(f.name)
+		]
 		if fonts:
 			return sorted(fonts, key=lambda x: (len(x), x))
 
@@ -436,7 +495,12 @@ def _scan_timezones() -> list[str]:
 		tabfile = root / tab
 		if not tabfile.is_file():
 			continue
-		zones = {cols[2] for line in tabfile.read_text().splitlines() if not line.startswith('#') and len(cols := line.split('\t')) >= 3}
+		zones = {
+			cols[2]
+			for line in tabfile.read_text().splitlines()
+			if not line.startswith('#')
+			and len(cols := line.split('\t')) >= 3
+		}
 		if zones:
 			zones.add('UTC')
 			return sorted(zones)

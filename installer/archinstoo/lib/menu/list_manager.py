@@ -24,9 +24,8 @@ class ListManager[ValueT](ABC):
 		# :param entries: list/dict of option to be shown / manipulated
 		# type param: list
 		#
-		# :param base_actions: list of actions that is displayed in the main list manager,
-		# usually global actions such as 'Add...'
-		# type param: list
+		# :param base_actions: list of actions that is displayed in the main
+		# list manager, usually global actions such as 'Add...' type param: list
 		#
 		# :param sub_menu_actions: list of actions available for a chosen entry
 		# type param: list
@@ -113,7 +112,10 @@ class ListManager[ValueT](ABC):
 		return self._data
 
 	def _run_actions_on_entry(self, entry: ValueT) -> None:
-		options = [*self.filter_options(entry, self._sub_menu_actions), self._back_action]
+		options = [
+			*self.filter_options(entry, self._sub_menu_actions),
+			self._back_action,
+		]
 
 		items = [MenuItem(o, value=o) for o in options]
 		group = MenuItemGroup(items, sort_items=False)
@@ -144,7 +146,9 @@ class ListManager[ValueT](ABC):
 		...
 
 	@abstractmethod
-	def handle_action(self, action: str, entry: ValueT | None, data: list[ValueT]) -> list[ValueT]:
+	def handle_action(
+		self, action: str, entry: ValueT | None, data: list[ValueT]
+	) -> list[ValueT]:
 		# this function is called when a base action or
 		# a specific action for an entry is triggered
 		...

@@ -26,12 +26,22 @@ from archinstoo.lib.models.applications import (
 	SecurityConfiguration,
 	ThunderboltConfiguration,
 )
-from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
+from archinstoo.lib.models.authentication import (
+	AuthenticationConfiguration,
+	PrivilegeEscalation,
+)
 from archinstoo.lib.models.bootloader import Bootloader, BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, Size
 from archinstoo.lib.models.graphics import GfxDriver
 from archinstoo.lib.models.localization import LocaleConfiguration
-from archinstoo.lib.models.mirrors import CustomRepository, CustomServer, MirrorRegion, PacmanConfiguration, SignCheck, SignOption
+from archinstoo.lib.models.mirrors import (
+	CustomRepository,
+	CustomServer,
+	MirrorRegion,
+	PacmanConfiguration,
+	SignCheck,
+	SignOption,
+)
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.models.service import UserService
@@ -112,7 +122,11 @@ def test_flags_match_arguments_dataclass(monkeypatch: pytest.MonkeyPatch) -> Non
 	# SUPPRESS-default actions (--version) never reach the namespace.
 	monkeypatch.setattr('sys.argv', ['archinstoo'])
 	handler = ArchConfigHandler()
-	dests = {action.dest for action in handler._parser._actions if action.default is not argparse.SUPPRESS}
+	dests = {
+		action.dest
+		for action in handler._parser._actions
+		if action.default is not argparse.SUPPRESS
+	}
 	fields = {field.name for field in dataclasses.fields(Arguments)}
 	assert dests == fields
 
@@ -121,7 +135,12 @@ def test_flags_match_man_page(monkeypatch: pytest.MonkeyPatch) -> None:
 	# Man page documents exactly the parser's flag set (docs drift guard).
 	monkeypatch.setattr('sys.argv', ['archinstoo'])
 	handler = ArchConfigHandler()
-	flags = {opt for action in handler._parser._actions for opt in action.option_strings if opt.startswith('--')}
+	flags = {
+		opt
+		for action in handler._parser._actions
+		for opt in action.option_strings
+		if opt.startswith('--')
+	}
 
 	man_path = Path(__file__).parent.parent / 'docs' / 'archinstoo.1'
 	man = man_path.read_text().replace('\\-', '-')
@@ -147,7 +166,8 @@ def test_config_file_parsing(
 	handler = ArchConfigHandler()
 	arch_config = handler.config
 
-	# TODO: Use the real values from the test fixture instead of clearing out the entries
+	# TODO: Use the real values from the test fixture instead of
+	# clearing out the entries
 	arch_config.disk_config.device_modifications = []  # type: ignore[union-attr]
 
 	# Profile objects compare by identity, so check separately by name
@@ -169,11 +189,17 @@ def test_config_file_parsing(
 			audio_config=AudioConfiguration(audio=Audio.PIPEWIRE),
 			print_service_config=PrintServiceConfiguration(enabled=True),
 			firewall_config=FirewallConfiguration(firewall=Firewall.UFW),
-			management_config=ManagementConfiguration(tools=[Management.GIT, Management.MAN]),
+			management_config=ManagementConfiguration(
+				tools=[Management.GIT, Management.MAN]
+			),
 			monitor_config=MonitorConfiguration(monitor=Monitor.HTOP),
 			editor_config=EditorConfiguration(editor=Editor.VIM),
-			power_management_config=PowerManagementConfiguration(power_management=PowerManagement.PPD),
-			security_config=SecurityConfiguration(tools=[Security.APPARMOR, Security.FIREJAIL]),
+			power_management_config=PowerManagementConfiguration(
+				power_management=PowerManagement.PPD
+			),
+			security_config=SecurityConfiguration(
+				tools=[Security.APPARMOR, Security.FIREJAIL]
+			),
 		),
 		auth_config=AuthenticationConfiguration(
 			users=[
@@ -204,10 +230,14 @@ def test_config_file_parsing(
 			mirror_regions=[
 				MirrorRegion(
 					name='Australia',
-					urls=['http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch'],
+					urls=[
+						'http://archlinux.mirror.digitalpacific.com.au/$repo/os/$arch'
+					],
 				),
 			],
-			custom_servers=[CustomServer('https://mymirror.com/$repo/os/$arch')],
+			custom_servers=[
+				CustomServer('https://mymirror.com/$repo/os/$arch')
+			],
 			optional_repositories=[Repository.Testing],
 			custom_repositories=[
 				CustomRepository(
@@ -247,7 +277,13 @@ def test_config_file_parsing(
 		packages=['firefox'],
 		swap=SwapConfiguration(zram=False, hibernation=False),
 		timezone='UTC',
-		services=['service_1', 'service_2', UserService(unit='syncthing.service', user='testuser', linger=True)],
+		services=[
+			'service_1',
+			'service_2',
+			UserService(
+				unit='syncthing.service', user='testuser', linger=True
+			),
+		],
 		custom_commands=["echo 'Hello, World!'"],
 	)
 
@@ -259,7 +295,10 @@ def test_example_config_parsing(
 	# the example names /dev/nvme0n1; on a runner that has one, its partitions
 	# get validated against that disk's real geometry. Pin the device to absent
 	# so parsing exercises the config, never the host
-	monkeypatch.setattr('archinstoo.lib.disk.device_handler.DeviceHandler.get_device', lambda self, path: None)
+	monkeypatch.setattr(
+		'archinstoo.lib.disk.device_handler.DeviceHandler.get_device',
+		lambda self, path: None,
+	)
 	monkeypatch.setattr(
 		'sys.argv',
 		[

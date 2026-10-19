@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.chroot import chroot_prefix
 from archinstoo.lib.disk.lvm import lvm_pvseg_info
 from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path
-from archinstoo.lib.exceptions import DiskError, HardwareIncompatibilityError, SysCallError
+from archinstoo.lib.exceptions import (
+	DiskError,
+	HardwareIncompatibilityError,
+	SysCallError,
+)
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.linux_path import LPath
@@ -38,7 +42,9 @@ def _luks_uuid_from_mapper_dev(mapper_dev_path: Path) -> str:
 	return lsblk_info.children[0].uuid
 
 
-def refind_kernel_dir(root: PartitionModification | LvmVolume, *, boot_on_root: bool) -> str:
+def refind_kernel_dir(
+	root: PartitionModification | LvmVolume, *, boot_on_root: bool
+) -> str:
 	# Directory holding vmlinuz/initramfs in refind's backslash form,
 	# relative to the volume refind addresses. On a btrfs root nothing
 	# sets a default subvolume, so the root subvolume is part of the path.
@@ -74,11 +80,18 @@ class BootloaderInstaller:
 		self._disk_config = disk_config
 		self._enc = disk_encryption
 		# extra cmdline entries collected during the install (resume=), plus
-		# quiet/console= added by install(); a copy, the install's list stays put
+		# quiet/console= added by install(); a copy, the
+		# install's list stays put
 		self._extra_params = list(kernel_params)
 		self._zram = zram_enabled
 
-	def _partitions(self) -> tuple[PartitionModification, PartitionModification | None, PartitionModification | LvmVolume]:
+	def _partitions(
+		self,
+	) -> tuple[
+		PartitionModification,
+		PartitionModification | None,
+		PartitionModification | LvmVolume,
+	]:
 		efi_partition = self._disk_config.get_efi_partition()
 		boot_partition = self._disk_config.get_boot_partition()
 		root = self._disk_config.get_root()
@@ -88,10 +101,15 @@ class BootloaderInstaller:
 			if SysInfo.has_uefi() and efi_partition is not None:
 				boot_partition = efi_partition
 			else:
-				raise ValueError(f'Could not detect boot at mountpoint {self.target}')
+				raise ValueError(
+					'Could not detect boot at '
+					f'mountpoint {self.target}'
+				)
 
 		if root is None:
-			raise ValueError(f'Could not detect root at mountpoint {self.target}')
+			raise ValueError(
+				f'Could not detect root at mountpoint {self.target}'
+			)
 
 		return boot_partition, efi_partition, root
 
@@ -111,16 +129,26 @@ class BootloaderInstaller:
 	) -> None:
 		boot_partition, efi_partition, root = self._partitions()
 
-		info(f'Adding bootloader {bootloader.display_name()} to {boot_partition.dev_path}', step=True)
+		info(
+			f'Adding bootloader {bootloader.display_name()} to '
+			f'{boot_partition.dev_path}',
+			step=True,
+		)
 
 		if not SysInfo.has_uefi() and not bootloader.has_bios_support():
 			raise HardwareIncompatibilityError
 
 		if removable and not SysInfo.has_uefi():
-			warn('Removable install requested but system is not UEFI; disabling.')
+			warn(
+				'Removable install requested but system is '
+				'not UEFI; disabling.'
+			)
 			removable = False
 		elif removable and not bootloader.has_removable_support():
-			warn(f'Bootloader {bootloader.display_name()} lacks removable support; disabling.')
+			warn(
+				f'Bootloader {bootloader.display_name()} '
+				'lacks removable support; disabling.'
+			)
 			removable = False
 
 		if quiet:
@@ -129,36 +157,72 @@ class BootloaderInstaller:
 			self._add_param(f'console={serial_console}')
 
 		if uki_enabled:
-			# grub-btrfs cannot consume a UKI for snapshot entries; keep standalone initramfs alongside
-			keep_standalone = bootloader == Bootloader.Grub and self._disk_config.btrfs_snapshot_type() is not None
-			self._config_uki(root, efi_partition, keep_standalone_initramfs=keep_standalone, splash=splash)
+			# grub-btrfs cannot consume a UKI for snapshot entries; keep
+			# standalone initramfs alongside
+			keep_standalone = (
+				bootloader == Bootloader.Grub
+				and self._disk_config.btrfs_snapshot_type() is not None
+			)
+			self._config_uki(
+				root,
+				efi_partition,
+				keep_standalone_initramfs=keep_standalone,
+				splash=splash,
+			)
 
 		match bootloader:
 			case Bootloader.Systemd:
-				self._add_systemd_bootloader(boot_partition, root, efi_partition, uki_enabled, removable)
+				self._add_systemd_bootloader(
+					boot_partition,
+					root,
+					efi_partition,
+					uki_enabled,
+					removable,
+				)
 			case Bootloader.Grub:
-				self._add_grub_bootloader(boot_partition, root, efi_partition, uki_enabled, removable)
+				self._add_grub_bootloader(
+					boot_partition,
+					root,
+					efi_partition,
+					uki_enabled,
+					removable,
+				)
 			case Bootloader.Efistub:
-				self._add_efistub_bootloader(boot_partition, root, uki_enabled)
+				self._add_efistub_bootloader(
+					boot_partition, root, uki_enabled
+				)
 			case Bootloader.Limine:
-				self._add_limine_bootloader(boot_partition, efi_partition, root, uki_enabled, removable)
+				self._add_limine_bootloader(
+					boot_partition,
+					efi_partition,
+					root,
+					uki_enabled,
+					removable,
+				)
 			case Bootloader.Refind:
-				self._add_refind_bootloader(boot_partition, efi_partition, root, uki_enabled)
+				self._add_refind_bootloader(
+					boot_partition, efi_partition, root, uki_enabled
+				)
 
 		# Seed /loader/random-seed in the chroot so the very first boot isn't
-		# entropy-starved. Consumed by systemd-boot, or for a UKI by the embedded
-		# systemd-stub regardless of which bootloader chainloads it. The EFI system
-		# token can't be written here (no NVRAM in the chroot);
+		# entropy-starved. Consumed by systemd-boot, or for a UKI by the
+		# embedded systemd-stub regardless of which bootloader chainloads it.
+		# The EFI system token can't be written here (no NVRAM in the chroot);
 		# systemd-boot-random-seed.service sets it on the first real boot.
-		if efi_partition is not None and (uki_enabled or bootloader == Bootloader.Systemd):
+		if efi_partition is not None and (
+			uki_enabled or bootloader == Bootloader.Systemd
+		):
 			seed_cmd = ['bootctl', '--graceful']
 			if has_separate_boot(boot_partition, efi_partition):
-				seed_cmd.append(f'--esp-path={efi_partition.mountpoint}')
+				seed_cmd.append(
+					f'--esp-path={efi_partition.mountpoint}'
+				)
 			seed_cmd.append('random-seed')
 			try:
 				self._inst.arch_chroot(seed_cmd)
 			except SysCallError as err:
-				# non-fatal: stub falls back to firmware RNG, service reseeds on boot
+				# non-fatal: stub falls back to firmware RNG,
+				# service reseeds on boot
 				warn(f'Could not seed bootloader random seed: {err}')
 
 	def _get_kernel_params_partition(
@@ -170,19 +234,34 @@ class BootloaderInstaller:
 		kernel_parameters = []
 
 		if root_partition in self._enc.partitions:
-			debug(f'Root partition is an encrypted device, identifying by UUID: {root_partition.uuid}')
-			kernel_parameters.append(f'rd.luks.name={root_partition.uuid}=root')
+			debug(
+				'Root partition is an encrypted device, '
+				f'identifying by UUID: {root_partition.uuid}'
+			)
+			kernel_parameters.append(
+				f'rd.luks.name={root_partition.uuid}=root'
+			)
 
 			if id_root:
 				kernel_parameters.append('root=/dev/mapper/root')
 		elif id_root:
 			# an md array has no partition entry to take a PARTUUID from
 			if partuuid and root_partition.partuuid:
-				debug(f'Identifying root partition by PARTUUID: {root_partition.partuuid}')
-				kernel_parameters.append(f'root=PARTUUID={root_partition.partuuid}')
+				debug(
+					'Identifying root partition by '
+					f'PARTUUID: {root_partition.partuuid}'
+				)
+				kernel_parameters.append(
+					f'root=PARTUUID={root_partition.partuuid}'
+				)
 			else:
-				debug(f'Identifying root partition by UUID: {root_partition.uuid}')
-				kernel_parameters.append(f'root=UUID={root_partition.uuid}')
+				debug(
+					'Identifying root partition by '
+					f'UUID: {root_partition.uuid}'
+				)
+				kernel_parameters.append(
+					f'root=UUID={root_partition.uuid}'
+				)
 
 		return kernel_parameters
 
@@ -195,24 +274,45 @@ class BootloaderInstaller:
 		match self._enc.encryption_type:
 			case EncryptionType.LVM_ON_LUKS:
 				if not lvm.vg_name:
-					raise ValueError(f'Unable to determine VG name for {lvm.name}')
+					raise ValueError(
+						'Unable to determine VG '
+						f'name for {lvm.name}'
+					)
 
 				pv_seg_info = lvm_pvseg_info(lvm.vg_name, lvm.name)
 
 				if not pv_seg_info:
-					raise ValueError(f'Unable to determine PV segment info for {lvm.vg_name}/{lvm.name}')
+					raise ValueError(
+						'Unable to determine PV segment info '
+						f'for {lvm.vg_name}/{lvm.name}'
+					)
 
 				uuid = _luks_uuid_from_mapper_dev(pv_seg_info.pv_name)
 
-				debug(f'LvmOnLuks, encrypted root partition, identifying by UUID: {uuid}')
-				kernel_parameters.append(f'rd.luks.name={uuid}=cryptlvm root={lvm.safe_dev_path}')
+				debug(
+					'LvmOnLuks, encrypted root partition, '
+					f'identifying by UUID: {uuid}'
+				)
+				kernel_parameters.append(
+					f'rd.luks.name={uuid}=cryptlvm '
+					f'root={lvm.safe_dev_path}'
+				)
 			case EncryptionType.LUKS_ON_LVM:
 				uuid = _luks_uuid_from_mapper_dev(lvm.mapper_path)
 
-				debug(f'LuksOnLvm, encrypted root partition, identifying by UUID: {uuid}')
-				kernel_parameters.append(f'rd.luks.name={uuid}=root root=/dev/mapper/root')
+				debug(
+					'LuksOnLvm, encrypted root '
+					f'partition, identifying by UUID: {uuid}'
+				)
+				kernel_parameters.append(
+					f'rd.luks.name={uuid}=root '
+					'root=/dev/mapper/root'
+				)
 			case EncryptionType.NO_ENCRYPTION:
-				debug(f'Identifying root lvm by mapper device: {lvm.dev_path}')
+				debug(
+					'Identifying root lvm by mapper '
+					f'device: {lvm.dev_path}'
+				)
 				kernel_parameters.append(f'root={lvm.safe_dev_path}')
 			case EncryptionType.LUKS:
 				pass
@@ -226,7 +326,9 @@ class BootloaderInstaller:
 		partuuid: bool = True,
 	) -> list[str]:
 		kernel_parameters = (
-			self._get_kernel_params_lvm(root) if isinstance(root, LvmVolume) else self._get_kernel_params_partition(root, id_root, partuuid)
+			self._get_kernel_params_lvm(root)
+			if isinstance(root, LvmVolume)
+			else self._get_kernel_params_partition(root, id_root, partuuid)
 		)
 
 		# Zswap should be disabled when using zram.
@@ -234,22 +336,32 @@ class BootloaderInstaller:
 		if self._zram:
 			kernel_parameters.append('zswap.enabled=0')
 
-		if self._enc.encryption_type != EncryptionType.NO_ENCRYPTION and self._enc.fido2_device:
-			# auto, not the enrolled hidraw path: hidraw numbering is not stable across boots.
-			# password-echo=no per upstream archlinux/archinstall#1196
-			# token-timeout: absent token otherwise holds the PIN/token prompt
-			# for the 30s default before falling back to the passphrase query
-			kernel_parameters.append('rd.luks.options=fido2-device=auto,token-timeout=5,password-echo=no')
+		if (
+			self._enc.encryption_type != EncryptionType.NO_ENCRYPTION
+			and self._enc.fido2_device
+		):
+			# auto, not the enrolled hidraw path: hidraw numbering is not
+			# stable across boots. password-echo=no per upstream
+			# archlinux/archinstall#1196 token-timeout: absent token
+			# otherwise holds the PIN/token prompt for the 30s default
+			# before falling back to the passphrase query
+			kernel_parameters.append(
+				'rd.luks.options=fido2-device=auto,token-timeout=5,password-echo=no'
+			)
 
 		if id_root:
 			for sub_vol in root.btrfs_subvols:
 				if sub_vol.is_root():
-					kernel_parameters.append(f'rootflags=subvol={sub_vol.name}')
+					kernel_parameters.append(
+						f'rootflags=subvol={sub_vol.name}'
+					)
 					break
 
 			kernel_parameters.append('rw')
 
-		kernel_parameters.append(f'rootfstype={root.safe_fs_type.fs_type_mount}')
+		kernel_parameters.append(
+			f'rootfstype={root.safe_fs_type.fs_type_mount}'
+		)
 		kernel_parameters.extend(self._extra_params)
 
 		debug(f'kernel parameters: {" ".join(kernel_parameters)}')
@@ -264,8 +376,13 @@ class BootloaderInstaller:
 	) -> None:
 		# Loader entries are stored in $BOOT/loader:
 		# https://uapi-group.org/specifications/specs/boot_loader_specification/#mount-points
-		entries_dir = self.target / boot_partition.relative_mountpoint / 'loader/entries'
-		# Ensure that the $BOOT/loader/entries/ directory exists before trying to create files in it
+		entries_dir = (
+			self.target
+			/ boot_partition.relative_mountpoint
+			/ 'loader/entries'
+		)
+		# Ensure that the $BOOT/loader/entries/ directory exists before trying
+		# to create files in it
 		entries_dir.mkdir(parents=True, exist_ok=True)
 
 		entry_template = textwrap.dedent(
@@ -287,7 +404,13 @@ class BootloaderInstaller:
 
 	def _register_systemd_boot(self, efi_partition: PartitionModification) -> None:
 		# same entry bootctl writes; EFI/BOOT/BOOT*.EFI stays as the fallback
-		suffix = 'aa64' if SysInfo.arch() == 'aarch64' else 'ia32' if SysInfo.bitness() == 32 else 'x64'
+		suffix = (
+			'aa64'
+			if SysInfo.arch() == 'aarch64'
+			else 'ia32'
+			if SysInfo.bitness() == 32
+			else 'x64'
+		)
 		cmd = [
 			'efibootmgr',
 			'--create',
@@ -304,7 +427,10 @@ class BootloaderInstaller:
 		try:
 			SysCommand(cmd)
 		except SysCallError as err:
-			warn(f'efibootmgr could not register systemd-boot, booting through EFI/BOOT instead: {err}')
+			warn(
+				'efibootmgr could not register systemd-boot, booting '
+				f'through EFI/BOOT instead: {err}'
+			)
 
 	def _add_systemd_bootloader(
 		self,
@@ -331,7 +457,9 @@ class BootloaderInstaller:
 		# for no gain, and plain BOOT-flagged /boot then fails the install.
 		if not uki_enabled and has_separate_boot(boot_partition, efi_partition):
 			bootctl_options.append(f'--esp-path={efi_partition.mountpoint}')
-			bootctl_options.append(f'--boot-path={boot_partition.mountpoint}')
+			bootctl_options.append(
+				f'--boot-path={boot_partition.mountpoint}'
+			)
 
 		# bootctl since v257 detects arch-chroot as a container and silently
 		# skips writing EFI boot variables; --variables=BOOL (systemd >=258)
@@ -340,7 +468,9 @@ class BootloaderInstaller:
 		# Under plain chroot it also treats the system as offline and writes
 		# the entry with a zeroed ESP partition GUID: systemd mode resolves it
 		def _bootctl_install(variables: str) -> None:
-			argv = ' '.join(('bootctl', variables, *bootctl_options, 'install'))
+			argv = ' '.join(
+				('bootctl', variables, *bootctl_options, 'install')
+			)
 			self._inst.arch_chroot(argv, systemd_mode=True)
 
 		# removable keeps the NVRAM out of it: from an installed host the new
@@ -348,23 +478,32 @@ class BootloaderInstaller:
 		if removable:
 			_bootctl_install('--variables=no')
 		elif not Host.has_systemd():
-			# plain chroot (the bootstrap root): bootctl takes the system for
-			# offline and writes the entry with a zeroed ESP GUID, efibootmgr
-			# reads it off the disk
+			# plain chroot (the bootstrap root): bootctl takes the system
+			# for offline and writes the entry with a zeroed ESP GUID,
+			# efibootmgr reads it off the disk
 			_bootctl_install('--variables=no')
 			self._register_systemd_boot(efi_partition)
 		else:
 			try:
 				_bootctl_install('--variables=yes')
 			except SysCallError as err:
-				# retry leaving the EFI variables untouched (e.g. vars not writable)
-				warn(f'bootctl could not write EFI variables ({err}), retrying with --variables=no')
+				# retry leaving the EFI variables untouched
+				# (e.g. vars not writable)
+				warn(
+					'bootctl could not write EFI variables '
+					f'({err}), retrying with --variables=no'
+				)
 				_bootctl_install('--variables=no')
 
 		# Loader configuration is stored in ESP/loader:
 		# https://man.archlinux.org/man/loader.conf.5
-		loader_conf = self.target / efi_partition.relative_mountpoint / 'loader/loader.conf'
-		# Ensure that the ESP/loader/ directory exists before trying to create a file in it
+		loader_conf = (
+			self.target
+			/ efi_partition.relative_mountpoint
+			/ 'loader/loader.conf'
+		)
+		# Ensure that the ESP/loader/ directory exists before trying
+		# to create a file in it
 		loader_conf.parent.mkdir(parents=True, exist_ok=True)
 
 		default_kernel = self.kernels[0]
@@ -390,7 +529,8 @@ class BootloaderInstaller:
 				if line.startswith('default'):
 					loader_data[index] = default
 				elif line.startswith('#timeout'):
-					# We add in the default timeout to support dual-boot
+					# We add in the default timeout
+					# to support dual-boot
 					loader_data[index] = line.removeprefix('#')
 
 		loader_conf.write_text('\n'.join(loader_data) + '\n')
@@ -413,7 +553,12 @@ class BootloaderInstaller:
 		grub_default = self.target / 'etc/default/grub'
 		if self._enc.encryption_type != EncryptionType.NO_ENCRYPTION:
 			config = grub_default.read_text()
-			config = re.sub(r'^#(GRUB_ENABLE_CRYPTODISK=y)', r'\1', config, flags=re.MULTILINE)
+			config = re.sub(
+				r'^#(GRUB_ENABLE_CRYPTODISK=y)',
+				r'\1',
+				config,
+				flags=re.MULTILINE,
+			)
 			grub_default.write_text(config)
 
 		info(f'GRUB boot partition: {boot_partition.dev_path}')
@@ -437,7 +582,8 @@ class BootloaderInstaller:
 				grub_target = 'x86_64-efi'
 			else:
 				# https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface
-				# mixed mode boot handling same as limine handling 32bit UEFI on 64-bit CPUs
+				# mixed mode boot handling same as limine handling
+				# 32bit UEFI on 64-bit CPUs
 				grub_target = 'i386-efi'
 
 			add_options = [
@@ -450,23 +596,40 @@ class BootloaderInstaller:
 				add_options.append('--removable')
 
 			command.extend(add_options)
+			efi_dir = f'{self.target}{efi_partition.mountpoint}'
 
 			try:
 				SysCommand(command, peek_output=True, silent=True)
 			except SysCallError as err:
 				if removable or 'efibootmgr' not in str(err):
-					raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err}') from err
-				# firmware refused the NVRAM entry (full, read-only): EFI/BOOT needs none
+					raise DiskError(
+						'Could not install GRUB to '
+						f'{efi_dir}: {err}'
+					) from err
+				# firmware refused the NVRAM entry (full,
+				# read-only): EFI/BOOT needs none
 				# https://github.com/archlinux/archinstall/issues/3976
-				warn(f'grub-install could not register a boot entry, installing as removable instead: {err}')
+				warn(
+					'grub-install could not register a boot '
+					f'entry, installing as removable instead: {err}'
+				)
 				try:
-					SysCommand([*command, '--removable'], peek_output=True, silent=True)
+					SysCommand(
+						[*command, '--removable'],
+						peek_output=True,
+						silent=True,
+					)
 				except SysCallError as err2:
-					raise DiskError(f'Could not install GRUB to {self.target}{efi_partition.mountpoint}: {err2}') from err2
+					raise DiskError(
+						'Could not install GRUB to '
+						f'{efi_dir}: {err2}'
+					) from err2
 		else:
 			info(f'GRUB boot partition: {boot_partition.dev_path}')
 
-			parent_dev_path = get_parent_device_path(boot_partition.safe_dev_path)
+			parent_dev_path = get_parent_device_path(
+				boot_partition.safe_dev_path
+			)
 
 			add_options = [
 				'--target=i386-pc',
@@ -475,9 +638,16 @@ class BootloaderInstaller:
 			]
 
 			try:
-				SysCommand(command + add_options, peek_output=True, silent=True)
+				SysCommand(
+					command + add_options,
+					peek_output=True,
+					silent=True,
+				)
 			except SysCallError as err:
-				raise DiskError(f'Failed to install GRUB boot on {boot_partition.dev_path}: {err}') from err
+				raise DiskError(
+					'Failed to install GRUB boot on '
+					f'{boot_partition.dev_path}: {err}'
+				) from err
 
 		if SysInfo.has_uefi() and uki_enabled:
 			grub_d = LPath(self.target) / 'etc/grub.d'
@@ -503,14 +673,19 @@ class BootloaderInstaller:
 				uki_file.write_text(content)
 				uki_file.add_exec()
 				linux_file.remove_exec()
-				debug('Enabled 15_uki and disabled 10_linux in /etc/grub.d')
+				debug(
+					'Enabled 15_uki and disabled '
+					'10_linux in /etc/grub.d'
+				)
 			except OSError:
 				error('Failed to enable UKI menu entries')
 		else:
 			config = grub_default.read_text()
 
 			kernel_parameters = ' '.join(
-				self._get_kernel_params(root, id_root=False, partuuid=False),
+				self._get_kernel_params(
+					root, id_root=False, partuuid=False
+				),
 			)
 			config = re.sub(
 				r'^(GRUB_CMDLINE_LINUX=")(")$',
@@ -555,13 +730,24 @@ class BootloaderInstaller:
 
 			info(f'Limine EFI partition: {efi_partition.dev_path}')
 
-			parent_dev_path = get_parent_device_path(efi_partition.safe_dev_path)
+			parent_dev_path = get_parent_device_path(
+				efi_partition.safe_dev_path
+			)
 
-			# limine ships arch-specific default EFI binaries; 64-bit one last
-			efi_binaries: tuple[str, ...] = ('BOOTAA64.EFI',) if SysInfo.arch() == 'aarch64' else ('BOOTIA32.EFI', 'BOOTX64.EFI')
+			# limine ships arch-specific default EFI
+			# binaries; 64-bit one last
+			efi_binaries: tuple[str, ...] = (
+				('BOOTAA64.EFI',)
+				if SysInfo.arch() == 'aarch64'
+				else ('BOOTIA32.EFI', 'BOOTX64.EFI')
+			)
 
 			try:
-				efi_dir_path = self.target / efi_partition.mountpoint.relative_to('/') / 'EFI'
+				efi_dir_path = (
+					self.target
+					/ efi_partition.mountpoint.relative_to('/')
+					/ 'EFI'
+				)
 				efi_dir_path_target = efi_partition.mountpoint / 'EFI'
 				subdir = 'BOOT' if removable else 'arch-limine'
 				efi_dir_path /= subdir
@@ -573,9 +759,17 @@ class BootloaderInstaller:
 				for file in efi_binaries:
 					(limine_path / file).copy_into(efi_dir_path)
 			except Exception as err:
-				raise DiskError(f'Failed to install Limine in {self.target}{efi_partition.mountpoint}: {err}') from err
+				raise DiskError(
+					'Failed to install Limine in '
+					f'{self.target}{efi_partition.mountpoint}: '
+					f'{err}'
+				) from err
 
-			hook_command = ' && '.join(f'/usr/bin/cp /usr/share/limine/{file} {efi_dir_path_target}/' for file in efi_binaries)
+			hook_command = ' && '.join(
+				f'/usr/bin/cp /usr/share/limine/{file} '
+				f'{efi_dir_path_target}/'
+				for file in efi_binaries
+			)
 
 			if not removable:
 				# Create EFI boot menu entry for Limine.
@@ -584,14 +778,21 @@ class BootloaderInstaller:
 					# mixed mode booting (32bit UEFI on x86_64 CPU)
 					efi_bitness = SysInfo.bitness()
 				except Exception as err:
-					raise OSError(f'Could not open or read /sys/ to determine EFI bitness: {err}') from err
+					raise OSError(
+						'Could not open or read /sys/ to '
+						f'determine EFI bitness: {err}'
+					) from err
 
 				if efi_bitness == 64:
-					loader_path = f'\\EFI\\arch-limine\\{efi_binaries[-1]}'
+					loader = efi_binaries[-1]
 				elif efi_bitness == 32:
-					loader_path = '\\EFI\\arch-limine\\BOOTIA32.EFI'
+					loader = 'BOOTIA32.EFI'
 				else:
-					raise ValueError(f'EFI bitness is neither 32 nor 64 bits. Found "{efi_bitness}".')
+					raise ValueError(
+						'EFI bitness is neither 32 '
+						f'nor 64 bits. Found "{efi_bitness}".'
+					)
+				loader_path = rf'\EFI\arch-limine\{loader}'
 
 				try:
 					SysCommand(
@@ -599,16 +800,27 @@ class BootloaderInstaller:
 						' --create'
 						f' --disk {parent_dev_path}'
 						f' --part {efi_partition.partn}'
-						' --label "Arch Linux Limine Bootloader"'
+						' --label "Arch Linux Limine '
+						'Bootloader"'
 						f" --loader '{loader_path}'"
-						' --unicode'
-						' --verbose',
+						' --unicode --verbose',
 					)
 				except SysCallError as err:
-					# same firmware failure as grub: EFI/BOOT/BOOT*.EFI boots without an entry
+					# same firmware failure as grub:
+					# EFI/BOOT/BOOT*.EFI boots without an entry
 					# https://github.com/archlinux/archinstall/issues/3990
-					warn(f'efibootmgr could not register Limine, installing as removable instead: {err}')
-					self._add_limine_bootloader(boot_partition, efi_partition, root, uki_enabled, removable=True)
+					warn(
+						'efibootmgr could not register Limine, '
+						'installing as removable '
+						f'instead: {err}'
+					)
+					self._add_limine_bootloader(
+						boot_partition,
+						efi_partition,
+						root,
+						uki_enabled,
+						removable=True,
+					)
 					return
 		else:
 			boot_limine_path = self.target / 'boot' / 'limine'
@@ -616,21 +828,40 @@ class BootloaderInstaller:
 
 			config_path = boot_limine_path / 'limine.conf'
 
-			parent_dev_path = get_parent_device_path(boot_partition.safe_dev_path)
+			parent_dev_path = get_parent_device_path(
+				boot_partition.safe_dev_path
+			)
 
-			if unique_path := self._inst.device_handler.get_unique_path_for_device(parent_dev_path):
+			if (
+				unique_path
+				:= self._inst.device_handler.get_unique_path_for_device(
+					parent_dev_path
+				)
+			):
 				parent_dev_path = unique_path
 
 			try:
 				# The `limine-bios.sys` file contains stage 3 code.
-				(limine_path / 'limine-bios.sys').copy_into(boot_limine_path)
+				(limine_path / 'limine-bios.sys').copy_into(
+					boot_limine_path
+				)
 
 				# `limine bios-install` deploys the stage 1 and 2 to the
-				self._inst.arch_chroot(f'limine bios-install {parent_dev_path}', peek_output=True)
+				self._inst.arch_chroot(
+					f'limine bios-install {parent_dev_path}',
+					peek_output=True,
+				)
 			except Exception as err:
-				raise DiskError(f'Failed to install Limine on {parent_dev_path}: {err}') from err
+				raise DiskError(
+					'Failed to install Limine on '
+					f'{parent_dev_path}: {err}'
+				) from err
 
-			hook_command = f'/usr/bin/limine bios-install {parent_dev_path} && /usr/bin/cp /usr/share/limine/limine-bios.sys /boot/limine/'
+			hook_command = (
+				f'/usr/bin/limine bios-install {parent_dev_path} && '
+				'/usr/bin/cp /usr/share/limine/limine-bios.sys '
+				'/boot/limine/'
+			)
 
 		hook_contents = textwrap.dedent(
 			f'''\
@@ -658,7 +889,9 @@ class BootloaderInstaller:
 		if efi_partition:
 			if has_separate_boot(boot_partition, efi_partition):
 				path_root = f'uuid({boot_partition.partuuid})'
-			elif efi_partition.mountpoint != Path('/boot') and isinstance(root, PartitionModification):
+			elif efi_partition.mountpoint != Path('/boot') and isinstance(
+				root, PartitionModification
+			):
 				path_root = f'uuid({root.partuuid})'
 
 		kernel_params = ' '.join(self._get_kernel_params(root))
@@ -676,7 +909,10 @@ class BootloaderInstaller:
 					'protocol: linux',
 					f'path: {path_root}:/vmlinuz-{kernel}',
 					f'cmdline: {kernel_params}',
-					f'module_path: {path_root}:/initramfs-{kernel}.img',
+					(
+						'module_path: '
+						f'{path_root}:/initramfs-{kernel}.img'
+					),
 				]
 			config_contents += f'\n/Arch Linux ({kernel})\n'
 			config_contents += '\n'.join(f'    {it}' for it in entry) + '\n'
@@ -737,12 +973,32 @@ class BootloaderInstaller:
 				SysCommand(cmd)
 			except SysCallError as err:
 				if not uki_enabled:
-					raise DiskError(f'efibootmgr could not register {kernel} and a plain kernel has no removable fallback: {err}') from err
+					raise DiskError(
+						'efibootmgr could not register '
+						f'{kernel} and a plain kernel has no '
+						f'removable fallback: {err}'
+					) from err
 				esp = self.target / boot_partition.relative_mountpoint
-				fallback = esp / 'EFI/BOOT' / ('BOOTAA64.EFI' if SysInfo.arch() == 'aarch64' else 'BOOTX64.EFI')
+				fallback = (
+					esp
+					/ 'EFI/BOOT'
+					/ (
+						'BOOTAA64.EFI'
+						if SysInfo.arch() == 'aarch64'
+						else 'BOOTX64.EFI'
+					)
+				)
 				fallback.parent.mkdir(parents=True, exist_ok=True)
-				shutil.copy2(esp / 'EFI/Linux' / f'arch-{kernel}.efi', fallback)
-				warn(f'efibootmgr could not register {kernel}, copied its UKI to {fallback.relative_to(self.target)} instead: {err}')
+				shutil.copy2(
+					esp / 'EFI/Linux' / f'arch-{kernel}.efi',
+					fallback,
+				)
+				warn(
+					'efibootmgr could not register '
+					f'{kernel}, copied its UKI to '
+					f'{fallback.relative_to(self.target)} '
+					f'instead: {err}'
+				)
 				break
 
 	def _add_refind_bootloader(
@@ -768,14 +1024,24 @@ class BootloaderInstaller:
 		try:
 			self._inst.arch_chroot('refind-install')
 		except SysCallError as err:
-			raise DiskError(f'Could not install rEFInd to {self.target}{efi_partition.mountpoint}: {err}') from err
+			raise DiskError(
+				'Could not install rEFInd to '
+				f'{self.target}{efi_partition.mountpoint}: {err}'
+			) from err
 
 		if not boot_partition.mountpoint:
-			raise ValueError('Boot partition is not mounted, cannot write rEFInd config')
+			raise ValueError(
+				'Boot partition is not mounted, cannot write '
+				'rEFInd config'
+			)
 
 		if has_separate_boot(boot_partition, efi_partition):
 			# kernels sit on their own /boot partition
-			config_path = self.target / boot_partition.mountpoint.relative_to('/') / 'refind_linux.conf'
+			config_path = (
+				self.target
+				/ boot_partition.mountpoint.relative_to('/')
+				/ 'refind_linux.conf'
+			)
 			boot_on_root = False
 		else:
 			# ESP at /boot means the kernels are on it; anywhere else
@@ -791,9 +1057,16 @@ class BootloaderInstaller:
 			if uki_enabled:
 				entry = f'"Arch Linux ({kernel}) UKI" "{kernel_params}"'
 			else:
-				kernel_dir = refind_kernel_dir(root, boot_on_root=boot_on_root)
-				initrd_path = f'initrd={kernel_dir}initramfs-{kernel}.img'
-				entry = f'"Arch Linux ({kernel})" "{kernel_params} {initrd_path}"'
+				kernel_dir = refind_kernel_dir(
+					root, boot_on_root=boot_on_root
+				)
+				initrd_path = (
+					f'initrd={kernel_dir}initramfs-{kernel}.img'
+				)
+				entry = (
+					f'"Arch Linux ({kernel})" "{kernel_params} '
+					f'{initrd_path}"'
+				)
 
 			config_contents.append(entry)
 
@@ -832,7 +1105,9 @@ class BootloaderInstaller:
 		info('Configuring UKI images...', step=True)
 
 		if not efi_partition or not efi_partition.mountpoint:
-			raise ValueError(f'Could not detect ESP at mountpoint {self.target}')
+			raise ValueError(
+				f'Could not detect ESP at mountpoint {self.target}'
+			)
 
 		# Set up kernel command line
 		cmdline_path = self.target / 'etc/kernel/cmdline'
@@ -845,7 +1120,8 @@ class BootloaderInstaller:
 		if efi_partition.mountpoint != Path('/efi'):
 			diff_mountpoint = str(efi_partition.mountpoint)
 
-		# default_* only: PRESETS stays ('default'), the fallback lines are left as shipped
+		# default_* only: PRESETS stays ('default'), the fallback
+		# lines are left as shipped
 		image_re = re.compile(r'(default_image="/([^"]+).+\n)')
 		uki_re = re.compile(r'#((default_uki=")/[^/]+(.+\n))')
 		presets_re = re.compile(r'^(PRESETS=)\((.*)\)\s*$')
@@ -871,7 +1147,8 @@ class BootloaderInstaller:
 			config = preset.read_text().splitlines(True)
 
 			for index, line in enumerate(config):
-				# Avoid storing redundant image file (unless grub-btrfs needs it for snapshot entries)
+				# Avoid storing redundant image file (unless grub-btrfs
+				# needs it for snapshot entries)
 				if m := image_re.match(line):
 					if keep_standalone_initramfs:
 						continue
@@ -881,21 +1158,36 @@ class BootloaderInstaller:
 					config[index] = '#' + m.group(1)
 				elif m := uki_re.match(line):
 					if diff_mountpoint:
-						config[index] = m.group(2) + diff_mountpoint + m.group(3)
+						config[index] = (
+							m.group(2)
+							+ diff_mountpoint
+							+ m.group(3)
+						)
 					else:
 						config[index] = m.group(1)
 				elif line.startswith('#default_options='):
-					# rebuild deterministically: the mkinitcpio template ships
-					# default_options with --splash, which we drop unless asked.
+					# rebuild deterministically: the mkinitcpio
+					# template ships default_options with --splash,
+					# which we drop unless asked.
 					opts = f'--osrelease /etc/os-release.d/{kernel}'
 					if splash:
-						opts += ' --splash /usr/share/systemd/bootctl/splash-arch.bmp'
+						opts += (
+							' --splash '
+							'/usr/share/systemd/bootctl/splash-arch.bmp'
+						)
 					config[index] = f'default_options="{opts}"\n'
-				elif keep_standalone_initramfs and (pm := presets_re.match(line)):
-					tokens = [t.strip().strip('\'"') for t in pm.group(2).split(',') if t.strip()]
+				elif keep_standalone_initramfs and (
+					pm := presets_re.match(line)
+				):
+					tokens = [
+						t.strip().strip('\'"')
+						for t in pm.group(2).split(',')
+						if t.strip()
+					]
 					if 'default' not in tokens:
 						tokens.insert(0, 'default')
-					config[index] = f'{pm.group(1)}({" ".join(repr(t) for t in tokens)})\n'
+					quoted = ' '.join(repr(t) for t in tokens)
+					config[index] = f'{pm.group(1)}({quoted})\n'
 
 			preset.write_text(''.join(config))
 			debug(f'Updated preset {preset}')

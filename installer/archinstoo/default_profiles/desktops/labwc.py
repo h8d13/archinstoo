@@ -25,19 +25,27 @@ class LabwcProfile(WaylandProfile):
 		return [
 			'labwc',
 			*seat_packages(self.custom_settings.get('seat_access')),
-			'xdg-desktop-portal-wlr',  # labwc-portals.conf: default=wlr; labwc pulls no backend
+			# labwc-portals.conf: default=wlr; labwc pulls no backend
+			'xdg-desktop-portal-wlr',
 		]
 
 	@override
 	def install(self, install_session: Installer) -> None:
 		super().install(install_session)
 
-		# xdg-desktop-portal-wlr only starts once the systemd user session knows the
-		# compositor; sway ships a drop-in for this, labwc leaves it to autostart
+		# xdg-desktop-portal-wlr only starts once the systemd user session
+		# knows the compositor; sway ships a drop-in for this, labwc
+		# leaves it to autostart
 		autostart = install_session.target / 'etc/xdg/labwc/autostart'
 		autostart.parent.mkdir(parents=True, exist_ok=True)
-		line = 'systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP && '
-		line += 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP\n'
+		line = (
+			'systemctl --user import-environment WAYLAND_DISPLAY '
+			'XDG_CURRENT_DESKTOP && '
+		)
+		line += (
+			'dbus-update-activation-environment --systemd '
+			'WAYLAND_DISPLAY XDG_CURRENT_DESKTOP\n'
+		)
 		existing = autostart.read_text() if autostart.is_file() else ''
 		if 'import-environment' not in existing:
 			autostart.write_text(existing + line)

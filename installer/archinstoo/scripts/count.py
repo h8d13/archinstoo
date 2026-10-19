@@ -18,7 +18,11 @@ def count() -> None:
 		description='Count packages from a saved config (resolves deps)',
 	)
 	parser.add_argument('config', type=str, help='Path to user_configuration.json')
-	parser.add_argument('--why', metavar='PKG', help='Show which explicit packages pull in PKG and the dep chain')
+	parser.add_argument(
+		'--why',
+		metavar='PKG',
+		help='Show which explicit packages pull in PKG and the dep chain',
+	)
 
 	args = parser.parse_args()
 
@@ -42,7 +46,10 @@ def count() -> None:
 		if args.why in explicit:
 			print(f"\n'{args.why}' is explicitly selected by this config.")
 		if roots:
-			print(f"\n'{args.why}' is pulled in by {len(roots)} explicit package(s):")
+			print(
+				f"\n'{args.why}' is pulled in by "
+				f'{len(roots)} explicit package(s):'
+			)
 			for root in sorted(roots):
 				print(f'  {root}')
 		elif args.why not in explicit:

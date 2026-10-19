@@ -24,11 +24,30 @@ def _stub(
 	def fake_run(argv: list[str]) -> subprocess.CompletedProcess[str]:
 		calls.append(argv)
 		if argv[0] == 'pacman-conf':
-			key, repo = argv[-1], next((a.split('=', 1)[1] for a in argv if a.startswith('--repo=')), None)
+			key, repo = (
+				argv[-1],
+				next(
+					(
+						a.split('=', 1)[1]
+						for a in argv
+						if a.startswith('--repo=')
+					),
+					None,
+				),
+			)
 			if key == 'Server':
-				return subprocess.CompletedProcess(argv, 0 if repo in servers else 1, '\n'.join(servers.get(repo or '', [])), '')
-			return subprocess.CompletedProcess(argv, 0, 'PackageRequired\nDatabaseOptional\n', '')
-		return subprocess.CompletedProcess(argv, pacman_rc, listing, 'boom' if pacman_rc else '')
+				return subprocess.CompletedProcess(
+					argv,
+					0 if repo in servers else 1,
+					'\n'.join(servers.get(repo or '', [])),
+					'',
+				)
+			return subprocess.CompletedProcess(
+				argv, 0, 'PackageRequired\nDatabaseOptional\n', ''
+			)
+		return subprocess.CompletedProcess(
+			argv, pacman_rc, listing, 'boom' if pacman_rc else ''
+		)
 
 	monkeypatch.setattr(tmpdb, '_run', fake_run)
 	monkeypatch.setattr(tmpdb, 'is_root', lambda: root)
@@ -36,7 +55,9 @@ def _stub(
 
 
 def test_conf_carries_only_the_asked_repos() -> None:
-	assert tmpdb.render_conf(['DatabaseOptional'], {'core': MIRRORS}) == textwrap.dedent("""\
+	assert tmpdb.render_conf(
+		['DatabaseOptional'], {'core': MIRRORS}
+	) == textwrap.dedent("""\
 		[options]
 		Architecture = auto
 		SigLevel = DatabaseOptional
@@ -48,7 +69,9 @@ def test_conf_carries_only_the_asked_repos() -> None:
 
 
 def test_conf_falls_back_to_arch_siglevel() -> None:
-	assert 'SigLevel = Required DatabaseOptional\n' in tmpdb.render_conf([], {'core': MIRRORS})
+	assert 'SigLevel = Required DatabaseOptional\n' in tmpdb.render_conf(
+		[], {'core': MIRRORS}
+	)
 
 
 def test_listing_skips_directories() -> None:
@@ -64,7 +87,9 @@ def test_listing_skips_directories() -> None:
 
 
 @pytest.mark.parametrize(('root', 'prefix'), [(True, []), (False, ['fakeroot', '--'])])
-def test_sync_stays_in_its_own_dbpath(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, root: bool, prefix: list[str]) -> None:
+def test_sync_stays_in_its_own_dbpath(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path, root: bool, prefix: list[str]
+) -> None:
 	calls = _stub(monkeypatch, root, {'core': MIRRORS})
 	db = tmpdb.TmpDB(('core',), root=tmp_path / 'db')
 
@@ -84,7 +109,9 @@ def test_sync_stays_in_its_own_dbpath(monkeypatch: pytest.MonkeyPatch, tmp_path:
 	assert 'Server = https://b.example/core/os/x86_64' in db.conf.read_text()
 
 
-def test_failed_sync_drops_the_lock(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_failed_sync_drops_the_lock(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
 	_stub(monkeypatch, True, {'core': MIRRORS}, pacman_rc=1)
 	db = tmpdb.TmpDB(('core',), root=tmp_path / 'db')
 	(tmp_path / 'db').mkdir()
@@ -94,7 +121,9 @@ def test_failed_sync_drops_the_lock(monkeypatch: pytest.MonkeyPatch, tmp_path: P
 	assert not (tmp_path / 'db/db.lck').exists()
 
 
-def test_repo_without_servers_skips_pacman(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_repo_without_servers_skips_pacman(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
 	calls = _stub(monkeypatch, True, {})
 
 	assert not tmpdb.TmpDB(('core',), root=tmp_path / 'db').sync_files()
@@ -102,9 +131,18 @@ def test_repo_without_servers_skips_pacman(monkeypatch: pytest.MonkeyPatch, tmp_
 	assert not (tmp_path / 'db').exists()
 
 
-def test_files_reads_the_private_dbpath(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-	calls = _stub(monkeypatch, True, {'core': MIRRORS}, listing='linux-firmware-marvell usr/lib/firmware/mrvl/x.bin.zst\n')
+def test_files_reads_the_private_dbpath(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+	calls = _stub(
+		monkeypatch,
+		True,
+		{'core': MIRRORS},
+		listing='linux-firmware-marvell usr/lib/firmware/mrvl/x.bin.zst\n',
+	)
 	db = tmpdb.TmpDB(('core',), root=tmp_path / 'db')
 
-	assert db.files() == [('linux-firmware-marvell', 'usr/lib/firmware/mrvl/x.bin.zst')]
+	assert db.files() == [
+		('linux-firmware-marvell', 'usr/lib/firmware/mrvl/x.bin.zst')
+	]
 	assert calls[-1][calls[-1].index('--dbpath') + 1] == str(tmp_path / 'db')

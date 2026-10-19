@@ -1,7 +1,12 @@
 import time
 
 from archinstoo.default_profiles.minimal import MinimalProfile
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstoo.lib.args import (
+	ArchConfig,
+	ArchConfigHandler,
+	Arguments,
+	get_arch_config_handler,
+)
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
@@ -64,7 +69,9 @@ def perform_installation(
 		# Strap in the base system, add a bootloader and configure
 		# some other minor details as specified by this profile and user.
 		installation.mount_ordered_layout()
-		installation.minimal_installation(locale_config=LocaleConfiguration.default())
+		installation.minimal_installation(
+			locale_config=LocaleConfiguration.default()
+		)
 		installation.set_hostname('minimal-arch')
 		installation.enroll_fido2()
 		installation.add_bootloader(Bootloader.Systemd)
@@ -79,7 +86,9 @@ def perform_installation(
 		installation.add_additional_packages(['nano', 'wget', 'git'])
 
 		profile_config = ProfileConfiguration([MinimalProfile()])
-		profile_handler.install_profile_config(installation, profile_config, config.app_config)
+		profile_handler.install_profile_config(
+			installation, profile_config, config.app_config
+		)
 
 		user = User('devel', Password(plaintext='devel'), False)
 		installation.create_users(user)
@@ -111,7 +120,9 @@ def _minimal() -> None:
 	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
 
 	if disk_config := config.disk_config:
-		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
+		fs_handler = FilesystemHandler(
+			disk_config, device_handler=device_handler
+		)
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(handler, device_handler, profile_handler, network_handler)

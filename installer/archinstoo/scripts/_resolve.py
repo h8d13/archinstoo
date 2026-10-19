@@ -89,10 +89,16 @@ def _filesystem_packages(disk: dict[str, Any]) -> set[str]:
 
 	if lvm_config:
 		for group in lvm_config.get('vol_groups', []) or []:
-			fs_types.update(vol.get('fs_type', '') for vol in group.get('volumes') or [])
+			fs_types.update(
+				vol.get('fs_type', '')
+				for vol in group.get('volumes') or []
+			)
 	else:
 		for dev in disk.get('device_modifications', []) or []:
-			fs_types.update(part.get('fs_type', '') for part in dev.get('partitions') or [])
+			fs_types.update(
+				part.get('fs_type', '')
+				for part in dev.get('partitions') or []
+			)
 
 	pkgs = {p for fs in fs_types if fs in fs_tools for p in fs_tools[fs]}
 
@@ -132,7 +138,11 @@ def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 	handler = ProfileHandler()
-	return [profile for tp in entries if (profile := handler.parse_profile_config(tp))]
+	return [
+		profile
+		for tp in entries
+		if (profile := handler.parse_profile_config(tp))
+	]
 
 
 def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
@@ -146,11 +156,14 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
 	dkms = SCHEMA['gfx_drivers_dkms'].get(gfx) if build else None
 
 	if gfx == GfxDriver.Custom.value:
-		# names outside the pool are dropped, as ProfileConfiguration.parse_arg does
+		# names outside the pool are dropped, as
+		# ProfileConfiguration.parse_arg does
 		pkgs = set(custom) & set(_flat('gfx_custom_choices'))
 		if build and GfxPackage.NvidiaOpen.value in pkgs:
 			pkgs.remove(GfxPackage.NvidiaOpen.value)
-			pkgs.update((GfxPackage.NvidiaOpenDkms.value, GfxPackage.Dkms.value))
+			pkgs.update(
+				(GfxPackage.NvidiaOpenDkms.value, GfxPackage.Dkms.value)
+			)
 			pkgs.update(f'{k}-headers' for k in kernels)
 	elif dkms:
 		pkgs = set(dkms)
@@ -202,7 +215,9 @@ def _application_packages(app: dict[str, Any], selected: list[Profile]) -> set[s
 	# terminal. a skipped menu entry leaves those on the default, which
 	# install_profile_config() installs instead
 	terminal = (app.get('terminal_config') or {}).get('terminal', '')
-	if terminal not in SCHEMA['terminals'] and any(p.needs_terminal for p in selected):
+	if terminal not in SCHEMA['terminals'] and any(
+		p.needs_terminal for p in selected
+	):
 		pkgs.update(SCHEMA['terminals'][DEFAULT_TERMINAL])
 
 	return pkgs
@@ -227,7 +242,11 @@ def collect(config: dict[str, Any]) -> set[str]:
 	# bootloader
 	bl = config.get('bootloader_config') or {}
 	bl_name = bl.get('bootloader', '')
-	bl_table = SCHEMA['bootloaders'] if SysInfo.has_uefi() else SCHEMA['bootloaders_bios']
+	bl_table = (
+		SCHEMA['bootloaders']
+		if SysInfo.has_uefi()
+		else SCHEMA['bootloaders_bios']
+	)
 	if bl_name in bl_table:
 		pkgs.update(bl_table[bl_name])
 
@@ -259,10 +278,16 @@ def collect(config: dict[str, Any]) -> set[str]:
 			excluded = set(settings.get('excluded_packages') or [])
 
 			if name in profiles:
-				pkgs.update(p for p in _profile_packages(name, settings) if p not in excluded)
+				pkgs.update(
+					p
+					for p in _profile_packages(name, settings)
+					if p not in excluded
+				)
 
 			# seat_access for the wayland WMs (see seat_packages)
-			if (seat := settings.get('seat_access')) and seat not in excluded:
+			if (
+				seat := settings.get('seat_access')
+			) and seat not in excluded:
 				pkgs.add(seat)
 
 	# custom path profiles: own packages plus selections, exclusions applied,
@@ -273,7 +298,9 @@ def collect(config: dict[str, Any]) -> set[str]:
 		for sub in profile.current_selection:
 			pkgs.update(sub.effective_packages())
 
-	has_desktop = 'desktop' in mains or any(p.is_desktop_profile() for p in custom_profiles)
+	has_desktop = 'desktop' in mains or any(
+		p.is_desktop_profile() for p in custom_profiles
+	)
 
 	# every profile the install will see, as install_profile_config() does:
 	# tops and details by name, path profiles with their selections
@@ -291,7 +318,13 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
-	pkgs.update(_gfx_packages(config.get('gfx_driver', ''), config.get('gfx_packages') or [], kernels))
+	pkgs.update(
+		_gfx_packages(
+			config.get('gfx_driver', ''),
+			config.get('gfx_packages') or [],
+			kernels,
+		)
+	)
 
 	# network
 	net = config.get('network_config') or {}
@@ -324,7 +357,9 @@ def collect(config: dict[str, Any]) -> set[str]:
 	pkgs.update(_filesystem_packages(disk))
 
 	# console font: the ISO has terminus, the target only gets it on request
-	if str((config.get('locale_config') or {}).get('console_font', '')).startswith('ter-'):
+	if str((config.get('locale_config') or {}).get('console_font', '')).startswith(
+		'ter-'
+	):
 		pkgs.update(_flat('ter_fonts'))
 
 	# snapshots
@@ -367,7 +402,9 @@ def _clean_dep(name: str) -> str | None:
 _TREE_PREFIX_RE = re.compile(r'^[\s│├└─]*')
 
 
-def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str], list[str]]:
+def resolve_deps(
+	explicit: set[str], target: str | None = None
+) -> tuple[set[str], list[str]]:
 	# Resolve the full dependency tree via `pactree -s`.
 	#
 	# `-s` keeps tree formatting and emits "<pkg> provides <virtual>" so we can
@@ -397,7 +434,9 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 				if not raw:
 					continue
 				m = _TREE_PREFIX_RE.match(raw)
-				rest = raw[m.end() if m else 0 :].split(' provides ', 1)[0]
+				rest = raw[m.end() if m else 0 :].split(
+					' provides ', 1
+				)[0]
 				if name := _clean_dep(rest):
 					deps.add(name)
 		except Exception:
@@ -409,9 +448,17 @@ def resolve_deps(explicit: set[str], target: str | None = None) -> tuple[set[str
 		if target and pkg != target and target in deps:
 			roots_for_target.append(pkg)
 
-		print(f'\r  {i}/{total} | resolved: {len(resolved)}', end='', flush=True)
+		print(
+			f'\r  {i}/{total} | resolved: {len(resolved)}',
+			end='',
+			flush=True,
+		)
 
 	print()
 	if unresolved:
-		print(f'  {len(unresolved)} package(s) could not be resolved, sizes are a lower bound: {" ".join(unresolved)}', file=sys.stderr)
+		print(
+			f'  {len(unresolved)} package(s) could not be resolved, sizes '
+			f'are a lower bound: {" ".join(unresolved)}',
+			file=sys.stderr,
+		)
 	return resolved, roots_for_target

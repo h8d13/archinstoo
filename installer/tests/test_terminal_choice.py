@@ -17,7 +17,12 @@ from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.lib import args
 from archinstoo.lib.applications.cat.terminal import TerminalApp
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.models.applications import DEFAULT_TERMINAL, ApplicationConfiguration, Terminal, TerminalConfiguration
+from archinstoo.lib.models.applications import (
+	DEFAULT_TERMINAL,
+	ApplicationConfiguration,
+	Terminal,
+	TerminalConfiguration,
+)
 from archinstoo.lib.models.users import User
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
@@ -27,7 +32,9 @@ if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
 
 
-def _pin_terminal(monkeypatch: pytest.MonkeyPatch, terminal: Terminal | None) -> ApplicationConfiguration:
+def _pin_terminal(
+	monkeypatch: pytest.MonkeyPatch, terminal: Terminal | None
+) -> ApplicationConfiguration:
 	app_config = ApplicationConfiguration()
 	if terminal is not None:
 		app_config.terminal_config = TerminalConfiguration(terminal=terminal)
@@ -40,8 +47,15 @@ def _pin_terminal(monkeypatch: pytest.MonkeyPatch, terminal: Terminal | None) ->
 def _session(target: Path, monkeypatch: pytest.MonkeyPatch) -> Installer:
 	installation = Installer.__new__(Installer)
 	installation.target = target
-	monkeypatch.setattr(installation, 'arch_chroot', lambda cmd: None, raising=False)
-	monkeypatch.setattr(installation, 'add_additional_packages', lambda pkgs: None, raising=False)
+	monkeypatch.setattr(
+		installation, 'arch_chroot', lambda cmd: None, raising=False
+	)
+	monkeypatch.setattr(
+		installation,
+		'add_additional_packages',
+		lambda pkgs: None,
+		raising=False,
+	)
 	return installation
 
 
@@ -80,14 +94,20 @@ def test_write_environment_leaves_unclaimed_lines_alone(tmp_path: Path) -> None:
 	""")
 
 
-def test_terminal_app_installs_and_exports(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_terminal_app_installs_and_exports(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	(tmp_path / 'etc').mkdir()
 	installation = _session(tmp_path, monkeypatch)
 
 	installed: list[list[str]] = []
-	monkeypatch.setattr(installation, 'add_additional_packages', installed.append, raising=False)
+	monkeypatch.setattr(
+		installation, 'add_additional_packages', installed.append, raising=False
+	)
 
-	TerminalApp().install(installation, TerminalConfiguration(terminal=Terminal.KONSOLE))
+	TerminalApp().install(
+		installation, TerminalConfiguration(terminal=Terminal.KONSOLE)
+	)
 
 	assert installed == [['konsole']]
 	assert (tmp_path / 'etc/environment').read_text() == 'TERMINAL=konsole\n'
@@ -135,15 +155,21 @@ def _awesome_target(tmp_path: Path) -> Path:
 	return xinitrc
 
 
-def test_awesome_starts_from_a_user_xinitrc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_awesome_starts_from_a_user_xinitrc(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# no greeter in this profile, so startx is the way in and ~/.xinitrc wins
 	# over the packaged session
 	shipped = _awesome_target(tmp_path)
 
-	AwesomeProfile().provision(_session(tmp_path, monkeypatch), [User('ada', None, False)])
+	AwesomeProfile().provision(
+		_session(tmp_path, monkeypatch), [User('ada', None, False)]
+	)
 
 	assert (tmp_path / 'home/ada/.xinitrc').read_text() == 'exec awesome\n'
-	assert shipped.read_text() == _STOCK_XINITRC, 'the packaged xinitrc must be left alone'
+	assert shipped.read_text() == _STOCK_XINITRC, (
+		'the packaged xinitrc must be left alone'
+	)
 
 
 _SHIPPED_TERMINAL = {
@@ -163,24 +189,37 @@ _TERMINALS = {'ghostty', 'alacritty', 'foot', 'kitty', 'xterm'}
 
 
 @pytest.mark.parametrize(('name', 'shipped'), _SHIPPED_TERMINAL.items())
-def test_profiles_ship_the_terminal_their_config_launches(name: str, shipped: str | None) -> None:
+def test_profiles_ship_the_terminal_their_config_launches(
+	name: str, shipped: str | None
+) -> None:
 	profile: Profile = next(p for p in ProfileHandler().profiles if p.name == name)
 
 	assert profile.needs_terminal
 	assert _TERMINALS & set(profile.packages) == ({shipped} if shipped else set())
 
 
-@pytest.mark.parametrize(('pick', 'expected'), [(Terminal.GHOSTTY, 'ghostty'), (None, DEFAULT_TERMINAL)])
-def test_install_adds_the_choice_once(pick: Terminal | None, expected: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+	('pick', 'expected'), [(Terminal.GHOSTTY, 'ghostty'), (None, DEFAULT_TERMINAL)]
+)
+def test_install_adds_the_choice_once(
+	pick: Terminal | None,
+	expected: str,
+	tmp_path: Path,
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
 	# a skipped menu entry still has to leave those profiles with a terminal
 	app_config = _pin_terminal(monkeypatch, pick)
 	installed: list[str] = []
 	session = _session(tmp_path, monkeypatch)
-	monkeypatch.setattr(session, 'add_additional_packages', installed.extend, raising=False)
+	monkeypatch.setattr(
+		session, 'add_additional_packages', installed.extend, raising=False
+	)
 
 	handler = ProfileHandler()
 	sway = next(p for p in handler.profiles if p.name == 'sway')
-	handler.install_profile_config(session, ProfileConfiguration(profiles=[sway]), app_config)
+	handler.install_profile_config(
+		session, ProfileConfiguration(profiles=[sway]), app_config
+	)
 
 	assert installed.count(expected) == 1
 

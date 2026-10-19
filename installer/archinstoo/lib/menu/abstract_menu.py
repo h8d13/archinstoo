@@ -31,7 +31,12 @@ class AbstractMenu[ValueT]:
 	def __enter__(self, *args: Any, **kwargs: Any) -> Self:  # noqa: ANN401 - passthrough
 		return self
 
-	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
+	def __exit__(
+		self,
+		exc_type: type[BaseException] | None,
+		exc_value: BaseException | None,
+		traceback: TracebackType | None,
+	) -> None:
 		# a crash propagates as is, run_as_a_module reports it once
 		if exc_type is None:
 			self.sync_all_to_config()
@@ -69,7 +74,10 @@ class AbstractMenu[ValueT]:
 		is_config_key = key == CONFIG_KEY
 
 		for item in self._menu_item_group.items:
-			if item.key and (item.key == key or (is_config_key and item.key.startswith(CONFIG_KEY))):
+			if item.key and (
+				item.key == key
+				or (is_config_key and item.key.startswith(CONFIG_KEY))
+			):
 				item.enabled = enabled
 				found = True
 

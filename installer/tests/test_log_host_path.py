@@ -14,7 +14,9 @@ def test_boot_names_the_host_path(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setenv('A2_BOOT_ROOT', '/tmp/A2-boot/root.x86_64')
 	logger = Logger(Path('/root/.local/state/archinstoo'))
 
-	assert logger.host_path == Path('/tmp/A2-boot/root.x86_64/root/.local/state/archinstoo/install.log')
+	assert logger.host_path == Path(
+		'/tmp/A2-boot/root.x86_64/root/.local/state/archinstoo/install.log'
+	)
 	assert logger.path == Path('/root/.local/state/archinstoo/install.log')
 
 

@@ -10,7 +10,9 @@ parser = argparse.ArgumentParser(
 	prog='python -m archinstoo --script mirror',
 	description='Test mirror speed sorting',
 )
-parser.add_argument('region', nargs='?', default='Germany', help='Region to test (default: Germany)')
+parser.add_argument(
+	'region', nargs='?', default='Germany', help='Region to test (default: Germany)'
+)
 parser.add_argument('--list', '-l', action='store_true', help='List available regions')
 args = parser.parse_args()
 

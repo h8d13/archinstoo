@@ -44,7 +44,11 @@ class ProfileConfiguration:
 		from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 		handler = ProfileHandler()
-		profiles = [profile for profile_data in arg.get('profiles', []) if (profile := handler.parse_profile_config(profile_data))]
+		profiles = [
+			profile
+			for profile_data in arg.get('profiles', [])
+			if (profile := handler.parse_profile_config(profile_data))
+		]
 
 		greeter = arg.get('greeter', None)
 
@@ -57,6 +61,9 @@ class ProfileConfiguration:
 		# and install_profile_config would drop it without a word after pacstrap
 		# had already run
 		if config.greeter and not config.is_greeter_supported():
-			warn(f'Greeter {config.greeter.value} in the config: no selected profile supports one, it will be skipped')
+			warn(
+				f'Greeter {config.greeter.value} in the config: no '
+				'selected profile supports one, it will be skipped'
+			)
 
 		return config

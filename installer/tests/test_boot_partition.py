@@ -19,7 +19,9 @@ from archinstoo.lib.models.device import (
 SECTOR = SectorSize(512, Unit.B)
 
 
-def _part(mountpoint: str, dev_path: str, flags: list[PartitionFlag]) -> PartitionModification:
+def _part(
+	mountpoint: str, dev_path: str, flags: list[PartitionFlag]
+) -> PartitionModification:
 	return PartitionModification(
 		status=ModificationStatus.CREATE,
 		type=PartitionType.PRIMARY,
@@ -41,14 +43,17 @@ SEPARATE_BOOT = ('/boot', '/dev/vda2', [PartitionFlag.BOOT])
 @pytest.mark.parametrize(
 	('layout', 'shared'),
 	[
-		# BootloaderInstaller hands the same object twice when nothing is at /boot
+		# BootloaderInstaller hands the same object twice
+		# when nothing is at /boot
 		(ESP_EFI, True),
 		(ESP_BOOT_EFI, True),
 		# ESP mounted at /boot: both getters return that one partition
 		(ESP_BOOT, True),
 	],
 )
-def test_no_separate_boot_when_one_partition(layout: tuple[str, str, list[PartitionFlag]], shared: bool) -> None:
+def test_no_separate_boot_when_one_partition(
+	layout: tuple[str, str, list[PartitionFlag]], shared: bool
+) -> None:
 	part = _part(*layout)
 	assert has_separate_boot(part, part) is not shared
 
@@ -94,7 +99,12 @@ def test_obj_id_hash_survives_a_config_round_trip() -> None:
 	assert {part: 'luks'}[restored] == 'luks'
 
 
-DEFAULT_SUBVOLS = [('@', '/'), ('@home', '/home'), ('@log', '/var/log'), ('@pkg', '/var/cache/pacman/pkg')]
+DEFAULT_SUBVOLS = [
+	('@', '/'),
+	('@home', '/home'),
+	('@log', '/var/log'),
+	('@pkg', '/var/cache/pacman/pkg'),
+]
 
 
 def _btrfs_root(subvols: list[tuple[str, str]] | None) -> PartitionModification:
@@ -109,7 +119,10 @@ def _btrfs_root(subvols: list[tuple[str, str]] | None) -> PartitionModification:
 		dev_path=Path('/dev/vda2'),
 	)
 	if subvols is not None:
-		part.btrfs_subvols = [SubvolumeModification(Path(name), Path(mp)) for name, mp in subvols]
+		part.btrfs_subvols = [
+			SubvolumeModification(Path(name), Path(mp))
+			for name, mp in subvols
+		]
 	return part
 
 
@@ -127,11 +140,19 @@ def _btrfs_root(subvols: list[tuple[str, str]] | None) -> PartitionModification:
 		(True, None, '\\boot\\'),
 	],
 )
-def test_refind_kernel_dir(boot_on_root: bool, subvols: list[tuple[str, str]] | None, expected: str) -> None:
-	assert refind_kernel_dir(_btrfs_root(subvols), boot_on_root=boot_on_root) == expected
+def test_refind_kernel_dir(
+	boot_on_root: bool, subvols: list[tuple[str, str]] | None, expected: str
+) -> None:
+	assert (
+		refind_kernel_dir(_btrfs_root(subvols), boot_on_root=boot_on_root)
+		== expected
+	)
 
 
 def test_refind_initrd_matches_installed_system() -> None:
 	# byte-for-byte what a real refind + ESP-at-/efi + btrfs install wrote
 	kernel_dir = refind_kernel_dir(_btrfs_root(DEFAULT_SUBVOLS), boot_on_root=True)
-	assert f'initrd={kernel_dir}initramfs-linux.img' == 'initrd=@\\boot\\initramfs-linux.img'
+	assert (
+		f'initrd={kernel_dir}initramfs-linux.img'
+		== 'initrd=@\\boot\\initramfs-linux.img'
+	)

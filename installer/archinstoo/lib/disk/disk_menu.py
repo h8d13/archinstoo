@@ -51,7 +51,11 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 				disk_encryption=None,
 			)
 		else:
-			snapshot_config = disk_layout_config.btrfs_options.snapshot_config if disk_layout_config.btrfs_options else None
+			snapshot_config = (
+				disk_layout_config.btrfs_options.snapshot_config
+				if disk_layout_config.btrfs_options
+				else None
+			)
 
 			self._disk_menu_config = DiskMenuConfig(
 				disk_config=disk_layout_config,
@@ -61,7 +65,9 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 			)
 
 		menu_options = self._define_menu_options()
-		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
+		self._item_group = MenuItemGroup(
+			menu_options, sort_items=False, checkmarks=True
+		)
 
 		super().__init__(
 			self._item_group,
@@ -104,40 +110,63 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		]
 
 	@override
-	def run(self, additional_title: str | None = None) -> DiskLayoutConfiguration | None:
+	def run(
+		self, additional_title: str | None = None
+	) -> DiskLayoutConfiguration | None:
 		super().run(additional_title=additional_title)
 
 		if self._disk_menu_config.disk_config:
-			self._disk_menu_config.disk_config.lvm_config = self._disk_menu_config.lvm_config
-			self._disk_menu_config.disk_config.btrfs_options = BtrfsOptions(snapshot_config=self._disk_menu_config.btrfs_snapshot_config)
-			self._disk_menu_config.disk_config.disk_encryption = self._disk_menu_config.disk_encryption
+			self._disk_menu_config.disk_config.lvm_config = (
+				self._disk_menu_config.lvm_config
+			)
+			self._disk_menu_config.disk_config.btrfs_options = BtrfsOptions(
+				snapshot_config=self._disk_menu_config.btrfs_snapshot_config
+			)
+			self._disk_menu_config.disk_config.disk_encryption = (
+				self._disk_menu_config.disk_encryption
+			)
 			return self._disk_menu_config.disk_config
 
 		return None
 
 	def _check_dep_lvm(self) -> bool:
-		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
+		disk_layout_conf: DiskLayoutConfiguration | None = (
+			self._menu_item_group.find_by_key('disk_config').value
+		)
 
 		if not disk_layout_conf:
 			return False
 
-		# manual: only offer LVM once at least one partition is marked as a PV (fs = lvm)
+		# manual: only offer LVM once at least one partition is
+		# marked as a PV (fs = lvm)
 		if disk_layout_conf.config_type == DiskLayoutType.Manual:
-			return any(p.fs_type == FilesystemType.LVM for mod in disk_layout_conf.device_modifications for p in mod.partitions)
+			return any(
+				p.fs_type == FilesystemType.LVM
+				for mod in disk_layout_conf.device_modifications
+				for p in mod.partitions
+			)
 
 		return disk_layout_conf.config_type == DiskLayoutType.Default
 
 	def _check_dep_btrfs(self) -> bool:
-		disk_layout_conf: DiskLayoutConfiguration | None = self._menu_item_group.find_by_key('disk_config').value
+		disk_layout_conf: DiskLayoutConfiguration | None = (
+			self._menu_item_group.find_by_key('disk_config').value
+		)
 
 		if disk_layout_conf:
 			return disk_layout_conf.has_default_btrfs_vols()
 
 		return False
 
-	def _select_disk_encryption(self, preset: DiskEncryption | None) -> DiskEncryption | None:
-		disk_config: DiskLayoutConfiguration | None = self._item_group.find_by_key('disk_config').value
-		lvm_config: LvmConfiguration | None = self._item_group.find_by_key('lvm_config').value
+	def _select_disk_encryption(
+		self, preset: DiskEncryption | None
+	) -> DiskEncryption | None:
+		disk_config: DiskLayoutConfiguration | None = (
+			self._item_group.find_by_key('disk_config').value
+		)
+		lvm_config: LvmConfiguration | None = self._item_group.find_by_key(
+			'lvm_config'
+		).value
 
 		if not disk_config:
 			return preset
@@ -151,27 +180,55 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		# 1. /efi is separate (so /boot isn't the ESP itself), AND
 		# 2. /boot is inside encrypted root (no separate /boot partition)
 
-		# When /boot is a separate unencrypted partition, the keyfile would be exposed.
-		has_efi = any(p.is_efi() for mod in modifications for p in mod.partitions)
-		has_separate_boot = any(p.is_boot() for mod in modifications for p in mod.partitions)
-		allow_auto_unlock = self._allow_auto_unlock and has_efi and not has_separate_boot
-		# we also check that UKI is disabled in menu logic (or the keyfile would be exposed too)
+		# When /boot is a separate unencrypted partition, the
+		# keyfile would be exposed.
+		has_efi = any(
+			p.is_efi() for mod in modifications for p in mod.partitions
+		)
+		has_separate_boot = any(
+			p.is_boot() for mod in modifications for p in mod.partitions
+		)
+		allow_auto_unlock = (
+			self._allow_auto_unlock and has_efi and not has_separate_boot
+		)
+		# we also check that UKI is disabled in menu logic (or the keyfile
+		# would be exposed too)
 
-		return DiskEncryptionMenu(modifications, lvm_config=lvm_config, preset=preset, allow_auto_unlock=allow_auto_unlock).run()
+		return DiskEncryptionMenu(
+			modifications,
+			lvm_config=lvm_config,
+			preset=preset,
+			allow_auto_unlock=allow_auto_unlock,
+		).run()
 
-	def _select_disk_layout_config(self, preset: DiskLayoutConfiguration | None) -> DiskLayoutConfiguration | None:
+	def _select_disk_layout_config(
+		self, preset: DiskLayoutConfiguration | None
+	) -> DiskLayoutConfiguration | None:
 		disk_config = select_disk_config(preset, bootloader=self._bootloader)
 
 		if disk_config != preset:
-			# carry an inline-defined lvm_config (fs=lvm in the default flow) into the peer item; else reset
-			self._menu_item_group.find_by_key('lvm_config').value = disk_config.lvm_config if disk_config else None
-			enc = disk_config.disk_encryption if disk_config and disk_config.config_type == DiskLayoutType.Pre_mount else None  # detected, keep
+			# carry an inline-defined lvm_config (fs=lvm in the default
+			# flow) into the peer item; else reset
+			self._menu_item_group.find_by_key('lvm_config').value = (
+				disk_config.lvm_config if disk_config else None
+			)
+			# detected, keep
+			enc = (
+				disk_config.disk_encryption
+				if disk_config
+				and disk_config.config_type == DiskLayoutType.Pre_mount
+				else None
+			)
 			self._menu_item_group.find_by_key('disk_encryption').value = enc
 
 		return disk_config
 
-	def _select_lvm_config(self, preset: LvmConfiguration | None) -> LvmConfiguration | None:
-		disk_config: DiskLayoutConfiguration | None = self._item_group.find_by_key('disk_config').value
+	def _select_lvm_config(
+		self, preset: LvmConfiguration | None
+	) -> LvmConfiguration | None:
+		disk_config: DiskLayoutConfiguration | None = (
+			self._item_group.find_by_key('disk_config').value
+		)
 
 		if not disk_config:
 			return preset
@@ -179,15 +236,21 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		lvm_config = select_lvm_config(disk_config, preset=preset)
 
 		if lvm_config != preset:
-			self._menu_item_group.find_by_key('disk_encryption').value = None
+			self._menu_item_group.find_by_key(
+				'disk_encryption'
+			).value = None
 
 		return lvm_config
 
-	def _select_btrfs_snapshots(self, preset: SnapshotConfig | None) -> SnapshotConfig | None:
+	def _select_btrfs_snapshots(
+		self, preset: SnapshotConfig | None
+	) -> SnapshotConfig | None:
 		preset_type = preset.snapshot_type if preset else None
 
 		group = MenuItemGroup.from_enum(SnapshotType, sort_items=True)
-		choice = prompt_choice(group, preset_type, frame='Snapshot type', allow_reset=True)
+		choice = prompt_choice(
+			group, preset_type, frame='Snapshot type', allow_reset=True
+		)
 		return SnapshotConfig(snapshot_type=choice) if choice else None
 
 	def _prev_disk_layouts(self, item: MenuItem) -> str | None:
@@ -197,28 +260,48 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		disk_layout_conf = item.get_value()
 
 		if disk_layout_conf.config_type == DiskLayoutType.Pre_mount:
-			msg = f'Configuration type: {disk_layout_conf.config_type.display_msg()}\n'
+			msg = (
+				'Configuration type: '
+				f'{disk_layout_conf.config_type.display_msg()}\n'
+			)
 			msg += f'Mountpoint: {disk_layout_conf.mountpoint}'
 			return msg
 
-		device_mods = [d for d in disk_layout_conf.device_modifications if d.partitions]
+		device_mods = [
+			d for d in disk_layout_conf.device_modifications if d.partitions
+		]
 
 		if device_mods:
-			output_partition = f'Configuration: {disk_layout_conf.config_type.display_msg()}\n'
+			output_partition = (
+				'Configuration: '
+				f'{disk_layout_conf.config_type.display_msg()}\n'
+			)
 			output_btrfs = ''
 
 			for mod in device_mods:
 				# create partition table
-				partition_table = FormattedOutput.as_table(mod.partitions)
+				partition_table = FormattedOutput.as_table(
+					mod.partitions
+				)
 
-				output_partition += f'{mod.device_path}: {mod.device.device_info.model}\n'
+				output_partition += (
+					f'{mod.device_path}: '
+					f'{mod.device.device_info.model}\n'
+				)
 				output_partition += f'Wipe: {mod.wipe}\n'
 				output_partition += partition_table + '\n'
 
 				# create btrfs table
-				btrfs_partitions = [p for p in mod.partitions if p.btrfs_subvols]
+				btrfs_partitions = [
+					p for p in mod.partitions if p.btrfs_subvols
+				]
 				for partition in btrfs_partitions:
-					output_btrfs += FormattedOutput.as_table(partition.btrfs_subvols) + '\n'
+					output_btrfs += (
+						FormattedOutput.as_table(
+							partition.btrfs_subvols
+						)
+						+ '\n'
+					)
 
 			output = output_partition + output_btrfs
 			return output.rstrip()
@@ -254,29 +337,39 @@ class DiskLayoutConfigurationMenu(AbstractSubMenu[DiskLayoutConfiguration]):
 		return f'Snapshot type: {snapshot_config.snapshot_type.display_name()}'
 
 	def _prev_disk_encryption(self, item: MenuItem) -> str | None:
-		disk_config: DiskLayoutConfiguration | None = self._item_group.find_by_key('disk_config').value
+		disk_config: DiskLayoutConfiguration | None = (
+			self._item_group.find_by_key('disk_config').value
+		)
 		enc_config: DiskEncryption | None = item.value
 
-		if disk_config and not DiskEncryption.validate_enc(disk_config.device_modifications, disk_config.lvm_config):
-			return 'LVM disk encryption with more than 2 partitions is currently not supported'
+		if disk_config and not DiskEncryption.validate_enc(
+			disk_config.device_modifications, disk_config.lvm_config
+		):
+			return (
+				'LVM disk encryption with more than 2 partitions is '
+				'currently not supported'
+			)
 
 		if enc_config:
 			enc_type = enc_config.encryption_type
-			output = 'Encryption type' + f': {enc_type.type_to_text()}\n'
+			output = f'Encryption type: {enc_type.type_to_text()}\n'
 
-			if enc_config.encryption_password:
-				output += 'Password' + f': {enc_config.encryption_password.hidden()}\n'
+			if password := enc_config.encryption_password:
+				output += f'Password: {password.hidden()}\n'
 
 			if enc_type != EncryptionType.NO_ENCRYPTION:
-				output += 'Iteration time' + f': {enc_config.iter_time or DEFAULT_ITER_TIME}ms'
+				iter_time = enc_config.iter_time or DEFAULT_ITER_TIME
+				output += f'Iteration time: {iter_time}ms'
 				if any(p.is_boot() for p in enc_config.partitions):
-					output += f' (/boot: {BOOT_ITER_TIME}ms for GRUB)'
+					output += (
+						f' (/boot: {BOOT_ITER_TIME}ms for GRUB)'
+					)
 				output += '\n'
 
-			if enc_config.partitions:
-				output += f'Partitions: {len(enc_config.partitions)} selected\n'
-			elif enc_config.lvm_volumes:
-				output += f'LVM volumes: {len(enc_config.lvm_volumes)} selected\n'
+			if parts := enc_config.partitions:
+				output += f'Partitions: {len(parts)} selected\n'
+			elif volumes := enc_config.lvm_volumes:
+				output += f'LVM volumes: {len(volumes)} selected\n'
 
 			return output
 

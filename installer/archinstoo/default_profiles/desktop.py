@@ -35,14 +35,27 @@ class DesktopProfile(Profile):
 	@override
 	def default_greeter_type(self) -> GreeterType | None:
 		# seatd profiles sort first, so their greeter wins a clash
-		ordered = sorted(self.current_selection, key=lambda p: p.custom_settings.get('seat_access') != 'seatd')
-		greeters = list(dict.fromkeys(p.default_greeter_type for p in ordered if p.default_greeter_type))
+		ordered = sorted(
+			self.current_selection,
+			key=lambda p: p.custom_settings.get('seat_access') != 'seatd',
+		)
+		greeters = list(
+			dict.fromkeys(
+				p.default_greeter_type
+				for p in ordered
+				if p.default_greeter_type
+			)
+		)
 
 		if not greeters:
 			return None
 
 		if len(greeters) > 1:
-			debug(f'Multiple default greeters {[g.value for g in greeters]}, using {greeters[0].value}')
+			debug(
+				'Multiple default greeters '
+				f'{[g.value for g in greeters]}, using '
+				f'{greeters[0].value}'
+			)
 		return greeters[0]
 
 	def _do_on_select_profiles(self) -> None:
@@ -98,9 +111,14 @@ class DesktopProfile(Profile):
 		# names come out localized
 		for user in users:
 			try:
-				install_session.arch_chroot(['xdg-user-dirs-update'], run_as=user.username)
+				install_session.arch_chroot(
+					['xdg-user-dirs-update'], run_as=user.username
+				)
 			except SysCallError as err:
-				warn(f'xdg-user-dirs-update failed for {user.username}: {err}')
+				warn(
+					'xdg-user-dirs-update failed for '
+					f'{user.username}: {err}'
+				)
 
 		for profile in self.current_selection:
 			profile.provision(install_session, users)
@@ -113,7 +131,9 @@ class DesktopProfile(Profile):
 		for profile in self.current_selection:
 			info(f'Installing profile {profile.name}...')
 
-			install_session.add_additional_packages(profile.effective_packages())
+			install_session.add_additional_packages(
+				profile.effective_packages()
+			)
 			install_session.enable_service(profile.services)
 
 			profile.install(install_session)

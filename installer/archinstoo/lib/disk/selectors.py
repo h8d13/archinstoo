@@ -12,7 +12,12 @@ from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
+from archinstoo.lib.tui.types import (
+	Alignment,
+	FrameProperties,
+	Orientation,
+	PreviewStyle,
+)
 
 from .device_handler import DeviceHandler
 
@@ -97,7 +102,8 @@ def select_main_filesystem_format(allow_lvm: bool = False) -> FilesystemType:
 		MenuItem('f2fs', value=FilesystemType.F2FS),
 	]
 
-	# LVM marks the data partition a PV, so no throwaway root fs is asked before the LVM step
+	# LVM marks the data partition a PV, so no throwaway root fs is
+	# asked before the LVM step
 	if allow_lvm:
 		items.append(MenuItem('lvm', value=FilesystemType.LVM))
 

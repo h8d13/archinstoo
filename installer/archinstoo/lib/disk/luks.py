@@ -23,7 +23,8 @@ KEYFILE_DIR = Path('/etc/cryptsetup-keys.d')
 
 
 def generate_password(length: int = 64) -> str:
-	haystack = string.printable  # digits, ascii_letters, punctuation (!"#$[] etc) and whitespace
+	# digits, ascii_letters, punctuation (!"#$[] etc) and whitespace
+	haystack = string.printable
 	return ''.join(secrets.choice(haystack) for _ in range(length))
 
 
@@ -57,7 +58,12 @@ class Luks2:
 	def __enter__(self) -> None:
 		self.unlock(self.key_file)
 
-	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
+	def __exit__(
+		self,
+		exc_type: type[BaseException] | None,
+		exc_value: BaseException | None,
+		traceback: TracebackType | None,
+	) -> None:
 		if self.auto_unmount:
 			self.lock()
 
@@ -94,7 +100,11 @@ class Luks2:
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
 
 		# pbkdf-memory is only relevant for the argon2 variants
-		pbkdf_memory_arg = ['--pbkdf-memory', str(pbkdf_memory)] if pbkdf_memory and pbkdf.is_argon2 else []
+		pbkdf_memory_arg = (
+			['--pbkdf-memory', str(pbkdf_memory)]
+			if pbkdf_memory and pbkdf.is_argon2
+			else []
+		)
 
 		# no --cipher => cryptsetup default (aes-xts-plain64), which takes 512
 		key_size = cipher.key_size if cipher else 512
@@ -129,9 +139,16 @@ class Luks2:
 		except CalledProcessError as err:
 			output = (err.stdout or b'').decode().rstrip()
 			err_output = (err.stderr or b'').decode().rstrip()
-			raise DiskError(f'Could not encrypt volume "{self.luks_dev_path}": {output} {err_output}'.rstrip()) from err
+			raise DiskError(
+				'Could not encrypt volume '
+				f'"{self.luks_dev_path}": {output} '
+				f'{err_output}'.rstrip()
+			) from err
 
-		debug(f'cryptsetup luksFormat output: {result.stdout.decode().rstrip()}')
+		debug(
+			'cryptsetup luksFormat output: '
+			f'{result.stdout.decode().rstrip()}'
+		)
 
 		self.key_file = key_file
 
@@ -143,15 +160,21 @@ class Luks2:
 		try:
 			return SysCommand(command).decode()
 		except SysCallError:
-			info(f'Unable to get UUID for Luks device: {self.luks_dev_path}')
+			info(
+				'Unable to get UUID for Luks device: '
+				f'{self.luks_dev_path}'
+			)
 			raise
 
 	def is_unlocked(self) -> bool:
-		return (mapper_dev := self.mapper_dev) is not None and mapper_dev.is_symlink()
+		return (
+			mapper_dev := self.mapper_dev
+		) is not None and mapper_dev.is_symlink()
 
 	def unlock(self, key_file: Path | None = None) -> None:
-		# Unlocks the luks device, an optional key file location for unlocking can be specified,
-		# otherwise a default location for the key file will be used.
+		# Unlocks the luks device, an optional key file location for
+		# unlocking can be specified, otherwise a default location for the
+		# key file will be used.
 		#
 		# :param key_file: An alternative key file
 		# :type key_file: Path
@@ -169,8 +192,9 @@ class Luks2:
 		key_file_arg, passphrase = self._get_passphrase_args(key_file)
 
 		# dm-crypt drops discards without this, so fstrim.timer trims nothing on
-		# an encrypted root. --persistent stores it in the LUKS2 header, so every
-		# later unlock inherits it. Tradeoff: cryptsetup-open(8) --allow-discards.
+		# an encrypted root. --persistent stores it in the LUKS2 header,
+		# so every later unlock inherits it. Tradeoff:
+		# cryptsetup-open(8) --allow-discards.
 		cmd = [
 			'cryptsetup',
 			'--batch-mode',
@@ -189,18 +213,24 @@ class Luks2:
 		except CalledProcessError as err:
 			output = (err.stdout or b'').decode().rstrip()
 			err_output = (err.stderr or b'').decode().rstrip()
-			raise DiskError(f'Could not unlock luks2 device "{self.luks_dev_path}": {output} {err_output}'.rstrip()) from err
+			raise DiskError(
+				'Could not unlock luks2 device '
+				f'"{self.luks_dev_path}": {output} '
+				f'{err_output}'.rstrip()
+			) from err
 
 		debug(f'cryptsetup open output: {result.stdout.decode().rstrip()}')
 
 		if not self.is_unlocked():
-			raise DiskError(f'Failed to open luks2 device: {self.luks_dev_path}')
+			raise DiskError(
+				f'Failed to open luks2 device: {self.luks_dev_path}'
+			)
 
 	def lock(self) -> None:
 		umount(self.luks_dev_path)
 
-		# Get crypt-information about the device by doing a reverse lookup starting with the partition path
-		# For instance: /dev/sda
+		# Get crypt-information about the device by doing a reverse lookup
+		# starting with the partition path For instance: /dev/sda
 		lsblk_info = get_lsblk_info(self.luks_dev_path)
 
 		# For each child (sub-partition/sub-device)
@@ -215,8 +245,9 @@ class Luks2:
 			SysCommand(f'cryptsetup close {child.name}')
 
 	def create_crypttab_entry(self, target_path: Path) -> None:
-		# Create a crypttab entry without a keyfile so systemd prompts for a passphrase at boot.
-		# Used when the root partition is unencrypted writing a keyfile there would expose it in plaintext.
+		# Create a crypttab entry without a keyfile so systemd prompts for a
+		# passphrase at boot. Used when the root partition is unencrypted
+		# writing a keyfile there would expose it in plaintext.
 		crypttab_path = target_path / 'etc/crypttab'
 		self._crypttab(crypttab_path, Path('none'), options=['luks'])
 
@@ -240,7 +271,10 @@ class Luks2:
 
 		if key_file.exists():
 			if not override:
-				info(f'Key file {key_file} already exists, keeping existing')
+				info(
+					f'Key file {key_file} already '
+					'exists, keeping existing'
+				)
 				return
 			info(f'Key file {key_file} already exists, overriding')
 
@@ -251,7 +285,12 @@ class Luks2:
 
 		key_file.chmod(0o400)
 
-		self.add_key(key_file, pbkdf_memory=pbkdf_memory, iter_time=iter_time, pbkdf=pbkdf)
+		self.add_key(
+			key_file,
+			pbkdf_memory=pbkdf_memory,
+			iter_time=iter_time,
+			pbkdf=pbkdf,
+		)
 		self._crypttab(crypttab_path, kf_path, options=['luks', 'key-slot=1'])
 
 	def add_key(
@@ -266,19 +305,30 @@ class Luks2:
 		# luksAddKey defaults new slots to argon2id regardless of the
 		# container's format-time pbkdf; pass it or the menu choice is lost
 		pbkdf_arg = f' --pbkdf {pbkdf.value}' if pbkdf else ''
-		pbkdf_memory_arg = f' --pbkdf-memory {pbkdf_memory}' if pbkdf_memory else ''
+		pbkdf_memory_arg = (
+			f' --pbkdf-memory {pbkdf_memory}' if pbkdf_memory else ''
+		)
 		iter_time_arg = f' --iter-time {iter_time}' if iter_time else ''
-		command = f'cryptsetup -q -v{pbkdf_arg}{pbkdf_memory_arg}{iter_time_arg} luksAddKey {self.luks_dev_path} {key_file}'
+		command = (
+			f'cryptsetup -q -v{pbkdf_arg}{pbkdf_memory_arg}{iter_time_arg} '
+			f'luksAddKey {self.luks_dev_path} {key_file}'
+		)
 		worker = SysCommandWorker(command)
 		pw_injected = False
 
 		while worker.is_alive():
-			if b'Enter any existing passphrase' in worker and pw_injected is False:
+			if (
+				b'Enter any existing passphrase' in worker
+				and pw_injected is False
+			):
 				worker.write(self._password_bytes())
 				pw_injected = True
 
 		if worker.exit_code != 0:
-			raise DiskError(f'Could not add encryption key {key_file} to {self.luks_dev_path}: {worker.decode()}')
+			raise DiskError(
+				f'Could not add encryption key {key_file} to '
+				f'{self.luks_dev_path}: {worker.decode()}'
+			)
 
 	def _crypttab(
 		self,

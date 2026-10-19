@@ -14,7 +14,9 @@ class BudgieProfile(WaylandProfile):
 		return [
 			'materia-gtk-theme',
 			'budgie',
-			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), budgie-portals.conf names it, groups only optdep it
+			# Secret portal backend (org.freedesktop.secrets), budgie-
+			# portals.conf names it, groups only optdep it
+			'gnome-keyring',
 			'konsole',
 			'dolphin',
 			'papirus-icon-theme',

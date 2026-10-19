@@ -22,7 +22,9 @@ class GnomeProfile(WaylandProfile):
 			'gnome-settings-daemon',
 			'nautilus',
 			'xdg-desktop-portal-gnome',
-			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), gnome-portals.conf names it, groups only optdep it
+			# Secret portal backend (org.freedesktop.secrets), gnome-
+			# portals.conf names it, groups only optdep it
+			'gnome-keyring',
 			'gnome-tweaks',
 		]
 

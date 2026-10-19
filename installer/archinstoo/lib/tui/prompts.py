@@ -52,7 +52,11 @@ def prompt_choice[T](
 	# one pick. preset is where the cursor starts and what a skip hands back,
 	# reset is what a reset hands back, and an item carrying None comes back
 	# as None; so the caller reads the answer, not the result type
-	group = items if isinstance(items, MenuItemGroup) else MenuItemGroup(items, sort_items=sort_items)
+	group = (
+		items
+		if isinstance(items, MenuItemGroup)
+		else MenuItemGroup(items, sort_items=sort_items)
+	)
 	if default is not None:
 		group.set_default_by_value(default)
 	if preset is not None:
@@ -78,12 +82,30 @@ def prompt_choice[T](
 
 
 @overload
-def prompt_yes_no(header: str, preset: bool | None = ..., *, allow_skip: Literal[False], default: bool | None = ...) -> bool: ...
+def prompt_yes_no(
+	header: str,
+	preset: bool | None = ...,
+	*,
+	allow_skip: Literal[False],
+	default: bool | None = ...,
+) -> bool: ...
 @overload
-def prompt_yes_no(header: str, preset: bool | None = ..., *, allow_skip: Literal[True] = ..., default: bool | None = ...) -> bool | None: ...
+def prompt_yes_no(
+	header: str,
+	preset: bool | None = ...,
+	*,
+	allow_skip: Literal[True] = ...,
+	default: bool | None = ...,
+) -> bool | None: ...
 
 
-def prompt_yes_no(header: str, preset: bool | None = None, *, allow_skip: bool = True, default: bool | None = None) -> bool | None:
+def prompt_yes_no(
+	header: str,
+	preset: bool | None = None,
+	*,
+	allow_skip: bool = True,
+	default: bool | None = None,
+) -> bool | None:
 	# the two-button question. preset is where the cursor starts, default the
 	# marked answer; None back is a skip, so the caller keeps what it had
 	group = MenuItemGroup.yes_no()
@@ -155,5 +177,11 @@ def prompt_dir(
 
 		return 'Not a valid directory'
 
-	path = prompt_text(text, header, preset, validate_path if validate else None, allow_skip=allow_skip)
+	path = prompt_text(
+		text,
+		header,
+		preset,
+		validate_path if validate else None,
+		allow_skip=allow_skip,
+	)
 	return Path(path) if path else None

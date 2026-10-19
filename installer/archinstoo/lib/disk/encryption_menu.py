@@ -50,7 +50,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		Fido2.get_devices(reload=True)
 
 		menu_options = self._define_menu_options()
-		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
+		self._item_group = MenuItemGroup(
+			menu_options, sort_items=False, checkmarks=True
+		)
 
 		super().__init__(
 			self._item_group,
@@ -62,7 +64,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return [
 			MenuItem(
 				text='Encryption type',
-				action=lambda x: select_encryption_type(self._lvm_config, x),
+				action=lambda x: select_encryption_type(
+					self._lvm_config, x
+				),
 				value=self._enc_config.encryption_type,
 				preview_action=self._preview,
 				key='encryption_type',
@@ -101,7 +105,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 			),
 			MenuItem(
 				text='Partitions',
-				action=lambda x: select_partitions_to_encrypt(self._device_modifications, x),
+				action=lambda x: select_partitions_to_encrypt(
+					self._device_modifications, x
+				),
 				value=self._enc_config.partitions,
 				dependencies=[self._check_dep_partitions],
 				preview_action=self._preview,
@@ -135,7 +141,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 
 	def _select_lvm_vols(self, preset: list[LvmVolume]) -> list[LvmVolume]:
 		if self._lvm_config:
-			return select_lvm_vols_to_encrypt(self._lvm_config, preset=preset)
+			return select_lvm_vols_to_encrypt(
+				self._lvm_config, preset=preset
+			)
 		return []
 
 	def _select_auto_unlock_root(self, preset: bool) -> bool:
@@ -146,15 +154,25 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return preset if choice is None else choice
 
 	def _check_dep_enc_type(self) -> bool:
-		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
+		enc_type: EncryptionType | None = self._item_group.find_by_key(
+			'encryption_type'
+		).value
 		return bool(enc_type and enc_type != EncryptionType.NO_ENCRYPTION)
 
 	def _check_dep_partitions(self) -> bool:
-		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		return bool(enc_type and enc_type in {EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS})
+		enc_type: EncryptionType | None = self._item_group.find_by_key(
+			'encryption_type'
+		).value
+		return bool(
+			enc_type
+			and enc_type
+			in {EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS}
+		)
 
 	def _check_dep_lvm_vols(self) -> bool:
-		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
+		enc_type: EncryptionType | None = self._item_group.find_by_key(
+			'encryption_type'
+		).value
 		return bool(enc_type and enc_type == EncryptionType.LUKS_ON_LVM)
 
 	def _check_dep_auto_unlock(self) -> bool:
@@ -163,7 +181,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def _check_dep_fido2(self) -> bool:
 		return bool(Fido2.get_devices()) and self._check_dep_enc_type()
 
-	def _select_fido2_device(self, preset: Fido2Device | None) -> Fido2Device | None:
+	def _select_fido2_device(
+		self, preset: Fido2Device | None
+	) -> Fido2Device | None:
 		header = 'Select a FIDO2 token to enroll as a LUKS keyslot\n'
 		header += 'Passphrase keyslot stays as fallback.\n'
 
@@ -179,26 +199,43 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 	def run(self, additional_title: str | None = None) -> DiskEncryption | None:
 		super().run(additional_title=additional_title)
 
-		enc_type: EncryptionType | None = self._item_group.find_by_key('encryption_type').value
-		enc_password: Password | None = self._item_group.find_by_key('encryption_password').value
+		enc_type: EncryptionType | None = self._item_group.find_by_key(
+			'encryption_type'
+		).value
+		enc_password: Password | None = self._item_group.find_by_key(
+			'encryption_password'
+		).value
 		pbkdf: LuksPbkdf | None = self._item_group.find_by_key('pbkdf').value
 		iter_time: int | None = self._item_group.find_by_key('iter_time').value
-		cipher: EncryptionCipher | None = self._item_group.find_by_key('cipher').value
+		cipher: EncryptionCipher | None = self._item_group.find_by_key(
+			'cipher'
+		).value
 		enc_partitions = self._item_group.find_by_key('partitions').value
 		enc_lvm_vols = self._item_group.find_by_key('lvm_volumes').value
-		auto_unlock_root: bool = self._item_group.find_by_key('auto_unlock_root').value or False
-		fido2_device: Fido2Device | None = self._item_group.find_by_key('fido2_device').value
+		auto_unlock_root: bool = (
+			self._item_group.find_by_key('auto_unlock_root').value or False
+		)
+		fido2_device: Fido2Device | None = self._item_group.find_by_key(
+			'fido2_device'
+		).value
 
 		if enc_type is None or enc_partitions is None or enc_lvm_vols is None:
 			return None
 
-		if enc_type in {EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS} and enc_partitions:
+		if (
+			enc_type in {EncryptionType.LUKS, EncryptionType.LVM_ON_LUKS}
+			and enc_partitions
+		):
 			enc_lvm_vols = []
 
 		if enc_type == EncryptionType.LUKS_ON_LVM:
 			enc_partitions = []
 
-		if enc_type != EncryptionType.NO_ENCRYPTION and enc_password and (enc_partitions or enc_lvm_vols):
+		if (
+			enc_type != EncryptionType.NO_ENCRYPTION
+			and enc_password
+			and (enc_partitions or enc_lvm_vols)
+		):
 			return DiskEncryption(
 				encryption_password=enc_password,
 				encryption_type=enc_type,
@@ -262,7 +299,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return None
 
 	def _prev_partitions(self) -> str | None:
-		partitions: list[PartitionModification] | None = self._item_group.find_by_key('partitions').value
+		partitions: list[PartitionModification] | None = (
+			self._item_group.find_by_key('partitions').value
+		)
 
 		if partitions:
 			output = 'Partitions to be encrypted\n'
@@ -272,7 +311,9 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		return None
 
 	def _prev_lvm_vols(self) -> str | None:
-		volumes: list[PartitionModification] | None = self._item_group.find_by_key('lvm_volumes').value
+		volumes: list[PartitionModification] | None = (
+			self._item_group.find_by_key('lvm_volumes').value
+		)
 
 		if volumes:
 			output = 'LVM volumes to be encrypted\n'
@@ -327,18 +368,27 @@ class DiskEncryptionMenu(AbstractSubMenu[DiskEncryption]):
 		if not enc_type or enc_type == EncryptionType.NO_ENCRYPTION:
 			return None
 
-		device: Fido2Device | None = self._item_group.find_by_key('fido2_device').value
+		device: Fido2Device | None = self._item_group.find_by_key(
+			'fido2_device'
+		).value
 		if not device:
 			return None
 
-		return f'FIDO2 token: {device.path} ({device.manufacturer} {device.product})'
+		return (
+			f'FIDO2 token: {device.path} ({device.manufacturer} '
+			f'{device.product})'
+		)
 
 
 def select_encryption_type(
 	lvm_config: LvmConfiguration | None = None,
 	preset: EncryptionType | None = None,
 ) -> EncryptionType | None:
-	options: list[EncryptionType] = [EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM] if lvm_config else [EncryptionType.LUKS]
+	options: list[EncryptionType] = (
+		[EncryptionType.LVM_ON_LUKS, EncryptionType.LUKS_ON_LVM]
+		if lvm_config
+		else [EncryptionType.LUKS]
+	)
 
 	if not preset:
 		preset = options[0]
@@ -422,7 +472,9 @@ def select_pbkdf(preset: LuksPbkdf | None = None) -> LuksPbkdf | None:
 		preset = LuksPbkdf.Argon2id
 
 	items = [MenuItem(o.display_name(), value=o) for o in LuksPbkdf]
-	return prompt_choice(items, preset, frame='Key derivation function', allow_reset=True)
+	return prompt_choice(
+		items, preset, frame='Key derivation function', allow_reset=True
+	)
 
 
 def select_cipher(preset: EncryptionCipher | None = None) -> EncryptionCipher | None:
@@ -445,12 +497,20 @@ def select_iteration_time(preset: int | None = None) -> int | None:
 			# floor matches the /boot clamp so the GRUB slot is never
 			# asked to go below what user picked
 			if iter_time < BOOT_ITER_TIME:
-				return f'Iteration time must be at least {BOOT_ITER_TIME}ms'
+				return (
+					'Iteration time must be at least '
+					f'{BOOT_ITER_TIME}ms'
+				)
 			if iter_time > 120000:
 				return 'Iteration time must be at most 120000ms'
 			return None
 		except ValueError:
 			return 'Please enter a valid number'
 
-	text = prompt_text('Iteration time', header, str(preset) if preset else str(DEFAULT_ITER_TIME), validate_iter_time)
+	text = prompt_text(
+		'Iteration time',
+		header,
+		str(preset) if preset else str(DEFAULT_ITER_TIME),
+		validate_iter_time,
+	)
 	return int(text) if text else preset

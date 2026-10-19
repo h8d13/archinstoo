@@ -118,7 +118,7 @@ recursive = true
 
 [tool.pylint.format]
 indent-string = '\t'
-max-line-length = 160
+max-line-length = 88
 
 [tool.pylint."messages control"]
 disable = [
@@ -140,13 +140,16 @@ ignored-modules = ["parted"]
 
 [tool.ruff]
 cache-dir = "~/.cache/archinstoo/ruff"
-line-length = 160
+line-length = 88
 indent-width = 8
-exclude = ["**/lib/grimoire.py"]
+extend-exclude = ["**/lib/grimoire.py"]
+# extensionless scripts pre-commit lints by shebang, so a plain `ruff .` agrees
+extend-include = ["**/NVGEN"]
 
 [tool.ruff.format]
 indent-style = "tab"
 quote-style = "single"
+line-ending = "lf"
 
 [tool.ruff.lint]
 # preview behaviour for the rules already selected below (C419 catching

@@ -57,8 +57,9 @@ class FirmwareConfiguration:
 
 	@classmethod
 	def default(cls) -> Self:
-		# Guests boot on virtio/emulated devices that ship no blobs. Bare metal keeps
-		# FULL: a missed blob can cost the only NIC, with no network left to fix it.
+		# Guests boot on virtio/emulated devices that ship no blobs. Bare
+		# metal keeps FULL: a missed blob can cost the only NIC, with no
+		# network left to fix it.
 		from archinstoo.lib.hardware import SysInfo
 
 		if SysInfo.is_vm():
@@ -76,7 +77,9 @@ class FirmwareConfiguration:
 				return list(self.vendors)
 
 	def json(self) -> FirmwareConfigSerialization:
-		out: FirmwareConfigSerialization = {'firmware_type': self.firmware_type.value}
+		out: FirmwareConfigSerialization = {
+			'firmware_type': self.firmware_type.value
+		}
 		if self.vendors:
 			out['vendors'] = [v.value for v in self.vendors]
 		return out

@@ -25,7 +25,11 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.output import warn
 from archinstoo.lib.tui.prompts import prompt_yes_no
 
-from .selectors import select_main_filesystem_format, select_mount_options, select_partition_table
+from .selectors import (
+	select_main_filesystem_format,
+	select_mount_options,
+	select_partition_table,
+)
 
 # https://github.com/archlinux/archinstall/issues/4769
 BOOT_PARTITION_SIZE_GIB = 2
@@ -53,7 +57,9 @@ def _boot_partition(
 				status=ModificationStatus.CREATE,
 				type=PartitionType.PRIMARY,
 				start=start,
-				length=Size(BOOT_PARTITION_SIZE_GIB, Unit.GiB, sector_size),
+				length=Size(
+					BOOT_PARTITION_SIZE_GIB, Unit.GiB, sector_size
+				),
 				mountpoint=mountpoint,
 				fs_type=FilesystemType.FAT32,
 				flags=[PartitionFlag.ESP],
@@ -77,14 +83,21 @@ def _boot_partition(
 			)
 			start = Size(2, Unit.MiB, sector_size)
 
-		# BIOS: /boot GRUB can read the user's chosen fs, Limine only supports FAT
-		boot_fs = FilesystemType.FAT32 if bootloader == Bootloader.Limine else filesystem_type
+		# BIOS: /boot GRUB can read the user's chosen fs,
+		# Limine only supports FAT
+		boot_fs = (
+			FilesystemType.FAT32
+			if bootloader == Bootloader.Limine
+			else filesystem_type
+		)
 		partitions.append(
 			PartitionModification(
 				status=ModificationStatus.CREATE,
 				type=PartitionType.PRIMARY,
 				start=start,
-				length=Size(BOOT_PARTITION_SIZE_GIB, Unit.GiB, sector_size),
+				length=Size(
+					BOOT_PARTITION_SIZE_GIB, Unit.GiB, sector_size
+				),
 				mountpoint=Path('/boot'),
 				fs_type=boot_fs,
 				flags=[PartitionFlag.BOOT],
@@ -140,7 +153,12 @@ def suggest_disk_layout(
 	min_size_to_allow_home_part = Size(64, Unit.GiB, sector_size)
 
 	if filesystem_type == FilesystemType.BTRFS:
-		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?\n', preset=True, allow_skip=False)
+		using_subvolumes = prompt_yes_no(
+			'Would you like to use BTRFS subvolumes with a '
+			'default structure?\n',
+			preset=True,
+			allow_skip=False,
+		)
 		mount_options = select_mount_options()
 	else:
 		using_subvolumes = False
@@ -148,7 +166,9 @@ def suggest_disk_layout(
 
 	uefi = SysInfo.has_uefi()
 	partition_table = PartitionTable.GPT if uefi else select_partition_table(device)
-	device_modification = DeviceModification(device, wipe=True, partition_table=partition_table)
+	device_modification = DeviceModification(
+		device, wipe=True, partition_table=partition_table
+	)
 
 	using_gpt = partition_table.is_gpt()
 
@@ -158,35 +178,61 @@ def suggest_disk_layout(
 		# the tail is unreachable, not merely unallocated: sizing the layout off
 		# the full disk is what makes parted reject it
 		unusable = total_size - available_space
-		warn(f'MBR cannot address past {available_space.format_highest()}, leaving {unusable.format_highest()} of {device.device_info.path} unused')
+		warn(
+			f'MBR cannot address past {available_space.format_highest()}, '
+			f'leaving {unusable.format_highest()} of '
+			f'{device.device_info.path} unused'
+		)
 
 	available_space = available_space.align()
 
 	# Used for reference: https://wiki.archlinux.org/title/partitioning
-	boot_partitions = _boot_partition(sector_size, using_gpt, uefi, bootloader, filesystem_type, using_subvolumes)
+	boot_partitions = _boot_partition(
+		sector_size,
+		using_gpt,
+		uefi,
+		bootloader,
+		filesystem_type,
+		using_subvolumes,
+	)
 	for part in boot_partitions:
 		device_modification.add_partition(part)
 
-	if separate_home is False or using_subvolumes or filesystem_type == FilesystemType.LVM or total_size < min_size_to_allow_home_part:
+	if (
+		separate_home is False
+		or using_subvolumes
+		or filesystem_type == FilesystemType.LVM
+		or total_size < min_size_to_allow_home_part
+	):
 		using_home_partition = False
 	elif separate_home:
 		using_home_partition = True
 	else:
-		using_home_partition = prompt_yes_no('Would you like to create a separate partition for /home?\n', preset=False, allow_skip=False)
+		using_home_partition = prompt_yes_no(
+			'Would you like to create a separate partition for /home?\n',
+			preset=False,
+			allow_skip=False,
+		)
 
 	# root partition starts after last boot partition
 	last_boot = boot_partitions[-1]
 	root_start = last_boot.start + last_boot.length
 
 	# Set a size for / (/root)
-	root_length = process_root_partition_size(total_size, sector_size) if using_home_partition else available_space - root_start
+	root_length = (
+		process_root_partition_size(total_size, sector_size)
+		if using_home_partition
+		else available_space - root_start
+	)
 
 	root_partition = PartitionModification(
 		status=ModificationStatus.CREATE,
 		type=PartitionType.PRIMARY,
 		start=root_start,
 		length=root_length,
-		mountpoint=None if using_subvolumes or filesystem_type == FilesystemType.LVM else Path('/'),
+		mountpoint=None
+		if using_subvolumes or filesystem_type == FilesystemType.LVM
+		else Path('/'),
 		fs_type=filesystem_type,
 		mount_options=mount_options,
 	)
@@ -227,10 +273,17 @@ def suggest_lvm_layout(
 	vg_grp_name: str = 'ArchinstooVg',
 	home_volume: bool = True,
 ) -> LvmConfiguration:
-	if disk_config.config_type not in {DiskLayoutType.Default, DiskLayoutType.Manual}:
-		raise ValueError('LVM suggested volumes are only available for default or manual partitioning')
+	if disk_config.config_type not in {
+		DiskLayoutType.Default,
+		DiskLayoutType.Manual,
+	}:
+		raise ValueError(
+			'LVM suggested volumes are only available for '
+			'default or manual partitioning'
+		)
 
-	root_only = not home_volume  # user intent, captured before the subvolume path flips home_volume
+	# user intent, captured before the subvolume path flips home_volume
+	root_only = not home_volume
 
 	using_subvolumes = False
 	btrfs_subvols = []
@@ -240,7 +293,12 @@ def suggest_lvm_layout(
 		filesystem_type = select_main_filesystem_format()
 
 	if filesystem_type == FilesystemType.BTRFS:
-		using_subvolumes = prompt_yes_no('Would you like to use BTRFS subvolumes with a default structure?\n', preset=True, allow_skip=False)
+		using_subvolumes = prompt_yes_no(
+			'Would you like to use BTRFS subvolumes with a '
+			'default structure?\n',
+			preset=True,
+			allow_skip=False,
+		)
 		mount_options = select_mount_options()
 
 	if using_subvolumes:
@@ -273,7 +331,9 @@ def suggest_lvm_layout(
 		boot_part = efi_part
 
 	if not boot_part:
-		raise ValueError('Unable to find boot partition in partition modifications')
+		raise ValueError(
+			'Unable to find boot partition in partition modifications'
+		)
 
 	total_vol_available = sum(
 		(p.length for p in other_part),
@@ -281,10 +341,13 @@ def suggest_lvm_layout(
 	)
 	if home_volume:
 		# separate /home LV: cap root, give the remainder to /home
-		root_vol_size = process_root_partition_size(total_vol_available, SectorSize.default())
+		root_vol_size = process_root_partition_size(
+			total_vol_available, SectorSize.default()
+		)
 		home_vol_size = total_vol_available - root_vol_size
 	else:
-		# no separate /home LV (root-only, or btrfs subvolumes carry /home): root spans the whole VG
+		# no separate /home LV (root-only, or btrfs subvolumes carry /home):
+		# root spans the whole VG
 		root_vol_size = total_vol_available
 		home_vol_size = Size(0, Unit.B, SectorSize.default())
 

@@ -26,7 +26,10 @@ def _is_fido(descriptor: bytes) -> bool:
 		size = (0, 1, 2, 4)[prefix & 0x03]
 		data = descriptor[i + 1 : i + 1 + size]
 		# global item, tag 0: Usage Page
-		if prefix & 0xFC == 0x04 and int.from_bytes(data, 'little') == _FIDO_USAGE_PAGE:
+		if (
+			prefix & 0xFC == 0x04
+			and int.from_bytes(data, 'little') == _FIDO_USAGE_PAGE
+		):
 			return True
 		i += 1 + size
 	return False
@@ -77,7 +80,12 @@ class Fido2:
 				debug(f'skipping {node.name}: {e}')
 				continue
 			if _is_fido(descriptor):
-				devices.append(Fido2Device(Path('/dev') / node.name, *_describe(hid)))
+				devices.append(
+					Fido2Device(
+						Path('/dev') / node.name,
+						*_describe(hid),
+					)
+				)
 
 		cls._loaded = True
 		cls._devices = devices

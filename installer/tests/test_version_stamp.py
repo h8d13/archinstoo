@@ -13,7 +13,14 @@ from pathlib import Path
 import pytest
 
 import archinstoo._version
-from archinstoo._version import PKGSTAMP, VERSION, git_branch, git_shash, read_pkgbuild_version, resolve_gitstat
+from archinstoo._version import (
+	PKGSTAMP,
+	VERSION,
+	git_branch,
+	git_shash,
+	read_pkgbuild_version,
+	resolve_gitstat,
+)
 
 ROOT = Path(__file__).parents[2]
 PKGBUILDS = (ROOT / 'PKGBUILD', ROOT / 'installer' / 'PKGBUILD')
@@ -31,18 +38,27 @@ def test_stamp_stays_a_placeholder() -> None:
 	assert PKGSTAMP == '0.0.0-0'
 
 
-@pytest.mark.parametrize('pkgbuild', PKGBUILDS, ids=lambda p: p.relative_to(ROOT).as_posix())
+@pytest.mark.parametrize(
+	'pkgbuild', PKGBUILDS, ids=lambda p: p.relative_to(ROOT).as_posix()
+)
 def test_sed_stamp_matches_source(pkgbuild: Path) -> None:
 	# translate the PKGBUILD's own sed s/// into a python regex and apply it
-	sed = re.search(r'sed -i \"s/(?P<pat>.+?)/(?P<repl>.*?)/\" archinstoo/_version\.py', pkgbuild.read_text())
+	sed = re.search(
+		r'sed -i \"s/(?P<pat>.+?)/(?P<repl>.*?)/\" archinstoo/_version\.py',
+		pkgbuild.read_text(),
+	)
 	assert sed, f'no _version.py stamp found in {pkgbuild}'
 
-	stamped, count = re.subn(sed['pat'], 'STAMPED', VERSION_PY.read_text(), flags=re.MULTILINE)
+	stamped, count = re.subn(
+		sed['pat'], 'STAMPED', VERSION_PY.read_text(), flags=re.MULTILINE
+	)
 	assert count == 1, f'{pkgbuild} stamp matched {count} lines in _version.py'
 	assert 'STAMPED' in stamped
 
 
-def test_git_stat_describes_this_tree_not_the_cwd(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_git_stat_describes_this_tree_not_the_cwd(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
 	# the version stamp must describe the source it was built from. running git
 	# in the process cwd made an installed archinstoo report whatever repo the
 	# user happened to stand in, and DEV outside one
@@ -55,7 +71,9 @@ def test_git_stat_describes_this_tree_not_the_cwd(monkeypatch: pytest.MonkeyPatc
 	assert (git_branch(), git_shash()) == (branch, shash)
 
 
-def test_no_repo_means_rel_when_installed_dev_in_checkout(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_repo_means_rel_when_installed_dev_in_checkout(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
 	# git always fails around site-packages, so the fallback IS the installed
 	# label: releases were reporting DEV
 	def _no_repo() -> str:

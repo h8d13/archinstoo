@@ -34,8 +34,12 @@ class _StubDisk:
 		self.type = table.value
 
 
-def _device(total: Size, sector_size: SectorSize, table: PartitionTable = PartitionTable.GPT) -> BDevice:
-	info = _DeviceInfo('stub', Path('/dev/vda'), 'disk', total, [], sector_size, False, False)
+def _device(
+	total: Size, sector_size: SectorSize, table: PartitionTable = PartitionTable.GPT
+) -> BDevice:
+	info = _DeviceInfo(
+		'stub', Path('/dev/vda'), 'disk', total, [], sector_size, False, False
+	)
 	return BDevice(disk=_StubDisk(table), device_info=info, partition_infos=[])  # type: ignore[arg-type]
 
 
@@ -105,13 +109,20 @@ def test_default_table_flips_to_gpt_past_the_mbr_ceiling(
 	sector_size: SectorSize,
 	expected: PartitionTable,
 ) -> None:
-	monkeypatch.setattr('archinstoo.lib.hardware.SysInfo.has_uefi', staticmethod(lambda: False))
+	monkeypatch.setattr(
+		'archinstoo.lib.hardware.SysInfo.has_uefi', staticmethod(lambda: False)
+	)
 	assert default_partition_table(_device(total, sector_size)) == expected
 
 
 def test_default_table_stays_gpt_on_uefi(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr('archinstoo.lib.hardware.SysInfo.has_uefi', staticmethod(lambda: True))
-	assert default_partition_table(_device(Size(64, Unit.GiB, S512), S512)) == PartitionTable.GPT
+	monkeypatch.setattr(
+		'archinstoo.lib.hardware.SysInfo.has_uefi', staticmethod(lambda: True)
+	)
+	assert (
+		default_partition_table(_device(Size(64, Unit.GiB, S512), S512))
+		== PartitionTable.GPT
+	)
 
 
 @pytest.mark.parametrize(
@@ -121,8 +132,14 @@ def test_default_table_stays_gpt_on_uefi(monkeypatch: pytest.MonkeyPatch) -> Non
 		(PartitionTable.GPT, '4 TiB'),
 	],
 )
-def test_menu_free_space_stops_where_the_table_does(table: PartitionTable, expected: str) -> None:
+def test_menu_free_space_stops_where_the_table_does(
+	table: PartitionTable, expected: str
+) -> None:
 	# msdos used to offer the whole 4 TiB, failing later at partitioning
-	mod = DeviceModification(device=_device(Size(4, Unit.TiB, S512), S512), wipe=True, partition_table=table)
+	mod = DeviceModification(
+		device=_device(Size(4, Unit.TiB, S512), S512),
+		wipe=True,
+		partition_table=table,
+	)
 	free = PartitioningList(mod, table).as_segments([])[0].segment
 	assert free.end.format_highest() == expected

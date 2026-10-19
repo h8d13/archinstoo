@@ -41,9 +41,18 @@ def vm_console() -> str:
 def need_serial() -> None:
 	# everything that types into ttyS0 or the monitor needs a --console serial VM
 	if not (pid := vm_pid()):
-		error(f'No VM running. Start one headless: {VM} fresh --console serial (or keep/boot)')
+		error(
+			f'No VM running. Start one headless: {VM} fresh '
+			'--console serial (or keep/boot)'
+		)
 		raise SystemExit(1)
 	if (console := vm_console()) != 'serial':
-		error(f'VM pid {pid} runs with --console {console}: no serial socket to drive.')
-		error(f'Restart it headless: {VM} quit && {VM} keep --console serial (or boot)')
+		error(
+			f'VM pid {pid} runs with --console {console}: no '
+			'serial socket to drive.'
+		)
+		error(
+			f'Restart it headless: {VM} quit && {VM} keep '
+			'--console serial (or boot)'
+		)
 		raise SystemExit(1)

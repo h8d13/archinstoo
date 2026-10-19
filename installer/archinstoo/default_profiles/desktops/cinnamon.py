@@ -14,7 +14,9 @@ class CinnamonProfile(XorgProfile):
 		return [
 			'cinnamon',
 			'system-config-printer',
-			'gnome-keyring',  # Secret portal backend (org.freedesktop.secrets), x-cinnamon-portals.conf names it, groups only optdep it
+			# Secret portal backend (org.freedesktop.secrets), x-cinnamon-
+			# portals.conf names it, groups only optdep it
+			'gnome-keyring',
 			'gnome-terminal',
 			'engrampa',
 			'gnome-screenshot',

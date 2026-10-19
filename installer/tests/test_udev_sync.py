@@ -31,7 +31,11 @@ class _Clock:
 @pytest.fixture
 def clock(monkeypatch: pytest.MonkeyPatch) -> _Clock:
 	fake = _Clock()
-	monkeypatch.setattr(device_handler, 'time', SimpleNamespace(monotonic=fake.monotonic, sleep=fake.sleep))
+	monkeypatch.setattr(
+		device_handler,
+		'time',
+		SimpleNamespace(monotonic=fake.monotonic, sleep=fake.sleep),
+	)
 	return fake
 
 
@@ -39,7 +43,9 @@ def clock(monkeypatch: pytest.MonkeyPatch) -> _Clock:
 def settle_env(monkeypatch: pytest.MonkeyPatch) -> _Env:
 	calls: _Env = []
 
-	def _syscommand(cmd: str, environment_vars: dict[str, str] | None = None, **_: object) -> None:
+	def _syscommand(
+		cmd: str, environment_vars: dict[str, str] | None = None, **_: object
+	) -> None:
 		assert cmd == 'udevadm settle'
 		calls.append(environment_vars)
 
@@ -62,7 +68,9 @@ def _queue_for(monkeypatch: pytest.MonkeyPatch, busy_checks: int | None) -> list
 	return seen
 
 
-def test_settle_overrides_chroot_and_skips_idle_queue(clock: _Clock, settle_env: _Env, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settle_overrides_chroot_and_skips_idle_queue(
+	clock: _Clock, settle_env: _Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	seen = _queue_for(monkeypatch, 0)
 	DeviceHandler.udev_sync()
 	assert settle_env == [{'SYSTEMD_IN_CHROOT': '0'}]
@@ -71,7 +79,9 @@ def test_settle_overrides_chroot_and_skips_idle_queue(clock: _Clock, settle_env:
 
 
 @pytest.mark.usefixtures('settle_env')
-def test_queue_poll_waits_until_drained(clock: _Clock, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_queue_poll_waits_until_drained(
+	clock: _Clock, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	seen = _queue_for(monkeypatch, 3)
 	DeviceHandler.udev_sync()
 	assert seen[0] == 4
@@ -79,7 +89,9 @@ def test_queue_poll_waits_until_drained(clock: _Clock, monkeypatch: pytest.Monke
 
 
 @pytest.mark.usefixtures('settle_env')
-def test_queue_poll_gives_up_at_deadline(clock: _Clock, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_queue_poll_gives_up_at_deadline(
+	clock: _Clock, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# a wedged host udevd must not hang the install
 	_queue_for(monkeypatch, None)
 	DeviceHandler.udev_sync()
@@ -98,7 +110,9 @@ def _lsblk(uuid: str | None) -> LsblkInfo:
 	)
 
 
-def _lsblk_sequence(monkeypatch: pytest.MonkeyPatch, empty_reads: int | None) -> list[int]:
+def _lsblk_sequence(
+	monkeypatch: pytest.MonkeyPatch, empty_reads: int | None
+) -> list[int]:
 	# uuid stays unset for the first empty_reads calls (None: forever)
 	calls = [0]
 
@@ -116,20 +130,26 @@ def _fetch(path: Path) -> LsblkInfo:
 	return DeviceHandler.fetch_part_info(object.__new__(DeviceHandler), path)
 
 
-def test_fetch_part_info_no_retry_when_ready(clock: _Clock, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fetch_part_info_no_retry_when_ready(
+	clock: _Clock, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	calls = _lsblk_sequence(monkeypatch, 0)
 	assert _fetch(Path('/dev/vdb1')).uuid == '19F1-92A4'
 	assert calls[0] == 1
 	assert clock.sleeps == 0
 
 
-def test_fetch_part_info_retries_until_uuid(clock: _Clock, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fetch_part_info_retries_until_uuid(
+	clock: _Clock, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	calls = _lsblk_sequence(monkeypatch, 4)
 	assert _fetch(Path('/dev/vdb1')).uuid == '19F1-92A4'
 	assert calls[0] == 5
 
 
-def test_fetch_part_info_raises_after_deadline(clock: _Clock, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fetch_part_info_raises_after_deadline(
+	clock: _Clock, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_lsblk_sequence(monkeypatch, None)
 	with pytest.raises(DiskError, match='Unable to determine new uuid'):
 		_fetch(Path('/dev/vdb1'))

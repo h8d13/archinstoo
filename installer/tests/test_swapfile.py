@@ -12,7 +12,9 @@ if TYPE_CHECKING:
 	import pytest
 
 
-def _session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fs_type: str) -> tuple[Installer, list[list[str]]]:
+def _session(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fs_type: str
+) -> tuple[Installer, list[list[str]]]:
 	installation = Installer.__new__(Installer)
 	installation.target = tmp_path
 	installation._fstab_entries = []
@@ -22,16 +24,24 @@ def _session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fs_type: str) -> t
 	monkeypatch.setattr(installation, 'arch_chroot', chroot.append, raising=False)
 	monkeypatch.setattr(installer_mod, 'setup_zram', lambda *_: None)
 
-	monkeypatch.setattr(swap_mod, 'mounted_at', lambda _target: {'fstype': fs_type, 'uuid': 'root-uuid'})
+	monkeypatch.setattr(
+		swap_mod,
+		'mounted_at',
+		lambda _target: {'fstype': fs_type, 'uuid': 'root-uuid'},
+	)
 	monkeypatch.setattr(hardware.SysInfo, 'has_uefi', staticmethod(lambda: True))
 	return installation, chroot
 
 
-def test_ext4_swapfile_lands_in_fstab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ext4_swapfile_lands_in_fstab(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	installation, chroot = _session(tmp_path, monkeypatch, 'ext4')
 
 	fstab_entry, kernel_params = swap_mod.setup_swapfile(installation, 4)
 
-	assert chroot == [['mkswap', '-U', 'clear', '--size', '4G', '--file', '/swapfile']]
+	assert chroot == [
+		['mkswap', '-U', 'clear', '--size', '4G', '--file', '/swapfile']
+	]
 	assert fstab_entry == '/swapfile\tnone\tswap\tdefaults\t0\t0'
 	assert kernel_params == []

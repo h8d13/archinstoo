@@ -67,17 +67,29 @@ def test_root_and_home_untouched() -> None:
 
 @pytest.mark.parametrize(
 	'option',
-	[BootMountOption.dev, BootMountOption.suid, BootMountOption.exec, BootMountOption.symfollow],
+	[
+		BootMountOption.dev,
+		BootMountOption.suid,
+		BootMountOption.exec,
+		BootMountOption.symfollow,
+	],
 )
 def test_explicit_opposite_wins(option: BootMountOption) -> None:
-	part = _part('/boot', FilesystemType.EXT4, [PartitionFlag.XBOOTLDR], [option.name])
+	part = _part(
+		'/boot', FilesystemType.EXT4, [PartitionFlag.XBOOTLDR], [option.name]
+	)
 	options = harden_boot_options(part, [option.name])
 	assert option.value not in options
 	assert option.name in options
 
 
 def test_no_duplicates_on_preset_options() -> None:
-	part = _part('/efi', FilesystemType.FAT32, [PartitionFlag.ESP], ['nodev', 'fmask=0177'])
+	part = _part(
+		'/efi',
+		FilesystemType.FAT32,
+		[PartitionFlag.ESP],
+		['nodev', 'fmask=0177'],
+	)
 	options = harden_boot_options(part, ['nodev', 'fmask=0177'])
 	assert sorted(options) == sorted(BOOT_MEDIA + MASKS)
 

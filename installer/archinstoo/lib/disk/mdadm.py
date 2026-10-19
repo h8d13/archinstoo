@@ -13,7 +13,11 @@ def scan_arrays() -> str:
 	# the command runs on a pty, so every line comes back CRLF, and mdadm reads
 	# the stray CR as part of the UUID and drops the whole ARRAY line
 	try:
-		return SysCommand(['mdadm', '--detail', '--scan']).output().decode('utf-8', errors='backslashreplace')
+		return (
+			SysCommand(['mdadm', '--detail', '--scan'])
+			.output()
+			.decode('utf-8', errors='backslashreplace')
+		)
 	except SysCallError as err:
 		debug(f'mdadm --detail --scan failed: {err}')
 		return ''

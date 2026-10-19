@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING, ClassVar, override
 from archinstoo.default_profiles.desktops import select_compositor, select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.output import debug
-from archinstoo.lib.profile.base import GreeterType, ProfileType, seat_packages, seat_services
+from archinstoo.lib.profile.base import (
+	GreeterType,
+	ProfileType,
+	seat_packages,
+	seat_services,
+)
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -33,7 +38,8 @@ class NoctaliaProfile(WaylandProfile):
 	# clipboard, polkit agent), no qt/gtk deps; compositor is a free choice
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
 		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
-		# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
+		# uwsm backs the "Hyprland (uwsm)" session entry the
+		# hyprland package ships
 		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
 		'sway': ['sway', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
 		'labwc': ['labwc', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
@@ -46,7 +52,10 @@ class NoctaliaProfile(WaylandProfile):
 	def __init__(self) -> None:
 		super().__init__('noctalia', ProfileType.WindowMgr)
 
-		self.custom_settings = {'noctalia_compositor': 'niri', 'seat_access': None}
+		self.custom_settings = {
+			'noctalia_compositor': 'niri',
+			'seat_access': None,
+		}
 
 	@property
 	@override
@@ -73,7 +82,12 @@ class NoctaliaProfile(WaylandProfile):
 		# noctalia starts via the compositor's autostart hook; only the
 		# compositor config is provisioned, the shell configures itself
 		for user in users:
-			config_dir = install_session.target / 'home' / user.username / '.config'
+			config_dir = (
+				install_session.target
+				/ 'home'
+				/ user.username
+				/ '.config'
+			)
 			dest_dir = config_dir / _COMPOSITOR_CONFIG_DIRS[self.compositor]
 			dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -82,7 +96,9 @@ class NoctaliaProfile(WaylandProfile):
 				debug(f'Writing {dest} for {user.username}')
 				shutil.copy(asset, dest)
 
-			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
+			install_session.chown_tree(
+				user.username, f'/home/{user.username}/.config'
+			)
 
 	@override
 	def do_on_select(self) -> None:

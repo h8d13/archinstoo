@@ -83,7 +83,10 @@ class MirrorStatusEntryV3:
 
 		self._hostname = urllib.parse.urlparse(self.url).netloc.split(':', 1)[0]
 
-		debug(f'Loaded mirror {self._hostname}' + (f' with score {self.score}' if self.score else ''))
+		debug(
+			f'Loaded mirror {self._hostname}'
+			+ (f' with score {self.score}' if self.score else '')
+		)
 
 	@classmethod
 	def from_dict(cls, data: _MirrorEntry) -> Self:
@@ -123,31 +126,58 @@ class MirrorStatusEntryV3:
 
 			retry = 0
 			while retry < self._speedtest_retries and self._speed is None:
-				debug(f'Checking download speed of {self._hostname}[{self.score}] by fetching: {test_db}')
+				debug(
+					'Checking download speed of '
+					f'{self._hostname}[{self.score}] by '
+					f'fetching: {test_db}'
+				)
 
 				req = urllib.request.Request(url=test_db)  # noqa: S310
 
 				try:
-					# timer first: arms SIGALRM before urlopen so the timeout bounds the connect
-					# phase too, not just read(). Else a multi-homed unreachable mirror walks every
-					# dead address at 5s each (Errno 101 / pre-403 stalls) before skipping.
-					with DownloadTimer(timeout=5) as timer, urllib.request.urlopen(req, None, 5) as handle:  # noqa: S310
+					# timer first: arms SIGALRM before urlopen so
+					# the timeout bounds the connect phase too, not
+					# just read(). Else a multi-homed unreachable
+					# mirror walks every dead address at 5s each
+					# (Errno 101 / pre-403 stalls) before skipping.
+					with (
+						DownloadTimer(timeout=5) as timer,
+						urllib.request.urlopen(  # noqa: S310
+							req, None, 5
+						) as handle,
+					):
 						size = len(handle.read())
 
 					if timer.time is None:
-						raise RuntimeError('DownloadTimer exited without recording time')
+						raise RuntimeError(
+							'DownloadTimer exited without '
+							'recording time'
+						)
 					self._speed = size / timer.time
-					debug(f'    speed: {self._speed} ({int(self._speed / 1024 / 1024 * 100) / 100}MiB/s)')
+					mib = int(self._speed / 1024 / 1024 * 100) / 100
+					debug(f'    speed: {self._speed} ({mib}MiB/s)')
 				# Do not retry error
 				except urllib.error.URLError as error:
-					debug(f'    speed: <undetermined> ({error}), skip')
+					debug(
+						'    speed: <undetermined> '
+						f'({error}), skip'
+					)
 					self._speed = 0
 				# Do retry error
-				except (http.client.IncompleteRead, ConnectionResetError) as error:
-					debug(f'    speed: <undetermined> ({error}), retry')
+				except (
+					http.client.IncompleteRead,
+					ConnectionResetError,
+				) as error:
+					debug(
+						'    speed: <undetermined> '
+						f'({error}), retry'
+					)
 				# Catch all
 				except Exception as error:
-					debug(f'    speed: <undetermined> ({error}), skip')
+					debug(
+						'    speed: <undetermined> '
+						f'({error}), skip'
+					)
 					self._speed = 0
 
 				retry += 1
@@ -162,7 +192,9 @@ class MirrorStatusEntryV3:
 		if self._latency is None:
 			debug(f'Checking latency for {self.url}')
 			if self._hostname is None:
-				raise RuntimeError(f'Mirror has no hostname: {self.url}')
+				raise RuntimeError(
+					f'Mirror has no hostname: {self.url}'
+				)
 			self._latency = ping(self._hostname, timeout=2)
 			debug(f'  latency: {self._latency}')
 
@@ -179,16 +211,21 @@ class MirrorStatusListV3:
 
 	def __post_init__(self) -> None:
 		if self.version != 3:
-			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
+			raise ValueError(
+				'MirrorStatusListV3 only accepts version 3 data'
+			)
 
 	@classmethod
 	def from_dict(cls, data: _MirrorList) -> Self:
 		if data.get('version') != 3:
-			raise ValueError('MirrorStatusListV3 only accepts version 3 data')
+			raise ValueError(
+				'MirrorStatusListV3 only accepts version 3 data'
+			)
 
 		return cls(
 			cutoff=data['cutoff'],
-			last_check=_parse_datetime(data['last_check']) or datetime.now(UTC),
+			last_check=_parse_datetime(data['last_check'])
+			or datetime.now(UTC),
 			num_checks=data['num_checks'],
 			urls=[MirrorStatusEntryV3.from_dict(u) for u in data['urls']],
 			version=data['version'],
@@ -306,7 +343,9 @@ class CustomRepository:
 	def parse_args(cls, args: list[_CustomRepositorySerialization]) -> list[Self]:
 		repos: list[Self] = []
 		for arg in args:
-			if error := cls.name_error(arg['name'], [r.name for r in repos]):
+			if error := cls.name_error(
+				arg['name'], [r.name for r in repos]
+			):
 				raise ValueError(f'custom_repositories: {error}')
 			repos.append(
 				cls(
@@ -373,8 +412,12 @@ class PacmanConfiguration:
 		config: _PacmanConfigurationSerialization = {
 			'mirror_regions': regions,
 			'custom_servers': [s.json() for s in self.custom_servers],
-			'optional_repositories': [r.value for r in self.optional_repositories],
-			'custom_repositories': [c.json() for c in self.custom_repositories],
+			'optional_repositories': [
+				r.value for r in self.optional_repositories
+			],
+			'custom_repositories': [
+				c.json() for c in self.custom_repositories
+			],
 		}
 
 		if self.pacman_options:
@@ -407,13 +450,19 @@ class PacmanConfiguration:
 				config.mirror_regions.append(MirrorRegion(region, urls))
 
 		if args.get('custom_servers'):
-			config.custom_servers = CustomServer.parse_args(args['custom_servers'])
+			config.custom_servers = CustomServer.parse_args(
+				args['custom_servers']
+			)
 
 		if 'custom_repositories' in args:
-			config.custom_repositories = CustomRepository.parse_args(args['custom_repositories'])
+			config.custom_repositories = CustomRepository.parse_args(
+				args['custom_repositories']
+			)
 
 		if 'optional_repositories' in args:
-			config.optional_repositories = [Repository(r) for r in args['optional_repositories']]
+			config.optional_repositories = [
+				Repository(r) for r in args['optional_repositories']
+			]
 
 		if 'pacman_options' in args:
 			config.pacman_options = args['pacman_options']

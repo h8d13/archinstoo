@@ -3,7 +3,12 @@ from typing import TYPE_CHECKING, ClassVar, override
 from archinstoo.default_profiles.desktops import select_compositor, select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.output import debug, info
-from archinstoo.lib.profile.base import GreeterType, ProfileType, seat_packages, seat_services
+from archinstoo.lib.profile.base import (
+	GreeterType,
+	ProfileType,
+	seat_packages,
+	seat_services,
+)
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -19,10 +24,16 @@ class DmsProfile(WaylandProfile):
 	# dms-shell-niri/-hyprland shims), so these only carry the compositor
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
 		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
-		# uwsm backs the "Hyprland (uwsm)" session entry the hyprland package ships
+		# uwsm backs the "Hyprland (uwsm)" session entry the
+		# hyprland package ships
 		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
-		# mango-portals.conf: gtk default, wlr for screencast; mangowm pulls neither
-		'mango': ['mangowm', 'xdg-desktop-portal-gtk', 'xdg-desktop-portal-wlr'],
+		# mango-portals.conf: gtk default, wlr for screencast;
+		# mangowm pulls neither
+		'mango': [
+			'mangowm',
+			'xdg-desktop-portal-gtk',
+			'xdg-desktop-portal-wlr',
+		],
 	}
 
 	# dms-shell 1.6.0 embedded the UI in the dms binary and dropped
@@ -49,9 +60,9 @@ class DmsProfile(WaylandProfile):
 			'cava',
 			'kimageformats',
 			'alacritty',
-			# dms defaults: Inter Variable + Fira Code. the shell bundles both
-			# privately, but doctor <= 1.5.3 only checks fontconfig, and the
-			# terminal needs a real mono font anyway
+			# dms defaults: Inter Variable + Fira Code. the shell bundles
+			# both privately, but doctor <= 1.5.3 only checks fontconfig,
+			# and the terminal needs a real mono font anyway
 			'inter-font',
 			'ttf-fira-code',
 			*seat_packages(self.custom_settings.get('seat_access')),
@@ -66,20 +77,25 @@ class DmsProfile(WaylandProfile):
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
 
-		# dms.service (WantedBy=graphical-session.target) autostarts the shell in
-		# any session that activates the target: niri natively, hyprland via the
-		# hyprland-session.target the setup below deploys. mango activates it
-		# too (mango-session.target), but setup gives mango `exec-once=dms run`
-		# instead, so the unit would start a second shell
+		# dms.service (WantedBy=graphical-session.target) autostarts the shell
+		# in any session that activates the target: niri natively, hyprland via
+		# the hyprland-session.target the setup below deploys. mango activates
+		# it too (mango-session.target), but setup gives mango `exec-once=dms
+		# run` instead, so the unit would start a second shell
 		if self.compositor != 'mango':
 			debug('Enabling dms.service globally for all users')
-			install_session.arch_chroot(['systemctl', '--global', 'enable', 'dms.service'])
+			install_session.arch_chroot(
+				['systemctl', '--global', 'enable', 'dms.service']
+			)
 
 		# `dms setup headless` writes the compositor config, the dms/ overrides
 		# and (for hyprland) ~/.config/systemd/user/hyprland-session.target.
 		# it has to run as the user: everything lands under their $HOME
 		for user in users:
-			info(f'Running dms setup for {user.username} ({self.compositor})')
+			info(
+				f'Running dms setup for {user.username} '
+				f'({self.compositor})'
+			)
 			install_session.arch_chroot(
 				[
 					'dms',

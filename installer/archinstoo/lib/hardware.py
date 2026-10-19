@@ -59,7 +59,9 @@ class _SysInfo:
 	@cached_property
 	def efi_bitness(self) -> int | None:
 		try:
-			return int((self.efi_path / 'fw_platform_size').read_text().strip())
+			return int(
+				(self.efi_path / 'fw_platform_size').read_text().strip()
+			)
 		except OSError:
 			return None
 
@@ -117,7 +119,11 @@ class _SysInfo:
 	@cached_property
 	def loaded_modules(self) -> set[str]:
 		with _PROC_MODULES.open() as file:
-			return {line.split(maxsplit=1)[0] for line in file if line.strip()}
+			return {
+				line.split(maxsplit=1)[0]
+				for line in file
+				if line.strip()
+			}
 
 	@cached_property
 	def is_vm(self) -> bool:
@@ -130,7 +136,8 @@ class _SysInfo:
 			# present but reported an error, treat as bare metal
 			return False
 		except RequirementError:
-			# non-systemd host (e.g. alpine): binary absent, fall back to DMI
+			# non-systemd host (e.g. alpine): binary
+			# absent, fall back to DMI
 			pass
 
 		# xen exposes its type here, and the DMI vendor names the hypervisor for

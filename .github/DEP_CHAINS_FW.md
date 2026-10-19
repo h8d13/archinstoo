@@ -4,9 +4,11 @@
 
 Basically to figure out why some things turn out the way they do:
 
-Using `pacman-contrib` we can explore full dep trees. This simulates the install flow and counts/parses recursive deps.
+Using `pacman-contrib` we can explore full dep trees.
+This simulates the install flow and counts/parses recursive deps.
 
-You can simply exit the menu and select `Save selections`, you'll then find your config in the logger directory (`~/.local/state/archinstoo/`).
+You can simply exit the menu and select `Save selections`,
+you'll then find your config in the logger directory (`~/.local/state/archinstoo/`).
 
 ```shell
 ./RUN --script count examples/config_sample_full.json --why polkit
@@ -25,8 +27,11 @@ Total packages (with deps): 574
   networkmanager
 ```
 
-This is useful before committing to an install and understanding why certain things always do end up on your system (regardless of choices).
-For a `seatd` only setup we'll have to jump a few hoops: Network option `Copy from ISO` or `iwd standalone` other NM options pull in `polkit`.
+This is useful before committing to an install
+and understanding why certain things always do end up on your system
+(regardless of choices).
+For a `seatd` only setup we'll have to jump a few hoops:
+Network option `Copy from ISO` or `iwd standalone` other NM options pull in `polkit`.
 
 `networkmanager → wpa_supplicant → pcsclite → polkit`
 

@@ -2,7 +2,11 @@ import textwrap
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.localization.catalog import locale_encoding, split_locale_name, uncomment_locale
+from archinstoo.lib.localization.catalog import (
+	locale_encoding,
+	split_locale_name,
+	uncomment_locale,
+)
 from archinstoo.lib.output import debug, error, info, warn
 
 if TYPE_CHECKING:
@@ -24,8 +28,14 @@ def set_locale(installation: Installer, locale_config: LocaleConfiguration) -> b
 	locale_gen = installation.target / 'etc/locale.gen'
 	locale_gen_lines = locale_gen.read_text().splitlines(True)
 
-	if not uncomment_locale(locale_gen_lines, locale_config.sys_lang, locale_config.sys_enc):
-		error(f"Invalid locale: language '{locale_config.sys_lang}', encoding '{locale_config.sys_enc}'")
+	if not uncomment_locale(
+		locale_gen_lines, locale_config.sys_lang, locale_config.sys_enc
+	):
+		error(
+			'Invalid locale: language '
+			f"'{locale_config.sys_lang}', encoding "
+			f"'{locale_config.sys_enc}'"
+		)
 		return False
 	# tools hardcoding LC_ALL=en_US.UTF-8 warn on every non-US system otherwise
 	# https://github.com/archlinux/archinstall/issues/3764
@@ -42,7 +52,9 @@ def set_locale(installation: Installer, locale_config: LocaleConfiguration) -> b
 	# under the bare name, but localedef also registers a normalized-codeset
 	# alias (locarchive.c), so LANG=en_IL.UTF-8 resolves and UTF-8 stays
 	# visible to tools sniffing LANG (tmux et al.)
-	(installation.target / 'etc/locale.conf').write_text(f'LANG={lang}.{encoding}{modifier}\n')
+	(installation.target / 'etc/locale.conf').write_text(
+		f'LANG={lang}.{encoding}{modifier}\n'
+	)
 	info(f'Set locale LANG={lang}.{encoding}{modifier}')
 	return True
 
@@ -109,7 +121,9 @@ def set_keyboard(installation: Installer, locale_config: LocaleConfiguration) ->
 
 	# Wayland: libxkbcommon reads neither file, so the layout has to reach the
 	# session as env vars. Same names, XKBLAYOUT -> XKB_DEFAULT_LAYOUT
-	installation.set_environment({f'XKB_DEFAULT_{key[3:]}': val for _, key, val in settings})
+	installation.set_environment(
+		{f'XKB_DEFAULT_{key[3:]}': val for _, key, val in settings}
+	)
 
 	return True
 
@@ -119,10 +133,20 @@ def _set_vconsole_xkb(installation: Installer, values: dict[str, str]) -> None:
 	# those lines and replace the whole XKB* block, so a second call neither
 	# stacks duplicates nor leaves a key the new selection dropped
 	vconsole_path = installation.target / 'etc/vconsole.conf'
-	lines = vconsole_path.read_text().splitlines() if vconsole_path.is_file() else []
-	kept = [line for line in lines if not line.split('=')[0].strip().startswith('XKB')]
+	lines = (
+		vconsole_path.read_text().splitlines()
+		if vconsole_path.is_file()
+		else []
+	)
+	kept = [
+		line
+		for line in lines
+		if not line.split('=')[0].strip().startswith('XKB')
+	]
 
-	vconsole_path.write_text('\n'.join(kept + [f'{k}={v}' for k, v in values.items()]) + '\n')
+	vconsole_path.write_text(
+		'\n'.join(kept + [f'{k}={v}' for k, v in values.items()]) + '\n'
+	)
 	debug(f'Wrote XKB keys to {vconsole_path}: {" ".join(values)}')
 
 
@@ -135,7 +159,9 @@ def set_timezone(installation: Installer, zone: str) -> bool:
 	# resolves inside the chroot, and a host may lack FHS zoneinfo (NixOS).
 	if (installation.target / 'usr/share/zoneinfo' / zone).exists():
 		(installation.target / 'etc' / 'localtime').unlink(missing_ok=True)
-		installation.arch_chroot(['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime'])
+		installation.arch_chroot(
+			['ln', '-s', f'/usr/share/zoneinfo/{zone}', '/etc/localtime']
+		)
 		info(f'Set timezone to {zone}')
 		return True
 

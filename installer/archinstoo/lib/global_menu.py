@@ -1,7 +1,11 @@
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
-from archinstoo.lib.models.device import DiskLayoutConfiguration, DiskLayoutType, EncryptionType
+from archinstoo.lib.models.device import (
+	DiskLayoutConfiguration,
+	DiskLayoutType,
+	EncryptionType,
+)
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.swap import SwapConfiguration
@@ -28,7 +32,12 @@ from .interactions.general_conf import (
 	select_ntp,
 	select_timezone,
 )
-from .interactions.system_conf import select_firmware, select_kernel, select_swap, select_sysctl
+from .interactions.system_conf import (
+	select_firmware,
+	select_kernel,
+	select_swap,
+	select_sysctl,
+)
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .menu.driver_select import select_driver, select_gfx_packages
 from .menu.locale_menu import LocaleMenu
@@ -77,7 +86,8 @@ class GlobalMenu(AbstractMenu[None]):
 
 		super().__init__(self._item_group, config=arch_config)
 
-		# make the abort menu (save / abort / cancel) reachable via Ctrl+Q from any submenu
+		# make the abort menu (save / abort / cancel) reachable via
+		# Ctrl+Q from any submenu
 		Tui.set_abort_handler(lambda: self._handle_abort(None))
 
 		# Apply pacman config if loaded from file
@@ -90,13 +100,16 @@ class GlobalMenu(AbstractMenu[None]):
 				text='Theme',
 				action=self._select_theme,
 				preview_action=self._prev_theme,
-				# CONFIG_KEY prefix: session-only TUI theme, excluded from config sync
+				# CONFIG_KEY prefix: session-only TUI theme,
+				# excluded from config sync
 				key=f'{CONFIG_KEY}_theme',
 			),
 			MenuItem.separator(),  # critical - assumed empty and mandatory
 			MenuItem(
 				text='Bootloader',
-				value=BootloaderConfiguration.get_default(self._uefi, self._skip_boot),
+				value=BootloaderConfiguration.get_default(
+					self._uefi, self._skip_boot
+				),
 				action=self._select_bootloader_config,
 				preview_action=self._prev_bootloader_config,
 				key='bootloader_config',
@@ -129,7 +142,11 @@ class GlobalMenu(AbstractMenu[None]):
 				preview_action=self._prev_pacman_config,
 				key='pacman_config',
 				value_validator=lambda c: bool(
-					c.mirror_regions or c.optional_repositories or c.custom_repositories or c.custom_servers or c.pacman_options
+					c.mirror_regions
+					or c.optional_repositories
+					or c.custom_repositories
+					or c.custom_servers
+					or c.pacman_options
 				),
 			),
 			MenuItem(
@@ -156,7 +173,9 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text='Profile',
-				value=ProfileConfiguration(profiles=[self._default_profile()]),
+				value=ProfileConfiguration(
+					profiles=[self._default_profile()]
+				),
 				action=self._select_profile,
 				preview_action=self._prev_profile,
 				key='profile_config',
@@ -174,7 +193,8 @@ class GlobalMenu(AbstractMenu[None]):
 				value=[],
 				preview_action=self._prev_gfx_packages,
 				# only value is synced from a loaded config, not enabled
-				enabled=self._arch_config.gfx_driver is GfxDriver.Custom,
+				enabled=self._arch_config.gfx_driver
+				is GfxDriver.Custom,
 				dependencies=['gfx_driver'],
 				key='gfx_packages',
 			),
@@ -257,13 +277,17 @@ class GlobalMenu(AbstractMenu[None]):
 		]
 
 	def _has_elevated_users(self) -> bool:
-		auth_config: AuthenticationConfiguration | None = self._item_group.find_by_key('auth_config').value
+		auth_config: AuthenticationConfiguration | None = (
+			self._item_group.find_by_key('auth_config').value
+		)
 		return auth_config.has_elevated_users if auth_config else False
 
 	def _missing_configs(self) -> list[str]:
 		item: MenuItem = self._item_group.find_by_key('auth_config')
 		auth_config: AuthenticationConfiguration | None = item.value
-		profile_config: ProfileConfiguration | None = self._item_group.find_by_key('profile_config').value
+		profile_config: ProfileConfiguration | None = (
+			self._item_group.find_by_key('profile_config').value
+		)
 
 		def check(s: str) -> bool:
 			item = self._item_group.find_by_key(s)
@@ -271,25 +295,49 @@ class GlobalMenu(AbstractMenu[None]):
 
 		missing = set()
 
-		if not self._skip_auth and (auth_config is None or auth_config.root_enc_password is None) and not self._has_elevated_users():
+		if (
+			not self._skip_auth
+			and (
+				auth_config is None
+				or auth_config.root_enc_password is None
+			)
+			and not self._has_elevated_users()
+		):
 			missing.add(
-				'Either root-password or at least 1 user with elevated privileges must be specified',
+				'Either root-password or at least 1 user '
+				'with elevated privileges must be specified',
 			)
 
-		if profile_config and profile_config.greeter == GreeterType.Sddm and not (auth_config and auth_config.users):
+		if (
+			profile_config
+			and profile_config.greeter == GreeterType.Sddm
+			and not (auth_config and auth_config.users)
+		):
 			missing.add('SDDM requires at least one regular user to log in')
 
 		aur_packages_item = self._item_group.find_by_key('aur_packages')
 		if aur_packages_item.has_value() and aur_packages_item.value:
-			from archinstoo.lib.models.authentication import PrivilegeEscalation
+			from archinstoo.lib.models.authentication import (
+				PrivilegeEscalation,
+			)
 
-			if not auth_config or auth_config.privilege_escalation == PrivilegeEscalation.Run0:
-				missing.add('AUR packages require Sudo or Doas privilege escalation (Run0 requires booted environment)')
+			if (
+				not auth_config
+				or auth_config.privilege_escalation
+				== PrivilegeEscalation.Run0
+			):
+				missing.add(
+					'AUR packages require Sudo or Doas privilege '
+					'escalation (Run0 requires booted environment)'
+				)
 
 		for item in self._item_group.items:
 			if item.mandatory:
 				if item.key is None:
-					raise RuntimeError(f'Mandatory menu item {item.text!r} has no key')
+					raise RuntimeError(
+						'Mandatory menu item '
+						f'{item.text!r} has no key'
+					)
 				if not check(item.key):
 					missing.add(item.text)
 
@@ -318,7 +366,9 @@ class GlobalMenu(AbstractMenu[None]):
 			allow_skip=True,
 		).run()
 
-		if mode_result.type_ == ResultType.Selection and (mode := mode_result.get_value()):
+		if mode_result.type_ == ResultType.Selection and (
+			mode := mode_result.get_value()
+		):
 			Tui.set_mode(mode)
 
 		# Select accent color
@@ -341,7 +391,9 @@ class GlobalMenu(AbstractMenu[None]):
 			allow_skip=True,
 		).run()
 
-		if accent_result.type_ == ResultType.Selection and (accent := accent_result.get_value()):
+		if accent_result.type_ == ResultType.Selection and (
+			accent := accent_result.get_value()
+		):
 			Tui.set_accent(accent)
 
 		Tui.apply_theme()
@@ -351,10 +403,14 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_theme(self, _item: MenuItem) -> str | None:
 		return f'Theme: {Tui.mode().capitalize()} / {Tui.accent().capitalize()}'
 
-	def _select_applications(self, preset: ApplicationConfiguration | None) -> ApplicationConfiguration | None:
+	def _select_applications(
+		self, preset: ApplicationConfiguration | None
+	) -> ApplicationConfiguration | None:
 		return ApplicationMenu(preset, advanced=self._advanced).run()
 
-	def _select_authentication(self, preset: AuthenticationConfiguration | None) -> AuthenticationConfiguration | None:
+	def _select_authentication(
+		self, preset: AuthenticationConfiguration | None
+	) -> AuthenticationConfiguration | None:
 		return AuthenticationMenu(preset).run()
 
 	def _locale_selection(self, preset: LocaleConfiguration) -> LocaleConfiguration:
@@ -372,7 +428,10 @@ class GlobalMenu(AbstractMenu[None]):
 			if network_config.type == NicType.MANUAL:
 				output = FormattedOutput.as_table(network_config.nics)
 			else:
-				output = f'Network configuration:\n{network_config.type.display_msg()}'
+				output = (
+					'Network '
+					f'configuration:\n{network_config.type.display_msg()}'
+				)
 
 			if network_config.dns:
 				output += f'\nDNS: {network_config.dns.display_msg()}'
@@ -396,25 +455,42 @@ class GlobalMenu(AbstractMenu[None]):
 			output = ''
 
 			if auth_config.root_enc_password:
-				output += f'Root password: {auth_config.root_enc_password.hidden()}\n'
+				output += (
+					'Root password: '
+					f'{auth_config.root_enc_password.hidden()}\n'
+				)
 
 			if auth_config.users:
-				output += FormattedOutput.as_table(auth_config.users) + '\n'
-				priv_esc = auth_config.privilege_escalation.value if auth_config.privilege_escalation else 'None'
+				output += (
+					FormattedOutput.as_table(auth_config.users)
+					+ '\n'
+				)
+				priv_esc = (
+					auth_config.privilege_escalation.value
+					if auth_config.privilege_escalation
+					else 'None'
+				)
 				output += f'Privilege esc: {priv_esc}\n'
 
 			return output
 
 		return None
 
-	def _validate_auth_config(self, auth_config: AuthenticationConfiguration) -> bool:
+	def _validate_auth_config(
+		self, auth_config: AuthenticationConfiguration
+	) -> bool:
 		if not (auth_config.root_enc_password is not None or auth_config.users):
 			return False
 		return all(u.password is not None for u in auth_config.users)
 
 	def _validate_disk_config(self, disk_config: DiskLayoutConfiguration) -> bool:
-		if (enc := disk_config.disk_encryption) and enc.encryption_type != EncryptionType.NO_ENCRYPTION:
-			return enc.encryption_password is not None or enc.is_pre_mounted()
+		if (
+			enc := disk_config.disk_encryption
+		) and enc.encryption_type != EncryptionType.NO_ENCRYPTION:
+			return (
+				enc.encryption_password is not None
+				or enc.is_pre_mounted()
+			)
 		return True
 
 	def _prev_applications(self, item: MenuItem) -> str | None:
@@ -442,10 +518,16 @@ class GlobalMenu(AbstractMenu[None]):
 	def _edit_custom_commands(self, preset: list[str]) -> list[str]:
 		try:
 			current_script = '\n'.join(preset) if preset else ''
-			result = edit_content(preset=current_script, title='Custom Commands')
+			result = edit_content(
+				preset=current_script, title='Custom Commands'
+			)
 			if result is not None:
 				# Split by newlines and filter empty lines
-				return [line for line in result.split('\n') if line.strip()]
+				return [
+					line
+					for line in result.split('\n')
+					if line.strip()
+				]
 			return preset
 		except KeyboardInterrupt:
 			return []
@@ -465,7 +547,10 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_sysctl(self, item: MenuItem) -> str | None:
 		config: SysctlConfiguration | None = item.value
 		if config and config.enabled:
-			output = f'Optimized defaults: {"Enabled" if config.optimized else "Disabled"}\n'
+			output = (
+				'Optimized defaults: '
+				f'{"Enabled" if config.optimized else "Disabled"}\n'
+			)
 			entries = config.entries
 			output += f'Custom entries: {len(entries)}\n'
 			for line in entries[:5]:
@@ -480,21 +565,33 @@ class GlobalMenu(AbstractMenu[None]):
 		disk_layout_conf: DiskLayoutConfiguration | None = item.value
 
 		if disk_layout_conf:
-			output = f'Configuration type: {disk_layout_conf.config_type.display_msg()}\n'
+			output = (
+				'Configuration type: '
+				f'{disk_layout_conf.config_type.display_msg()}\n'
+			)
 
 			if disk_layout_conf.config_type == DiskLayoutType.Pre_mount:
 				output += f'Mountpoint: {disk_layout_conf.mountpoint}'
 
 			if disk_layout_conf.lvm_config:
-				output += f'LVM configuration type: {disk_layout_conf.lvm_config.config_type.display_msg()}\n'
+				output += (
+					'LVM configuration type: '
+					f'{disk_layout_conf.lvm_config.config_type.display_msg()}\n'
+				)
 
 			if disk_layout_conf.disk_encryption:
-				output += f'Disk encryption: {disk_layout_conf.disk_encryption.encryption_type.type_to_text()}\n'
+				output += (
+					'Disk encryption: '
+					f'{disk_layout_conf.disk_encryption.encryption_type.type_to_text()}\n'
+				)
 
 			if disk_layout_conf.btrfs_options:
 				btrfs_options = disk_layout_conf.btrfs_options
 				if btrfs_options.snapshot_config:
-					output += f'Btrfs snapshot type: {btrfs_options.snapshot_config.snapshot_type.display_name()}\n'
+					output += (
+						'Btrfs snapshot type: '
+						f'{btrfs_options.snapshot_config.snapshot_type.display_name()}\n'
+					)
 
 			return output
 
@@ -502,14 +599,30 @@ class GlobalMenu(AbstractMenu[None]):
 
 	def _prev_swap(self, item: MenuItem) -> str | None:
 		if item.value is not None:
-			output = f'Swap on zram: {"Enabled" if item.value.zram else "Disabled"}'
+			output = (
+				'Swap on zram: '
+				f'{"Enabled" if item.value.zram else "Disabled"}'
+			)
 			if item.value.zram:
-				output += f'\nCompression algorithm: {item.value.algorithm.value}'
+				output += (
+					'\nCompression algorithm: '
+					f'{item.value.algorithm.value}'
+				)
 				if item.value.recomp_algorithm:
-					output += f'\nRecompression algorithm: {item.value.recomp_algorithm.value}'
-			output += f'\nHibernation: {"Enabled" if item.value.hibernation else "Disabled"}'
+					output += (
+						'\nRecompression algorithm: '
+						f'{item.value.recomp_algorithm.value}'
+					)
+			output += (
+				'\nHibernation: '
+				f'{"Enabled" if item.value.hibernation else "Disabled"}'
+			)
 			if item.value.hibernation:
-				size = f'{item.value.size_gib}GiB' if item.value.size_gib else 'RAM size'
+				size = (
+					f'{item.value.size_gib}GiB'
+					if item.value.size_gib
+					else 'RAM size'
+				)
 				output += f'\nSwap file size: {size}'
 			return output
 		return None
@@ -526,7 +639,9 @@ class GlobalMenu(AbstractMenu[None]):
 		# Ask about kernel headers
 		current_headers = self._arch_config.kernel_headers
 		header_text = 'Install kernel headers?\n\n'
-		header_text += 'Useful for building out-of-tree drivers or DKMS modules,\n'
+		header_text += (
+			'Useful for building out-of-tree drivers or DKMS modules,\n'
+		)
 		header_text += 'especially for non-standard kernel variants.\n'
 
 		if (headers := prompt_yes_no(header_text, current_headers)) is not None:
@@ -538,7 +653,11 @@ class GlobalMenu(AbstractMenu[None]):
 		if item.value:
 			kernel = ', '.join(item.value)
 			output = f'Kernels: {kernel}\n'
-			status = 'Enabled' if self._arch_config.kernel_headers else 'Disabled'
+			status = (
+				'Enabled'
+				if self._arch_config.kernel_headers
+				else 'Disabled'
+			)
 			output += f'Headers: {status}'
 			return output
 		return None
@@ -591,7 +710,11 @@ class GlobalMenu(AbstractMenu[None]):
 			# Show sub-selections for each profile
 			for profile in profile_config.profiles:
 				if sub_names := profile.current_selection_names():
-					output += f'  {profile.name}: ' + ', '.join(sub_names) + '\n'
+					output += (
+						f'  {profile.name}: '
+						+ ', '.join(sub_names)
+						+ '\n'
+					)
 
 			if profile_config.greeter:
 				output += f'Greeter: {profile_config.greeter.value}\n'
@@ -604,22 +727,33 @@ class GlobalMenu(AbstractMenu[None]):
 		self,
 		preset: DiskLayoutConfiguration | None = None,
 	) -> DiskLayoutConfiguration | None:
-		bootloader_config: BootloaderConfiguration | None = self._item_group.find_by_key('bootloader_config').value
+		bootloader_config: BootloaderConfiguration | None = (
+			self._item_group.find_by_key('bootloader_config').value
+		)
 		uki_enabled = bool(bootloader_config and bootloader_config.uki)
-		is_grub = bool(bootloader_config and bootloader_config.bootloader == Bootloader.Grub)
+		is_grub = bool(
+			bootloader_config
+			and bootloader_config.bootloader == Bootloader.Grub
+		)
 		# Auto-unlock embeds a keyfile in the initramfs; only GRUB can boot
 		# from encrypted /boot, and UKI must be off otherwise the key
 		# ends up on the unencrypted ESP
 		allow_auto_unlock = is_grub and not uki_enabled
 		bootloader = bootloader_config.bootloader if bootloader_config else None
-		return DiskLayoutConfigurationMenu(preset, allow_auto_unlock=allow_auto_unlock, bootloader=bootloader).run()
+		return DiskLayoutConfigurationMenu(
+			preset,
+			allow_auto_unlock=allow_auto_unlock,
+			bootloader=bootloader,
+		).run()
 
 	def _select_bootloader_config(
 		self,
 		preset: BootloaderConfiguration | None = None,
 	) -> BootloaderConfiguration | None:
 		if preset is None:
-			preset = BootloaderConfiguration.get_default(self._uefi, self._skip_boot)
+			preset = BootloaderConfiguration.get_default(
+				self._uefi, self._skip_boot
+			)
 
 		return BootloaderMenu(preset, self._uefi, self._skip_boot).run()
 
@@ -627,20 +761,30 @@ class GlobalMenu(AbstractMenu[None]):
 	def _default_profile() -> Profile:
 		return Profile('minimal', ProfileType.Minimal)
 
-	def _select_profile(self, current_profile: ProfileConfiguration | None) -> ProfileConfiguration | None:
+	def _select_profile(
+		self, current_profile: ProfileConfiguration | None
+	) -> ProfileConfiguration | None:
 		from .profile.profile_menu import ProfileMenu
 
 		return ProfileMenu(preset=current_profile).run()
 
-	def _select_gfx_driver(self, preset: GfxDriver | None = None) -> GfxDriver | None:
-		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
+	def _select_gfx_driver(
+		self, preset: GfxDriver | None = None
+	) -> GfxDriver | None:
+		kernels: list[str] | None = self._item_group.find_by_key(
+			'kernels'
+		).value
 		driver = select_driver(preset=preset, kernels=kernels)
 
 		# custom chains straight into the package list; any other driver
 		# owns its packages and the list item goes dark
 		item = self._item_group.find_by_key('gfx_packages')
 		item.enabled = driver is GfxDriver.Custom
-		item.value = select_gfx_packages(item.value) if driver is GfxDriver.Custom else []
+		item.value = (
+			select_gfx_packages(item.value)
+			if driver is GfxDriver.Custom
+			else []
+		)
 
 		return driver
 
@@ -648,24 +792,37 @@ class GlobalMenu(AbstractMenu[None]):
 		driver: GfxDriver | None = item.value
 		if not driver:
 			return None
-		kernels: list[str] | None = self._item_group.find_by_key('kernels').value
-		return f'Graphics driver: {driver.display_name()}\n{driver.packages_text(kernels)}'
+		kernels: list[str] | None = self._item_group.find_by_key(
+			'kernels'
+		).value
+		return (
+			'Graphics driver: '
+			f'{driver.display_name()}\n{driver.packages_text(kernels)}'
+		)
 
 	def _prev_gfx_packages(self, item: MenuItem) -> str | None:
 		packages: list[GfxPackage] = item.value or []
 		if not packages:
 			return 'No packages picked'
-		return 'Graphics packages:\n' + ''.join(f'\t- {name}\n' for name in sorted(p.value for p in packages))
+		return 'Graphics packages:\n' + ''.join(
+			f'\t- {name}\n' for name in sorted(p.value for p in packages)
+		)
 
 	def _select_additional_packages(self, preset: list[str]) -> list[str]:
 		# repos come from the live pacman.conf, which _pacman_configuration has
 		# already written by the time this runs
 		return select_additional_packages(preset)
 
-	def _pacman_configuration(self, preset: PacmanConfiguration | None = None) -> PacmanConfiguration:
+	def _pacman_configuration(
+		self, preset: PacmanConfiguration | None = None
+	) -> PacmanConfiguration:
 		pacman_configuration = PMenu(preset=preset).run()
 
-		needs_apply = pacman_configuration.optional_repositories or pacman_configuration.custom_repositories or pacman_configuration.pacman_options
+		needs_apply = (
+			pacman_configuration.optional_repositories
+			or pacman_configuration.custom_repositories
+			or pacman_configuration.pacman_options
+		)
 
 		# the package list is keyed on nothing but the conf now, so any pass
 		# through this menu invalidates it
@@ -675,11 +832,17 @@ class GlobalMenu(AbstractMenu[None]):
 			# enable the repositories and options in the config
 			pacman_config = PacmanConfig(None)
 			if pacman_configuration.optional_repositories:
-				pacman_config.enable(pacman_configuration.optional_repositories)
+				pacman_config.enable(
+					pacman_configuration.optional_repositories
+				)
 			if pacman_configuration.custom_repositories:
-				pacman_config.enable_custom(pacman_configuration.custom_repositories)
+				pacman_config.enable_custom(
+					pacman_configuration.custom_repositories
+				)
 			if pacman_configuration.pacman_options:
-				pacman_config.enable_options(pacman_configuration.pacman_options)
+				pacman_config.enable_options(
+					pacman_configuration.pacman_options
+				)
 			pacman_config.apply()
 
 		return pacman_configuration
@@ -692,13 +855,19 @@ class GlobalMenu(AbstractMenu[None]):
 
 		sections = []
 		if config.mirror_regions:
-			sections.append(_section('Selected mirror regions', config.region_names))
+			sections.append(
+				_section('Selected mirror regions', config.region_names)
+			)
 
 		if config.custom_servers:
-			sections.append(_section('Custom servers', config.custom_server_urls))
+			sections.append(
+				_section('Custom servers', config.custom_server_urls)
+			)
 
 		if config.optional_repositories:
-			repos = ', '.join([r.value for r in config.optional_repositories])
+			repos = ', '.join(
+				[r.value for r in config.optional_repositories]
+			)
 			sections.append(_section('Optional repositories', repos))
 
 		if config.custom_repositories:
@@ -715,12 +884,18 @@ class GlobalMenu(AbstractMenu[None]):
 		app_config = self._item_group.find_by_key('app_config').value
 
 		if disk_config is not None or profile_config is not None or app_config:
-			items.append(MenuItem(text='save selections abort', value='save_abort'))
+			items.append(
+				MenuItem(
+					text='save selections abort', value='save_abort'
+				)
+			)
 
 		items.append(MenuItem(text='exit delete selection', value='abort_only'))
 		items.append(MenuItem(text='cancel abort', value='cancel'))
 
-		choice: str = prompt_choice(items, header='Abort the installation? \n', allow_skip=False)
+		choice: str = prompt_choice(
+			items, header='Abort the installation? \n', allow_skip=False
+		)
 
 		if choice == 'save_abort':
 			# Sync current selections to config before saving

@@ -29,7 +29,11 @@ def _conf_values(key: str, repo: str | None = None) -> list[str]:
 
 
 def render_conf(siglevel: list[str], servers: dict[str, list[str]]) -> str:
-	lines = ['[options]', 'Architecture = auto', f'SigLevel = {" ".join(siglevel or _DEFAULT_SIGLEVEL)}']
+	lines = [
+		'[options]',
+		'Architecture = auto',
+		f'SigLevel = {" ".join(siglevel or _DEFAULT_SIGLEVEL)}',
+	]
 	for repo, urls in servers.items():
 		lines += ['', f'[{repo}]', *(f'Server = {url}' for url in urls)]
 	return '\n'.join(lines) + '\n'
@@ -51,7 +55,16 @@ class TmpDB:
 		self.conf = root / 'pacman.conf'
 
 	def _pacman(self, *args: str) -> list[str]:
-		return ['pacman', '--config', str(self.conf), '--dbpath', str(self.root), '--logfile', '/dev/null', *args]
+		return [
+			'pacman',
+			'--config',
+			str(self.conf),
+			'--dbpath',
+			str(self.root),
+			'--logfile',
+			'/dev/null',
+			*args,
+		]
 
 	def sync_files(self) -> bool:
 		servers = {repo: _conf_values('Server', repo) for repo in self.repos}
@@ -71,13 +84,19 @@ class TmpDB:
 			(self.root / 'db.lck').unlink(missing_ok=True)
 
 		if proc.returncode != 0:
-			debug(f'tmpdb: files sync of {self.repos} failed: {proc.stderr.strip()}')
+			debug(
+				f'tmpdb: files sync of {self.repos} failed: '
+				f'{proc.stderr.strip()}'
+			)
 			return False
 		return True
 
 	def files(self) -> list[tuple[str, str]]:
 		proc = _run(self._pacman('-Fl'))
 		if proc.returncode != 0:
-			debug(f'tmpdb: listing {self.repos} failed: {proc.stderr.strip()}')
+			debug(
+				f'tmpdb: listing {self.repos} failed: '
+				f'{proc.stderr.strip()}'
+			)
 			return []
 		return parse_files(proc.stdout)

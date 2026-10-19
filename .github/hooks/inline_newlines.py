@@ -31,7 +31,13 @@ def is_inline_block(src: str, node: ast.expr) -> bool:
 
 
 def _sources(args: list[str]) -> list[Path]:
-	paths = [p for arg in args for p in (Path(arg).rglob('*.py') if Path(arg).is_dir() else [Path(arg)])]
+	paths = [
+		p
+		for arg in args
+		for p in (
+			Path(arg).rglob('*.py') if Path(arg).is_dir() else [Path(arg)]
+		)
+	]
 	return [p for p in paths if p.name not in EXCLUDE]
 
 
@@ -42,12 +48,23 @@ def main(args: list[str]) -> int:
 		lines = src.splitlines()
 		nodes = list(ast.walk(ast.parse(src, path)))
 		# f-string parts have no quotes of their own, judge the whole
-		parts = {id(v) for n in nodes if isinstance(n, ast.JoinedStr) for v in n.values}
+		parts = {
+			id(v)
+			for n in nodes
+			if isinstance(n, ast.JoinedStr)
+			for v in n.values
+		}
 		for node in nodes:
 			if id(node) in parts or not isinstance(node, ast.expr):
 				continue
 			if is_inline_block(src, node):
-				hits.add((str(path), node.lineno, lines[node.lineno - 1].strip()))
+				hits.add(
+					(
+						str(path),
+						node.lineno,
+						lines[node.lineno - 1].strip(),
+					)
+				)
 	for path, lineno, line in sorted(hits):
 		print(f'{path}:{lineno}: {line}')
 	return 1 if hits else 0

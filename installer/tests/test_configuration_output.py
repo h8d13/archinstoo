@@ -21,7 +21,11 @@ def test_user_config_roundtrip(
 	store = ConfigStore(arch_config)
 
 	test_out_file = Path('/tmp/') / ConfigStore._USER_CONFIG_FILENAME
-	monkeypatch.setattr(ConfigStore, '_saved_config_path', classmethod(lambda cls: test_out_file))
+	monkeypatch.setattr(
+		ConfigStore,
+		'_saved_config_path',
+		classmethod(lambda cls: test_out_file),
+	)
 
 	store.save()
 
@@ -29,11 +33,13 @@ def test_user_config_roundtrip(
 	expected = json.loads(config_fixture.read_text())
 
 	# the parsed config will check if the given device exists otherwise
-	# it will ignore the modification; as this test will run on various local systems
-	# and the CI pipeline there's no good way specify a real device so we'll simply
-	# copy the expected result to the actual result
+	# it will ignore the modification; as this test will run on various local
+	# systems and the CI pipeline there's no good way specify a real device so we'll
+	# simply copy the expected result to the actual result
 	result['disk_config']['config_type'] = expected['disk_config']['config_type']
-	result['disk_config']['device_modifications'] = expected['disk_config']['device_modifications']
+	result['disk_config']['device_modifications'] = expected['disk_config'][
+		'device_modifications'
+	]
 
 	assert json.dumps(
 		result['pacman_config'],

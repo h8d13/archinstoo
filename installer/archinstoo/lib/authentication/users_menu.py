@@ -36,12 +36,18 @@ class UserList(ListManager[User]):
 		return selection.username
 
 	@override
-	def handle_action(self, action: str, entry: User | None, data: list[User]) -> list[User]:
+	def handle_action(
+		self, action: str, entry: User | None, data: list[User]
+	) -> list[User]:
 		if action == self._actions[0]:  # add
 			if (new_user := self._add_user()) is not None:
-				# in case a user with the same username as an existing user
-				# was created we'll replace the existing one
-				data = [d for d in data if d.username != new_user.username]
+				# in case a user with the same username as an existing
+				# user was created we'll replace the existing one
+				data = [
+					d
+					for d in data
+					if d.username != new_user.username
+				]
 				data += [new_user]
 				self._data = data  # update before showing sub-menu
 				self._run_actions_on_entry(new_user)
@@ -70,7 +76,11 @@ class UserList(ListManager[User]):
 		return data
 
 	def _check_for_correct_username(self, username: str | None) -> str | None:
-		if username is not None and re.match(r'^[a-z_][a-z0-9_-]*\$?$', username) and len(username) <= 32:
+		if (
+			username is not None
+			and re.match(r'^[a-z_][a-z0-9_-]*\$?$', username)
+			and len(username) <= 32
+		):
 			return None
 		return 'The username you entered is invalid'
 
@@ -89,10 +99,19 @@ class UserList(ListManager[User]):
 		items.append(MenuItem('Add new stash URL', '__add__'))
 
 		header = f'User: {user.username}\n'
-		header += 'Select URL to remove, or add new\n' if urls else 'No stash URLs configured\n'
+		header += (
+			'Select URL to remove, or add new\n'
+			if urls
+			else 'No stash URLs configured\n'
+		)
 
 		group = MenuItemGroup(items)
-		result = SelectMenu[str](group, header=header, allow_skip=True, alignment=Alignment.CENTER).run()
+		result = SelectMenu[str](
+			group,
+			header=header,
+			allow_skip=True,
+			alignment=Alignment.CENTER,
+		).run()
 
 		match result.type_:
 			case ResultType.Skip:
@@ -110,11 +129,21 @@ class UserList(ListManager[User]):
 		return urls
 
 	def _get_stash_url(self) -> str | None:
-		header = 'Format: https://provider.com/user/repo#branch\nBranch is optional\n'
-		return prompt_text('Stash URL', header, validator=self._validate_stash_url) or None
+		header = (
+			'Format: https://provider.com/user/repo#branch\nBranch is '
+			'optional\n'
+		)
+		return (
+			prompt_text(
+				'Stash URL', header, validator=self._validate_stash_url
+			)
+			or None
+		)
 
 	def _add_user(self) -> User | None:
-		username = prompt_text('Username', validator=self._check_for_correct_username)
+		username = prompt_text(
+			'Username', validator=self._check_for_correct_username
+		)
 		if not username:
 			return None
 
@@ -144,7 +173,13 @@ def _select_groups(preset: list[str] | None = None) -> list[str]:
 	group = MenuItemGroup.from_enum(SupplementaryGroup)
 
 	if preset:
-		group.set_selected_by_value([SupplementaryGroup(g) for g in preset if g in SupplementaryGroup])
+		group.set_selected_by_value(
+			[
+				SupplementaryGroup(g)
+				for g in preset
+				if g in SupplementaryGroup
+			]
+		)
 
 	result = SelectMenu[SupplementaryGroup](
 		group,
@@ -163,7 +198,9 @@ def _select_groups(preset: list[str] | None = None) -> list[str]:
 			return preset or []
 
 
-def select_users(prompt: str = '', defined_users: list[User] | None = None) -> list[User]:
+def select_users(
+	prompt: str = '', defined_users: list[User] | None = None
+) -> list[User]:
 	if defined_users is None:
 		defined_users = []
 

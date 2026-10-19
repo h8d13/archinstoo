@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.applications import PowerManagement, PowerManagementConfiguration
+from archinstoo.lib.models.applications import (
+	PowerManagement,
+	PowerManagementConfiguration,
+)
 from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
@@ -38,12 +41,19 @@ class PowerManagementApp:
 		install_session: Installer,
 		power_management_config: PowerManagementConfiguration,
 	) -> None:
-		debug(f'Installing power management daemon: {power_management_config.power_management.value}')
+		debug(
+			'Installing power management daemon: '
+			f'{power_management_config.power_management.value}'
+		)
 
 		match power_management_config.power_management:
 			case PowerManagement.PPD:
-				install_session.add_additional_packages(self.ppd_packages)
+				install_session.add_additional_packages(
+					self.ppd_packages
+				)
 				install_session.enable_service(self.ppd_services)
 			case PowerManagement.TUNED:
-				install_session.add_additional_packages(self.tuned_packages)
+				install_session.add_additional_packages(
+					self.tuned_packages
+				)
 				install_session.enable_service(self.tuned_services)

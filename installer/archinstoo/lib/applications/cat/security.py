@@ -47,32 +47,50 @@ class SecurityApp:
 			match tool:
 				case Security.APPARMOR:
 					debug('Installing security: AppArmor')
-					install_session.add_additional_packages(self.apparmor_packages)
-					install_session.enable_service(self.apparmor_services)
-					install_session.add_kernel_param(self.apparmor_kernel_params)
+					install_session.add_additional_packages(
+						self.apparmor_packages
+					)
+					install_session.enable_service(
+						self.apparmor_services
+					)
+					install_session.add_kernel_param(
+						self.apparmor_kernel_params
+					)
 
 				case Security.FIREJAIL:
 					debug('Installing security: Firejail')
-					install_session.add_additional_packages(self.firejail_packages)
+					install_session.add_additional_packages(
+						self.firejail_packages
+					)
 
 				case Security.BUBBLEWRAP:
 					debug('Installing security: Bubblewrap')
-					install_session.add_additional_packages(self.bubblewrap_packages)
+					install_session.add_additional_packages(
+						self.bubblewrap_packages
+					)
 
 				case Security.FAIL2BAN:
 					debug('Installing security: Fail2ban')
-					install_session.add_additional_packages([tool.value])
+					install_session.add_additional_packages(
+						[tool.value]
+					)
 					install_session.enable_service('fail2ban')
 
 				case Security.PAM_U2F:
 					debug('Installing security: pam-u2f')
-					install_session.add_additional_packages(['pam-u2f'])
+					install_session.add_additional_packages(
+						['pam-u2f']
+					)
 
 				case Security.SBCTL:
 					debug('Installing security: sbctl')
-					install_session.add_additional_packages(['sbctl'])
+					install_session.add_additional_packages(
+						['sbctl']
+					)
 
 				case Security.AUDIT:
 					debug('Installing security: audit')
-					install_session.add_additional_packages(['audit'])
+					install_session.add_additional_packages(
+						['audit']
+					)
 					install_session.enable_service('auditd')

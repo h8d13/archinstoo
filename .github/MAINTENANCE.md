@@ -5,7 +5,8 @@ I am stuck stepbro:
 CTRL + ALT + Fx
 # x being an F key nbr
 ```
-This should let you access a tty, from there you can try to kill the problematic process or fix the issue.
+This should let you access a tty,
+from there you can try to kill the problematic process or fix the issue.
 
 I dont know what I'm looking for:
 ```shell
@@ -63,15 +64,19 @@ sudo pacman -Syu <pkg>
 Same applies to `-Syy` (only forces the db re-download), `-Syuw` and `IgnorePkg`.
 
 > [!TIP]
-> To peek at pending updates without touching the db, use `checkupdates` (`pacman-contrib`): it syncs into a temp copy.
+> To peek at pending updates without touching the db,
+> use `checkupdates` (`pacman-contrib`): it syncs into a temp copy.
 
 ### Kernel upgrades
 
-The kernel package owns `/usr/lib/modules/<version>/`. Upgrading swaps that dir for the new version,
-so modules for the **running** kernel are gone. Anything not already loaded fails until reboot:
+The kernel package owns `/usr/lib/modules/<version>/`.
+Upgrading swaps that dir for the new version,
+so modules for the **running** kernel are gone.
+Anything not already loaded fails until reboot:
 new USB devices, fs types, `tun`/`wireguard`, bridges (docker), etc...
 Check `checkupdates` for `linux*` and [reboot after upgrading](https://wiki.archlinux.org/title/System_maintenance#Restart_or_reboot_after_upgrades).
 
 > [!TIP]
-> [`kernel-modules-hook`](https://archlinux.org/packages/extra/any/kernel-modules-hook/) (`extra`)
-> keeps the old dir around until reboot. Install, then `systemctl enable linux-modules-cleanup`.
+> [`kernel-modules-hook`](https://archlinux.org/packages/extra/any/kernel-modules-hook/)
+> (`extra`) keeps the old dir around until reboot.
+> Install, then `systemctl enable linux-modules-cleanup`.

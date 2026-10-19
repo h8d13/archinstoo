@@ -7,9 +7,11 @@ You can select multiple profiles, if desired.
 
 ## Example
 
-In this example we'll set up a `tailscale` host to not have to do any port forwarding for Minecraft.
+In this example we'll set up a `tailscale` host
+to not have to do any port forwarding for Minecraft.
 
-In server options select `tailscale` and `java`, you could create or select more profiles at this step.
+In server options select `tailscale` and `java`,
+you could create or select more profiles at this step.
 
 Depending on what you are trying to achieve.
 
@@ -19,7 +21,8 @@ Depending on what you are trying to achieve.
 
 - Get the server.jar file, agree to `eula.txt` set to `=true` in `/srv/minecraft/`
 
-> Used the AUR version (`minecraft-server`) but you can also just get the raw file then ran `minecraftd start`
+> Used the AUR version (`minecraft-server`)
+> but you can also just get the raw file then ran `minecraftd start`
 
 Then run `tailscale up` or `down` when turning the server off.
 
@@ -40,7 +43,8 @@ Default port is `tailscale_ip:25565`
 Be sure to check your firewall configs if running several server profiles.
 You can also use stuff like `docker` or `podman` to manage this in a more efficient way.
 
-Docker/Podman publish their own `iptables` chain that bypasses `ufw` but it still protects the host regardless.
+Docker/Podman publish their own `iptables` chain that bypasses `ufw`
+but it still protects the host regardless.
 Make sure to only enable needed ports or use reverse proxies.
 
 ---
@@ -49,4 +53,5 @@ Make sure to only enable needed ports or use reverse proxies.
 
 You can apply the same logic to remotely anything.
 
-For instance `SteamCMD` to run other game servers, or other Linux native server binaries like `terraria`.
+For instance `SteamCMD` to run other game servers,
+or other Linux native server binaries like `terraria`.

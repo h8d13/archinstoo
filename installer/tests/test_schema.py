@@ -42,7 +42,10 @@ if TYPE_CHECKING:
 def test_committed_schema_is_current() -> None:
 	# the one check the generated file exists for: everything below only
 	# matters because this can be regenerated and diffed
-	assert SCHEMA_PATH.read_text() == schema_gen.render(), f'{SCHEMA_PATH.name} is stale, run `python -m archinstoo --script schema`'
+	assert SCHEMA_PATH.read_text() == schema_gen.render(), (
+		f'{SCHEMA_PATH.name} is stale, run `python -m archinstoo '
+		'--script schema`'
+	)
 
 
 def test_sections_are_listed_in_install_order() -> None:
@@ -74,7 +77,9 @@ _EXACT_SECTIONS: dict[str, type[Enum]] = {
 }
 
 
-@pytest.mark.parametrize(('key', 'enum'), _EXACT_SECTIONS.items(), ids=list(_EXACT_SECTIONS))
+@pytest.mark.parametrize(
+	('key', 'enum'), _EXACT_SECTIONS.items(), ids=list(_EXACT_SECTIONS)
+)
 def test_exact_sections(key: str, enum: type[Enum]) -> None:
 	schema_keys = set(SCHEMA[key])
 	enum_values = {e.value for e in enum}
@@ -98,13 +103,18 @@ _PICKED = [s for s in schema_gen.SECTIONS if s.pick]
 def test_every_app_category_has_a_pick() -> None:
 	picked = {s.pick[0] for s in _PICKED}
 	categories = set(ApplicationConfiguration._config_parsers())
-	assert picked == categories, f'categories with no pick: {sorted(categories - picked)}; picks with no category: {sorted(picked - categories)}'
+	assert picked == categories, (
+		f'categories with no pick: {sorted(categories - picked)}; '
+		f'picks with no category: {sorted(picked - categories)}'
+	)
 
 
 def _walk(serialization: type, path: tuple[str, ...]) -> None:
 	# NotRequired is stripped by get_type_hints, leaving the nested TypedDict
 	hints = get_type_hints(serialization)
-	assert path[0] in hints, f'{path[0]!r} is not a field of {serialization.__name__}'
+	assert path[0] in hints, (
+		f'{path[0]!r} is not a field of {serialization.__name__}'
+	)
 	if len(path) > 1:
 		_walk(hints[path[0]], path[1:])
 
@@ -126,7 +136,11 @@ def test_resolve_walks_the_picks() -> None:
 		'management_config': {'tools': ['git', 'not-a-tool']},
 	}
 
-	expected = set(SCHEMA['media_codecs']['packages']) | set(SCHEMA['cpu_scheduler']['packages']) | {'htop', 'git'}
+	expected = (
+		set(SCHEMA['media_codecs']['packages'])
+		| set(SCHEMA['cpu_scheduler']['packages'])
+		| {'htop', 'git'}
+	)
 	assert _resolve._application_packages(app, []) == expected
 
 
@@ -134,8 +148,14 @@ def test_resolve_defaults_the_terminal_for_terminal_profiles() -> None:
 	# a skipped terminal entry still installs the default for a profile that
 	# ships a keybind; a profile that does not gets nothing
 	default = set(SCHEMA['terminals'][DEFAULT_TERMINAL])
-	assert _resolve._application_packages({}, _resolve._named_profiles(['sway'])) == default
-	assert _resolve._application_packages({}, _resolve._named_profiles(['gnome'])) == set()
+	assert (
+		_resolve._application_packages({}, _resolve._named_profiles(['sway']))
+		== default
+	)
+	assert (
+		_resolve._application_packages({}, _resolve._named_profiles(['gnome']))
+		== set()
+	)
 
 
 # -- reverse cover -----------------------------------------------------------
@@ -149,7 +169,9 @@ def _installed_literals() -> dict[str, set[str]]:
 	found: dict[str, set[str]] = {}
 
 	def record(name: str, path: Path) -> None:
-		found.setdefault(name, set()).add(str(path.relative_to(Path(installer.__file__).parents[1])))
+		found.setdefault(name, set()).add(
+			str(path.relative_to(Path(installer.__file__).parents[1]))
+		)
 
 	for path in sorted(Path(installer.__file__).parent.parent.rglob('*.py')):
 		tree = ast.parse(path.read_text())
@@ -157,36 +179,59 @@ def _installed_literals() -> dict[str, set[str]]:
 		consts = {
 			target.id: node.value.value
 			for node in ast.walk(tree)
-			if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+			if isinstance(node, ast.Assign)
+			and isinstance(node.value, ast.Constant)
+			and isinstance(node.value.value, str)
 			for target in node.targets
 			if isinstance(target, ast.Name)
 		}
 
-		def literals(node: ast.expr, consts: dict[str, str] = consts) -> set[str]:
-			if isinstance(node, ast.Constant) and isinstance(node.value, str):
+		def literals(
+			node: ast.expr, consts: dict[str, str] = consts
+		) -> set[str]:
+			if isinstance(node, ast.Constant) and isinstance(
+				node.value, str
+			):
 				return {node.value}
 			if isinstance(node, ast.Name):
 				return {consts[node.id]} if node.id in consts else set()
 			if isinstance(node, ast.List | ast.Tuple):
-				return {name for elt in node.elts for name in literals(elt)}
+				return {
+					name
+					for elt in node.elts
+					for name in literals(elt)
+				}
 			return set()
 
 		for node in ast.walk(tree):
 			# install calls
-			if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-				installs = node.func.attr in {'add_additional_packages', 'strap'} or (
-					node.func.attr in {'append', 'extend'} and getattr(node.func.value, 'attr', '') == '_base_packages'
+			if isinstance(node, ast.Call) and isinstance(
+				node.func, ast.Attribute
+			):
+				installs = node.func.attr in {
+					'add_additional_packages',
+					'strap',
+				} or (
+					node.func.attr in {'append', 'extend'}
+					and getattr(node.func.value, 'attr', '')
+					== '_base_packages'
 				)
 				if installs:
 					for arg in node.args:
 						for name in literals(arg):
 							record(name, path)
 
-			# `def <x>_packages(...)` returning a literal list. only a list or
-			# tuple counts: menu helpers of the same shape return display text
-			if isinstance(node, ast.FunctionDef) and (node.name == 'packages' or node.name.endswith('_packages')):
+			# `def <x>_packages(...)` returning a literal list.
+			# only a list or tuple counts: menu helpers of the same
+			# shape return display text
+			if isinstance(node, ast.FunctionDef) and (
+				node.name == 'packages'
+				or node.name.endswith('_packages')
+			):
 				for stmt in ast.walk(node):
-					if isinstance(stmt, ast.Return) and isinstance(stmt.value, ast.List | ast.Tuple):
+					if isinstance(stmt, ast.Return) and isinstance(
+						stmt.value, ast.List | ast.Tuple
+					):
 						for name in literals(stmt.value):
 							record(name, path)
 
@@ -197,8 +242,14 @@ def test_every_installed_package_is_in_the_schema() -> None:
 	# the reverse of the generator: a package some codepath grew that no
 	# section claims is invisible to count and nvchecker
 	known = schema.package_names(SCHEMA)
-	missing = {name: sorted(where) for name, where in _installed_literals().items() if name not in known}
-	assert not missing, f'packages installed by code that no schema section lists: {missing}'
+	missing = {
+		name: sorted(where)
+		for name, where in _installed_literals().items()
+		if name not in known
+	}
+	assert not missing, (
+		f'packages installed by code that no schema section lists: {missing}'
+	)
 
 
 # disk_encryption is never written to a saved config (the password would go
@@ -212,8 +263,13 @@ def test_resolve_reads_every_section() -> None:
 	# them back the same way
 	source = Path(_resolve.__file__).read_text()
 	picked = {s.key for s in _PICKED}
-	unread = {key for key in SCHEMA if f"'{key}'" not in source and key not in picked}
-	assert unread == _NOT_READ, f'sections _resolve.py never reads: {sorted(unread - _NOT_READ)}; exempted but now read: {sorted(_NOT_READ - unread)}'
+	unread = {
+		key for key in SCHEMA if f"'{key}'" not in source and key not in picked
+	}
+	assert unread == _NOT_READ, (
+		f'sections _resolve.py never reads: {sorted(unread - _NOT_READ)}; '
+		f'exempted but now read: {sorted(_NOT_READ - unread)}'
+	)
 
 
 # -- nvchecker/NVGEN ---------------------------------------------------------
@@ -255,9 +311,13 @@ def _load_nvgen() -> ModuleType:
 def test_nvgen_enum_paths_resolve() -> None:
 	nvgen = _load_nvgen()
 	names = [class_name for _, class_name, _ in nvgen.PKG_ENUMS]
-	assert names == list(_NVGEN_ENUMS), f'NVGEN PKG_ENUMS drifted from the enums under test: {names}'
+	assert names == list(_NVGEN_ENUMS), (
+		f'NVGEN PKG_ENUMS drifted from the enums under test: {names}'
+	)
 	for path, class_name, _ in nvgen.PKG_ENUMS:
-		assert path.is_file(), f'NVGEN points {class_name} at a missing file: {path}'
+		assert path.is_file(), (
+			f'NVGEN points {class_name} at a missing file: {path}'
+		)
 
 
 def test_nvgen_enum_parse_matches_code() -> None:
@@ -267,8 +327,16 @@ def test_nvgen_enum_parse_matches_code() -> None:
 	nvgen = _load_nvgen()
 	for path, class_name, _ in nvgen.PKG_ENUMS:
 		parsed = nvgen.enum_values(path, class_name)
-		live = {e.value for e in _NVGEN_ENUMS[class_name] if not e.name.startswith('_')}
-		assert parsed == live, f'NVGEN parse of {class_name} drifted: parsed-only={sorted(parsed - live)} code-only={sorted(live - parsed)}'
+		live = {
+			e.value
+			for e in _NVGEN_ENUMS[class_name]
+			if not e.name.startswith('_')
+		}
+		assert parsed == live, (
+			f'NVGEN parse of {class_name} drifted: '
+			f'parsed-only={sorted(parsed - live)} '
+			f'code-only={sorted(live - parsed)}'
+		)
 
 
 def test_nvgen_toml_tracks_code_packages() -> None:
@@ -280,7 +348,9 @@ def test_nvgen_toml_tracks_code_packages() -> None:
 
 	tracked = set(tomllib.loads(toml_path.read_text())) - {'__config__'}
 	missing = sorted(nvgen.code_packages() - tracked)
-	assert not missing, f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'
+	assert not missing, (
+		f'nvchecker.toml is stale, run `./NVGEN gen`: missing {missing}'
+	)
 
 
 def test_nvgen_shares_the_installer_modules() -> None:
@@ -288,8 +358,12 @@ def test_nvgen_shares_the_installer_modules() -> None:
 	# its own loader and group expansion; those copies are what drifted before.
 	# also proves both modules stay loadable without the archinstoo runtime
 	nvgen = _load_nvgen()
-	assert Path(schema.__file__) == nvgen.SCHEMA_MODULE, f'NVGEN loads a different schema module: {nvgen.SCHEMA_MODULE}'
-	assert Path(groups.__file__) == nvgen.GROUPS_MODULE, f'NVGEN loads a different groups module: {nvgen.GROUPS_MODULE}'
+	assert Path(schema.__file__) == nvgen.SCHEMA_MODULE, (
+		f'NVGEN loads a different schema module: {nvgen.SCHEMA_MODULE}'
+	)
+	assert Path(groups.__file__) == nvgen.GROUPS_MODULE, (
+		f'NVGEN loads a different groups module: {nvgen.GROUPS_MODULE}'
+	)
 	assert nvgen.schema_mod.SCHEMA == SCHEMA
 	assert nvgen.groups_mod.parse(_SGG_OUTPUT) == groups.parse(_SGG_OUTPUT)
 
@@ -308,14 +382,22 @@ xfce4-goodies xfburn
 
 
 def test_parse_reads_sgg_pairs() -> None:
-	assert groups.parse(_SGG_OUTPUT) == {'mate': {'caja', 'marco'}, 'xfce4-goodies': {'xfburn'}}
+	assert groups.parse(_SGG_OUTPUT) == {
+		'mate': {'caja', 'marco'},
+		'xfce4-goodies': {'xfburn'},
+	}
 
 
 def test_expand_replaces_groups_with_members(monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr(groups, 'sync', lambda: groups.parse(_SGG_OUTPUT))
 
 	# 'nano' is a package, not a group, and must survive untouched
-	assert groups.expand({'mate', 'xfce4-goodies', 'nano'}) == {'caja', 'marco', 'xfburn', 'nano'}
+	assert groups.expand({'mate', 'xfce4-goodies', 'nano'}) == {
+		'caja',
+		'marco',
+		'xfburn',
+		'nano',
+	}
 
 
 def test_resolve_uses_the_shared_modules() -> None:
@@ -328,7 +410,19 @@ def test_resolve_uses_the_shared_modules() -> None:
 def test_schema_group_entries_are_not_treated_as_packages() -> None:
 	# guards the inputs the expansion exists for: these schema profile entries
 	# are pacman groups today, so they must never be counted as single packages
-	known_groups = {'budgie', 'cosmic', 'deepin', 'lxqt', 'mate', 'mate-extra', 'xfce4', 'xfce4-goodies'}
+	known_groups = {
+		'budgie',
+		'cosmic',
+		'deepin',
+		'lxqt',
+		'mate',
+		'mate-extra',
+		'xfce4',
+		'xfce4-goodies',
+	}
 	schema_entries = {p for pkgs in SCHEMA['profiles'].values() for p in pkgs}
 	present = known_groups & schema_entries
-	assert present, 'no group entries left in schema profiles; drop expand() if that is intentional'
+	assert present, (
+		'no group entries left in schema profiles; drop expand() if '
+		'that is intentional'
+	)

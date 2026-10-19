@@ -26,7 +26,8 @@ if TYPE_CHECKING:
 	from collections.abc import Mapping
 
 # lsblk --json -o NAME,PATH,PKNAME,TYPE,FSTYPE,UUID,PARTUUID,MOUNTPOINTS /dev/vda2
-# on the dev VM after `cryptsetup open /dev/vda2 encrypted_p2 && mount /dev/mapper/encrypted_p2 /mnt`
+# on the dev VM after `cryptsetup open /dev/vda2 encrypted_p2 && mount
+# /dev/mapper/encrypted_p2 /mnt`
 LUKS_OPEN = {
 	'name': 'vda2',
 	'path': '/dev/vda2',
@@ -147,7 +148,9 @@ def _device(path: str) -> BDevice:
 	return device
 
 
-def _whole_device(lsblk: Mapping[str, object], base: Path = Path('/mnt')) -> PartitionModification | None:
+def _whole_device(
+	lsblk: Mapping[str, object], base: Path = Path('/mnt')
+) -> PartitionModification | None:
 	# __init__ scans the host's real disks through pyparted
 	handler = DeviceHandler.__new__(DeviceHandler)
 	handler._lsblk_info = lambda path: LsblkInfo.from_dict(dict(lsblk))  # type: ignore[method-assign,assignment]
@@ -172,7 +175,13 @@ def test_whole_device_ignores_other_base() -> None:
 
 
 def test_whole_device_plain_filesystem_is_not_flagged_raid() -> None:
-	plain = {**RAID_LUKS_OPEN, 'type': 'disk', 'fstype': 'ext4', 'mountpoints': ['/mnt'], 'children': []}
+	plain = {
+		**RAID_LUKS_OPEN,
+		'type': 'disk',
+		'fstype': 'ext4',
+		'mountpoints': ['/mnt'],
+		'children': [],
+	}
 	part_mod = _whole_device(plain)
 
 	assert part_mod is not None

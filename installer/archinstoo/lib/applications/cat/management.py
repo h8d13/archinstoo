@@ -13,7 +13,10 @@ class ManagementApp:
 		install_session: Installer,
 		management_config: ManagementConfiguration,
 	) -> None:
-		debug(f'Installing management tools: {[t.value for t in management_config.tools]}')
+		debug(
+			'Installing management tools: '
+			f'{[t.value for t in management_config.tools]}'
+		)
 
 		packages = [tool.value for tool in management_config.tools]
 		if packages:

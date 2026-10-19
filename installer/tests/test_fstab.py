@@ -21,8 +21,20 @@ class _Out:
 		return json.dumps(self._data)
 
 
-def _fs(target: str, fstype: str, options: str, uuid: str | None, children: list[dict[str, Any]] | None = None) -> dict[str, Any]:
-	fs: dict[str, Any] = {'target': target, 'source': f'/dev/{fstype}', 'fstype': fstype, 'options': options, 'uuid': uuid}
+def _fs(
+	target: str,
+	fstype: str,
+	options: str,
+	uuid: str | None,
+	children: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+	fs: dict[str, Any] = {
+		'target': target,
+		'source': f'/dev/{fstype}',
+		'fstype': fstype,
+		'options': options,
+		'uuid': uuid,
+	}
 	if children:
 		fs['children'] = children
 	return fs
@@ -37,7 +49,12 @@ TREE = {
 			'root-uuid',
 			[
 				_fs('/mnt/proc', 'proc', 'rw', None),
-				_fs('/mnt/home', 'btrfs', 'rw,subvolid=257,subvol=/@home', 'root-uuid'),
+				_fs(
+					'/mnt/home',
+					'btrfs',
+					'rw,subvolid=257,subvol=/@home',
+					'root-uuid',
+				),
 				_fs('/mnt/boot', 'vfat', 'rw,fmask=0022', 'ESP-UUID'),
 			],
 		),
@@ -45,11 +62,17 @@ TREE = {
 }
 
 
-def _write(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, tree: dict[str, Any]) -> list[str]:
+def _write(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path, tree: dict[str, Any]
+) -> list[str]:
 	monkeypatch.setattr(fstab, 'SysCommand', lambda _cmd: _Out(tree))
 	(tmp_path / 'etc').mkdir()
 	fstab.write_fstab(tmp_path, ['/swapfile\tnone\tswap\tdefaults\t0\t0'])
-	return [line for line in (tmp_path / 'etc/fstab').read_text().splitlines() if line and not line.startswith('#')]
+	return [
+		line
+		for line in (tmp_path / 'etc/fstab').read_text().splitlines()
+		if line and not line.startswith('#')
+	]
 
 
 def test_mounts_in_order(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -75,7 +98,13 @@ def test_stacked_mount_hidden(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
 	target = str(tmp_path)
 	tree = {
 		'filesystems': [
-			_fs(target, 'btrfs', 'rw,subvol=/root', 'host-uuid', [_fs(target, 'ext4', 'rw,relatime', 'root-uuid')]),
+			_fs(
+				target,
+				'btrfs',
+				'rw,subvol=/root',
+				'host-uuid',
+				[_fs(target, 'ext4', 'rw,relatime', 'root-uuid')],
+			),
 		],
 	}
 	assert _write(monkeypatch, tmp_path, tree) == [

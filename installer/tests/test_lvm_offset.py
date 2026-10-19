@@ -17,7 +17,12 @@ def test_overcommit_trimmed_to_extent() -> None:
 
 
 def test_room_in_vg_keeps_sizes() -> None:
-	assert lvm_overcommit_offset(Size(40, Unit.GiB, SECTOR), Size(61, Unit.GiB, SECTOR)) is None
+	assert (
+		lvm_overcommit_offset(
+			Size(40, Unit.GiB, SECTOR), Size(61, Unit.GiB, SECTOR)
+		)
+		is None
+	)
 
 
 def test_exact_fit_keeps_sizes() -> None:

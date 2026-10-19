@@ -8,7 +8,14 @@ from typing import Any
 import pytest
 
 from archinstoo.lib.models import device as dev_model
-from archinstoo.lib.models.device import BDevice, DiskLayoutConfiguration, SectorSize, Size, Unit, _DeviceInfo
+from archinstoo.lib.models.device import (
+	BDevice,
+	DiskLayoutConfiguration,
+	SectorSize,
+	Size,
+	Unit,
+	_DeviceInfo,
+)
 
 
 def _stub_device(path: Path, serial: str | None) -> BDevice:
@@ -44,11 +51,17 @@ def _config(saved_serial: str | None) -> dict[str, Any]:
 
 def test_serial_mismatch_refuses() -> None:
 	with pytest.raises(ValueError, match='saved for DISK-AAA'):
-		DiskLayoutConfiguration.parse_arg(_config('DISK-AAA'), _Handler('DISK-BBB'))  # type: ignore[arg-type]
+		DiskLayoutConfiguration.parse_arg(
+			_config('DISK-AAA'),  # type: ignore[arg-type]
+			_Handler('DISK-BBB'),  # type: ignore[arg-type]
+		)
 
 
 def test_serial_match_loads() -> None:
-	cfg = DiskLayoutConfiguration.parse_arg(_config('DISK-AAA'), _Handler('DISK-AAA'))  # type: ignore[arg-type]
+	cfg = DiskLayoutConfiguration.parse_arg(
+		_config('DISK-AAA'),  # type: ignore[arg-type]
+		_Handler('DISK-AAA'),  # type: ignore[arg-type]
+	)
 	assert cfg is not None
 	assert cfg.device_modifications[0].device.device_info.path == Path('/dev/vda')
 
@@ -61,12 +74,20 @@ def test_missing_serial_skips_check(saved: str | None, live: str | None) -> None
 
 
 def test_saved_serial_but_unknown_disk_refuses() -> None:
-	# the saved serial means this exact disk: a serial-less one at that path is not it
+	# the saved serial means this exact disk: a serial-less one
+	# at that path is not it
 	with pytest.raises(ValueError, match='unknown'):
 		DiskLayoutConfiguration.parse_arg(_config('DISK-AAA'), _Handler(None))  # type: ignore[arg-type]
 
 
 def test_json_carries_serial() -> None:
-	mod = dev_model.DeviceModification(_stub_device(Path('/dev/vda'), 'DISK-AAA'), wipe=True)
+	mod = dev_model.DeviceModification(
+		_stub_device(Path('/dev/vda'), 'DISK-AAA'), wipe=True
+	)
 	assert mod.json().get('serial') == 'DISK-AAA'
-	assert 'serial' not in dev_model.DeviceModification(_stub_device(Path('/dev/vda'), None), wipe=True).json()
+	assert (
+		'serial'
+		not in dev_model.DeviceModification(
+			_stub_device(Path('/dev/vda'), None), wipe=True
+		).json()
+	)

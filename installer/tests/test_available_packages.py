@@ -49,7 +49,13 @@ def test_lists_every_repo_in_the_conf(monkeypatch: pytest.MonkeyPatch) -> None:
 
 	# no repo names passed to pacman: the conf decides
 	assert calls == ['-Sy', '-Sl']
-	assert set(available) == {'linux', 'nano', 'neovim', 'lib32-glibc', 'ananicy-cpp'}
+	assert set(available) == {
+		'linux',
+		'nano',
+		'neovim',
+		'lib32-glibc',
+		'ananicy-cpp',
+	}
 	assert available['lib32-glibc'].repository == 'multilib'
 	assert available['ananicy-cpp'].version == '1.1.1-3'
 
@@ -135,7 +141,9 @@ def conf(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> LPath:
 			return []
 
 		lines = []
-		for repo in re.findall(r'^\[([^\]]+)\]', pacman_conf.read_text(), re.MULTILINE):
+		for repo in re.findall(
+			r'^\[([^\]]+)\]', pacman_conf.read_text(), re.MULTILINE
+		):
 			for name, version in _FAKE_DB.get(repo, []):
 				lines.append(f'{repo} {name} {version}\n'.encode())
 

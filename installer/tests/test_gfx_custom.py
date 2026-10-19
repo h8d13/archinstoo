@@ -52,7 +52,9 @@ def test_drivers_per_arch() -> None:
 		GfxDriver.Custom,
 	]
 	assert GfxDriver.MesaOpenSource not in gfx_drivers('x86_64')
-	assert {GfxDriver.AllOpenSource, GfxDriver.IntelOpenSource} <= set(gfx_drivers('x86_64'))
+	assert {GfxDriver.AllOpenSource, GfxDriver.IntelOpenSource} <= set(
+		gfx_drivers('x86_64')
+	)
 
 
 @pytest.mark.parametrize('arch', ['x86_64', 'aarch64'])
@@ -68,10 +70,20 @@ def test_offered_presets_fit_the_arch(arch: str) -> None:
 	[
 		(['linux'], HYBRID),
 		(None, HYBRID),
-		(['linux-zen'], [GfxPackage.NvidiaOpenDkms, GfxPackage.VulkanIntel, GfxPackage.Mesa, GfxPackage.Dkms]),
+		(
+			['linux-zen'],
+			[
+				GfxPackage.NvidiaOpenDkms,
+				GfxPackage.VulkanIntel,
+				GfxPackage.Mesa,
+				GfxPackage.Dkms,
+			],
+		),
 	],
 )
-def test_dkms_swap_only_touches_nvidia_open(kernels: list[str] | None, expected: list[GfxPackage]) -> None:
+def test_dkms_swap_only_touches_nvidia_open(
+	kernels: list[str] | None, expected: list[GfxPackage]
+) -> None:
 	assert dkms_packages(HYBRID, kernels) == expected
 	# nothing to swap: the list comes back as-is, not with a stray dkms
 	assert dkms_packages([GfxPackage.Mesa], ['linux-zen']) == [GfxPackage.Mesa]
@@ -96,12 +108,20 @@ def test_resolve_mirrors_the_install_path() -> None:
 		'vulkan-intel',
 		'mesa',
 	}
-	# a name outside the pool never reaches pacman, and dkms cannot be forced by hand
-	assert _resolve._gfx_packages('custom', ['mesa', 'nvidia-390xx', 'dkms'], ['linux']) == {'mesa'}
+	# a name outside the pool never reaches pacman, and dkms
+	# cannot be forced by hand
+	assert _resolve._gfx_packages(
+		'custom', ['mesa', 'nvidia-390xx', 'dkms'], ['linux']
+	) == {'mesa'}
 
 
 def test_config_round_trip_drops_unknown_names() -> None:
-	parsed = ArchConfig.from_config({'gfx_driver': 'custom', 'gfx_packages': ['mesa', 'vulkan-intel', 'not-a-package']})
+	parsed = ArchConfig.from_config(
+		{
+			'gfx_driver': 'custom',
+			'gfx_packages': ['mesa', 'vulkan-intel', 'not-a-package'],
+		}
+	)
 	assert parsed.gfx_driver is GfxDriver.Custom
 	assert parsed.gfx_packages == [GfxPackage.Mesa, GfxPackage.VulkanIntel]
 	assert parsed.safe_json()['gfx_packages'] == ['mesa', 'vulkan-intel']
@@ -124,10 +144,16 @@ def test_presets_match_the_count_mirror(driver: GfxDriver, kernels: list[str]) -
 
 def test_custom_install_takes_the_picks_as_given() -> None:
 	installed: list[str] = []
-	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend)
+	session = SimpleNamespace(
+		kernels=['linux'], add_additional_packages=installed.extend
+	)
 
 	handler = ProfileHandler()
-	handler.install_gfx_driver(session, GfxDriver.Custom, [GfxPackage.Mesa, GfxPackage.VulkanMesaLayers])  # type: ignore[arg-type]
+	handler.install_gfx_driver(
+		session,  # type: ignore[arg-type]
+		GfxDriver.Custom,
+		[GfxPackage.Mesa, GfxPackage.VulkanMesaLayers],
+	)
 	assert installed == ['mesa', 'vulkan-mesa-layers']
 
 
@@ -135,21 +161,34 @@ def test_driver_installs_only_its_own_packages() -> None:
 	# a headless box running CUDA picks a driver and never selects a profile:
 	# no display server packages ride along with the driver
 	installed: list[str] = []
-	session = SimpleNamespace(kernels=['linux'], add_additional_packages=installed.extend)
+	session = SimpleNamespace(
+		kernels=['linux'], add_additional_packages=installed.extend
+	)
 
 	ProfileHandler().install_gfx_driver(session, GfxDriver.IntelOpenSource)  # type: ignore[arg-type]
 
-	assert installed == [p.value for p in GfxDriver.IntelOpenSource.gfx_packages(['linux'])]
+	assert installed == [
+		p.value for p in GfxDriver.IntelOpenSource.gfx_packages(['linux'])
+	]
 
 
-@pytest.mark.parametrize(('name', 'server'), [('xorg', DisplayServer.X11), ('sway', DisplayServer.Wayland)])
-def test_profile_install_adds_its_display_server(name: str, server: DisplayServer) -> None:
+@pytest.mark.parametrize(
+	('name', 'server'),
+	[('xorg', DisplayServer.X11), ('sway', DisplayServer.Wayland)],
+)
+def test_profile_install_adds_its_display_server(
+	name: str, server: DisplayServer
+) -> None:
 	installed: list[str] = []
 	session = SimpleNamespace(add_additional_packages=installed.extend)
 
 	handler = ProfileHandler()
 	profile = next(p for p in handler.profiles if p.name == name)
 	assert server in profile.display_servers()
-	handler.install_profile_config(session, ProfileConfiguration(profiles=[profile]), None)  # type: ignore[arg-type]
+	handler.install_profile_config(
+		session,  # type: ignore[arg-type]
+		ProfileConfiguration(profiles=[profile]),
+		None,
+	)
 
 	assert set(server.packages()) <= set(installed)

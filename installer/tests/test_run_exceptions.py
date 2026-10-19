@@ -28,7 +28,16 @@ def test_run_failure_caught_by_either_vocabulary() -> None:
 
 def test_run_failure_carries_stderr() -> None:
 	with pytest.raises(SysCallError) as exc:
-		run(['python3', '-c', 'import sys; sys.exit(print("boom", file=sys.stderr) or 3)'])
+		run(
+			[
+				'python3',
+				'-c',
+				(
+					'import sys; sys.exit(print("boom", '
+					'file=sys.stderr) or 3)'
+				),
+			]
+		)
 
 	err = exc.value
 	assert err.returncode == 3

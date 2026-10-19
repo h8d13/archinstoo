@@ -1,7 +1,10 @@
 from typing import override
 
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
-from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
+from archinstoo.lib.models.authentication import (
+	AuthenticationConfiguration,
+	PrivilegeEscalation,
+)
 from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.output import FormattedOutput
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -28,7 +31,9 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 		)
 
 	@override
-	def run(self, additional_title: str | None = None) -> AuthenticationConfiguration:
+	def run(
+		self, additional_title: str | None = None
+	) -> AuthenticationConfiguration:
 		super().run(additional_title=additional_title)
 		return self._auth_config
 
@@ -59,7 +64,10 @@ class AuthenticationMenu(AbstractSubMenu[AuthenticationConfiguration]):
 				action=select_lock_root_account,
 				value=self._auth_config.lock_root_account,
 				preview_action=self._prev_lock_root,
-				dependencies=['root_enc_password', self.has_elevated_users],
+				dependencies=[
+					'root_enc_password',
+					self.has_elevated_users,
+				],
 				key='lock_root_account',
 			),
 		]
@@ -102,13 +110,18 @@ def select_root_password(_preset: str | None = None) -> Password | None:
 	return get_password(text='Root password', allow_skip=True)
 
 
-def select_privilege_escalation(preset: PrivilegeEscalation | None) -> PrivilegeEscalation | None:
+def select_privilege_escalation(
+	preset: PrivilegeEscalation | None,
+) -> PrivilegeEscalation | None:
 	items = [MenuItem(method.value, value=method) for method in PrivilegeEscalation]
 	items.append(MenuItem(text='None', value=None))
 	return prompt_choice(items, preset, frame='Privilege escalation')
 
 
 def select_lock_root_account(preset: bool) -> bool:
-	header = 'Lock root account? Can be undone using passwd -u root later.\nSudo users can still edit /etc/shadow or use sudo directly.\n'
+	header = (
+		'Lock root account? Can be undone using passwd -u root later.\nSudo '
+		'users can still edit /etc/shadow or use sudo directly.\n'
+	)
 	choice = prompt_yes_no(header, preset)
 	return preset if choice is None else choice

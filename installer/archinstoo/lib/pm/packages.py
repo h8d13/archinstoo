@@ -17,7 +17,9 @@ def _update_package(pkg: AvailablePackage, detailed: AvailablePackage) -> None:
 		setattr(pkg, f.name, getattr(detailed, f.name))
 
 
-def enrich_package_info(pkg: AvailablePackage, prefetch: list[AvailablePackage] | None = None) -> None:
+def enrich_package_info(
+	pkg: AvailablePackage, prefetch: list[AvailablePackage] | None = None
+) -> None:
 	if prefetch is None:
 		prefetch = []
 
@@ -66,12 +68,18 @@ def list_available_packages() -> dict[str, AvailablePackage]:
 		debug(f'Failed to sync Arch Linux package database: {e}')
 
 	try:
-		# -Sl walks repos in conf order, so setdefault (not assignment) keeps the
-		# same winner pacman would pick when a name exists in more than one repo
+		# -Sl walks repos in conf order, so setdefault (not
+		# assignment) keeps the same winner pacman would pick when a
+		# name exists in more than one repo
 		for line in Pacman.run('-Sl'):
 			parts = line.decode().strip().split()
 			if len(parts) >= 3:
-				packages.setdefault(parts[1], _create_package_stub(parts[0], parts[1], parts[2]))
+				packages.setdefault(
+					parts[1],
+					_create_package_stub(
+						parts[0], parts[1], parts[2]
+					),
+				)
 	except Exception as e:
 		debug(f'Failed to list available packages: {e}')
 

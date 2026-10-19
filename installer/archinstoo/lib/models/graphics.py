@@ -49,7 +49,10 @@ class GfxDriver(Enum):
 			case GfxDriver.IntelOpenSource:
 				return 'Intel (open-source)'
 			case GfxDriver.NvidiaOpenKernel:
-				return 'Nvidia (open kernel module for newer GPUs, Turing+)'
+				return (
+					'Nvidia (open kernel module for newer GPUs, '
+					'Turing+)'
+				)
 			case GfxDriver.NvidiaOpenSource:
 				return 'Nvidia (open-source nouveau driver)'
 			case GfxDriver.MesaOpenSource:
@@ -70,7 +73,10 @@ class GfxDriver(Enum):
 
 	def packages_text(self, kernels: list[str] | None = None) -> str:
 		if self is GfxDriver.Custom:
-			return 'Packages are picked one by one in the next menu (hybrid GPUs, unlisted mixes)\n'
+			return (
+				'Packages are picked one by one in the next menu '
+				'(hybrid GPUs, unlisted mixes)\n'
+			)
 
 		pkg_names = [p.value for p in self.gfx_packages(kernels)]
 		text = 'Installed packages:\n'
@@ -89,18 +95,25 @@ def needs_dkms_build(kernels: list[str] | None) -> bool:
 	return kernels is not None and any('-' in k for k in kernels)
 
 
-def dkms_packages(packages: list[GfxPackage], kernels: list[str] | None) -> list[GfxPackage]:
+def dkms_packages(
+	packages: list[GfxPackage], kernels: list[str] | None
+) -> list[GfxPackage]:
 	# nvidia-open is the only out-of-tree driver: a non-standard kernel swaps
 	# it for the dkms build and pulls dkms itself. Everything else is in-tree
 	if GfxPackage.NvidiaOpen not in packages or not needs_dkms_build(kernels):
 		return list(packages)
-	swapped: list[GfxPackage] = [GfxPackage.NvidiaOpenDkms if p is GfxPackage.NvidiaOpen else p for p in packages]
+	swapped: list[GfxPackage] = [
+		GfxPackage.NvidiaOpenDkms if p is GfxPackage.NvidiaOpen else p
+		for p in packages
+	]
 	return [*swapped, GfxPackage.Dkms]
 
 
 # what the custom driver lets a user tick on any arch. dkms and its nvidia
 # variant are derived from the kernel list
-GFX_CUSTOM_CHOICES: list[GfxPackage] = [p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms)]
+GFX_CUSTOM_CHOICES: list[GfxPackage] = [
+	p for p in GfxPackage if p not in (GfxPackage.Dkms, GfxPackage.NvidiaOpenDkms)
+]
 
 # hidden per arch. x86_64 repos carry the SoC and translation-layer vulkan
 # drivers, but no x86 GPU uses them; Arch Ports aarch64 builds no Intel media
@@ -116,7 +129,13 @@ _HIDDEN: dict[str, frozenset[GfxPackage]] = {
 			GfxPackage.VulkanPowervr,
 		}
 	),
-	'aarch64': frozenset({GfxPackage.IntelMediaDriver, GfxPackage.LibvaIntelDriver, GfxPackage.VplGpuRt}),
+	'aarch64': frozenset(
+		{
+			GfxPackage.IntelMediaDriver,
+			GfxPackage.LibvaIntelDriver,
+			GfxPackage.VplGpuRt,
+		}
+	),
 }
 
 
@@ -129,7 +148,12 @@ def gfx_drivers(arch: str) -> list[GfxDriver]:
 	# a preset shows when none of its packages is hidden. On x86_64 the
 	# vendor presets cover what plain mesa would
 	hidden = _HIDDEN.get(arch, frozenset())
-	return [d for d in GfxDriver if hidden.isdisjoint(GFX_PACKAGES[d]) and not (arch == 'x86_64' and d is GfxDriver.MesaOpenSource)]
+	return [
+		d
+		for d in GfxDriver
+		if hidden.isdisjoint(GFX_PACKAGES[d])
+		and not (arch == 'x86_64' and d is GfxDriver.MesaOpenSource)
+	]
 
 
 # the static half of every driver, before the DKMS swap

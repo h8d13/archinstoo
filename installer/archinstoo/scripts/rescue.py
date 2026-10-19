@@ -62,8 +62,15 @@ def find_linux_partitions(lsblk_infos: list[LsblkInfo]) -> list[LsblkInfo]:
 
 	def _check_partition(lsblk_info: LsblkInfo) -> None:
 		# Check if it's a partition or LVM volume with a Linux filesystem
-		# Include partitions that are not mounted or mounted elsewhere (not on /mnt or /)
-		if lsblk_info.fstype in fs_values and (not lsblk_info.mountpoints or all(str(mp) not in {'/', '/mnt'} for mp in lsblk_info.mountpoints)):
+		# Include partitions that are not mounted or mounted
+		# elsewhere (not on /mnt or /)
+		if lsblk_info.fstype in fs_values and (
+			not lsblk_info.mountpoints
+			or all(
+				str(mp) not in {'/', '/mnt'}
+				for mp in lsblk_info.mountpoints
+			)
+		):
 			linux_partitions.append(lsblk_info)
 
 		# Recursively check children (for LVM, etc.)
@@ -143,10 +150,20 @@ def mount_additional_filesystems(mount_point: Path) -> None:
 				if len(parts) < 3:
 					continue
 
-				device, mountpoint, fstype = parts[0], parts[1], parts[2]
+				device, mountpoint, fstype = (
+					parts[0],
+					parts[1],
+					parts[2],
+				)
 
 				# Skip the root filesystem and special filesystems
-				if mountpoint in {'/', 'none', 'swap'} or mountpoint.startswith(('/proc', '/sys', '/dev', '/run')):
+				if mountpoint in {
+					'/',
+					'none',
+					'swap',
+				} or mountpoint.startswith(
+					('/proc', '/sys', '/dev', '/run')
+				):
 					continue
 
 				# Skip swap
@@ -156,10 +173,17 @@ def mount_additional_filesystems(mount_point: Path) -> None:
 				target_path = mount_point / mountpoint.lstrip('/')
 
 				try:
-					mount(fstab_device(device), target_path, create_target_mountpoint=True)
+					mount(
+						fstab_device(device),
+						target_path,
+						create_target_mountpoint=True,
+					)
 					info(f'Mounted {device} to {target_path}')
 				except DiskError, SysCallError:
-					warn(f'Could not mount {device} to {target_path}, skipping...')
+					warn(
+						f'Could not mount {device} to '
+						f'{target_path}, skipping...'
+					)
 
 	except Exception as e:
 		warn(f'Error reading fstab: {e}')
@@ -184,10 +208,16 @@ def unmount_all(mount_point: Path) -> None:
 			return
 		except SysCallError:
 			if attempt < max_attempts - 1:
-				warn(f'Unmount attempt {attempt + 1} failed, retrying...')
+				warn(
+					f'Unmount attempt {attempt + 1} '
+					'failed, retrying...'
+				)
 				time.sleep(1)
 			else:
-				error('Failed to unmount all filesystems. You may need to unmount manually.')
+				error(
+					'Failed to unmount all filesystems. '
+					'You may need to unmount manually.'
+				)
 
 
 def unlock_luks_partition(partition: LsblkInfo) -> Luks2 | None:
@@ -212,15 +242,24 @@ def unlock_luks_partition(partition: LsblkInfo) -> Luks2 | None:
 			)
 
 			luks.unlock()
-			info(f'Successfully unlocked {partition.path} -> /dev/mapper/{mapper_name}')
+			info(
+				f'Successfully unlocked {partition.path} -> '
+				f'/dev/mapper/{mapper_name}'
+			)
 			return luks
 
 		except (DiskError, SysCallError) as e:
 			remaining = max_attempts - attempt - 1
 			if remaining > 0:
-				warn(f'Failed to unlock: {e}. {remaining} attempt(s) remaining.')
+				warn(
+					f'Failed to unlock: {e}. {remaining} '
+					'attempt(s) remaining.'
+				)
 			else:
-				error(f'Failed to unlock {partition.path} after {max_attempts} attempts')
+				error(
+					f'Failed to unlock {partition.path} '
+					f'after {max_attempts} attempts'
+				)
 
 	return None
 
@@ -238,7 +277,10 @@ def select_partition(partitions: list[LsblkInfo]) -> LsblkInfo | None:
 			f'UUID: {partition.uuid or "None"}',
 		]
 		if partition.mountpoints:
-			lines.append(f'Currently mounted: {", ".join(str(mp) for mp in partition.mountpoints)}')
+			lines.append(
+				'Currently mounted: '
+				f'{", ".join(str(mp) for mp in partition.mountpoints)}'
+			)
 		return '\n'.join(lines)
 
 	# Create menu items
@@ -261,7 +303,10 @@ def select_partition(partitions: list[LsblkInfo]) -> LsblkInfo | None:
 	result = SelectMenu[LsblkInfo](
 		group,
 		alignment=Alignment.CENTER,
-		header='Select a partition containing the Linux installation to rescue:',
+		header=(
+			'Select a partition containing the Linux installation to '
+			'rescue:'
+		),
 		allow_skip=True,
 	).run()
 
@@ -288,7 +333,10 @@ def select_luks_partitions(partitions: list[LsblkInfo]) -> list[LsblkInfo]:
 
 	menu_items = []
 	for partition in partitions:
-		label = f'{partition.name} ({partition.path}) - {partition.size.format_size(Unit.GiB)}'
+		label = (
+			f'{partition.name} ({partition.path}) - '
+			f'{partition.size.format_size(Unit.GiB)}'
+		)
 
 		item = MenuItem(
 			text=label,
@@ -322,7 +370,10 @@ def rescue() -> None:
 	handler = get_arch_config_handler()
 	args = handler.args
 
-	info('This utility will help you mount and chroot into an existing installation.')
+	info(
+		'This utility will help you mount and chroot into an '
+		'existing installation.'
+	)
 
 	# Track unlocked LUKS devices for cleanup
 	unlocked_luks: list[Luks2] = []
@@ -361,7 +412,10 @@ def rescue() -> None:
 	linux_partitions = find_linux_partitions(all_devices)
 
 	if not linux_partitions:
-		error('No Linux partitions found. Make sure your disks are properly connected.')
+		error(
+			'No Linux partitions found. Make sure your disks are '
+			'properly connected.'
+		)
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
 			with contextlib.suppress(DiskError, SysCallError):
@@ -400,7 +454,10 @@ def rescue() -> None:
 
 	# Verify it's a Linux root filesystem
 	if not verify_linux_root(mount_point):
-		error(f'{selected_partition.path} does not appear to contain a valid Linux root filesystem.')
+		error(
+			f'{selected_partition.path} does not appear to '
+			'contain a valid Linux root filesystem.'
+		)
 		unmount_all(mount_point)
 		# Cleanup: lock any unlocked LUKS devices
 		for luks in unlocked_luks:
@@ -416,7 +473,10 @@ def rescue() -> None:
 	# Display information
 	info(f'Installation mounted at: {mount_point}')
 	info('Entering chroot environment...')
-	info('Note: arch-chroot will automatically mount /dev, /proc, /sys, and handle DNS.')
+	info(
+		'Note: arch-chroot will automatically mount /dev, /proc, '
+		'/sys, and handle DNS.'
+	)
 	info('Type "exit" to leave the chroot and return to the live environment.')
 
 	try:

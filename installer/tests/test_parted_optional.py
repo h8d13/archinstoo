@@ -50,7 +50,12 @@ disk_config = DiskLayoutConfiguration(
 	device_modifications=[],
 	mountpoint=Path('/'),
 )
-Installer(Path('/'), disk_config, kernels=[], handler=SimpleNamespace(args=Arguments(), config=ArchConfig()))
+Installer(
+	Path('/'),
+	disk_config,
+	kernels=[],
+	handler=SimpleNamespace(args=Arguments(), config=ArchConfig()),
+)
 """
 
 
@@ -58,7 +63,11 @@ def _script_chain(name: str) -> str:
 	# top-level imports only: nested ones belong to codepaths the script
 	# reaches at runtime, not to what it needs present to load
 	tree = ast.parse((_SCRIPTS / f'{name}.py').read_text())
-	imports = [ast.unparse(n) for n in tree.body if isinstance(n, ast.Import | ast.ImportFrom)]
+	imports = [
+		ast.unparse(n)
+		for n in tree.body
+		if isinstance(n, ast.Import | ast.ImportFrom)
+	]
 	return '\n'.join(imports) + '\n' + _DUMMY_INSTALLER
 
 
@@ -71,7 +80,9 @@ try:
 except RequirementError:
 	pass
 else:
-	raise AssertionError('DeviceHandler() must raise RequirementError without pyparted')
+	raise AssertionError(
+		'DeviceHandler() must raise RequirementError without pyparted'
+	)
 """
 
 
@@ -83,12 +94,16 @@ def _run_isolated(code: str) -> None:
 		text=True,
 		check=False,
 	)
-	assert result.returncode == 0, f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}'
+	assert result.returncode == 0, (
+		f'stdout:\n{result.stdout}\nstderr:\n{result.stderr}'
+	)
 
 
 @pytest.mark.parametrize('script', sorted(NO_DISK_SCRIPTS), ids=str)
 def test_no_disk_chain_imports_without_parted(script: str) -> None:
-	assert (_SCRIPTS / f'{script}.py').is_file(), f'NO_DISK_SCRIPTS names {script!r}, which has no script module'
+	assert (_SCRIPTS / f'{script}.py').is_file(), (
+		f'NO_DISK_SCRIPTS names {script!r}, which has no script module'
+	)
 	_run_isolated(_BLOCK_PARTED + _script_chain(script))
 
 

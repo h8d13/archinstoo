@@ -35,8 +35,8 @@ class Host:
 
 	@staticmethod
 	def running_from_arch() -> bool:
-		# distinguishes an Arch host/ISO from a foreign host (Debian, Alpine, ...)
-		# archarm is Arch Linux ARM, native for our purposes
+		# distinguishes an Arch host/ISO from a foreign host (Debian, Alpine,
+		# ...) archarm is Arch Linux ARM, native for our purposes
 		return Host.running_from_who() in {'arch', 'archarm'}
 
 	@staticmethod
@@ -48,7 +48,11 @@ class Host:
 	def running_from_arch_host() -> bool:
 		# H2T on an installed Arch: '/' is the user's own system, not a live or
 		# throwaway root, so archinstoo must not sync or install into it
-		return Host.running_from_host() and Host.running_from_arch() and not Host.running_from_bootstrap()
+		return (
+			Host.running_from_host()
+			and Host.running_from_arch()
+			and not Host.running_from_bootstrap()
+		)
 
 	@staticmethod
 	def running_from_bootstrap() -> bool:
@@ -66,11 +70,15 @@ class Host:
 	@staticmethod
 	def has_systemd() -> bool:
 		# sd_booted(), except chroots: arch-chroot binds the host /run in
-		return Path('/run/systemd/system').is_dir() and not Host.running_in_chroot()
+		return (
+			Path('/run/systemd/system').is_dir()
+			and not Host.running_in_chroot()
+		)
 
 	@staticmethod
 	def invoking_username() -> str | None:
-		# the human behind sudo/doas; None when running as real root (su -, autologin)
+		# the human behind sudo/doas; None when running as real
+		# root (su -, autologin)
 		name = Env.get_value('SUDO_USER') or Env.get_value('DOAS_USER')
 		if not name or name == 'root':
 			return None

@@ -29,7 +29,8 @@ class RiverProfile(WaylandProfile):
 			'river-classic',
 			'foot',
 			# neither river-classic nor foot pulls a font (sway does via
-			# ttf-font): without one foot exits at spawn, the binding looks dead
+			# ttf-font): without one foot exits at spawn,
+			# the binding looks dead
 			'ttf-liberation',
 			# the shipped init binds the media keys to these three; eject is
 			# util-linux. nothing else in it spawns a program
@@ -50,15 +51,25 @@ class RiverProfile(WaylandProfile):
 
 		# river reads ~/.config/river/init and nothing else (no /etc fallback):
 		# no init means no bindings and no layout, a black screen
-		shipped = install_session.target / 'usr/share/river-classic/example/init'
+		shipped = (
+			install_session.target / 'usr/share/river-classic/example/init'
+		)
 
-		# xdg-desktop-portal-wlr only starts once the systemd user session knows the
-		# compositor; river sets no XDG_CURRENT_DESKTOP (no DesktopNames) nor imports
-		# anything, river matches the UseIn of wlr.portal
-		env = 'dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=river\n'
+		# xdg-desktop-portal-wlr only starts once the systemd user session knows
+		# the compositor; river sets no XDG_CURRENT_DESKTOP (no DesktopNames)
+		# nor imports anything, river matches the UseIn of wlr.portal
+		env = (
+			'dbus-update-activation-environment --systemd '
+			'WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=river\n'
+		)
 
 		for user in users:
-			init = install_session.target / 'home' / user.username / '.config/river/init'
+			init = (
+				install_session.target
+				/ 'home'
+				/ user.username
+				/ '.config/river/init'
+			)
 			init.parent.mkdir(parents=True, exist_ok=True)
 			shutil.copy(shipped, init)
 			with init.open('a') as f:
@@ -66,7 +77,9 @@ class RiverProfile(WaylandProfile):
 			# river runs init as a program, a 0644 copy is silently skipped
 			init.chmod(0o755)
 
-			install_session.chown_tree(user.username, f'/home/{user.username}/.config')
+			install_session.chown_tree(
+				user.username, f'/home/{user.username}/.config'
+			)
 
 	@override
 	def do_on_select(self) -> None:

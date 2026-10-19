@@ -17,7 +17,12 @@ from archinstoo.lib.utils.env import Env
 		('nope', True, False),
 	],
 )
-def test_get_bool(monkeypatch: pytest.MonkeyPatch, value: str | None, default: bool, expected: bool) -> None:
+def test_get_bool(
+	monkeypatch: pytest.MonkeyPatch,
+	value: str | None,
+	default: bool,
+	expected: bool,
+) -> None:
 	if value is None:
 		monkeypatch.delenv('A2_TEST', raising=False)
 	else:
@@ -37,7 +42,12 @@ def test_get_bool(monkeypatch: pytest.MonkeyPatch, value: str | None, default: b
 		('isos/x.iso', None, Path('isos/x.iso')),
 	],
 )
-def test_get_path(monkeypatch: pytest.MonkeyPatch, value: str | None, base: Path | None, expected: Path | None) -> None:
+def test_get_path(
+	monkeypatch: pytest.MonkeyPatch,
+	value: str | None,
+	base: Path | None,
+	expected: Path | None,
+) -> None:
 	if value is None:
 		monkeypatch.delenv('A2_TEST', raising=False)
 	else:
@@ -62,7 +72,9 @@ def test_get_path_expands_home(monkeypatch: pytest.MonkeyPatch) -> None:
 		('8G', '8G'),
 	],
 )
-def test_get_value(monkeypatch: pytest.MonkeyPatch, value: str | None, expected: str) -> None:
+def test_get_value(
+	monkeypatch: pytest.MonkeyPatch, value: str | None, expected: str
+) -> None:
 	if value is None:
 		monkeypatch.delenv('A2_TEST', raising=False)
 	else:

@@ -27,4 +27,6 @@ class DockerProfile(Profile):
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
-		add_to_group(install_session, 'docker', [user.username for user in users])
+		add_to_group(
+			install_session, 'docker', [user.username for user in users]
+		)

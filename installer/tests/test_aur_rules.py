@@ -4,7 +4,10 @@
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.authentication import AuthenticationConfiguration, PrivilegeEscalation
+from archinstoo.lib.models.authentication import (
+	AuthenticationConfiguration,
+	PrivilegeEscalation,
+)
 from archinstoo.lib.models.users import User
 from archinstoo.lib.pm import aur
 
@@ -25,8 +28,14 @@ def _build(tmp_path: Path, priv_esc: PrivilegeEscalation) -> dict[str, str]:
 			if (tmp_path / rule).exists():
 				seen[rule] = (tmp_path / rule).read_text()
 
-	installation = SimpleNamespace(target=tmp_path, add_additional_packages=lambda _: None, arch_chroot=arch_chroot)
-	auth = AuthenticationConfiguration(users=[User('ada', None, True)], privilege_escalation=priv_esc)
+	installation = SimpleNamespace(
+		target=tmp_path,
+		add_additional_packages=lambda _: None,
+		arch_chroot=arch_chroot,
+	)
+	auth = AuthenticationConfiguration(
+		users=[User('ada', None, True)], privilege_escalation=priv_esc
+	)
 	aur.run_grimoire_installation(['yay'], installation, auth)  # type: ignore[arg-type]
 	return seen
 
@@ -45,6 +54,10 @@ def test_doas_rule_keeps_proxy_env(tmp_path: Path) -> None:
 
 	lines = seen['etc/doas.conf'].splitlines()
 	for cmd in ('pacman', '/usr/bin/pacman'):
-		assert f'permit nopass setenv {{ http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY }} ada as root cmd {cmd}' in lines
+		assert (
+			'permit nopass setenv { http_proxy https_proxy '
+			'no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY } ada as '
+			f'root cmd {cmd}' in lines
+		)
 	# the user's own rules survive the cleanup, ours do not
 	assert (tmp_path / 'etc/doas.conf').read_text() == 'permit persist :wheel\n'

@@ -23,7 +23,9 @@ SECTOR = SectorSize(512, Unit.B)
 		(Bootloader.Grub, False, '/boot'),
 	],
 )
-def test_uefi_esp_mountpoint(bootloader: Bootloader, using_subvolumes: bool, expected: str) -> None:
+def test_uefi_esp_mountpoint(
+	bootloader: Bootloader, using_subvolumes: bool, expected: str
+) -> None:
 	parts = _boot_partition(
 		SECTOR,
 		using_gpt=True,

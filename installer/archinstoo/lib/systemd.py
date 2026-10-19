@@ -32,7 +32,8 @@ def _service_started(service_name: str) -> str | None:
 
 	last_execution_time = (
 		SysCommand(
-			f'systemctl show --property=ActiveEnterTimestamp --no-pager {_unit(service_name)}',
+			'systemctl show --property=ActiveEnterTimestamp '
+			f'--no-pager {_unit(service_name)}',
 			environment_vars={'SYSTEMD_COLORS': '0'},
 		)
 		.decode()
@@ -84,7 +85,10 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 		# (networkd reporting offline, chrony instead, nothing) is not a
 		# sign the clock is wrong, and pacman fails loudly if it is.
 		# bootstrap: running inside arch-chroot from BOOT, no live units
-		debug('Running from host or bootstrap, skipping ISO service-stop checks')
+		debug(
+			'Running from host or bootstrap, skipping ISO '
+			'service-stop checks'
+		)
 		return
 
 	if not skip_ntp:
@@ -99,9 +103,14 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 		while time.monotonic() - started_wait < 60:
 			if not notified and time.monotonic() - started_wait > 5:
 				notified = True
-				warn('NTP sync taking longer than expected, still waiting...')
+				warn(
+					'NTP sync taking longer than '
+					'expected, still waiting...'
+				)
 
-			time_val = SysCommand('timedatectl show --property=NTPSynchronized --value').decode()
+			time_val = SysCommand(
+				'timedatectl show --property=NTPSynchronized --value'
+			).decode()
 			if time_val and time_val.strip() == 'yes':
 				synced = True
 				break
@@ -110,9 +119,15 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 		if synced:
 			info('NTP time synchronization completed')
 		else:
-			warn('NTP did not sync within 60 seconds, continuing anyway (or use --skip-ntp)')
+			warn(
+				'NTP did not sync within 60 seconds, '
+				'continuing anyway (or use --skip-ntp)'
+			)
 	else:
-		info('Skipping NTP time sync (may cause issues if system time is incorrect)')
+		info(
+			'Skipping NTP time sync (may cause issues if system '
+			'time is incorrect)'
+		)
 
 	if not skip_wkd and SysInfo.arch() == 'x86_64':
 		info('Waiting for Arch Linux keyring sync...')
@@ -127,14 +142,20 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 
 		# Wait for the service to enter a finished state
 		keyring_state = _service_state(service)
-		while keyring_state not in {'dead', 'failed', 'exited'} and time.monotonic() < deadline:
+		while (
+			keyring_state not in {'dead', 'failed', 'exited'}
+			and time.monotonic() < deadline
+		):
 			time.sleep(1)
 			keyring_state = _service_state(service)
 
 		if keyring_state == 'failed':
 			warn('Arch Linux keyring sync failed')
 		elif keyring_state not in {'dead', 'exited'}:
-			warn('Keyring sync did not finish within 60 seconds, continuing anyway (or use --skip-wkd)')
+			warn(
+				'Keyring sync did not finish within 60 seconds, '
+				'continuing anyway (or use --skip-wkd)'
+			)
 		else:
 			info('Arch Linux keyring sync completed')
 	else:
@@ -162,7 +183,9 @@ def enable_service(installation: Installer, services: str | list[str]) -> None:
 		try:
 			_systemctl_target(installation, 'enable', service)
 		except SysCallError as err:
-			raise ServiceError(f'Unable to start service {service}: {err}') from err
+			raise ServiceError(
+				f'Unable to start service {service}: {err}'
+			) from err
 
 
 def _enable_linger(installation: Installer, user: str) -> None:
@@ -172,11 +195,16 @@ def _enable_linger(installation: Installer, user: str) -> None:
 	info(f'Enabled linger for user {user}')
 
 
-def _enable_user_service(installation: Installer, user: str, services: str | list[str]) -> None:
+def _enable_user_service(
+	installation: Installer, user: str, services: str | list[str]
+) -> None:
 	if isinstance(services, str):
 		services = [services]
 
-	wants_dir = installation.target / f'home/{user}/.config/systemd/user/default.target.wants'
+	wants_dir = (
+		installation.target
+		/ f'home/{user}/.config/systemd/user/default.target.wants'
+	)
 	wants_dir.mkdir(parents=True, exist_ok=True)
 
 	for service in services:
@@ -189,7 +217,9 @@ def _enable_user_service(installation: Installer, user: str, services: str | lis
 	installation.chown_tree(user, f'/home/{user}/.config')
 
 
-def enable_services_from_config(installation: Installer, services: list[str | UserService]) -> None:
+def enable_services_from_config(
+	installation: Installer, services: list[str | UserService]
+) -> None:
 	system_services = [s for s in services if isinstance(s, str)]
 	user_services = [s for s in services if isinstance(s, UserService)]
 
@@ -212,4 +242,6 @@ def disable_service(installation: Installer, services_disable: str | list[str]) 
 		try:
 			_systemctl_target(installation, 'disable', service)
 		except SysCallError as err:
-			raise ServiceError(f'Unable to disable service {service}: {err}') from err
+			raise ServiceError(
+				f'Unable to disable service {service}: {err}'
+			) from err

@@ -18,8 +18,12 @@ from archinstoo.lib.utils.host import Host
 		('', False),
 	],
 )
-def test_running_from_arch(monkeypatch: pytest.MonkeyPatch, distro_id: str, is_arch: bool) -> None:
-	monkeypatch.setattr('platform.freedesktop_os_release', lambda: {'ID': distro_id})
+def test_running_from_arch(
+	monkeypatch: pytest.MonkeyPatch, distro_id: str, is_arch: bool
+) -> None:
+	monkeypatch.setattr(
+		'platform.freedesktop_os_release', lambda: {'ID': distro_id}
+	)
 
 	assert Host.running_from_arch() is is_arch
 
@@ -33,7 +37,9 @@ def test_running_from_arch(monkeypatch: pytest.MonkeyPatch, distro_id: str, is_a
 		(PermissionError(), False),
 	],
 )
-def test_running_in_chroot(monkeypatch: pytest.MonkeyPatch, same_root: bool | OSError, in_chroot: bool) -> None:
+def test_running_in_chroot(
+	monkeypatch: pytest.MonkeyPatch, same_root: bool | OSError, in_chroot: bool
+) -> None:
 	def samefile(self: Path, other: str) -> bool:
 		if isinstance(same_root, OSError):
 			raise same_root

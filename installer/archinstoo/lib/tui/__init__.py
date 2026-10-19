@@ -2,7 +2,14 @@ from .content_editor import ContentEditor, edit_content
 from .curses_menu import EditMenu, SelectMenu, Tui
 from .menu_item import MenuItem, MenuItemGroup
 from .result import Result, ResultType
-from .types import Alignment, Chars, FrameProperties, FrameStyle, Orientation, PreviewStyle
+from .types import (
+	Alignment,
+	Chars,
+	FrameProperties,
+	FrameStyle,
+	Orientation,
+	PreviewStyle,
+)
 
 __all__ = [
 	'Alignment',

@@ -10,8 +10,9 @@ An operating system installer (and tools) for [archlinux](https://archlinux.org)
 > In the [ISO](https://archlinux.org/download/), you are root by default.
 > Use `sudo` or equivalent, *when from an existing system.*
 
-Or from any Linux host: `./RUN --script bootstrap -- [archinstoo args...]` runs archinstoo inside the
-Arch bootstrap tarball, see [`distros/`](https://github.com/h8d13/archinstoo/tree/master/distros).
+Or from any Linux host: `./RUN --script bootstrap -- [archinstoo args...]`
+runs archinstoo inside the Arch bootstrap tarball,
+see [`distros/`](https://github.com/h8d13/archinstoo/tree/master/distros).
 
 ## Setup / Usage
 
@@ -53,7 +54,8 @@ pacman -Syy git python
 
 > [!NOTE]
 > The ISO has limited `cow_spacesize` (256M by default).
-> Optionally, if you need space in the temporary environment, simply: `mount -o remount,size=1G /run/archiso/cowspace`
+> Optionally, if you need space in the temporary environment, simply:
+> `mount -o remount,size=1G /run/archiso/cowspace`
 
 ### **3. Get the source code**
 
@@ -75,10 +77,12 @@ python -m archinstoo [args] # try -h or --help
 
 Make your pizzas. *Una pizza con funghi e prosciutto.*
 
-See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md) if you're just starting out with Arch.
+See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_CORNER.md)
+if you're just starting out with Arch.
 
 > [!TIP]
-> **Alternatively:** There are wrappers/helpers (which perform similar step to 4) from the **repo root**:
+> **Alternatively:** There are wrappers/helpers (which perform similar step to 4)
+> from the **repo root**:
 
 ```shell
 ./RUN # regular
@@ -89,20 +93,25 @@ See [Newb-Corner](https://github.com/h8d13/archinstoo/blob/master/.github/NEWB_C
 
 ## Modify/Extend
 
-> You can create any profile in [`archinstoo/default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles) following convention, which will be imported automatically.
+> You can create any profile in [`archinstoo/default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles)
+> following convention, which will be imported automatically.
 Or modify existing ones directly. Can also see here for [examples](https://github.com/h8d13/archinstoo/tree/master/installer/examples)
 
-You can make plugins easily `--script list` for `archinstoo`, anything inside [`scripts/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/scripts) is also imported.
+You can make plugins easily `--script list` for `archinstoo`,
+anything inside [`scripts/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/scripts)
+is also imported.
 
 The full structure of the project can be consulted through [`TREE`](https://github.com/h8d13/archinstoo/tree/master/installer)
 
-Install steps are ordered in [`installer.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py) here search/find/replace is your friend.
+Install steps are ordered in [`installer.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/installer.py)
+here search/find/replace is your friend.
 
 A `man` page is also available `man -l installer/docs/archinstoo.1`
 
 ### Use cases / Docs
 
-See the full documentation on [mkdocs](https://h8d13.github.io/archinstoo/) generated from this repo.
+See the full documentation on [mkdocs](https://h8d13.github.io/archinstoo/)
+generated from this repo.
 
 ### Testing
 
@@ -110,12 +119,18 @@ See the full documentation on [mkdocs](https://h8d13.github.io/archinstoo/) gene
 
 See historical/latest changes [Changelog](https://github.com/h8d13/archinstoo/blob/master/.github/CHANGELOG.md)
 
-The process would be the same with `git clone -b <branch> <url>` to test a specific fix. Usually reproduced then tested on **actual/appropriate hardware.**
+The process would be the same with `git clone -b <branch> <url>` to test a specific fix.
+Usually reproduced then tested on **actual/appropriate hardware.**
 
-> Any help in this regard is deeply appreciated, as testing/digging takes just as long as writing code. Accurate reports/PRs will be addressed in a timely manner:
-> [PRs](https://github.com/h8d13/archinstoo/pulls), [Issues](https://github.com/h8d13/archinstoo/issues) and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
+> Any help in this regard is deeply appreciated,
+> as testing/digging takes just as long as writing code.
+> Accurate reports/PRs will be addressed in a timely manner:
+> [PRs](https://github.com/h8d13/archinstoo/pulls),
+> [Issues](https://github.com/h8d13/archinstoo/issues)
+> and [Contributing](https://github.com/h8d13/archinstoo/blob/master/.github/CONTRIBUTING.md)
 
-**Philosophy:** Simplify, No backwards-compat, Move fast (even if it means breaking and fixing).
+**Philosophy:** Simplify, No backwards-compat,
+Move fast (even if it means breaking and fixing).
 [More...](https://github.com/h8d13/archinstoo/blob/master/.github/PHILOSOPHY.md)
 
 ---
@@ -123,14 +138,19 @@ The process would be the same with `git clone -b <branch> <url>` to test a speci
 ## Building sources
 
 >[!NOTE]
-> For **DEV** top-level `PKGBUILD` has extra tools like `archiso`, `pacman-contrib` and `nvchecker`.
-> For **non-dev** see [`installer/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD) uses the repo without its top part from git.
+> For **DEV** top-level `PKGBUILD` has extra tools
+> like `archiso`, `pacman-contrib` and `nvchecker`.
+> For **non-dev** see [`installer/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD)
+> uses the repo without its top part from git.
 
 But it is recommended to use latest from git `master` instead.
 
-See [`archinstall`](https://github.com/archlinux/archinstall) and thanks to the many original contributors. And the [arch-wiki](https://wiki.archlinux.org/title/Main_page).
+See [`archinstall`](https://github.com/archlinux/archinstall)
+and thanks to the many original contributors.
+And the [arch-wiki](https://wiki.archlinux.org/title/Main_page).
 
-See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this repo, not hosted on GitHub.
+See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/)
+for a copy of this repo, not hosted on GitHub.
 
 ---
 
@@ -138,6 +158,9 @@ See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/) for a copy of this 
 
 Made with ♡
 
-[Documentation](https://h8d13.github.io/archinstoo/) · [Star this repo](https://github.com/h8d13/archinstoo) · [Bugs/Features](https://github.com/h8d13/archinstoo/issues/new) · [Discussions](https://github.com/h8d13/archinstoo/discussions)
+[Documentation](https://h8d13.github.io/archinstoo/) ·
+[Star this repo](https://github.com/h8d13/archinstoo) ·
+[Bugs/Features](https://github.com/h8d13/archinstoo/issues/new) ·
+[Discussions](https://github.com/h8d13/archinstoo/discussions)
 
 </div>

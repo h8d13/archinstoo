@@ -21,7 +21,8 @@ MIRRORLIST: Final = LPath('/etc/pacman.d/mirrorlist')
 
 # Helpers for exceptions
 def reset_conf() -> bool:
-	# reset pacman.conf to upstream default in case a modification is causing breakage
+	# reset pacman.conf to upstream default in case a
+	# modification is causing breakage
 	try:
 		default_pm_conf = 'https://gitlab.archlinux.org/archlinux/packaging/packages/pacman/-/raw/main/pacman.conf'
 		info('Fetching default pacman.conf from upstream...')
@@ -49,21 +50,31 @@ class Pacman:
 		self.target = target
 
 	@staticmethod
-	def run(args: str, default_cmd: str = 'pacman', peek_output: bool = False) -> SysCommand:
+	def run(
+		args: str, default_cmd: str = 'pacman', peek_output: bool = False
+	) -> SysCommand:
 		# A centralized function to call `pacman` from.
-		# It also protects us from colliding with other running pacman sessions (if used locally).
-		# The grace period is set to 10 minutes before exiting hard if another pacman instance is running.
+		# It also protects us from colliding with other running pacman sessions
+		# (if used locally). The grace period is set to 10 minutes before
+		# exiting hard if another pacman instance is running.
 		pacman_db_lock = Path('/var/lib/pacman/db.lck')
 
 		if pacman_db_lock.exists():
-			warn('Pacman is already running, waiting maximum 10 minutes for it to terminate.')
+			warn(
+				'Pacman is already running, waiting maximum '
+				'10 minutes for it to terminate.'
+			)
 
 		started = time.monotonic()
 		while pacman_db_lock.exists():
 			time.sleep(0.25)
 
 			if time.monotonic() - started > (60 * 10):
-				error('Pre-existing pacman lock never exited. Please clean up any existing pacman sessions before using archinstoo.')
+				error(
+					'Pre-existing pacman lock never exited. Please '
+					'clean up any existing pacman sessions before '
+					'using archinstoo.'
+				)
 				raise SystemExit(1)
 
 		# -T and the -Q family draw no progress bar and reject the flag with
@@ -88,15 +99,28 @@ class Pacman:
 				except OSError as e:
 					warn(f'Could not remove {PACMAN_GNUPG}: {e}')
 			Pacman.run('--init', default_cmd='pacman-key', peek_output=True)
-			Pacman.run('--populate archlinux', default_cmd='pacman-key', peek_output=True)
-			Pacman.run('-Sy archlinux-keyring --noconfirm', peek_output=True)
+			Pacman.run(
+				'--populate archlinux',
+				default_cmd='pacman-key',
+				peek_output=True,
+			)
+			Pacman.run(
+				'-Sy archlinux-keyring --noconfirm', peek_output=True
+			)
 			info('Pacman keyring reinitialized.')
 			return True
 		except Exception as e:
 			error(f'Keyring reset failed: {e}')
 			return False
 
-	def ask(self, error_message: str, bail_message: str, func: Callable[..., object], *args: object, **kwargs: object) -> None:
+	def ask(
+		self,
+		error_message: str,
+		bail_message: str,
+		func: Callable[..., object],
+		*args: object,
+		**kwargs: object,
+	) -> None:
 		try:
 			func(*args, **kwargs)
 		except Exception as err:
@@ -105,13 +129,26 @@ class Pacman:
 
 			recovery = None
 			if 'invalid or corrupted package' in err_str:
-				warn('Detected corrupted package: resetting keyring and retrying...')
+				warn(
+					'Detected corrupted package: '
+					'resetting keyring and retrying...'
+				)
 				recovery = Pacman.reset_keyring
-			elif 'gpgme error' in err_str or 'no data' in err_str or 'signature' in err_str:
-				warn('Detected keyring/signature issue: resetting keyring and retrying...')
+			elif (
+				'gpgme error' in err_str
+				or 'no data' in err_str
+				or 'signature' in err_str
+			):
+				warn(
+					'Detected keyring/signature issue: '
+					'resetting keyring and retrying...'
+				)
 				recovery = Pacman.reset_keyring
 			elif 'could not satisfy dependencies' in err_str:
-				warn('Detected dependency issue: resetting pacman.conf and retrying...')
+				warn(
+					'Detected dependency issue: resetting '
+					'pacman.conf and retrying...'
+				)
 				recovery = reset_conf
 
 			if recovery and recovery():
@@ -119,14 +156,20 @@ class Pacman:
 					func(*args, **kwargs)
 					return
 				except Exception as retry_err:
-					raise RequirementError(f'{bail_message}: {retry_err}') from retry_err
+					raise RequirementError(
+						f'{bail_message}: {retry_err}'
+					) from retry_err
 
-			if input('Would you like to re-try this download? (Y/n): ').lower().strip() in {'', 'y'}:
+			if input(
+				'Would you like to re-try this download? (Y/n): '
+			).lower().strip() in {'', 'y'}:
 				try:
 					func(*args, **kwargs)
 					return
 				except Exception as retry_err:
-					raise RequirementError(f'{bail_message}: {retry_err}') from retry_err
+					raise RequirementError(
+						f'{bail_message}: {retry_err}'
+					) from retry_err
 
 			raise RequirementError(f'{bail_message}: {err}') from err
 
@@ -153,14 +196,24 @@ class Pacman:
 
 		if self.target == Path('/'):
 			cmd = f'pacman -S {" ".join(packages)} {flags}'
-			bail = f'Package installation failed. See {logger.host_path} or above message for error details'
+			bail = (
+				'Package installation failed. See '
+				f'{logger.host_path} or above message for error details'
+			)
 		else:
-			# no -K: that inits an empty target keyring (RSA-4096 master key gen,
-			# then archlinux-keyring's post_install lsigns every trusted key from
-			# scratch). pacstrap already verified packages with the host keyring,
-			# so let it copy that one in (its default when -K/-G are absent).
-			cmd = f'pacstrap -C {PACMAN_CONF} {self.target} {" ".join(packages)} {flags}'
-			bail = f'Pacstrap failed. See {logger.host_path} or above message for error details'
+			# no -K: that inits an empty target keyring (RSA-4096 master key
+			# gen, then archlinux-keyring's post_install lsigns every
+			# trusted key from scratch). pacstrap already verified packages
+			# with the host keyring, so let it copy that one in (its default
+			# when -K/-G are absent).
+			cmd = (
+				f'pacstrap -C {PACMAN_CONF} {self.target} '
+				f'{" ".join(packages)} {flags}'
+			)
+			bail = (
+				f'Pacstrap failed. See {logger.host_path} or above '
+				'message for error details'
+			)
 
 		self.ask(
 			'Could not strap in packages',

@@ -5,16 +5,22 @@
 For some hardware using the AUR for drivers is inevitable: the fix is a build.
 
 Hence why you can now use `--advanced` to get AUR support built-in
-> Uses a modified [`grimoire`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/grimoire.py) *during install*. As far as I know not many installers allow for this.
+> Uses a modified [`grimoire`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/grimoire.py)
+> *during install*. As far as I know not many installers allow for this.
 
-=> Make sure **to toggle kernel headers** from your desired variant(s) if you are building DKMS modules.
+=> Make sure **to toggle kernel headers** from your desired variant(s)
+if you are building DKMS modules.
 
-*For obvious reason another disclaimer here* is to make sure you know to trust what you are installing.
-Especially given the automated nature of the installs (privileged build user): sufficiently harden the machine for your use cases and limit AUR usage.
+*For obvious reason another disclaimer here*
+is to make sure you know to trust what you are installing.
+Especially given the automated nature of the installs (privileged build user):
+sufficiently harden the machine for your use cases and limit AUR usage.
 
 ## More hardware support
 
-Directly supported [graphics](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/graphics.py) and [firmware](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/firmware.py) packages can all be seen here.
+Directly supported [graphics](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/graphics.py)
+and [firmware](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/models/firmware.py)
+packages can all be seen here.
 
 The AUR might be useful for RealTek (and often requires you to pick LTS kernel).
 

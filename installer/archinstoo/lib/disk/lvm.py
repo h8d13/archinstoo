@@ -55,19 +55,29 @@ def _lvm_info(
 				return LvmVolumeInfo(
 					lv_name=entry['lv_name'],
 					vg_name=entry['vg_name'],
-					lv_size=Size(int(entry['lv_size'][:-1]), Unit.B, SectorSize.default()),
+					lv_size=Size(
+						int(entry['lv_size'][:-1]),
+						Unit.B,
+						SectorSize.default(),
+					),
 				)
 			case 'vg':
 				return LvmGroupInfo(
 					vg_uuid=entry['vg_uuid'],
-					vg_size=Size(int(entry['vg_size'][:-1]), Unit.B, SectorSize.default()),
+					vg_size=Size(
+						int(entry['vg_size'][:-1]),
+						Unit.B,
+						SectorSize.default(),
+					),
 				)
 
 	return None
 
 
 @overload
-def _lvm_info_with_retry(cmd: str, info_type: Literal['lv']) -> LvmVolumeInfo | None: ...
+def _lvm_info_with_retry(
+	cmd: str, info_type: Literal['lv']
+) -> LvmVolumeInfo | None: ...
 
 
 @overload
@@ -89,7 +99,11 @@ def _lvm_info_with_retry(
 			return _lvm_info(cmd, info_type)
 		except _EmptyReportError:
 			if attempt < max_retries - 1:
-				debug(f'LVM info query failed (attempt {attempt + 1}/{max_retries}), retrying in 3 seconds...')
+				debug(
+					'LVM info query failed (attempt '
+					f'{attempt + 1}/{max_retries}), '
+					'retrying in 3 seconds...'
+				)
 				time.sleep(3)
 
 	debug(f'LVM info query failed after {max_retries} attempts')
@@ -103,13 +117,19 @@ def lvm_vol_info(lv_name: str) -> LvmVolumeInfo | None:
 
 
 def lvm_group_info(vg_name: str) -> LvmGroupInfo | None:
-	cmd = f'vgs --reportformat json --unit B -o vg_name,vg_uuid,vg_size -S vg_name={vg_name}'
+	cmd = (
+		'vgs --reportformat json --unit B -o vg_name,vg_uuid,vg_size -S '
+		f'vg_name={vg_name}'
+	)
 
 	return _lvm_info_with_retry(cmd, 'vg')
 
 
 def lvm_pvseg_info(vg_name: str, lv_name: str) -> LvmPVInfo | None:
-	cmd = f'pvs --segments -o+lv_name,vg_name -S vg_name={vg_name},lv_name={lv_name} --reportformat json '
+	cmd = (
+		'pvs --segments -o+lv_name,vg_name -S '
+		f'vg_name={vg_name},lv_name={lv_name} --reportformat json '
+	)
 
 	return _lvm_info_with_retry(cmd, 'pvseg')
 
@@ -135,7 +155,10 @@ def lvm_import_vg(vg: LvmVolumeGroup) -> None:
 		return
 
 	if not is_exported:
-		debug(f'Volume group {vg.name} is already active (not exported), skipping import')
+		debug(
+			f'Volume group {vg.name} is already active (not '
+			'exported), skipping import'
+		)
 		return
 
 	cmd = f'vgimport {vg.name}'

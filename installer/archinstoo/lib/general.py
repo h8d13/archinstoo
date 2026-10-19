@@ -27,9 +27,12 @@ if TYPE_CHECKING:
 	from types import TracebackType
 
 # https://stackoverflow.com/a/43627833/929999
-# expanded strip ANSI/VT100 escapes: CSI (\x1B[...), OSC (\x1B]...BEL/ST), and single Fe escapes.
-# order matters: CSI and OSC must precede the Fe branch or \x1B] matches as a 2-char escape.
-_VT100_ESCAPE_REGEX = r'\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1B]*(?:\x07|\x1B\\)|[@-Z\\^_])'
+# expanded strip ANSI/VT100 escapes: CSI (\x1B[...), OSC (\x1B]...BEL/ST), and
+# single Fe escapes. order matters: CSI and OSC must precede the Fe branch or \x1B]
+# matches as a 2-char escape.
+_VT100_ESCAPE_REGEX = (
+	r'\x1B(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1B]*(?:\x07|\x1B\\)|[@-Z\\^_])'
+)
 _VT100_ESCAPE_REGEX_BYTES = _VT100_ESCAPE_REGEX.encode()
 
 
@@ -92,14 +95,17 @@ class SysCommandWorker:
 		if isinstance(cmd, str):
 			cmd = shlex.split(cmd)
 
-		if cmd and not cmd[0].startswith(('/', './')):  # Path() does not work well
+		# Path() does not work well
+		if cmd and not cmd[0].startswith(('/', './')):
 			cmd[0] = locate_binary(cmd[0])
 
 		self.cmd = cmd
 		self.peek_output = peek_output
-		# silent: still capture peeked output to cmd_output.txt, but don't echo it to the terminal
+		# silent: still capture peeked output to cmd_output.txt, but don't
+		# echo it to the terminal
 		self.silent = silent
-		# define the standard locale for command outputs. For now the C ascii one. Can be overridden
+		# define the standard locale for command outputs. For now the C ascii
+		# one. Can be overridden
 		self.environment_vars = {'LC_ALL': 'C'}
 		if environment_vars:
 			self.environment_vars.update(environment_vars)
@@ -115,7 +121,9 @@ class SysCommandWorker:
 		self.pid: int | None = None
 		self.started = False
 		self.ended = False
-		self.remove_vt100_escape_codes_from_lines: bool = remove_vt100_escape_codes_from_lines
+		self.remove_vt100_escape_codes_from_lines: bool = (
+			remove_vt100_escape_codes_from_lines
+		)
 
 	def __contains__(self, key: bytes) -> bool:
 		# Contains will also move the current buffert position forward.
@@ -129,9 +137,18 @@ class SysCommandWorker:
 
 	def __iter__(self, *args: str, **kwargs: dict[str, Any]) -> Iterator[bytes]:
 		last_line = self._trace_log.rfind(b'\n')
-		lines = filter(None, bytes(self._trace_log[self._trace_log_pos : last_line]).splitlines())
+		lines = filter(
+			None,
+			bytes(
+				self._trace_log[self._trace_log_pos : last_line]
+			).splitlines(),
+		)
 		for raw in lines:
-			line = clear_vt100_escape_codes(raw) if self.remove_vt100_escape_codes_from_lines else raw
+			line = (
+				clear_vt100_escape_codes(raw)
+				if self.remove_vt100_escape_codes_from_lines
+				else raw
+			)
 			yield line + b'\n'
 
 		self._trace_log_pos = last_line
@@ -151,7 +168,12 @@ class SysCommandWorker:
 	def __enter__(self) -> Self:
 		return self
 
-	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
+	def __exit__(
+		self,
+		exc_type: type[BaseException] | None,
+		exc_value: BaseException | None,
+		traceback: TracebackType | None,
+	) -> None:
 		# TODO: https://stackoverflow.com/questions/28157929/how-to-safely-handle-an-exception-inside-a-context-manager
 
 		if self.child_fd:
@@ -171,8 +193,10 @@ class SysCommandWorker:
 
 		if self.exit_code != 0:
 			cleaned_log = clear_vt100_escape_codes(self.trace_log)
+			tail = cleaned_log.decode('utf-8', errors='ignore')[-500:]
 			raise SysCallError(
-				f'{self.cmd} exited with abnormal exit code [{self.exit_code}]: {cleaned_log.decode("utf-8", errors="ignore")[-500:]}',
+				f'{self.cmd} exited with abnormal exit code '
+				f'[{self.exit_code}]: {tail}',
 				self.exit_code,
 				worker_log=cleaned_log,
 				cmd=self.cmd,
@@ -188,7 +212,9 @@ class SysCommandWorker:
 		self.make_sure_we_are_executing()
 
 		if self.child_fd:
-			return os.write(self.child_fd, data + (b'\n' if line_ending else b''))
+			return os.write(
+				self.child_fd, data + (b'\n' if line_ending else b'')
+			)
 
 		return 0
 
@@ -207,11 +233,14 @@ class SysCommandWorker:
 			if isinstance(output, str):
 				output = output.encode('UTF-8')
 			# the pty makes the child think it has a terminal, so pacman-key
-			# colours and pacman hides the cursor; only a real terminal wants
-			# those bytes, a log (CI, redirect, cmd_output.txt) wants the text
+			# colours and pacman hides the cursor; only a real
+			# terminal wants those bytes, a log (CI, redirect,
+			# cmd_output.txt) wants the text
 			plain = clear_vt100_escape_codes(output)
 			try:
-				text = (output if sys.stdout.isatty() else plain).decode('UTF-8')
+				text = (
+					output if sys.stdout.isatty() else plain
+				).decode('UTF-8')
 				_cmd_output(plain.decode('UTF-8'))
 			except UnicodeDecodeError:
 				return False
@@ -234,17 +263,21 @@ class SysCommandWorker:
 					self.peak(output)
 					self._trace_log += output
 				except OSError:
-					# pty closed: command done and no process holds the slave
+					# pty closed: command done and no
+					# process holds the slave
 					self.ended = True
 					break
 
 			if self.ended:
 				self._reap()
 			elif not got_output and self.pid is not None:
-				# pty can stay open on a leaked daemon (gnupg post_install spawns
-				# dirmngr); reap the child by pid so a held slave can't hang us
+				# pty can stay open on a leaked daemon (gnupg
+				# post_install spawns dirmngr); reap the child by pid so
+				# a held slave can't hang us
 				try:
-					reaped, wait_status = os.waitpid(self.pid, os.WNOHANG)
+					reaped, wait_status = os.waitpid(
+						self.pid, os.WNOHANG
+					)
 				except ChildProcessError:
 					self.ended = True
 					self.exit_code = 1
@@ -252,7 +285,9 @@ class SysCommandWorker:
 
 				if reaped:
 					self.ended = True
-					self.exit_code = os.waitstatus_to_exitcode(wait_status)
+					self.exit_code = os.waitstatus_to_exitcode(
+						wait_status
+					)
 
 	def _reap(self) -> None:
 		# prefer the pid; fall back to the pty fd if it was already reaped
@@ -291,19 +326,25 @@ class SysCommandWorker:
 		# https://stackoverflow.com/questions/4022600/python-pty-fork-how-does-it-work
 		if not self.pid:
 			# resizing our own pty SIGWINCHes us, and the forked child still
-			# carries the menu's handler: it would redraw curses into the pty
+			# carries the menu's handler: it would
+			# redraw curses into the pty
 			signal.signal(signal.SIGWINCH, signal.SIG_DFL)
 			termios.tcsetwinsize(0, (size.lines, size.columns))
 			_cmd_history(self.cmd)
 
 			try:
-				os.execve(self.cmd[0], list(self.cmd), Env.get_envir(self.environment_vars))  # noqa: S606 - SysCommand intentionally runs without a shell
+				os.execve(  # noqa: S606 - SysCommand intentionally runs without a shell
+					self.cmd[0],
+					list(self.cmd),
+					Env.get_envir(self.environment_vars),
+				)
 			except FileNotFoundError:
 				error(f'{self.cmd[0]} does not exist.')
 				self.exit_code = 1
 				return False
 		else:
-			# Only parent process moves back to the original working directory
+			# Only parent process moves back to the
+			# original working directory
 			os.chdir(old_dir)
 
 		self.started = True
@@ -335,7 +376,9 @@ class SysCommand:
 		self.silent = silent
 		self.environment_vars = environment_vars
 		self.working_directory = working_directory
-		self.remove_vt100_escape_codes_from_lines = remove_vt100_escape_codes_from_lines
+		self.remove_vt100_escape_codes_from_lines = (
+			remove_vt100_escape_codes_from_lines
+		)
 
 		self.session: SysCommandWorker | None = None
 		self.create_session()
@@ -343,13 +386,20 @@ class SysCommand:
 	def __enter__(self) -> SysCommandWorker | None:
 		return self.session
 
-	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
+	def __exit__(
+		self,
+		exc_type: type[BaseException] | None,
+		exc_value: BaseException | None,
+		traceback: TracebackType | None,
+	) -> None:
 		# TODO: https://stackoverflow.com/questions/28157929/how-to-safely-handle-an-exception-inside-a-context-manager
 
 		if exc_type is not None:
 			error(str(exc_value))
 
-	def __iter__(self, *args: list[Any], **kwargs: dict[str, Any]) -> Iterator[bytes]:
+	def __iter__(
+		self, *args: list[Any], **kwargs: dict[str, Any]
+	) -> Iterator[bytes]:
 		if self.session:
 			yield from self.session
 
@@ -361,16 +411,20 @@ class SysCommand:
 			end = key.stop or len(self.session.trace_log)
 
 			return self.session.trace_log[start:end]
-		raise ValueError("SysCommand() doesn't have key & value pairs, only slices, SysCommand('ls')[:10] as an example.")
+		raise ValueError(
+			"SysCommand() doesn't have key & value pairs, only "
+			"slices, SysCommand('ls')[:10] as an example."
+		)
 
 	@override
 	def __repr__(self, *args: list[Any], **kwargs: dict[str, Any]) -> str:
 		return self.decode('UTF-8', errors='backslashreplace') or ''
 
 	def create_session(self) -> bool:
-		# Initiates a :ref:`SysCommandWorker` session in this class ``.session``.
-		# It then proceeds to poll the process until it ends, after which it also
-		# clears any printed output if ``.peek_output=True``.
+		# Initiates a :ref:`SysCommandWorker` session in this class
+		# ``.session``. It then proceeds to poll the process until it ends,
+		# after which it also clears any printed output if
+		# ``.peek_output=True``.
 		if self.session:
 			return True
 
@@ -393,7 +447,12 @@ class SysCommand:
 
 		return True
 
-	def decode(self, encoding: str = 'utf-8', errors: str = 'backslashreplace', strip: bool = True) -> str:
+	def decode(
+		self,
+		encoding: str = 'utf-8',
+		errors: str = 'backslashreplace',
+		strip: bool = True,
+	) -> str:
 		if not self.session:
 			raise ValueError('No session available to decode')
 
@@ -453,20 +512,25 @@ def _cmd_history(cmd: list[str]) -> None:
 
 
 class _CmdOutputLog:
-	# the pty delivers redraw output in fragments, so blank-line capping and partial-line
-	# assembly carry state across writes; flush() drains the trailing partial at command end.
+	# the pty delivers redraw output in fragments, so blank-line capping and
+	# partial-line assembly carry state across writes; flush() drains the trailing
+	# partial at command end.
 	def __init__(self) -> None:
 		self._buffer = ''
 		self._blank_run = 0
 
 	def write(self, output: str) -> None:
 		cleaned = re.sub(_VT100_ESCAPE_REGEX, '', output)
-		cleaned = cleaned.replace('\r\n', '\n')  # the pty's ONLCR delivers every \n as \r\n
-		cleaned = re.sub(r'[^\n]*\r', '', cleaned)  # collapse bare-\r progress redraws to the final frame
-		cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', cleaned)  # leftover C0 controls (SI/SO/BEL/...), keep \t \n
+		# the pty's ONLCR delivers every \n as \r\n
+		cleaned = cleaned.replace('\r\n', '\n')
+		# collapse bare-\r progress redraws to the final frame
+		cleaned = re.sub(r'[^\n]*\r', '', cleaned)
+		# leftover C0 controls (SI/SO/BEL/...), keep \t \n
+		cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', cleaned)
 
 		self._buffer += cleaned
-		*lines, self._buffer = self._buffer.split('\n')  # keep the trailing partial line buffered
+		# keep the trailing partial line buffered
+		*lines, self._buffer = self._buffer.split('\n')
 
 		out = []
 		for line in lines:
@@ -474,7 +538,8 @@ class _CmdOutputLog:
 				self._blank_run = 0
 				out.append(line)
 			else:
-				# in-place redraws leave runs of blank lines; keep at most one
+				# in-place redraws leave runs of blank
+				# lines; keep at most one
 				self._blank_run += 1
 				if self._blank_run <= 1:
 					out.append('')
@@ -521,8 +586,12 @@ def run(
 	except subprocess.CalledProcessError as err:
 		# normalize to the SysCommand path's type so handlers written
 		# against either exception see failures from both exec paths
+		tail = (err.stderr or err.stdout or b'').decode(
+			'utf-8', errors='ignore'
+		)[-500:]
 		raise SysCallError(
-			f'{cmd} exited with abnormal exit code [{err.returncode}]: {(err.stderr or err.stdout or b"").decode("utf-8", errors="ignore")[-500:]}',
+			f'{cmd} exited with abnormal exit code '
+			f'[{err.returncode}]: {tail}',
 			err.returncode,
 			worker_log=(err.stdout or b'') + (err.stderr or b''),
 			cmd=err.cmd,

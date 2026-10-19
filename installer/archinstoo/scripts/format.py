@@ -1,7 +1,12 @@
 from pathlib import Path
 
 from archinstoo import debug, error, info
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstoo.lib.args import (
+	ArchConfig,
+	ArchConfigHandler,
+	Arguments,
+	get_arch_config_handler,
+)
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
@@ -19,7 +24,8 @@ def show_menu(config: ArchConfig, _args: Arguments) -> None:
 		global_menu.disable_all()
 
 		global_menu.set_enabled('disk_config', True)
-		global_menu.set_enabled('__config__', True)  # also enables session-only theme
+		# also enables session-only theme
+		global_menu.set_enabled('__config__', True)
 		global_menu.set_mandatory('timezone', False)
 
 		global_menu.run(additional_title='- Format mode')
@@ -53,17 +59,20 @@ def perform_installation(
 		installation.set_helper_flag('base', True)
 
 		# Mount all the drives to the desired mountpoint
-		# This *can* be done outside of the installation, but the installer can deal with it.
+		# This *can* be done outside of the installation, but the
+		# installer can deal with it.
 		info('Mounting the formatted layout...')
 		installation.mount_ordered_layout()
 
-		# to generate a fstab directory holder. Avoids an error on exit and at the same time checks the procedure
+		# to generate a fstab directory holder. Avoids an error on exit and at
+		# the same time checks the procedure
 		target = Path(f'{mountpoint}/etc/fstab')
 		if not target.parent.exists():
 			target.parent.mkdir(parents=True)
 			debug(f'Created {target.parent} to anchor fstab')
 
-	# For support reasons, we'll log the disk layout post installation (crash or no crash)
+	# For support reasons, we'll log the disk layout post
+	# installation (crash or no crash)
 	debug(f'Disk states after installing:\n{disk_layouts()}')
 
 
@@ -83,7 +92,9 @@ def format_disk() -> None:
 	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
 
 	if disk_config := config.disk_config:
-		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
+		fs_handler = FilesystemHandler(
+			disk_config, device_handler=device_handler
+		)
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(handler, device_handler)

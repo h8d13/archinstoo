@@ -26,7 +26,10 @@ class CPUSchedulerApp:
 		install_session: Installer,
 		cpu_scheduler_config: CPUSchedulerConfiguration,
 	) -> None:
-		debug(f'Installing sched_ext CPU scheduler: {cpu_scheduler_config.scheduler.value}')
+		debug(
+			'Installing sched_ext CPU scheduler: '
+			f'{cpu_scheduler_config.scheduler.value}'
+		)
 
 		install_session.add_additional_packages(self.packages)
 
@@ -35,7 +38,11 @@ class CPUSchedulerApp:
 		config_dir = install_session.target / 'etc/scx_loader'
 		config_dir.mkdir(parents=True, exist_ok=True)
 		config_path = config_dir / 'config.toml'
-		config_path.write_text(f'default_sched = "{cpu_scheduler_config.scheduler.value}"\ndefault_mode = "Auto"\n')
+		config_path.write_text(
+			'default_sched = '
+			f'"{cpu_scheduler_config.scheduler.value}"\ndefault_mode '
+			'= "Auto"\n'
+		)
 		debug(f'Wrote {config_path}')
 
 		install_session.enable_service(self.services)

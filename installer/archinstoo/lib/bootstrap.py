@@ -67,7 +67,10 @@ def source() -> Source | None:
 		)
 	if ARCH == 'aarch64':
 		ports = 'https://arch-linux-repo.drzee.net/arch'
-		tarball = f'{ports}/tarballs/os/aarch64/archlinux-bootstrap-latest-aarch64.tar.zst'
+		tarball = (
+			f'{ports}/tarballs/os/aarch64/'
+			'archlinux-bootstrap-latest-aarch64.tar.zst'
+		)
 		return Source(
 			tarball=tarball,
 			sig=f'{tarball}.sig',
@@ -115,9 +118,28 @@ def _gpg_status(src: Source, gpg: list[str], tarball: Path, sig: Path) -> str:
 	if src.key_url:
 		SysCommand([*gpg, '--import', str(fetch(src.key_url))])
 	else:
-		SysCommand([*gpg, '--auto-key-locate', 'clear,wkd', '--locate-external-key', str(src.key_wkd)])
+		SysCommand(
+			[
+				*gpg,
+				'--auto-key-locate',
+				'clear,wkd',
+				'--locate-external-key',
+				str(src.key_wkd),
+			]
+		)
 	try:
-		return SysCommand([*gpg, '--trusted-key', src.key_fpr, '--status-fd', '1', '--verify', str(sig), str(tarball)]).decode()
+		return SysCommand(
+			[
+				*gpg,
+				'--trusted-key',
+				src.key_fpr,
+				'--status-fd',
+				'1',
+				'--verify',
+				str(sig),
+				str(tarball),
+			]
+		).decode()
 	except SysCallError as err:
 		return err.worker_log.decode(errors='ignore')
 
@@ -126,7 +148,9 @@ def verify_sig(src: Source, tarball: Path, sig: Path) -> None:
 	gnupg = BOOT_DIR / 'gnupg'
 	gnupg.mkdir(mode=0o700, exist_ok=True)
 	try:
-		status = _gpg_status(src, ['gpg', '--homedir', str(gnupg)], tarball, sig)
+		status = _gpg_status(
+			src, ['gpg', '--homedir', str(gnupg)], tarball, sig
+		)
 	finally:
 		# gpg started an agent (and dirmngr for WKD) for this homedir:
 		# nothing needs them after, they would outlive the run on the host
@@ -149,14 +173,27 @@ def unpack(src: Source) -> None:
 	if shutil.which('gpg'):
 		verify_sig(src, tarball, sig)
 	elif src.sums:
-		warn(f'no gpg, checksum only, trusting TLS to {src.sums.rsplit("/", 1)[0]}')
+		warn(
+			'no gpg, checksum only, trusting TLS to '
+			f'{src.sums.rsplit("/", 1)[0]}'
+		)
 	else:
 		raise BootError(f'no checksums published for {ARCH}, gpg is required')
 	sig.unlink()
 
 	# bsdtar: restores the LIBARCHIVE.xattr file capabilities GNU/busybox tar
 	# and python's tarfile drop
-	SysCommand(['bsdtar', '-x', '--numeric-owner', '-f', str(tarball), '-C', str(BOOT_DIR)])
+	SysCommand(
+		[
+			'bsdtar',
+			'-x',
+			'--numeric-owner',
+			'-f',
+			str(tarball),
+			'-C',
+			str(BOOT_DIR),
+		]
+	)
 	tarball.unlink()
 	if src.key_url:
 		shutil.copy(BOOT_DIR / src.key_url.rsplit('/', 1)[-1], PORT_KEY)
@@ -219,7 +256,14 @@ def chroot_setup() -> None:
 		bind_into_root(Path('/mnt'), '--rbind', '--make-rslave')
 	# /run/udev: lsblk UUIDs, same reason as the udev check
 	bind_into_root(Path('/run'), '--bind', '--make-private')
-	mount('-t', 'tmpfs', 'tmp', str(ROOT / 'tmp'), '-o', 'mode=1777,strictatime,nodev,nosuid')
+	mount(
+		'-t',
+		'tmpfs',
+		'tmp',
+		str(ROOT / 'tmp'),
+		'-o',
+		'mode=1777,strictatime,nodev,nosuid',
+	)
 	# the tarball has no resolv.conf to bind over; a host without one has no
 	# DNS to hand in either (arch-chroot skips it the same way)
 	if Path('/etc/resolv.conf').exists():
@@ -269,7 +313,19 @@ def run_inside(src: Source, args: list[str]) -> int:
 	# own pid namespace, as arch-chroot does: what the run leaves behind
 	# (pacman-key's gpg-agent) dies with it instead of holding the root busy.
 	# This console, not SysCommand's pty: the menus read our stdin
-	argv = ['unshare', '--fork', '--pid', '--kill-child', 'chroot', str(ROOT), '/bin/bash', '-c', script, 'boot', *args]
+	argv = [
+		'unshare',
+		'--fork',
+		'--pid',
+		'--kill-child',
+		'chroot',
+		str(ROOT),
+		'/bin/bash',
+		'-c',
+		script,
+		'boot',
+		*args,
+	]
 	return subprocess.run(argv, env=env, check=False).returncode  # noqa: S603 - fixed argv, tools from $PATH
 
 

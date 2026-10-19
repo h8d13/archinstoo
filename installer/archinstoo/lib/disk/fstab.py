@@ -19,7 +19,11 @@ _FSCK_TYPES = ('ext2', 'ext3', 'ext4', 'vfat')
 
 
 def fs_uuid(dev_path: Path | str) -> str:
-	return SysCommand(['blkid', '-s', 'UUID', '-o', 'value', str(dev_path)]).decode().strip()
+	return (
+		SysCommand(['blkid', '-s', 'UUID', '-o', 'value', str(dev_path)])
+		.decode()
+		.strip()
+	)
 
 
 def _options(raw: str) -> str:
@@ -34,7 +38,17 @@ def _fsck_pass(fstype: str, mountpoint: str) -> int:
 
 def _mount_entries(target: Path) -> list[str]:
 	# -v: source without its [/subvol] suffix, the subvol= option carries it
-	out = SysCommand(['findmnt', '-J', '-R', '-v', '-o', 'TARGET,SOURCE,FSTYPE,OPTIONS,UUID', str(target)]).decode()
+	out = SysCommand(
+		[
+			'findmnt',
+			'-J',
+			'-R',
+			'-v',
+			'-o',
+			'TARGET,SOURCE,FSTYPE,OPTIONS,UUID',
+			str(target),
+		]
+	).decode()
 	stack = json.loads(out)['filesystems']
 	entries = []
 	while stack:
@@ -45,19 +59,39 @@ def _mount_entries(target: Path) -> list[str]:
 		# a mount stacked on it at the same path hides it (a bind of the
 		# directory underneath, the host's fs below a pre-mounted target):
 		# only the top one is what boots
-		if not fs['uuid'] or any(child['target'] == fs['target'] for child in children):
+		if not fs['uuid'] or any(
+			child['target'] == fs['target'] for child in children
+		):
 			continue
 		mountpoint = '/' + fs['target'].removeprefix(str(target)).lstrip('/')
 		fstype = fs['fstype']
 		# one block per mount: the source as a comment, a blank line after
-		line = f'UUID={fs["uuid"]}\t{mountpoint}\t{fstype}\t{_options(fs["options"])}\t0\t{_fsck_pass(fstype, mountpoint)}'
+		fields = (
+			f'UUID={fs["uuid"]}',
+			mountpoint,
+			fstype,
+			_options(fs['options']),
+			'0',
+			str(_fsck_pass(fstype, mountpoint)),
+		)
+		line = '\t'.join(fields)
 		entries.append(f'# {fs["source"]}\n{line}\n')
 	return entries
 
 
 def mounted_at(target: Path) -> dict[str, str]:
 	# what is visible at target: mountinfo order, the topmost mount comes last
-	out = SysCommand(['findmnt', '-J', '-l', '-o', 'UUID,FSTYPE', '--mountpoint', str(target)]).decode()
+	out = SysCommand(
+		[
+			'findmnt',
+			'-J',
+			'-l',
+			'-o',
+			'UUID,FSTYPE',
+			'--mountpoint',
+			str(target),
+		]
+	).decode()
 	fs: dict[str, str] = json.loads(out)['filesystems'][-1]
 	return fs
 

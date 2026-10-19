@@ -32,7 +32,10 @@ def _bootstrap_key(target: Path, name: str, passphrase: str) -> Iterator[Path]:
 
 
 def enroll_fido2(target: Path, enc: DiskEncryption) -> None:
-	if not (token := enc.fido2_device) or enc.encryption_type == EncryptionType.NO_ENCRYPTION:
+	if (
+		not (token := enc.fido2_device)
+		or enc.encryption_type == EncryptionType.NO_ENCRYPTION
+	):
 		return
 	if not (password := enc.encryption_password):
 		warn('FIDO2 enrollment skipped: no encryption password available')
@@ -45,14 +48,20 @@ def enroll_fido2(target: Path, enc: DiskEncryption) -> None:
 		# inherited by cryptenroll below: keep PIN/touch prompts plain text
 		Env.put_value('SYSTEMD_EMOJI', '0')
 
-		info(f'FIDO2 token: {token.path} ({token.manufacturer} {token.product})')
+		info(
+			f'FIDO2 token: {token.path} ({token.manufacturer} '
+			f'{token.product})'
+		)
 		# Touch/PIN prompts are easy to miss in the install output;
 		# block until the user is watching before systemd-cryptenroll starts.
 		input('Are you ready to enroll your token? Press Enter to continue...')
 
 		for dev in devices:
 			info(f'Enrolling FIDO2 keyslot for {dev}')
-			info('Touch the token when it blinks; a PIN prompt may appear first')
+			info(
+				'Touch the token when it blinks; a PIN '
+				'prompt may appear first'
+			)
 			# the target's own cryptenroll, key path as seen from inside it
 			cmd = [
 				'systemd-cryptenroll',
@@ -60,6 +69,10 @@ def enroll_fido2(target: Path, enc: DiskEncryption) -> None:
 				f'--fido2-device={token.path}',
 				str(dev),
 			]
-			# stdio is inherited, cryptenroll's own error is already on screen
+			# stdio is inherited, cryptenroll's own error
+			# is already on screen
 			if returncode := run_attached(target, cmd):
-				warn(f'FIDO2 enrollment failed for {dev} (exit {returncode})')
+				warn(
+					f'FIDO2 enrollment failed for {dev} '
+					f'(exit {returncode})'
+				)

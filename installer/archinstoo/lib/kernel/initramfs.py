@@ -63,22 +63,44 @@ class Initramfs:
 	def write_conf(self, target: Path) -> None:
 		with (target / 'etc/mkinitcpio.conf').open('r+') as mkinit:
 			content = mkinit.read()
-			content = re.sub(r'\nMODULES=(.*)', f'\nMODULES=({" ".join(self.modules)})', content)
-			content = re.sub(r'\nBINARIES=(.*)', f'\nBINARIES=({" ".join(self.binaries)})', content)
-			content = re.sub(r'\nFILES=(.*)', f'\nFILES=({" ".join(self.files)})', content)
-			content = re.sub(r'\nHOOKS=(.*)', f'\nHOOKS=({" ".join(self.hooks)})', content)
+			content = re.sub(
+				r'\nMODULES=(.*)',
+				f'\nMODULES=({" ".join(self.modules)})',
+				content,
+			)
+			content = re.sub(
+				r'\nBINARIES=(.*)',
+				f'\nBINARIES=({" ".join(self.binaries)})',
+				content,
+			)
+			content = re.sub(
+				r'\nFILES=(.*)',
+				f'\nFILES=({" ".join(self.files)})',
+				content,
+			)
+			content = re.sub(
+				r'\nHOOKS=(.*)',
+				f'\nHOOKS=({" ".join(self.hooks)})',
+				content,
+			)
 			mkinit.seek(0)
 			mkinit.truncate()
 			mkinit.write(content)
 
-		debug(f'mkinitcpio.conf HOOKS=({" ".join(self.hooks)}) MODULES=({" ".join(self.modules)}) FILES=({" ".join(self.files)})')
+		debug(
+			f'mkinitcpio.conf HOOKS=({" ".join(self.hooks)}) '
+			f'MODULES=({" ".join(self.modules)}) '
+			f'FILES=({" ".join(self.files)})'
+		)
 
 	def build(self, installation: Installer, flags: list[str]) -> bool:
 		self.write_conf(installation.target)
 		info('Building initramfs...', step=True)
 
 		try:
-			installation.arch_chroot(f'mkinitcpio {" ".join(flags)}', peek_output=True)
+			installation.arch_chroot(
+				f'mkinitcpio {" ".join(flags)}', peek_output=True
+			)
 			return True
 		except SysCallError as e:
 			warn(f'mkinitcpio failed: {e}')

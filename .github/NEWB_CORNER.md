@@ -2,24 +2,33 @@
 
 ## Flashing the USB
 
-You can use [rufus](https://rufus.ie/) for Winslows or [KDEImageWriter](https://apps.kde.org/isoimagewriter/) from Linux (or dd)
+You can use [rufus](https://rufus.ie/) for Winslows
+or [KDEImageWriter](https://apps.kde.org/isoimagewriter/) from Linux (or dd)
 > Select mbr/gpt according to your hardware (usually gpt for newer hardware)
 
 Then when pressing "start" **use dd mode** for full copy.
 
-After install, do not forget to **remove or change boot orders** in motherboard settings.
+After install,
+do not forget to **remove or change boot orders** in motherboard settings.
 This is usually f2, f10, f12 or DEL or other combinations depending on manufacturers.
 
-Do check that you are using your best hub/USB keys (usually blue USBs are for 3.x+ or even better in USB-C)
+Do check that you are using your best hub/USB keys
+(usually blue USBs are for 3.x+ or even better in USB-C)
 If install speed matters to you.
 
 ## More tips in the menu
 
-Take your time, **installing is fast**, make sure you went through everything you might need.
+Take your time, **installing is fast**,
+make sure you went through everything you might need.
 
 > [!TIP]
-> Looking up your motherboard model, CPU/GPU, memory, disks, etc... Can often save you lots of headaches.
-> You can use `lspci` and `lsusb`. `Firmware` > `full` lets you add the optional vendor packages (Marvell, Mellanox, QLogic and friends) which the base `linux-firmware` does not carry. `vendor` is for trimming that down by hand.
+> Looking up your motherboard model, CPU/GPU, memory, disks, etc...
+> Can often save you lots of headaches.
+> You can use `lspci` and `lsusb`.
+> `Firmware` > `full` lets you add the optional vendor packages
+> (Marvell, Mellanox, QLogic and friends)
+> which the base `linux-firmware` does not carry.
+> `vendor` is for trimming that down by hand.
 
 You may view main schema here: [Menu-Preview](./SCHEMA.md)
 
@@ -31,20 +40,26 @@ ARROW keys lets you move around.
 
 `CTRL + H` shows the full help
 
-When setting up a user you can also clone dotfiles directly and will be in `/home/user/.stash`
+When setting up a user you can also clone dotfiles directly
+and will be in `/home/user/.stash`
 
 ## Desktop vs Window Manager
 
-If you are brand new to archlinux full desktops are simpler to handle (`KDE Plasma`, `GNOME`, `Cinnamon`, `Cosmic` and the likes)
+If you are brand new to archlinux full desktops are simpler to handle
+(`KDE Plasma`, `GNOME`, `Cinnamon`, `Cosmic` and the likes)
 Since a lot can be handled through GUI and not config files.
 
 > [!NOTE]
-> You may want to install one of these first instead of a WindowManager where more **manual work** is expected.
-> If you do want a WM, we recommend using your **own config files** instead of the "dotfile" culture, you'll learn more and have a system tailored to you.
+> You may want to install one of these first
+> instead of a WindowManager where more **manual work** is expected.
+> If you do want a WM, we recommend using your **own config files**
+> instead of the "dotfile" culture,
+> you'll learn more and have a system tailored to you.
 
 ## Languages compat
 
-You can add Google fonts for extended language support and setup multiple keyboards once you have a basic system working.
+You can add Google fonts for extended language support
+and setup multiple keyboards once you have a basic system working.
 ```shell
 noto-fonts-cjk         # Chinese, Japanese, Korean
 noto-fonts-extra       # Full extended symbols

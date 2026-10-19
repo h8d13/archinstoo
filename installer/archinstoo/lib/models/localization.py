@@ -12,7 +12,8 @@ class LocaleConfiguration:
 	console_font: str = 'default8x16'
 	# Graphical (X11/Wayland) keyboard, kept separate from the console kb_layout.
 	# Empty = leave unset (graphical sessions fall back to the libxkbcommon 'us').
-	# xkb_options is a comma-separated list (matches XkbOptions / XKB_DEFAULT_OPTIONS).
+	# xkb_options is a comma-separated list (matches XkbOptions /
+	# XKB_DEFAULT_OPTIONS).
 	xkb_layout: str = ''
 	xkb_model: str = ''
 	xkb_variant: str = ''

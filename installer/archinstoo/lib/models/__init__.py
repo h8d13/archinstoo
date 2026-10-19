@@ -1,4 +1,11 @@
-from .applications import ApplicationConfiguration, Audio, AudioConfiguration, BluetoothConfiguration, PrintServiceConfiguration, ThunderboltConfiguration
+from .applications import (
+	ApplicationConfiguration,
+	Audio,
+	AudioConfiguration,
+	BluetoothConfiguration,
+	PrintServiceConfiguration,
+	ThunderboltConfiguration,
+)
 from .bootloader import Bootloader
 from .device import (
 	BDevice,

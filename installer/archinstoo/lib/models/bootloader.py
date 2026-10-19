@@ -38,7 +38,8 @@ class Bootloader(Enum):
 			case Bootloader.Refind:
 				return [self.value]
 			case _:
-				# systemd-boot ships with systemd, efistub is a kernel feature
+				# systemd-boot ships with systemd,
+				# efistub is a kernel feature
 				return [EFIBOOTMGR] if uefi else []
 
 	def has_removable_support(self) -> bool:
@@ -67,7 +68,10 @@ class Bootloader(Enum):
 
 		if bootloader not in bootloader_options:
 			values = ', '.join(bootloader_options)
-			warn(f'Invalid bootloader value "{bootloader}". Allowed values: {values}')
+			warn(
+				f'Invalid bootloader value "{bootloader}". '
+				f'Allowed values: {values}'
+			)
 			raise SystemExit(1)
 
 		return cls(bootloader)
@@ -86,7 +90,9 @@ class BootloaderConfiguration:
 
 	def json(self) -> dict[str, Any]:
 		return {
-			'bootloader': self.bootloader.json() if self.bootloader else None,
+			'bootloader': self.bootloader.json()
+			if self.bootloader
+			else None,
 			'uki': self.uki,
 			'removable': self.removable,
 			'quiet': self.quiet,
@@ -115,13 +121,17 @@ class BootloaderConfiguration:
 	@classmethod
 	def get_default(cls, uefi: bool, skip_boot: bool = False) -> Self:
 		bootloader = None if skip_boot else Bootloader.Grub
-		removable = uefi and bootloader is not None and bootloader.has_removable_support()
+		removable = (
+			uefi
+			and bootloader is not None
+			and bootloader.has_removable_support()
+		)
 		uki = uefi and bootloader is not None
 		return cls(bootloader=bootloader, uki=uki, removable=removable)
 
 	def preview(self, uefi: bool) -> str:
-		text = f'Bootloader: {self.bootloader.display_name() if self.bootloader else "None"}'
-		text += '\n'
+		name = self.bootloader.display_name() if self.bootloader else 'None'
+		text = f'Bootloader: {name}\n'
 		if self.bootloader is None:
 			return text
 		if uefi:

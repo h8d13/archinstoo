@@ -6,47 +6,73 @@ Why would someone want to code 12h a day something like this..?
 
 ## Roots
 
-When asked in 2005 whether he planned to automate more of the installation process, adding curses frontends, user creation wizards, etc. Judd Vinet, Arch's founder, replied:
+When asked in 2005 whether he planned to automate more of the installation process,
+adding curses frontends, user creation wizards, etc.
+Judd Vinet, Arch's founder, replied:
 
-> "Not really. A lot of people like our current installation script. One thing I'd like to have is a 'kickstart' style setup for sysadmins who install linux in labs or other settings where each install is more-or-less identical."
+> "Not really. A lot of people like our current installation script.
+> One thing I'd like to have is a 'kickstart' style setup for sysadmins
+> who install linux in labs or other settings
+> where each install is more-or-less identical."
 > — [The Big Arch Linux Interview, OSnews (March 2005)](https://www.osnews.com/story/10142/the-big-arch-linux-interview/)
 
-He also said: *"Arch assumes you know what you're doing... it tends to stay out of your way."*
+He also said:
+*"Arch assumes you know what you're doing... it tends to stay out of your way."*
 
-Installer `archinstoo` carries this forward. It exists to give you an OS, not to make decisions for you.
+Installer `archinstoo` carries this forward.
+It exists to give you an OS, not to make decisions for you.
 The entire advancement is the number of decisions it **hands back to you**.
 
-There is a true power in reproducible/modular automation as such, which surfaces problems in core logic or order of operations or even actual upstream fixes.
-And the "manual" enjoyer, might even take taste to reading through some of the source: since they will find direct references to both the holy Wiki and reports from other users.
+There is a true power in reproducible/modular automation as such,
+which surfaces problems in core logic or order of operations
+or even actual upstream fixes.
+And the "manual" enjoyer, might even take taste to reading through some of the source:
+since they will find direct references to both the holy Wiki
+and reports from other users.
 
-A human doing a manual install just shrugs and retries, but a script hitting the same weird hang every run forces you to dig until you find the root cause.
-Because correct scripting is unforgiving, reproducible. It also doubles it's usefulness by being documentation as code.
+A human doing a manual install just shrugs and retries,
+but a script hitting the same weird hang every run forces you to dig
+until you find the root cause.
+Because correct scripting is unforgiving, reproducible.
+It also doubles it's usefulness by being documentation as code.
 
 > “Every good work of software starts by scratching a developer’s personal itch.”
-> ― Eric S. Raymond, The Cathedral & the Bazaar: Musings on Linux and Open Source by an Accidental Revolutionary
+> ― Eric S. Raymond, The Cathedral & the Bazaar:
+> Musings on Linux and Open Source by an Accidental Revolutionary
 
-I'd like to extend this quote: private tinkering with, digging into, and understanding something is what enables "real work" in the first place. Every pass yields deeper meaning, and better implementations. 
-Yet there's a beautiful irony here: however much I add to this doc, the **end result** is the only thing that predicates actual motivation.
+I'd like to extend this quote: private tinkering with, digging into,
+and understanding something is what enables "real work" in the first place.
+Every pass yields deeper meaning, and better implementations.
+Yet there's a beautiful irony here: however much I add to this doc,
+the **end result** is the only thing that predicates actual motivation.
 
 This "draft state" is the work, before anyone is watching or stakes to exist.
-Someone's dead-end, or disagreement, or random forum post might actually be exactly what another person needs.
+Someone's dead-end, or disagreement, or random forum post
+might actually be exactly what another person needs.
 
 > Simplicity does not precede complexity, but follows it.
 > ― Alan Perlis
 
 ## Rebuilding more with less
 
-Idea was that with less complexity, we can build more stable experience and possible paths.
+Idea was that with less complexity,
+we can build more stable experience and possible paths.
 
-This is a powerful idea because it would allow for standards to **compete in better environment**.
+This is a powerful idea because it would allow for standards to
+**compete in better environment**.
 
 Providing choice should always be a priority, this makes for why, arch is arch.
-And `archinstoo` in its essence should behave similarly, giving all the options makes them all "right" to someone's eyes.
+And `archinstoo` in its essence should behave similarly,
+giving all the options makes them all "right" to someone's eyes.
 
-For example a feature that only 1% of users actually use, should not be given priorities over modular architecture.
+For example a feature that only 1% of users actually use,
+should not be given priorities over modular architecture.
 
-A recurring pattern in the old codebase was hard-coded defaults masquerading as necessity. Desktop profiles bundled networking tools, editors, and utilities.
-Regardless of environment or intent. Over time, this created hidden dependencies and undocumented behavior.
+A recurring pattern in the old codebase
+was hard-coded defaults masquerading as necessity.
+Desktop profiles bundled networking tools, editors, and utilities.
+Regardless of environment or intent.
+Over time, this created hidden dependencies and undocumented behavior.
 
 Some better examples:
 
@@ -69,11 +95,13 @@ Historically this list from [`default_profiles/desktop.py`](https://github.com/a
 (Which I have already been tearing apart)
 Used to hardcode stuff like `nano htop vim wpa_supplicant ...`
 
-My goal is this, to keep reducing hard-coded "standard" to choices/logic options. Every thing here becomes a menu of it's own.
+My goal is this, to keep reducing hard-coded "standard" to choices/logic options.
+Every thing here becomes a menu of it's own.
 The same is true with `base-devel` that used to be installed by default in archinstall.
 But also pulled in `sudo` instead of giving liberty of choice there again.
 
-But for 5 years makepkg and similar major upstream projects support alternatives and so should any code really.
+But for 5 years makepkg and similar major upstream projects support alternatives
+and so should any code really.
 
 ```
   Commit: 2535611d6c3cbf951408c50ab35953efaf32f686
@@ -88,81 +116,127 @@ But for 5 years makepkg and similar major upstream projects support alternatives
 
   The feature request (FS#32621) is at: https://bugs.archlinux.org/task/32621
 ```
-Anyways you start seeing the pattern... What is a 'standard' because it's actually needed, or what is a 'standard' because someone said it should be and left it in a file somewhere.
+Anyways you start seeing the pattern...
+What is a 'standard' because it's actually needed,
+or what is a 'standard' because someone said it should be
+and left it in a file somewhere.
 
-Then `doas`, `run0` and simply `su` can become first class citizens. (Or any other priv-esc binary really.)
+Then `doas`, `run0` and simply `su` can become first class citizens.
+(Or any other priv-esc binary really.)
 
-The same philosophy applies to dependencies. By removing unnecessary Python libraries and reducing the dependency surface to what is actually required.
+The same philosophy applies to dependencies.
+By removing unnecessary Python libraries
+and reducing the dependency surface to what is actually required.
 Then `archinstoo` becomes lighter, clearer, and no less capable.
 
-For example, by removing `python-pydantic`, `python-cryptography` and `python-textual` from deps we can allow for a lighter package that only depends directly on `python-pyparted`.
+For example, by removing `python-pydantic`, `python-cryptography` and `python-textual`
+from deps we can allow for a lighter package
+that only depends directly on `python-pyparted`.
 (And what is expected on ISOs) Without losing any functionality.
 
-Up until recently, the official installer [used](https://github.com/archlinux/archinstall/commit/6c6c8d8000af4d395abe9c453b21bdd074b6c6bb) to also install x11 packages unconditionally.
-Following [issue/discussion](https://github.com/archlinux/archinstall/issues/4190). This illustrates the larger theme of why `archinstoo`.
+Up until recently, the official installer [used](https://github.com/archlinux/archinstall/commit/6c6c8d8000af4d395abe9c453b21bdd074b6c6bb)
+to also install x11 packages unconditionally.
+Following [issue/discussion](https://github.com/archlinux/archinstall/issues/4190).
+This illustrates the larger theme of why `archinstoo`.
 
 ### Withstanding to-dos
 
-Working in a volunteer-driven project with limited feedback loops often means long-standing issues survive simply because they are hard to address incrementally.
+Working in a volunteer-driven project with limited feedback loops
+often means long-standing issues survive
+simply because they are hard to address incrementally.
 
-Alpha: `archinstoo` exists as a space where problems can be solved directly, not worked around.
+Alpha: `archinstoo` exists as a space where problems can be solved directly,
+not worked around.
 
-The first major refactor removed too much. This iteration is more deliberate, unapologetic about removing code that exists only to preserve behavior rather than correctness.
+The first major refactor removed too much.
+This iteration is more deliberate,
+unapologetic about removing code
+that exists only to preserve behavior rather than correctness.
 But still removed considerable parts, often in favor of something else.
 
 ### Code Quality
 
-Hard-coded behavior acts as undocumented policy. Once embedded, it becomes invisible; accepted as “how things work” rather than questioned. Reducing these assumptions improves code readability, logical flow, and long-term adaptability.
+Hard-coded behavior acts as undocumented policy.
+Once embedded, it becomes invisible;
+accepted as “how things work” rather than questioned.
+Reducing these assumptions improves code readability, logical flow,
+and long-term adaptability.
 
-This approach naturally opens the door to alternatives (and competing standards), different privilege models, and non-default environments. Once the choice exists and works, using it becomes both empowering and satisfying.
+This approach naturally opens the door to alternatives (and competing standards),
+different privilege models, and non-default environments.
+Once the choice exists and works, using it becomes both empowering and satisfying.
 
 Linters and other tools to improve code programmatically.
 
 ### Separation and pace
 
-This separation allows faster development cycles, cleaner testing, and clearer boundaries between development and general usage: `archinstoo` also serves as:
+This separation allows faster development cycles, cleaner testing,
+and clearer boundaries between development and general usage:
+`archinstoo` also serves as:
 
 - its own installation medium builder
 - testing suite
 - surrounding tools
 
-The master branch is intended to be a single source of truth that evolves alongside the ecosystem.
-It should not be constrained by deprecated configurations or stylistic nitpicks that slow meaningful progress.
+The master branch is intended to be a single source of truth
+that evolves alongside the ecosystem.
+It should not be constrained by deprecated configurations
+or stylistic nitpicks that slow meaningful progress.
 
 ### Dev
 
-Development branches are intentionally experimental, sometimes exploring ideas that may never land upstream.
-This freedom enables rapid iteration and early testing of new technologies without burdening stable users.
+Development branches are intentionally experimental,
+sometimes exploring ideas that may never land upstream.
+This freedom enables rapid iteration and early testing of new technologies
+without burdening stable users.
 
-In a fast-moving, deeply technical codebase, correctness and architecture must come first. And experimental features are fun to test:
+In a fast-moving, deeply technical codebase,
+correctness and architecture must come first.
+And experimental features are fun to test:
 Bcachefs support when it was dropped by Mr. Torvalds, CachyOS kernel support, etc.
 
-Future to me IS simplifying/automating, and providing more tools, never settling for less.
+Future to me IS simplifying/automating, and providing more tools,
+never settling for less.
 
 ### Buried treasures
 
-The moment it became possible to directly fix issues instead of negotiating around them, the project became a long-term investment.
-And here `archinstoo` exists to uncover edge cases, support unconsidered configurations, and give users tools.
+The moment it became possible to directly fix issues instead of negotiating around them,
+the project became a long-term investment.
+And here `archinstoo` exists to uncover edge cases, support unconsidered configurations,
+and give users tools.
 This aiming to actually reflect how operating systems are used in the real world.
 
 ## Why
 
 ### Fork
 
-I don't really think a fork is ever considered something welcome, or truly maintainable, but again it's the only way I can think of to have a "safe space".
-Both for my fixes or testing other's patches. Anyways this allows me to test a bit faster and modify more behaviors to shorten testing.
+I don't really think a fork is ever considered something welcome, or truly maintainable,
+but again it's the only way I can think of to have a "safe space".
+Both for my fixes or testing other's patches.
+Anyways this allows me to test a bit faster
+and modify more behaviors to shorten testing.
 
-`archinstoo` exists because fixing `archinstall`’s problems required more than incremental patches.
-Over time, architectural debt, backwards-compat constraints, and installer-first assumptions made certain classes of bugs, UX issues, and misconfigurations...
-Effectively become unfixable without breaking existing behavior or being annoyed at the slow progress.
+`archinstoo` exists because fixing `archinstall`’s problems
+required more than incremental patches.
+Over time, architectural debt, backwards-compat constraints,
+and installer-first assumptions made certain classes of bugs, UX issues,
+and misconfigurations...
+Effectively become unfixable without breaking existing behavior
+or being annoyed at the slow progress.
 
-This project started after contributing upstream and realizing that correctness, clarity, and explicit system modeling could not meaningfully coexist with those constraints.
+This project started after contributing upstream
+and realizing that correctness, clarity, and explicit system modeling
+could not meaningfully coexist with those constraints.
 (+ UI choices I disagree with, same for creds file).
 
-The goal of `archinstoo` is to be explicit instead of permissive, minimal instead of defensive (and bloated!), and intentional instead of heuristic-driven.
-Nothing is installed “just in case,” configuration is derived from actual capabilities, and users are expected to mean the choices they make.
+The goal of `archinstoo` is to be explicit instead of permissive,
+minimal instead of defensive (and bloated!),
+and intentional instead of heuristic-driven.
+Nothing is installed “just in case,” configuration is derived from actual capabilities,
+and users are expected to mean the choices they make.
 
-This trades broad approachability for predictable, debuggable systems and that trade-off is intentional.
+This trades broad approachability for predictable, debuggable systems
+and that trade-off is intentional.
 
 ### Arch
 
@@ -170,27 +244,38 @@ The main controversy in the arch world is the following:
 
     - Users should always install manually once
 
-This makes it easier for them to troubleshoot if they ever do run into an issue, and even contribute to installer related issues.
+This makes it easier for them to troubleshoot if they ever do run into an issue,
+and even contribute to installer related issues.
 Bonus points for weird hardware that needed specific filesystems/bootloader, etc.
 
     - But maintaining an install is just as valuable
 
-Keeping an install clean, and/or making it what you need it to be, you will also learn a bunch.
-That is the beauty of arch, it is made for learners, who want control over their systems AND the latest.
+Keeping an install clean, and/or making it what you need it to be,
+you will also learn a bunch.
+That is the beauty of arch, it is made for learners,
+who want control over their systems AND the latest.
 
-At the cost of sometimes having to be more careful: ie, manual interventions/following update prints. As seen on [NEWS](https://archlinux.org/news/)
+At the cost of sometimes having to be more careful:
+ie, manual interventions/following update prints. As seen on [NEWS](https://archlinux.org/news/)
 
-Countless times, but aside from that is pretty smooth sailing and the OS gets out of your way once you know what you are doing.
+Countless times, but aside from that is pretty smooth sailing
+and the OS gets out of your way once you know what you are doing.
 
 	- If you are not looking to learn command lines and/or reading docs
 
-This is the last and key point, other distros might be easier/better fit for you if you do not wish to dive deeper into your system's inner workings.
+This is the last and key point, other distros might be easier/better fit for you
+if you do not wish to dive deeper into your system's inner workings.
 But if you are interested, my guess is that you will like it here.
 
 Rolling distros enable installers to become tools/artifacts rather than just projects.
-This means it doesn't have to be more features and more users, but simply adapting to its time, maintaining worthy code, choices, occasionally helping out ecosystem and issue trackers.
-This is possible structurally because of the team at Arch Linux and using directly the tools **they make available**.
+This means it doesn't have to be more features and more users,
+but simply adapting to its time, maintaining worthy code, choices,
+occasionally helping out ecosystem and issue trackers.
+This is possible structurally because of the team at Arch Linux
+and using directly the tools **they make available**.
 
 Which circles back to how an installer, can be more than a distro in a way.
 
-Cheers for even reading any of this, if you are looking to read more I wrote [this](https://github.com/h8d13/archinstoo/blob/master/.github/PAST_CONTRIBS.md). At the end of 2025.
+Cheers for even reading any of this,
+if you are looking to read more I wrote [this](https://github.com/h8d13/archinstoo/blob/master/.github/PAST_CONTRIBS.md).
+At the end of 2025.

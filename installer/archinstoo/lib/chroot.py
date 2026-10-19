@@ -19,7 +19,14 @@ if TYPE_CHECKING:
 
 # su - resets the environment; proxies set for the install must still reach
 # git/curl in AUR builds
-KEEP_ENV = ('http_proxy', 'https_proxy', 'no_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY')
+KEEP_ENV = (
+	'http_proxy',
+	'https_proxy',
+	'no_proxy',
+	'HTTP_PROXY',
+	'HTTPS_PROXY',
+	'NO_PROXY',
+)
 
 
 def chroot_prefix(target: Path, systemd_mode: bool = False) -> list[str]:
@@ -48,12 +55,14 @@ def run_in_target(
 ) -> SysCommand | CompletedProcess[bytes]:
 	on_host = target == Path('/')
 
-	# argv list form avoids shell injection when arguments come from user or config input
+	# argv list form avoids shell injection when arguments come from
+	# user or config input
 	if isinstance(cmd, list):
 		if run_as:
 			cmd = [*su_prefix(run_as), shlex.join(cmd)]
 		argv = cmd if on_host else [*chroot_prefix(target, systemd_mode), *cmd]
-		return run(argv, env=env)  # env: secrets (NEWPIN) stay off argv and out of cmd_history
+		# env: secrets (NEWPIN) stay off argv and out of cmd_history
+		return run(argv, env=env)
 
 	if run_as:
 		cmd = f'{shlex.join(su_prefix(run_as))} {shlex.quote(cmd)}'

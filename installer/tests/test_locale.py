@@ -116,7 +116,9 @@ def _run_set_locale(
 	installation = Installer.__new__(Installer)
 	installation.target = target
 	# skip the locale-gen run in chroot
-	monkeypatch.setattr(installation, 'arch_chroot', lambda cmd: None, raising=False)
+	monkeypatch.setattr(
+		installation, 'arch_chroot', lambda cmd: None, raising=False
+	)
 
 	assert installation.set_locale(LocaleConfiguration('us', sys_lang, sys_enc))
 	return (
@@ -125,8 +127,12 @@ def _run_set_locale(
 	)
 
 
-def test_set_locale_bare_utf8_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_IL', 'UTF-8', monkeypatch)
+def test_set_locale_bare_utf8_entry(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	locale_conf, locale_gen = _run_set_locale(
+		tmp_path, 'en_IL', 'UTF-8', monkeypatch
+	)
 
 	assert locale_conf == 'LANG=en_IL.UTF-8\n'
 	# entry only uncommented, name left as SUPPORTED lists it
@@ -134,8 +140,12 @@ def test_set_locale_bare_utf8_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 	assert '#en_IL' not in locale_gen
 
 
-def test_set_locale_suffix_lands_before_modifier(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'be_BY@latin', 'UTF-8', monkeypatch)
+def test_set_locale_suffix_lands_before_modifier(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	locale_conf, locale_gen = _run_set_locale(
+		tmp_path, 'be_BY@latin', 'UTF-8', monkeypatch
+	)
 
 	assert locale_conf == 'LANG=be_BY.UTF-8@latin\n'
 	assert 'be_BY@latin UTF-8' in locale_gen
@@ -145,15 +155,23 @@ def test_set_locale_suffix_lands_before_modifier(tmp_path: Path, monkeypatch: py
 	assert '#be_BY CP1251' in locale_gen
 
 
-def test_set_locale_suffixed_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_GB.UTF-8', 'UTF-8', monkeypatch)
+def test_set_locale_suffixed_entry(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	locale_conf, locale_gen = _run_set_locale(
+		tmp_path, 'en_GB.UTF-8', 'UTF-8', monkeypatch
+	)
 
 	assert locale_conf == 'LANG=en_GB.UTF-8\n'
 	assert '#en_GB ISO-8859-1' in locale_gen
 
 
-def test_set_locale_non_utf8_fully_qualified(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_US', 'ISO-8859-1', monkeypatch)
+def test_set_locale_non_utf8_fully_qualified(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	locale_conf, locale_gen = _run_set_locale(
+		tmp_path, 'en_US', 'ISO-8859-1', monkeypatch
+	)
 
 	assert locale_conf == 'LANG=en_US.ISO-8859-1\n'
 	assert 'en_US ISO-8859-1' in locale_gen
@@ -167,13 +185,17 @@ def _use_disk_supported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 	monkeypatch.setattr(catalog, '_SUPPORTED_PATH', supported)
 
 
-def _use_upstream_supported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, text: str = _GLIBC_SUPPORTED) -> None:
+def _use_upstream_supported(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch, text: str = _GLIBC_SUPPORTED
+) -> None:
 	# no glibc copy on disk (musl/alpine host), answer the fetch instead
 	monkeypatch.setattr(catalog, '_SUPPORTED_PATH', tmp_path / 'absent')
 	monkeypatch.setattr(catalog, 'fetch_data_from_url', lambda url, **kw: text)
 
 
-def test_list_locales_from_disk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_list_locales_from_disk(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_use_disk_supported(tmp_path, monkeypatch)
 
 	# C.UTF-8 is compiled into glibc and absent from locale.gen, so it must not
@@ -181,14 +203,18 @@ def test_list_locales_from_disk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
 	assert catalog.list_locales() == _EXPECTED_LOCALES
 
 
-def test_list_locales_fetch_matches_disk(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_list_locales_fetch_matches_disk(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_use_upstream_supported(tmp_path, monkeypatch)
 
 	# "<locale>/<charset> \" converts to the same form the disk copy uses
 	assert catalog.list_locales() == _EXPECTED_LOCALES
 
 
-def test_list_locales_offline_falls_back_to_minimum(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_list_locales_offline_falls_back_to_minimum(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	def _no_network(url: str, **kwargs: object) -> str:
 		raise FetchError(f'Unable to fetch data from url: {url}')
 
@@ -198,7 +224,9 @@ def test_list_locales_offline_falls_back_to_minimum(tmp_path: Path, monkeypatch:
 	assert catalog.list_locales() == catalog._MIN_LOCALES
 
 
-def test_offered_locales_have_a_locale_gen_entry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_offered_locales_have_a_locale_gen_entry(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# every locale the menu offers must uncomment a line in the target's
 	# locale.gen; a builtin like C.UTF-8 leaking through fails here
 	_use_upstream_supported(tmp_path, monkeypatch)
@@ -207,11 +235,19 @@ def test_offered_locales_have_a_locale_gen_entry(tmp_path: Path, monkeypatch: py
 
 	for index, entry in enumerate(offered):
 		sys_lang, sys_enc = entry.split()
-		locale_conf, _ = _run_set_locale(tmp_path / f'root{index}', sys_lang, sys_enc, monkeypatch, locale_gen)
+		locale_conf, _ = _run_set_locale(
+			tmp_path / f'root{index}',
+			sys_lang,
+			sys_enc,
+			monkeypatch,
+			locale_gen,
+		)
 		assert locale_conf.startswith('LANG=')
 
 
-def test_encodings_are_scoped_to_the_language(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_encodings_are_scoped_to_the_language(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_use_disk_supported(tmp_path, monkeypatch)
 
 	# a language with two charsets offers both, UTF-8 first so a language
@@ -225,7 +261,9 @@ def test_encodings_are_scoped_to_the_language(tmp_path: Path, monkeypatch: pytes
 	assert catalog.list_locale_encodings('en_IL') == ['UTF-8']
 
 
-def test_every_scoped_pair_resolves(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_every_scoped_pair_resolves(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# the invariant the split language/encoding menus have to hold: every pair
 	# they can produce names a locale.gen entry. Unscoped, only 866 of the
 	# 15030 pairs the two menus could form did.
@@ -236,13 +274,22 @@ def test_every_scoped_pair_resolves(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 	for sys_lang in langs:
 		for sys_enc in catalog.list_locale_encodings(sys_lang):
 			index += 1
-			locale_conf, _ = _run_set_locale(tmp_path / f'root{index}', sys_lang, sys_enc, monkeypatch)
+			locale_conf, _ = _run_set_locale(
+				tmp_path / f'root{index}',
+				sys_lang,
+				sys_enc,
+				monkeypatch,
+			)
 			assert locale_conf.startswith('LANG=')
 
 
-def test_language_change_drops_an_incompatible_encoding(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_language_change_drops_an_incompatible_encoding(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_use_disk_supported(tmp_path, monkeypatch)
-	monkeypatch.setattr(locale_menu, 'select_locale_lang', lambda preset=None: 'de_DE@euro')
+	monkeypatch.setattr(
+		locale_menu, 'select_locale_lang', lambda preset=None: 'de_DE@euro'
+	)
 
 	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8'))
 	assert menu._select_locale_lang('en_US.UTF-8') == 'de_DE@euro'
@@ -250,9 +297,13 @@ def test_language_change_drops_an_incompatible_encoding(tmp_path: Path, monkeypa
 	assert menu._menu_item_group.find_by_key('sys_enc').value == 'ISO-8859-15'
 
 
-def test_language_change_keeps_a_compatible_encoding(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_language_change_keeps_a_compatible_encoding(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_use_disk_supported(tmp_path, monkeypatch)
-	monkeypatch.setattr(locale_menu, 'select_locale_lang', lambda preset=None: 'de_DE')
+	monkeypatch.setattr(
+		locale_menu, 'select_locale_lang', lambda preset=None: 'de_DE'
+	)
 
 	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US', 'ISO-8859-1'))
 	assert menu._select_locale_lang('en_US') == 'de_DE'
@@ -260,10 +311,14 @@ def test_language_change_keeps_a_compatible_encoding(tmp_path: Path, monkeypatch
 	assert menu._menu_item_group.find_by_key('sys_enc').value == 'ISO-8859-1'
 
 
-def test_set_locale_euro_modifier_without_utf8(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_set_locale_euro_modifier_without_utf8(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# de_DE@euro exists only as ISO-8859-15; the menu now hands over that
 	# charset instead of the UTF-8 default it used to carry across
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'de_DE@euro', 'ISO-8859-15', monkeypatch)
+	locale_conf, locale_gen = _run_set_locale(
+		tmp_path, 'de_DE@euro', 'ISO-8859-15', monkeypatch
+	)
 
 	assert locale_conf == 'LANG=de_DE.ISO-8859-15@euro\n'
 	assert 'de_DE@euro ISO-8859-15' in locale_gen
@@ -271,7 +326,9 @@ def test_set_locale_euro_modifier_without_utf8(tmp_path: Path, monkeypatch: pyte
 	assert '#de_DE ISO-8859-1  ' in locale_gen
 
 
-def test_set_locale_charset_prefix_is_not_a_match(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_set_locale_charset_prefix_is_not_a_match(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# ca_AD ships ISO-8859-15 only; asking for ISO-8859-1 must fail rather
 	# than uncomment the ISO-8859-15 line its name is a prefix of
 	(tmp_path / 'etc').mkdir()
@@ -279,19 +336,27 @@ def test_set_locale_charset_prefix_is_not_a_match(tmp_path: Path, monkeypatch: p
 
 	installation = Installer.__new__(Installer)
 	installation.target = tmp_path
-	monkeypatch.setattr(installation, 'arch_chroot', lambda cmd: None, raising=False)
+	monkeypatch.setattr(
+		installation, 'arch_chroot', lambda cmd: None, raising=False
+	)
 
-	assert not installation.set_locale(LocaleConfiguration('us', 'ca_AD', 'ISO-8859-1'))
+	assert not installation.set_locale(
+		LocaleConfiguration('us', 'ca_AD', 'ISO-8859-1')
+	)
 	assert '#ca_AD ISO-8859-15' in (tmp_path / 'etc/locale.gen').read_text()
 
 
-def test_set_locale_unknown_entry_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_set_locale_unknown_entry_fails(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	(tmp_path / 'etc').mkdir()
 	(tmp_path / 'etc/locale.gen').write_text(_LOCALE_GEN)
 
 	installation = Installer.__new__(Installer)
 	installation.target = tmp_path
-	monkeypatch.setattr(installation, 'arch_chroot', lambda cmd: None, raising=False)
+	monkeypatch.setattr(
+		installation, 'arch_chroot', lambda cmd: None, raising=False
+	)
 
 	assert not installation.set_locale(LocaleConfiguration('us', 'xx_XX', 'UTF-8'))
 	assert not (tmp_path / 'etc/locale.conf').exists()
@@ -299,15 +364,21 @@ def test_set_locale_unknown_entry_fails(tmp_path: Path, monkeypatch: pytest.Monk
 
 # https://github.com/archlinux/archinstall/issues/3764: en_US.UTF-8 is the
 # fallback tools hardcode, so it gets generated alongside any other choice
-def test_set_locale_generates_en_us_fallback(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	locale_conf, locale_gen = _run_set_locale(tmp_path, 'en_GB', 'UTF-8', monkeypatch)
+def test_set_locale_generates_en_us_fallback(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	locale_conf, locale_gen = _run_set_locale(
+		tmp_path, 'en_GB', 'UTF-8', monkeypatch
+	)
 	assert locale_conf == 'LANG=en_GB.UTF-8\n'
 	assert '\nen_GB.UTF-8 UTF-8' in '\n' + locale_gen
 	assert '\nen_US.UTF-8 UTF-8' in '\n' + locale_gen
 	assert '#en_US ISO-8859-1' in locale_gen
 
 
-def test_set_locale_en_us_only_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_set_locale_en_us_only_once(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_, locale_gen = _run_set_locale(tmp_path, 'en_US', 'UTF-8', monkeypatch)
 	assert locale_gen.count('en_US.UTF-8 UTF-8') == 1
 	assert '#en_US.UTF-8' not in locale_gen
@@ -316,18 +387,35 @@ def test_set_locale_en_us_only_once(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 # kbd ships docs and a partialfonts/ subdirectory next to the fonts. Offering
 # either writes a FONT= the sd-vconsole hook cannot resolve, and that hook
 # errors out rather than warning, so the initramfs build fails.
-def test_list_console_fonts_skips_non_fonts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_list_console_fonts_skips_non_fonts(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [tmp_path])
 	(tmp_path / 'partialfonts').mkdir()
-	(tmp_path / 'ERRORS').write_text('In iso04.f08 the letters K, and k, are wrong.\n')
+	(tmp_path / 'ERRORS').write_text(
+		'In iso04.f08 the letters K, and k, are wrong.\n'
+	)
 	(tmp_path / 'README.Cyrillic').write_text('docs\n')
 	# README.psfu carries a font suffix, so only the prefix check excludes it
-	for name in ('cyr-sun16.psfu.gz', 'default8x16.psfu.gz', 'alt-8x16.gz', 'arm8.fnt.gz', '161.cp.gz', 'README.psfu'):
+	for name in (
+		'cyr-sun16.psfu.gz',
+		'default8x16.psfu.gz',
+		'alt-8x16.gz',
+		'arm8.fnt.gz',
+		'161.cp.gz',
+		'README.psfu',
+	):
 		(tmp_path / name).write_bytes(b'')
 
 	# alt-8x16 carries no font extension at all, only compression; the kbd
 	# hooks resolve it and so must the menu
-	assert catalog.list_console_fonts() == ['161.cp', 'alt-8x16', 'arm8.fnt', 'cyr-sun16', 'default8x16']
+	assert catalog.list_console_fonts() == [
+		'161.cp',
+		'alt-8x16',
+		'arm8.fnt',
+		'cyr-sun16',
+		'default8x16',
+	]
 
 
 # systemd-localed reads the XKB layout from /etc/vconsole.conf in preference to
@@ -369,11 +457,16 @@ def test_xkb_keys_land_in_vconsole(tmp_path: Path) -> None:
 
 
 def test_xkb_rewrite_drops_stale_keys(tmp_path: Path) -> None:
-	with_variant = LocaleConfiguration('fr', 'en_US.UTF-8', 'UTF-8', xkb_layout='fr', xkb_variant='oss')
+	with_variant = LocaleConfiguration(
+		'fr', 'en_US.UTF-8', 'UTF-8', xkb_layout='fr', xkb_variant='oss'
+	)
 	_run_set_keyboard(tmp_path, with_variant)
 
 	# second pass without a variant: the key is gone, not kept from the first
-	vconsole = _run_set_keyboard(tmp_path, LocaleConfiguration('fr', 'en_US.UTF-8', 'UTF-8', xkb_layout='fr'))
+	vconsole = _run_set_keyboard(
+		tmp_path,
+		LocaleConfiguration('fr', 'en_US.UTF-8', 'UTF-8', xkb_layout='fr'),
+	)
 	assert 'XKBVARIANT' not in vconsole
 	assert vconsole.count('XKBLAYOUT=fr') == 1
 
@@ -419,7 +512,11 @@ def local_registry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 	path.write_text(_REGISTRY)
 	monkeypatch.delenv(catalog._XKB_ROOT_ENV, raising=False)
 	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [path])
-	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: pytest.fail('fetched with a local registry present'))
+	monkeypatch.setattr(
+		catalog,
+		'_fetch_x11_registry',
+		lambda: pytest.fail('fetched with a local registry present'),
+	)
 	return path
 
 
@@ -438,23 +535,39 @@ def test_x11_options_skip_group_headings(local_registry: Path) -> None:
 	assert catalog.list_x11_keyboard_options() == ['caps:escape']
 
 
-def test_x11_registry_falls_back_to_the_fetch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [tmp_path / 'missing.xml'])
-	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
+def test_x11_registry_falls_back_to_the_fetch(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	monkeypatch.setattr(
+		_DATA_PATHS, lambda anchor, *rel: [tmp_path / 'missing.xml']
+	)
+	monkeypatch.setattr(
+		catalog,
+		'_fetch_x11_registry',
+		lambda: ET.fromstring(_REGISTRY),  # noqa: S314 - fixture XML written by this test
+	)
 
 	assert catalog.list_x11_keyboard_languages() == ['be']
 
 
-def test_x11_registry_survives_a_broken_local_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_x11_registry_survives_a_broken_local_file(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	broken = tmp_path / 'evdev.xml'
 	broken.write_text('<xkbConfigRegistry')
 	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [broken])
-	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
+	monkeypatch.setattr(
+		catalog,
+		'_fetch_x11_registry',
+		lambda: ET.fromstring(_REGISTRY),  # noqa: S314 - fixture XML written by this test
+	)
 
 	assert catalog.list_x11_keyboard_languages() == ['be']
 
 
-def test_failed_fetch_is_retried_not_cached(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_failed_fetch_is_retried_not_cached(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# a blip on the fetch path must not leave every keymap list empty for the
 	# rest of the run: the parse is cached, the failure is not
 	attempts = []
@@ -462,7 +575,9 @@ def test_failed_fetch_is_retried_not_cached(tmp_path: Path, monkeypatch: pytest.
 	def failing_fetch() -> None:
 		attempts.append(1)
 
-	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [tmp_path / 'missing.xml'])
+	monkeypatch.setattr(
+		_DATA_PATHS, lambda anchor, *rel: [tmp_path / 'missing.xml']
+	)
 	monkeypatch.setattr(catalog, '_fetch_x11_registry', failing_fetch)
 
 	assert catalog.list_x11_keyboard_languages() == []
@@ -470,9 +585,17 @@ def test_failed_fetch_is_retried_not_cached(tmp_path: Path, monkeypatch: pytest.
 	assert len(attempts) == 2
 
 	# and once it comes back, the parse is cached for the calls after it
-	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: ET.fromstring(_REGISTRY))  # noqa: S314 - fixture XML written by this test
+	monkeypatch.setattr(
+		catalog,
+		'_fetch_x11_registry',
+		lambda: ET.fromstring(_REGISTRY),  # noqa: S314 - fixture XML written by this test
+	)
 	assert catalog.list_x11_keyboard_languages() == ['be']
-	monkeypatch.setattr(catalog, '_fetch_x11_registry', lambda: pytest.fail('re-fetched a registry already parsed'))
+	monkeypatch.setattr(
+		catalog,
+		'_fetch_x11_registry',
+		lambda: pytest.fail('re-fetched a registry already parsed'),
+	)
 	assert catalog.list_x11_keyboard_models() == ['pc105']
 
 
@@ -518,8 +641,12 @@ def test_xkb_from_keymap_skips_what_a_single_field_cannot_hold() -> None:
 
 
 @pytest.mark.usefixtures('model_map')
-def test_keymap_choice_preselects_the_graphical_layout(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1')
+def test_keymap_choice_preselects_the_graphical_layout(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	monkeypatch.setattr(
+		locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1'
+	)
 	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
 	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8'))
@@ -531,11 +658,17 @@ def test_keymap_choice_preselects_the_graphical_layout(monkeypatch: pytest.Monke
 
 
 @pytest.mark.usefixtures('model_map')
-def test_keymap_choice_keeps_a_layout_the_user_picked(monkeypatch: pytest.MonkeyPatch) -> None:
-	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1')
+def test_keymap_choice_keeps_a_layout_the_user_picked(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	monkeypatch.setattr(
+		locale_menu, 'select_kb_layout', lambda preset=None: 'be-latin1'
+	)
 	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
-	menu = locale_menu.LocaleMenu(LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8', xkb_layout='dvorak'))
+	menu = locale_menu.LocaleMenu(
+		LocaleConfiguration('us', 'en_US.UTF-8', 'UTF-8', xkb_layout='dvorak')
+	)
 	assert menu._select_kb_layout('us') == 'be-latin1'
 
 	# 'dvorak' is not what 'us' derives, so it was chosen by hand: leave it
@@ -543,24 +676,32 @@ def test_keymap_choice_keeps_a_layout_the_user_picked(monkeypatch: pytest.Monkey
 
 
 @pytest.mark.usefixtures('model_map')
-def test_keymap_change_follows_a_derived_layout(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_keymap_change_follows_a_derived_layout(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
 	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'uk')
 	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
 	# 'de' is exactly what the previous keymap derived, so the user never
 	# touched it and it follows the new keymap instead of going stale
-	menu = locale_menu.LocaleMenu(LocaleConfiguration('de', 'en_US.UTF-8', 'UTF-8', xkb_layout='de'))
+	menu = locale_menu.LocaleMenu(
+		LocaleConfiguration('de', 'en_US.UTF-8', 'UTF-8', xkb_layout='de')
+	)
 	assert menu._select_kb_layout('de') == 'uk'
 
 	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'gb'
 
 
 @pytest.mark.usefixtures('model_map')
-def test_uncovered_keymap_clears_a_derived_layout(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_uncovered_keymap_clears_a_derived_layout(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
 	monkeypatch.setattr(locale_menu, 'select_kb_layout', lambda preset=None: 'ru')
 	monkeypatch.setattr(locale_menu, 'set_kb_layout', lambda layout: True)
 
-	menu = locale_menu.LocaleMenu(LocaleConfiguration('de', 'en_US.UTF-8', 'UTF-8', xkb_layout='de'))
+	menu = locale_menu.LocaleMenu(
+		LocaleConfiguration('de', 'en_US.UTF-8', 'UTF-8', xkb_layout='de')
+	)
 	assert menu._select_kb_layout('de') == 'ru'
 
 	# no row for 'ru': back to unset rather than left on the old derivation
@@ -572,7 +713,9 @@ def test_uncovered_keymap_clears_a_derived_layout(monkeypatch: pytest.MonkeyPatc
 def test_menu_preselects_from_the_keymap_it_opens_with() -> None:
 	# the keymap is usually detected off the host before the menu opens, so
 	# the derivation cannot wait for a pick that never happens
-	menu = locale_menu.LocaleMenu(LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8'))
+	menu = locale_menu.LocaleMenu(
+		LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8')
+	)
 
 	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'be'
 	assert menu._menu_item_group.find_by_key('xkb_variant').enabled
@@ -582,7 +725,11 @@ def test_menu_preselects_from_the_keymap_it_opens_with() -> None:
 @pytest.mark.usefixtures('model_map')
 def test_menu_keeps_an_xkb_layout_it_opens_with() -> None:
 	# a config that already names one is the user's answer, not a gap to fill
-	menu = locale_menu.LocaleMenu(LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8', xkb_layout='dvorak'))
+	menu = locale_menu.LocaleMenu(
+		LocaleConfiguration(
+			'be-latin1', 'en_US.UTF-8', 'UTF-8', xkb_layout='dvorak'
+		)
+	)
 
 	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'dvorak'
 
@@ -596,10 +743,14 @@ def test_menu_opens_unset_for_an_uncovered_keymap() -> None:
 
 
 @pytest.mark.usefixtures('model_map')
-def test_preselected_layout_can_be_cleared_back_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_preselected_layout_can_be_cleared_back_to_none(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
 	# the derivation only moves the default: '(none)' in the layout menu has
 	# to survive all the way into the config, or empty stops meaning empty
-	menu = locale_menu.LocaleMenu(LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8'))
+	menu = locale_menu.LocaleMenu(
+		LocaleConfiguration('be-latin1', 'en_US.UTF-8', 'UTF-8')
+	)
 	assert menu._menu_item_group.find_by_key('xkb_layout').value == 'be'
 
 	monkeypatch.setattr(locale_menu, 'select_xkb_layout', lambda preset=None: '')
@@ -636,7 +787,9 @@ def test_host_keymap_probe_is_cached(monkeypatch: pytest.MonkeyPatch) -> None:
 	catalog.get_kb_layout.cache_clear()
 
 
-def test_setting_the_host_keymap_drops_the_cached_probe(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_setting_the_host_keymap_drops_the_cached_probe(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
 	calls: list[str] = []
 
 	def fake_syscommand(cmd: str, **_kwargs: object) -> None:
@@ -654,12 +807,18 @@ def test_setting_the_host_keymap_drops_the_cached_probe(monkeypatch: pytest.Monk
 	catalog.get_kb_layout()
 
 	# probe, set-keymap, probe again: the second read is not the stale one
-	assert [c.split()[1] for c in calls] == ['--no-pager', 'set-keymap', '--no-pager']
+	assert [c.split()[1] for c in calls] == [
+		'--no-pager',
+		'set-keymap',
+		'--no-pager',
+	]
 
 	catalog.get_kb_layout.cache_clear()
 
 
-def test_kbd_model_map_found_off_localectl(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_kbd_model_map_found_off_localectl(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# a store based distro (NixOS) has no /usr/share at all, but localectl
 	# resolves into the systemd package, whose share/ carries the map
 	prefix = tmp_path / 'nix/store/abc-systemd-260'
@@ -672,12 +831,17 @@ def test_kbd_model_map_found_off_localectl(tmp_path: Path, monkeypatch: pytest.M
 	catalog._kbd_model_map.cache_clear()
 
 	# /usr/share comes first and is not there, so the prefix candidate wins
-	assert str(data_paths('localectl', 'systemd/kbd-model-map')[0]) == '/usr/share/systemd/kbd-model-map'
+	assert (
+		str(data_paths('localectl', 'systemd/kbd-model-map')[0])
+		== '/usr/share/systemd/kbd-model-map'
+	)
 	assert catalog.xkb_from_keymap('be-latin1') == ('be', '')
 	catalog._kbd_model_map.cache_clear()
 
 
-def test_no_kbd_model_map_anywhere_is_not_an_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_kbd_model_map_anywhere_is_not_an_error(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [tmp_path / 'missing'])
 	catalog._kbd_model_map.cache_clear()
 
@@ -685,7 +849,9 @@ def test_no_kbd_model_map_anywhere_is_not_an_error(tmp_path: Path, monkeypatch: 
 	catalog._kbd_model_map.cache_clear()
 
 
-def test_xkb_root_env_beats_the_data_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_xkb_root_env_beats_the_data_paths(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# xkeyboard-config ships no binary to anchor on, so a store based host (and
 	# the nix devshell) names the registry root through libxkbcommon's variable
 	xkb_root = tmp_path / 'nix/store/abc-xkeyboard-config/share/X11/xkb'
@@ -693,7 +859,10 @@ def test_xkb_root_env_beats_the_data_paths(tmp_path: Path, monkeypatch: pytest.M
 	(xkb_root / 'rules/evdev.xml').write_text(_REGISTRY)
 
 	monkeypatch.setenv(catalog._XKB_ROOT_ENV, str(xkb_root))
-	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: pytest.fail('looked past XKB_CONFIG_ROOT'))
+	monkeypatch.setattr(
+		_DATA_PATHS,
+		lambda anchor, *rel: pytest.fail('looked past XKB_CONFIG_ROOT'),
+	)
 	catalog._load_x11_registry.cache_clear()
 
 	assert catalog.list_x11_keyboard_languages() == ['be']
@@ -707,12 +876,19 @@ def _keymap_tree(root: Path, *names: str) -> None:
 		path.write_bytes(b'')
 
 
-def test_scan_keymaps_reads_both_distro_spellings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_scan_keymaps_reads_both_distro_spellings(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# arch/alpine/nixos: *.map[.gz]. debian's console-data: *.kmap.gz, under
 	# the same /usr/share/keymaps root. Same upstream data, same names.
 	arch = tmp_path / 'arch/share/kbd/keymaps'
 	debian = tmp_path / 'debian/share/keymaps'
-	_keymap_tree(arch, 'i386/qwerty/us.map.gz', 'i386/azerty/be-latin1.map.gz', 'include/compose.inc')
+	_keymap_tree(
+		arch,
+		'i386/qwerty/us.map.gz',
+		'i386/azerty/be-latin1.map.gz',
+		'include/compose.inc',
+	)
 	_keymap_tree(debian, 'i386/qwerty/us.kmap.gz', 'i386/azerty/fr-latin9.kmap.gz')
 
 	monkeypatch.setattr(_DATA_PATHS, lambda anchor, *rel: [arch, debian])
@@ -721,7 +897,9 @@ def test_scan_keymaps_reads_both_distro_spellings(tmp_path: Path, monkeypatch: p
 	assert catalog._scan_keymaps() == ['be-latin1', 'fr-latin9', 'us']
 
 
-def test_keymap_and_font_lists_never_come_back_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_keymap_and_font_lists_never_come_back_empty(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# the kbd data is a hard dependency now, so a host without it is broken
 	# rather than offline: say so and keep the menu usable instead of reaching
 	# for the network
@@ -731,7 +909,9 @@ def test_keymap_and_font_lists_never_come_back_empty(tmp_path: Path, monkeypatch
 	assert catalog.list_console_fonts() == ['default8x16']
 
 
-def test_data_paths_cover_fedoras_usr_lib(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_data_paths_cover_fedoras_usr_lib(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# fedora keeps kbd keymaps and fonts in /usr/lib/kbd, with no /usr/share/kbd
 	# at all, so share/ alone finds nothing there
 	prefix = tmp_path / 'usr'

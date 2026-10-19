@@ -8,7 +8,18 @@ from pathlib import Path
 
 from archinstoo.lib.output import error, info
 from archinstoo.lib.utils.env import Env
-from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, PIDFILE, ROOT, SERIAL, STATE, VM, vm_console, vm_pid
+from archinstoo.scripts.dev._vm import (
+	CAPTURE,
+	LOG,
+	MONITOR,
+	PIDFILE,
+	ROOT,
+	SERIAL,
+	STATE,
+	VM,
+	vm_console,
+	vm_pid,
+)
 
 ISOMOD_OUT = ROOT / 'isos' / 'a'
 # vm cloud: the install target riding along a cloud image's boot disk
@@ -22,20 +33,44 @@ FIRMWARE = {
 	'x86_64': (
 		'edk2-ovmf',
 		[
-			('/usr/share/edk2/x64/OVMF_CODE.4m.fd', '/usr/share/edk2/x64/OVMF_VARS.4m.fd'),
-			('/usr/share/edk2-ovmf/x64/OVMF_CODE.fd', '/usr/share/edk2-ovmf/x64/OVMF_VARS.fd'),
-			('/usr/share/edk2/ovmf/OVMF_CODE.fd', '/usr/share/edk2/ovmf/OVMF_VARS.fd'),
-			('/usr/share/OVMF/OVMF_CODE_4M.fd', '/usr/share/OVMF/OVMF_VARS_4M.fd'),
-			('/usr/share/OVMF/OVMF_CODE.fd', '/usr/share/OVMF/OVMF_VARS.fd'),
+			(
+				'/usr/share/edk2/x64/OVMF_CODE.4m.fd',
+				'/usr/share/edk2/x64/OVMF_VARS.4m.fd',
+			),
+			(
+				'/usr/share/edk2-ovmf/x64/OVMF_CODE.fd',
+				'/usr/share/edk2-ovmf/x64/OVMF_VARS.fd',
+			),
+			(
+				'/usr/share/edk2/ovmf/OVMF_CODE.fd',
+				'/usr/share/edk2/ovmf/OVMF_VARS.fd',
+			),
+			(
+				'/usr/share/OVMF/OVMF_CODE_4M.fd',
+				'/usr/share/OVMF/OVMF_VARS_4M.fd',
+			),
+			(
+				'/usr/share/OVMF/OVMF_CODE.fd',
+				'/usr/share/OVMF/OVMF_VARS.fd',
+			),
 		],
 	),
 	# virt pflash wants both images padded to 64M, Arch/Debian ship them so
 	'aarch64': (
 		'edk2-aarch64',
 		[
-			('/usr/share/edk2/aarch64/QEMU_EFI.fd', '/usr/share/edk2/aarch64/QEMU_VARS.fd'),
-			('/usr/share/edk2/aarch64/QEMU_CODE.fd', '/usr/share/edk2/aarch64/QEMU_VARS.fd'),
-			('/usr/share/AAVMF/AAVMF_CODE.fd', '/usr/share/AAVMF/AAVMF_VARS.fd'),
+			(
+				'/usr/share/edk2/aarch64/QEMU_EFI.fd',
+				'/usr/share/edk2/aarch64/QEMU_VARS.fd',
+			),
+			(
+				'/usr/share/edk2/aarch64/QEMU_CODE.fd',
+				'/usr/share/edk2/aarch64/QEMU_VARS.fd',
+			),
+			(
+				'/usr/share/AAVMF/AAVMF_CODE.fd',
+				'/usr/share/AAVMF/AAVMF_VARS.fd',
+			),
 		],
 	),
 }
@@ -113,7 +148,8 @@ def read_opts(console: str | None = None) -> Opts:
 		# ramfb is compiled in, virtio-gpu-pci is a module.
 		vga=Env.get_value('A2_VGA', 'std' if arch == 'x86_64' else 'ramfb'),
 		audio=Env.get_value('A2_AUDIO_BACKEND', 'pipewire'),
-		# raw qemu args, word-split: an extra disk with a serial, a second NIC, ...
+		# raw qemu args, word-split: an extra disk with a
+		# serial, a second NIC, ...
 		extra=tuple(Env.get_value('A2_QEMU_EXTRA', '').split()),
 	)
 
@@ -125,7 +161,10 @@ def probe_ovmf(opts: Opts) -> tuple[Path, Path] | None:
 	for code, nvram in pairs:
 		if Path(code).is_file() and Path(nvram).is_file():
 			return Path(code), Path(nvram)
-	error(f"UEFI firmware for {opts.arch} not found. Install '{pkg}' or similar on your distro.")
+	error(
+		f"UEFI firmware for {opts.arch} not found. Install '{pkg}' "
+		'or similar on your distro.'
+	)
 	raise SystemExit(1)
 
 
@@ -149,15 +188,27 @@ def serial_log_args() -> list[str]:
 def ensure_virgl(opts: Opts) -> None:
 	# virgl needs both ends: GL-capable device AND gl=on on the display.
 	# -device help skips unloaded modules; probe with device-specific help instead.
-	probe = subprocess.run([opts.qemu, '-device', f'{opts.gl_device},help'], capture_output=True, text=True, check=False)
+	probe = subprocess.run(
+		[opts.qemu, '-device', f'{opts.gl_device},help'],
+		capture_output=True,
+		text=True,
+		check=False,
+	)
 	if 'not found' in probe.stdout + probe.stderr:
-		error(f'{opts.gl_device} not loadable (install qemu-hw-display-virtio-{{gpu,gpu-gl,vga,vga-gl}} / -{{gpu-pci,gpu-gl-pci}} and qemu-ui-opengl)')
+		error(
+			f'{opts.gl_device} not loadable (install '
+			'qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} / '
+			'-{gpu-pci,gpu-gl-pci} and qemu-ui-opengl)'
+		)
 		raise SystemExit(1)
 
 
 def check_host_deps(opts: Opts, attach_iso: bool) -> None:
 	if missing := [cmd for cmd in (opts.qemu, 'qemu-img') if not shutil.which(cmd)]:
-		error(f'missing host commands: {" ".join(missing)} (install qemu-base / qemu-system-{opts.arch})')
+		error(
+			f'missing host commands: {" ".join(missing)} '
+			f'(install qemu-base / qemu-system-{opts.arch})'
+		)
 		raise SystemExit(1)
 	if not opts.x86 and opts.bios:
 		error('A2_BIOS is x86_64 only (no SeaBIOS on virt)')
@@ -166,14 +217,25 @@ def check_host_deps(opts: Opts, attach_iso: bool) -> None:
 		error('A2_UKI is x86_64 only (UKIMOD builds x86_64 images)')
 		raise SystemExit(1)
 	# bsdtar reads the kernel out of the ISO, no mount (and no root) needed
-	if attach_iso and opts.console != 'window' and not opts.uki and not shutil.which('bsdtar'):
-		error(f'--console {opts.console} needs bsdtar to read the ISO (install libarchive)')
+	if (
+		attach_iso
+		and opts.console != 'window'
+		and not opts.uki
+		and not shutil.which('bsdtar')
+	):
+		error(
+			f'--console {opts.console} needs bsdtar to read the '
+			'ISO (install libarchive)'
+		)
 		raise SystemExit(1)
 
 
 def ensure_no_running_vm() -> None:
 	if pid := vm_pid():
-		error(f'VM already running (pid {pid}, --console {vm_console()}), stop it with {VM} quit')
+		error(
+			f'VM already running (pid {pid}, --console '
+			f'{vm_console()}), stop it with {VM} quit'
+		)
 		raise SystemExit(1)
 	PIDFILE.unlink(missing_ok=True)
 	STATE.unlink(missing_ok=True)
@@ -181,14 +243,20 @@ def ensure_no_running_vm() -> None:
 
 def bsdtar_x(iso: Path, member: str, dest: Path) -> None:
 	with dest.open('wb') as fh:
-		rc = subprocess.run(['bsdtar', '-xOf', str(iso), member], stdout=fh, check=False).returncode
+		rc = subprocess.run(
+			['bsdtar', '-xOf', str(iso), member], stdout=fh, check=False
+		).returncode
 	if rc:
 		error(f'bsdtar could not extract {member} from {iso}')
 		raise SystemExit(rc)
 
 
 def bsdtar_read(iso: Path, member: str) -> str:
-	result = subprocess.run(['bsdtar', '-xOf', str(iso), member], stdout=subprocess.PIPE, check=False)
+	result = subprocess.run(
+		['bsdtar', '-xOf', str(iso), member],
+		stdout=subprocess.PIPE,
+		check=False,
+	)
 	if result.returncode:
 		error(f'bsdtar could not extract {member} from {iso}')
 		raise SystemExit(result.returncode)
@@ -203,31 +271,65 @@ def extract_iso_kernel(opts: Opts, iso: Path) -> str:
 	# console=ttyS0 appended. The ISO stays attached as a cdrom: the archiso hook
 	# still finds the squashfs on it.
 	stamp = BOOT_DIR / '.stamp'
-	vmlinuz, initrd, cmdline = BOOT_DIR / 'vmlinuz', BOOT_DIR / 'initrd', BOOT_DIR / 'cmdline'
+	vmlinuz, initrd, cmdline = (
+		BOOT_DIR / 'vmlinuz',
+		BOOT_DIR / 'initrd',
+		BOOT_DIR / 'cmdline',
+	)
 	want = f'{iso}:{int(iso.stat().st_mtime)}'
 	BOOT_DIR.mkdir(parents=True, exist_ok=True)
 
 	# a missing output re-extracts too: a stamp can outlive the file names
-	cached = stamp.is_file() and stamp.read_text().strip() == want and initrd.is_file() and initrd.stat().st_size > 0
+	cached = (
+		stamp.is_file()
+		and stamp.read_text().strip() == want
+		and initrd.is_file()
+		and initrd.stat().st_size > 0
+	)
 	if not cached:
 		info(f'extracting kernel/initramfs from {iso.name}')
 		for name in ('vmlinuz', 'initrd', 'cmdline', 'grub.cfg'):
 			(BOOT_DIR / name).unlink(missing_ok=True)
 
-		if subprocess.run(['bsdtar', '-tf', str(iso), ARCHISO_ENTRY], capture_output=True, check=False).returncode == 0:
+		if (
+			subprocess.run(
+				['bsdtar', '-tf', str(iso), ARCHISO_ENTRY],
+				capture_output=True,
+				check=False,
+			).returncode
+			== 0
+		):
 			kernel_member = f'arch/boot/{opts.arch}/vmlinuz-linux'
 			initrd_member = f'arch/boot/{opts.arch}/initramfs-linux.img'
 			entry = bsdtar_read(iso, ARCHISO_ENTRY).splitlines()
-			options = [m.group(1) for line in entry if (m := re.match(r'options\s+(.*)', line))]
+			options = [
+				m.group(1)
+				for line in entry
+				if (m := re.match(r'options\s+(.*)', line))
+			]
 			cmdline.write_text(''.join(f'{opt}\n' for opt in options))
 		else:
-			# other live ISOs (alpine): first grub entry has kernel, cmdline, initrd
+			# other live ISOs (alpine): first grub entry has
+			# kernel, cmdline, initrd
 			bsdtar_x(iso, 'boot/grub/grub.cfg', BOOT_DIR / 'grub.cfg')
-			fields = [line.split() for line in (BOOT_DIR / 'grub.cfg').read_text(errors='replace').splitlines()]
+			fields = [
+				line.split()
+				for line in (BOOT_DIR / 'grub.cfg')
+				.read_text(errors='replace')
+				.splitlines()
+			]
 			linux = next((f for f in fields if f[:1] == ['linux']), [])
-			initrd_line = next((f for f in fields if f[:1] == ['initrd']), [])
-			kernel_member = linux[1].removeprefix('/') if len(linux) > 1 else ''
-			initrd_member = initrd_line[1].removeprefix('/') if len(initrd_line) > 1 else ''
+			initrd_line = next(
+				(f for f in fields if f[:1] == ['initrd']), []
+			)
+			kernel_member = (
+				linux[1].removeprefix('/') if len(linux) > 1 else ''
+			)
+			initrd_member = (
+				initrd_line[1].removeprefix('/')
+				if len(initrd_line) > 1
+				else ''
+			)
 			cmdline.write_text(f'{" ".join(linux[2:])}\n' if linux else '')
 
 		bsdtar_x(iso, kernel_member, vmlinuz)
@@ -251,7 +353,11 @@ def find_iso(opts: Opts) -> Path | None:
 		return opts.iso
 	# newest first, then keep the guest arch: aarch64 ISOs carry it in the
 	# name (archlinux-*-aarch64.iso), x86_64 ones do not always (archlinux-*.iso)
-	isos = sorted([*ISOMOD_OUT.glob('*.iso'), *DEV_ISO_DIR.glob('*.iso')], key=lambda p: p.stat().st_mtime, reverse=True)
+	isos = sorted(
+		[*ISOMOD_OUT.glob('*.iso'), *DEV_ISO_DIR.glob('*.iso')],
+		key=lambda p: p.stat().st_mtime,
+		reverse=True,
+	)
 	if opts.x86:
 		return next((p for p in isos if 'aarch64' not in str(p)), None)
 	return next((p for p in isos if opts.arch in str(p)), None)
@@ -260,7 +366,10 @@ def find_iso(opts: Opts) -> Path | None:
 def require_iso(opts: Opts) -> Path:
 	if iso := find_iso(opts):
 		return iso
-	error(f'No ISO found. Build one with isos/ISOMOD, drop one in {DEV_ISO_DIR}/ or {ISOMOD_OUT}, or set A2_DEV_ISO=/path/to.iso')
+	error(
+		f'No ISO found. Build one with isos/ISOMOD, drop one in {DEV_ISO_DIR}/ '
+		f'or {ISOMOD_OUT}, or set A2_DEV_ISO=/path/to.iso'
+	)
 	raise SystemExit(1)
 
 
@@ -286,7 +395,16 @@ def require_disk(opts: Opts) -> None:
 def clean(opts: Opts) -> None:
 	ensure_no_running_vm()
 	# cloud images stay cached in CLOUD_DIR, like ISOs
-	for path in (opts.disk, opts.ovmf_vars, TARGET, SERIAL, LOG, CAPTURE, MONITOR, STATE):
+	for path in (
+		opts.disk,
+		opts.ovmf_vars,
+		TARGET,
+		SERIAL,
+		LOG,
+		CAPTURE,
+		MONITOR,
+		STATE,
+	):
 		if path.exists() or path.is_symlink():
 			path.unlink()
 			info(f"removed '{path}'")
@@ -313,19 +431,41 @@ def console_args(opts: Opts) -> list[str]:
 		# ttyS1 is a plain file chardev: guest output redirected to /dev/ttyS1
 		# is a byte-exact transcript of one command (dev.vm capture). ttyS0
 		# stays the interactive end.
-		args = [*video, *serial_log_args(), '-chardev', f'file,id=cap0,path={CAPTURE}']
+		args = [
+			*video,
+			*serial_log_args(),
+			'-chardev',
+			f'file,id=cap0,path={CAPTURE}',
+		]
 		if opts.x86:
 			args += ['-serial', 'chardev:ser0', '-serial', 'chardev:cap0']
 		else:
-			# q35's ISA 16550s become one dual-port PCI 16550 on virt, so the
-			# guest still sees ttyS0/ttyS1. The pl011 stays off the sockets: its
-			# QEMU model stops taking input after ~280 bytes in one line.
-			args += ['-device', 'pci-serial-2x,chardev1=ser0,chardev2=cap0', '-serial', 'none']
-		return [*args, '-monitor', f'unix:{MONITOR},server=on,wait=off', '-daemonize']
+			# q35's ISA 16550s become one dual-port PCI 16550 on virt,
+			# so the guest still sees ttyS0/ttyS1. The pl011 stays off
+			# the sockets: its QEMU model stops taking input after
+			# ~280 bytes in one line.
+			args += [
+				'-device',
+				'pci-serial-2x,chardev1=ser0,chardev2=cap0',
+				'-serial',
+				'none',
+			]
+		return [
+			*args,
+			'-monitor',
+			f'unix:{MONITOR},server=on,wait=off',
+			'-daemonize',
+		]
 
 	if opts.console == 'tty':
 		# ttyS0 and the monitor share stdio (mux), Ctrl-a switches between them
-		args = [*video, '-chardev', 'stdio,id=ser0,mux=on,signal=off', '-mon', 'chardev=ser0']
+		args = [
+			*video,
+			'-chardev',
+			'stdio,id=ser0,mux=on,signal=off',
+			'-mon',
+			'chardev=ser0',
+		]
 		if opts.x86:
 			return [*args, '-serial', 'chardev:ser0']
 		return [*args, '-device', 'pci-serial,chardev=ser0', '-serial', 'none']
@@ -351,13 +491,27 @@ def machine_args(opts: Opts) -> list[str]:
 	else:
 		args = ['-machine', 'virt', '-cpu', 'max', '-accel', 'tcg,thread=multi']
 	# virt has neither IDE nor PS/2: ISO on virtio-scsi, USB input
-	return [*args, '-device', 'qemu-xhci', '-device', 'usb-kbd', '-device', 'usb-tablet']
+	return [
+		*args,
+		'-device',
+		'qemu-xhci',
+		'-device',
+		'usb-kbd',
+		'-device',
+		'usb-tablet',
+	]
 
 
 def disk_args(opts: Opts, boot_order: str) -> list[str]:
 	if opts.x86:
-		# q35 has IDE for -cdrom and PS/2 input; -boot order is honored by both firmwares
-		return ['-drive', f'file={opts.disk},format=qcow2,if=virtio', '-boot', f'order={boot_order}']
+		# q35 has IDE for -cdrom and PS/2 input; -boot order is
+		# honored by both firmwares
+		return [
+			'-drive',
+			f'file={opts.disk},format=qcow2,if=virtio',
+			'-boot',
+			f'order={boot_order}',
+		]
 	# -boot order means nothing to edk2 on arm, bootindex does (fw_cfg), so
 	# the disk yields to the cdrom whenever one is attached.
 	disk_index = 1 if boot_order == 'd' else 0
@@ -379,10 +533,22 @@ def media_args(opts: Opts) -> list[str]:
 	if opts.x86:
 		args = ['-cdrom', str(iso)]
 	else:
-		args = ['-drive', f'file={iso},media=cdrom,if=none,id=cd0,readonly=on', '-device', 'scsi-cd,drive=cd0,bootindex=0']
+		args = [
+			'-drive',
+			f'file={iso},media=cdrom,if=none,id=cd0,readonly=on',
+			'-device',
+			'scsi-cd,drive=cd0,bootindex=0',
+		]
 	if opts.console != 'window':
 		cmdline = extract_iso_kernel(opts, iso)
-		args += ['-kernel', str(BOOT_DIR / 'vmlinuz'), '-initrd', str(BOOT_DIR / 'initrd'), '-append', f'{cmdline} console=ttyS0,115200']
+		args += [
+			'-kernel',
+			str(BOOT_DIR / 'vmlinuz'),
+			'-initrd',
+			str(BOOT_DIR / 'initrd'),
+			'-append',
+			f'{cmdline} console=ttyS0,115200',
+		]
 	return args
 
 
@@ -393,7 +559,8 @@ def run_foreground(cmd: list[str]) -> int:
 			try:
 				return proc.wait()
 			except KeyboardInterrupt:
-				# ^C reaches qemu too (same process group): let it shut down
+				# ^C reaches qemu too (same process
+				# group): let it shut down
 				continue
 	finally:
 		if sys.stdin.isatty():
@@ -423,7 +590,17 @@ def launch(opts: Opts, mode: str) -> int:
 	else:
 		require_media(opts)
 		opts.disk.unlink(missing_ok=True)
-		if rc := subprocess.run(['qemu-img', 'create', '-f', 'qcow2', str(opts.disk), opts.disk_size], check=False).returncode:
+		if rc := subprocess.run(
+			[
+				'qemu-img',
+				'create',
+				'-f',
+				'qcow2',
+				str(opts.disk),
+				opts.disk_size,
+			],
+			check=False,
+		).returncode:
 			error(f'qemu-img could not create {opts.disk}')
 			return rc
 
@@ -454,7 +631,12 @@ def launch(opts: Opts, mode: str) -> int:
 		str(PIDFILE),
 	]
 	if firmware:
-		cmd += ['-drive', f'if=pflash,format=raw,readonly=on,file={firmware[0]}', '-drive', f'if=pflash,format=raw,file={opts.ovmf_vars}']
+		cmd += [
+			'-drive',
+			f'if=pflash,format=raw,readonly=on,file={firmware[0]}',
+			'-drive',
+			f'if=pflash,format=raw,file={opts.ovmf_vars}',
+		]
 	if attach_iso:
 		cmd += media_args(opts)
 	cmd += opts.extra
@@ -475,7 +657,13 @@ def launch(opts: Opts, mode: str) -> int:
 		return 0
 
 	if opts.console == 'tty':
-		info('ttyS0 is this terminal: Ctrl-a x quits, Ctrl-a c toggles the QEMU monitor')
+		info(
+			'ttyS0 is this terminal: Ctrl-a x quits, Ctrl-a c '
+			'toggles the QEMU monitor'
+		)
 	else:
-		info('VM in a window. (qemu) below is the monitor, not the guest: quit or Ctrl-C stops the VM')
+		info(
+			'VM in a window. (qemu) below is the monitor, not '
+			'the guest: quit or Ctrl-C stops the VM'
+		)
 	return run_foreground(cmd)

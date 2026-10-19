@@ -38,7 +38,9 @@ def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) ->
 			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
 
 
-def _set_parsed(obj: object, config: dict[str, Any], mapping: dict[str, Callable[[Any], object]]) -> None:
+def _set_parsed(
+	obj: object, config: dict[str, Any], mapping: dict[str, Callable[[Any], object]]
+) -> None:
 	for key, parser in mapping.items():
 		if value := config.get(key):
 			setattr(obj, key, parser(value))
@@ -81,7 +83,9 @@ class ArchConfig:
 	hostname: str = 'archlinux'
 	kernels: list[str] = field(default_factory=lambda: [DEFAULT_KERNEL.value])
 	kernel_headers: bool = False
-	firmware: FirmwareConfiguration = field(default_factory=FirmwareConfiguration.default)
+	firmware: FirmwareConfiguration = field(
+		default_factory=FirmwareConfiguration.default
+	)
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
 	aur_packages: list[str] = field(default_factory=list)
@@ -95,26 +99,47 @@ class ArchConfig:
 		config: dict[str, Any] = {
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
-			'locale_config': self.locale_config.json() if self.locale_config else None,
-			'pacman_config': self.pacman_config.json() if self.pacman_config else None,
-			'bootloader_config': self.bootloader_config.json() if self.bootloader_config else None,
-			'disk_config': self.disk_config.json() if self.disk_config else None,
+			'locale_config': self.locale_config.json()
+			if self.locale_config
+			else None,
+			'pacman_config': self.pacman_config.json()
+			if self.pacman_config
+			else None,
+			'bootloader_config': self.bootloader_config.json()
+			if self.bootloader_config
+			else None,
+			'disk_config': self.disk_config.json()
+			if self.disk_config
+			else None,
 			'swap': self.swap,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
 			'firmware': self.firmware.json(),
-			'profile_config': self.profile_config.json() if self.profile_config else None,
-			'gfx_driver': self.gfx_driver.value if self.gfx_driver else None,
+			'profile_config': self.profile_config.json()
+			if self.profile_config
+			else None,
+			'gfx_driver': self.gfx_driver.value
+			if self.gfx_driver
+			else None,
 			'gfx_packages': [p.value for p in self.gfx_packages],
 			'hostname': self.hostname,
-			'auth_config': self.auth_config.json() if self.auth_config else None,
-			'app_config': self.app_config.json() if self.app_config else None,
-			'network_config': self.network_config.json() if self.network_config else None,
+			'auth_config': self.auth_config.json()
+			if self.auth_config
+			else None,
+			'app_config': self.app_config.json()
+			if self.app_config
+			else None,
+			'network_config': self.network_config.json()
+			if self.network_config
+			else None,
 			'timezone': self.timezone,
 			'ntp': self.ntp,
 			'packages': self.packages,
 			'aur_packages': self.aur_packages,
-			'services': [s.json() if isinstance(s, UserService) else s for s in self.services],
+			'services': [
+				s.json() if isinstance(s, UserService) else s
+				for s in self.services
+			],
 			'sysctl': self.sysctl,
 			'custom_commands': self.custom_commands,
 		}
@@ -145,14 +170,21 @@ class ArchConfig:
 
 		# Parse services: strings stay as-is, dicts become UserService
 		if raw_services := args_config.get('services'):
-			arch_config.services = [s if isinstance(s, str) else UserService.parse_arg(s) for s in raw_services]
+			arch_config.services = [
+				s if isinstance(s, str) else UserService.parse_arg(s)
+				for s in raw_services
+			]
 
 		_set_parsed(
 			arch_config,
 			args_config,
 			{
 				'pacman_config': PacmanConfiguration.parse_args,
-				'disk_config': lambda arg: DiskLayoutConfiguration.parse_arg(arg, DeviceHandler()),
+				'disk_config': lambda arg: (
+					DiskLayoutConfiguration.parse_arg(
+						arg, DeviceHandler()
+					)
+				),
 				'profile_config': ProfileConfiguration.parse_arg,
 				'auth_config': AuthenticationConfiguration.parse_arg,
 				'app_config': ApplicationConfiguration.parse_arg,
@@ -161,10 +193,14 @@ class ArchConfig:
 		)
 
 		# Special cases that don't fit the pattern
-		arch_config.locale_config = LocaleConfiguration.parse_arg(args_config.get('locale_config', {}))
+		arch_config.locale_config = LocaleConfiguration.parse_arg(
+			args_config.get('locale_config', {})
+		)
 
 		if bootloader := args_config.get('bootloader_config'):
-			arch_config.bootloader_config = BootloaderConfiguration.parse_arg(bootloader)
+			arch_config.bootloader_config = (
+				BootloaderConfiguration.parse_arg(bootloader)
+			)
 
 		if (swap := args_config.get('swap')) is not None:
 			arch_config.swap = SwapConfiguration.parse_arg(swap)
@@ -175,7 +211,11 @@ class ArchConfig:
 		if gfx_driver := args_config.get('gfx_driver'):
 			arch_config.gfx_driver = GfxDriver(gfx_driver)
 		# unknown names are dropped, the same way kernels are parsed
-		arch_config.gfx_packages = [GfxPackage(p) for p in args_config.get('gfx_packages') or [] if p in GfxPackage]
+		arch_config.gfx_packages = [
+			GfxPackage(p)
+			for p in args_config.get('gfx_packages') or []
+			if p in GfxPackage
+		]
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 		if firmware := args_config.get('firmware'):
@@ -242,7 +282,10 @@ class ArchConfigHandler:
 				config.update(json.loads(config_data))
 
 			except JSONDecodeError as e:
-				warn(f'Malformed JSON at line {e.lineno}, column {e.colno}: {e.msg}')
+				warn(
+					f'Malformed JSON at line {e.lineno}, '
+					f'column {e.colno}: {e.msg}'
+				)
 				raise SystemExit(1) from e
 
 		return self._cleanup_config(config)
@@ -271,7 +314,11 @@ class ArchConfigHandler:
 	def _cleanup_config(self, config: dict[str, Any]) -> dict[str, Any]:
 		clean_args = {}
 		for key, raw in config.items():
-			val = self._cleanup_config(raw) if isinstance(raw, dict) else raw
+			val = (
+				self._cleanup_config(raw)
+				if isinstance(raw, dict)
+				else raw
+			)
 
 			if val is not None:
 				clean_args[key] = val

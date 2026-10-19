@@ -41,7 +41,9 @@ def on_pre_page(page: Page, config: MkDocsConfig, files: Files) -> Page:
 	if src and Path(src).is_symlink():
 		repo_root = Path(config.config_file_path).parent
 		if real := _repo_rel(src, repo_root):
-			page.edit_url = config.repo_url.rstrip('/') + '/blob/master/' + real
+			page.edit_url = (
+				config.repo_url.rstrip('/') + '/blob/master/' + real
+			)
 	return page
 
 
@@ -54,9 +56,15 @@ def _doc_for(path: str) -> str | None:
 	return None
 
 
-def on_page_markdown(markdown: str, page: Page, config: MkDocsConfig, files: Files) -> str:
+def on_page_markdown(
+	markdown: str, page: Page, config: MkDocsConfig, files: Files
+) -> str:
 	# ](repo_url[/blob|tree/master/path][?query][#anchor])
-	link = re.compile(r'\]\(' + re.escape(config.repo_url.rstrip('/')) + r'(?:/(?:blob|tree)/master(/[^)?#\s]*))?(?:\?[^)#\s]*)?(#[^)\s]*)?\)')
+	link = re.compile(
+		r'\]\('
+		+ re.escape(config.repo_url.rstrip('/'))
+		+ r'(?:/(?:blob|tree)/master(/[^)?#\s]*))?(?:\?[^)#\s]*)?(#[^)\s]*)?\)'
+	)
 	page_dir = posixpath.dirname(page.file.src_uri) or '.'
 
 	def repl(m: re.Match[str]) -> str:

@@ -48,7 +48,8 @@ Some options are also given in the TUI but **are always optional**.
 
 Strong Passwords & Usernames
 
-Usernames/Hostnames: Avoid admin, user, root. Use something descriptive unrelated to your identity.
+Usernames/Hostnames: Avoid admin, user, root.
+Use something descriptive unrelated to your identity.
 
 Hostname has to be RFC-compliant for DNS (strict):
 
@@ -74,8 +75,10 @@ Root account can **optionally be locked** in the TUI.
 
 ### Guest users
 
-Ex: siblings using the same system as you can set a user to have access to the same apps, yet no terminal.
-In the menu you can simply create the user without elevated privileges and optionally `rbash`.
+Ex: siblings using the same system as you
+can set a user to have access to the same apps, yet no terminal.
+In the menu you can simply create the user without elevated privileges
+and optionally `rbash`.
 
 ### Laptop Encryption
 
@@ -83,10 +86,12 @@ Highly recommended in case of theft.
 
 ### U2F
 
-You can enroll `pam.d` for passwordless auth/2FA/etc. Using keys such as:  YubiKey, Titan, SoloKey, Nitrokey
+You can enroll `pam.d` for passwordless auth/2FA/etc.
+Using keys such as:  YubiKey, Titan, SoloKey, Nitrokey
 And use them for encryption too. See this wiki [article](https://wiki.archlinux.org/title/Universal_2nd_Factor)
 
-Unlock LUKS disk devices using [`systemd-cryptenroll`](https://wiki.archlinux.org/title/Systemd-cryptenroll) is also available.
+Unlock LUKS disk devices using [`systemd-cryptenroll`](https://wiki.archlinux.org/title/Systemd-cryptenroll)
+is also available.
 
 ---
 

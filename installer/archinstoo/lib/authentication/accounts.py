@@ -25,16 +25,18 @@ def _enable_sudo(installation: Installer, user: User, group: bool = False) -> No
 		sudoers_dir.mkdir(parents=True)
 		# Guarantees sudoer confs directory recommended perms
 		sudoers_dir.chmod(0o440)
-		# Appends a reference to the sudoers file, because if we are here sudoers.d did not exist yet
+		# Appends a reference to the sudoers file, because if we are here
+		# sudoers.d did not exist yet
 		with (installation.target / 'etc/sudoers').open('a') as sudoers:
 			sudoers.write('@includedir /etc/sudoers.d\n')
 
-	# We count how many files are there already so we know which number to prefix the file with
+	# We count how many files are there already so we know which number to
+	# prefix the file with
 	num_of_rules_already = len(list(sudoers_dir.iterdir()))
 	file_num_str = f'{num_of_rules_already:02d}'  # We want 00_user1, 01_user2, etc
 
-	# Guarantees that username str does not contain invalid characters for a linux file name:
-	# \ / : * ? " < > |
+	# Guarantees that username str does not contain invalid characters for a
+	# linux file name: \ / : * ? " < > |
 	safe_username_file_name = re.sub(r'(\\|\/|:|\*|\?|"|<|>|\|)', '', user.username)
 
 	rule_file = sudoers_dir / f'{file_num_str}_{safe_username_file_name}'
@@ -51,7 +53,10 @@ def _enable_sudo(installation: Installer, user: User, group: bool = False) -> No
 def add_to_group(installation: Installer, group: str, usernames: list[str]) -> None:
 	group_lines = installation.target.joinpath('etc/group').read_text().splitlines()
 	if not any(line.startswith(f'{group}:') for line in group_lines):
-		debug(f'No {group} group on target, skipping membership for {usernames}')
+		debug(
+			f'No {group} group on target, skipping membership '
+			f'for {usernames}'
+		)
 		return
 	for name in usernames:
 		debug(f'Adding {name} to {group} group')
@@ -78,7 +83,11 @@ def create_users(
 	if not isinstance(users, list):
 		users = [users]
 
-	info(f'Creating {len(users)} user account(s): {", ".join(u.username for u in users)}', step=True)
+	info(
+		f'Creating {len(users)} user account(s): '
+		f'{", ".join(u.username for u in users)}',
+		step=True,
+	)
 
 	# Install the privilege escalation package
 	if privilege_escalation is not None and User.any_elevated(users):
@@ -90,7 +99,9 @@ def create_users(
 		_create_user(installation, user, privilege_escalation)
 
 
-def _configure_makepkg(installation: Installer, privilege_escalation: PrivilegeEscalation | None) -> None:
+def _configure_makepkg(
+	installation: Installer, privilege_escalation: PrivilegeEscalation | None
+) -> None:
 	# makepkg tries sudo then su by default, only doas/run0 need an override
 	if privilege_escalation is None:
 		return
@@ -101,7 +112,10 @@ def _configure_makepkg(installation: Installer, privilege_escalation: PrivilegeE
 	}.get(privilege_escalation)
 
 	if auth_binary is None:
-		debug(f'{privilege_escalation.value} uses makepkg default PACMAN_AUTH, nothing to set')
+		debug(
+			f'{privilege_escalation.value} uses makepkg default '
+			'PACMAN_AUTH, nothing to set'
+		)
 		return
 
 	makepkg_conf = installation.target / 'etc/makepkg.conf'

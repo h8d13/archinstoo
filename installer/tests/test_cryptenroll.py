@@ -19,6 +19,9 @@ def test_bootstrap_key_written_then_removed(tmp_path: Path) -> None:
 
 
 def test_bootstrap_key_removed_on_error(tmp_path: Path) -> None:
-	with pytest.raises(RuntimeError), _bootstrap_key(tmp_path, '.fido2-bootstrap.key', 'hunter2') as key:
+	with (
+		pytest.raises(RuntimeError),
+		_bootstrap_key(tmp_path, '.fido2-bootstrap.key', 'hunter2') as key,
+	):
 		raise RuntimeError
 	assert not key.exists()

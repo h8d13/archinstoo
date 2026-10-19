@@ -17,7 +17,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
 
 from archinstoo.lib.output import error, info
-from archinstoo.scripts.dev._vm import CAPTURE, LOG, MONITOR, ROOT, SERIAL, VM, vm_console, vm_pid
+from archinstoo.scripts.dev._vm import (
+	CAPTURE,
+	LOG,
+	MONITOR,
+	ROOT,
+	SERIAL,
+	VM,
+	vm_console,
+	vm_pid,
+)
 
 if TYPE_CHECKING:
 	import argparse
@@ -56,7 +65,10 @@ def log_read(offset: int = 0) -> bytes:
 			fh.seek(offset)
 			return fh.read()
 	except FileNotFoundError as e:
-		error(f'{LOG} missing: no VM ran with --console serial since the last clean')
+		error(
+			f'{LOG} missing: no VM ran with --console serial '
+			'since the last clean'
+		)
 		raise SystemExit(1) from e
 
 
@@ -70,7 +82,12 @@ def clean(raw: bytes) -> str:
 	# A lone CR is a redraw (pacman progress bars): keep it as a line break
 	text = re.sub(r'\r+\n', '\n', raw.decode('utf-8', 'replace'))
 	# readline rings BEL for the ^U serial_write sends on an empty line
-	return ANSI.sub('', text).replace('\x1b', '').replace('\x07', '').replace('\r', '\n')
+	return (
+		ANSI.sub('', text)
+		.replace('\x1b', '')
+		.replace('\x07', '')
+		.replace('\r', '\n')
+	)
 
 
 def paced_send(sock: socket.socket, payload: bytes) -> None:
@@ -117,7 +134,9 @@ def monitor_cmd(cmd: str, timeout: float = 5.0) -> str:
 		return clean(out)
 
 
-def wait_for(pattern: str, timeout: float, offset: int = 0) -> tuple[str, re.Match[str] | None]:
+def wait_for(
+	pattern: str, timeout: float, offset: int = 0
+) -> tuple[str, re.Match[str] | None]:
 	rx = re.compile(pattern, re.MULTILINE)
 	deadline = time.time() + timeout
 	while True:
@@ -156,7 +175,9 @@ def cmd_attach(_args: argparse.Namespace) -> None:
 					sys.stdout.buffer.write(data)
 					sys.stdout.buffer.flush()
 				if fd in ready:
-					keys, detach, _ = os.read(fd, 1024).partition(DETACH)
+					keys, detach, _ = os.read(fd, 1024).partition(
+						DETACH
+					)
 					paced_send(sock, keys)
 					if detach:
 						break
@@ -186,7 +207,11 @@ def wait_idle(timeout: float) -> bool:
 	# running: the VM is a daemon, it never noticed we walked away.
 	deadline = time.time() + timeout
 	while True:
-		lines = [ln.rstrip() for ln in clean(log_read()).splitlines() if ln.strip()]
+		lines = [
+			ln.rstrip()
+			for ln in clean(log_read()).splitlines()
+			if ln.strip()
+		]
 		if lines and IDLE.search(lines[-1]):
 			return True
 		if time.time() >= deadline:
@@ -211,7 +236,11 @@ def marked_run(cmd: str, timeout: float) -> tuple[str, int | None]:
 	if match:
 		text = text[: match.end()]
 	# drop the shell's echo of what we typed and grml zsh's prompt padding
-	body = [ln for ln in text.splitlines() if marker not in ln and not PROMPT.fullmatch(ln.rstrip())]
+	body = [
+		ln
+		for ln in text.splitlines()
+		if marker not in ln and not PROMPT.fullmatch(ln.rstrip())
+	]
 	return '\n'.join(body).strip(), (int(match.group(1)) if match else None)
 
 
@@ -308,12 +337,19 @@ def cmd_push(args: argparse.Namespace) -> None:
 			name = src.name
 			shutil.copy2(src, root / name)
 
-		server = ThreadingHTTPServer(('127.0.0.1', 0), partial(SimpleHTTPRequestHandler, directory=str(root)))
+		server = ThreadingHTTPServer(
+			('127.0.0.1', 0),
+			partial(SimpleHTTPRequestHandler, directory=str(root)),
+		)
 		port = server.server_address[1]
 		threading.Thread(target=server.serve_forever, daemon=True).start()
 
 		url = f'http://10.0.2.2:{port}/{name}'
-		fetch = f'mkdir -p {dest} && curl -sSf {url} | tar -xzf - -C {dest}' if src.is_dir() else f'curl -sSf -o {dest} {url}'
+		fetch = (
+			f'mkdir -p {dest} && curl -sSf {url} | tar -xzf - -C {dest}'
+			if src.is_dir()
+			else f'curl -sSf -o {dest} {url}'
+		)
 
 		try:
 			body, rc = marked_run(fetch, args.timeout)
@@ -435,7 +471,8 @@ def cmd_mon(args: argparse.Namespace) -> None:
 
 def cmd_status(_args: argparse.Namespace) -> NoReturn:
 	pid = vm_pid()
-	print(f'vm:      {f"running pid {pid}, --console {vm_console()}" if pid else "not running"}')
+	vm = f'running pid {pid}, --console {vm_console()}' if pid else 'not running'
+	print(f'vm:      {vm}')
 	print(f'serial:  {SERIAL} {"ok" if SERIAL.exists() else "missing"}')
 	print(f'monitor: {MONITOR} {"ok" if MONITOR.exists() else "missing"}')
 	print(f'log:     {LOG} {log_size()} bytes')

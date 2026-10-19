@@ -20,7 +20,9 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		self._skip_boot = skip_boot
 		menu_options = self._define_menu_options()
 
-		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
+		self._item_group = MenuItemGroup(
+			menu_options, sort_items=False, checkmarks=True
+		)
 		super().__init__(
 			self._item_group,
 			config=self._bootloader_conf,
@@ -36,7 +38,11 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			self._bootloader_conf.uki = False
 
 		# Removable availability
-		removable_enabled = self._uefi and bootloader is not None and bootloader.has_removable_support()
+		removable_enabled = (
+			self._uefi
+			and bootloader is not None
+			and bootloader.has_removable_support()
+		)
 		if not removable_enabled:
 			self._bootloader_conf.removable = False
 
@@ -102,7 +108,10 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _prev_removable(self, item: MenuItem) -> str | None:
 		if item.value:
-			return 'Will install to /EFI/BOOT/ (removable location, safe default)'
+			return (
+				'Will install to /EFI/BOOT/ (removable location, '
+				'safe default)'
+			)
 		return 'Will install to custom location with NVRAM entry'
 
 	def _prev_quiet(self, item: MenuItem) -> str | None:
@@ -138,7 +147,11 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 			uki_item.enabled = True
 
 		removable_item = self._menu_item_group.find_by_key('removable')
-		if not self._uefi or bootloader is None or not bootloader.has_removable_support():
+		if (
+			not self._uefi
+			or bootloader is None
+			or not bootloader.has_removable_support()
+		):
 			removable_item.enabled = False
 			removable_item.value = False
 			self._bootloader_conf.removable = False
@@ -158,8 +171,15 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _select_serial_console(self, preset: str | None) -> str | None:
 		# pl011 UART on ARM, 16550 everywhere else
-		default = 'ttyAMA0,115200' if SysInfo.arch() == 'aarch64' else 'ttyS0,115200'
-		header = f'Kernel "console=" value for a serial console (e.g. {default}).\nLeave empty to disable.\n'
+		default = (
+			'ttyAMA0,115200'
+			if SysInfo.arch() == 'aarch64'
+			else 'ttyS0,115200'
+		)
+		header = (
+			'Kernel "console=" value for a serial console (e.g. '
+			f'{default}).\nLeave empty to disable.\n'
+		)
 
 		value = prompt_text('Serial console', header, preset or default)
 		if value is None:
@@ -167,7 +187,10 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return value.strip() or None
 
 	def _select_splash(self, preset: bool) -> bool:
-		prompt = 'Embed the Arch logo splash image into the unified kernel image?\n'
+		prompt = (
+			'Embed the Arch logo splash image into the unified kernel '
+			'image?\n'
+		)
 
 		choice = prompt_yes_no(prompt, preset)
 		return preset if choice is None else choice
@@ -193,27 +216,40 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		uses = '\n'.join(
 			f'  • {use}'
 			for use in (
-				'Firmware that does not properly support NVRAM boot entries like most MSI motherboards,\n    most Apple Macs, many laptops...',
+				(
+					'Firmware that does not properly support NVRAM '
+					'boot entries like most MSI motherboards,\n    '
+					'most Apple Macs, many laptops...'
+				),
 				'USB drives or other portable external media.',
-				'Systems where you want the disk to be bootable on any computer.',
+				(
+					'Systems where you want the disk to be '
+					'bootable on any computer.'
+				),
 			)
 		)
 		# format after dedent: the bullets' space indent would shrink the margin
 		prompt = textwrap.dedent("""\
-			Would you like to install the bootloader to the default removable media search location?
+			Would you like to install the bootloader to the default
+			removable media search location?
 
-			This installs the bootloader to /EFI/BOOT/BOOTX64.EFI (or similar) which is useful for:
+			This installs the bootloader to /EFI/BOOT/BOOTX64.EFI
+			(or similar) which is useful for:
 
 			{uses}
 
-			If you do not know what this means, LEAVE THIS OPTION ENABLED, as it is the safe default.
+			If you do not know what this means, LEAVE THIS OPTION ENABLED,
+			as it is the safe default.
 
-			It is suggested to disable this if none of the above apply, as it makes installing multiple
-			EFI bootloaders on the same disk easier, and it will not overwrite whatever bootloader
-			was previously installed at the default removable media search location, if any.
+			It is suggested to disable this if none of the above apply, as
+			it makes installing multiple EFI bootloaders on the same disk
+			easier, and it will not overwrite whatever bootloader was
+			previously installed at the default removable media search
+			location, if any.
 
-			It may also make the installation more resilient in case of dual-booting with Windows,
-			as Windows is known to sometimes erase or replace the bootloader installed at the removable
+			It may also make the installation more resilient in case of
+			dual-booting with Windows, as Windows is known to sometimes
+			erase or replace the bootloader installed at the removable
 			location.
 
 		""").format(uses=uses)
@@ -222,7 +258,9 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 		return preset if choice is None else choice
 
 
-def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = False) -> Bootloader | None:
+def select_bootloader(
+	preset: Bootloader | None, uefi: bool, skip_boot: bool = False
+) -> Bootloader | None:
 	options: list[Bootloader] = []
 	header = None
 
@@ -236,4 +274,6 @@ def select_bootloader(preset: Bootloader | None, uefi: bool, skip_boot: bool = F
 
 	items = [MenuItem(o.display_name(), value=o) for o in options]
 	items.append(MenuItem(text='None', value=None))
-	return prompt_choice(items, preset, header=header, frame='Bootloader', default=default)
+	return prompt_choice(
+		items, preset, header=header, frame='Bootloader', default=default
+	)

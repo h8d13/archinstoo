@@ -36,7 +36,9 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 
 		menu_options = self._define_menu_options()
 
-		self._item_group = MenuItemGroup(menu_options, sort_items=False, checkmarks=True)
+		self._item_group = MenuItemGroup(
+			menu_options, sort_items=False, checkmarks=True
+		)
 		super().__init__(
 			self._item_group,
 			config=self._locale_conf,
@@ -107,15 +109,31 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 
 	def _prev_locale(self, _item: MenuItem) -> str:
 		default = LocaleConfiguration.default()
-		kb_layout = self._menu_item_group.find_by_key('kb_layout').value or default.kb_layout
-		sys_lang = self._menu_item_group.find_by_key('sys_lang').value or default.sys_lang
-		sys_enc = self._menu_item_group.find_by_key('sys_enc').value or default.sys_enc
-		console_font = self._menu_item_group.find_by_key('console_font').value or default.console_font
+		kb_layout = (
+			self._menu_item_group.find_by_key('kb_layout').value
+			or default.kb_layout
+		)
+		sys_lang = (
+			self._menu_item_group.find_by_key('sys_lang').value
+			or default.sys_lang
+		)
+		sys_enc = (
+			self._menu_item_group.find_by_key('sys_enc').value
+			or default.sys_enc
+		)
+		console_font = (
+			self._menu_item_group.find_by_key('console_font').value
+			or default.console_font
+		)
 		# xkb fields default to '' (graphical layout left unset)
 		xkb_layout = self._menu_item_group.find_by_key('xkb_layout').value or ''
 		xkb_model = self._menu_item_group.find_by_key('xkb_model').value or ''
-		xkb_variant = self._menu_item_group.find_by_key('xkb_variant').value or ''
-		xkb_options = self._menu_item_group.find_by_key('xkb_options').value or ''
+		xkb_variant = (
+			self._menu_item_group.find_by_key('xkb_variant').value or ''
+		)
+		xkb_options = (
+			self._menu_item_group.find_by_key('xkb_options').value or ''
+		)
 
 		temp_locale = LocaleConfiguration(
 			kb_layout,
@@ -136,7 +154,8 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 	) -> LocaleConfiguration:
 		super().run(additional_title=additional_title)
 		# If reset, return defaults instead of config with None fields
-		# Note: kb_layout can be None at runtime after reset despite type annotation
+		# Note: kb_layout can be None at runtime after reset
+		# despite type annotation
 		if getattr(self._locale_conf, 'kb_layout', None) is None:
 			return LocaleConfiguration.default()
 		return self._locale_conf
@@ -173,7 +192,10 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		layout, variant = xkb_from_keymap(keymap) or ('', '')
 		self._locale_conf.xkb_layout = layout
 		self._locale_conf.xkb_variant = variant
-		debug(f'Keymap {keymap} pre-selected graphical layout {layout or "(none)"} {variant}')
+		debug(
+			f'Keymap {keymap} pre-selected graphical layout '
+			f'{layout or "(none)"} {variant}'
+		)
 		return layout, variant
 
 	def _select_xkb_layout(self, preset: str | None) -> str | None:
@@ -229,10 +251,16 @@ def select_locale_lang(preset: str | None = None) -> str | None:
 	return prompt_choice(items, preset, frame='Locale language', sort_items=True)
 
 
-def select_locale_enc(sys_lang: str | None = None, preset: str | None = None) -> str | None:
+def select_locale_enc(
+	sys_lang: str | None = None, preset: str | None = None
+) -> str | None:
 	# only the encodings the language actually has a locale for; unset language
 	# (config file without sys_lang) falls back to every encoding listed
-	locale_enc = list_locale_encodings(sys_lang) if sys_lang else sorted({locale.split()[1] for locale in list_locales()})
+	locale_enc = (
+		list_locale_encodings(sys_lang)
+		if sys_lang
+		else sorted({locale.split()[1] for locale in list_locales()})
+	)
 
 	items = [MenuItem(le, value=le) for le in locale_enc]
 	return prompt_choice(items, preset, frame='Locale encoding')
@@ -279,7 +307,9 @@ def select_xkb_model(preset: str | None = None) -> str | None:
 
 
 def select_xkb_variant(layout: str | None, preset: str | None = None) -> str | None:
-	return _select_xkb_single('Layout variant', list_x11_keyboard_variants(layout or ''), preset)
+	return _select_xkb_single(
+		'Layout variant', list_x11_keyboard_variants(layout or ''), preset
+	)
 
 
 def select_xkb_options(preset: str | None = None) -> str | None:

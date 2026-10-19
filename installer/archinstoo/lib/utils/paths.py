@@ -25,4 +25,9 @@ def data_paths(anchor: str, *relative: str) -> list[Path]:
 	if binary := which(anchor):
 		roots.append(Path(binary).resolve().parent.parent)
 
-	return [root / data / rel for root in roots for data in _DATA_DIRS for rel in relative]
+	return [
+		root / data / rel
+		for root in roots
+		for data in _DATA_DIRS
+		for rel in relative
+	]

@@ -27,10 +27,31 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 		# it, so root snapshots keep working with the swapfile in place
 		swapfile = '/swap/swapfile'
 		installation.arch_chroot(['btrfs', 'subvolume', 'create', '/swap'])
-		installation.arch_chroot(['btrfs', 'filesystem', 'mkswapfile', '--size', f'{size}g', '--uuid', 'clear', swapfile])
+		installation.arch_chroot(
+			[
+				'btrfs',
+				'filesystem',
+				'mkswapfile',
+				'--size',
+				f'{size}g',
+				'--uuid',
+				'clear',
+				swapfile,
+			]
+		)
 	else:
 		swapfile = '/swapfile'
-		installation.arch_chroot(['mkswap', '-U', 'clear', '--size', f'{size}G', '--file', swapfile])
+		installation.arch_chroot(
+			[
+				'mkswap',
+				'-U',
+				'clear',
+				'--size',
+				f'{size}G',
+				'--file',
+				swapfile,
+			]
+		)
 
 	fstab_entry = f'{swapfile}\tnone\tswap\tdefaults\t0\t0'
 	kernel_params: list[str] = []
@@ -38,18 +59,41 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 	if not SysInfo.has_uefi():
 		fs_uuid = root_fs['uuid']
 		if fs_type == 'btrfs':
-			result = installation.arch_chroot(['btrfs', 'inspect-internal', 'map-swapfile', '-r', swapfile])
-			offset = result.stdout.decode().strip() if isinstance(result, CompletedProcess) else str(result).strip()
+			result = installation.arch_chroot(
+				[
+					'btrfs',
+					'inspect-internal',
+					'map-swapfile',
+					'-r',
+					swapfile,
+				]
+			)
+			offset = (
+				result.stdout.decode().strip()
+				if isinstance(result, CompletedProcess)
+				else str(result).strip()
+			)
 		else:
 			# the kernel wants the offset in PAGE_SIZE units, filefrag's
 			# default unit is the fs block size; page size is an arch
 			# property (arm64 kernels ship 4k/16k/64k), not always 4096
 			page_size = os.sysconf('SC_PAGE_SIZE')
-			result = installation.arch_chroot(['filefrag', f'-b{page_size}', '-v', swapfile])
-			out = result.stdout.decode() if isinstance(result, CompletedProcess) else str(result)
-			match = re.search(r'^\s*0:\s+\d+\.\.\s*\d+:\s+(\d+)', out, re.MULTILINE)
+			result = installation.arch_chroot(
+				['filefrag', f'-b{page_size}', '-v', swapfile]
+			)
+			out = (
+				result.stdout.decode()
+				if isinstance(result, CompletedProcess)
+				else str(result)
+			)
+			match = re.search(
+				r'^\s*0:\s+\d+\.\.\s*\d+:\s+(\d+)', out, re.MULTILINE
+			)
 			if not match:
-				raise DiskError(f'Could not determine swap file offset from filefrag:\n{out}')
+				raise DiskError(
+					'Could not determine swap file '
+					f'offset from filefrag:\n{out}'
+				)
 			offset = match.group(1)
 		kernel_params = [f'resume=UUID={fs_uuid}', f'resume_offset={offset}']
 	return fstab_entry, kernel_params

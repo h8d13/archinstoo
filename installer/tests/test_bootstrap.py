@@ -21,12 +21,22 @@ def _fake_bin(bin_dir: Path, name: str, body: str) -> None:
 
 
 @pytest.mark.parametrize(('deptest_exit', 'synced'), [(0, False), (127, True)])
-def test_deps_only_synced_when_missing(tmp_path: Path, deptest_exit: int, synced: bool) -> None:
+def test_deps_only_synced_when_missing(
+	tmp_path: Path, deptest_exit: int, synced: bool
+) -> None:
 	# the root is reused across runs: a rerun with every dep in must not sync
 	calls = tmp_path / 'pacman.args'
-	_fake_bin(tmp_path, 'pacman', f'case "$1" in -T) exit {deptest_exit};; esac\necho "$@" > {calls}')
+	_fake_bin(
+		tmp_path,
+		'pacman',
+		f'case "$1" in -T) exit {deptest_exit};; esac\necho "$@" > {calls}',
+	)
 
-	subprocess.run(['/bin/sh', '-c', bootstrap.install_deps_cmd()], env={'PATH': str(tmp_path)}, check=True)  # noqa: S603 - the bootstrap's own command
+	subprocess.run(  # noqa: S603 - the bootstrap's own command
+		['/bin/sh', '-c', bootstrap.install_deps_cmd()],
+		env={'PATH': str(tmp_path)},
+		check=True,
+	)
 
 	assert calls.exists() is synced
 	if synced:
@@ -46,19 +56,50 @@ def test_python_and_both_dep_sets_inside() -> None:
 	('argv', 'inner', 'rc'),
 	[
 		# what follows -- reaches the root as given
-		(['--script', 'bootstrap', '--', '--script', 'minimal', '--silent'], ['--', '--script', 'minimal', '--silent'], 0),
+		(
+			[
+				'--script',
+				'bootstrap',
+				'--',
+				'--script',
+				'minimal',
+				'--silent',
+			],
+			['--', '--script', 'minimal', '--silent'],
+			0,
+		),
 		(['--script=bootstrap', '--debug'], ['--'], 0),
 		# the script's own help, before anything is fetched
 		(['--script', 'bootstrap', '-h'], ['-h', '--'], 0),
 		# parsed by the host run and never forwarded: refused, nothing runs
-		(['--script', 'bootstrap', '--silent', '--', '--script', 'guided'], None, 1),
+		(
+			[
+				'--script',
+				'bootstrap',
+				'--silent',
+				'--',
+				'--script',
+				'guided',
+			],
+			None,
+			1,
+		),
 	],
 )
-def test_args_after_dashdash(monkeypatch: pytest.MonkeyPatch, argv: list[str], inner: list[str] | None, rc: int) -> None:
+def test_args_after_dashdash(
+	monkeypatch: pytest.MonkeyPatch,
+	argv: list[str],
+	inner: list[str] | None,
+	rc: int,
+) -> None:
 	ran: list[list[str]] = []
 	monkeypatch.setattr('sys.argv', ['archinstoo', *argv])
 	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: False))
-	monkeypatch.setattr(archinstoo, '_run_script', lambda _script: ran.append(list(sys.argv[1:])))
+	monkeypatch.setattr(
+		archinstoo,
+		'_run_script',
+		lambda _script: ran.append(list(sys.argv[1:])),
+	)
 
 	assert archinstoo._run_bootstrap() == rc
 	assert ran == ([] if inner is None else [inner])
@@ -82,7 +123,9 @@ def test_checksum(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize('host_mnt_mounted', [True, False])
-def test_root_self_bind_private_first(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, host_mnt_mounted: bool) -> None:
+def test_root_self_bind_private_first(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path, host_mnt_mounted: bool
+) -> None:
 	# a shared self-bind (/tmp is shared on the ISO) copied every mount below
 	# it into the parent, where teardown never looked: the host's layout
 	# stayed mounted twice
@@ -90,7 +133,11 @@ def test_root_self_bind_private_first(monkeypatch: pytest.MonkeyPatch, tmp_path:
 	(tmp_path / 'root/etc').mkdir(parents=True)
 	monkeypatch.setattr(bootstrap, 'ROOT', tmp_path / 'root')
 	monkeypatch.setattr(bootstrap, 'mount', lambda *args: mounts.append(args))
-	monkeypatch.setattr(bootstrap, 'is_mounted', lambda path: host_mnt_mounted and path == Path('/mnt'))
+	monkeypatch.setattr(
+		bootstrap,
+		'is_mounted',
+		lambda path: host_mnt_mounted and path == Path('/mnt'),
+	)
 
 	bootstrap.chroot_setup()
 
@@ -98,7 +145,9 @@ def test_root_self_bind_private_first(monkeypatch: pytest.MonkeyPatch, tmp_path:
 	assert mounts[0] == ('--bind', '--make-private', root, root)
 	# a bare /mnt is the host's root fs: bound in, the target stacked on it
 	# and fstab took the host's filesystem for / (a Fedora host's btrfs)
-	assert (('--rbind', '--make-rslave', '/mnt', f'{root}/mnt') in mounts) is host_mnt_mounted
+	assert (
+		('--rbind', '--make-rslave', '/mnt', f'{root}/mnt') in mounts
+	) is host_mnt_mounted
 
 
 def test_not_nested(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -112,7 +161,9 @@ def test_not_nested(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize('mounted', [True, False])
-def test_teardown_reads_mountinfo(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mounted: bool) -> None:
+def test_teardown_reads_mountinfo(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path, mounted: bool
+) -> None:
 	# Path.is_mount() compares st_dev with the parent: the self-bind sits on
 	# the same filesystem, read as unmounted, and a run left 23 mounts behind
 	calls: list[list[str]] = []

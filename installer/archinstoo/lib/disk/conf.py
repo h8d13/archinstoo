@@ -46,9 +46,17 @@ def select_disk_config(
 	handler = device_handler or DeviceHandler()
 
 	# if manual mode already configured, go directly to partition detail screen
-	if preset and preset.config_type == DiskLayoutType.Manual and preset.device_modifications:
+	if (
+		preset
+		and preset.config_type == DiskLayoutType.Manual
+		and preset.device_modifications
+	):
 		preset_mod = preset.device_modifications[0]
-		if (manual_modification := _manual_partitioning(preset_mod, preset_mod.device, handler)) is not None:
+		if (
+			manual_modification := _manual_partitioning(
+				preset_mod, preset_mod.device, handler
+			)
+		) is not None:
 			return DiskLayoutConfiguration(
 				config_type=DiskLayoutType.Manual,
 				device_modifications=[manual_modification],
@@ -86,10 +94,18 @@ def select_disk_config(
 			selection = result.get_value()
 
 			if selection == pre_mount_mode:
-				output = 'You will use whatever drive-setup is mounted at the specified directory\n'
-				output += "WARNING: Archinstoo won't check the suitability of this setup\n"
+				output = (
+					'You will use whatever drive-setup is '
+					'mounted at the specified directory\n'
+				)
+				output += (
+					"WARNING: Archinstoo won't check the "
+					'suitability of this setup\n'
+				)
 
-				path = prompt_dir('Root mount directory', output, allow_skip=True)
+				path = prompt_dir(
+					'Root mount directory', output, allow_skip=True
+				)
 
 				if path is None:
 					return None
@@ -100,26 +116,49 @@ def select_disk_config(
 					config_type=DiskLayoutType.Pre_mount,
 					device_modifications=mods,
 					mountpoint=path,
-					disk_encryption=DiskEncryption.from_pre_mounted(mods),
+					disk_encryption=DiskEncryption.from_pre_mounted(
+						mods
+					),
 				)
 
-			preset_device = preset.device_modifications[0].device if preset and preset.device_modifications else None
+			preset_device = (
+				preset.device_modifications[0].device
+				if preset and preset.device_modifications
+				else None
+			)
 			device = select_device(preset_device, device_handler=handler)
 
 			if not device:
 				return None
 
 			if result.get_value() == default_layout:
-				modification = get_default_partition_layout(device, bootloader=bootloader)
+				modification = get_default_partition_layout(
+					device, bootloader=bootloader
+				)
 				disk_config = DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Default,
 					device_modifications=[modification],
 				)
-				# choosing lvm as the fs marks a PV, so open the volume menu (Default / Root only) inline
-				if any(p.fs_type == FilesystemType.LVM for mod in disk_config.device_modifications for p in mod.partitions):
-					disk_config.lvm_config = select_lvm_config(disk_config)
+				# choosing lvm as the fs marks a PV, so open the volume
+				# menu (Default / Root only) inline
+				if any(
+					p.fs_type == FilesystemType.LVM
+					for mod in disk_config.device_modifications
+					for p in mod.partitions
+				):
+					disk_config.lvm_config = select_lvm_config(
+						disk_config
+					)
 				return disk_config
-			if result.get_value() == manual_mode and (manual_modification := _manual_partitioning(None, device)) is not None:
+			if (
+				result.get_value() == manual_mode
+				and (
+					manual_modification := _manual_partitioning(
+						None, device
+					)
+				)
+				is not None
+			):
 				return DiskLayoutConfiguration(
 					config_type=DiskLayoutType.Manual,
 					device_modifications=[manual_modification],
@@ -136,7 +175,10 @@ def select_lvm_config(
 	default_mode = LvmLayoutType.Default.display_msg()
 	no_home_mode = LvmLayoutType.NoHome.display_msg()
 
-	items = [MenuItem(default_mode, value=default_mode), MenuItem(no_home_mode, value=no_home_mode)]
+	items = [
+		MenuItem(default_mode, value=default_mode),
+		MenuItem(no_home_mode, value=no_home_mode),
+	]
 	group = MenuItemGroup(items)
 	group.set_focus_by_value(preset_value)
 
@@ -157,6 +199,8 @@ def select_lvm_config(
 			if result.get_value() == default_mode:
 				return suggest_lvm_layout(disk_config)
 			if result.get_value() == no_home_mode:
-				return suggest_lvm_layout(disk_config, home_volume=False)
+				return suggest_lvm_layout(
+					disk_config, home_volume=False
+				)
 
 	return None

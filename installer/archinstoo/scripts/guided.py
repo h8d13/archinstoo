@@ -14,7 +14,10 @@ from archinstoo.lib.disk.utils import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.interactions.general_conf import PostInstallationAction, select_post_installation
+from archinstoo.lib.interactions.general_conf import (
+	PostInstallationAction,
+	select_post_installation,
+)
 from archinstoo.lib.models.device import (
 	DiskLayoutType,
 	EncryptionType,
@@ -63,9 +66,15 @@ def perform_installation(
 		return
 
 	disk_config = config.disk_config
-	run_mkinitcpio = not config.bootloader_config or not config.bootloader_config.uki
+	run_mkinitcpio = (
+		not config.bootloader_config or not config.bootloader_config.uki
+	)
 	locale_config = config.locale_config
-	optional_repositories = config.pacman_config.optional_repositories if config.pacman_config else []
+	optional_repositories = (
+		config.pacman_config.optional_repositories
+		if config.pacman_config
+		else []
+	)
 	mountpoint = disk_config.mountpoint or args.mountpoint
 
 	with Installer(
@@ -84,7 +93,8 @@ def perform_installation(
 		if (
 			disk_config.config_type != DiskLayoutType.Pre_mount
 			and disk_config.disk_encryption
-			and disk_config.disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION
+			and disk_config.disk_encryption.encryption_type
+			!= EncryptionType.NO_ENCRYPTION
 		):
 			# generate encryption key files for the mounted luks devices
 			installation.generate_key_files()
@@ -113,7 +123,8 @@ def perform_installation(
 		if config.sysctl and config.sysctl.enabled:
 			installation.setup_sysctl(config.sysctl)
 
-		# Create users before applications i.e audio needs user(s) for pipewire config
+		# Create users before applications i.e audio needs
+		# user(s) for pipewire config
 		if config.auth_config and config.auth_config.users:
 			installation.create_users(
 				config.auth_config.users,
@@ -121,23 +132,42 @@ def perform_installation(
 			)
 			ShellApp().install(installation, config.auth_config.users)
 
-		# Install applications before bootloader so kernel params (e.g. AppArmor LSM) are included
+		# Install applications before bootloader so kernel params (e.g.
+		# AppArmor LSM) are included
 		if app_config := config.app_config:
 			users = config.auth_config.users if config.auth_config else None
-			application_handler.install_applications(installation, app_config, users)
+			application_handler.install_applications(
+				installation, app_config, users
+			)
 
-		# before the bootloader: grub-btrfs ships /etc/grub.d/41_snapshots-btrfs,
-		# and grub-mkconfig only runs once, so the snapshots submenu is
-		# in grub.cfg from the first boot (and in every rolled-back grub.cfg)
+		# before the bootloader: grub-btrfs ships
+		# /etc/grub.d/41_snapshots-btrfs, and grub-mkconfig only runs once, so
+		# the snapshots submenu is in grub.cfg from the first boot (and in every
+		# rolled-back grub.cfg)
 		if disk_config.has_default_btrfs_vols():
 			btrfs_options = disk_config.btrfs_options
-			snapshot_config = btrfs_options.snapshot_config if btrfs_options else None
-			snapshot_type = snapshot_config.snapshot_type if snapshot_config else None
+			snapshot_config = (
+				btrfs_options.snapshot_config if btrfs_options else None
+			)
+			snapshot_type = (
+				snapshot_config.snapshot_type
+				if snapshot_config
+				else None
+			)
 			if snapshot_type:
-				bootloader = config.bootloader_config.bootloader if config.bootloader_config else None
-				installation.setup_btrfs_snapshot(snapshot_type, bootloader)
+				bootloader = (
+					config.bootloader_config.bootloader
+					if config.bootloader_config
+					else None
+				)
+				installation.setup_btrfs_snapshot(
+					snapshot_type, bootloader
+				)
 
-		if config.bootloader_config and config.bootloader_config.bootloader is not None:
+		if (
+			config.bootloader_config
+			and config.bootloader_config.bootloader is not None
+		):
 			installation.add_bootloader(
 				config.bootloader_config.bootloader,
 				config.bootloader_config.uki,
@@ -165,16 +195,27 @@ def perform_installation(
 		# (vulkan-driver virtual group). Independent of them too: a headless box
 		# picks a driver and never selects a profile.
 		if config.gfx_driver:
-			profile_handler.install_gfx_driver(installation, config.gfx_driver, config.gfx_packages)
+			profile_handler.install_gfx_driver(
+				installation, config.gfx_driver, config.gfx_packages
+			)
 
 		if profile_config := config.profile_config:
-			profile_handler.install_profile_config(installation, profile_config, config.app_config)
+			profile_handler.install_profile_config(
+				installation, profile_config, config.app_config
+			)
 
-			# Set graphical keyboard config (Xorg + Wayland) for any graphical profile
-			if profile_config.profiles and profile_config.display_servers() and locale_config:
+			# Set graphical keyboard config (Xorg + Wayland) for
+			# any graphical profile
+			if (
+				profile_config.profiles
+				and profile_config.display_servers()
+				and locale_config
+			):
 				installation.set_keyboard(locale_config)
 
-		if (profile_config := config.profile_config) and profile_config.profiles:
+		if (
+			profile_config := config.profile_config
+		) and profile_config.profiles:
 			users = config.auth_config.users if config.auth_config else []
 			for profile in profile_config.profiles:
 				profile.post_install(installation)
@@ -190,7 +231,9 @@ def perform_installation(
 			installation.enable_service('espeakup')
 
 		if config.auth_config and config.auth_config.root_enc_password:
-			root_user = User('root', config.auth_config.root_enc_password, False)
+			root_user = User(
+				'root', config.auth_config.root_enc_password, False
+			)
 			installation.set_user_password(root_user)
 
 			if config.auth_config.lock_root_account:
@@ -198,7 +241,9 @@ def perform_installation(
 
 		# We run the next defs last because they might depend on anything above
 		if config.aur_packages and config.auth_config:
-			run_grimoire_installation(config.aur_packages, installation, config.auth_config)
+			run_grimoire_installation(
+				config.aur_packages, installation, config.auth_config
+			)
 
 		# If the user provided a list of services to be enabled
 		# This might include system wide services or user specific
@@ -234,11 +279,17 @@ def perform_installation(
 				pass
 			case PostInstallationAction.REBOOT:
 				info('Rebooting...')
-				if rc := subprocess.run(['reboot'], check=False).returncode:  # noqa: S607 - systemd shutdown shim from $PATH
+				if rc := subprocess.run(
+					['reboot'],  # noqa: S607 - systemd shutdown shim from $PATH
+					check=False,
+				).returncode:
 					error(f'reboot exited {rc}')
 			case PostInstallationAction.POWEROFF:
 				info('Powering off...')
-				if rc := subprocess.run(['poweroff'], check=False).returncode:  # noqa: S607 - systemd shutdown shim from $PATH
+				if rc := subprocess.run(
+					['poweroff'],  # noqa: S607 - systemd shutdown shim from $PATH
+					check=False,
+				).returncode:
 					error(f'poweroff exited {rc}')
 			case PostInstallationAction.CHROOT:
 				try:
@@ -255,7 +306,9 @@ def _validate_silent(config: ArchConfig) -> None:
 	# the menu runs these before it lets you start; unattended skipped them
 	# entirely, so a bad pairing only showed up as a failed bootloader
 	# install after pacstrap, or a system that installs and never boots
-	if bootloader_errors := validate_bootloader(config.bootloader_config, config.disk_config, SysInfo.has_uefi()):
+	if bootloader_errors := validate_bootloader(
+		config.bootloader_config, config.disk_config, SysInfo.has_uefi()
+	):
 		for msg in bootloader_errors:
 			error(f'invalid bootloader configuration: {msg}')
 		raise SystemExit(1)
@@ -273,7 +326,9 @@ def guided() -> None:
 	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
 
 	if disk_config := config.disk_config:
-		fs_handler = FilesystemHandler(disk_config, device_handler=device_handler)
+		fs_handler = FilesystemHandler(
+			disk_config, device_handler=device_handler
+		)
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(

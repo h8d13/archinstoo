@@ -50,8 +50,8 @@ if TYPE_CHECKING:
 
 # Base packages installed by default (firmware added based on FirmwareConfiguration)
 # mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
-# pacman picks the first initramfs provider from the host's pacman.conf, which on non-Arch
-# hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
+# pacman picks the first initramfs provider from the host's pacman.conf, which on
+# non-Arch hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
 # UKI presets, both of which assume mkinitcpio is present in the chroot.
 BASE_PACKAGES = ['base', 'mkinitcpio']
 # Arch Ports (aarch64) ships its keyring from forge, not as a pacman dependency
@@ -71,7 +71,8 @@ RAID_PACKAGES = ['mdadm']
 # otherwise mkinitcpio will be screaming at you
 TER_FONT_PACKAGES = ['terminus-font']
 
-# Additional packages that are installed if the user is running the Live ISO with accessibility tools enabled
+# Additional packages that are installed if the user is running the Live ISO with
+# accessibility tools enabled
 ACCESSIBILITY_PACKAGES = ['brltty', 'espeakup', 'alsa-utils']
 
 
@@ -98,7 +99,9 @@ class Installer:
 		self.kernels = kernels or [DEFAULT_KERNEL.value]
 		self._disk_config = disk_config
 
-		self._disk_encryption = disk_config.disk_encryption or DiskEncryption(EncryptionType.NO_ENCRYPTION)
+		self._disk_encryption = disk_config.disk_encryption or DiskEncryption(
+			EncryptionType.NO_ENCRYPTION
+		)
 		self.target: Path = target
 
 		# steps report_outcome names as missed on a clean exit. bootloader is
@@ -111,7 +114,8 @@ class Installer:
 		for kernel in self.kernels:
 			self._base_packages.append(kernel)
 
-		# If using accessibility tools in the live environment, append those to the packages list
+		# If using accessibility tools in the live environment, append those
+		# to the packages list
 		if systemd.accessibility_tools_in_use():
 			self._base_packages.extend(ACCESSIBILITY_PACKAGES)
 
@@ -152,7 +156,12 @@ class Installer:
 	def __enter__(self) -> Self:
 		return self
 
-	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
+	def __exit__(
+		self,
+		exc_type: type[BaseException] | None,
+		exc_value: BaseException | None,
+		traceback: TracebackType | None,
+	) -> None:
 		# crashes and ^C propagate as they are: run_as_a_module reports them
 		# once for every script. Only a clean exit has a verdict to give.
 		try:
@@ -160,7 +169,9 @@ class Installer:
 				info('Syncing the system...')
 				os.sync()
 				self.sync_artifacts()
-				checkpoints.report_outcome(self.target, self._helper_flags)
+				checkpoints.report_outcome(
+					self.target, self._helper_flags
+				)
 		finally:
 			try:
 				self._teardown_target()
@@ -181,22 +192,39 @@ class Installer:
 		self._layout_teardown_required = False
 
 	def sanity_check(self) -> None:
-		systemd.wait_iso_services(self._handler.args.skip_ntp, self._handler.args.skip_wkd)
+		systemd.wait_iso_services(
+			self._handler.args.skip_ntp, self._handler.args.skip_wkd
+		)
 
 	def mount_ordered_layout(self) -> None:
-		info(f'Mounting ordered layout at {self.target} (encryption: {self._disk_encryption.encryption_type.value})', step=True)
+		info(
+			f'Mounting ordered layout at {self.target} (encryption: '
+			f'{self._disk_encryption.encryption_type.value})',
+			step=True,
+		)
 		self._layout_teardown_required = True
-		self._fstab_entries.extend(LayoutMounter(self.target, self._disk_config, self._disk_encryption).mount())
+		self._fstab_entries.extend(
+			LayoutMounter(
+				self.target, self._disk_config, self._disk_encryption
+			).mount()
+		)
 
 	def generate_key_files(self) -> None:
-		info(f'Generating key files for {self._disk_encryption.encryption_type.value}...')
-		self.initramfs.files.extend(KeyFileGenerator(self.target, self._disk_encryption).generate())
+		info(
+			'Generating key files for '
+			f'{self._disk_encryption.encryption_type.value}...'
+		)
+		self.initramfs.files.extend(
+			KeyFileGenerator(self.target, self._disk_encryption).generate()
+		)
 
 	def enroll_fido2(self) -> None:
 		# no-op unless a token was picked for an encrypted layout
 		enroll_fido2(self.target, self._disk_encryption)
 
-	def set_mirrors(self, pacman_configuration: PacmanConfiguration, on_target: bool = False) -> None:
+	def set_mirrors(
+		self, pacman_configuration: PacmanConfiguration, on_target: bool = False
+	) -> None:
 		mirrors.set_mirrors(self, pacman_configuration, on_target)
 
 	def genfstab(self) -> None:
@@ -214,7 +242,9 @@ class Installer:
 	def disable_service(self, services: str | list[str]) -> None:
 		systemd.disable_service(self, services)
 
-	def enable_services_from_config(self, services: list[str | UserService]) -> None:
+	def enable_services_from_config(
+		self, services: list[str | UserService]
+	) -> None:
 		systemd.enable_services_from_config(self, services)
 
 	def arch_chroot(
@@ -225,7 +255,9 @@ class Installer:
 		env: dict[str, str] | None = None,
 		systemd_mode: bool = False,
 	) -> SysCommand | CompletedProcess[bytes]:
-		return chroot.run_in_target(self.target, cmd, run_as, peek_output, env, systemd_mode)
+		return chroot.run_in_target(
+			self.target, cmd, run_as, peek_output, env, systemd_mode
+		)
 
 	def mkinitcpio(self, flags: list[str]) -> bool:
 		return self.initramfs.build(self, flags)
@@ -249,7 +281,11 @@ class Installer:
 		if optional_repositories is None:
 			optional_repositories = []
 
-		info(f'Installing base system: kernels={", ".join(self.kernels)}, hostname={hostname or "(unset)"}', step=True)
+		info(
+			f'Installing base system: kernels={", ".join(self.kernels)}, '
+			f'hostname={hostname or "(unset)"}',
+			step=True,
+		)
 
 		if self._disk_config.lvm_config:
 			self._base_packages.extend(LVM_PACKAGES)
@@ -276,15 +312,18 @@ class Installer:
 
 					if part.on_raid:
 						self._on_raid = True
-						self._base_packages.extend(RAID_PACKAGES)
+						self._base_packages.extend(
+							RAID_PACKAGES
+						)
 						self.initramfs.add_raid()
 
 		if self._disk_encryption.fido2_device:
 			self._base_packages.extend(FIDO2_PACKAGES)
 
 		if ucode := SysInfo.ucode():
-			# the ucode package owns its image in /boot: an unowned copy left
-			# on a reused /boot fails pacstrap with "exists in filesystem"
+			# the ucode package owns its image in /boot: an unowned
+			# copy left on a reused /boot fails pacstrap with
+			# "exists in filesystem"
 			(self.target / 'boot' / ucode).unlink(missing_ok=True)
 			debug(f'Adding microcode package {ucode.stem}')
 			self._base_packages.append(ucode.stem)
@@ -321,7 +360,8 @@ class Installer:
 		# https://github.com/archlinux/archinstall/issues/1837
 		# https://github.com/archlinux/archinstall/issues/1841
 		if not self._disable_fstrim:
-			# fstrim is owned by util-linux, a dependency of both base and systemd.
+			# fstrim is owned by util-linux, a dependency of
+			# both base and systemd.
 			self.enable_service('fstrim.timer')
 
 		# appends to the mdadm.conf the package ships, so after pacstrap
@@ -332,7 +372,10 @@ class Installer:
 			self.set_hostname(hostname)
 
 		if locale_config and not self.set_locale(locale_config):
-			warn(f'Failed to set locale: {locale_config.sys_lang} {locale_config.sys_enc}')
+			warn(
+				'Failed to set locale: '
+				f'{locale_config.sys_lang} {locale_config.sys_enc}'
+			)
 
 		if timezone and not self.set_timezone(timezone):
 			warn(f'Failed to set timezone: {timezone}')
@@ -342,7 +385,9 @@ class Installer:
 
 		self._helper_flags['base'] = True
 
-	def setup_btrfs_snapshot(self, snapshot_type: SnapshotType, bootloader: Bootloader | None = None) -> None:
+	def setup_btrfs_snapshot(
+		self, snapshot_type: SnapshotType, bootloader: Bootloader | None = None
+	) -> None:
 		snapshots.setup_btrfs_snapshot(self, snapshot_type, bootloader)
 
 	def setup_swap(self, config: SwapConfiguration) -> None:
@@ -351,7 +396,9 @@ class Installer:
 			self._zram_enabled = True
 		if config.hibernation:
 			try:
-				fstab_entry, kernel_params = setup_swapfile(self, config.size_gib)
+				fstab_entry, kernel_params = setup_swapfile(
+					self, config.size_gib
+				)
 			except (SysCallError, DiskError) as err:
 				warn(f'Failed to set up hibernation swap file: {err}')
 			else:
@@ -370,7 +417,13 @@ class Installer:
 		splash: bool = False,
 		serial_console: str | None = None,
 	) -> None:
-		BootloaderInstaller(self, self._disk_config, self._disk_encryption, self._kernel_params, self._zram_enabled).install(
+		BootloaderInstaller(
+			self,
+			self._disk_config,
+			self._disk_encryption,
+			self._kernel_params,
+			self._zram_enabled,
+		).install(
 			bootloader,
 			uki_enabled=uki_enabled,
 			removable=removable,
@@ -391,7 +444,8 @@ class Installer:
 	def create_users(
 		self,
 		users: User | list[User],
-		privilege_escalation: PrivilegeEscalation | None = PrivilegeEscalation.Sudo,
+		privilege_escalation: PrivilegeEscalation
+		| None = PrivilegeEscalation.Sudo,
 	) -> None:
 		accounts.create_users(self, users, privilege_escalation)
 

@@ -52,7 +52,9 @@ def gen_salt() -> str:
 	return ''.join(secrets.choice(B64) for _ in range(SALT_MAX))
 
 
-def sha512_crypt(password: bytes, salt: str | None = None, rounds: int = ROUNDS_DEFAULT) -> str:
+def sha512_crypt(
+	password: bytes, salt: str | None = None, rounds: int = ROUNDS_DEFAULT
+) -> str:
 	salt_b = (salt if salt is not None else gen_salt()).encode()[:SALT_MAX]
 	# spec clamps out of range rounds instead of failing
 	rounds = min(max(rounds, ROUNDS_MIN), ROUNDS_MAX)
@@ -61,7 +63,8 @@ def sha512_crypt(password: bytes, salt: str | None = None, rounds: int = ROUNDS_
 	# digest B, fed into digest A
 	db = hashlib.sha512(password + salt_b + password).digest()
 
-	# digest A: pw + salt, B stretched to pw length, then B or pw per bit of pw length
+	# digest A: pw + salt, B stretched to pw length, then B or pw
+	# per bit of pw length
 	ctx = hashlib.sha512(password + salt_b + _repeat(db, pw_len))
 	i = pw_len
 	while i:
@@ -93,4 +96,6 @@ def sha512_crypt(password: bytes, salt: str | None = None, rounds: int = ROUNDS_
 
 def hash_password(password: Password) -> str:
 	# a config already carries the hash, the menu only the plaintext
-	return password.enc_password or sha512_crypt(password.plaintext.encode('utf-8'), rounds=ROUNDS_INSTALL)
+	return password.enc_password or sha512_crypt(
+		password.plaintext.encode('utf-8'), rounds=ROUNDS_INSTALL
+	)

@@ -4,17 +4,21 @@
 
 - `Disk config` & `Authentication` => Assumed to **not be resumed**
 
-Disk is self-explanatory and kinda risky always. *Multi-disk was removed because adding disks later on is trivial*
+Disk is self-explanatory and kinda risky always.
+*Multi-disk was removed because adding disks later on is trivial*
 
-They let you decide where to install to set up `users/groups/elevation/shells` + `stashes`
+They let you decide where to install
+to set up `users/groups/elevation/shells` + `stashes`
 
 - `Locales` & `Pacman` & `TZ`/`NTP` & `Hostname`
 
 This tries to follow the ArchWiki as close as possible.
 
-These are main auto configurations that are found on the system or need to be setup. This is usually done through `systemctl` calls or `/etc`
+These are main auto configurations that are found on the system or need to be setup.
+This is usually done through `systemctl` calls or `/etc`
 
-`terminus-font` is auto-added when requested as a console font through `/etc/vconsole.conf`
+`terminus-font` is auto-added when requested as a console font
+through `/etc/vconsole.conf`
 A keymap is also set here.
 
 Repos, mirrors, misc options.
@@ -32,7 +36,9 @@ Options here are also important: Both `NetworkManager`:
 - Copy from ISO (Use current config) minimal `systemd` network features
 - IWD standalone
 
-Usually I pick Copy to ISO from VMs or a desktop (cabled) and other two options for laptops this allows for proper integration to `DE`or`WM`.
+Usually I pick Copy to ISO from VMs or a desktop (cabled)
+and other two options for laptops
+this allows for proper integration to `DE`or`WM`.
 
 - `Graphics driver`
 
@@ -46,21 +52,26 @@ Select according to your setup.
 This is all up to user preference, can be multi-selected / some set the global default
 (like `Editor` and `Terminal`) through `/etc/environment`
 
-`Terminal` is the one every window manager profile shares: it installs the package and exports
-`TERMINAL`. Configs a window manager ships keep the terminal upstream put in them, and the
-profile installs that one too. Skipping it leaves the profiles on `alacritty`.
+`Terminal` is the one every window manager profile shares:
+it installs the package and exports `TERMINAL`.
+Configs a window manager ships keep the terminal upstream put in them,
+and the profile installs that one too.
+Skipping it leaves the profiles on `alacritty`.
 
 - `Additional packages` & `AUR packages`
 
-You can also add something like `noto-fonts` variants at this step or anything you would like in target really.
+You can also add something like `noto-fonts` variants at this step
+or anything you would like in target really.
 
-Also all up to user preference, AUR hidden behind `--advanced` this allows to build DKMS drivers.
+Also all up to user preference,
+AUR hidden behind `--advanced` this allows to build DKMS drivers.
 
 **Make sure to toggle `Kernel Headers` when doing so.**
 
 - `Sysctl` & `Custom commands`
 
-This is an experimental feature which allows me to test some additional automation steps.
+This is an experimental feature
+which allows me to test some additional automation steps.
 
 ---
 
@@ -68,14 +79,16 @@ This is an experimental feature which allows me to test some additional automati
 
 Configs and custom profiles references can be found in [`examples/`](https://github.com/h8d13/archinstoo/tree/master/installer/examples)
 
-You can also add them directly in [`default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles) following other profiles as example or modify existing ones.
+You can also add them directly in [`default_profiles/`](https://github.com/h8d13/archinstoo/tree/master/installer/archinstoo/default_profiles)
+following other profiles as example or modify existing ones.
 
 ### The package schema
 
-[`schema.toml`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/schema.toml) lists every
-package an install can pull, in the order the install pulls them. It is **generated**, the
-package lists live in the code that installs them (profiles under `default_profiles/`, the enums under
-`lib/models/`, the app handlers under `lib/applications/cat/`), and
+[`schema.toml`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/schema.toml)
+lists every package an install can pull, in the order the install pulls them.
+It is **generated**, the package lists live in the code that installs them
+(profiles under `default_profiles/`, the enums under `lib/models/`,
+the app handlers under `lib/applications/cat/`), and
 [`lib/schema_gen.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py)
 flattens them out.
 
@@ -88,7 +101,8 @@ python -m archinstoo --script schema
 `tests/test_schema.py` fails if the committed file is stale, and `--script count` and
 `nvchecker/NVGEN` all read the generated file rather than the runtime.
 
-Each application category's `Section` also carries a `pick`: the key path under `app_config` where
-a saved config keeps that choice. `count` walks the picks, so a new category is one `Section`
-line and a regenerate; the test fails on a category without one. The step list is in
+Each application category's `Section` also carries a `pick`:
+the key path under `app_config` where a saved config keeps that choice.
+`count` walks the picks, so a new category is one `Section` line and a regenerate;
+the test fails on a category without one. The step list is in
 [API_REF.md](API_REF.md), "Add an application".

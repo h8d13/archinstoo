@@ -24,7 +24,13 @@ from archinstoo.lib.output import error, info
 from archinstoo.lib.utils.env import Env
 from archinstoo.lib.utils.net import download_file_from_url
 from archinstoo.scripts.dev._drive import wait_for
-from archinstoo.scripts.dev._launch import TARGET, Opts, ensure_no_running_vm, launch, read_opts
+from archinstoo.scripts.dev._launch import (
+	TARGET,
+	Opts,
+	ensure_no_running_vm,
+	launch,
+	read_opts,
+)
 from archinstoo.scripts.dev._vm import ROOT, VM
 
 CLOUD_DIR = ROOT / '.dev-cloud'
@@ -43,9 +49,14 @@ def image(distro: str) -> Image:
 		rel = Env.get_value('A2_CLOUD_REL', '44')
 		build = Env.get_value('A2_CLOUD_BUILD', '1.7')
 		name = f'Fedora-Cloud-Base-Generic-{rel}-{build}.x86_64.qcow2'
-		return Image(name, f'https://download.fedoraproject.org/pub/fedora/linux/releases/{rel}/Cloud/x86_64/images/{name}')
+		return Image(
+			name,
+			f'https://download.fedoraproject.org/pub/fedora/linux/releases/{rel}/Cloud/x86_64/images/{name}',
+		)
 	name = 'debian-13-genericcloud-amd64.qcow2'
-	return Image(name, f'https://cloud.debian.org/images/cloud/trixie/latest/{name}')
+	return Image(
+		name, f'https://cloud.debian.org/images/cloud/trixie/latest/{name}'
+	)
 
 
 def fetch(img: Image) -> Path:
@@ -77,7 +88,10 @@ def write_seed(seed: Path, distro: str, password: str, user_data: Path | None) -
 	# instance-id changes per run, else a reused overlay skips the seed
 	(seed / 'vendor-data').write_text('')
 	(seed / 'network-config').write_text('')
-	(seed / 'meta-data').write_text(f'instance-id: cloud-{distro}-{int(time.time())}\nlocal-hostname: cloud-{distro}\n')
+	(seed / 'meta-data').write_text(
+		f'instance-id: cloud-{distro}-{int(time.time())}\nlocal-hostname: '
+		f'cloud-{distro}\n'
+	)
 	# a given user-data goes in as is: users, keys, packages are its business
 	if user_data:
 		shutil.copy(user_data, seed / 'user-data')
@@ -85,10 +99,17 @@ def write_seed(seed: Path, distro: str, password: str, user_data: Path | None) -
 	# JSON is YAML: no indentation to keep straight against the code's tabs
 	config = {
 		'disable_root': False,
-		'chpasswd': {'expire': False, 'users': [{'name': 'root', 'password': password, 'type': 'text'}]},
+		'chpasswd': {
+			'expire': False,
+			'users': [
+				{'name': 'root', 'password': password, 'type': 'text'}
+			],
+		},
 		'users': ['default', {'name': 'root'}],
 	}
-	(seed / 'user-data').write_text('\n'.join(('#cloud-config', json.dumps(config), '')))
+	(seed / 'user-data').write_text(
+		'\n'.join(('#cloud-config', json.dumps(config), ''))
+	)
 
 
 def boot(distro: str, console: str | None, user_data: str | None) -> None:
@@ -105,18 +126,39 @@ def boot(distro: str, console: str | None, user_data: str | None) -> None:
 	# pristine every run: an overlay over the cached image, and an empty target
 	opts.disk.unlink(missing_ok=True)
 	TARGET.unlink(missing_ok=True)
-	qemu_img('create', '-f', 'qcow2', '-F', 'qcow2', '-b', str(backing), str(opts.disk), '20G')
+	qemu_img(
+		'create',
+		'-f',
+		'qcow2',
+		'-F',
+		'qcow2',
+		'-b',
+		str(backing),
+		str(opts.disk),
+		'20G',
+	)
 	qemu_img('create', '-f', 'qcow2', str(TARGET), opts.disk_size)
 
 	with tempfile.TemporaryDirectory(prefix='a2-seed-') as tmp:
 		write_seed(Path(tmp), distro, password, given)
 		# user-mode net: the guest reaches the host's loopback as 10.0.2.2
-		server = ThreadingHTTPServer(('127.0.0.1', 0), partial(SimpleHTTPRequestHandler, directory=tmp))
+		server = ThreadingHTTPServer(
+			('127.0.0.1', 0),
+			partial(SimpleHTTPRequestHandler, directory=tmp),
+		)
 		threading.Thread(target=server.serve_forever, daemon=True).start()
 		seed_url = f'http://10.0.2.2:{server.server_address[1]}/'
-		extra = ('-drive', f'file={TARGET},format=qcow2,if=virtio', '-smbios', f'type=1,serial=ds=nocloud;s={seed_url}')
+		extra = (
+			'-drive',
+			f'file={TARGET},format=qcow2,if=virtio',
+			'-smbios',
+			f'type=1,serial=ds=nocloud;s={seed_url}',
+		)
 		try:
-			rc = launch(dataclasses.replace(opts, extra=(*opts.extra, *extra)), 'boot')
+			rc = launch(
+				dataclasses.replace(opts, extra=(*opts.extra, *extra)),
+				'boot',
+			)
 			# window/tty: launch held the terminal until the VM exited
 			if rc or opts.dry or opts.console != 'serial':
 				raise SystemExit(rc)
@@ -128,16 +170,25 @@ def boot(distro: str, console: str | None, user_data: str | None) -> None:
 		error(f'cloud-init not done after {FINISH_TIMEOUT}s, see {VM} read')
 		raise SystemExit(1)
 	if given:
-		info(f'cloud-init done: log in as {given.name} set up (target disk is /dev/vdb)')
+		info(
+			f'cloud-init done: log in as {given.name} set up '
+			'(target disk is /dev/vdb)'
+		)
 	else:
-		info(f'cloud-init done: {VM} login -p {password} (target disk is /dev/vdb)')
+		info(
+			f'cloud-init done: {VM} login -p {password} (target '
+			'disk is /dev/vdb)'
+		)
 
 
 def boot_target(console: str | None) -> None:
 	ensure_no_running_vm()
 	opts = cloud_opts(console)
 	if not (TARGET.is_file() and TARGET.stat().st_size):
-		error(f'no {TARGET}, run {VM} cloud fed|deb and install onto /dev/vdb first')
+		error(
+			f'no {TARGET}, run {VM} cloud fed|deb and install '
+			'onto /dev/vdb first'
+		)
 		raise SystemExit(1)
 	# fstab and grub name UUIDs, so vdb booting as vda comes up the same
 	shutil.move(TARGET, opts.disk)

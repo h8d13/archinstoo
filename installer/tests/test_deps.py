@@ -14,10 +14,16 @@ _DEPS = ('pacman', 'git', 'xfsprogs')
 		('warning: whatever\ngit\n', ['git']),
 	],
 )
-def test_missing_deps_reports_unsatisfied(monkeypatch: pytest.MonkeyPatch, output: str, expected: list[str]) -> None:
+def test_missing_deps_reports_unsatisfied(
+	monkeypatch: pytest.MonkeyPatch, output: str, expected: list[str]
+) -> None:
 	# pacman -T exits 127 and prints one unsatisfied dep per line
 	def _run(args: str, **kw: object) -> None:
-		raise SysCallError(f'pacman {args} exited with abnormal exit code [127]', 127, worker_log=output.encode())
+		raise SysCallError(
+			f'pacman {args} exited with abnormal exit code [127]',
+			127,
+			worker_log=output.encode(),
+		)
 
 	monkeypatch.setattr(archinstoo.Pacman, 'run', _run)
 

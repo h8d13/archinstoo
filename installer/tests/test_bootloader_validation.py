@@ -59,19 +59,32 @@ def _part(
 
 
 ESP_EFI = _part('/efi', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.ESP])
-ESP_BOOT = _part('/boot', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.ESP, PartitionFlag.BOOT])
+ESP_BOOT = _part(
+	'/boot',
+	'/dev/vda1',
+	FilesystemType.FAT32,
+	[PartitionFlag.ESP, PartitionFlag.BOOT],
+)
 BOOT_FLAGGED = _part('/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.BOOT])
-BOOT_XBOOTLDR = _part('/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.XBOOTLDR])
+BOOT_XBOOTLDR = _part(
+	'/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.XBOOTLDR]
+)
 BOOT_EXT4 = _part('/boot', '/dev/vda2', FilesystemType.EXT4, [PartitionFlag.XBOOTLDR])
 ROOT_BTRFS = _part('/', '/dev/vda3', FilesystemType.BTRFS, [], subvols=True)
 
 
-def _errors(bootloader: Bootloader, parts: list[PartitionModification], *, uki: bool = False) -> list[str]:
+def _errors(
+	bootloader: Bootloader, parts: list[PartitionModification], *, uki: bool = False
+) -> list[str]:
 	disk_config = DiskLayoutConfiguration(
 		config_type=DiskLayoutType.Manual,
-		device_modifications=[DeviceModification(device=None, wipe=True, partitions=parts)],  # type: ignore[arg-type]
+		device_modifications=[
+			DeviceModification(device=None, wipe=True, partitions=parts)  # type: ignore[arg-type]
+		],
 	)
-	return validate_bootloader(BootloaderConfiguration(bootloader, uki=uki), disk_config, uefi=True)
+	return validate_bootloader(
+		BootloaderConfiguration(bootloader, uki=uki), disk_config, uefi=True
+	)
 
 
 def test_systemd_xbootldr_accepted() -> None:
@@ -82,13 +95,34 @@ def test_systemd_xbootldr_accepted() -> None:
 def test_lvm_root_volume_accepted() -> None:
 	# an LVM root is a volume, the partition under it is a bare PV
 	pv = _part(None, '/dev/vda2', FilesystemType.EXT4, [])
-	root = LvmVolume(ModificationStatus.CREATE, 'root', FilesystemType.EXT4, Size(10, Unit.GiB, SECTOR), Path('/'))
+	root = LvmVolume(
+		ModificationStatus.CREATE,
+		'root',
+		FilesystemType.EXT4,
+		Size(10, Unit.GiB, SECTOR),
+		Path('/'),
+	)
 	disk_config = DiskLayoutConfiguration(
 		config_type=DiskLayoutType.Manual,
-		device_modifications=[DeviceModification(device=None, wipe=True, partitions=[ESP_BOOT, pv])],  # type: ignore[arg-type]
-		lvm_config=LvmConfiguration(LvmLayoutType.Default, [LvmVolumeGroup('vg', [pv], [root])]),
+		device_modifications=[
+			DeviceModification(
+				device=None,  # type: ignore[arg-type]
+				wipe=True,
+				partitions=[ESP_BOOT, pv],
+			)
+		],
+		lvm_config=LvmConfiguration(
+			LvmLayoutType.Default, [LvmVolumeGroup('vg', [pv], [root])]
+		),
 	)
-	assert validate_bootloader(BootloaderConfiguration(Bootloader.Systemd), disk_config, uefi=True) == []
+	assert (
+		validate_bootloader(
+			BootloaderConfiguration(Bootloader.Systemd),
+			disk_config,
+			uefi=True,
+		)
+		== []
+	)
 
 
 def test_systemd_boot_flagged_rejected() -> None:
@@ -101,7 +135,14 @@ def test_systemd_boot_flagged_rejected() -> None:
 def test_systemd_boot_flagged_allowed_under_uki() -> None:
 	# row J: a UKI is self-contained on the ESP, bootctl is never told about
 	# the boot partition, so the XBOOTLDR rule does not apply
-	assert _errors(Bootloader.Systemd, [ESP_EFI, BOOT_FLAGGED, ROOT_BTRFS], uki=True) == []
+	assert (
+		_errors(
+			Bootloader.Systemd,
+			[ESP_EFI, BOOT_FLAGGED, ROOT_BTRFS],
+			uki=True,
+		)
+		== []
+	)
 
 
 def test_systemd_non_fat_xbootldr_rejected() -> None:
@@ -111,7 +152,10 @@ def test_systemd_non_fat_xbootldr_rejected() -> None:
 
 def test_systemd_esp_at_efi_without_boot_needs_uki() -> None:
 	errors = _errors(Bootloader.Systemd, [ESP_EFI, ROOT_BTRFS])
-	assert 'systemd-boot with ESP at /efi requires UKI or a separate XBOOTLDR /boot partition' in errors
+	assert (
+		'systemd-boot with ESP at /efi requires UKI or a separate '
+		'XBOOTLDR /boot partition' in errors
+	)
 
 
 def test_limine_esp_at_boot_accepted() -> None:
@@ -155,20 +199,37 @@ def _bios_errors(
 ) -> list[str]:
 	disk_config = DiskLayoutConfiguration(
 		config_type=DiskLayoutType.Manual,
-		device_modifications=[DeviceModification(device=None, wipe=True, partitions=parts, partition_table=table)],  # type: ignore[arg-type]
+		device_modifications=[
+			DeviceModification(
+				device=None,  # type: ignore[arg-type]
+				wipe=True,
+				partitions=parts,
+				partition_table=table,
+			)
+		],
 	)
-	return validate_bootloader(BootloaderConfiguration(bootloader, uki=False), disk_config, uefi=False)
+	return validate_bootloader(
+		BootloaderConfiguration(bootloader, uki=False), disk_config, uefi=False
+	)
 
 
 def test_bios_grub_flag_on_msdos_rejected() -> None:
-	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.MBR)
-	assert 'bios_grub flag requires a GPT partition table (msdos label selected)' in errors
+	errors = _bios_errors(
+		[BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.MBR
+	)
+	assert (
+		'bios_grub flag requires a GPT partition table (msdos label selected)'
+		in errors
+	)
 
 
 def test_bios_grub_flag_on_host_default_mbr_rejected() -> None:
 	# no explicit table: BIOS host defaults to msdos, same parted crash
 	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], None)
-	assert 'bios_grub flag requires a GPT partition table (msdos label selected)' in errors
+	assert (
+		'bios_grub flag requires a GPT partition table (msdos label selected)'
+		in errors
+	)
 
 
 def test_bios_gpt_grub_without_bios_grub_rejected() -> None:
@@ -177,19 +238,35 @@ def test_bios_gpt_grub_without_bios_grub_rejected() -> None:
 
 
 def test_bios_gpt_grub_with_bios_grub_accepted() -> None:
-	assert _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.GPT) == []
+	assert (
+		_bios_errors(
+			[BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4], PartitionTable.GPT
+		)
+		== []
+	)
 
 
 def test_bios_gpt_limine_without_bios_grub_rejected() -> None:
 	# limine 12.x fails this at bios-install, a whole install too late
-	boot_fat = _part('/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.BOOT])
-	errors = _bios_errors([boot_fat, ROOT_EXT4], PartitionTable.GPT, Bootloader.Limine)
+	boot_fat = _part(
+		'/boot', '/dev/vda2', FilesystemType.FAT32, [PartitionFlag.BOOT]
+	)
+	errors = _bios_errors(
+		[boot_fat, ROOT_EXT4], PartitionTable.GPT, Bootloader.Limine
+	)
 	assert 'BIOS boot from a GPT disk needs a 1MiB bios_grub partition' in errors
 
 
 def test_bios_mbr_limine_accepted() -> None:
-	boot_fat = _part('/boot', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.BOOT])
-	assert _bios_errors([boot_fat, ROOT_EXT4], PartitionTable.MBR, Bootloader.Limine) == []
+	boot_fat = _part(
+		'/boot', '/dev/vda1', FilesystemType.FAT32, [PartitionFlag.BOOT]
+	)
+	assert (
+		_bios_errors(
+			[boot_fat, ROOT_EXT4], PartitionTable.MBR, Bootloader.Limine
+		)
+		== []
+	)
 
 
 def test_bios_mbr_grub_accepted() -> None:
@@ -199,22 +276,39 @@ def test_bios_mbr_grub_accepted() -> None:
 def test_mbr_partition_count_rejected_preflight() -> None:
 	# was only caught in device_handler.partition() after the wipe started
 	swap_part = _part(None, '/dev/vda4', FilesystemType.LINUX_SWAP, [])
-	errors = _bios_errors([BOOT_EXT4_BIOS, ROOT_EXT4, ROOT_EXT4, swap_part], PartitionTable.MBR)
-	assert 'Too many partitions on disk, MBR disks can only have 3 primary partitions' in errors
+	errors = _bios_errors(
+		[BOOT_EXT4_BIOS, ROOT_EXT4, ROOT_EXT4, swap_part], PartitionTable.MBR
+	)
+	assert (
+		'Too many partitions on disk, MBR disks can only have 3 '
+		'primary partitions' in errors
+	)
 
 
 def test_gpt_partition_count_unrestricted() -> None:
 	swap_part = _part(None, '/dev/vda5', FilesystemType.LINUX_SWAP, [])
-	errors = _bios_errors([BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4, swap_part], PartitionTable.GPT)
+	errors = _bios_errors(
+		[BIOS_GRUB_PART, BOOT_EXT4_BIOS, ROOT_EXT4, swap_part],
+		PartitionTable.GPT,
+	)
 	assert errors == []
 
 
-@pytest.mark.parametrize(('bootstrap', 'hint'), [('1', " (the bootstrap root sees only the host's /mnt)"), ('', '')])
-def test_pre_mount_with_nothing_mounted(monkeypatch: pytest.MonkeyPatch, bootstrap: str, hint: str) -> None:
+@pytest.mark.parametrize(
+	('bootstrap', 'hint'),
+	[('1', " (the bootstrap root sees only the host's /mnt)"), ('', '')],
+)
+def test_pre_mount_with_nothing_mounted(
+	monkeypatch: pytest.MonkeyPatch, bootstrap: str, hint: str
+) -> None:
 	# the bootstrap root cannot see a host mount outside /mnt; say so instead of
 	# reporting a missing root and ESP
 	monkeypatch.setenv('A2_BOOTSTRAP', bootstrap)
-	disk = DiskLayoutConfiguration(config_type=DiskLayoutType.Pre_mount, mountpoint=Path('/target'))
+	disk = DiskLayoutConfiguration(
+		config_type=DiskLayoutType.Pre_mount, mountpoint=Path('/target')
+	)
 	config = BootloaderConfiguration(bootloader=Bootloader.Systemd)
 
-	assert validate_bootloader(config, disk, uefi=True) == [f'Nothing mounted at /target{hint}']
+	assert validate_bootloader(config, disk, uefi=True) == [
+		f'Nothing mounted at /target{hint}'
+	]

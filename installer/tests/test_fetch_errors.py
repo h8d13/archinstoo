@@ -27,7 +27,9 @@ def test_fetch_failure_is_fetch_error(monkeypatch: pytest.MonkeyPatch) -> None:
 		net.fetch_data_from_url('https://example.org')
 
 
-def test_download_failure_is_fetch_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_download_failure_is_fetch_error(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	monkeypatch.setattr(net, 'urlopen', _unreachable)
 
 	with pytest.raises(FetchError):
@@ -62,7 +64,10 @@ def test_lvm_retries_empty_report(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_lvm_malformed_report_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
-	sleeps = _lvs(monkeypatch, [{'lv_name': 'root', 'vg_name': 'vg', 'lv_size': 'garbage'}])
+	sleeps = _lvs(
+		monkeypatch,
+		[{'lv_name': 'root', 'vg_name': 'vg', 'lv_size': 'garbage'}],
+	)
 
 	with pytest.raises(ValueError, match='invalid literal'):
 		lvm.lvm_vol_info('root')

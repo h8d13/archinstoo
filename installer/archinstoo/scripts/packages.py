@@ -2,7 +2,12 @@ import time
 from pathlib import Path
 
 from archinstoo.lib.applications.application_handler import ApplicationHandler
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments, get_arch_config_handler
+from archinstoo.lib.args import (
+	ArchConfig,
+	ArchConfigHandler,
+	Arguments,
+	get_arch_config_handler,
+)
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
@@ -23,7 +28,8 @@ def show_menu(config: ArchConfig, _args: Arguments) -> None:
 		global_menu.set_enabled('profile_config', True)
 		global_menu.set_enabled('app_config', True)
 		global_menu.set_enabled('packages', True)
-		global_menu.set_enabled('__config__', True)  # also enables session-only theme
+		# also enables session-only theme
+		global_menu.set_enabled('__config__', True)
 
 		# Skip mandatory checks
 		global_menu.set_mandatory('timezone', False)
@@ -55,17 +61,26 @@ def perform_installation(
 
 		# Applications
 		if app_config := config.app_config:
-			application_handler.install_applications(installation, app_config, None)
+			application_handler.install_applications(
+				installation, app_config, None
+			)
 
 		# Profile (desktop environment, etc.)
 		if profile_config := config.profile_config:
-			profile_handler.install_profile_config(installation, profile_config, config.app_config)
+			profile_handler.install_profile_config(
+				installation, profile_config, config.app_config
+			)
 
 			# Post-install profile hooks; no auth config here, so the person
-			# driving the install through sudo/doas is the provision target and
-			# profile group wiring (seat/docker) reaches their account only
+			# driving the install through sudo/doas is the
+			# provision target and profile group wiring
+			# (seat/docker) reaches their account only
 			if profile_config.profiles:
-				users = [User(name, None, False)] if (name := Host.invoking_username()) else []
+				users = (
+					[User(name, None, False)]
+					if (name := Host.invoking_username())
+					else []
+				)
 				for profile in profile_config.profiles:
 					profile.post_install(installation)
 					profile.provision(installation, users)

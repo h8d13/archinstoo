@@ -57,11 +57,26 @@ class DnsProvider(StrEnum):
 	def servers(self) -> list[str]:
 		match self:
 			case DnsProvider.QUAD9:
-				return ['9.9.9.9', '149.112.112.112', '2620:fe::fe', '2620:fe::9']
+				return [
+					'9.9.9.9',
+					'149.112.112.112',
+					'2620:fe::fe',
+					'2620:fe::9',
+				]
 			case DnsProvider.CLOUDFLARE:
-				return ['1.1.1.1', '1.0.0.1', '2606:4700:4700::1111', '2606:4700:4700::1001']
+				return [
+					'1.1.1.1',
+					'1.0.0.1',
+					'2606:4700:4700::1111',
+					'2606:4700:4700::1001',
+				]
 			case DnsProvider.GOOGLE:
-				return ['8.8.8.8', '8.8.4.4', '2001:4860:4860::8888', '2001:4860:4860::8844']
+				return [
+					'8.8.8.8',
+					'8.8.4.4',
+					'2001:4860:4860::8888',
+					'2001:4860:4860::8844',
+				]
 			case DnsProvider.CUSTOM:
 				return []
 
@@ -100,7 +115,10 @@ class DnsConfiguration:
 	tls_name: str = ''
 
 	def json(self) -> _DnsSerialization:
-		config: _DnsSerialization = {'provider': self.provider.value, 'over_tls': self.over_tls}
+		config: _DnsSerialization = {
+			'provider': self.provider.value,
+			'over_tls': self.over_tls,
+		}
 		if self.provider is DnsProvider.CUSTOM:
 			config['servers'] = self.servers
 			if self.over_tls:
@@ -119,14 +137,26 @@ class DnsConfiguration:
 
 	@property
 	def effective_servers(self) -> list[str]:
-		return self.servers if self.provider is DnsProvider.CUSTOM else self.provider.servers
+		return (
+			self.servers
+			if self.provider is DnsProvider.CUSTOM
+			else self.provider.servers
+		)
 
 	@property
 	def effective_tls_name(self) -> str:
-		return self.tls_name if self.provider is DnsProvider.CUSTOM else self.provider.tls_name
+		return (
+			self.tls_name
+			if self.provider is DnsProvider.CUSTOM
+			else self.provider.tls_name
+		)
 
 	def display_msg(self) -> str:
-		text = ' '.join(self.servers) if self.provider is DnsProvider.CUSTOM else self.provider.display_msg()
+		text = (
+			' '.join(self.servers)
+			if self.provider is DnsProvider.CUSTOM
+			else self.provider.display_msg()
+		)
 		return text + (' over TLS' if self.over_tls else '')
 
 	def as_resolved_config(self) -> str:
@@ -249,6 +279,10 @@ class NetworkConfiguration:
 			if not nics:
 				return None
 
-		dns = DnsConfiguration.parse_arg(dns_arg) if (dns_arg := config.get('dns')) else None
+		dns = (
+			DnsConfiguration.parse_arg(dns_arg)
+			if (dns_arg := config.get('dns'))
+			else None
+		)
 
 		return cls(NicType(nic_type), nics, dns)

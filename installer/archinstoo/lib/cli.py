@@ -20,7 +20,9 @@ def script_help(path: Path) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
-	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False)
+	parser = argparse.ArgumentParser(
+		formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
+	)
 	parser.add_argument(
 		'--script',
 		nargs='?',
@@ -46,7 +48,10 @@ def build_parser() -> argparse.ArgumentParser:
 		'--dry-run',
 		action='store_true',
 		default=False,
-		help='Generates a configuration file and then exits instead of performing an installation',
+		help=(
+			'Generates a configuration file and then exits instead of '
+			'performing an installation'
+		),
 	)
 	parser.add_argument(
 		'--mountpoint',
@@ -70,7 +75,10 @@ def build_parser() -> argparse.ArgumentParser:
 	parser.add_argument(
 		'--skip-boot',
 		action='store_true',
-		help='Disables installation of a boot loader (note: only use this when problems arise with the boot loader step).',
+		help=(
+			'Disables installation of a boot loader (note: only use this '
+			'when problems arise with the boot loader step).'
+		),
 		default=False,
 	)
 	parser.add_argument(
@@ -101,7 +109,10 @@ def build_parser() -> argparse.ArgumentParser:
 		'--silent',
 		action='store_true',
 		default=False,
-		help='Install straight from --config with no menus or prompts (unattended)',
+		help=(
+			'Install straight from --config with no menus or prompts '
+			'(unattended)'
+		),
 	)
 	parser.add_argument(
 		'--version',

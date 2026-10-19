@@ -33,7 +33,10 @@ def _graphics() -> None:
 	drivers = detect.gfx_drivers(gpus)
 
 	print('\nGraphics')
-	_row('devices', ', '.join(f'{v:04x}:{d:04x}' for v, d in sorted(gpus)) or 'none')
+	_row(
+		'devices',
+		', '.join(f'{v:04x}:{d:04x}' for v, d in sorted(gpus)) or 'none',
+	)
 	_row('vendors', ', '.join(detect.gpu_vendors(gpus)) or 'none')
 	_row('driver', ', '.join(d.value for d in drivers) or 'none')
 	# a hybrid needs both halves, which no single preset holds

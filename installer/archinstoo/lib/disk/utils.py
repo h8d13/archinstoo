@@ -17,11 +17,16 @@ class LsblkOutput:
 	@classmethod
 	def from_json(cls, data: str) -> LsblkOutput:
 		parsed = json.loads(data)
-		devices = [LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])]
+		devices = [
+			LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])
+		]
 		return cls(blockdevices=devices)
 
 	def to_json(self) -> str:
-		return json.dumps({'blockdevices': [d.to_dict() for d in self.blockdevices]}, indent=4)
+		return json.dumps(
+			{'blockdevices': [d.to_dict() for d in self.blockdevices]},
+			indent=4,
+		)
 
 
 def _fetch_lsblk_info(
@@ -43,12 +48,15 @@ def _fetch_lsblk_info(
 	try:
 		result = run(cmd)
 	except CalledProcessError as err:
-		# Get the output minus the message/info from lsblk if it returns a non-zero exit code.
+		# Get the output minus the message/info from lsblk if it returns
+		# a non-zero exit code.
 		if stdout := err.stdout:
 			debug(f'Error calling lsblk: {stdout.decode().rstrip()}')
 
 		if dev_path:
-			raise DiskError(f'Failed to read disk "{dev_path}" with lsblk') from err
+			raise DiskError(
+				f'Failed to read disk "{dev_path}" with lsblk'
+			) from err
 
 		raise
 
@@ -60,7 +68,9 @@ def get_lsblk_info(
 	reverse: bool = False,
 	full_dev_path: bool = False,
 ) -> LsblkInfo:
-	infos = _fetch_lsblk_info(dev_path, reverse=reverse, full_dev_path=full_dev_path)
+	infos = _fetch_lsblk_info(
+		dev_path, reverse=reverse, full_dev_path=full_dev_path
+	)
 
 	if infos.blockdevices:
 		return infos.blockdevices[0]
@@ -90,18 +100,27 @@ def find_lsblk_info(
 	return None
 
 
-def get_lsblk_by_mountpoint(mountpoint: Path, as_prefix: bool = False) -> list[LsblkInfo]:
+def get_lsblk_by_mountpoint(
+	mountpoint: Path, as_prefix: bool = False
+) -> list[LsblkInfo]:
 	def _check(infos: list[LsblkInfo]) -> list[LsblkInfo]:
 		devices = []
 		for entry in infos:
 			if as_prefix:
-				matches = [m for m in entry.mountpoints if str(m).startswith(str(mountpoint))]
+				matches = [
+					m
+					for m in entry.mountpoints
+					if str(m).startswith(str(mountpoint))
+				]
 				if matches:
 					devices += [entry]
 			elif mountpoint in entry.mountpoints:
 				devices += [entry]
 
-			if len(entry.children) > 0 and len(match := _check(entry.children)) > 0:
+			if (
+				len(entry.children) > 0
+				and len(match := _check(entry.children)) > 0
+			):
 				devices += match
 
 		return devices
@@ -158,7 +177,9 @@ def mount(
 	try:
 		SysCommand(command)
 	except SysCallError as err:
-		raise DiskError(f'Could not mount {dev_path}: {command}\n{err.message}') from err
+		raise DiskError(
+			f'Could not mount {dev_path}: {command}\n{err.message}'
+		) from err
 
 
 def umount(mountpoint: Path | str, recursive: bool = False) -> None:
@@ -168,7 +189,10 @@ def umount(mountpoint: Path | str, recursive: bool = False) -> None:
 		debug(f'{mountpoint} has no mountpoints, nothing to unmount')
 		return
 
-	debug(f'Partition {mountpoint} is currently mounted at: {[str(m) for m in lsblk_info.mountpoints]}')
+	debug(
+		f'Partition {mountpoint} is currently mounted at: '
+		f'{[str(m) for m in lsblk_info.mountpoints]}'
+	)
 
 	cmd = ['umount']
 
@@ -198,7 +222,9 @@ def swapon(path: Path) -> None:
 	try:
 		SysCommand(['swapon', str(path)])
 	except SysCallError as err:
-		raise DiskError(f'Could not enable swap {path}:\n{err.message}') from err
+		raise DiskError(
+			f'Could not enable swap {path}:\n{err.message}'
+		) from err
 
 
 def swapoff(path: Path | str) -> None:

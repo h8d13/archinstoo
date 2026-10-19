@@ -32,7 +32,9 @@ def swapoff_layout(disk_config: DiskLayoutConfiguration) -> None:
 			if part.is_swap():
 				swapoff_path(part.dev_path)
 				if part.mapper_name:
-					swapoff_path(Path('/dev/mapper') / part.mapper_name)
+					swapoff_path(
+						Path('/dev/mapper') / part.mapper_name
+					)
 
 	lvm_cfg = disk_config.lvm_config
 	if not lvm_cfg:
@@ -57,8 +59,8 @@ def teardown_layout(
 	disk_encryption: DiskEncryption,
 	device_handler: DeviceHandler,
 ) -> None:
-	# Order: swapoff, unmount, deactivate VGs, close LUKS. Inner mappers close before the
-	# outer ones that hold them.
+	# Order: swapoff, unmount, deactivate VGs, close LUKS. Inner mappers close
+	# before the outer ones that hold them.
 	info('Tearing down target mounts and mappings...')
 
 	swapoff_layout(disk_config)
@@ -79,7 +81,8 @@ def teardown_layout(
 
 	match disk_encryption.encryption_type:
 		case EncryptionType.LUKS_ON_LVM:
-			# LUKS sits on top of LVs, close LUKS first, then deactivate VGs.
+			# LUKS sits on top of LVs, close LUKS first,
+			# then deactivate VGs.
 			for vol in disk_encryption.lvm_volumes:
 				close_luks(vol.safe_dev_path, vol.mapper_name)
 			_deactivate_vgs()

@@ -26,7 +26,12 @@ try:
 except ModuleNotFoundError:
 	_HAS_PARTED = False
 
-from archinstoo.lib.exceptions import DiskError, RequirementError, SysCallError, UnknownFilesystemFormatError
+from archinstoo.lib.exceptions import (
+	DiskError,
+	RequirementError,
+	SysCallError,
+	UnknownFilesystemFormatError,
+)
 from archinstoo.lib.general import SysCommand, SysCommandWorker
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.device import (
@@ -70,14 +75,18 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import Password
 
 
-# mounts the running system cannot lose; wiping /home still deserves a warning, not a refusal
-_HOST_MOUNTPOINTS = frozenset(Path(p) for p in ('/', '/usr', '/var', '/boot', '/efi', '/boot/efi'))
+# mounts the running system cannot lose; wiping /home still deserves a
+# warning, not a refusal
+_HOST_MOUNTPOINTS = frozenset(
+	Path(p) for p in ('/', '/usr', '/var', '/boot', '/efi', '/boot/efi')
+)
 
 
 def host_mounts(lsblk_info: LsblkInfo) -> list[Path]:
 	# https://github.com/archlinux/archinstall/issues/4275
 	held = [m for m in lsblk_info.mountpoints if m in _HOST_MOUNTPOINTS]
-	for child in lsblk_info.children:  # mappers/LVs hold the mount, not the partition
+	# mappers/LVs hold the mount, not the partition
+	for child in lsblk_info.children:
 		held += host_mounts(child)
 	return held
 
@@ -86,7 +95,9 @@ def luks_child_mount(lsblk_info: LsblkInfo, base_mountpoint: Path) -> LsblkInfo 
 	# lsblk hangs fs and mountpoint on the dm-crypt child, the partition shows none
 	# https://github.com/archlinux/archinstall/issues/4182
 	for child in lsblk_info.children:
-		if child.type == 'crypt' and any(m.is_relative_to(base_mountpoint) for m in child.mountpoints):
+		if child.type == 'crypt' and any(
+			m.is_relative_to(base_mountpoint) for m in child.mountpoints
+		):
 			return child
 	return None
 
@@ -116,9 +127,13 @@ class DeviceHandler:
 
 	def __init__(self) -> None:
 		if not _HAS_PARTED:
-			raise RequirementError('python-pyparted is required for disk operations')
+			raise RequirementError(
+				'python-pyparted is required for disk operations'
+			)
 		self._devices: dict[Path, BDevice] = {}
-		self._partition_table = PartitionTable.GPT if SysInfo.has_uefi() else PartitionTable.MBR
+		self._partition_table = (
+			PartitionTable.GPT if SysInfo.has_uefi() else PartitionTable.MBR
+		)
 		self.load_devices()
 
 	@property
@@ -138,41 +153,59 @@ class DeviceHandler:
 		devices.extend(self.get_loop_devices())
 
 		for device in devices:
-			# lsblk's tree hangs an md array under its member partitions, so an
-			# array never shows up among the top-level nodes; ask for it by path
-			dev_lsblk_info = find_lsblk_info(device.path, all_lsblk_info) or self._lsblk_info(device.path)
+			# lsblk's tree hangs an md array under its member
+			# partitions, so an array never shows up among the top-level
+			# nodes; ask for it by path
+			dev_lsblk_info = find_lsblk_info(
+				device.path, all_lsblk_info
+			) or self._lsblk_info(device.path)
 
 			if not dev_lsblk_info:
 				debug(f'Device lsblk info not found: {device.path}')
 				continue
 
-			# nothing installs onto these: optical drives (an empty one reports
-			# RO=0) and the live medium's read-only squashfs loop, whose mount
-			# sits outside the bootstrap root
+			# nothing installs onto these: optical drives (an empty one
+			# reports RO=0) and the live medium's read-only squashfs loop,
+			# whose mount sits outside the bootstrap root
 			if dev_lsblk_info.type == 'rom' or dev_lsblk_info.ro:
 				continue
 
 			try:
-				disk = newDisk(device) if dev_lsblk_info.pttype else freshDisk(device, self.partition_table.value)
+				disk = (
+					newDisk(device)
+					if dev_lsblk_info.pttype
+					else freshDisk(
+						device, self.partition_table.value
+					)
+				)
 			except DiskException as err:
 				debug(f'Unable to get disk from {device.path}: {err}')
 				continue
 
-			device_info = _DeviceInfo.from_disk(disk, serial=dev_lsblk_info.serial)
+			device_info = _DeviceInfo.from_disk(
+				disk, serial=dev_lsblk_info.serial
+			)
 			partition_infos = []
 
 			for partition in disk.partitions:
-				lsblk_info = find_lsblk_info(partition.path, dev_lsblk_info.children)
+				lsblk_info = find_lsblk_info(
+					partition.path, dev_lsblk_info.children
+				)
 
 				if not lsblk_info:
-					debug(f'Partition lsblk info not found: {partition.path}')
+					debug(
+						'Partition lsblk info not '
+						f'found: {partition.path}'
+					)
 					continue
 
 				fs_type = self._determine_fs_type(partition, lsblk_info)
 				subvol_infos = []
 
 				if fs_type == FilesystemType.BTRFS:
-					subvol_infos = self.get_btrfs_info(partition.path, lsblk_info)
+					subvol_infos = self.get_btrfs_info(
+						partition.path, lsblk_info
+					)
 
 				partition_infos.append(
 					_PartitionInfo.from_partition(
@@ -209,7 +242,9 @@ class DeviceHandler:
 		else:
 			for ld_info in str(loop_devices).splitlines():
 				try:
-					loop_device_path, _ = ld_info.split(':', maxsplit=1)
+					loop_device_path, _ = ld_info.split(
+						':', maxsplit=1
+					)
 				except ValueError:
 					continue
 
@@ -241,10 +276,14 @@ class DeviceHandler:
 		try:
 			return FilesystemType(fs_type)
 		except ValueError:
-			# fs we detect but do not manage (hfs+, apfs, zfs...). Log the value,
-			# not the parted repr: the repr buries the type under object addresses
-			# and the lsblk branch used to report the unrelated fileSystem=None.
-			debug(f'Unsupported filesystem on {partition.path} ({source}): {fs_type}')
+			# fs we detect but do not manage (hfs+, apfs, zfs...). Log the
+			# value, not the parted repr: the repr buries the type under
+			# object addresses and the lsblk branch used to report the
+			# unrelated fileSystem=None.
+			debug(
+				f'Unsupported filesystem on {partition.path} '
+				f'({source}): {fs_type}'
+			)
 
 		return None
 
@@ -254,7 +293,11 @@ class DeviceHandler:
 	def get_unique_path_for_device(self, dev_path: Path) -> Path | None:
 		paths = Path('/dev/disk/by-id').glob('*')
 		linked_targets = {p.resolve(): p for p in paths}
-		linked_wwn_targets = {p: linked_targets[p] for p in linked_targets if p.name.startswith('wwn-') or p.name.startswith('nvme-eui.')}
+		linked_wwn_targets = {
+			p: linked_targets[p]
+			for p in linked_targets
+			if p.name.startswith('wwn-') or p.name.startswith('nvme-eui.')
+		}
 
 		if dev_path in linked_wwn_targets:
 			return linked_wwn_targets[dev_path]
@@ -276,14 +319,22 @@ class DeviceHandler:
 
 		if not lsblk_info.mountpoint:
 			try:
-				mount(dev_path, self._TMP_BTRFS_MOUNT, create_target_mountpoint=True)
+				mount(
+					dev_path,
+					self._TMP_BTRFS_MOUNT,
+					create_target_mountpoint=True,
+				)
 			except SysCallError, DiskError:
-				debug(f'Failed to mount {dev_path} for btrfs inspection, skipping')
+				debug(
+					f'Failed to mount {dev_path} for '
+					'btrfs inspection, skipping'
+				)
 				return subvol_infos
 			mountpoint = self._TMP_BTRFS_MOUNT
 		else:
-			# when multiple subvolumes are mounted then the lsblk output may look like
-			# so we'll determine the minimum common path and assume that's the root
+			# when multiple subvolumes are mounted then the lsblk output may
+			# look like so we'll determine the minimum common path and
+			# assume that's the root
 			try:
 				common_path = os.path.commonpath(lsblk_info.mountpoints)
 			except ValueError:
@@ -292,17 +343,21 @@ class DeviceHandler:
 			mountpoint = Path(common_path)
 
 		try:
-			result = SysCommand(f'btrfs subvolume list {mountpoint}').decode()
+			result = SysCommand(
+				f'btrfs subvolume list {mountpoint}'
+			).decode()
 		except SysCallError as err:
 			debug(f'Failed to read btrfs subvolume information: {err}')
 			return subvol_infos
 
 		# It is assumed that lsblk will contain the fields as
-		# "mountpoints": ["/mnt/archinstall/log", "/mnt/archinstall/home", "/mnt/archinstall", ...]
-		# "fsroots": ["/@log", "/@home", "/@"...]
-		# we'll thereby map the fsroot, which are the mounted filesystem roots
-		# to the corresponding mountpoints
-		btrfs_subvol_info = dict(zip(lsblk_info.fsroots, lsblk_info.mountpoints, strict=True))
+		# "mountpoints": ["/mnt/archinstall/log", "/mnt/archinstall/home",
+		# "/mnt/archinstall", ...] "fsroots": ["/@log", "/@home", "/@"...] we'll
+		# thereby map the fsroot, which are the mounted filesystem roots to the
+		# corresponding mountpoints
+		btrfs_subvol_info = dict(
+			zip(lsblk_info.fsroots, lsblk_info.mountpoints, strict=True)
+		)
 
 		# ID 256 gen 16 top level 5 path @
 		for line in result.splitlines():
@@ -310,7 +365,9 @@ class DeviceHandler:
 			# ID 257 gen 8 top level 5 path @home
 			name = Path(line.split(' ')[-1])
 			sub_vol_mountpoint = btrfs_subvol_info.get('/' / name)
-			subvol_infos.append(_BtrfsSubvolumeInfo(name, sub_vol_mountpoint))
+			subvol_infos.append(
+				_BtrfsSubvolumeInfo(name, sub_vol_mountpoint)
+			)
 
 		if not lsblk_info.mountpoint:
 			umount(dev_path)
@@ -337,17 +394,25 @@ class DeviceHandler:
 			case FilesystemType.F2FS:
 				options.append('-f')
 				options.extend(('-O', 'extra_attr'))
-			case FilesystemType.EXT2 | FilesystemType.EXT3 | FilesystemType.EXT4:
+			case (
+				FilesystemType.EXT2
+				| FilesystemType.EXT3
+				| FilesystemType.EXT4
+			):
 				# Force create
 				options.append('-F')
 			case _ if fs_type.is_fat():
 				mkfs_type = 'fat'
 				# Set FAT size
-				options.extend(('-F', fs_type.value.removeprefix(mkfs_type)))
+				options.extend(
+					('-F', fs_type.value.removeprefix(mkfs_type))
+				)
 			case FilesystemType.LINUX_SWAP:
 				command = 'mkswap'
 			case _:
-				raise UnknownFilesystemFormatError(f'Filetype "{fs_type.value}" is not supported')
+				raise UnknownFilesystemFormatError(
+					f'Filetype "{fs_type.value}" is not supported'
+				)
 
 		if not command:
 			command = f'mkfs.{mkfs_type}'
@@ -359,7 +424,10 @@ class DeviceHandler:
 		try:
 			SysCommand(cmd)
 		except SysCallError as err:
-			msg = f'Could not format {path} with {fs_type.value}: {err.message}'
+			msg = (
+				f'Could not format {path} with {fs_type.value}: '
+				f'{err.message}'
+			)
 			error(msg)
 			raise DiskError(msg) from err
 
@@ -451,10 +519,19 @@ class DeviceHandler:
 				for line in result.decode().strip().split('\n'):
 					if line.startswith(f'{vg_name}-'):
 						dm_name = line.split()[0]
-						debug(f'Force removing dm device: {dm_name}')
-						SysCommand(f'dmsetup remove --force {dm_name}')
+						debug(
+							'Force removing dm '
+							f'device: {dm_name}'
+						)
+						SysCommand(
+							'dmsetup remove '
+							f'--force {dm_name}'
+						)
 			except SysCallError:
-				debug(f'Could not force-remove dm devices for VG {vg_name}')
+				debug(
+					'Could not force-remove dm devices '
+					f'for VG {vg_name}'
+				)
 
 	def lvm_deactivate_vgs_on_device(self, device: BDevice) -> None:
 		# lvm2 is optional on an H2T host; without it no VG can be active
@@ -465,23 +542,34 @@ class DeviceHandler:
 		# First try using partition_infos
 		for partition in device.partition_infos:
 			try:
-				result = SysCommand(f'pvs --noheadings -o vg_name {partition.path}')
+				result = SysCommand(
+					f'pvs --noheadings -o vg_name {partition.path}'
+				)
 				vg_name = result.decode().strip()
 				if vg_name:
-					debug(f'Found LVM VG {vg_name} on {partition.path}')
+					debug(
+						f'Found LVM VG {vg_name} on '
+						f'{partition.path}'
+					)
 					self.lvm_vg_deactivate(vg_name)
 			except SysCallError:
 				pass  # Not an LVM PV
 
-		# Also check using device path directly (catches VGs after partition table changes)
+		# Also check using device path directly (catches VGs after
+		# partition table changes)
 		try:
 			result = SysCommand('pvs --noheadings -o vg_name,pv_name')
 			for line in result.decode().strip().split('\n'):
 				parts = line.split()
 				if len(parts) >= 2:
 					vg_name, pv_path = parts[0], parts[1]
-					if pv_path.startswith(str(device.device_info.path)):
-						debug(f'Found LVM VG {vg_name} on {pv_path}')
+					if pv_path.startswith(
+						str(device.device_info.path)
+					):
+						debug(
+							f'Found LVM VG {vg_name} on '
+							f'{pv_path}'
+						)
 						self.lvm_vg_deactivate(vg_name)
 		except SysCallError:
 			pass
@@ -514,7 +602,9 @@ class DeviceHandler:
 		# Sync with udev to ensure the VG is visible
 		self.udev_sync()
 
-	def lvm_vol_create(self, vg_name: str, volume: LvmVolume, offset: Size | None = None) -> None:
+	def lvm_vol_create(
+		self, vg_name: str, volume: LvmVolume, offset: Size | None = None
+	) -> None:
 		length = volume.length - offset if offset is not None else volume.length
 
 		length_str = length.format_size(Unit.B, include_unit=False)
@@ -538,14 +628,21 @@ class DeviceHandler:
 	) -> None:
 		# when we require a delete and the partition to be (re)created
 		# already exists then we have to delete it first
-		if requires_delete and part_mod.status in {ModificationStatus.MODIFY, ModificationStatus.DELETE}:
+		if requires_delete and part_mod.status in {
+			ModificationStatus.MODIFY,
+			ModificationStatus.DELETE,
+		}:
 			info(f'Delete existing partition: {part_mod.safe_dev_path}')
-			# resolve on the disk being committed: cached partition objects can
-			# belong to another Disk instance and parted refuses cross-disk deletes
+			# resolve on the disk being committed: cached partition
+			# objects can belong to another Disk instance and parted
+			# refuses cross-disk deletes
 			partition = disk.getPartitionByPath(str(part_mod.safe_dev_path))
 
 			if not partition:
-				raise DiskError(f'No partition for dev path found: {part_mod.safe_dev_path}')
+				raise DiskError(
+					'No partition for dev path found: '
+					f'{part_mod.safe_dev_path}'
+				)
 
 			disk.deletePartition(partition)
 
@@ -569,11 +666,20 @@ class DeviceHandler:
 		)
 
 		if part_mod.fs_type == FilesystemType.LVM:
-			# LVM PV: create a raw partition, no parted filesystem signature; pvcreate handles it
+			# LVM PV: create a raw partition, no parted filesystem
+			# signature; pvcreate handles it
 			fs_value: str | None = None
 		else:
-			fs_value = part_mod.fs_type.parted_value if part_mod.fs_type else None
-		filesystem = FileSystem(type=fs_value, geometry=geometry) if fs_value else None
+			fs_value = (
+				part_mod.fs_type.parted_value
+				if part_mod.fs_type
+				else None
+			)
+		filesystem = (
+			FileSystem(type=fs_value, geometry=geometry)
+			if fs_value
+			else None
+		)
 
 		partition = Partition(
 			disk=disk,
@@ -587,17 +693,29 @@ class DeviceHandler:
 
 		debug(f'\tType: {part_mod.type.value}')
 		debug(f'\tFilesystem: {fs_value}')
-		debug(f'\tGeometry: {start_sector.value} start sector, {length_sector.value} length')
+		debug(
+			f'\tGeometry: {start_sector.value} start sector, '
+			f'{length_sector.value} length'
+		)
 
 		try:
-			disk.addPartition(partition=partition, constraint=disk.device.optimalAlignedConstraint)
+			disk.addPartition(
+				partition=partition,
+				constraint=disk.device.optimalAlignedConstraint,
+			)
 		except PartitionException as ex:
-			raise DiskError(f'Unable to add partition, most likely due to overlapping sectors: {ex}') from ex
+			raise DiskError(
+				'Unable to add partition, most likely due '
+				f'to overlapping sectors: {ex}'
+			) from ex
 
 		if disk.type == PartitionTable.GPT.value:
 			if part_mod.is_root():
 				partition.type_uuid = PartitionGUID.linux_root().bytes
-			elif PartitionFlag.LINUX_HOME not in part_mod.flags and part_mod.is_home():
+			elif (
+				PartitionFlag.LINUX_HOME not in part_mod.flags
+				and part_mod.is_home()
+			):
 				partition.setFlag(PartitionFlag.LINUX_HOME.flag_id)
 
 		# the partition has a path now that it has been added
@@ -614,12 +732,22 @@ class DeviceHandler:
 			lsblk_info = get_lsblk_info(path)
 
 		if not lsblk_info.partn:
-			debug(f'Unable to determine new partition number: {path}\n{lsblk_info}')
-			raise DiskError(f'Unable to determine new partition number: {path}')
+			debug(
+				'Unable to determine new partition number: '
+				f'{path}\n{lsblk_info}'
+			)
+			raise DiskError(
+				f'Unable to determine new partition number: {path}'
+			)
 
 		if not lsblk_info.partuuid:
-			debug(f'Unable to determine new partition uuid: {path}\n{lsblk_info}')
-			raise DiskError(f'Unable to determine new partition uuid: {path}')
+			debug(
+				'Unable to determine new partition uuid: '
+				f'{path}\n{lsblk_info}'
+			)
+			raise DiskError(
+				f'Unable to determine new partition uuid: {path}'
+			)
 
 		if not lsblk_info.uuid:
 			debug(f'Unable to determine new uuid: {path}\n{lsblk_info}')
@@ -650,13 +778,19 @@ class DeviceHandler:
 				try:
 					SysCommand(f'chattr +C {subvol_path}')
 				except SysCallError as err:
-					raise DiskError(f'Could not set nodatacow attribute at {subvol_path}: {err}') from err
+					raise DiskError(
+						'Could not set nodatacow attribute at '
+						f'{subvol_path}: {err}'
+					) from err
 
 			if BtrfsMountOption.compress.value in mount_options:
 				try:
 					SysCommand(f'chattr +c {subvol_path}')
 				except SysCallError as err:
-					raise DiskError(f'Could not set compress attribute at {subvol_path}: {err}') from err
+					raise DiskError(
+						'Could not set compress '
+						f'attribute at {subvol_path}: {err}'
+					) from err
 
 		umount(path)
 
@@ -670,7 +804,9 @@ class DeviceHandler:
 		# unlock the partition first if it's encrypted
 		if enc_conf is not None and part_mod in enc_conf.partitions:
 			if not part_mod.mapper_name:
-				raise ValueError('No device path specified for modification')
+				raise ValueError(
+					'No device path specified for modification'
+				)
 
 			luks_handler = unlock_luks2_dev(
 				part_mod.safe_dev_path,
@@ -707,7 +843,10 @@ class DeviceHandler:
 
 	def umount_all_existing(self, device_path: Path) -> None:
 		if held := host_mounts(get_lsblk_info(device_path)):
-			raise DiskError(f'{device_path} carries the running system ({", ".join(map(str, held))}), refusing to unmount it')
+			raise DiskError(
+				f'{device_path} carries the running system '
+				f'({", ".join(map(str, held))}), refusing to unmount it'
+			)
 
 		debug(f'Unmounting all existing partitions: {device_path}')
 
@@ -723,22 +862,29 @@ class DeviceHandler:
 				umount(partition.path, recursive=True)
 
 	@staticmethod
-	def _validate_addressable(modification: DeviceModification, partition_table: PartitionTable) -> None:
+	def _validate_addressable(
+		modification: DeviceModification, partition_table: PartitionTable
+	) -> None:
 		# parted refuses these as "overlapping sectors", which reads like a
 		# layout bug. using_gpt reads the on-disk label when nothing is wiped
 		if modification.using_gpt(partition_table):
 			return
 
-		limit = PartitionTable.MBR.max_addressable(modification.device.device_info.sector_size)
+		limit = PartitionTable.MBR.max_addressable(
+			modification.device.device_info.sector_size
+		)
 
 		if limit is None:  # GPT only, for the type checker
 			return
 
+		mbr = PartitionTable.MBR.value
 		for part_mod in modification.partitions:
 			if limit < part_mod.start + part_mod.length:
+				name = part_mod.mountpoint or part_mod.dev_path or ''
 				raise DiskError(
-					f'Partition {part_mod.mountpoint or part_mod.dev_path or ""} ends past what {PartitionTable.MBR.value} can address '
-					f'({limit.format_highest()}); use GPT or shrink the layout'
+					f'Partition {name} ends past what {mbr} can '
+					f'address ({limit.format_highest()}); use GPT '
+					'or shrink the layout'
 				)
 
 	def partition(
@@ -746,18 +892,31 @@ class DeviceHandler:
 		modification: DeviceModification,
 		partition_table: PartitionTable | None = None,
 	) -> None:
-		# Create a partition table on the block device and create all partitions.
-		partition_table = partition_table or modification.partition_table or self.partition_table
+		# Create a partition table on the block device and
+		# create all partitions.
+		partition_table = (
+			partition_table
+			or modification.partition_table
+			or self.partition_table
+		)
 
 		self._validate_addressable(modification, partition_table)
 
 		# WARNING: the entire device will be wiped and all data lost
 		if modification.wipe:
-			if partition_table.is_mbr() and len(modification.partitions) > 3:
-				raise DiskError('Too many partitions on disk, MBR disks can only have 3 primary partitions')
+			if (
+				partition_table.is_mbr()
+				and len(modification.partitions) > 3
+			):
+				raise DiskError(
+					'Too many partitions on disk, MBR disks can '
+					'only have 3 primary partitions'
+				)
 
 			self.wipe_dev(modification.device)
-			disk = freshDisk(modification.device.disk.device, partition_table.value)
+			disk = freshDisk(
+				modification.device.disk.device, partition_table.value
+			)
 		else:
 			info(f'Use existing device: {modification.device_path}')
 			disk = modification.device.disk
@@ -769,9 +928,15 @@ class DeviceHandler:
 
 		for part_mod in filtered_part:
 			# if the entire disk got nuked then we don't have to delete
-			# any existing partitions anymore because they're all gone already
+			# any existing partitions anymore because
+			# they're all gone already
 			requires_delete = modification.wipe is False
-			self._setup_partition(part_mod, modification.device, disk, requires_delete=requires_delete)
+			self._setup_partition(
+				part_mod,
+				modification.device,
+				disk,
+				requires_delete=requires_delete,
+			)
 
 		info(f'Committing partition table to {modification.device_path}')
 		disk.commit()
@@ -786,7 +951,9 @@ class DeviceHandler:
 		self.udev_sync()
 
 		# Remove any remaining dm devices on this device
-		for dm_name in self.dm_names_on_device(modification.device.device_info.path):
+		for dm_name in self.dm_names_on_device(
+			modification.device.device_info.path
+		):
 			debug(f'Force removing dm device: {dm_name}')
 			try:
 				SysCommand(f'dmsetup remove --force {dm_name}')
@@ -807,35 +974,61 @@ class DeviceHandler:
 	def _rebase(mountpoint: Path, base_mountpoint: Path) -> Path:
 		return mountpoint.root / mountpoint.relative_to(base_mountpoint)
 
-	def _pre_mounted_part(self, part_info: _PartitionInfo, base_mountpoint: Path) -> PartitionModification | None:
-		mountpoint = next((m for m in part_info.mountpoints if m.is_relative_to(base_mountpoint)), None)
+	def _pre_mounted_part(
+		self, part_info: _PartitionInfo, base_mountpoint: Path
+	) -> PartitionModification | None:
+		mountpoint = next(
+			(
+				m
+				for m in part_info.mountpoints
+				if m.is_relative_to(base_mountpoint)
+			),
+			None,
+		)
 
 		if mountpoint is not None:
-			part_mod = PartitionModification.from_existing_partition(part_info)
+			part_mod = PartitionModification.from_existing_partition(
+				part_info
+			)
 			if part_mod.mountpoint:
-				part_mod.mountpoint = self._rebase(mountpoint, base_mountpoint)
+				part_mod.mountpoint = self._rebase(
+					mountpoint, base_mountpoint
+				)
 			else:
 				for subvol in part_mod.btrfs_subvols:
 					if sm := subvol.mountpoint:
-						subvol.mountpoint = self._rebase(sm, base_mountpoint)
+						subvol.mountpoint = self._rebase(
+							sm, base_mountpoint
+						)
 			return part_mod
 
 		if part_info.fs_type != FilesystemType.CRYPTO_LUKS:
 			return None
 
-		child = luks_child_mount(get_lsblk_info(part_info.path), base_mountpoint)
+		child = luks_child_mount(
+			get_lsblk_info(part_info.path), base_mountpoint
+		)
 		if child is None:
 			return None
 
 		part_mod = PartitionModification.from_existing_partition(part_info)
-		part_mod.luks_mapper = child.name  # uuid stays the container's: rd.luks.name= wants that one
+		# uuid stays the container's: rd.luks.name= wants that one
+		part_mod.luks_mapper = child.name
 		if not self._fill_from_lsblk(part_mod, child, base_mountpoint):
 			return None
 
-		debug(f'Pre-mounted LUKS {part_info.path} via {child.path}: {part_mod.fs_type} at {part_mod.mountpoint}')
+		debug(
+			f'Pre-mounted LUKS {part_info.path} via {child.path}: '
+			f'{part_mod.fs_type} at {part_mod.mountpoint}'
+		)
 		return part_mod
 
-	def _fill_from_lsblk(self, part_mod: PartitionModification, node: LsblkInfo, base_mountpoint: Path) -> bool:
+	def _fill_from_lsblk(
+		self,
+		part_mod: PartitionModification,
+		node: LsblkInfo,
+		base_mountpoint: Path,
+	) -> bool:
 		# node is whatever carries the filesystem: the partition or device
 		# itself, or the dm-crypt child when a LUKS container is in the way
 		try:
@@ -846,17 +1039,28 @@ class DeviceHandler:
 
 		if part_mod.fs_type == FilesystemType.BTRFS:
 			subvol_infos = self.get_btrfs_info(node.path, node)
-			part_mod.btrfs_subvols = [SubvolumeModification.from_existing_subvol_info(i) for i in subvol_infos]
+			part_mod.btrfs_subvols = [
+				SubvolumeModification.from_existing_subvol_info(i)
+				for i in subvol_infos
+			]
 			for subvol in part_mod.btrfs_subvols:
 				if sm := subvol.mountpoint:
-					subvol.mountpoint = self._rebase(sm, base_mountpoint)
+					subvol.mountpoint = self._rebase(
+						sm, base_mountpoint
+					)
 		else:
-			mounted = next(m for m in node.mountpoints if m.is_relative_to(base_mountpoint))
+			mounted = next(
+				m
+				for m in node.mountpoints
+				if m.is_relative_to(base_mountpoint)
+			)
 			part_mod.mountpoint = self._rebase(mounted, base_mountpoint)
 
 		return True
 
-	def _pre_mounted_whole_device(self, device: BDevice, base_mountpoint: Path) -> PartitionModification | None:
+	def _pre_mounted_whole_device(
+		self, device: BDevice, base_mountpoint: Path
+	) -> PartitionModification | None:
 		dev_info = self._lsblk_info(device.device_info.path)
 
 		if dev_info is None:
@@ -864,11 +1068,18 @@ class DeviceHandler:
 
 		node, mapper = dev_info, None
 
-		if _normalize_lsblk_fstype(dev_info) == FilesystemType.CRYPTO_LUKS.value:
-			if (child := luks_child_mount(dev_info, base_mountpoint)) is None:
+		if (
+			_normalize_lsblk_fstype(dev_info)
+			== FilesystemType.CRYPTO_LUKS.value
+		):
+			if (
+				child := luks_child_mount(dev_info, base_mountpoint)
+			) is None:
 				return None
 			node, mapper = child, child.name
-		elif not any(m.is_relative_to(base_mountpoint) for m in dev_info.mountpoints):
+		elif not any(
+			m.is_relative_to(base_mountpoint) for m in dev_info.mountpoints
+		):
 			return None
 
 		part_mod = PartitionModification(
@@ -877,23 +1088,33 @@ class DeviceHandler:
 			start=Size(0, Unit.sectors, device.device_info.sector_size),
 			length=device.device_info.total_size,
 			dev_path=device.device_info.path,
-			uuid=dev_info.uuid,  # the container's when LUKS, which rd.luks.name= wants
+			# the container's when LUKS, which rd.luks.name= wants
+			uuid=dev_info.uuid,
 			luks_mapper=mapper,
-			on_raid=bool(dev_info.type and dev_info.type.startswith('raid')),
+			on_raid=bool(
+				dev_info.type and dev_info.type.startswith('raid')
+			),
 		)
 
 		if not self._fill_from_lsblk(part_mod, node, base_mountpoint):
 			return None
 
-		debug(f'Pre-mounted {dev_info.type} {dev_info.path}: {part_mod.fs_type} at {part_mod.mountpoint}')
+		debug(
+			f'Pre-mounted {dev_info.type} {dev_info.path}: '
+			f'{part_mod.fs_type} at {part_mod.mountpoint}'
+		)
 		return part_mod
 
-	def detect_pre_mounted_mods(self, base_mountpoint: Path) -> list[DeviceModification]:
+	def detect_pre_mounted_mods(
+		self, base_mountpoint: Path
+	) -> list[DeviceModification]:
 		part_mods: dict[Path, list[PartitionModification]] = {}
 
 		for device in self.devices:
 			for part_info in device.partition_infos:
-				part_mod = self._pre_mounted_part(part_info, base_mountpoint)
+				part_mod = self._pre_mounted_part(
+					part_info, base_mountpoint
+				)
 				if part_mod is None:
 					continue
 				path = Path(part_info.disk.device.path)
@@ -902,19 +1123,27 @@ class DeviceHandler:
 			# an md array carries no partition table: the filesystem, or the
 			# LUKS container holding it, sits on the device node itself
 			if not device.partition_infos:
-				whole = self._pre_mounted_whole_device(device, base_mountpoint)
+				whole = self._pre_mounted_whole_device(
+					device, base_mountpoint
+				)
 				if whole is not None:
-					part_mods.setdefault(device.device_info.path, []).append(whole)
+					part_mods.setdefault(
+						device.device_info.path, []
+					).append(whole)
 
 		device_mods: list[DeviceModification] = []
 		for device_path, mods in part_mods.items():
-			device_mod = DeviceModification(self._devices[device_path], False, mods)
+			device_mod = DeviceModification(
+				self._devices[device_path], False, mods
+			)
 			device_mods.append(device_mod)
 
 		return device_mods
 
 	@staticmethod
-	def dm_names_on_device(device_path: Path, sysfs: Path = Path('/sys/block')) -> list[str]:
+	def dm_names_on_device(
+		device_path: Path, sysfs: Path = Path('/sys/block')
+	) -> list[str]:
 		# `dmsetup ls` names every mapper on the host with no hint of what it
 		# sits on; tearing all of them down took the host's own LUKS/LVM with
 		# it. sysfs knows: /sys/block/dm-N/slaves/ lists the backing devices,
@@ -927,14 +1156,18 @@ class DeviceHandler:
 			slaves = sysfs / block / 'slaves'
 			if not block.startswith('dm-') or not slaves.is_dir():
 				return None
-			found = [hops_to_disk(s.name, hops + 1) for s in slaves.iterdir()]
+			found = [
+				hops_to_disk(s.name, hops + 1) for s in slaves.iterdir()
+			]
 			return max((h for h in found if h is not None), default=None)
 
 		chained: list[tuple[int, str]] = []
 		for dm in sysfs.glob('dm-*'):
 			hops = hops_to_disk(dm.name, 0)
 			if hops is not None:
-				chained.append((hops, (dm / 'dm' / 'name').read_text().strip()))
+				chained.append(
+					(hops, (dm / 'dm' / 'name').read_text().strip())
+				)
 
 		# deepest first: a mapper stacked on another must go before its base
 		return [name for _, name in sorted(chained, reverse=True)]
@@ -950,11 +1183,12 @@ class DeviceHandler:
 			return False
 
 	def _wipe(self, dev_path: Path) -> None:
-		# Wipe a device (partition or otherwise) of meta-data, be it file system, LVM, etc.
-		# @param dev_path:	Device path of the partition to be wiped.
-		# @type dev_path:		str
+		# Wipe a device (partition or otherwise) of meta-data, be it file
+		# system, LVM, etc. @param dev_path:      Device path of the partition
+		# to be wiped. @type dev_path:               str
 		with dev_path.open('wb') as p:
-			# 1-sector partitions exist (ChromeOS KERN-C/ROOT-C), past-end write = ENOSPC
+			# 1-sector partitions exist (ChromeOS KERN-C/ROOT-C),
+			# past-end write = ENOSPC
 			size = p.seek(0, os.SEEK_END)
 			p.seek(0)
 			debug(f'Zeroing first {min(1024, size)} bytes of {dev_path}')
@@ -966,8 +1200,8 @@ class DeviceHandler:
 		# auto-discovery tools don't recognize anything here.
 		info(f'Wiping partitions and metadata: {block_device.device_info.path}')
 
-		# Wipe filesystem signatures first to prevent auto-discovery tools
-		# from recognizing stale FS types during teardown (e.g. btrfs mount attempts)
+		# Wipe filesystem signatures first to prevent auto-discovery tools from
+		# recognizing stale FS types during teardown (e.g. btrfs mount attempts)
 		for partition in block_device.partition_infos:
 			self.wipefs(partition.path)
 
@@ -986,7 +1220,8 @@ class DeviceHandler:
 	@staticmethod
 	def udev_sync() -> None:
 		try:
-			# a chroot (the bootstrap root) reads as one to udevadm, which skips settle
+			# a chroot (the bootstrap root) reads as one to
+			# udevadm, which skips settle
 			env = {'SYSTEMD_IN_CHROOT': '0'}
 			SysCommand('udevadm settle', environment_vars=env)
 		except (SysCallError, RequirementError) as err:

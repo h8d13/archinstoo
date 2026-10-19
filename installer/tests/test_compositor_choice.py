@@ -22,7 +22,9 @@ _IDS = [f'{cls.__name__}-{c}' for cls, c in _CHOICES]
 
 
 @pytest.mark.parametrize('profile_cls', _COMPOSITOR_PROFILES)
-def test_known_compositor_is_kept_alone(profile_cls: type[DmsProfile | NoctaliaProfile]) -> None:
+def test_known_compositor_is_kept_alone(
+	profile_cls: type[DmsProfile | NoctaliaProfile],
+) -> None:
 	profile = profile_cls()
 	profile.custom_settings[f'{profile.name}_compositor'] = 'hyprland'
 
@@ -32,7 +34,9 @@ def test_known_compositor_is_kept_alone(profile_cls: type[DmsProfile | NoctaliaP
 
 
 @pytest.mark.parametrize(('profile_cls', 'setting'), _CHOICES, ids=_IDS)
-def test_resolver_agrees_with_profile(profile_cls: type[DmsProfile | NoctaliaProfile], setting: str) -> None:
+def test_resolver_agrees_with_profile(
+	profile_cls: type[DmsProfile | NoctaliaProfile], setting: str
+) -> None:
 	# scripts count expands a saved config without the runtime profile
 	profile = profile_cls()
 	key = f'{profile.name}_compositor'
@@ -42,7 +46,9 @@ def test_resolver_agrees_with_profile(profile_cls: type[DmsProfile | NoctaliaPro
 
 
 @pytest.mark.parametrize('compositor', list(DmsProfile.compositor_packages))
-def test_dms_shell_starts_once(compositor: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_dms_shell_starts_once(
+	compositor: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# mango-session.target activates graphical-session.target like the others,
 	# but `dms setup` gives mango `exec-once=dms run`: enabling dms.service on
 	# top would start a second shell

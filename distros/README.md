@@ -5,7 +5,8 @@ Experimental ports `archinstoo` to run from **any Linux host** (not just Arch IS
 
 ## Per distro host:
 
-> Mostly tested from smallest **server type ISOs/cloud images** (see `./RUN --script dev.vm cloud fed|deb`).
+> Mostly tested from smallest **server type ISOs/cloud images**
+> (see `./RUN --script dev.vm cloud fed|deb`).
 
 Not fully cooked since it takes a lot of time, but at least all deps should be correct.
 
@@ -34,9 +35,11 @@ python3 (>= 3.14) util-linux coreutils libarchive udev gnupg
 
 `gnupg` is optional on x86_64 (checksum only without it, trusting TLS).
 
-Package names might differ per distro. `libarchive-tools` on Debian and Alpine, `bsdtar` on Fedora.
+Package names might differ per distro.
+`libarchive-tools` on Debian and Alpine, `bsdtar` on Fedora.
 
-From Alpine (mdev by default): `apk add python3 util-linux coreutils libarchive-tools gnupg eudev && setup-devd udev`
+From Alpine (mdev by default):
+`apk add python3 util-linux coreutils libarchive-tools gnupg eudev && setup-devd udev`
 
 ```shell
 # what follows -- runs inside the root, as given (no args: guided)
@@ -45,7 +48,9 @@ From Alpine (mdev by default): `apk add python3 util-linux coreutils libarchive-
 # BOOT_MIRROR picks the x86_64 mirror for the tarball and packages
 ```
 
-Everything runs inside the root: the tarball's own pacman, keyring and python, with archinstoo's deps
-installed there on the first run. Scripts that configure the running system (`packages`) are refused, the
-root is thrown away after. A layout mounted by hand on the host's `/mnt` is passed through for pre-mounted
-configs, and the log path printed is the one the host sees.
+Everything runs inside the root: the tarball's own pacman, keyring and python,
+with archinstoo's deps installed there on the first run.
+Scripts that configure the running system (`packages`) are refused,
+the root is thrown away after.
+A layout mounted by hand on the host's `/mnt` is passed through for pre-mounted configs,
+and the log path printed is the one the host sees.

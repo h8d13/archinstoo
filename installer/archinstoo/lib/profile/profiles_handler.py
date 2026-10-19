@@ -18,6 +18,18 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.applications import ApplicationConfiguration
 	from archinstoo.lib.profile.config import ProfileConfiguration
 
+# greetd's stock config.toml runs the tty agreety greeter, so every front-end
+# here replaces it wholesale. tuigreet reads the sessions each compositor ships
+# and remembers the pick; regreet has no default config at all and needs the
+# cage kiosk compositor around it
+_GREETD_SESSION = {
+	GreeterType.Tuigreet: (
+		'tuigreet --time --remember --remember-session '
+		'--sessions /usr/share/wayland-sessions'
+	),
+	GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
+}
+
 
 class ProfileSerialization(TypedDict):
 	main: NotRequired[str]
@@ -41,8 +53,14 @@ class ProfileHandler:
 		if profile is not None:
 			data = {
 				'main': profile.name,
-				'details': [profile.name for profile in profile.current_selection],
-				'custom_settings': {profile.name: profile.custom_settings for profile in profile.current_selection},
+				'details': [
+					profile.name
+					for profile in profile.current_selection
+				],
+				'custom_settings': {
+					profile.name: profile.custom_settings
+					for profile in profile.current_selection
+				},
 			}
 
 		if self._custom_path is not None:
@@ -50,7 +68,9 @@ class ProfileHandler:
 
 		return data
 
-	def parse_profile_config(self, profile_config: ProfileSerialization) -> Profile | None:
+	def parse_profile_config(
+		self, profile_config: ProfileSerialization
+	) -> Profile | None:
 		# Deserialize JSON configuration for profile
 		profile: Profile | None = None
 
@@ -69,7 +89,10 @@ class ProfileHandler:
 				custom_profiles = self._process_profile_file(local_path)
 				self.remove_custom_profiles(custom_profiles)
 				self.add_custom_profiles(custom_profiles)
-				info(f'Loaded {len(custom_profiles)} custom profile(s) from {local_path}')
+				info(
+					f'Loaded {len(custom_profiles)} '
+					f'custom profile(s) from {local_path}'
+				)
 			else:
 				error(f'Custom profile file not found: {local_path}')
 
@@ -92,7 +115,10 @@ class ProfileHandler:
 				invalid_sub_profiles.append(detail)
 
 		if invalid_sub_profiles:
-			info(f'No profile definition found: {", ".join(invalid_sub_profiles)}')
+			info(
+				'No profile definition found: '
+				f'{", ".join(invalid_sub_profiles)}'
+			)
 
 		custom_settings = profile_config.get('custom_settings', {})
 		profile.current_selection = valid_sub_profiles
@@ -124,7 +150,9 @@ class ProfileHandler:
 			profiles = [profiles]
 
 		remove_names = [p.name for p in profiles]
-		self._profiles = [p for p in self.profiles if p.name not in remove_names]
+		self._profiles = [
+			p for p in self.profiles if p.name not in remove_names
+		]
 
 	def get_profile_by_name(self, name: str) -> Profile | None:
 		return next(filter(lambda x: x.name == name, self.profiles), None)
@@ -138,7 +166,9 @@ class ProfileHandler:
 	def get_desktop_profiles(self) -> list[Profile]:
 		return [p for p in self.profiles if p.is_desktop_type_profile()]
 
-	def install_greeter(self, install_session: Installer, greeter: GreeterType) -> None:
+	def install_greeter(
+		self, install_session: Installer, greeter: GreeterType
+	) -> None:
 		# what each greeter pulls and runs lives on GreeterType; only the
 		# per-greeter configuration below is this function's own business
 		info(f'Installing greeter {greeter.value}', step=True)
@@ -150,24 +180,26 @@ class ProfileHandler:
 
 		# slick-greeter requires a config change
 		if greeter == GreeterType.LightdmSlick:
-			path = install_session.target.joinpath('etc/lightdm/lightdm.conf')
+			path = install_session.target.joinpath(
+				'etc/lightdm/lightdm.conf'
+			)
 			filedata = path.read_text()
 
 			if '#greeter-session=example-gtk-gnome' not in filedata:
-				warn(f'{path}: greeter-session marker not found, slick-greeter not activated')
+				warn(
+					f'{path}: greeter-session marker not '
+					'found, slick-greeter not activated'
+				)
 			else:
 				debug(f'Setting greeter-session in {path}')
-				path.write_text(filedata.replace('#greeter-session=example-gtk-gnome', 'greeter-session=lightdm-slick-greeter'))
+				path.write_text(
+					filedata.replace(
+						'#greeter-session=example-gtk-gnome',
+						'greeter-session=lightdm-slick-greeter',
+					)
+				)
 
-		# greetd's stock config.toml runs the tty agreety greeter, so every
-		# front-end here replaces it wholesale. tuigreet reads the sessions
-		# each compositor ships and remembers the pick; regreet has no default
-		# config at all and needs the cage kiosk compositor around it
-		greetd_session = {
-			GreeterType.Tuigreet: 'tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions',
-			GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
-		}
-		if command := greetd_session.get(greeter):
+		if command := _GREETD_SESSION.get(greeter):
 			debug(f'Writing greetd session config: {command}')
 			path = install_session.target.joinpath('etc/greetd/config.toml')
 			path.write_text(
@@ -195,13 +227,21 @@ class ProfileHandler:
 		debug(f'Installing GFX driver: {driver.value}')
 
 		if driver is GfxDriver.Custom:
-			driver_pkgs = dkms_packages(custom or [], install_session.kernels)
+			driver_pkgs = dkms_packages(
+				custom or [], install_session.kernels
+			)
 		else:
 			driver_pkgs = driver.gfx_packages(install_session.kernels)
 
 		if GfxPackage.NvidiaOpenDkms in driver_pkgs:
-			debug(f'Non-standard kernel selected, installing DKMS variant of {driver.value}')
-			headers = [f'{kernel}-headers' for kernel in install_session.kernels]
+			debug(
+				'Non-standard kernel selected, installing '
+				f'DKMS variant of {driver.value}'
+			)
+			headers = [
+				f'{kernel}-headers'
+				for kernel in install_session.kernels
+			]
 			install_session.add_additional_packages(headers)
 
 		install_session.add_additional_packages([p.value for p in driver_pkgs])
@@ -216,10 +256,17 @@ class ProfileHandler:
 			debug('No profiles selected, skipping profile installation')
 			return
 
-		# one terminal for every profile that ships a keybind rather than its own
-		selected = [p for top in profile_config.profiles for p in (top, *top.current_selection)]
+		# one terminal for every profile that ships a
+		# keybind rather than its own
+		selected = [
+			p
+			for top in profile_config.profiles
+			for p in (top, *top.current_selection)
+		]
 		if any(p.needs_terminal for p in selected):
-			install_session.add_additional_packages([terminal_for(app_config)])
+			install_session.add_additional_packages(
+				[terminal_for(app_config)]
+			)
 
 		for server in profile_config.display_servers():
 			install_session.add_additional_packages(server.packages())
@@ -245,18 +292,27 @@ class ProfileHandler:
 						if isinstance(cls_, Profile):
 							profiles.append(cls_)
 					except Exception:
-						debug(f'Cannot import {module}, it does not appear to be a Profile class')
+						debug(
+							f'Cannot import {module}, it '
+							'does not appear to be a '
+							'Profile class'
+						)
 
 		return profiles
 
 	def _verify_unique_profile_names(self, profiles: list[Profile]) -> None:
 		# All profile names have to be unique, this function will verify
-		# that the provided list contains only default_profiles with unique names
+		# that the provided list contains only
+		# default_profiles with unique names
 		counter = Counter([p.name for p in profiles])
 		duplicates = [x for x in counter.items() if x[1] != 1]
 
 		if len(duplicates) > 0:
-			err = f'Profiles must have unique name, but profile definitions with duplicate name found: {duplicates[0][0]}'
+			err = (
+				'Profiles must have unique name, but profile '
+				'definitions with duplicate name found: '
+				f'{duplicates[0][0]}'
+			)
 			error(err)
 			raise SystemExit(1)
 
@@ -295,7 +351,9 @@ class ProfileHandler:
 		self._verify_unique_profile_names(profiles)
 		return profiles
 
-	def reset_top_level_profiles(self, exclude: list[Profile] | None = None) -> None:
+	def reset_top_level_profiles(
+		self, exclude: list[Profile] | None = None
+	) -> None:
 		# Reset all top level profile configurations, this is usually necessary
 		# when a new top level profile is selected
 		if exclude is None:

@@ -63,11 +63,17 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		# list order is the order repos land in pacman.conf, so an edit keeps
 		# its slot and only an add goes to the end
 		if action == self._actions[0]:  # add
-			if (new_repo := self._add_custom_repository([d.name for d in data])) is not None:
+			if (
+				new_repo := self._add_custom_repository(
+					[d.name for d in data]
+				)
+			) is not None:
 				data = [*data, new_repo]
 		elif action == self._actions[1] and entry:  # modify repo
 			taken = [d.name for d in data if d != entry]
-			if (new_repo := self._add_custom_repository(taken, entry)) is not None:
+			if (
+				new_repo := self._add_custom_repository(taken, entry)
+			) is not None:
 				data = [new_repo if d == entry else d for d in data]
 		elif action == self._actions[2] and entry:  # delete
 			data = [d for d in data if d != entry]
@@ -82,7 +88,9 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		name = prompt_text(
 			'Repository name',
 			preset=preset.name if preset else None,
-			validator=lambda text: CustomRepository.name_error(text or '', taken),
+			validator=lambda text: CustomRepository.name_error(
+				text or '', taken
+			),
 		)
 		if name is None:
 			return preset
@@ -97,19 +105,34 @@ class CustomMirrorRepositoriesList(ListManager[CustomRepository]):
 		prompt = f'{header}\nSelect signature check'
 
 		sign_chk_items = [MenuItem(s.value, value=s) for s in SignCheck]
-		sign_check = prompt_choice(sign_chk_items, preset.sign_check if preset else None, header=prompt, allow_skip=False)
+		sign_check = prompt_choice(
+			sign_chk_items,
+			preset.sign_check if preset else None,
+			header=prompt,
+			allow_skip=False,
+		)
 
 		header += f'Signature check: {sign_check.value}\n'
 		prompt = f'{header}\nSelect signature option'
 
 		sign_opt_items = [MenuItem(s.value, value=s) for s in SignOption]
-		sign_opt = prompt_choice(sign_opt_items, preset.sign_option if preset else None, header=prompt, allow_skip=False)
+		sign_opt = prompt_choice(
+			sign_opt_items,
+			preset.sign_option if preset else None,
+			header=prompt,
+			allow_skip=False,
+		)
 
 		header += f'Signature option: {sign_opt.value}\n'
-		prompt = f'{header}\nPriority? (placed above [core], overrides official packages of the same name)'
+		prompt = (
+			f'{header}\nPriority? (placed above [core], overrides '
+			'official packages of the same name)'
+		)
 
 		# a local cache only pays off if pacman reads it before the network
-		priority_default = preset.priority if preset else url.startswith('file://')
+		priority_default = (
+			preset.priority if preset else url.startswith('file://')
+		)
 		priority = prompt_yes_no(prompt, priority_default, allow_skip=False)
 
 		return CustomRepository(name, url, sign_check, sign_opt, priority)
@@ -154,7 +177,9 @@ class CustomMirrorServersList(ListManager[CustomServer]):
 
 		return data
 
-	def _add_custom_server(self, preset: CustomServer | None = None) -> CustomServer | None:
+	def _add_custom_server(
+		self, preset: CustomServer | None = None
+	) -> CustomServer | None:
 		uri = prompt_text('Server url', preset=preset.url if preset else None)
 		return preset if uri is None else CustomServer(uri)
 
@@ -167,7 +192,9 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 		if preset:
 			self._mirror_config = preset
 		else:
-			self._mirror_config = PacmanConfiguration(custom_repositories=PacmanConfig.get_existing_custom_repos())
+			self._mirror_config = PacmanConfiguration(
+				custom_repositories=PacmanConfig.get_existing_custom_repos()
+			)
 
 		self._mirror_handler = MirrorListHandler()
 		menu_options = self._define_menu_options()
@@ -186,7 +213,10 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 		regions = [
 			MenuItem(
 				text='Select regions',
-				action=partial(select_mirror_regions, mirror_list_handler=self._mirror_handler),
+				action=partial(
+					select_mirror_regions,
+					mirror_list_handler=self._mirror_handler,
+				),
 				value=self._mirror_config.mirror_regions,
 				preview_action=self._prev_regions,
 				key='mirror_regions',
@@ -326,11 +356,15 @@ def select_mirror_regions(
 			return result.get_values()
 
 
-def add_custom_mirror_servers(preset: list[CustomServer] | None = None) -> list[CustomServer]:
+def add_custom_mirror_servers(
+	preset: list[CustomServer] | None = None,
+) -> list[CustomServer]:
 	return CustomMirrorServersList(preset or []).run()
 
 
-def select_custom_mirror(preset: list[CustomRepository] | None = None) -> list[CustomRepository]:
+def select_custom_mirror(
+	preset: list[CustomRepository] | None = None,
+) -> list[CustomRepository]:
 	return CustomMirrorRepositoriesList(preset or []).run()
 
 
@@ -443,14 +477,21 @@ class MirrorListHandler:
 
 		for attempt_nr in range(attempts):
 			try:
-				data = fetch_data_from_url('https://archlinux.org/mirrors/status/json/')
-				_MirrorCache.data.update(self._parse_remote_mirror_list(data))
+				data = fetch_data_from_url(
+					'https://archlinux.org/mirrors/status/json/'
+				)
+				_MirrorCache.data.update(
+					self._parse_remote_mirror_list(data)
+				)
 				return True
 			except Exception as e:
 				debug(f'Error fetching from archlinux.org: {e}')
 				time.sleep(attempt_nr + 1)
 
-		debug('Unable to fetch mirror list remotely, falling back to local mirror list')
+		debug(
+			'Unable to fetch mirror list remotely, falling back '
+			'to local mirror list'
+		)
 		return False
 
 	def load_local_mirrors(self) -> None:
@@ -463,13 +504,18 @@ class MirrorListHandler:
 		if count == 0:
 			warn(f'No mirrors found in {self._local_mirrorlist}')
 		else:
-			debug(f'Loaded {count} mirrors in {len(parsed)} regions from {self._local_mirrorlist}')
+			debug(
+				f'Loaded {count} mirrors in {len(parsed)} '
+				f'regions from {self._local_mirrorlist}'
+			)
 
 	def regions_config(self, regions: list[MirrorRegion], speed_sort: bool) -> str:
 		config = ''
 
 		for region in regions:
-			sorted_stati = self.get_status_by_region(region.name, speed_sort=speed_sort)
+			sorted_stati = self.get_status_by_region(
+				region.name, speed_sort=speed_sort
+			)
 
 			config += f'\n\n## {region.name}\n'
 
@@ -478,7 +524,9 @@ class MirrorListHandler:
 
 		return config
 
-	def get_status_by_region(self, region: str, speed_sort: bool) -> list[MirrorStatusEntryV3]:
+	def get_status_by_region(
+		self, region: str, speed_sort: bool
+	) -> list[MirrorStatusEntryV3]:
 		mappings = self._mappings()
 		region_list = mappings[region]
 
@@ -491,47 +539,60 @@ class MirrorListHandler:
 			for i, mirror in enumerate(region_list, 1):
 				# speed is lazy, access runs the test for this tick
 				_ = mirror.speed
-				print(f'\rTesting mirror speeds {i}/{total}', end='', flush=True)
+				print(
+					f'\rTesting mirror speeds {i}/{total}',
+					end='',
+					flush=True,
+				)
 			print()
 
-			# Sort by speed descending (higher is better in bitrate form core.db download)
+			# Sort by speed descending (higher is better in bitrate
+			# form core.db download)
 			return sorted(region_list, key=lambda mirror: -mirror.speed)
 		# just return as-is without sorting?
 		return region_list
 
-	def _parse_remote_mirror_list(self, mirrorlist: str) -> dict[str, list[MirrorStatusEntryV3]]:
+	def _parse_remote_mirror_list(
+		self, mirrorlist: str
+	) -> dict[str, list[MirrorStatusEntryV3]]:
 		mirror_status = MirrorStatusListV3.from_json(mirrorlist)
 
 		sorting_placeholder: dict[str, list[MirrorStatusEntryV3]] = {}
 
 		for mirror in mirror_status.urls:
-			# We filter out mirrors that have bad criteria values
-			if any(
-				[
-					mirror.active is False,  # Disabled by mirror-list admins
-					mirror.last_sync is None,  # Has not synced recently
-					# mirror.score (error rate) over time reported from backend:
-					# https://github.com/archlinux/archweb/blob/31333d3516c91db9a2f2d12260bd61656c011fd1/mirrors/utils.py#L111C22-L111C66
-					(mirror.score is None or mirror.score >= 100),
-				]
+			# We filter out mirrors that have bad criteria values: disabled
+			# by mirror-list admins, not synced recently, or a bad
+			# mirror.score (error rate over time, reported from backend):
+			# https://github.com/archlinux/archweb/blob/31333d3516c91db9a2f2d12260bd61656c011fd1/mirrors/utils.py#L111C22-L111C66
+			if (
+				mirror.active is False
+				or mirror.last_sync is None
+				or mirror.score is None
+				or mirror.score >= 100
 			):
 				continue
 
 			if not mirror.country:
-				# TODO: This should be removed once RFC!29 is merged and completed
-				# Until then, there are mirrors which lacks data in the backend
-				# and there is no way of knowing where they're located.
-				# So we have to assume world-wide
+				# TODO: This should be removed once RFC!29 is merged and
+				# completed Until then, there are mirrors which lacks
+				# data in the backend and there is no way of knowing
+				# where they're located. So we have to assume world-wide
 				mirror.country = 'Worldwide'
 
 			if mirror.url.startswith('http'):
-				sorting_placeholder.setdefault(mirror.country, []).append(mirror)
+				sorting_placeholder.setdefault(
+					mirror.country, []
+				).append(mirror)
 
-		sorted_by_regions: dict[str, list[MirrorStatusEntryV3]] = dict(sorted(sorting_placeholder.items()))
+		sorted_by_regions: dict[str, list[MirrorStatusEntryV3]] = dict(
+			sorted(sorting_placeholder.items())
+		)
 
 		return sorted_by_regions
 
-	def _parse_local_mirrors(self, mirrorlist: str) -> dict[str, list[MirrorStatusEntryV3]]:
+	def _parse_local_mirrors(
+		self, mirrorlist: str
+	) -> dict[str, list[MirrorStatusEntryV3]]:
 		lines = mirrorlist.splitlines()
 
 		mirror_list: dict[str, list[MirrorStatusEntryV3]] = {}
@@ -547,9 +608,12 @@ class MirrorListHandler:
 			# ## header country on x86, city subheader on ARM
 			elif line.startswith('## '):
 				if not has_countries:
-					current_region = line.removeprefix('## ').strip()
+					current_region = line.removeprefix(
+						'## '
+					).strip()
 					mirror_list.setdefault(current_region, [])
-				# else: city subheader under a ### country, keep current_region
+				# else: city subheader under a ###
+				# country, keep current_region
 
 			# pick up both "Server = ..." and "#Server = ..."
 			server_line = line.lstrip('#').strip()
@@ -559,8 +623,11 @@ class MirrorListHandler:
 					mirror_list.setdefault(current_region, [])
 
 				url = server_line.removeprefix('Server = ')
-				# strip both x86 ($repo/os/$arch) and ARM ($arch/$repo) suffixes
-				url = url.removesuffix('$repo/os/$arch').removesuffix('$arch/$repo')
+				# strip both x86 ($repo/os/$arch) and ARM
+				# ($arch/$repo) suffixes
+				url = url.removesuffix('$repo/os/$arch').removesuffix(
+					'$arch/$repo'
+				)
 
 				mirror_entry = MirrorStatusEntryV3(
 					url=url,
@@ -568,8 +635,8 @@ class MirrorListHandler:
 					active=True,
 					country=current_region or 'Worldwide',
 					# The following values are normally populated by
-					# archlinux.org mirror-list endpoint, and can't be known
-					# from just the local mirror-list file.
+					# archlinux.org mirror-list endpoint, and can't
+					# be known from just the local mirror-list file.
 					country_code='WW',
 					isos=True,
 					ipv4=True,
@@ -591,14 +658,22 @@ def set_mirrors(
 	# once on the target so the installed pacman starts from the same choices
 	info('Setting mirrors on ' + ('target' if on_target else 'live system...'))
 
-	mirrorlist_path = installation.target / MIRRORLIST.relative_to_root() if on_target else MIRRORLIST
+	mirrorlist_path = (
+		installation.target / MIRRORLIST.relative_to_root()
+		if on_target
+		else MIRRORLIST
+	)
 
 	# repos, custom repos, misc options and ParallelDownloads all land in
 	# the conf for this side of the install
-	PacmanConfig.apply_config(pacman_configuration, installation.target if on_target else None)
+	PacmanConfig.apply_config(
+		pacman_configuration, installation.target if on_target else None
+	)
 
 	# Speed test only for the live system, target reuses the same order
-	regions_config = MirrorListHandler().regions_config(pacman_configuration.mirror_regions, speed_sort=not on_target)
+	regions_config = MirrorListHandler().regions_config(
+		pacman_configuration.mirror_regions, speed_sort=not on_target
+	)
 	if regions_config:
 		debug(f'Mirrorlist:\n{regions_config}')
 		mirrorlist_path.write_text(regions_config)

@@ -40,9 +40,14 @@ def get_password(
 		strength_line = f'Password strength: {strength.value}'
 
 		if header is not None:
-			confirmation_header = f'{header}Password: {password.hidden()}\n{strength_line}\n'
+			confirmation_header = (
+				f'{header}Password: '
+				f'{password.hidden()}\n{strength_line}\n'
+			)
 		else:
-			confirmation_header = f'Password: {password.hidden()}\n{strength_line}\n'
+			confirmation_header = (
+				f'Password: {password.hidden()}\n{strength_line}\n'
+			)
 
 		result = EditMenu(
 			'Confirm password',

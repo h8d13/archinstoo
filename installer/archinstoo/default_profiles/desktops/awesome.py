@@ -41,9 +41,16 @@ class AwesomeProfile(XorgProfile):
 		# startx prefers ~/.xinitrc over the packaged /etc/X11/xinit/xinitrc,
 		# whose twm/xclock/xterm session this profile installs none of
 		for user in users:
-			xinitrc = install_session.target / 'home' / user.username / '.xinitrc'
+			xinitrc = (
+				install_session.target
+				/ 'home'
+				/ user.username
+				/ '.xinitrc'
+			)
 			xinitrc.parent.mkdir(parents=True, exist_ok=True)
 			xinitrc.write_text('exec awesome\n')
 			debug(f'Wrote {xinitrc}')
 
-			install_session.chown_tree(user.username, f'/home/{user.username}/.xinitrc')
+			install_session.chown_tree(
+				user.username, f'/home/{user.username}/.xinitrc'
+			)

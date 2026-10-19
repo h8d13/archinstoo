@@ -6,7 +6,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.lib import hardware
-from archinstoo.lib.models.firmware import FIRMWARE_OPTDEPS, FirmwareConfiguration, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.firmware import (
+	FIRMWARE_OPTDEPS,
+	FirmwareConfiguration,
+	FirmwareType,
+	FirmwareVendor,
+)
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -21,7 +26,10 @@ def _si_field(text: str, key: str) -> set[str]:
 		if sep and not line.startswith(' '):
 			current = head.strip()
 		if current == key:
-			values.update(token.rstrip(':') for token in (rest if sep else line).split())
+			values.update(
+				token.rstrip(':')
+				for token in (rest if sep else line).split()
+			)
 	return {v for v in values if v.startswith('linux-firmware-')}
 
 
@@ -68,11 +76,16 @@ def test_sound_firmware_from_loaded_modules(
 ) -> None:
 	# /proc/modules: name size refcount deps state address
 	proc_modules = tmp_path / 'modules'
-	proc_modules.write_text(''.join(f'{m} 16384 0 - Live 0x0000000000000000\n' for m in modules))
+	proc_modules.write_text(
+		''.join(f'{m} 16384 0 - Live 0x0000000000000000\n' for m in modules)
+	)
 	monkeypatch.setattr(hardware, '_PROC_MODULES', proc_modules)
 	monkeypatch.setattr(hardware, '_sys_info', hardware._SysInfo())
 
-	assert (hardware.SysInfo.requires_sof_fw(), hardware.SysInfo.requires_alsa_fw()) == (sof, alsa)
+	assert (
+		hardware.SysInfo.requires_sof_fw(),
+		hardware.SysInfo.requires_alsa_fw(),
+	) == (sof, alsa)
 
 
 def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -100,7 +113,9 @@ def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
 		(False, FirmwareType.FULL),
 	],
 )
-def test_firmware_default_per_host(monkeypatch: pytest.MonkeyPatch, is_vm: bool, expected: FirmwareType) -> None:
+def test_firmware_default_per_host(
+	monkeypatch: pytest.MonkeyPatch, is_vm: bool, expected: FirmwareType
+) -> None:
 	monkeypatch.setattr(hardware.SysInfo, 'is_vm', staticmethod(lambda: is_vm))
 
 	assert FirmwareConfiguration.default().firmware_type is expected
@@ -115,9 +130,18 @@ def test_firmware_default_per_host(monkeypatch: pytest.MonkeyPatch, is_vm: bool,
 			['linux-firmware', 'linux-firmware-marvell'],
 		),
 		# MINIMAL is an explicit opt-out, a stale pick does not leak through
-		(FirmwareConfiguration(firmware_type=FirmwareType.MINIMAL, vendors=[FirmwareVendor.MARVELL]), []),
 		(
-			FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=[FirmwareVendor.INTEL]),
+			FirmwareConfiguration(
+				firmware_type=FirmwareType.MINIMAL,
+				vendors=[FirmwareVendor.MARVELL],
+			),
+			[],
+		),
+		(
+			FirmwareConfiguration(
+				firmware_type=FirmwareType.VENDOR,
+				vendors=[FirmwareVendor.INTEL],
+			),
 			['linux-firmware-intel'],
 		),
 	],
@@ -131,7 +155,10 @@ def test_firmware_packages(config: FirmwareConfiguration, expected: list[str]) -
 	[
 		FirmwareConfiguration(),
 		FirmwareConfiguration(vendors=[FirmwareVendor.QCOM]),
-		FirmwareConfiguration(firmware_type=FirmwareType.VENDOR, vendors=[FirmwareVendor.INTEL, FirmwareVendor.REALTEK]),
+		FirmwareConfiguration(
+			firmware_type=FirmwareType.VENDOR,
+			vendors=[FirmwareVendor.INTEL, FirmwareVendor.REALTEK],
+		),
 	],
 )
 def test_config_round_trip(config: FirmwareConfiguration) -> None:

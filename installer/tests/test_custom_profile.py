@@ -15,7 +15,9 @@ EXAMPLE = Path(__file__).parents[1] / 'examples' / 'custom.py'
 
 def test_example_profile_loads() -> None:
 	handler = ProfileHandler()
-	profile = handler.parse_profile_config({'path': str(EXAMPLE), 'details': ['xfce4']})
+	profile = handler.parse_profile_config(
+		{'path': str(EXAMPLE), 'details': ['xfce4']}
+	)
 
 	assert profile is not None
 	assert profile.name == 'CustomDesktop'
@@ -28,7 +30,11 @@ def test_url_path_not_fetched(monkeypatch: pytest.MonkeyPatch) -> None:
 	errors: list[str] = []
 	monkeypatch.setattr(profiles_handler, 'error', errors.append)
 
-	profile = ProfileHandler().parse_profile_config({'path': 'https://example.org/profile.py'})
+	profile = ProfileHandler().parse_profile_config(
+		{'path': 'https://example.org/profile.py'}
+	)
 
 	assert profile is None
-	assert errors == ['Custom profile file not found: https:/example.org/profile.py']
+	assert errors == [
+		'Custom profile file not found: https:/example.org/profile.py'
+	]

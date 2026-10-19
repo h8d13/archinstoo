@@ -1,6 +1,11 @@
 from typing import assert_never
 
-from archinstoo.lib.models.firmware import FIRMWARE_OPTDEPS, FirmwareConfiguration, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.firmware import (
+	FIRMWARE_OPTDEPS,
+	FirmwareConfiguration,
+	FirmwareType,
+	FirmwareVendor,
+)
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL, Kernel, kernel_names_error
 from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
 from archinstoo.lib.models.sysctl import SysctlConfiguration
@@ -63,14 +68,21 @@ def _prompt_kernel_names() -> list[str]:
 	base_header = 'Kernel package names, space separated (e.g. linux-rpi5)\n'
 	header, text = base_header, None
 
-	while (text := prompt_text('Custom kernels', header, text, kernel_names_error)) is not None:
+	while (
+		text := prompt_text('Custom kernels', header, text, kernel_names_error)
+	) is not None:
 		names = text.split()
 		Tui.print('Checking repositories...', clear_screen=True)
 		if not (missing := missing_packages(names)):
 			return names
 
 		text = ' '.join(n for n in names if n not in missing)
-		header = base_header + '\nNot found in the repositories: ' + ', '.join(missing) + '\n'
+		header = (
+			base_header
+			+ '\nNot found in the repositories: '
+			+ ', '.join(missing)
+			+ '\n'
+		)
 
 	return []
 
@@ -79,7 +91,9 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 	if preset is None:
 		preset = SwapConfiguration()
 
-	zram = prompt_yes_no('Would you like to use swap on zram?\n', preset.zram, default=True)
+	zram = prompt_yes_no(
+		'Would you like to use swap on zram?\n', preset.zram, default=True
+	)
 	if zram is None:
 		return preset
 
@@ -88,11 +102,17 @@ def select_swap(preset: SwapConfiguration | None = None) -> SwapConfiguration:
 	if zram:
 		algo_group = MenuItemGroup.from_enum(ZramAlgorithm)
 		algo = (
-			prompt_choice(algo_group, preset.algorithm, header='Select zram compression algorithm:\n', default=ZramAlgorithm.Default)
+			prompt_choice(
+				algo_group,
+				preset.algorithm,
+				header='Select zram compression algorithm:\n',
+				default=ZramAlgorithm.Default,
+			)
 			or preset.algorithm
 		)
 
-		# Ask for idle recompression algorithm (only if a specific primary algo was chosen)
+		# Ask for idle recompression algorithm (only if a specific
+		# primary algo was chosen)
 		if algo != ZramAlgorithm.Default:
 			recomp_algo = _select_recomp_algorithm(preset.recomp_algorithm)
 
@@ -115,13 +135,18 @@ def select_sysctl(preset: SysctlConfiguration | None = None) -> SysctlConfigurat
 		preset = SysctlConfiguration()
 
 	try:
-		opt_prompt = 'Apply optimized defaults? Network, security and performance tunables.\n'
+		opt_prompt = (
+			'Apply optimized defaults? Network, security and performance '
+			'tunables.\n'
+		)
 		optimized = prompt_yes_no(opt_prompt, preset.optimized, default=False)
 		if optimized is None:
 			optimized = preset.optimized
 
 		# custom entries only: the defaults live in their own drop-in
-		edited = edit_content(preset='\n'.join(preset.entries), title='Sysctl', mode='kvp')
+		edited = edit_content(
+			preset='\n'.join(preset.entries), title='Sysctl', mode='kvp'
+		)
 	except KeyboardInterrupt:
 		return SysctlConfiguration()
 
@@ -135,12 +160,17 @@ def select_sysctl(preset: SysctlConfiguration | None = None) -> SysctlConfigurat
 	return SysctlConfiguration(optimized=optimized, entries=tuple(entries))
 
 
-def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConfiguration:
+def select_firmware(
+	preset: FirmwareConfiguration | None = None,
+) -> FirmwareConfiguration:
 	# Host-dependent (MINIMAL in a VM), so it cannot be a signature default
 	default = FirmwareConfiguration.default()
 	preset = preset or default
 
-	header = 'Full installs the linux-firmware meta package, plus picked optional firmware.\n'
+	header = (
+		'Full installs the linux-firmware meta package, plus picked optional '
+		'firmware.\n'
+	)
 	header += 'Minimal skips firmware entirely (safe for most VMs using virtio).\n'
 	header += 'Vendor lets you pick only the firmware subpackages you need.\n'
 
@@ -174,7 +204,10 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 		# linux-firmware leaves its optdeps out, so they are opt-in here
 		choices = sorted(FIRMWARE_OPTDEPS)
 		title = 'Optional firmware'
-		vendor_header = 'Select optional firmware (none are pulled in by linux-firmware):'
+		vendor_header = (
+			'Select optional firmware (none are pulled in by '
+			'linux-firmware):'
+		)
 	else:
 		choices = list(FirmwareVendor)
 		title = 'Firmware vendors'
@@ -182,7 +215,9 @@ def select_firmware(preset: FirmwareConfiguration | None = None) -> FirmwareConf
 
 	# a pick saved under the other type may hold names this list lacks
 	kept = [v for v in preset.vendors if v in choices]
-	vendor_group = MenuItemGroup([MenuItem(v.value, value=v) for v in choices], sort_items=True)
+	vendor_group = MenuItemGroup(
+		[MenuItem(v.value, value=v) for v in choices], sort_items=True
+	)
 	vendor_group.set_selected_by_value(kept)
 
 	vendor_result = SelectMenu[FirmwareVendor](
@@ -212,5 +247,9 @@ def _select_recomp_algorithm(preset: ZramAlgorithm | None) -> ZramAlgorithm | No
 	prompt = 'Select idle recompression algorithm (skip for none):\n'
 
 	# Exclude Default since recompression needs a specific algorithm
-	recomp_items = [MenuItem(algo.value, value=algo) for algo in ZramAlgorithm if algo != ZramAlgorithm.Default]
+	recomp_items = [
+		MenuItem(algo.value, value=algo)
+		for algo in ZramAlgorithm
+		if algo != ZramAlgorithm.Default
+	]
 	return prompt_choice(recomp_items, preset, header=prompt)

@@ -76,5 +76,9 @@ def test_resume_parses_partition_without_mountpoint(config_fixture: Path) -> Non
 
 	assert config is not None
 	parsed = config.device_modifications[0].partitions
-	assert [str(p.mountpoint) if p.mountpoint else None for p in parsed] == ['/boot', '/', None]
+	assert [str(p.mountpoint) if p.mountpoint else None for p in parsed] == [
+		'/boot',
+		'/',
+		None,
+	]
 	assert all(p.dev_path is None for p in parsed)

@@ -14,8 +14,15 @@ from archinstoo.lib.pm.tmpdb import TmpDB
 _PCI_VENDOR_AMD = 0x1002  # ATI's ID, every AMD GPU still carries it
 _PCI_VENDOR_INTEL = 0x8086
 _PCI_VENDOR_NVIDIA = 0x10DE
-_GFX_BY_VENDOR: dict[int, GfxDriver] = {_PCI_VENDOR_AMD: GfxDriver.AmdOpenSource, _PCI_VENDOR_INTEL: GfxDriver.IntelOpenSource}
-_GPU_VENDORS: dict[int, str] = {_PCI_VENDOR_AMD: 'amd', _PCI_VENDOR_INTEL: 'intel', _PCI_VENDOR_NVIDIA: 'nvidia'}
+_GFX_BY_VENDOR: dict[int, GfxDriver] = {
+	_PCI_VENDOR_AMD: GfxDriver.AmdOpenSource,
+	_PCI_VENDOR_INTEL: GfxDriver.IntelOpenSource,
+}
+_GPU_VENDORS: dict[int, str] = {
+	_PCI_VENDOR_AMD: 'amd',
+	_PCI_VENDOR_INTEL: 'intel',
+	_PCI_VENDOR_NVIDIA: 'nvidia',
+}
 # nvidia-open needs the GSP, so Turing on: TU102 opens at 0x1e02 and every
 # later generation numbers higher. Volta (GV100, 0x1d81) stays below
 _NVIDIA_TURING_FIRST = 0x1E00
@@ -24,7 +31,17 @@ _NVIDIA_TURING_FIRST = 0x1E00
 _SYS_BUS = Path('/sys/bus')
 _PCI_BUS = _SYS_BUS / 'pci/devices'
 # amps enumerate on acpi and bind on i2c/spi, codecs on hdaudio, SoC blocks on platform
-_MODULE_BUSES = ('pci', 'usb', 'acpi', 'hdaudio', 'i2c', 'platform', 'sdio', 'soundwire', 'spi')
+_MODULE_BUSES = (
+	'pci',
+	'usb',
+	'acpi',
+	'hdaudio',
+	'i2c',
+	'platform',
+	'sdio',
+	'soundwire',
+	'spi',
+)
 _MODULE_ROOT = Path('/usr/lib/modules')
 _DMI_CHASSIS = Path('/sys/class/dmi/id/chassis_type')
 # SMBIOS portable chassis: chwd's laptop set plus sub notebook and detachable
@@ -50,7 +67,11 @@ def module_release() -> str:
 	if (_MODULE_ROOT / release).is_dir():
 		return release
 
-	installed = sorted(p.name for p in _MODULE_ROOT.glob('*') if (p / 'modules.alias').is_file())
+	installed = sorted(
+		p.name
+		for p in _MODULE_ROOT.glob('*')
+		if (p / 'modules.alias').is_file()
+	)
 	if len(installed) == 1:
 		debug(f'No modules for running kernel {release}, using {installed[0]}')
 		return installed[0]
@@ -77,7 +98,12 @@ def gpu_ids() -> set[tuple[int, int]]:
 		try:
 			if not (dev / 'class').read_text().startswith('0x03'):
 				continue
-			found.add((int((dev / 'vendor').read_text(), 16), int((dev / 'device').read_text(), 16)))
+			found.add(
+				(
+					int((dev / 'vendor').read_text(), 16),
+					int((dev / 'device').read_text(), 16),
+				)
+			)
 		except OSError, ValueError:
 			continue
 
@@ -86,7 +112,9 @@ def gpu_ids() -> set[tuple[int, int]]:
 
 def gpu_vendors(gpus: set[tuple[int, int]]) -> list[str]:
 	# known vendors only: a server's BMC (ASPEED) is display class too
-	return sorted({_GPU_VENDORS[vendor] for vendor, _ in gpus if vendor in _GPU_VENDORS})
+	return sorted(
+		{_GPU_VENDORS[vendor] for vendor, _ in gpus if vendor in _GPU_VENDORS}
+	)
 
 
 def gfx_drivers(gpus: set[tuple[int, int]]) -> list[GfxDriver]:
@@ -95,7 +123,11 @@ def gfx_drivers(gpus: set[tuple[int, int]]) -> list[GfxDriver]:
 	for vendor, device in sorted(gpus):
 		driver = _GFX_BY_VENDOR.get(vendor)
 		if vendor == _PCI_VENDOR_NVIDIA:
-			driver = GfxDriver.NvidiaOpenKernel if device >= _NVIDIA_TURING_FIRST else GfxDriver.NvidiaOpenSource
+			driver = (
+				GfxDriver.NvidiaOpenKernel
+				if device >= _NVIDIA_TURING_FIRST
+				else GfxDriver.NvidiaOpenSource
+			)
 		if driver and driver not in drivers:
 			drivers.append(driver)
 	return drivers
@@ -144,7 +176,11 @@ def _bus_modules(bus: Path, release: str) -> set[str]:
 			continue
 
 		if alias := _modalias(dev):
-			modules.update(_run_splitlines(['modprobe', '-S', release, '-R', alias]))
+			modules.update(
+				_run_splitlines(
+					['modprobe', '-S', release, '-R', alias]
+				)
+			)
 
 	return modules
 
@@ -156,7 +192,9 @@ def _wrapped_parents(release: str, module: str) -> set[str]:
 	# btrtl, btmtk and btbcm alike and picks one per device at probe.
 	# modinfo prints dashes here where it answers to underscores.
 	parents: set[str] = set()
-	for line in _run_splitlines(['modinfo', '-k', release, '-F', 'depends', module]):
+	for line in _run_splitlines(
+		['modinfo', '-k', release, '-F', 'depends', module]
+	):
 		deps = (d.replace('-', '_') for d in line.split(',') if d)
 		parents.update(d for d in deps if module.startswith(d + '_'))
 
@@ -182,7 +220,9 @@ def declared_firmware(release: str, modules: set[str]) -> dict[str, set[str]]:
 	# Modules declaring nothing are left out
 	declared: dict[str, set[str]] = {}
 	for module in sorted(modules):
-		if names := _run_splitlines(['modinfo', '-k', release, '-F', 'firmware', module]):
+		if names := _run_splitlines(
+			['modinfo', '-k', release, '-F', 'firmware', module]
+		):
 			declared[module] = set(names)
 
 	return declared
@@ -197,20 +237,28 @@ def firmware_index() -> dict[str, str]:
 	if not db.sync_files():
 		return {}
 
-	return {path.removeprefix(_FIRMWARE_DIR).removesuffix('.zst'): pkg for pkg, path in db.files() if path.startswith(_FIRMWARE_DIR)}
+	return {
+		path.removeprefix(_FIRMWARE_DIR).removesuffix('.zst'): pkg
+		for pkg, path in db.files()
+		if path.startswith(_FIRMWARE_DIR)
+	}
 
 
 def owners(declared: set[str], index: dict[str, str]) -> set[str]:
 	found: set[str] = set()
 	for entry in declared:
 		if any(c in entry for c in '*?['):
-			found.update(index[path] for path in fnmatch.filter(index, entry))
+			found.update(
+				index[path] for path in fnmatch.filter(index, entry)
+			)
 		elif pkg := index.get(entry):
 			found.add(pkg)
 	return found
 
 
-def firmware_splits(declared: dict[str, set[str]], index: dict[str, str]) -> dict[FirmwareVendor, list[str]]:
+def firmware_splits(
+	declared: dict[str, set[str]], index: dict[str, str]
+) -> dict[FirmwareVendor, list[str]]:
 	# split -> the modules whose declared blobs it ships
 	members = {v.value: v for v in FirmwareVendor}
 	splits: dict[FirmwareVendor, list[str]] = {}
@@ -219,7 +267,10 @@ def firmware_splits(declared: dict[str, set[str]], index: dict[str, str]) -> dic
 			if pkg in members:
 				splits.setdefault(members[pkg], []).append(module)
 			elif pkg.startswith('linux-firmware-'):
-				debug(f'Firmware split {pkg} is not a FirmwareVendor member')
+				debug(
+					f'Firmware split {pkg} is not a '
+					'FirmwareVendor member'
+				)
 
 	return dict(sorted(splits.items()))
 

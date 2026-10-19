@@ -22,7 +22,11 @@ if TYPE_CHECKING:
 def _calc_checksum(icmp_packet: bytes) -> int:
 	checksum = 0
 	for i in range(0, len(icmp_packet), 2):
-		checksum += (icmp_packet[i] << 8) + (struct.unpack('B', icmp_packet[i + 1 : i + 2])[0] if len(icmp_packet[i + 1 : i + 2]) else 0)
+		checksum += (icmp_packet[i] << 8) + (
+			struct.unpack('B', icmp_packet[i + 1 : i + 2])[0]
+			if len(icmp_packet[i + 1 : i + 2])
+			else 0
+		)
 	checksum = (checksum >> 16) + (checksum & 0xFFFF)
 	return ~checksum & 0xFFFF
 
@@ -39,7 +43,9 @@ def ping(hostname: str, timeout: int = 5) -> int:
 	started = time.monotonic()
 	random_identifier = f'archinstoo-{random.randint(1000, 9999)}'.encode()  # noqa: S311 - ICMP echo id, not for crypto
 
-	icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+	icmp_socket = socket.socket(
+		socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP
+	)
 	watchdog.register(icmp_socket, select.EPOLLIN | select.EPOLLHUP)
 
 	icmp_packet = _build_icmp(random_identifier)
@@ -51,8 +57,14 @@ def ping(hostname: str, timeout: int = 5) -> int:
 			for _fileno, _event in watchdog.poll(0.1):
 				response, _ = icmp_socket.recvfrom(1024)
 				icmp_type = struct.unpack('!B', response[20:21])[0]
-				if icmp_type == 0 and response[-len(random_identifier) :] == random_identifier:
-					latency = round((time.monotonic() - started) * 1000)
+				if (
+					icmp_type == 0
+					and response[-len(random_identifier) :]
+					== random_identifier
+				):
+					latency = round(
+						(time.monotonic() - started) * 1000
+					)
 					break
 		except OSError:
 			break
@@ -71,22 +83,36 @@ class DownloadTimer:
 		self.time: float | None = None
 		self.start_time: float | None = None
 		self.timeout = timeout
-		self.previous_handler: Callable[[int, FrameType | None], object] | int | signal.Handlers | None = None
+		self.previous_handler: (
+			Callable[[int, FrameType | None], object]
+			| int
+			| signal.Handlers
+			| None
+		) = None
 		self.previous_timer: int | None = None
 
 	def raise_timeout(self, _signl: int, _frame: FrameType | None) -> None:
 		# Raise the DownloadTimeoutError with time
-		raise DownloadTimeoutError(f'Download timed out after {self.timeout} second(s).')
+		raise DownloadTimeoutError(
+			f'Download timed out after {self.timeout} second(s).'
+		)
 
 	def __enter__(self) -> Self:
 		if self.timeout > 0:
-			self.previous_handler = signal.signal(signal.SIGALRM, self.raise_timeout)
+			self.previous_handler = signal.signal(
+				signal.SIGALRM, self.raise_timeout
+			)
 			self.previous_timer = signal.alarm(self.timeout)
 
 		self.start_time = time.monotonic()
 		return self
 
-	def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
+	def __exit__(
+		self,
+		exc_type: type[BaseException] | None,
+		exc_value: BaseException | None,
+		traceback: TracebackType | None,
+	) -> None:
 		if self.start_time:
 			time_delta = time.monotonic() - self.start_time
 			signal.alarm(0)
@@ -96,8 +122,11 @@ class DownloadTimer:
 
 				previous_timer = self.previous_timer
 				if previous_timer and previous_timer > 0:
-					remaining_time = int(previous_timer - time_delta)
-					# The alarm should have been raised during the download.
+					remaining_time = int(
+						previous_timer - time_delta
+					)
+					# The alarm should have been raised
+					# during the download.
 					if remaining_time <= 0:
 						signal.raise_signal(signal.SIGALRM)
 					else:
@@ -114,7 +143,9 @@ def _urlopen_checked(url: str, timeout: int) -> HTTPResponse:
 	return resp
 
 
-def fetch_data_from_url(url: str, params: dict[str, str] | None = None, timeout: int = 30) -> str:
+def fetch_data_from_url(
+	url: str, params: dict[str, str] | None = None, timeout: int = 30
+) -> str:
 	if params is not None:
 		encoded = urlencode(params)
 		full_url = f'{url}?{encoded}'

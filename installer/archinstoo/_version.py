@@ -39,11 +39,25 @@ _SRC = str(_PKGBUILD.parent)
 
 
 def git_shash() -> str:
-	return subprocess.check_output(['git', '-C', _SRC, 'rev-parse', '--short', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()  # noqa: S603,S607 - fixed argv, git from $PATH
+	return (
+		subprocess.check_output(  # noqa: S603 - fixed argv
+			['git', '-C', _SRC, 'rev-parse', '--short', 'HEAD'],  # noqa: S607 - git from $PATH
+			stderr=subprocess.DEVNULL,
+		)
+		.decode('ascii')
+		.strip()
+	)
 
 
 def git_branch() -> str:
-	return subprocess.check_output(['git', '-C', _SRC, 'rev-parse', '--abbrev-ref', 'HEAD'], stderr=subprocess.DEVNULL).decode('ascii').strip()  # noqa: S603,S607 - fixed argv, git from $PATH
+	return (
+		subprocess.check_output(  # noqa: S603 - fixed argv
+			['git', '-C', _SRC, 'rev-parse', '--abbrev-ref', 'HEAD'],  # noqa: S607 - git from $PATH
+			stderr=subprocess.DEVNULL,
+		)
+		.decode('ascii')
+		.strip()
+	)
 
 
 # no git binary (OSError) or not a repo (CalledProcessError): an installed

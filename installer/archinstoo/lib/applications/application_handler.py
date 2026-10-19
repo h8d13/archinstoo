@@ -27,13 +27,21 @@ class ApplicationHandler:
 	def __init__(self) -> None:
 		pass
 
-	def install_applications(self, install_session: Installer, app_config: ApplicationConfiguration, users: list[User] | None = None) -> None:
+	def install_applications(
+		self,
+		install_session: Installer,
+		app_config: ApplicationConfiguration,
+		users: list[User] | None = None,
+	) -> None:
 		info('Installing applications', step=True)
 
 		if app_config.bluetooth_config and app_config.bluetooth_config.enabled:
 			BluetoothApp().install(install_session)
 
-		if app_config.thunderbolt_config and app_config.thunderbolt_config.enabled:
+		if (
+			app_config.thunderbolt_config
+			and app_config.thunderbolt_config.enabled
+		):
 			ThunderboltApp().install(install_session)
 
 		if app_config.audio_config:
@@ -43,7 +51,10 @@ class ApplicationHandler:
 				users,
 			)
 
-		if app_config.media_codecs_config and app_config.media_codecs_config.enabled:
+		if (
+			app_config.media_codecs_config
+			and app_config.media_codecs_config.enabled
+		):
 			MediaCodecsApp().install(install_session)
 
 		if app_config.flatpak_config and app_config.flatpak_config.enabled:
@@ -61,7 +72,10 @@ class ApplicationHandler:
 				app_config.cpu_scheduler_config,
 			)
 
-		if app_config.print_service_config and app_config.print_service_config.enabled:
+		if (
+			app_config.print_service_config
+			and app_config.print_service_config.enabled
+		):
 			PrintServiceApp().install(install_session)
 
 		if app_config.firewall_config:

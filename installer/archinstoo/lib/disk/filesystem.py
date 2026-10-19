@@ -33,7 +33,11 @@ if TYPE_CHECKING:
 	from .luks import Luks2
 
 
-_CHANGE_LABEL = {ModificationStatus.CREATE: 'create', ModificationStatus.MODIFY: 'format', ModificationStatus.DELETE: 'delete'}
+_CHANGE_LABEL = {
+	ModificationStatus.CREATE: 'create',
+	ModificationStatus.MODIFY: 'format',
+	ModificationStatus.DELETE: 'delete',
+}
 
 
 # the VG is smaller than the PVs (metadata), so volumes sized off the PVs ask
@@ -50,19 +54,28 @@ def lvm_overcommit_offset(desired: Size, avail: Size) -> Size | None:
 
 
 def pending_changes(device_mods: list[DeviceModification]) -> list[str]:
-	# "Starting device modifications" read as a whole-disk wipe to people keeping Windows
+	# "Starting device modifications" read as a whole-disk wipe to
+	# people keeping Windows
 	# on the same SSD; spell out what is touched https://github.com/archlinux/archinstall/issues/2334
 	lines = ['Pending disk changes:']
 	for mod in device_mods:
 		if mod.wipe:
-			lines.append(f'  wipe    {mod.device_path} (every partition on it)')
+			lines.append(
+				f'  wipe    {mod.device_path} (every partition on it)'
+			)
 			continue
 		for part in mod.partitions:
 			if part.status == ModificationStatus.EXIST:
 				continue
-			target = part.dev_path or f'{mod.device_path} +{part.length.format_highest()}'
+			target = (
+				part.dev_path
+				or f'{mod.device_path} +{part.length.format_highest()}'
+			)
 			fs = part.fs_type.value if part.fs_type else ''
-			lines.append(f'  {_CHANGE_LABEL[part.status]:<8}{target} {fs} {part.mountpoint or ""}'.rstrip())
+			lines.append(
+				f'  {_CHANGE_LABEL[part.status]:<8}{target} '
+				f'{fs} {part.mountpoint or ""}'.rstrip()
+			)
 	return lines
 
 
@@ -78,20 +91,35 @@ class FilesystemHandler:
 
 	def perform_filesystem_operations(self, show_countdown: bool = True) -> None:
 		if self._disk_config.config_type == DiskLayoutType.Pre_mount:
-			debug('Disk layout configuration is set to pre-mount, not performing any operations')
+			debug(
+				'Disk layout configuration is set to '
+				'pre-mount, not performing any operations'
+			)
 			return
 
-		device_mods = [d for d in self._disk_config.device_modifications if d.partitions]
+		device_mods = [
+			d
+			for d in self._disk_config.device_modifications
+			if d.partitions
+		]
 
 		if not device_mods:
 			debug('No modifications required')
 			return
 
-		# skip devices that aren't being wiped and have no new/modified partitions
-		active_mods = [d for d in device_mods if d.wipe or any(p.is_create_or_modify() for p in d.partitions)]
+		# skip devices that aren't being wiped and have no
+		# new/modified partitions
+		active_mods = [
+			d
+			for d in device_mods
+			if d.wipe or any(p.is_create_or_modify() for p in d.partitions)
+		]
 
 		if not active_mods:
-			debug('No disk operations required (all partitions are existing)')
+			debug(
+				'No disk operations required (all partitions '
+				'are existing)'
+			)
 			return
 
 		if show_countdown:
@@ -111,9 +139,15 @@ class FilesystemHandler:
 
 		if self._disk_config.lvm_config:
 			for mod in device_mods:
-				boot_part = mod.get_boot_partition() or mod.get_efi_partition()
+				boot_part = (
+					mod.get_boot_partition()
+					or mod.get_efi_partition()
+				)
 				if boot_part:
-					debug(f'Formatting boot partition: {boot_part.dev_path}')
+					debug(
+						'Formatting boot partition: '
+						f'{boot_part.dev_path}'
+					)
 					self._format_partitions([boot_part])
 
 			self.perform_lvm_operations()
@@ -122,28 +156,49 @@ class FilesystemHandler:
 				self._format_partitions(mod.partitions)
 
 				for part_mod in mod.partitions:
-					if part_mod.fs_type == FilesystemType.BTRFS and part_mod.is_create_or_modify():
-						self._device_handler.create_btrfs_volumes(part_mod, enc_conf=self._enc_config)
+					if (
+						part_mod.fs_type == FilesystemType.BTRFS
+						and part_mod.is_create_or_modify()
+					):
+						self._device_handler.create_btrfs_volumes(
+							part_mod,
+							enc_conf=self._enc_config,
+						)
 
 	def _format_partitions(
 		self,
 		partitions: list[PartitionModification],
 	) -> None:
 		# Format can be given an overriding path, for instance /dev/null to test
-		# the formatting functionality and in essence the support for the given filesystem.
-		# don't touch existing partitions or raw partitions (e.g. BIOS boot ef02), or LVM PVs (pvcreate handles those)
-		create_or_modify_parts = [p for p in partitions if p.is_create_or_modify() and p.fs_type is not None and p.fs_type is not FilesystemType.LVM]
+		# the formatting functionality and in essence the support for the given
+		# filesystem. don't touch existing partitions or raw partitions (e.g.
+		# BIOS boot ef02), or LVM PVs (pvcreate handles those)
+		create_or_modify_parts = [
+			p
+			for p in partitions
+			if p.is_create_or_modify()
+			and p.fs_type is not None
+			and p.fs_type is not FilesystemType.LVM
+		]
 
 		self._validate_partitions(create_or_modify_parts)
 
 		for part_mod in create_or_modify_parts:
 			# partition will be encrypted
-			if self._enc_config is not None and part_mod in self._enc_config.partitions:
+			if (
+				self._enc_config is not None
+				and part_mod in self._enc_config.partitions
+			):
 				# GRUB has limited memory for argon2 decryption;
-				# use reduced pbkdf memory and iter time so GRUB can decrypt /boot
+				# use reduced pbkdf memory and iter time so
+				# GRUB can decrypt /boot
 				is_boot = part_mod.is_boot()
 				uses_argon2 = self._enc_config.pbkdf.is_argon2
-				pbkdf_memory = BOOT_PBKDF_MEMORY if is_boot and uses_argon2 else None
+				pbkdf_memory = (
+					BOOT_PBKDF_MEMORY
+					if is_boot and uses_argon2
+					else None
+				)
 				iter_time = BOOT_ITER_TIME if is_boot else None
 
 				self._device_handler.format_encrypted(
@@ -155,12 +210,16 @@ class FilesystemHandler:
 					iter_time=iter_time,
 				)
 			else:
-				self._device_handler.format(part_mod.safe_fs_type, part_mod.safe_dev_path)
+				self._device_handler.format(
+					part_mod.safe_fs_type, part_mod.safe_dev_path
+				)
 
 			# synchronize with udev before using lsblk
 			self._device_handler.udev_sync()
 
-			lsblk_info = self._device_handler.fetch_part_info(part_mod.safe_dev_path)
+			lsblk_info = self._device_handler.fetch_part_info(
+				part_mod.safe_dev_path
+			)
 
 			part_mod.partn = lsblk_info.partn
 			part_mod.partuuid = lsblk_info.partuuid
@@ -168,12 +227,19 @@ class FilesystemHandler:
 
 	def _validate_partitions(self, partitions: list[PartitionModification]) -> None:
 		checks = {
-			# verify that all partitions have a path set (which implies that they have been created)
-			lambda x: x.dev_path is None: ValueError('When formatting, all partitions must have a path set'),
+			# verify that all partitions have a path set (which implies that
+			# they have been created)
+			lambda x: x.dev_path is None: ValueError(
+				'When formatting, all partitions must have a path set'
+			),
 			# crypto luks is not a valid file system type
-			lambda x: x.fs_type is FilesystemType.CRYPTO_LUKS: ValueError('Crypto luks cannot be set as a filesystem type'),
+			lambda x: x.fs_type is FilesystemType.CRYPTO_LUKS: ValueError(
+				'Crypto luks cannot be set as a filesystem type'
+			),
 			# file system type must be set
-			lambda x: x.fs_type is None: ValueError('File system type must be set for modification'),
+			lambda x: x.fs_type is None: ValueError(
+				'File system type must be set for modification'
+			),
 		}
 
 		for check, exc in checks.items():
@@ -195,9 +261,13 @@ class FilesystemHandler:
 			self._setup_lvm(self._disk_config.lvm_config)
 			self._format_lvm_vols(self._disk_config.lvm_config)
 
-	def _setup_lvm_encrypted(self, lvm_config: LvmConfiguration, enc_config: DiskEncryption) -> None:
+	def _setup_lvm_encrypted(
+		self, lvm_config: LvmConfiguration, enc_config: DiskEncryption
+	) -> None:
 		if enc_config.encryption_type == EncryptionType.LVM_ON_LUKS:
-			enc_mods = self._encrypt_partitions(enc_config, lock_after_create=False)
+			enc_mods = self._encrypt_partitions(
+				enc_config, lock_after_create=False
+			)
 
 			self._setup_lvm(lvm_config, enc_mods)
 			self._format_lvm_vols(lvm_config)
@@ -211,7 +281,8 @@ class FilesystemHandler:
 			self._format_lvm_vols(lvm_config, enc_vols)
 
 			# Lock LUKS devices but keep LVM active
-			# LVM volumes must remain active for later re-unlock during installation
+			# LVM volumes must remain active for later
+			# re-unlock during installation
 			for luks in enc_vols.values():
 				luks.lock()
 
@@ -236,20 +307,31 @@ class FilesystemHandler:
 			if not vg_info:
 				raise ValueError('Unable to fetch VG info')
 
-			desired_size = sum((vol.length for vol in vg.volumes), Size(0, Unit.B, SectorSize.default()))
-			max_vol_offset = lvm_overcommit_offset(desired_size, vg_info.vg_size)
+			desired_size = sum(
+				(vol.length for vol in vg.volumes),
+				Size(0, Unit.B, SectorSize.default()),
+			)
+			max_vol_offset = lvm_overcommit_offset(
+				desired_size, vg_info.vg_size
+			)
 			max_vol = max(vg.volumes, key=lambda x: x.length)
 
 			for lv in vg.volumes:
 				offset = max_vol_offset if lv == max_vol else None
 
-				debug(f'vg: {vg.name}, vol: {lv.name}, offset: {offset}')
+				debug(
+					f'vg: {vg.name}, vol: {lv.name}, '
+					f'offset: {offset}'
+				)
 				self._device_handler.lvm_vol_create(vg.name, lv, offset)
 
 				attempt = 0
 				while True:
 					attempt += 1
-					debug(f'Waiting for LVM volume {lv.name} (attempt {attempt})')
+					debug(
+						f'Waiting for LVM volume {lv.name} '
+						f'(attempt {attempt})'
+					)
 					if lvm_vol_info(lv.name) is not None:
 						break
 
@@ -278,7 +360,9 @@ class FilesystemHandler:
 			self._device_handler.format(vol.fs_type, path)
 
 			if vol.fs_type == FilesystemType.BTRFS:
-				self._device_handler.create_lvm_btrfs_subvolumes(path, vol.btrfs_subvols, vol.mount_options)
+				self._device_handler.create_lvm_btrfs_subvolumes(
+					path, vol.btrfs_subvols, vol.mount_options
+				)
 
 	def _lvm_create_pvs(
 		self,
@@ -358,11 +442,20 @@ class FilesystemHandler:
 			for part_mod in filtered_part:
 				if part_mod in enc_config.partitions:
 					# GRUB has limited memory for argon2 decryption;
-					# use reduced pbkdf memory and iter time for /boot so GRUB can decrypt it
+					# use reduced pbkdf memory and iter time for
+					# /boot so GRUB can decrypt it
 					is_boot = part_mod.is_boot()
 					uses_argon2 = enc_config.pbkdf.is_argon2
-					pbkdf_memory = BOOT_PBKDF_MEMORY if is_boot and uses_argon2 else None
-					iter_time = BOOT_ITER_TIME if is_boot else enc_config.iter_time
+					pbkdf_memory = (
+						BOOT_PBKDF_MEMORY
+						if is_boot and uses_argon2
+						else None
+					)
+					iter_time = (
+						BOOT_ITER_TIME
+						if is_boot
+						else enc_config.iter_time
+					)
 
 					luks_handler = self._device_handler.encrypt(
 						part_mod.safe_dev_path,
@@ -381,8 +474,8 @@ class FilesystemHandler:
 
 	def _lvm_vol_handle_e2scrub(self, vol_gp: LvmVolumeGroup) -> None:
 		# from arch wiki:
-		# If a logical volume will be formatted with ext4, leave at least 256 MiB
-		# free space in the volume group to allow using e2scrub
+		# If a logical volume will be formatted with ext4, leave at least 256
+		# MiB free space in the volume group to allow using e2scrub
 		if any(vol.fs_type == FilesystemType.EXT4 for vol in vol_gp.volumes):
 			largest_vol = max(vol_gp.volumes, key=lambda x: x.length)
 

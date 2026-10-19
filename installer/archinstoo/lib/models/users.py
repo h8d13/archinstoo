@@ -56,7 +56,9 @@ class PasswordStrength(Enum):
 		upper = any(character.isupper() for character in password)
 		lower = any(character.islower() for character in password)
 		symbol = any(not character.isalnum() for character in password)
-		return cls._check_password_strength(digit, upper, lower, symbol, len(password))
+		return cls._check_password_strength(
+			digit, upper, lower, symbol, len(password)
+		)
 
 	@classmethod
 	def _check_password_strength(
@@ -124,7 +126,9 @@ class Password:
 		enc_password: str | None = None,
 	) -> None:
 		if not plaintext and not enc_password:
-			raise ValueError('Either plaintext or enc_password must be provided')
+			raise ValueError(
+				'Either plaintext or enc_password must be provided'
+			)
 
 		self._plaintext = plaintext
 		self.enc_password = enc_password
@@ -137,7 +141,10 @@ class Password:
 	def __eq__(self, other: object) -> bool:
 		if not isinstance(other, Password):
 			return NotImplemented
-		return (self._plaintext, self.enc_password) == (other._plaintext, other.enc_password)
+		return (self._plaintext, self.enc_password) == (
+			other._plaintext,
+			other.enc_password,
+		)
 
 	@override
 	def __hash__(self) -> int:
@@ -173,7 +180,8 @@ class User:
 		}
 
 	def json(self) -> UserSerialization:
-		# enc_password is intentionally never serialized (re-prompted on config load), like root_enc_password
+		# enc_password is intentionally never serialized (re-prompted on config
+		# load), like root_enc_password
 		return {
 			'username': self.username,
 			'elev': self.elev,
@@ -199,7 +207,11 @@ class User:
 				continue
 
 			enc_password = entry.get('enc_password')
-			password = Password(enc_password=enc_password) if enc_password else None
+			password = (
+				Password(enc_password=enc_password)
+				if enc_password
+				else None
+			)
 
 			user = cls(
 				username=username,
@@ -207,7 +219,9 @@ class User:
 				elev=entry.get('elev', False) is True,
 				groups=entry.get('groups') or [],
 				stash_urls=entry.get('stash_urls', []),
-				shell=Shell(entry['shell']) if 'shell' in entry else Shell.BASH,
+				shell=Shell(entry['shell'])
+				if 'shell' in entry
+				else Shell.BASH,
 			)
 
 			users.append(user)

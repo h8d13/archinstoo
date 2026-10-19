@@ -1,6 +1,14 @@
 from dataclasses import dataclass, fields
 from enum import Enum, StrEnum, auto
-from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, get_args, get_origin
+from typing import (
+	TYPE_CHECKING,
+	Any,
+	NotRequired,
+	Self,
+	TypedDict,
+	get_args,
+	get_origin,
+)
 
 if TYPE_CHECKING:
 	from collections.abc import Mapping
@@ -300,7 +308,8 @@ class ApplicationConfiguration:
 
 	@classmethod
 	def _config_parsers(cls) -> dict[str, type]:
-		# every field is `<Category>Configuration | None`; the class is the first arm
+		# every field is `<Category>Configuration | None`; the
+		# class is the first arm
 		return {f.name: get_args(f.type)[0] for f in fields(cls)}
 
 	@property
@@ -319,14 +328,23 @@ class ApplicationConfiguration:
 		if args:
 			for attr, parser_cls in cls._config_parsers().items():
 				if (value := args.get(attr)) is not None:
-					setattr(app_config, attr, parser_cls.parse_arg(value))  # type: ignore[attr-defined]
-					# a new category is a field here and in ApplicationSerialization;
-					# the rest of the flow is in .github/API_REF.md, "Add an application"
+					setattr(
+						app_config,
+						attr,
+						parser_cls.parse_arg(value),  # type: ignore[attr-defined]
+					)
+					# a new category is a field here and in
+					# ApplicationSerialization; the rest of the flow
+					# is in .github/API_REF.md, "Add an application"
 
 		return app_config
 
 	def json(self) -> ApplicationSerialization:
-		return {attr: obj.json() for attr in self._config_parsers() if (obj := getattr(self, attr))}  # type: ignore[return-value]
+		return {
+			attr: obj.json()
+			for attr in self._config_parsers()
+			if (obj := getattr(self, attr))
+		}  # type: ignore[return-value]
 
 
 def terminal_for(app_config: ApplicationConfiguration | None) -> str:

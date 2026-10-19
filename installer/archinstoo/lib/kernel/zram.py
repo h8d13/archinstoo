@@ -11,11 +11,15 @@ if TYPE_CHECKING:
 ZRAM_PACKAGES = ['zram-generator']
 
 
-def setup_zram(installation: Installer, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None) -> None:
+def setup_zram(
+	installation: Installer, algo: ZramAlgorithm, recomp_algo: ZramAlgorithm | None
+) -> None:
 	info('Setting up swap on zram')
 	installation.pacman.strap(ZRAM_PACKAGES)
 
-	with (installation.target / 'etc/systemd/zram-generator.conf').open('w') as zram_conf:
+	with (installation.target / 'etc/systemd/zram-generator.conf').open(
+		'w'
+	) as zram_conf:
 		zram_conf.write('[zram0]\n')
 		zram_conf.write('zram-size = ram / 2\n')
 		if algo != ZramAlgorithm.Default:

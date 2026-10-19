@@ -61,7 +61,9 @@ def fake_menu(monkeypatch: pytest.MonkeyPatch) -> type[FakeMenu]:
 
 @pytest.mark.parametrize('profile_cls', SEAT_PROFILES)
 @pytest.mark.parametrize('seat', list(SeatAccess))
-def test_chosen_seat_package_is_installed(profile_cls: type[WaylandProfile], seat: SeatAccess) -> None:
+def test_chosen_seat_package_is_installed(
+	profile_cls: type[WaylandProfile], seat: SeatAccess
+) -> None:
 	# enabling seatd.service without the seatd package exits 1 and aborts the
 	# install; the logind path needs the polkit package for the same reason
 	profile = profile_cls()
@@ -85,7 +87,9 @@ def test_only_seatd_ships_a_unit() -> None:
 
 
 @pytest.mark.parametrize('seat', list(SeatAccess))
-def test_saved_choice_preselects_and_saves_plain_string(seat: SeatAccess, fake_menu: type[FakeMenu]) -> None:
+def test_saved_choice_preselects_and_saves_plain_string(
+	seat: SeatAccess, fake_menu: type[FakeMenu]
+) -> None:
 	# custom_settings stores the plain string, the menu items carry the member
 	picked = select_seat_access('Sway', seat.value)
 

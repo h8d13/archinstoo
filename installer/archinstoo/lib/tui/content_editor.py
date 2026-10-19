@@ -82,10 +82,14 @@ class ContentEditor:
 				display_line = line[:available_width]
 
 				line_style = normal
-				if self._mode == 'kvp' and not self._is_line_valid(line):
+				if self._mode == 'kvp' and not self._is_line_valid(
+					line
+				):
 					line_style = highlight
 
-				screen.addstr(y_pos, line_num_width, display_line, line_style)
+				screen.addstr(
+					y_pos, line_num_width, display_line, line_style
+				)
 			else:
 				# Empty line indicator
 				screen.addstr(y_pos, line_num_width - 2, '~', normal)
@@ -95,16 +99,25 @@ class ContentEditor:
 		screen.addstr(status_y, 0, Chars.Horizontal * max_x, normal)
 
 		if self._error_msg:
-			screen.addstr(status_y + 1, 0, self._error_msg[: max_x - 1], highlight)
+			screen.addstr(
+				status_y + 1, 0, self._error_msg[: max_x - 1], highlight
+			)
 		else:
 			pos_info = f'Ln {self._cursor_y + 1}, Col {self._cursor_x + 1}'
 			help_text = 'F2:save  F10/Esc:cancel  Ctrl-C:clear  Ctrl-Q:quit'
 			screen.addstr(status_y + 1, 0, help_text, normal)
-			screen.addstr(status_y + 1, max_x - len(pos_info) - 1, pos_info, normal)
+			screen.addstr(
+				status_y + 1,
+				max_x - len(pos_info) - 1,
+				pos_info,
+				normal,
+			)
 
 		# Position cursor
 		cursor_screen_y = edit_start_y + (self._cursor_y - self._scroll_y)
-		cursor_screen_x = line_num_width + min(self._cursor_x, max_x - line_num_width - 1)
+		cursor_screen_x = line_num_width + min(
+			self._cursor_x, max_x - line_num_width - 1
+		)
 		with contextlib.suppress(curses.error):
 			screen.move(cursor_screen_y, cursor_screen_x)
 
@@ -116,12 +129,17 @@ class ContentEditor:
 
 		if key in {27, curses.KEY_F10}:  # ESC or F10 - cancel
 			self._running = False
-		elif key == 17:  # Ctrl+Q - abort menu; restore editor cursor after it closes
+		# Ctrl+Q - abort menu; restore editor cursor after it closes
+		elif key == 17:
 			Tui.trigger_abort()
 			curses.curs_set(1)
 		elif key == curses.KEY_F2:  # F2 - save
-			if self._mode == 'kvp' and any(not self._is_line_valid(line) for line in self._lines):
-				self._error_msg = 'Invalid format each line must be key = value'
+			if self._mode == 'kvp' and any(
+				not self._is_line_valid(line) for line in self._lines
+			):
+				self._error_msg = (
+					'Invalid format each line must be key = value'
+				)
 			else:
 				self._saved = True
 				self._running = False
@@ -151,7 +169,10 @@ class ContentEditor:
 			self._cursor_x = len(current_line)
 		elif key in {curses.KEY_BACKSPACE, 127, 8}:  # Backspace
 			if self._cursor_x > 0:
-				self._lines[self._cursor_y] = current_line[: self._cursor_x - 1] + current_line[self._cursor_x :]
+				self._lines[self._cursor_y] = (
+					current_line[: self._cursor_x - 1]
+					+ current_line[self._cursor_x :]
+				)
 				self._cursor_x -= 1
 			elif self._cursor_y > 0:
 				# Join with previous line
@@ -162,10 +183,15 @@ class ContentEditor:
 				self._cursor_x = prev_len
 		elif key == curses.KEY_DC:  # Delete key
 			if self._cursor_x < len(current_line):
-				self._lines[self._cursor_y] = current_line[: self._cursor_x] + current_line[self._cursor_x + 1 :]
+				self._lines[self._cursor_y] = (
+					current_line[: self._cursor_x]
+					+ current_line[self._cursor_x + 1 :]
+				)
 			elif self._cursor_y < len(self._lines) - 1:
 				# Join with next line
-				self._lines[self._cursor_y] += self._lines[self._cursor_y + 1]
+				self._lines[self._cursor_y] += self._lines[
+					self._cursor_y + 1
+				]
 				self._lines.pop(self._cursor_y + 1)
 		elif key in {curses.KEY_ENTER, 10, 13}:  # Enter
 			# Split line
@@ -176,10 +202,18 @@ class ContentEditor:
 			self._lines.insert(self._cursor_y, after)
 			self._cursor_x = 0
 		elif key == 9:  # Tab
-			self._lines[self._cursor_y] = current_line[: self._cursor_x] + '\t' + current_line[self._cursor_x :]
+			self._lines[self._cursor_y] = (
+				current_line[: self._cursor_x]
+				+ '\t'
+				+ current_line[self._cursor_x :]
+			)
 			self._cursor_x += 1
 		elif 32 <= key <= 126:  # Printable ASCII
-			self._lines[self._cursor_y] = current_line[: self._cursor_x] + chr(key) + current_line[self._cursor_x :]
+			self._lines[self._cursor_y] = (
+				current_line[: self._cursor_x]
+				+ chr(key)
+				+ current_line[self._cursor_x :]
+			)
 			self._cursor_x += 1
 
 	def _is_line_valid(self, line: str) -> bool:
@@ -196,6 +230,8 @@ class ContentEditor:
 		self._cursor_x = max(0, min(self._cursor_x, max_x))
 
 
-def edit_content(preset: str = '', title: str = 'Custom Commands', mode: str = 'free') -> str | None:
+def edit_content(
+	preset: str = '', title: str = 'Custom Commands', mode: str = 'free'
+) -> str | None:
 	editor = ContentEditor(title=title, preset=preset, mode=mode)
 	return editor.edit()

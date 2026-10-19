@@ -3,7 +3,13 @@ import re
 from typing import override
 
 from archinstoo.lib.menu.list_manager import ListManager
-from archinstoo.lib.models.network import DnsConfiguration, DnsProvider, NetworkConfiguration, Nic, NicType
+from archinstoo.lib.models.network import (
+	DnsConfiguration,
+	DnsProvider,
+	NetworkConfiguration,
+	Nic,
+	NicType,
+)
 from archinstoo.lib.network.interfaces import list_interfaces
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -32,7 +38,9 @@ class ManualNetworkConfig(ListManager[Nic]):
 		return selection.iface or ''
 
 	@override
-	def handle_action(self, action: str, entry: Nic | None, data: list[Nic]) -> list[Nic]:
+	def handle_action(
+		self, action: str, entry: Nic | None, data: list[Nic]
+	) -> list[Nic]:
 		if action == self._actions[0]:  # add
 			iface = self._select_iface(data)
 			if iface:
@@ -85,7 +93,9 @@ class ManualNetworkConfig(ListManager[Nic]):
 			except ValueError:
 				return failure
 
-		text = prompt_text(title, header, preset, validator, allow_skip=allow_skip)
+		text = prompt_text(
+			title, header, preset, validator, allow_skip=allow_skip
+		)
 		return preset if text is None else text
 
 	def _edit_iface(self, edit_nic: Nic) -> Nic:
@@ -95,18 +105,36 @@ class ManualNetworkConfig(ListManager[Nic]):
 
 		header = f'Select which mode to configure for "{iface_name}"\n'
 		items = [MenuItem(m, value=m) for m in modes]
-		mode = prompt_choice(items, header=header, frame='Modes', default=default_mode, sort_items=True, allow_skip=False)
+		mode = prompt_choice(
+			items,
+			header=header,
+			frame='Modes',
+			default=default_mode,
+			sort_items=True,
+			allow_skip=False,
+		)
 
 		if mode == 'IP (static)':
-			header = f'Enter the IP and subnet for {iface_name} (example: 192.168.0.5/24): \n'
+			header = (
+				f'Enter the IP and subnet for {iface_name} (example: '
+				'192.168.0.5/24): \n'
+			)
 			ip = self._get_ip_address('IP address', header, False, False)
 
-			header = 'Enter your gateway (router) IP address (leave blank for none)\n'
-			gateway = self._get_ip_address('Gateway address', header, True, False)
+			header = (
+				'Enter your gateway (router) IP address (leave blank '
+				'for none)\n'
+			)
+			gateway = self._get_ip_address(
+				'Gateway address', header, True, False
+			)
 
 			display_dns = ' '.join(edit_nic.dns) if edit_nic.dns else None
 
-			header = 'Enter your DNS servers with space separated (leave blank for none)\n'
+			header = (
+				'Enter your DNS servers with space separated (leave '
+				'blank for none)\n'
+			)
 			dns_servers = self._get_ip_address(
 				'DNS servers',
 				header,
@@ -119,7 +147,13 @@ class ManualNetworkConfig(ListManager[Nic]):
 			if dns_servers is not None:
 				dns = dns_servers.split(' ')
 
-			return Nic(iface=iface_name, ip=ip, gateway=gateway, dns=dns, dhcp=False)
+			return Nic(
+				iface=iface_name,
+				ip=ip,
+				gateway=gateway,
+				dns=dns,
+				dhcp=False,
+			)
 		# this will contain network iface names
 		return Nic(iface=iface_name)
 
@@ -138,8 +172,14 @@ def _valid_addresses(text: str | None) -> str | None:
 def _valid_hostname(text: str | None) -> str | None:
 	# the name on the resolver's certificate, dns.example.net style; resolved
 	# refuses the session when it does not match, so keep the obvious typos out
-	if not text or not re.fullmatch(r'[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+', text.lower()):
-		return 'Enter the hostname on the server certificate (e.g. dns.quad9.net)'
+	if not text or not re.fullmatch(
+		r'[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+',
+		text.lower(),
+	):
+		return (
+			'Enter the hostname on the server certificate (e.g. '
+			'dns.quad9.net)'
+		)
 	return None
 
 
@@ -173,18 +213,31 @@ def _select_dns(preset: DnsConfiguration | None) -> DnsConfiguration | None:
 	custom = preset if preset and preset.provider is DnsProvider.CUSTOM else None
 	servers: list[str] = []
 	if provider is DnsProvider.CUSTOM:
-		text = prompt_text('DNS servers', 'Server addresses, space separated\n', ' '.join(custom.servers) if custom else None, _valid_addresses)
+		text = prompt_text(
+			'DNS servers',
+			'Server addresses, space separated\n',
+			' '.join(custom.servers) if custom else None,
+			_valid_addresses,
+		)
 		if text is None:
 			return preset
 		servers = text.split()
 
-	over_tls = prompt_yes_no('Encrypt lookups with DNS over TLS?\n', preset.over_tls if preset else True)
+	over_tls = prompt_yes_no(
+		'Encrypt lookups with DNS over TLS?\n',
+		preset.over_tls if preset else True,
+	)
 	if over_tls is None:
 		over_tls = True
 
 	tls_name = ''
 	if provider is DnsProvider.CUSTOM and over_tls:
-		name = prompt_text('Certificate name', 'Hostname the servers present over TLS\n', custom.tls_name if custom else None, _valid_hostname)
+		name = prompt_text(
+			'Certificate name',
+			'Hostname the servers present over TLS\n',
+			custom.tls_name if custom else None,
+			_valid_hostname,
+		)
 		if name is None:
 			return preset
 		tls_name = name.lower()
@@ -223,7 +276,9 @@ def select_network(preset: NetworkConfiguration | None) -> NetworkConfiguration 
 			nics: list[Nic] = []
 			if config == NicType.MANUAL:
 				preset_nics = preset.nics if preset else []
-				nics = ManualNetworkConfig('Configure interfaces', preset_nics).run()
+				nics = ManualNetworkConfig(
+					'Configure interfaces', preset_nics
+				).run()
 
 				if not nics:
 					return preset

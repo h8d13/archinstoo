@@ -24,7 +24,11 @@ def package_names(schema: dict[str, Any]) -> set[str]:
 	for section in schema.values():
 		for values in section.values():
 			# a nested section (compositors) is one table per profile
-			for pkgs in values.values() if isinstance(values, dict) else [values]:
+			for pkgs in (
+				values.values()
+				if isinstance(values, dict)
+				else [values]
+			):
 				names.update(pkgs)
 
 	return names

@@ -42,19 +42,30 @@ class FirewallApp:
 
 		match firewall_config.firewall:
 			case Firewall.UFW:
-				install_session.add_additional_packages(self.ufw_packages)
+				install_session.add_additional_packages(
+					self.ufw_packages
+				)
 				install_session.enable_service(self.ufw_services)
 				# write default conf file to enabled
 				ufw_conf = install_session.target / 'etc/ufw/ufw.conf'
 				content = ufw_conf.read_text()
 				if 'ENABLED=no' not in content:
-					warn(f'{ufw_conf}: no ENABLED=no line, leaving the file as shipped')
+					warn(
+						f'{ufw_conf}: no ENABLED=no line, '
+						'leaving the file as shipped'
+					)
 				else:
 					debug(f'Setting ENABLED=yes in {ufw_conf}')
-					ufw_conf.write_text(content.replace('ENABLED=no', 'ENABLED=yes'))
+					ufw_conf.write_text(
+						content.replace(
+							'ENABLED=no', 'ENABLED=yes'
+						)
+					)
 
 			case Firewall.FWD:
-				install_session.add_additional_packages(self.fwd_packages)
+				install_session.add_additional_packages(
+					self.fwd_packages
+				)
 				install_session.enable_service(self.fwd_services)
 
 	def allow_ssh(
@@ -70,10 +81,15 @@ class FirewallApp:
 		try:
 			match firewall:
 				case Firewall.UFW:
-					install_session.arch_chroot(['ufw', 'allow', 'ssh'])
+					install_session.arch_chroot(
+						['ufw', 'allow', 'ssh']
+					)
 				case Firewall.FWD:
 					install_session.arch_chroot(
-						['firewall-offline-cmd', '--add-service=ssh'],
+						[
+							'firewall-offline-cmd',
+							'--add-service=ssh',
+						],
 					)
 		except SysCallError as err:
 			warn(f'Failed to open ssh in firewall: {err}')

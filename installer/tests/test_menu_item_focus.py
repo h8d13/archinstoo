@@ -7,7 +7,13 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 
 
 def _group() -> MenuItemGroup:
-	return MenuItemGroup([MenuItem('alpha', value='a'), MenuItem('beta', value='b'), MenuItem('gamma', value='g')])
+	return MenuItemGroup(
+		[
+			MenuItem('alpha', value='a'),
+			MenuItem('beta', value='b'),
+			MenuItem('gamma', value='g'),
+		]
+	)
 
 
 def test_focus_next_recovers_from_stale_focus() -> None:

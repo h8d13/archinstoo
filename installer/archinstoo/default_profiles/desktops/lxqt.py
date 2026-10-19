@@ -8,8 +8,9 @@ class LxqtProfile(XorgProfile):
 	def __init__(self) -> None:
 		super().__init__('lxqt', ProfileType.DesktopEnv)
 
-	# NOTE: SDDM is the only officially supported greeter for LXQt, so unlike other DEs, lightdm is not used here.
-	# LXQt works with lightdm, but since this is not supported, we will not default to this.
+	# NOTE: SDDM is the only officially supported greeter for LXQt, so unlike other
+	# DEs, lightdm is not used here. LXQt works with lightdm, but since this is not
+	# supported, we will not default to this.
 	# https://github.com/lxqt/lxqt/issues/795
 	@property
 	@override

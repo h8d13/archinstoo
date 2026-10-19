@@ -9,15 +9,21 @@ if TYPE_CHECKING:
 class PrintServiceApp:
 	@property
 	def packages(self) -> list[str]:
-		return ['cups', 'system-config-printer', 'cups-pk-helper', 'ghostscript']
+		return [
+			'cups',
+			'system-config-printer',
+			'cups-pk-helper',
+			'ghostscript',
+		]
 		# PostScript interp https://github.com/archlinux/archinstall/issues/4595
 
 	@property
 	def services(self) -> list[str]:
 		return [
 			'cups',
-			# cups dnssd backend needs the daemon running to discover network
-			# printers (temporary queues cover IPP Everywhere in DE dialogs);
+			# cups dnssd backend needs the daemon running to
+			# discover network printers (temporary queues cover IPP
+			# Everywhere in DE dialogs);
 			# resolved can't substitute https://github.com/OpenPrinting/libcups/issues/81
 			# not covered: .local via glibc (nss-mdns + nsswitch edit) and
 			# pre-IPP printers needing vendor drivers (hplip etc.)

@@ -14,11 +14,15 @@ def test_encrypt_lands_between_block_and_filesystems() -> None:
 	initramfs.add_encrypt()  # second layout pass must not stack the hook
 
 	assert initramfs.hooks.count('sd-encrypt') == 1
-	assert _order(initramfs.hooks, 'block', 'sd-encrypt', 'filesystems') == sorted(_order(initramfs.hooks, 'block', 'sd-encrypt', 'filesystems'))
+	assert _order(initramfs.hooks, 'block', 'sd-encrypt', 'filesystems') == sorted(
+		_order(initramfs.hooks, 'block', 'sd-encrypt', 'filesystems')
+	)
 
 
 @pytest.mark.parametrize(('arch', 'present'), [('x86_64', True), ('aarch64', False)])
-def test_microcode_hook_only_where_it_applies(monkeypatch: pytest.MonkeyPatch, arch: str, present: bool) -> None:
+def test_microcode_hook_only_where_it_applies(
+	monkeypatch: pytest.MonkeyPatch, arch: str, present: bool
+) -> None:
 	monkeypatch.setattr(hardware.SysInfo, 'arch', staticmethod(lambda: arch))
 
 	assert ('microcode' in Initramfs().hooks) is present
@@ -49,5 +53,7 @@ def test_raid_hook_precedes_encrypt_either_order(encrypt_first: bool) -> None:
 	initramfs.add_raid()  # second layout pass must not stack the hook
 
 	assert initramfs.hooks.count('mdadm_udev') == 1
-	expected = _order(initramfs.hooks, 'block', 'mdadm_udev', 'sd-encrypt', 'filesystems')
+	expected = _order(
+		initramfs.hooks, 'block', 'mdadm_udev', 'sd-encrypt', 'filesystems'
+	)
 	assert expected == sorted(expected)

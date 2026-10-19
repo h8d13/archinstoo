@@ -5,7 +5,10 @@ from archinstoo.lib.tui.types import Alignment, FrameProperties
 
 
 def select_seat_access(name: str, default: str | list[str] | None) -> str:
-	header = f'{name} needs access to your seat (collection of hardware devices i.e. keyboard, mouse, etc)'
+	header = (
+		f'{name} needs access to your seat (collection of hardware devices '
+		'i.e. keyboard, mouse, etc)'
+	)
 	header += '\n' + f'Choose an option to give {name} access to your hardware\n'
 
 	items = [MenuItem(s.label, value=s) for s in SeatAccess]

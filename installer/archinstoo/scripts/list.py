@@ -9,7 +9,8 @@ here = Path(__file__).parent
 scripts = [
 	'.'.join(rel.with_suffix('').parts)
 	for rel in (p.relative_to(here) for p in here.rglob('*.py'))
-	if not any(part.startswith('_') for part in rel.parts) and rel != Path('list.py')
+	if not any(part.startswith('_') for part in rel.parts)
+	and rel != Path('list.py')
 ]
 
 rootless = sorted(s for s in scripts if s in ROOTLESS_SCRIPTS)

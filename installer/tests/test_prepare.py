@@ -32,14 +32,21 @@ def test_arch_host(
 	bootstrap: bool,
 	arch_host: bool,
 ) -> None:
-	monkeypatch.setattr('platform.freedesktop_os_release', lambda: {'ID': distro_id})
+	monkeypatch.setattr(
+		'platform.freedesktop_os_release', lambda: {'ID': distro_id}
+	)
 	monkeypatch.setattr(Host, 'running_from_host', staticmethod(lambda: not on_iso))
-	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
+	monkeypatch.setattr(
+		Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap)
+	)
 
 	assert Host.running_from_arch_host() is arch_host
 
 
-@pytest.mark.parametrize(('arch_host', 'bootstrap', 'synced'), [(True, False, False), (False, True, False), (False, False, True)])
+@pytest.mark.parametrize(
+	('arch_host', 'bootstrap', 'synced'),
+	[(True, False, False), (False, True, False), (False, False, True)],
+)
 def test_prepare_skips_pacman_on_arch_host(
 	monkeypatch: pytest.MonkeyPatch,
 	arch_host: bool,
@@ -52,10 +59,16 @@ def test_prepare_skips_pacman_on_arch_host(
 	monkeypatch.setattr(archinstoo, 'is_root', lambda: True)
 	monkeypatch.setattr(archinstoo, '_log_env_info', lambda: None)
 	monkeypatch.setattr(archinstoo, '_check_online', lambda: 0)
-	monkeypatch.setattr(Host, 'running_from_arch_host', staticmethod(lambda: arch_host))
+	monkeypatch.setattr(
+		Host, 'running_from_arch_host', staticmethod(lambda: arch_host)
+	)
 	monkeypatch.setattr(Host, 'running_from_foreign', staticmethod(lambda: False))
-	monkeypatch.setattr(Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap))
-	monkeypatch.setattr(Pacman, 'run', staticmethod(lambda args, **_: calls.append(args)))
+	monkeypatch.setattr(
+		Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap)
+	)
+	monkeypatch.setattr(
+		Pacman, 'run', staticmethod(lambda args, **_: calls.append(args))
+	)
 
 	assert archinstoo._prepare(offline=False) == 0
 	assert ('-Syy' in calls) is synced
@@ -109,7 +122,11 @@ def test_bootstrap_fails_on_broken_deptest(monkeypatch: pytest.MonkeyPatch) -> N
 
 def test_arch_host_missing_deps_stops(monkeypatch: pytest.MonkeyPatch) -> None:
 	# reported, never fetched: the host's own pacman owns its packages
-	_deptest_exits(monkeypatch, 127, b'arch-install-scripts\r\npython-pyparted\r\ndosfstools\r\n')
+	_deptest_exits(
+		monkeypatch,
+		127,
+		b'arch-install-scripts\r\npython-pyparted\r\ndosfstools\r\n',
+	)
 
 	assert archinstoo._ensure_host_deps() == 1
 
@@ -119,7 +136,8 @@ def test_arch_host_missing_deps_stops(monkeypatch: pytest.MonkeyPatch) -> None:
 	[
 		# dev PKGBUILD: what _ensure_host_deps checks on an H2T host
 		('PKGBUILD', deps.BASE),
-		# release PKGBUILD: every disk tool too, same as the bootstrap root fetches
+		# release PKGBUILD: every disk tool too, same as the
+		# bootstrap root fetches
 		('installer/PKGBUILD', deps.BASE + deps.DISK),
 	],
 )

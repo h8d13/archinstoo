@@ -1,15 +1,17 @@
 # Dev test VM for archinstoo: boots an ISO or the installed disk under QEMU,
 # and drives it over serial. One VM at a time, all state in the repo root.
-# ISO building is intentionally NOT done here, use isos/ISOMOD for that/default Arch ISO.
-# Credits to @Softer, modified for archinstoo.
+# ISO building is intentionally NOT done here, use isos/ISOMOD for that/default Arch
+# ISO. Credits to @Softer, modified for archinstoo.
 #
 # Host deps:
 #   sudo pacman -S --needed qemu-base qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 #   (QEMU >= 10.0: --console serial builds its console on the chardev hub)
-#   (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set A2_DISPLAY_BACKEND to match)
-#   (audio backend is a separate pkg: qemu-audio-pipewire (default), qemu-audio-pa, qemu-audio-alsa; set A2_AUDIO_BACKEND to match)
-#   (A2_ARCH=aarch64 adds: qemu-system-aarch64 edk2-aarch64; qemu-hw-display-virtio-gpu{,-pci} for A2_VGA=virtio-gpu-pci)
-#   bsdtar (libarchive) to boot an ISO with --console serial or tty
+#   (swap qemu-ui-gtk for qemu-ui-sdl/qemu-ui-curses if you prefer; set
+#   A2_DISPLAY_BACKEND to match) (audio backend is a separate pkg: qemu-audio-pipewire
+#   (default), qemu-audio-pa, qemu-audio-alsa; set A2_AUDIO_BACKEND to match)
+#   (A2_ARCH=aarch64 adds: qemu-system-aarch64 edk2-aarch64;
+#   qemu-hw-display-virtio-gpu{,-pci} for A2_VGA=virtio-gpu-pci) bsdtar (libarchive) to
+#   boot an ISO with --console serial or tty
 #
 # Usage (from the repo root, vm = ./RUN --script dev.vm):
 #   Start, --console picks how you reach the guest (default window):
@@ -130,21 +132,27 @@
 #   A2_RAM, A2_CPUS     VM resources (default 4G, 4)
 #   A2_DISK_SIZE        new disk size (default 64G)
 #   A2_DISPLAY_BACKEND  qemu -display value (default 'gtk,zoom-to-fit=off')
-#   A2_VGA              qemu -vga value (default 'std'; 'virtio' needs qemu-hw-display-virtio-vga)
+#   A2_VGA              qemu -vga value (default 'std'; 'virtio' needs
+#   qemu-hw-display-virtio-vga)
 #                       On aarch64 it is a -device name instead (default 'ramfb',
-#                       built in; 'virtio-gpu-pci' needs qemu-hw-display-virtio-gpu{,-pci})
-#   A2_GL               on swaps video for virtio-vga-gl + display gl=on (virgl 3D accel).
-#                       Overrides A2_VGA. niri/DMS have no software fallback, black-screen
-#                       without this. Needs the full module chain (vga-gl alone won't load):
+#                       built in; 'virtio-gpu-pci' needs
+#                       qemu-hw-display-virtio-gpu{,-pci})
+#   A2_GL               on swaps video for virtio-vga-gl + display gl=on (virgl 3D
+#   accel).
+#                       Overrides A2_VGA. niri/DMS have no software fallback,
+#                       black-screen without this. Needs the full module chain (vga-gl
+#                       alone won't load):
 #                       qemu-hw-display-virtio-{gpu,gpu-gl,vga,vga-gl} + qemu-ui-opengl
-#                       (aarch64: virtio-gpu-gl-pci, qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
+#                       (aarch64: virtio-gpu-gl-pci,
+#                       qemu-hw-display-virtio-gpu{,-gl,-pci,-gl-pci})
 #   A2_QEMU_EXTRA       raw qemu args appended last (word-split, no quoting inside)
 #   A2_CLOUD_REL, A2_CLOUD_BUILD
 #                       vm cloud fed's release and compose (default 44, 1.7)
 #   A2_CLOUD_PASS       root password cloud-init sets (default 'test')
 #   A2_DRY              on prints the assembled qemu command and exits (still
 #                       creates the disk/NVRAM the mode asks for)
-#   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the matching qemu-audio-* pkg)
+#   A2_AUDIO_BACKEND    qemu -audiodev value (default 'pipewire'; 'pa'/'alsa' need the
+#   matching qemu-audio-* pkg)
 
 import argparse
 from pathlib import Path
@@ -166,15 +174,32 @@ def vm() -> None:
 
 	# start
 	console = argparse.ArgumentParser(add_help=False)
-	console.add_argument('--console', choices=CONSOLES, help='how to reach the guest (default: window, or A2_SERIAL)')
+	console.add_argument(
+		'--console',
+		choices=CONSOLES,
+		help='how to reach the guest (default: window, or A2_SERIAL)',
+	)
 	for mode, aliases in (('fresh', []), ('keep', ['k']), ('boot', ['b'])):
 		p = sub.add_parser(mode, aliases=aliases, parents=[console])
-		p.set_defaults(func=lambda args, mode=mode: launch.start(mode, args.console))
+		p.set_defaults(
+			func=lambda args, mode=mode: launch.start(mode, args.console)
+		)
 	p = sub.add_parser('cloud', parents=[console])
 	p.add_argument('which', choices=('fed', 'deb', 'target'))
-	p.add_argument('--user-data', metavar='FILE', help='cloud-init user-data served as is (default: root with A2_CLOUD_PASS)')
-	p.set_defaults(func=lambda args: cloud.start(args.which, args.console, args.user_data))
-	sub.add_parser('clean', aliases=['c']).set_defaults(func=lambda _args: launch.clean(launch.read_opts()))
+	p.add_argument(
+		'--user-data',
+		metavar='FILE',
+		help=(
+			'cloud-init user-data served as is (default: root with '
+			'A2_CLOUD_PASS)'
+		),
+	)
+	p.set_defaults(
+		func=lambda args: cloud.start(args.which, args.console, args.user_data)
+	)
+	sub.add_parser('clean', aliases=['c']).set_defaults(
+		func=lambda _args: launch.clean(launch.read_opts())
+	)
 
 	# drive a --console serial VM
 	sub.add_parser('attach').set_defaults(func=drive.cmd_attach, serial=True)
@@ -229,7 +254,9 @@ def vm() -> None:
 	# any console
 	sub.add_parser('status').set_defaults(func=drive.cmd_status)
 	sub.add_parser('quit').set_defaults(func=drive.cmd_quit)
-	sub.add_parser('help', aliases=['h']).set_defaults(func=lambda _args: parser.print_help())
+	sub.add_parser('help', aliases=['h']).set_defaults(
+		func=lambda _args: parser.print_help()
+	)
 
 	args = parser.parse_args()
 	# say why a window/tty VM can't be driven before a command trips over it

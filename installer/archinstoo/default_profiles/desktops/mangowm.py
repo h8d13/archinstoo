@@ -26,7 +26,9 @@ class MangowmProfile(WaylandProfile):
 			'foot',
 			'rofi',
 			*seat_packages(self.custom_settings.get('seat_access')),
-			'xdg-desktop-portal-gtk',  # mango-portals.conf: gtk default, wlr for screencast; mangowm pulls neither
+			# mango-portals.conf: gtk default, wlr for screencast;
+			# mangowm pulls neither
+			'xdg-desktop-portal-gtk',
 			'xdg-desktop-portal-wlr',
 		]
 

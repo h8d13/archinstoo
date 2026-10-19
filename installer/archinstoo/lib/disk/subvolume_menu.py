@@ -32,13 +32,19 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 	def selected_action_display(self, selection: SubvolumeModification) -> str:
 		return str(selection.name)
 
-	def _add_subvolume(self, preset: SubvolumeModification | None = None) -> SubvolumeModification | None:
+	def _add_subvolume(
+		self, preset: SubvolumeModification | None = None
+	) -> SubvolumeModification | None:
 		def validate(value: str | None) -> str | None:
 			if value:
 				return None
 			return 'Value cannot be empty'
 
-		name = prompt_text('Subvolume name', preset=str(preset.name) if preset else None, validator=validate)
+		name = prompt_text(
+			'Subvolume name',
+			preset=str(preset.name) if preset else None,
+			validator=validate,
+		)
 		if name is None:
 			return preset
 
@@ -66,17 +72,25 @@ class SubvolumeMenu(ListManager[SubvolumeModification]):
 	) -> list[SubvolumeModification]:
 		if action == self._actions[0]:  # add
 			if (new_subvolume := self._add_subvolume()) is not None:
-				# in case a user with the same username as an existing user
-				# was created we'll replace the existing one
+				# in case a user with the same username as an existing
+				# user was created we'll replace the existing one
 				data = [d for d in data if d.name != new_subvolume.name]
 				data += [new_subvolume]
 		elif action == self._actions[1]:  # default layout
 			data = get_default_btrfs_subvols()
 		elif entry is not None:  # edit/delete
 			if action == self._actions[2]:  # edit subvolume
-				if (new_subvolume := self._add_subvolume(entry)) is not None:
-					# we'll remove the original subvolume and add the modified version
-					data = [d for d in data if d.name not in {entry.name, new_subvolume.name}]
+				if (
+					new_subvolume := self._add_subvolume(entry)
+				) is not None:
+					# we'll remove the original subvolume and add
+					# the modified version
+					data = [
+						d
+						for d in data
+						if d.name
+						not in {entry.name, new_subvolume.name}
+					]
 					data += [new_subvolume]
 			elif action == self._actions[3]:  # delete
 				data = [d for d in data if d != entry]

@@ -54,7 +54,11 @@ class MenuItem:
 		return not self.text
 
 	def has_value(self) -> bool:
-		if self.value is None or (isinstance(self.value, list) and len(self.value) == 0) or (isinstance(self.value, dict) and len(self.value) == 0):
+		if (
+			self.value is None
+			or (isinstance(self.value, list) and len(self.value) == 0)
+			or (isinstance(self.value, dict) and len(self.value) == 0)
+		):
 			return False
 		if self.value_validator is not None:
 			return self.value_validator(self.value)
@@ -81,11 +85,18 @@ class MenuItemGroup:
 			raise ValueError('Menu must have at least one item')
 
 		if sort_items:
-			# Items with value=None (e.g. explicit "None" options) always sort last
+			# Items with value=None (e.g. explicit "None"
+			# options) always sort last
 			menu_items = (
-				sorted(menu_items, key=lambda x: (x.value is None, x.text))
+				sorted(
+					menu_items,
+					key=lambda x: (x.value is None, x.text),
+				)
 				if sort_case_sensitive
-				else sorted(menu_items, key=lambda x: (x.value is None, x.text.lower()))
+				else sorted(
+					menu_items,
+					key=lambda x: (x.value is None, x.text.lower()),
+				)
 			)
 
 		self._filter_pattern: str = ''
@@ -175,9 +186,9 @@ class MenuItemGroup:
 				return self.items.index(self.focus_item)
 			except ValueError:
 				# on large menus (15k+) when filtering very quickly
-				# the index search is too slow while the items are reduced
-				# by the filter and it will blow up as it cannot find the
-				# focus item
+				# the index search is too slow while the items are
+				# reduced by the filter and it will blow up as it
+				# cannot find the focus item
 				pass
 
 		return None
@@ -213,7 +224,11 @@ class MenuItemGroup:
 			from .types import Chars
 
 			if item.has_value():
-				text = f'{text}{spacing}{Chars.Check}' if item.get_value() is not False else f'{text}{spacing}{Chars.Empty}'
+				text = (
+					f'{text}{spacing}{Chars.Check}'
+					if item.get_value() is not False
+					else f'{text}{spacing}{Chars.Empty}'
+				)
 			else:
 				text = f'{text}{spacing}{Chars.Empty}'
 
@@ -238,7 +253,10 @@ class MenuItemGroup:
 	@cached_property
 	def items(self) -> list[MenuItem]:
 		pattern = self._filter_pattern.lower()
-		items = filter(lambda item: item.is_empty() or pattern in item.text.lower(), self._menu_items)
+		items = filter(
+			lambda item: item.is_empty() or pattern in item.text.lower(),
+			self._menu_items,
+		)
 		return sorted(items, key=self._items_score)
 
 	def _items_score(self, item: MenuItem) -> int:
@@ -292,7 +310,9 @@ class MenuItemGroup:
 		first_item: MenuItem | None = self.items[0]
 
 		if first_item and not self._is_selectable(first_item):
-			first_item = self._find_next_selectable_item(self.items, first_item, 1)
+			first_item = self._find_next_selectable_item(
+				self.items, first_item, 1
+			)
 
 		if first_item is not None:
 			self.focus_item = first_item
@@ -304,7 +324,9 @@ class MenuItemGroup:
 		last_item: MenuItem | None = self.items[-1]
 
 		if last_item and not self._is_selectable(last_item):
-			last_item = self._find_next_selectable_item(self.items, last_item, -1)
+			last_item = self._find_next_selectable_item(
+				self.items, last_item, -1
+			)
 
 		if last_item is not None:
 			self.focus_item = last_item
@@ -341,7 +363,14 @@ class MenuItemGroup:
 			# focus can go stale: filtering rebuilds the items view and
 			# focus_first() keeps the old focus when nothing is selectable
 			candidates = items if direction == 1 else list(reversed(items))
-			return next((item for item in candidates if self._is_selectable(item)), None)
+			return next(
+				(
+					item
+					for item in candidates
+					if self._is_selectable(item)
+				),
+				None,
+			)
 
 		n = len(items)
 
@@ -355,7 +384,10 @@ class MenuItemGroup:
 		return None
 
 	def is_mandatory_fulfilled(self) -> bool:
-		return all(not (item.mandatory and not item.value) for item in self._menu_items)
+		return all(
+			not (item.mandatory and not item.value)
+			for item in self._menu_items
+		)
 
 	def _is_selectable(self, item: MenuItem) -> bool:
 		if item.is_empty() or item.read_only:
@@ -416,7 +448,12 @@ class MenuItemsState:
 
 		start, end = 0, 0
 
-		if len(self._view_items) == 0 or self._prev_row_idx == -1 or focus_row_idx == 0:  # initial setup
+		# initial setup
+		if (
+			len(self._view_items) == 0
+			or self._prev_row_idx == -1
+			or focus_row_idx == 0
+		):
 			if focus_row_idx < self._total_rows:
 				start = 0
 				end = self._total_rows
@@ -426,10 +463,15 @@ class MenuItemsState:
 			else:
 				start = focus_row_idx
 				end = focus_row_idx + self._total_rows
-		elif len(enabled_items) <= self._total_rows:  # the view can handle all items
+		# the view can handle all items
+		elif len(enabled_items) <= self._total_rows:
 			start = 0
 			end = self._total_rows
-		elif not self._item_group.has_filter() and focus_row_idx in self._prev_visible_rows:  # focus is in the same view
+		# focus is in the same view
+		elif (
+			not self._item_group.has_filter()
+			and focus_row_idx in self._prev_visible_rows
+		):
 			self._prev_row_idx = focus_row_idx
 			return self._view_items
 		elif self._item_group.has_filter():
@@ -458,4 +500,7 @@ class MenuItemsState:
 		total_rows: int,
 	) -> list[list[MenuItem]]:
 		nr_items = self._total_cols * min(total_rows, len(items))
-		return [items[x : x + self._total_cols] for x in range(start_row, nr_items, self._total_cols)]
+		return [
+			items[x : x + self._total_cols]
+			for x in range(start_row, nr_items, self._total_cols)
+		]

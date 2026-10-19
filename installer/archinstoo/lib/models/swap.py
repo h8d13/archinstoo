@@ -43,7 +43,9 @@ class SwapConfiguration:
 		recomp = arg.get('recomp_algorithm')
 		return cls(
 			zram=arg.get('zram', True),
-			algorithm=ZramAlgorithm(arg.get('algorithm', ZramAlgorithm.Default.value)),
+			algorithm=ZramAlgorithm(
+				arg.get('algorithm', ZramAlgorithm.Default.value)
+			),
 			recomp_algorithm=ZramAlgorithm(recomp) if recomp else None,
 			hibernation=arg.get('hibernation', False),
 			size_gib=arg.get('size_gib', 0),

@@ -2,7 +2,12 @@ from typing import override
 
 from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import GreeterType, ProfileType, seat_packages, seat_services
+from archinstoo.lib.profile.base import (
+	GreeterType,
+	ProfileType,
+	seat_packages,
+	seat_services,
+)
 
 
 class HyprlandProfile(WaylandProfile):

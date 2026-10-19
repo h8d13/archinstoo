@@ -103,7 +103,8 @@ class GreeterType(Enum):
 			case GreeterType.Greetd:
 				return ['greetd']
 			case GreeterType.Tuigreet:
-				# tuigreet draws on the tty itself, no compositor to host it
+				# tuigreet draws on the tty itself, no
+				# compositor to host it
 				return ['greetd', 'greetd-tuigreet']
 			case GreeterType.Regreet:
 				# regreet (GUI) runs inside the cage kiosk compositor
@@ -129,7 +130,11 @@ class GreeterType(Enum):
 	def disabled_services(self) -> list[str]:
 		# these take over vt1, so the getty that owns it has to go
 		match self:
-			case GreeterType.Ly | GreeterType.Tuigreet | GreeterType.Regreet:
+			case (
+				GreeterType.Ly
+				| GreeterType.Tuigreet
+				| GreeterType.Regreet
+			):
 				return ['getty@tty1']
 			case _:
 				return []
@@ -178,7 +183,10 @@ class Profile:
 		excluded = set(self.custom_settings.get('excluded_packages') or [])
 		if excluded:
 			matched = excluded & set(self.packages)
-			debug(f'{self.name}: excluding {sorted(matched)}; unmatched: {sorted(excluded - matched)}')
+			debug(
+				f'{self.name}: excluding {sorted(matched)}; '
+				f'unmatched: {sorted(excluded - matched)}'
+			)
 		return [p for p in self.packages if p not in excluded]
 
 	@property
@@ -214,7 +222,12 @@ class Profile:
 		self.current_selection = []
 
 	def is_top_level_profile(self) -> bool:
-		top_levels = [ProfileType.Desktop, ProfileType.Server, ProfileType.Xorg, ProfileType.Custom]
+		top_levels = [
+			ProfileType.Desktop,
+			ProfileType.Server,
+			ProfileType.Xorg,
+			ProfileType.Custom,
+		]
 		return self.profile_type in top_levels
 
 	def is_desktop_profile(self) -> bool:
@@ -224,7 +237,10 @@ class Profile:
 		return self.profile_type == ProfileType.ServerType
 
 	def is_desktop_type_profile(self) -> bool:
-		return self.profile_type in {ProfileType.DesktopEnv, ProfileType.WindowMgr}
+		return self.profile_type in {
+			ProfileType.DesktopEnv,
+			ProfileType.WindowMgr,
+		}
 
 	def is_greeter_supported(self) -> bool:
 		return self.profile_type == ProfileType.Desktop
@@ -232,7 +248,8 @@ class Profile:
 	def display_servers(self) -> set[DisplayServer]:
 		# Returns the set of display servers required by this profile.
 		# Aggregates requirements from sub-profiles if present.
-		# Profiles inherit from XorgProfile or WaylandProfile to specify their display server.
+		# Profiles inherit from XorgProfile or WaylandProfile to specify
+		# their display server.
 		if self.current_selection:
 			servers: set[DisplayServer] = set()
 			for sub_profile in self.current_selection:

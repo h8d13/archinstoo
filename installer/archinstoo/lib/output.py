@@ -46,7 +46,8 @@ class FormattedOutput:
 
 	@classmethod
 	def as_table(cls, obj: Sequence[object]) -> str:
-		# one data record per line, separated by newline, for compatibility with a print statement
+		# one data record per line, separated by newline, for compatibility
+		# with a print statement
 		raw_data = [cls._get_values(o) for o in obj]
 
 		# determine the maximum column size
@@ -54,7 +55,9 @@ class FormattedOutput:
 		for o in raw_data:
 			for k, v in o.items():
 				column_width.setdefault(k, 0)
-				column_width[k] = max(column_width[k], len(str(v)), len(k))
+				column_width[k] = max(
+					column_width[k], len(str(v)), len(k)
+				)
 
 		# create the header lines
 		output = ''
@@ -71,10 +74,16 @@ class FormattedOutput:
 			for key, width in column_width.items():
 				value = record.get(key, '')
 
-				if isinstance(value, (int, float)) or (isinstance(value, str) and value.isnumeric()):
-					obj_data.append(unicode_rjust(str(value), width))
+				if isinstance(value, (int, float)) or (
+					isinstance(value, str) and value.isnumeric()
+				):
+					obj_data.append(
+						unicode_rjust(str(value), width)
+					)
 				else:
-					obj_data.append(unicode_ljust(str(value), width))
+					obj_data.append(
+						unicode_ljust(str(value), width)
+					)
 
 			output += ' | '.join(obj_data) + '\n'
 
@@ -164,8 +173,9 @@ class Logger:
 			f.write(f'[{ts}] - {level_name} - {content}\n')
 
 
-# Intentionally a singleton: logging is a cross-cutting concern used via debug(), info(),
-# etc. throughout the codebase. Follows Python's standard logging.getLogger() pattern.
+# Intentionally a singleton: logging is a cross-cutting concern used via debug(),
+# info(), etc. throughout the codebase. Follows Python's standard
+# logging.getLogger() pattern.
 # See: https://github.com/archlinux/archinstall/issues/4149
 logger = Logger()
 log_level = logging.INFO
@@ -177,7 +187,8 @@ TARGET_STATE_DIR = LPath('/etc/archinstoo.d')
 
 def copy_artifacts(target: Path) -> None:
 	# Copy the run log and saved user config into the target so they survive reboot
-	# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for post-install debugging.
+	# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for
+	# post-install debugging.
 	try:
 		dest_dir = target / TARGET_STATE_DIR.relative_to_root()
 		dest_dir.mkdir(mode=0o755, exist_ok=True)
@@ -185,7 +196,10 @@ def copy_artifacts(target: Path) -> None:
 		ts = datetime.now(tz=UTC).strftime('%Y-%m-%dT%H-%M')
 		artifacts = [
 			(logger.path, f'{ts}_install.log'),
-			(logger.directory / 'user_configuration.json', f'{ts}_config.json'),
+			(
+				logger.directory / 'user_configuration.json',
+				f'{ts}_config.json',
+			),
 		]
 
 		for src, dst_name in artifacts:
@@ -268,8 +282,16 @@ def info(
 	step: bool = False,
 ) -> None:
 	if step:
-		# Mark a major install phase: prepend ==> (cyan unless caller overrode fg)
-		log('==>', *msgs, level=level, fg='cyan' if fg == 'white' else fg, bg=bg, reset=reset)
+		# Mark a major install phase: prepend ==> (cyan
+		# unless caller overrode fg)
+		log(
+			'==>',
+			*msgs,
+			level=level,
+			fg='cyan' if fg == 'white' else fg,
+			bg=bg,
+			reset=reset,
+		)
 		return
 	log(*msgs, level=level, fg=fg, bg=bg, reset=reset)
 

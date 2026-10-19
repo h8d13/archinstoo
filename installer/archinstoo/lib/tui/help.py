@@ -83,7 +83,11 @@ class Help:
 			help_output += '-' * divider_len + '\n'
 
 			for entry in help_group.group_entries:
-				help_output += entry.description.ljust(max_desc_width, ' ') + ', '.join(entry.keys) + '\n'
+				help_output += (
+					entry.description.ljust(max_desc_width, ' ')
+					+ ', '.join(entry.keys)
+					+ '\n'
+				)
 
 			help_output += '\n'
 

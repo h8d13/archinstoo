@@ -25,9 +25,17 @@ def sync() -> dict[str, set[str]]:
 	# pacman.conf and a custom DBPath are honoured for free: a disabled-but-
 	# present db (core-testing, a local repo) would otherwise contribute members
 	# pacman would never install.
-	proc = subprocess.run(['pacman', '-Sgg'], capture_output=True, text=True, check=False)  # noqa: S607 - pacman from $PATH
+	proc = subprocess.run(
+		['pacman', '-Sgg'],  # noqa: S607 - pacman from $PATH
+		capture_output=True,
+		text=True,
+		check=False,
+	)
 	if proc.returncode != 0:
-		print(f'warning: pacman -Sgg failed: {proc.stderr.strip()}', file=sys.stderr)
+		print(
+			f'warning: pacman -Sgg failed: {proc.stderr.strip()}',
+			file=sys.stderr,
+		)
 		return {}
 	return parse(proc.stdout)
 

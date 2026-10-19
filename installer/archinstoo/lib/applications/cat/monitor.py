@@ -29,8 +29,14 @@ class MonitorApp:
 
 		match monitor_config.monitor:
 			case Monitor.HTOP:
-				install_session.add_additional_packages(self.htop_package)
+				install_session.add_additional_packages(
+					self.htop_package
+				)
 			case Monitor.BTOP:
-				install_session.add_additional_packages(self.btop_package)
+				install_session.add_additional_packages(
+					self.btop_package
+				)
 			case Monitor.BOTTOM:
-				install_session.add_additional_packages(self.bottom_package)
+				install_session.add_additional_packages(
+					self.bottom_package
+				)

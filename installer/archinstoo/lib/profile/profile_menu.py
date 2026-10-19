@@ -46,15 +46,24 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 				action=self._customize_packages,
 				value=None,
 				preview_action=self._prev_customize_packages,
-				enabled=any(p.profile_type != ProfileType.Minimal for p in self._profile_config.profiles),
+				enabled=any(
+					p.profile_type != ProfileType.Minimal
+					for p in self._profile_config.profiles
+				),
 				dependencies=['profiles'],
 				key=f'{CONFIG_KEY}_customize_packages',
 			),
 			MenuItem(
 				text='Greeter',
 				action=self.select_greeter,
-				value=self._profile_config.greeter if self._profile_config.profiles and self._profile_config.is_greeter_supported() else None,
-				enabled=bool(self._profile_config.profiles and self._profile_config.is_greeter_supported()),
+				value=self._profile_config.greeter
+				if self._profile_config.profiles
+				and self._profile_config.is_greeter_supported()
+				else None,
+				enabled=bool(
+					self._profile_config.profiles
+					and self._profile_config.is_greeter_supported()
+				),
 				preview_action=self._prev_greeter,
 				dependencies=['profiles'],
 				key='greeter',
@@ -62,7 +71,9 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 		]
 
 	@override
-	def run(self, additional_title: str | None = None) -> ProfileConfiguration | None:
+	def run(
+		self, additional_title: str | None = None
+	) -> ProfileConfiguration | None:
 		super().run(additional_title=additional_title)
 		return self._profile_config
 
@@ -75,7 +86,9 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 
 		if profiles:
 			# Check if any profile supports greeter
-			supports_greeter = any(p.is_greeter_supported() for p in profiles)
+			supports_greeter = any(
+				p.is_greeter_supported() for p in profiles
+			)
 			if not supports_greeter:
 				self._item_group.find_by_key('greeter').enabled = False
 				self._item_group.find_by_key('greeter').value = None
@@ -86,34 +99,56 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 				if changed or greeter_item.value is None:
 					for p in profiles:
 						if p.default_greeter_type:
-							greeter_item.value = p.default_greeter_type
+							greeter_item.value = (
+								p.default_greeter_type
+							)
 							break
 		else:
 			self._item_group.find_by_key('greeter').value = None
 
-		customize_item = self._item_group.find_by_key(f'{CONFIG_KEY}_customize_packages')
+		customize_item = self._item_group.find_by_key(
+			f'{CONFIG_KEY}_customize_packages'
+		)
 		if customize_item is not None:
-			customize_item.enabled = any(p.profile_type != ProfileType.Minimal for p in profiles)
+			customize_item.enabled = any(
+				p.profile_type != ProfileType.Minimal for p in profiles
+			)
 
 		return profiles
 
-	def select_greeter(self, preset: GreeterType | None = None) -> GreeterType | None:
-		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
+	def select_greeter(
+		self, preset: GreeterType | None = None
+	) -> GreeterType | None:
+		profiles: list[Profile] = (
+			self._item_group.find_by_key('profiles').value or []
+		)
 		profile = next((p for p in profiles if p.is_greeter_supported()), None)
 		return select_greeter(profile=profile, preset=preset)
 
 	def _customize_packages(self, _preset: None = None) -> None:
-		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
-		targets = [p for pr in profiles for p in [pr, *(pr.current_selection or [])]]
+		profiles: list[Profile] = (
+			self._item_group.find_by_key('profiles').value or []
+		)
+		targets = [
+			p
+			for pr in profiles
+			for p in [pr, *(pr.current_selection or [])]
+		]
 
 		for profile in targets:
 			pkgs = profile.packages
 			if not pkgs:
 				continue
 
-			excluded = set(profile.custom_settings.get('excluded_packages') or [])
-			group = MenuItemGroup([MenuItem(p, value=p) for p in sorted(pkgs)])
-			group.set_selected_by_value([p for p in pkgs if p not in excluded])
+			excluded = set(
+				profile.custom_settings.get('excluded_packages') or []
+			)
+			group = MenuItemGroup(
+				[MenuItem(p, value=p) for p in sorted(pkgs)]
+			)
+			group.set_selected_by_value(
+				[p for p in pkgs if p not in excluded]
+			)
 
 			result = SelectMenu[str](
 				group,
@@ -127,17 +162,34 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			if result.type_ != ResultType.Selection:
 				continue
 
-			new_excluded = [p for p in pkgs if p not in set(result.get_values() or [])]
-			profile.custom_settings['excluded_packages'] = new_excluded or None
+			new_excluded = [
+				p
+				for p in pkgs
+				if p not in set(result.get_values() or [])
+			]
+			profile.custom_settings['excluded_packages'] = (
+				new_excluded or None
+			)
 
 	def _prev_customize_packages(self, _item: MenuItem) -> str | None:
-		profiles: list[Profile] = self._item_group.find_by_key('profiles').value or []
+		profiles: list[Profile] = (
+			self._item_group.find_by_key('profiles').value or []
+		)
 		excluded = sorted(
-			{pkg for pr in profiles for p in [pr, *(pr.current_selection or [])] for pkg in (p.custom_settings.get('excluded_packages') or [])}
+			{
+				pkg
+				for pr in profiles
+				for p in [pr, *(pr.current_selection or [])]
+				for pkg in (
+					p.custom_settings.get('excluded_packages') or []
+				)
+			}
 		)
 		if not excluded:
 			return 'No packages excluded'
-		return 'Excluded packages:\n' + '\n'.join(f'\t- {pkg}' for pkg in excluded)
+		return 'Excluded packages:\n' + '\n'.join(
+			f'\t- {pkg}' for pkg in excluded
+		)
 
 	def _prev_greeter(self, item: MenuItem) -> str | None:
 		if item.value:
@@ -155,7 +207,12 @@ class ProfileMenu(AbstractSubMenu[ProfileConfiguration]):
 			for profile in profiles:
 				if sub_profiles := profile.current_selection:
 					text += f'  {profile.name}: '
-					text += ', '.join([p.name for p in sub_profiles]) + '\n'
+					text += (
+						', '.join(
+							[p.name for p in sub_profiles]
+						)
+						+ '\n'
+					)
 
 			# Collect all packages
 			all_packages: set[str] = set()
@@ -192,7 +249,9 @@ def select_greeter(
 			default_greeter = profile.default_greeter_type
 			default = default_greeter or None
 
-		return prompt_choice(items, preset, frame='Greeter', default=default, sort_items=True)
+		return prompt_choice(
+			items, preset, frame='Greeter', default=default, sort_items=True
+		)
 
 	return None
 

@@ -35,20 +35,30 @@ class FakeMenu:
 _REPOS = {'linux', 'linux-lts', 'linux-zen', 'linux-rpi5', 'linux-mainline'}
 
 
-def _pick(monkeypatch: pytest.MonkeyPatch, picks: list[str], answers: list[str | None] | None = None) -> list[tuple[str, str | None]]:
+def _pick(
+	monkeypatch: pytest.MonkeyPatch,
+	picks: list[str],
+	answers: list[str | None] | None = None,
+) -> list[tuple[str, str | None]]:
 	# answers are replayed one per prompt; returns (header, prefill) per
 	# prompt shown, so a test can assert none was or what was re-asked
 	prompts: list[tuple[str, str | None]] = []
 	queue = list(answers or [])
 
-	def fake_prompt(_title: str, header: str, preset: str | None, *_: object) -> str | None:
+	def fake_prompt(
+		_title: str, header: str, preset: str | None, *_: object
+	) -> str | None:
 		prompts.append((header, preset))
 		return queue.pop(0)
 
 	monkeypatch.setattr(system_conf, 'SelectMenu', FakeMenu)
 	monkeypatch.setattr(FakeMenu, 'picks', picks, raising=False)
 	monkeypatch.setattr(system_conf, 'prompt_text', fake_prompt)
-	monkeypatch.setattr(system_conf, 'missing_packages', lambda names: [n for n in names if n not in _REPOS])
+	monkeypatch.setattr(
+		system_conf,
+		'missing_packages',
+		lambda names: [n for n in names if n not in _REPOS],
+	)
 	return prompts
 
 
@@ -73,7 +83,11 @@ def test_skipped_prompt_keeps_the_ticked(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_unknown_name_is_asked_again(monkeypatch: pytest.MonkeyPatch) -> None:
 	# a typo never reaches pacstrap: the found names stay in the field
-	prompts = _pick(monkeypatch, [system_conf._TYPE_KERNEL], ['linux-rpi5 linux-rpi6', 'linux-rpi5 linux-mainline'])
+	prompts = _pick(
+		monkeypatch,
+		[system_conf._TYPE_KERNEL],
+		['linux-rpi5 linux-rpi6', 'linux-rpi5 linux-mainline'],
+	)
 
 	assert system_conf.select_kernel([]) == ['linux-rpi5', 'linux-mainline']
 	(_, first), (header, second) = prompts
@@ -115,7 +129,12 @@ def test_kernel_name_check(text: str, ok: bool) -> None:
 		({}, []),
 	],
 )
-def test_missing_packages(monkeypatch: pytest.MonkeyPatch, listing: dict[str, None], missing: list[str]) -> None:
+def test_missing_packages(
+	monkeypatch: pytest.MonkeyPatch, listing: dict[str, None], missing: list[str]
+) -> None:
 	monkeypatch.setattr(packages, 'list_available_packages', lambda: listing)
 
-	assert packages.missing_packages(['linux', 'linux-rpi5', 'linux-rpi6']) == missing
+	assert (
+		packages.missing_packages(['linux', 'linux-rpi5', 'linux-rpi6'])
+		== missing
+	)

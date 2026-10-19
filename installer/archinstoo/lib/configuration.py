@@ -4,7 +4,12 @@ from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
-from archinstoo.lib.tui.types import Alignment, FrameProperties, Orientation, PreviewStyle
+from archinstoo.lib.tui.types import (
+	Alignment,
+	FrameProperties,
+	Orientation,
+	PreviewStyle,
+)
 
 from .general import JSON
 from .output import debug, error, info, logger, restore_perms, warn
@@ -39,7 +44,8 @@ class ConfigStore:
 		self._config.script = get_arch_config_handler().get_script()
 
 		out = self._config.safe_json()
-		return json.dumps(out, indent=4, cls=JSON)  # Note remove the sort so that we keep "menu order"
+		# Note remove the sort so that we keep "menu order"
+		return json.dumps(out, indent=4, cls=JSON)
 
 	def write_debug(self) -> None:
 		debug(' -- Chosen configuration --')
@@ -96,10 +102,17 @@ class ConfigStore:
 				with config_file.open() as f:
 					data = json.load(f)
 
-				# Validate at the boundary: valid JSON of the wrong type (list/scalar/null,
-				# or dict with non-str keys) must fail here, not mid-install downstream.
-				if not isinstance(data, dict) or not all(isinstance(k, str) for k in data):
-					warn(f'Ignoring saved config: expected a JSON object with string keys, got {type(data).__name__}')
+				# Validate at the boundary: valid JSON of the wrong type
+				# (list/scalar/null, or dict with non-str keys) must
+				# fail here, not mid-install downstream.
+				if not isinstance(data, dict) or not all(
+					isinstance(k, str) for k in data
+				):
+					warn(
+						'Ignoring saved config: expected a '
+						'JSON object with string keys, got '
+						f'{type(data).__name__}'
+					)
 					return None
 
 				return data
@@ -127,7 +140,11 @@ class ConfigStore:
 				MenuItem(text='resume from saved', value='resume'),
 				MenuItem(text='start fresh', value='fresh'),
 			]
-			choice: str = prompt_choice(items, header='Saved configuration found:\n', allow_skip=False)
+			choice: str = prompt_choice(
+				items,
+				header='Saved configuration found:\n',
+				allow_skip=False,
+			)
 
 			if choice == 'resume':
 				return cls.load_saved_config()

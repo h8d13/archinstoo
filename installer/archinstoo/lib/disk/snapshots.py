@@ -32,10 +32,18 @@ def setup_btrfs_snapshot(
 		}
 
 		for config_name, mountpoint in snapper.items():
-			# snapper create-config makes its own .snapshots subvolume and errors if one exists
-			# (e.g. a manual layout that pre-created it); skip rather than abort the whole install
-			if (installation.target / mountpoint.lstrip('/') / '.snapshots').exists():
-				info(f'snapper: .snapshots already present at {mountpoint}, skipping create-config')
+			# snapper create-config makes its own .snapshots subvolume and
+			# errors if one exists (e.g. a manual layout that pre-created
+			# it); skip rather than abort the whole install
+			if (
+				installation.target
+				/ mountpoint.lstrip('/')
+				/ '.snapshots'
+			).exists():
+				info(
+					'snapper: .snapshots already present at '
+					f'{mountpoint}, skipping create-config'
+				)
 				continue
 
 			command = [
@@ -51,7 +59,9 @@ def setup_btrfs_snapshot(
 			try:
 				SysCommand(command, peek_output=True)
 			except SysCallError as err:
-				raise DiskError(f'Could not setup Btrfs snapper: {err}') from err
+				raise DiskError(
+					f'Could not setup Btrfs snapper: {err}'
+				) from err
 
 		installation.enable_service('snapper-timeline.timer')
 		installation.enable_service('snapper-cleanup.timer')

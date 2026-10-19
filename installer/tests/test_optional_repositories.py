@@ -16,17 +16,29 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
 	('arch', 'offered'),
 	[
-		('x86_64', [Repository.Multilib, Repository.MultilibTesting, Repository.CoreTesting, Repository.ExtraTesting]),
+		(
+			'x86_64',
+			[
+				Repository.Multilib,
+				Repository.MultilibTesting,
+				Repository.CoreTesting,
+				Repository.ExtraTesting,
+			],
+		),
 		('aarch64', [Repository.CoreTesting, Repository.ExtraTesting]),
 	],
 )
-def test_optional_repositories_follow_the_port(monkeypatch: pytest.MonkeyPatch, arch: str, offered: list[Repository]) -> None:
+def test_optional_repositories_follow_the_port(
+	monkeypatch: pytest.MonkeyPatch, arch: str, offered: list[Repository]
+) -> None:
 	monkeypatch.setattr(hardware.SysInfo, 'arch', staticmethod(lambda: arch))
 
 	assert optional_repositories() == offered
 
 
-def test_forge_is_not_a_custom_repo(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_forge_is_not_a_custom_repo(
+	monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
 	# the Arch Ports ISO conf: forge sits next to core/extra as a port repo,
 	# only the ISO builder's own repo is custom
 	conf = tmp_path / 'pacman.conf'
@@ -46,4 +58,6 @@ Server = https://arch-linux-repo.drzee.net/arch/$repo/os/$arch
 	)
 	monkeypatch.setattr(pm_config, 'PACMAN_CONF', LPath(conf))
 
-	assert [r.name for r in PacmanConfig.get_existing_custom_repos()] == ['ironrobin-aarch64']
+	assert [r.name for r in PacmanConfig.get_existing_custom_repos()] == [
+		'ironrobin-aarch64'
+	]

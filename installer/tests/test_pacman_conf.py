@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.lib.linux_path import LPath
-from archinstoo.lib.models.mirrors import CustomRepository, PacmanConfiguration, SignCheck, SignOption
+from archinstoo.lib.models.mirrors import (
+	CustomRepository,
+	PacmanConfiguration,
+	SignCheck,
+	SignOption,
+)
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pm import config as pm_config
 from archinstoo.lib.pm.config import PacmanConfig
@@ -36,10 +41,23 @@ Include = /etc/pacman.d/mirrorlist
 """
 
 # what a customised ISO runs with, none of which the target should inherit
-_ISO_CONF = _STOCK_CONF.replace('#Color', 'Color').replace('ParallelDownloads = 5', 'ParallelDownloads = 5\nILoveCandy')
+_ISO_CONF = _STOCK_CONF.replace('#Color', 'Color').replace(
+	'ParallelDownloads = 5', 'ParallelDownloads = 5\nILoveCandy'
+)
 
-_CACHE_REPO = CustomRepository('isocache', 'file:///run/archiso/cache', SignCheck.Never, SignOption.TrustAll, priority=True)
-_NET_REPO = CustomRepository('cachyos', 'https://mirror.cachyos.org/repo/x86_64/cachyos', SignCheck.Required, SignOption.TrustedOnly)
+_CACHE_REPO = CustomRepository(
+	'isocache',
+	'file:///run/archiso/cache',
+	SignCheck.Never,
+	SignOption.TrustAll,
+	priority=True,
+)
+_NET_REPO = CustomRepository(
+	'cachyos',
+	'https://mirror.cachyos.org/repo/x86_64/cachyos',
+	SignCheck.Required,
+	SignOption.TrustedOnly,
+)
 
 
 def _config() -> PacmanConfiguration:
@@ -88,7 +106,9 @@ def test_file_url_repo_never_reaches_the_target(target: Path) -> None:
 	assert '[isocache]' not in (target / 'etc/pacman.conf').read_text()
 
 
-def test_file_url_repo_still_serves_the_live_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_file_url_repo_still_serves_the_live_install(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	live = tmp_path / 'pacman.conf'
 	live.write_text(_STOCK_CONF)
 	monkeypatch.setattr(pm_config, 'PACMAN_CONF', LPath(live))
@@ -97,7 +117,9 @@ def test_file_url_repo_still_serves_the_live_install(tmp_path: Path, monkeypatch
 
 	written = live.read_text()
 	assert '[isocache]' in written
-	assert written.index('[isocache]') < written.index('[core]'), 'cache must outrank the network repos'
+	assert written.index('[isocache]') < written.index('[core]'), (
+		'cache must outrank the network repos'
+	)
 
 
 def _live(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> LPath:
@@ -123,54 +145,125 @@ def test_network_priority_repo_reaches_the_target(target: Path) -> None:
 
 	written = (target / 'etc/pacman.conf').read_text()
 	assert written.index('[vrch]') < written.index('[core]')
-	assert written.index('[cachyos]') > written.index('[extra]'), 'default placement is appended'
+	assert written.index('[cachyos]') > written.index('[extra]'), (
+		'default placement is appended'
+	)
 
 
-def test_priority_repos_keep_list_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_priority_repos_keep_list_order(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# pacman takes the first repo that has the package, so list order is priority
 	live = _live(tmp_path, monkeypatch)
-	first = CustomRepository('first', 'https://a.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
-	second = CustomRepository('second', 'https://b.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
+	first = CustomRepository(
+		'first',
+		'https://a.example/$arch',
+		SignCheck.Never,
+		SignOption.TrustAll,
+		priority=True,
+	)
+	second = CustomRepository(
+		'second',
+		'https://b.example/$arch',
+		SignCheck.Never,
+		SignOption.TrustAll,
+		priority=True,
+	)
 
-	PacmanConfig.apply_config(PacmanConfiguration(custom_repositories=[first, second]), None)
+	PacmanConfig.apply_config(
+		PacmanConfiguration(custom_repositories=[first, second]), None
+	)
 
 	written = live.read_text()
-	assert written.index('[first]') < written.index('[second]') < written.index('[core]')
+	assert (
+		written.index('[first]')
+		< written.index('[second]')
+		< written.index('[core]')
+	)
 
 
-def test_existing_repo_position_survives_reread(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_existing_repo_position_survives_reread(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	_live(tmp_path, monkeypatch)
-	above = CustomRepository('above', 'https://a.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
-	below = CustomRepository('below', 'https://b.example/$arch', SignCheck.Never, SignOption.TrustAll)
+	above = CustomRepository(
+		'above',
+		'https://a.example/$arch',
+		SignCheck.Never,
+		SignOption.TrustAll,
+		priority=True,
+	)
+	below = CustomRepository(
+		'below', 'https://b.example/$arch', SignCheck.Never, SignOption.TrustAll
+	)
 
-	PacmanConfig.apply_config(PacmanConfiguration(custom_repositories=[above, below]), None)
+	PacmanConfig.apply_config(
+		PacmanConfiguration(custom_repositories=[above, below]), None
+	)
 
 	assert PacmanConfig.get_existing_custom_repos() == [above, below]
 
 
 def test_priority_json_round_trip() -> None:
-	repo = CustomRepository('above', 'https://a.example/$arch', SignCheck.Never, SignOption.TrustAll, priority=True)
+	repo = CustomRepository(
+		'above',
+		'https://a.example/$arch',
+		SignCheck.Never,
+		SignOption.TrustAll,
+		priority=True,
+	)
 
 	assert CustomRepository.parse_args([repo.json()]) == [repo]
 
 
-def test_priority_repos_first_then_the_rest_in_insertion_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_priority_repos_first_then_the_rest_in_insertion_order(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	live = _live(tmp_path, monkeypatch)
 	names = [('a', False), ('b', True), ('c', False), ('d', True)]
-	repos = [CustomRepository(n, f'https://{n}.example/$arch', SignCheck.Never, SignOption.TrustAll, p) for n, p in names]
+	repos = [
+		CustomRepository(
+			n,
+			f'https://{n}.example/$arch',
+			SignCheck.Never,
+			SignOption.TrustAll,
+			p,
+		)
+		for n, p in names
+	]
 
 	PacmanConfig.apply_config(PacmanConfiguration(custom_repositories=repos), None)
 
-	sections = [line for line in live.read_text().splitlines() if line.startswith('[')]
-	assert sections == ['[options]', '[b]', '[d]', '[core]', '[extra]', '[a]', '[c]']
+	sections = [
+		line for line in live.read_text().splitlines() if line.startswith('[')
+	]
+	assert sections == [
+		'[options]',
+		'[b]',
+		'[d]',
+		'[core]',
+		'[extra]',
+		'[a]',
+		'[c]',
+	]
 
 
-def test_parallel_downloads_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_parallel_downloads_is_idempotent(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
 	# a trailing newline used to be written back as an extra blank line per run
 	live = _live(tmp_path, monkeypatch)
-	monkeypatch.setattr(pm_config, 'EditMenu', lambda *_a, **_kw: SimpleNamespace(input=lambda: Result(ResultType.Selection, '8')))
+	monkeypatch.setattr(
+		pm_config,
+		'EditMenu',
+		lambda *_a, **_kw: SimpleNamespace(
+			input=lambda: Result(ResultType.Selection, '8')
+		),
+	)
 
 	pm_config.set_parallel_downloads()
 	pm_config.set_parallel_downloads()
 
-	assert live.read_text() == _STOCK_CONF.replace('ParallelDownloads = 5', 'ParallelDownloads = 8')
+	assert live.read_text() == _STOCK_CONF.replace(
+		'ParallelDownloads = 5', 'ParallelDownloads = 8'
+	)

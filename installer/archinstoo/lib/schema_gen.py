@@ -52,7 +52,12 @@ from archinstoo.lib.models.graphics import GFX_CUSTOM_CHOICES, GFX_PACKAGES, Gfx
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.pm import aur
-from archinstoo.lib.profile.base import DisplayServer, GreeterType, ProfileType, SeatAccess
+from archinstoo.lib.profile.base import (
+	DisplayServer,
+	GreeterType,
+	ProfileType,
+	SeatAccess,
+)
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
 
@@ -76,13 +81,23 @@ _LEAF_PROFILES = {ProfileType.DesktopEnv, ProfileType.WindowMgr, ProfileType.Ser
 
 
 def _leaves() -> list[Profile]:
-	return [p for p in ProfileHandler().profiles if p.profile_type in _LEAF_PROFILES]
+	return [
+		p for p in ProfileHandler().profiles if p.profile_type in _LEAF_PROFILES
+	]
 
 
 def _one_to_one(enum: type[StrEnum]) -> Table:
 	# categories the installer expands as [tool.value for tool in tools], so
 	# every option is its own package
 	return {e.value: [e.value] for e in enum}
+
+
+def _power_management() -> Table:
+	app = PowerManagementApp()
+	return {
+		PowerManagement.PPD.value: app.ppd_packages,
+		PowerManagement.TUNED.value: app.tuned_packages,
+	}
 
 
 @dataclass(frozen=True)
@@ -117,10 +132,18 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: installer.ACCESSIBILITY_PACKAGES,
 		site='Installer',
 	),
-	Section('lvm', lambda: installer.LVM_PACKAGES, site='installation.minimal_installation'),
+	Section(
+		'lvm',
+		lambda: installer.LVM_PACKAGES,
+		site='installation.minimal_installation',
+	),
 	Section(
 		'filesystem_tools',
-		lambda: {fs.value: [pkg] for fs in FilesystemType if (pkg := fs.installation_pkg)},
+		lambda: {
+			fs.value: [pkg]
+			for fs in FilesystemType
+			if (pkg := fs.installation_pkg)
+		},
 		site='installation.minimal_installation',
 	),
 	Section(
@@ -135,10 +158,18 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'microcode',
-		lambda: {v.value: [ucode.stem] for v in CpuVendor if (ucode := v.get_ucode())},
+		lambda: {
+			v.value: [ucode.stem]
+			for v in CpuVendor
+			if (ucode := v.get_ucode())
+		},
 		site='installation.minimal_installation',
 	),
-	Section('ter_fonts', lambda: installer.TER_FONT_PACKAGES, site='installation.minimal_installation'),
+	Section(
+		'ter_fonts',
+		lambda: installer.TER_FONT_PACKAGES,
+		site='installation.minimal_installation',
+	),
 	Section(
 		'swap',
 		lambda: {'zram': zram.ZRAM_PACKAGES},
@@ -149,13 +180,20 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
 		site='installation.create_users',
 	),
-	Section('stash', lambda: stash.STASH_PACKAGES, site='installation.create_users'),
+	Section(
+		'stash', lambda: stash.STASH_PACKAGES, site='installation.create_users'
+	),
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
 		site='ShellApp().install',
 	),
-	Section('bluetooth', lambda: BluetoothApp().packages, pick=('bluetooth_config', 'enabled'), site='application_handler.install_applications'),
+	Section(
+		'bluetooth',
+		lambda: BluetoothApp().packages,
+		pick=('bluetooth_config', 'enabled'),
+		site='application_handler.install_applications',
+	),
 	Section(
 		'thunderbolt',
 		lambda: ThunderboltApp().packages,
@@ -164,7 +202,10 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'audio_firmware',
-		lambda: {'sof': AudioApp().sof_packages, 'alsa': AudioApp().alsa_packages},
+		lambda: {
+			'sof': AudioApp().sof_packages,
+			'alsa': AudioApp().alsa_packages,
+		},
 		site='application_handler.install_applications',
 	),
 	Section(
@@ -190,10 +231,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'power_management',
-		lambda: {
-			PowerManagement.PPD.value: PowerManagementApp().ppd_packages,
-			PowerManagement.TUNED.value: PowerManagementApp().tuned_packages,
-		},
+		_power_management,
 		pick=('power_management_config', 'power_management'),
 		site='application_handler.install_applications',
 	),
@@ -218,8 +256,18 @@ SECTIONS: tuple[Section, ...] = (
 		pick=('firewall_config', 'firewall'),
 		site='application_handler.install_applications',
 	),
-	Section('management', lambda: _one_to_one(Management), pick=('management_config', 'tools'), site='application_handler.install_applications'),
-	Section('monitors', lambda: _one_to_one(Monitor), pick=('monitor_config', 'monitor'), site='application_handler.install_applications'),
+	Section(
+		'management',
+		lambda: _one_to_one(Management),
+		pick=('management_config', 'tools'),
+		site='application_handler.install_applications',
+	),
+	Section(
+		'monitors',
+		lambda: _one_to_one(Monitor),
+		pick=('monitor_config', 'monitor'),
+		site='application_handler.install_applications',
+	),
 	Section(
 		'editors',
 		lambda: {e.value: e.packages for e in Editor},
@@ -238,13 +286,30 @@ SECTIONS: tuple[Section, ...] = (
 			Security.APPARMOR.value: SecurityApp().apparmor_packages,
 			Security.FIREJAIL.value: SecurityApp().firejail_packages,
 			Security.BUBBLEWRAP.value: SecurityApp().bubblewrap_packages,
-			**{s.value: [s.value] for s in Security if s not in {Security.APPARMOR, Security.FIREJAIL, Security.BUBBLEWRAP}},
+			**{
+				s.value: [s.value]
+				for s in Security
+				if s
+				not in {
+					Security.APPARMOR,
+					Security.FIREJAIL,
+					Security.BUBBLEWRAP,
+				}
+			},
 		},
 		pick=('security_config', 'tools'),
 		site='application_handler.install_applications',
 	),
-	Section('snapshots', lambda: {s.value: s.packages for s in SnapshotType}, site='installation.setup_btrfs_snapshot'),
-	Section('grub_extra', lambda: snapshots.GRUB_SNAPSHOT_PACKAGES, site='installation.setup_btrfs_snapshot'),
+	Section(
+		'snapshots',
+		lambda: {s.value: s.packages for s in SnapshotType},
+		site='installation.setup_btrfs_snapshot',
+	),
+	Section(
+		'grub_extra',
+		lambda: snapshots.GRUB_SNAPSHOT_PACKAGES,
+		site='installation.setup_btrfs_snapshot',
+	),
 	Section(
 		'bootloaders',
 		lambda: {b.value: b.packages() for b in Bootloader},
@@ -252,7 +317,11 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'bootloaders_bios',
-		lambda: {b.value: b.packages(uefi=False) for b in Bootloader if b.has_bios_support()},
+		lambda: {
+			b.value: b.packages(uefi=False)
+			for b in Bootloader
+			if b.has_bios_support()
+		},
 		site='installation.add_bootloader',
 	),
 	Section(
@@ -272,7 +341,9 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'gfx_drivers',
-		lambda: {d.value: [p.value for p in GFX_PACKAGES[d]] for d in GfxDriver},
+		lambda: {
+			d.value: [p.value for p in GFX_PACKAGES[d]] for d in GfxDriver
+		},
 		site='profile_handler.install_profile_config',
 	),
 	Section(
@@ -282,7 +353,11 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'gfx_drivers_dkms',
-		lambda: {d.value: [p.value for p in d.gfx_packages(_DKMS_KERNEL)] for d in GfxDriver if d.has_dkms_variant()},
+		lambda: {
+			d.value: [p.value for p in d.gfx_packages(_DKMS_KERNEL)]
+			for d in GfxDriver
+			if d.has_dkms_variant()
+		},
 		site='profile_handler.install_profile_config',
 	),
 	Section(
@@ -292,7 +367,11 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'profile_base',
-		lambda: {p.name: p.packages for p in ProfileHandler().profiles if p.profile_type in {ProfileType.Desktop, ProfileType.Server}},
+		lambda: {
+			p.name: p.packages
+			for p in ProfileHandler().profiles
+			if p.profile_type in {ProfileType.Desktop, ProfileType.Server}
+		},
 		site='profile_handler.install_profile_config',
 	),
 	Section(
@@ -302,7 +381,11 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'compositors',
-		lambda: {p.name: p.compositor_packages for p in _leaves() if p.compositor_packages},
+		lambda: {
+			p.name: p.compositor_packages
+			for p in _leaves()
+			if p.compositor_packages
+		},
 		site='profile_handler.install_profile_config',
 	),
 	Section(
@@ -389,7 +472,11 @@ class _Calls(ast.NodeVisitor):
 
 def site_order() -> list[str]:
 	tree = ast.parse(_GUIDED.read_text())
-	fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'perform_installation')
+	fn = next(
+		n
+		for n in tree.body
+		if isinstance(n, ast.FunctionDef) and n.name == 'perform_installation'
+	)
 	calls = _Calls()
 	calls.visit(fn)
 	return calls.order
@@ -415,7 +502,10 @@ def render() -> str:
 			lines.append(f'# -- {site} --')
 		for header, table in _tables(section):
 			lines.append(f'[{header}]')
-			lines += [f'{_key(name)} = {_list(pkgs)}' for name, pkgs in table.items()]
+			lines += [
+				f'{_key(name)} = {_list(pkgs)}'
+				for name, pkgs in table.items()
+			]
 			lines.append('')
 
 	return '\n'.join(lines)

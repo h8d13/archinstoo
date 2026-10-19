@@ -23,7 +23,20 @@ def test_comments_not_docstrings() -> None:
 				continue
 
 			tree = ast.parse(path.read_text())
-			scopes = (n for n in ast.walk(tree) if isinstance(n, ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef))
-			found.extend(f'{path.relative_to(root.parent)}:{node.body[0].lineno}' for node in (tree, *scopes) if ast.get_docstring(node))
+			scopes = (
+				n
+				for n in ast.walk(tree)
+				if isinstance(
+					n,
+					ast.AsyncFunctionDef
+					| ast.ClassDef
+					| ast.FunctionDef,
+				)
+			)
+			found.extend(
+				f'{path.relative_to(root.parent)}:{node.body[0].lineno}'
+				for node in (tree, *scopes)
+				if ast.get_docstring(node)
+			)
 
 	assert not found, f'use a `# why` comment instead of a docstring: {found}'

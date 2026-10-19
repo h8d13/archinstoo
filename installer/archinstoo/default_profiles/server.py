@@ -82,8 +82,13 @@ class ServerProfile(Profile):
 
 		for server in self.current_selection:
 			info(f'Installing {server.name}...')
-			install_session.add_additional_packages(server.effective_packages())
+			install_session.add_additional_packages(
+				server.effective_packages()
+			)
 			install_session.enable_service(server.services)
 			server.install(install_session)
 
-		info('If your selections included multiple servers with the same port, you may have to reconfigure them.')
+		info(
+			'If your selections included multiple servers with '
+			'the same port, you may have to reconfigure them.'
+		)

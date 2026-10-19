@@ -50,7 +50,10 @@ AUR_BOOTSTRAP_PACKAGES = [
 # grimoire elevates `pacman -S` for official repo deps: those downloads need
 # the proxy too, and sudo/doas reset the env unless the rule keeps it
 def sudo_aur_rule(username: str) -> str:
-	return f'Defaults:{username} env_keep += "{" ".join(KEEP_ENV)}"\n{username} ALL=(ALL) NOPASSWD: /usr/bin/pacman\n'
+	return (
+		f'Defaults:{username} env_keep += "{" ".join(KEEP_ENV)}"\n{username} '
+		'ALL=(ALL) NOPASSWD: /usr/bin/pacman\n'
+	)
 
 
 def doas_aur_rules(username: str) -> str:
@@ -58,7 +61,10 @@ def doas_aur_rules(username: str) -> str:
 	# pacman`, makepkg -i runs `doas /usr/bin/pacman` (PACMAN_PATH),
 	# so both spellings need a rule
 	keep = ' '.join(KEEP_ENV)
-	return ''.join(f'permit nopass setenv {{ {keep} }} {username} as root cmd {cmd}\n' for cmd in ('pacman', '/usr/bin/pacman'))
+	return ''.join(
+		f'permit nopass setenv {{ {keep} }} {username} as root cmd {cmd}\n'
+		for cmd in ('pacman', '/usr/bin/pacman')
+	)
 
 
 # appended to the user's doas.conf, so cleanup strips only our lines
@@ -66,7 +72,10 @@ def doas_aur_rules(username: str) -> str:
 def _doas_rule(target: Path, username: str) -> Iterator[None]:
 	conf = target / 'etc/doas.conf'
 	rules = doas_aur_rules(username)
-	debug(f'Adding temporary doas rules for AUR build: permit nopass {username} as root cmd pacman')
+	debug(
+		'Adding temporary doas rules for AUR build: permit nopass '
+		f'{username} as root cmd pacman'
+	)
 	try:
 		with conf.open('a') as doas:
 			doas.write(rules)
@@ -77,7 +86,9 @@ def _doas_rule(target: Path, username: str) -> Iterator[None]:
 			debug(f'Removing temporary doas rule for {username}')
 			added = set(rules.splitlines(keepends=True))
 			lines = conf.read_text().splitlines(keepends=True)
-			conf.write_text(''.join(line for line in lines if line not in added))
+			conf.write_text(
+				''.join(line for line in lines if line not in added)
+			)
 
 
 @contextmanager
@@ -114,14 +125,19 @@ def run_grimoire_installation(
 	grimoire_dest.chmod(0o755)
 	debug(f'Installed grimoire helper to {grimoire_dest}')
 
-	temp_rule = _doas_rule if auth_config.privilege_escalation == PrivilegeEscalation.Doas else _sudo_rule
+	temp_rule = (
+		_doas_rule
+		if auth_config.privilege_escalation == PrivilegeEscalation.Doas
+		else _sudo_rule
+	)
 
 	with temp_rule(installation.target, build_user.username):
 		for pkg in packages:
 			info(f'Installing AUR package: {pkg}')
 			try:
 				installation.arch_chroot(
-					f'grimoire --no-color install --repo AUR {shlex.quote(pkg)} --noconfirm',
+					'grimoire --no-color install --repo '
+					f'AUR {shlex.quote(pkg)} --noconfirm',
 					run_as=build_user.username,
 					peek_output=True,
 				)

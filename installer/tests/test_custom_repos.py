@@ -9,10 +9,18 @@ from archinstoo.lib.pm.mirrors import CustomMirrorRepositoriesList
 
 
 def _repo(name: str, priority: bool = False) -> CustomRepository:
-	return CustomRepository(name, f'https://{name}.example/$arch', SignCheck.Never, SignOption.TrustAll, priority)
+	return CustomRepository(
+		name,
+		f'https://{name}.example/$arch',
+		SignCheck.Never,
+		SignOption.TrustAll,
+		priority,
+	)
 
 
-@pytest.mark.parametrize('name', ['core', 'extra', 'options', 'multilib-testing', 'Core'])
+@pytest.mark.parametrize(
+	'name', ['core', 'extra', 'options', 'multilib-testing', 'Core']
+)
 def test_reserved_name_rejected(name: str) -> None:
 	assert CustomRepository.name_error(name, []) is not None
 
@@ -43,11 +51,17 @@ def test_config_with_reserved_name_rejected() -> None:
 		CustomRepository.parse_args([_repo('core').json()])
 
 
-def _menu(monkeypatch: pytest.MonkeyPatch, data: list[CustomRepository], result: CustomRepository) -> tuple[CustomMirrorRepositoriesList, list[list[str]]]:
+def _menu(
+	monkeypatch: pytest.MonkeyPatch,
+	data: list[CustomRepository],
+	result: CustomRepository,
+) -> tuple[CustomMirrorRepositoriesList, list[list[str]]]:
 	# stands in for the prompts; records which names were off limits
 	seen: list[list[str]] = []
 
-	def fake_prompt(taken: list[str], preset: CustomRepository | None = None) -> CustomRepository:
+	def fake_prompt(
+		taken: list[str], preset: CustomRepository | None = None
+	) -> CustomRepository:
 		seen.append(taken)
 		return result
 
@@ -56,7 +70,9 @@ def _menu(monkeypatch: pytest.MonkeyPatch, data: list[CustomRepository], result:
 	return menu, seen
 
 
-def test_add_appends_and_blocks_every_existing_name(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_add_appends_and_blocks_every_existing_name(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
 	data = [_repo('a'), _repo('b')]
 	menu, seen = _menu(monkeypatch, data, _repo('c'))
 

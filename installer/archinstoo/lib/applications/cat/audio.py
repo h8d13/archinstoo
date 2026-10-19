@@ -26,7 +26,8 @@ class AudioApp:
 			'gst-plugin-pipewire',
 			'libpulse',
 			'wireplumber',
-			# realtime scheduling; only ever as optional (and in pulse-audio) but we pin it here.
+			# realtime scheduling; only ever as optional (and in
+			# pulse-audio) but we pin it here.
 			'rtkit',
 		]
 
@@ -45,16 +46,30 @@ class AudioApp:
 		users: list[User] | None = None,
 	) -> None:
 		if users is None:
-			# the packages script installs onto a running system and passes none
-			debug('No users defined, skipping pipewire user service activation')
+			# the packages script installs onto a running
+			# system and passes none
+			debug(
+				'No users defined, skipping pipewire user '
+				'service activation'
+			)
 			return
 
 		for user in users:
 			# Create the full path for enabling the pipewire systemd items
-			service_dir = install_session.target / 'home' / user.username / '.config' / 'systemd' / 'user' / 'default.target.wants'
+			service_dir = (
+				install_session.target
+				/ 'home'
+				/ user.username
+				/ '.config'
+				/ 'systemd'
+				/ 'user'
+				/ 'default.target.wants'
+			)
 			service_dir.mkdir(parents=True, exist_ok=True)
 
-			install_session.chown_tree(user.username, f'/home/{user.username}')
+			install_session.chown_tree(
+				user.username, f'/home/{user.username}'
+			)
 
 			# symlink in the correct pipewire systemd items
 			debug(f'Linking pipewire-pulse user units for {user.username}')
@@ -93,7 +108,11 @@ class AudioApp:
 
 		match audio_config.audio:
 			case Audio.PIPEWIRE:
-				install_session.add_additional_packages(self.pipewire_packages)
+				install_session.add_additional_packages(
+					self.pipewire_packages
+				)
 				self._enable_pipewire(install_session, users)
 			case Audio.PULSEAUDIO:
-				install_session.add_additional_packages(self.pulseaudio_packages)
+				install_session.add_additional_packages(
+					self.pulseaudio_packages
+				)

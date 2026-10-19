@@ -3,9 +3,13 @@
 ## Fork's origin
 
 Divergence [point](https://github.com/archlinux/archinstall/pull/3997)
-> At this point I wanted to add a lot of menu entries and remove some of the hardcoded defaults.
+> At this point I wanted to add a lot of menu entries
+> and remove some of the hardcoded defaults.
 
-Two distinct places to send things: Arch **packaging** (gitlab, the pkgs the installer sits on top of) and **archinstall** itself (github). Different trackers, different review, different lifetimes.
+Two distinct places to send things:
+Arch **packaging** (gitlab, the pkgs the installer sits on top of)
+and **archinstall** itself (github).
+Different trackers, different review, different lifetimes.
 
 ## Arch packaging / Upstreams
 
@@ -53,24 +57,30 @@ Reported [here](https://gitlab.archlinux.org/archlinux/packaging/packages/base-d
 
 ## Archinstall
 
-Sending my patches upstream finally meant the months of testing something privately made sense to other people publicly.
+Sending my patches upstream finally meant the months of testing something privately
+made sense to other people publicly.
 
-The first step to this is **finding a bug**, for something I care enough about to devote a lot of time, focus and energy to.
+The first step to this is **finding a bug**,
+for something I care enough about to devote a lot of time, focus and energy to.
 
-The initial bug I found was that when installing from one computer to another (instead of from a USB), then rebooting it on another machine simply didn't work: it would get stuck at mounting drives for about 2 minutes.
+The initial bug I found was that when installing from one computer to another
+(instead of from a USB), then rebooting it on another machine simply didn't work:
+it would get stuck at mounting drives for about 2 minutes.
 
 [3599](https://github.com/archlinux/archinstall/issues/3599) # `/etc/fstab` boot hanging
 
 > Bug was quickly reproduced by a maintainer, which made it worthy of fixing!
 
 Opened this issue on Jun 15th and it got merged on Nov 9th, or 148 days later.
-The fix was simply `man genfstab` and finding the right flag for what I needed: `-f` for filter, and repeating the destination.
+The fix was simply `man genfstab` and finding the right flag for what I needed:
+`-f` for filter, and repeating the destination.
 
 ```python
 gen_fstab = SysCommand(f'genfstab {flags} -f {self.target} {self.target}').output()
 ```
 
-I had found and patched this in my private repo for months but didn't know how or why to contribute it to public.
+I had found and patched this in my private repo for months
+but didn't know how or why to contribute it to public.
 
 Then I wondered: are there other similar commands we miss flags for?
 So I looked at other `SysCommand` calls (about 100 of them in total).
@@ -81,18 +91,21 @@ And I found this gem:
 pacstrap -C /etc/pacman.conf -K {self.target} {" ".join(packages)} --noconfirm
 ```
 
-In the logs of any installation I kept seeing `Re-installing x, y`, due to selections having some overlap in dependencies.
-Which is normal but useless compute. So I added `--needed` and logs properly showed `Skipping...`, which I was very happy about.
+In the logs of any installation I kept seeing `Re-installing x, y`,
+due to selections having some overlap in dependencies.
+Which is normal but useless compute.
+So I added `--needed` and logs properly showed `Skipping...`,
+which I was very happy about.
 
 ### More features, more problems
 
 Now I have more that got pulled in:
 
-[3930](https://github.com/archlinux/archinstall/commit/375d64a6001086dd0aeb22140e1e022247c33059) # `snapper` -> `grub` integration fix
+[3930] # `snapper` -> `grub` integration fix
 
-[3928](https://github.com/archlinux/archinstall/commit/6b50815eb67c4c5fef9fa08c916be7884687427c) # `vconsole.conf` `KEYMAP=` `FONT=` `mkinitcpio` v40 error
+[3928] # `vconsole.conf` `KEYMAP=` `FONT=` `mkinitcpio` v40 error
 
-[3978](https://github.com/archlinux/archinstall/commit/6b23eff4226a7574e2d763aa3b49fdfb4153b75d) # Add host-to-target (H2T) installation mode detection
+[3978] # Add host-to-target (H2T) installation mode detection
 
 - Add `running_from_host()` function to detect if running from installed system vs ISO
 - Function checks for `/run/archiso` existence (ISO mode) vs host mode
@@ -101,95 +114,111 @@ Now I have more that got pulled in:
 - Fix Pyright type error in `jsonify()` by using `Any` instead of `object`
 - Update README to mention installation from existing system
 
-This enables archinstall to be run from an existing Arch installation to perform host-to-target installs on other disks/partitions.
+This enables archinstall to be run from an existing Arch installation
+to perform host-to-target installs on other disks/partitions.
 
-[4022](https://github.com/archlinux/archinstall/commit/9e7a5f693108aad80a731bb719454547b97e50c9) # Do not install `base-devel` by default
+[4022] # Do not install `base-devel` by default
 
-A funny one I'm also very proud of: `base-devel` is more of a dev tool than a user's tool.
-Building systems should explicitly state it as a dependency and not assume it's installed by default.
+A funny one I'm also very proud of:
+`base-devel` is more of a dev tool than a user's tool.
+Building systems should explicitly state it as a dependency
+and not assume it's installed by default.
 The first line of AUR helpers is often `sudo pacman -S git base-devel` anyway.
 
-[4028](https://github.com/archlinux/archinstall/commit/e5ccdb0c1c4495e63a7e1b5fe4b99c4a95c05cf8) # Adds a timer to post install screen
+[4028] # Adds a timer to post install screen
 
 Because testing should be quick.
 
-[4024](https://github.com/archlinux/archinstall/commit/5fcea379b9cd1f65343056dcfd70a441dc0ab744) # Fix LVM creation/info
+[4024] # Fix LVM creation/info
 
-Hotfix for LVMs to not hang on `Setting up LVM config...`, which I had experienced myself.
+Hotfix for LVMs to not hang on `Setting up LVM config...`,
+which I had experienced myself.
 
-[4005](https://github.com/archlinux/archinstall/commit/1227babd8cf67750926df4bb75a8106a114a4693) # Change LVM `/root` def to adapt dynamically
+[4005] # Change LVM `/root` def to adapt dynamically
 
 Another hotfix where it was `20GiB` hardcoded.
 
-[4007](https://github.com/archlinux/archinstall/commit/17dc00185724d07a92abb19904c773ea95ea38c8) # Cache property of `graphics_devices`
+[4007] # Cache property of `graphics_devices`
 
 Then it stopped being one bug at a time and became areas.
 
-[3979](https://github.com/archlinux/archinstall/commit/326232098a93bf81d35b0620e59a58ec19c0486b) # Full disclosure for bootloaders/keymaps
+[3979] # Full disclosure for bootloaders/keymaps
 
-[4006](https://github.com/archlinux/archinstall/commit/f639290c2025f378ee60562c48ea29b272fab99e) # `ly.service` -> `ly@tty1.service`
+[4006] # `ly.service` -> `ly@tty1.service`
 
 A greeter that never shows up is a black screen. The unit needs the tty instance.
 
-[4027](https://github.com/archlinux/archinstall/commit/9412f977718983b7d261cdac3e275a538f3163c8) # Set up `zram` dynamically based on best practice
+[4027] # Set up `zram` dynamically based on best practice
 
-[4042](https://github.com/archlinux/archinstall/commit/2954e4397b053841851d9c79e2b4cde946c0f7e1) # `zram` algorithm config
+[4042] # `zram` algorithm config
 
-Hardcoded sizes again. Then the follow-up: if you expose `zram`, expose the compressor/decompressor too.
+Hardcoded sizes again.
+Then the follow-up: if you expose `zram`, expose the compressor/decompressor too.
 
-[4025](https://github.com/archlinux/archinstall/commit/c1eae10e93a94edbd0f9b94da4ad3d1c73ae993c) # Enable `iwd` to be used as back-end in network selection
+[4025] # Enable `iwd` to be used as back-end in network selection
 
-[4031](https://github.com/archlinux/archinstall/commit/79313c4942ea10acf26a284037ac842012cc6f42) # Fix mirrors hang when `/status` endpoint is down
+[4031] # Fix mirrors hang when `/status` endpoint is down
 
 Third-party endpoint down should not stall an installer. Timeout and move on.
 
-[4050](https://github.com/archlinux/archinstall/commit/eb5e88f31784809098bb30754b3639d9ce08f0c1) # Mirrors sort ([4046](https://github.com/archlinux/archinstall/issues/4046))
+[4050] # Mirrors sort ([4046])
 
-[4047](https://github.com/archlinux/archinstall/commit/747385a8831774afa76a08708448af0767cbbf6f) # `lvm2`/LUKS fixes + mirror logic
+[4047] # `lvm2`/LUKS fixes + mirror logic
 
-[4043](https://github.com/archlinux/archinstall/commit/ac984b7622462c0e9b791541fc603ddad21a7852) # Change the order of the main menu
+[4043] # Change the order of the main menu
 
-[4048](https://github.com/archlinux/archinstall/commit/83c9bf06b25854647eef6b6b4445fc2348b80b2d) # Language display handled like other sections
+[4048] # Language display handled like other sections
 
-Menu order and consistency are not cosmetics here: the order is the install flow a first-timer reads top to bottom.
+Menu order and consistency are not cosmetics here:
+the order is the install flow a first-timer reads top to bottom.
 
-[4074](https://github.com/archlinux/archinstall/commit/450664cdc43ac90db34cc4b9036f1a626ac0770d) # Firewalls
+[4074] # Firewalls
 
-[4082](https://github.com/archlinux/archinstall/commit/cc6e247dcfd131d059288c53f217552593291d80) # State `libfido2` dependency
+[4082] # State `libfido2` dependency
 
 Implicit deps break the day the pkg that pulled them in drops them. Say it out loud.
 
-[4073](https://github.com/archlinux/archinstall/commit/01884599173049323aab584a266d37f6ff3a6f46) # Bootloader changes
+[4073] # Bootloader changes
 
-[4099](https://github.com/archlinux/archinstall/commit/62edc56a52879846d16bbd9544fcd8642f5bf666) # Hotfix: revert `grub` changes
+[4099] # Hotfix: revert `grub` changes
 
-[4100](https://github.com/archlinux/archinstall/commit/ef9f704761c3123b04434a88eaa3e74036556244) # Hotfix: firewall
+[4100] # Hotfix: firewall
 
-Two hotfixes three days after the features. Worth keeping in the record: shipping to an installer means the blast radius is somebody's unbootable machine, so reverting fast is part of the job, not a failure of it.
+Two hotfixes three days after the features.
+Worth keeping in the record: shipping to an installer means the blast radius
+is somebody's unbootable machine,
+so reverting fast is part of the job, not a failure of it.
 
-[4231](https://github.com/archlinux/archinstall/commit/8148b1d9bf8985394044b8074e04c541ac4e3a90) # Fix `efistub` bootloader to use backslashes
+[4231] # Fix `efistub` bootloader to use backslashes
 
 EFI paths are DOS paths. `/` works until firmware decides it doesn't.
 
-[4238](https://github.com/archlinux/archinstall/commit/f736b8c4ec9c2b16d98db914824eb283a6a8b032) # Install gfx before DE/WM/Server
+[4238] # Install gfx before DE/WM/Server
 
 Ordering bug: the desktop pulls its own gfx assumptions if it gets there first.
 
-[4358](https://github.com/archlinux/archinstall/commit/3ba29f1193dd996a5ec4e9e68d0bb47ba063be28) # Patch `plasma` profile, add essentials ([4336](https://github.com/archlinux/archinstall/issues/4336))
+[4358] # Patch `plasma` profile, add essentials ([4336])
 
-[4528](https://github.com/archlinux/archinstall/commit/b81fe955f0c789e371b96ed03c79642d4c607f82) # `iwd` standalone option + fix `NM_IWD`
+[4528] # `iwd` standalone option + fix `NM_IWD`
 
-`NicType.IWD` as a third option next to `NM` and `NM_IWD`: `iwd` does its own DHCP, `systemd-resolved` picks up DNS through the symlink, no `NetworkManager` pulled in. Also filled in the `parse_arg` cases so both nic types round-trip through a config file.
+`NicType.IWD` as a third option next to `NM` and `NM_IWD`:
+`iwd` does its own DHCP, `systemd-resolved` picks up DNS through the symlink,
+no `NetworkManager` pulled in.
+Also filled in the `parse_arg` cases so both nic types round-trip through a config file.
 
-[4711](https://github.com/archlinux/archinstall/commit/8157685d04cf146676cf9e8e1182295f34495e2f) # Add [`linux-rt`](https://archlinux.org/packages/?sort=&q=linux-rt) kernel variants from upstream
+[4711] # Add [`linux-rt`][linux-rt] kernel variants from upstream
 
-[4705](https://github.com/archlinux/archinstall/commit/426e2732657611f188a7ab7801bda585f62f1a62) # Intel open-source post Gen12 needs this for `ffmpeg`, `obs-studio`, etc
+[4705] # Intel open-source post Gen12 needs this for `ffmpeg`, `obs-studio`, etc
 
-[4713](https://github.com/archlinux/archinstall/commit/3ffa1a98a0c1881fdb2cfb6c7e31efd324a7d405) # Continue [4705](https://github.com/archlinux/archinstall/pull/4705): Intel VPL
+[4713] # Continue [4705][pr-4705]: Intel VPL
 
-Gen12 and up moved to a different media stack. Miss it and hardware accel silently isn't there, which the user only finds out when a recording drops frames. Per the [wiki](https://wiki.archlinux.org/title/Hardware_video_acceleration#Intel_Video_Processing_Library_(Intel_VPL)).
+Gen12 and up moved to a different media stack.
+Miss it and hardware accel silently isn't there,
+which the user only finds out when a recording drops frames.
+Per the [wiki](https://wiki.archlinux.org/title/Hardware_video_acceleration#Intel_Video_Processing_Library_(Intel_VPL)).
 
-You can see all work upstream [here](https://github.com/archlinux/archinstall/commits/master/?author=h8d13), and on gitlab where the more "serious" reports go.
+You can see all work upstream [here](https://github.com/archlinux/archinstall/commits/master/?author=h8d13),
+and on gitlab where the more "serious" reports go.
 
 ----
 
@@ -206,75 +235,149 @@ So how do we bridge this gap?
 
 In this category I see two main things:
 
-One: overly complex issue categories, flows, reviews, and codebases, which slow down a project during traction.
-Backwards-compat claims and style nits that make the code a magical piece instead, too few dare to touch. Instead of a place for fast iteration.
+One: overly complex issue categories, flows, reviews, and codebases,
+which slow down a project during traction.
+Backwards-compat claims and style nits that make the code a magical piece instead,
+too few dare to touch. Instead of a place for fast iteration.
 
-Two: amazing tools that are under-exploited should be made clearer to likely future contributors, especially local hooks such as `shellcheck`, `ruff`, etc.
+Two: amazing tools that are under-exploited
+should be made clearer to likely future contributors,
+especially local hooks such as `shellcheck`, `ruff`, etc.
 
 ### **Systematic testing**
 
-When a patch is released, or when edge occurrences need to be covered, testing has to be done in real-world conditions and from scratch.
-This, plus logs/notes/screenshots and multiple scenarios, can often take more time than finding the fix in the first place.
+When a patch is released, or when edge occurrences need to be covered,
+testing has to be done in real-world conditions and from scratch.
+This, plus logs/notes/screenshots and multiple scenarios,
+can often take more time than finding the fix in the first place.
 
-It doesn't even account for two more factors: one, you need to understand and dig into the docs of the underlying issue(s) or related; two, you might need to test related changes several times over a matrix.
+It doesn't even account for two more factors:
+one, you need to understand and dig into the docs of the underlying issue(s) or related;
+two, you might need to test related changes several times over a matrix.
 
 ### **Open**
 
-From a philosophical standpoint this means _anyone_ can get involved, but moreover means they should be given the necessary information to do so.
+From a philosophical standpoint this means _anyone_ can get involved,
+but moreover means they should be given the necessary information to do so.
 
-This shouldn't mean complicated rules but instead welcoming guidelines that enhance success:
+This shouldn't mean complicated rules
+but instead welcoming guidelines that enhance success:
 
 - **Issues:** user reports from issues AND other sources are the heart of the dev.
-Taking real experience with a program helps us avoid other similar issues too. This naturally filters future issues to be more critical.
+Taking real experience with a program helps us avoid other similar issues too.
+This naturally filters future issues to be more critical.
 
-- **Contrib style:** in large established codebases you'll likely want to make targeted commits to specifics. Unless you're working on a mega patch (hehehe).
+- **Contrib style:** in large established codebases
+you'll likely want to make targeted commits to specifics.
+Unless you're working on a mega patch (hehehe).
 
-- **Reviews:** other maintainers will look at all of the code, and perhaps even test themselves on your branch.
+- **Reviews:** other maintainers will look at all of the code,
+and perhaps even test themselves on your branch.
 Sometimes this means more changes are required, other times it might be logic related.
 
-- **Implications:** with each change you make, however personal, you have to grasp other related code.
-Searching the repo for defs/classes will help you trace, plus tracebacks when hitting errors (and again, proper testing according to changes).
+- **Implications:** with each change you make, however personal,
+you have to grasp other related code.
+Searching the repo for defs/classes will help you trace,
+plus tracebacks when hitting errors
+(and again, proper testing according to changes).
 
-- **Formats:** there are certain formats in place that help (simple issue format/categories).
-Mentioning other PRs/issues/docs in discussions helps with traceability for other peers to look at quickly.
+- **Formats:** there are certain formats in place that help
+(simple issue format/categories).
+Mentioning other PRs/issues/docs in discussions
+helps with traceability for other peers to look at quickly.
 
 ### Common issues
 
-Often the best fixes are the ones we know for sure will occur again (reproducible and documented).
-These are things we see from various sources and can either solve in code or make explicit in docs/UI.
+Often the best fixes are the ones we know for sure will occur again
+(reproducible and documented).
+These are things we see from various sources
+and can either solve in code or make explicit in docs/UI.
 
 In archinstall an example is that by default the timezone selected is `UTC`.
-If the choice is wrong according to the user's real time and/or the hardware clock got reset (CMOS battery dead), then `gpg` verification of pkgs just fails.
-A simple solution is to force the user to select a timezone by starting at `None` and making it mandatory, plus adding it to docs.
+If the choice is wrong according to the user's real time
+and/or the hardware clock got reset (CMOS battery dead),
+then `gpg` verification of pkgs just fails.
+A simple solution is to force the user to select a timezone
+by starting at `None` and making it mandatory, plus adding it to docs.
 
 ### Speed
 
-Testing is annoying. Physical tests need you to flash the latest ISOs (monthly), go into BIOS, test install, `grep` logs, then reboot and verify.
+Testing is annoying.
+Physical tests need you to flash the latest ISOs (monthly), go into BIOS, test install,
+`grep` logs, then reboot and verify.
 Sometimes several times for one scenario.
 
 So I thought, while I'm coding, this needs to be faster. Which needed two things:
 
-**1.** a decent `QEMU` script to test different scenarios in VMs (the GUI managers needed more options)
+**1.** a decent `QEMU` script to test different scenarios in VMs
+(the GUI managers needed more options)
 **2.** an ISO with KDE files so I could test full desktop features in less time.
 
-Made it so the target would have `git` pre-installed with the repo already cloned in `sudo_user(0)` home (very inception like).
+Made it so the target would have `git` pre-installed
+with the repo already cloned in `sudo_user(0)` home (very inception like).
 
-Current best time is **1m54s**, achieved when I moved all the pkgs with hooks in the installer to the first base-strap.
+Current best time is **1m54s**,
+achieved when I moved all the pkgs with hooks in the installer to the first base-strap.
 Which you shouldn't do, for obvious reasons.
 
 ## Weird structure of an OS installer
 
-The archinstall project is especially relevant to me because it covers thousands of use-cases in a TUI that could run on a potato, a small server in your closet or the latest most expensive hardware.
+The archinstall project is especially relevant to me
+because it covers thousands of use-cases in a TUI that could run on a potato,
+a small server in your closet or the latest most expensive hardware.
 
-This makes it interesting: it covers a lot of ground, and has many options within (bootloaders, FS types, encryption, UKI, U2F keys, HSM, desktops/servers, etc).
-These options are philosophy: a good starting point but barebones, due to arch being arch.
+This makes it interesting: it covers a lot of ground, and has many options within
+(bootloaders, FS types, encryption, UKI, U2F keys, HSM, desktops/servers, etc).
+These options are philosophy:
+a good starting point but barebones, due to arch being arch.
 
 This places the installer in a weird position, kind of being downstream from everything.
-But at the same time, breaking changes do occur in dev cycles, meaning testing here becomes both hell and fun.
-Notably `systemd` or other major base libs (`mkinitcpio`, encryption libs) can break, or some rules change for x or y. This is often hotfixed in a few days and back to normal.
-And in the end it's kind of **upstream of everything**, since different components have similar structure and do kind of compete.
+But at the same time, breaking changes do occur in dev cycles,
+meaning testing here becomes both hell and fun.
+Notably `systemd` or other major base libs (`mkinitcpio`, encryption libs) can break,
+or some rules change for x or y.
+This is often hotfixed in a few days and back to normal.
+And in the end it's kind of **upstream of everything**,
+since different components have similar structure and do kind of compete.
 
-Insert [xkcd comic](https://imgs.xkcd.com/comics/standards_2x.png) about competing standards.
+Insert [xkcd comic](https://imgs.xkcd.com/comics/standards_2x.png)
+about competing standards.
 
-[Archinstall](https://github.com/archlinux/archinstall) doesn't judge: it gives you all the options and you end up making your pizza.
+[Archinstall](https://github.com/archlinux/archinstall) doesn't judge:
+it gives you all the options and you end up making your pizza.
 And considering arch packages are basically live updates, let's just say it's fresh.
+
+[3930]: https://github.com/archlinux/archinstall/commit/375d64a6001086dd0aeb22140e1e022247c33059
+[3928]: https://github.com/archlinux/archinstall/commit/6b50815eb67c4c5fef9fa08c916be7884687427c
+[3978]: https://github.com/archlinux/archinstall/commit/6b23eff4226a7574e2d763aa3b49fdfb4153b75d
+[4022]: https://github.com/archlinux/archinstall/commit/9e7a5f693108aad80a731bb719454547b97e50c9
+[4028]: https://github.com/archlinux/archinstall/commit/e5ccdb0c1c4495e63a7e1b5fe4b99c4a95c05cf8
+[4024]: https://github.com/archlinux/archinstall/commit/5fcea379b9cd1f65343056dcfd70a441dc0ab744
+[4005]: https://github.com/archlinux/archinstall/commit/1227babd8cf67750926df4bb75a8106a114a4693
+[4007]: https://github.com/archlinux/archinstall/commit/17dc00185724d07a92abb19904c773ea95ea38c8
+[3979]: https://github.com/archlinux/archinstall/commit/326232098a93bf81d35b0620e59a58ec19c0486b
+[4006]: https://github.com/archlinux/archinstall/commit/f639290c2025f378ee60562c48ea29b272fab99e
+[4027]: https://github.com/archlinux/archinstall/commit/9412f977718983b7d261cdac3e275a538f3163c8
+[4042]: https://github.com/archlinux/archinstall/commit/2954e4397b053841851d9c79e2b4cde946c0f7e1
+[4025]: https://github.com/archlinux/archinstall/commit/c1eae10e93a94edbd0f9b94da4ad3d1c73ae993c
+[4031]: https://github.com/archlinux/archinstall/commit/79313c4942ea10acf26a284037ac842012cc6f42
+[4050]: https://github.com/archlinux/archinstall/commit/eb5e88f31784809098bb30754b3639d9ce08f0c1
+[4046]: https://github.com/archlinux/archinstall/issues/4046
+[4047]: https://github.com/archlinux/archinstall/commit/747385a8831774afa76a08708448af0767cbbf6f
+[4043]: https://github.com/archlinux/archinstall/commit/ac984b7622462c0e9b791541fc603ddad21a7852
+[4048]: https://github.com/archlinux/archinstall/commit/83c9bf06b25854647eef6b6b4445fc2348b80b2d
+[4074]: https://github.com/archlinux/archinstall/commit/450664cdc43ac90db34cc4b9036f1a626ac0770d
+[4082]: https://github.com/archlinux/archinstall/commit/cc6e247dcfd131d059288c53f217552593291d80
+[4073]: https://github.com/archlinux/archinstall/commit/01884599173049323aab584a266d37f6ff3a6f46
+[4099]: https://github.com/archlinux/archinstall/commit/62edc56a52879846d16bbd9544fcd8642f5bf666
+[4100]: https://github.com/archlinux/archinstall/commit/ef9f704761c3123b04434a88eaa3e74036556244
+[4231]: https://github.com/archlinux/archinstall/commit/8148b1d9bf8985394044b8074e04c541ac4e3a90
+[4238]: https://github.com/archlinux/archinstall/commit/f736b8c4ec9c2b16d98db914824eb283a6a8b032
+[4358]: https://github.com/archlinux/archinstall/commit/3ba29f1193dd996a5ec4e9e68d0bb47ba063be28
+[4336]: https://github.com/archlinux/archinstall/issues/4336
+[4528]: https://github.com/archlinux/archinstall/commit/b81fe955f0c789e371b96ed03c79642d4c607f82
+[4711]: https://github.com/archlinux/archinstall/commit/8157685d04cf146676cf9e8e1182295f34495e2f
+[linux-rt]: https://archlinux.org/packages/?sort=&q=linux-rt
+[4705]: https://github.com/archlinux/archinstall/commit/426e2732657611f188a7ab7801bda585f62f1a62
+[pr-4705]: https://github.com/archlinux/archinstall/pull/4705
+[4713]: https://github.com/archlinux/archinstall/commit/3ffa1a98a0c1881fdb2cfb6c7e31efd324a7d405

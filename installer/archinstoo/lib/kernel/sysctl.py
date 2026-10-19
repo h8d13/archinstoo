@@ -1,6 +1,11 @@
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.models.sysctl import BASE_DEFAULTS, DEFAULTS_CONF, ENTRIES_CONF, SysctlConfiguration
+from archinstoo.lib.models.sysctl import (
+	BASE_DEFAULTS,
+	DEFAULTS_CONF,
+	ENTRIES_CONF,
+	SysctlConfiguration,
+)
 from archinstoo.lib.output import info
 
 if TYPE_CHECKING:

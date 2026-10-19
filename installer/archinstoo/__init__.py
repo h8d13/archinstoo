@@ -47,7 +47,8 @@ r"""ArchInstoo Linux Installer.
           ░░░░░░░░░░░           ░██████▓░█▒▓▓░░░░█▓▓█▒▓▓▓▓▓▒░▒▒▒ ▒▒▒░ ░ ░░
             ░░░░░░░░░░░░         ▓▒    ▓▓ ▒▓▓░░░░░░▒▒▒▒▒▓▓▓▓▒░░▒   ░▒▒▒░
 
-=> BL => FS => PM/BASE => KERN/H => DRIVERS => USERS/GROUPS => PROFILES => APPS(CAT) => MISC.
+=> BL => FS => PM/BASE => KERN/H => DRIVERS => USERS/GROUPS => PROFILES
+=> APPS(CAT) => MISC.
 Base refers to a minimal install:
 	=> Essential pkgs
 	=> Locales, console, kb
@@ -55,11 +56,13 @@ Base refers to a minimal install:
 	=> Hostname, TZ/NTP
 
 This roughly shows the `guided` flow.
-Other scripts or skip flags allow to skip some or all of these steps and run archinstoo.
-The way you need it, you are also free to modify profiles or certain install steps if desired.
+Other scripts or skip flags allow to skip some or all of these steps and run
+archinstoo the way you need it, you are also free to modify profiles or certain
+install steps if desired.
 
-Misc is up to preference, which is the entire goal of this project: enable & give choices.
-But also lets standards compete in a better environment. Banner made on 10/02/2026.
+Misc is up to preference, which is the entire goal of this project: enable & give
+choices. But also lets standards compete in a better environment.
+Banner made on 10/02/2026.
 """
 
 import logging
@@ -124,7 +127,11 @@ def _missing_deps(depends: tuple[str, ...]) -> list[str]:
 		if err.exit_code != 127:
 			raise
 		out = err.worker_log.decode('utf-8', errors='ignore')
-		missing = [line.strip() for line in out.splitlines() if line.strip() in depends]
+		missing = [
+			line.strip()
+			for line in out.splitlines()
+			if line.strip() in depends
+		]
 		if not missing:
 			raise
 		return missing
@@ -154,7 +161,9 @@ def _fetch_deps() -> int:
 			return 0
 
 		info(f'Fetching {len(missing)} missing dep(s): {" ".join(missing)}')
-		Pacman.run(f'-S --needed --noconfirm {" ".join(missing)}', peek_output=True)
+		Pacman.run(
+			f'-S --needed --noconfirm {" ".join(missing)}', peek_output=True
+		)
 		Env.put_value('A2_DEPS_FETCHED', '1')
 	except Exception as e:
 		error(f'Failed to fetch deps: {e}')
@@ -196,7 +205,11 @@ def _prepare(offline: bool) -> int:
 	# pacman, its config and keyring only exist on Arch: any other host runs
 	# archinstoo inside the bootstrap script's Arch root instead
 	if Host.running_from_foreign():
-		error(f'Running on {Host.running_from_who() or "an unknown host"}: start through --script bootstrap, which runs from any Linux host.')
+		error(
+			f'Running on {Host.running_from_who() or "an unknown host"}: '
+			'start through --script bootstrap, which runs from any Linux '
+			'host.'
+		)
 		return 1
 
 	if not offline and (rc := _check_online()):
@@ -217,9 +230,15 @@ def _prepare(offline: bool) -> int:
 	except Exception as e:
 		error('Failed to prepare app.')
 		if 'could not resolve host' in str(e).lower():
-			error('Most likely due to a missing network connection or DNS issue. Or dependency resolution.')
+			error(
+				'Most likely due to a missing network connection or '
+				'DNS issue. Or dependency resolution.'
+			)
 
-		error(f'Run archinstoo --debug and check {logger.host_path} for details.')
+		error(
+			'Run archinstoo --debug and check '
+			f'{logger.host_path} for details.'
+		)
 
 		debug(f'Failed to prepare app: {e}')
 		return 1
@@ -227,8 +246,14 @@ def _prepare(offline: bool) -> int:
 
 def _log_sys_info(args: Arguments) -> None:
 	bitness = SysInfo.bitness()
-	debug(f'Hardware model detected: {SysInfo.sys_vendor()} {SysInfo.product_name()}')
-	debug(f'UEFI mode: {SysInfo.has_uefi()} Bitness: {bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}')
+	debug(
+		f'Hardware model detected: {SysInfo.sys_vendor()} '
+		f'{SysInfo.product_name()}'
+	)
+	debug(
+		f'UEFI mode: {SysInfo.has_uefi()} Bitness: '
+		f'{bitness if bitness is not None else "N/A"} Arch: {SysInfo.arch()}'
+	)
 	debug(f'Processor model detected: {SysInfo.cpu_model()}')
 	debug(f'Memory statistics: {SysInfo.mem_total()} kB total installed')
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
@@ -240,20 +265,25 @@ def _log_sys_info(args: Arguments) -> None:
 
 
 def main(script: str, handler: ArchConfigHandler) -> int:
-	# Usually ran straight as a module: python -m archinstoo or compiled as a package.
-	# In any case we will be attempting to load the provided script to be run from the scripts/ folder
+	# Usually ran straight as a module: python -m archinstoo or compiled as a
+	# package. In any case we will be attempting to load the provided script to be
+	# run from the scripts/ folder
 	args = handler.args
 
 	if not is_root():
-		print(f'archinstoo {script} requires root privileges to run. See --help for more.')
+		print(
+			f'archinstoo {script} requires root privileges to '
+			'run. See --help for more.'
+		)
 		return 1
 
 	# fixes #4149 by passing args properly to subscripts
 	handler.pass_args_to_subscript()
 	_log_sys_info(args)
 
-	# On host, snapshot /etc/pacman.conf and restore it on exit so an H2T run never leaves
-	# the running system with a modified pacman.conf (heals a prior crashed run too).
+	# On host, snapshot /etc/pacman.conf and restore it on exit so an H2T run
+	# never leaves the running system with a modified pacman.conf (heals a
+	# prior crashed run too).
 	from .lib.pm.config import guard_host_conf
 
 	guard_host_conf()
@@ -269,8 +299,9 @@ def _error_message(exc: Exception, handler: ArchConfigHandler) -> None:
 	error(err)
 
 	text = textwrap.dedent(f"""\
-		Archinstoo experienced the above error. If you think this is a bug, please report it to
-		{handler.config.bug_report_url} and include the log file "{logger.host_path}".
+		Archinstoo experienced the above error. If you think this is a bug,
+		please report it to {handler.config.bug_report_url}
+		and include the log file "{logger.host_path}".
 
 		Hint: To extract the log from a live ISO
 		curl --data-binary @{logger.host_path} https://paste.rs
@@ -287,15 +318,26 @@ def _is_bootstrap_blocked(script: str | None) -> bool:
 
 def _run_bootstrap() -> int:
 	if Host.running_from_bootstrap():
-		error('archinstoo --script bootstrap: already inside the bootstrap root')
+		error(
+			'archinstoo --script bootstrap: already inside the '
+			'bootstrap root'
+		)
 		return 1
 	argv = sys.argv[1:]
 	split = argv.index('--') if '--' in argv else len(argv)
 	head = argv[:split]
 	own = [a for a in head if a in {'-h', '--help'}]
 	# options before -- would be parsed here and never reach the root
-	if extra := [a for a in head if a not in {'--script', 'bootstrap', '--script=bootstrap', '--debug', *own}]:
-		error(f'archinstoo --script bootstrap: pass {" ".join(extra)} after --, it runs inside the root')
+	if extra := [
+		a
+		for a in head
+		if a
+		not in {'--script', 'bootstrap', '--script=bootstrap', '--debug', *own}
+	]:
+		error(
+			'archinstoo --script bootstrap: pass '
+			f'{" ".join(extra)} after --, it runs inside the root'
+		)
 		return 1
 	sys.argv = [sys.argv[0], *own, '--', *argv[split + 1 :]]
 	_run_script('bootstrap')
@@ -331,7 +373,10 @@ def run_as_a_module() -> int:
 		return _run_bootstrap()
 
 	if _is_bootstrap_blocked(early.script):
-		error(f'archinstoo {early.script} configures the running system, which is the bootstrap root.')
+		error(
+			f'archinstoo {early.script} configures the running '
+			'system, which is the bootstrap root.'
+		)
 		error('Run it on the installed system instead.')
 		return 1
 
@@ -370,7 +415,8 @@ def run_as_a_module() -> int:
 			rc = main(script, handler)
 		except KeyboardInterrupt:
 			# clean user abort: no traceback / bug-report noise. 128+SIGINT,
-			# what an uncaught ^C exits with, so callers can tell it from a failure
+			# what an uncaught ^C exits with, so callers can
+			# tell it from a failure
 			warn('Aborted by user.')
 			rc = 130
 		except Exception as e:

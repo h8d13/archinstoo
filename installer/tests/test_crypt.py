@@ -3,12 +3,21 @@ from ctypes.util import find_library
 
 import pytest
 
-from archinstoo.lib.authentication.crypt import ROUNDS_INSTALL, hash_password, sha512_crypt
+from archinstoo.lib.authentication.crypt import (
+	ROUNDS_INSTALL,
+	hash_password,
+	sha512_crypt,
+)
 from archinstoo.lib.models.users import Password
 
 # vectors from Drepper's spec, https://www.akkadia.org/drepper/SHA-crypt.txt
 SPEC_VECTORS = [
-	('Hello world!', 'saltstring', 5000, '$6$saltstring$svn8UoSVapNtMuq1ukKS4tPQd8iKwSMHWjl/O817G3uBnIFNjnQJuesI68u4OTLiBFdcbYEdFCoEOfaS35inz1'),
+	(
+		'Hello world!',
+		'saltstring',
+		5000,
+		'$6$saltstring$svn8UoSVapNtMuq1ukKS4tPQd8iKwSMHWjl/O817G3uBnIFNjnQJuesI68u4OTLiBFdcbYEdFCoEOfaS35inz1',
+	),
 	(
 		'Hello world!',
 		'saltstringsaltstring',
@@ -16,7 +25,10 @@ SPEC_VECTORS = [
 		'$6$rounds=10000$saltstringsaltst$OW1/O6BYHV6BcXZu8QVeXbDWra3Oeqh0sbHbbMCVNSnCM/UrjmM0Dp8vOuZeHBy/YTBmSK6H9qs/y3RnOaw5v.',
 	),
 	(
-		'a very much longer text to encrypt.  This one even stretches over morethan one line.',
+		(
+			'a very much longer text to encrypt.  This one even '
+			'stretches over morethan one line.'
+		),
 		'anotherlongsaltstring',
 		1400,
 		'$6$rounds=1400$anotherlongsalts$POfYwTEok97VWcjxIiSOjiykti.o/pQs.wPvMxQ6Fm7I6IoYN3CmLs66x9t0oSwbtEW7o7UmJEiDwGqd8p4ur1',
@@ -64,7 +76,9 @@ def test_matches_host_libc_crypt() -> None:
 	lib.crypt.restype = ctypes.c_char_p
 	for n in (0, 1, 15, 16, 17, 63, 64, 65, 95, 96, 200):
 		password = bytes(range(1, n + 1))
-		assert lib.crypt(password, b'$6$abcdefgh').decode() == sha512_crypt(password, 'abcdefgh')
+		assert lib.crypt(password, b'$6$abcdefgh').decode() == sha512_crypt(
+			password, 'abcdefgh'
+		)
 
 
 def test_hash_password_uses_install_rounds() -> None:

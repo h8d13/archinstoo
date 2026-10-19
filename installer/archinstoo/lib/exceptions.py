@@ -27,7 +27,12 @@ class SysCallError(CalledProcessError):
 		output: bytes | None = None,
 		stderr: bytes | None = None,
 	) -> None:
-		super().__init__(exit_code if exit_code is not None else 1, cmd or message, output, stderr)
+		super().__init__(
+			exit_code if exit_code is not None else 1,
+			cmd or message,
+			output,
+			stderr,
+		)
 		self.message = message
 		self.exit_code = exit_code
 		self.worker_log = worker_log

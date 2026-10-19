@@ -14,7 +14,8 @@ class PrivilegeEscalation(Enum):
 		return {
 			PrivilegeEscalation.Sudo: ['sudo'],
 			PrivilegeEscalation.Doas: ['opendoas'],
-			PrivilegeEscalation.Run0: ['polkit'],  # run0 is part of systemd, just needs polkit
+			# run0 is part of systemd, just needs polkit
+			PrivilegeEscalation.Run0: ['polkit'],
 		}[self]
 
 
@@ -41,7 +42,9 @@ class AuthenticationConfiguration:
 		auth_config = cls()
 
 		if enc_password := args.get('root_enc_password'):
-			auth_config.root_enc_password = Password(enc_password=enc_password)
+			auth_config.root_enc_password = Password(
+				enc_password=enc_password
+			)
 
 		if lock_root := args.get('lock_root_account'):
 			auth_config.lock_root_account = lock_root
@@ -51,7 +54,9 @@ class AuthenticationConfiguration:
 
 		if 'privilege_escalation' in args:
 			priv_esc = args.get('privilege_escalation')
-			auth_config.privilege_escalation = PrivilegeEscalation(priv_esc) if priv_esc else None
+			auth_config.privilege_escalation = (
+				PrivilegeEscalation(priv_esc) if priv_esc else None
+			)
 
 		return auth_config
 
@@ -62,7 +67,11 @@ class AuthenticationConfiguration:
 			config['lock_root_account'] = self.lock_root_account
 
 		if self.privilege_escalation != PrivilegeEscalation.Sudo:
-			config['privilege_escalation'] = self.privilege_escalation.value if self.privilege_escalation else None
+			config['privilege_escalation'] = (
+				self.privilege_escalation.value
+				if self.privilege_escalation
+				else None
+			)
 
 		if self.users:
 			config['users'] = [u.json() for u in self.users]

@@ -61,7 +61,12 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 
 	def preview_lines(self) -> list[str]:
 		# every category preview, off the config this menu was handed
-		return [text for entry in self._item_group.items if entry.preview_action and (text := entry.preview_action(entry))]
+		return [
+			text
+			for entry in self._item_group.items
+			if entry.preview_action
+			and (text := entry.preview_action(entry))
+		]
 
 	@override
 	def run(self, additional_title: str | None = None) -> ApplicationConfiguration:
@@ -254,20 +259,40 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		return None
 
 
-def select_power_management(preset: PowerManagementConfiguration | None = None) -> PowerManagementConfiguration | None:
+def select_power_management(
+	preset: PowerManagementConfiguration | None = None,
+) -> PowerManagementConfiguration | None:
 	choice = prompt_choice(
-		MenuItemGroup.from_enum(PowerManagement), preset.power_management if preset else None, frame='Power management', allow_reset=True
+		MenuItemGroup.from_enum(PowerManagement),
+		preset.power_management if preset else None,
+		frame='Power management',
+		allow_reset=True,
 	)
 	return PowerManagementConfiguration(choice) if choice else None
 
 
-def select_cpu_scheduler(preset: CPUSchedulerConfiguration | None = None) -> CPUSchedulerConfiguration | None:
+def select_cpu_scheduler(
+	preset: CPUSchedulerConfiguration | None = None,
+) -> CPUSchedulerConfiguration | None:
 	items = [MenuItem(text='Stable', read_only=True)]
-	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s not in EXPERIMENTAL_CPU_SCHEDULERS]
+	items += [
+		MenuItem(text=f'  {s.value}', value=s)
+		for s in CPUScheduler
+		if s not in EXPERIMENTAL_CPU_SCHEDULERS
+	]
 	items.append(MenuItem(text='Experimental', read_only=True))
-	items += [MenuItem(text=f'  {s.value}', value=s) for s in CPUScheduler if s in EXPERIMENTAL_CPU_SCHEDULERS]
+	items += [
+		MenuItem(text=f'  {s.value}', value=s)
+		for s in CPUScheduler
+		if s in EXPERIMENTAL_CPU_SCHEDULERS
+	]
 
-	choice = prompt_choice(items, preset.scheduler if preset else None, frame='CPU scheduler', allow_reset=True)
+	choice = prompt_choice(
+		items,
+		preset.scheduler if preset else None,
+		frame='CPU scheduler',
+		allow_reset=True,
+	)
 	return CPUSchedulerConfiguration(choice) if choice else None
 
 
@@ -275,35 +300,56 @@ def _enabled_text(label: str, enabled: bool) -> str:
 	return f'{label}: {"Enabled" if enabled else "Disabled"}'
 
 
-def select_bluetooth(preset: BluetoothConfiguration | None) -> BluetoothConfiguration | None:
-	enabled = prompt_yes_no('Would you like to configure Bluetooth?\n', preset.enabled if preset else False)
+def select_bluetooth(
+	preset: BluetoothConfiguration | None,
+) -> BluetoothConfiguration | None:
+	enabled = prompt_yes_no(
+		'Would you like to configure Bluetooth?\n',
+		preset.enabled if preset else False,
+	)
 	return preset if enabled is None else BluetoothConfiguration(enabled)
 
 
-def select_thunderbolt(preset: ThunderboltConfiguration | None) -> ThunderboltConfiguration | None:
+def select_thunderbolt(
+	preset: ThunderboltConfiguration | None,
+) -> ThunderboltConfiguration | None:
 	enabled = prompt_yes_no(
 		textwrap.dedent("""\
-			Would you like to configure Thunderbolt device authorization (bolt)?
-			New devices are auto-enrolled when the desktop asks or IOMMU DMA protection is on,
-			otherwise once with: boltctl enroll --policy auto <uuid>
+			Would you like to configure Thunderbolt device authorization
+			(bolt)? New devices are auto-enrolled when the desktop asks or
+			IOMMU DMA protection is on, otherwise once with:
+			boltctl enroll --policy auto <uuid>
 		"""),
 		preset.enabled if preset else False,
 	)
 	return preset if enabled is None else ThunderboltConfiguration(enabled)
 
 
-def select_print_service(preset: PrintServiceConfiguration | None) -> PrintServiceConfiguration | None:
-	enabled = prompt_yes_no('Would you like to configure the print service?\n', preset.enabled if preset else False)
+def select_print_service(
+	preset: PrintServiceConfiguration | None,
+) -> PrintServiceConfiguration | None:
+	enabled = prompt_yes_no(
+		'Would you like to configure the print service?\n',
+		preset.enabled if preset else False,
+	)
 	return preset if enabled is None else PrintServiceConfiguration(enabled)
 
 
 def select_flatpak(preset: FlatpakConfiguration | None) -> FlatpakConfiguration | None:
-	enabled = prompt_yes_no('Install flatpak with the flathub remote and a portal fallback?\n', preset.enabled if preset else False)
+	enabled = prompt_yes_no(
+		'Install flatpak with the flathub remote and a portal fallback?\n',
+		preset.enabled if preset else False,
+	)
 	return preset if enabled is None else FlatpakConfiguration(enabled)
 
 
-def select_media_codecs(preset: MediaCodecsConfiguration | None) -> MediaCodecsConfiguration | None:
-	enabled = prompt_yes_no('Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?\n', preset.enabled if preset else False)
+def select_media_codecs(
+	preset: MediaCodecsConfiguration | None,
+) -> MediaCodecsConfiguration | None:
+	enabled = prompt_yes_no(
+		'Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?\n',
+		preset.enabled if preset else False,
+	)
 	return preset if enabled is None else MediaCodecsConfiguration(enabled)
 
 
@@ -315,13 +361,26 @@ def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration
 	return AudioConfiguration(choice) if choice else None
 
 
-def select_firewall(preset: FirewallConfiguration | None = None) -> FirewallConfiguration | None:
-	choice = prompt_choice(MenuItemGroup.from_enum(Firewall), preset.firewall if preset else None, frame='Firewall', allow_reset=True)
+def select_firewall(
+	preset: FirewallConfiguration | None = None,
+) -> FirewallConfiguration | None:
+	choice = prompt_choice(
+		MenuItemGroup.from_enum(Firewall),
+		preset.firewall if preset else None,
+		frame='Firewall',
+		allow_reset=True,
+	)
 	return FirewallConfiguration(choice) if choice else None
 
 
-def select_management(preset: ManagementConfiguration | None = None) -> ManagementConfiguration | None:
-	options = [m for m in Management if not (m == Management.REFLECTOR and SysInfo.arch() != 'x86_64')]
+def select_management(
+	preset: ManagementConfiguration | None = None,
+) -> ManagementConfiguration | None:
+	options = [
+		m
+		for m in Management
+		if not (m == Management.REFLECTOR and SysInfo.arch() != 'x86_64')
+	]
 	items = [MenuItem(m.value, value=m) for m in options]
 	group = MenuItemGroup(items)
 
@@ -349,25 +408,50 @@ def select_management(preset: ManagementConfiguration | None = None) -> Manageme
 			return None
 
 
-def select_monitor(preset: MonitorConfiguration | None = None) -> MonitorConfiguration | None:
-	choice = prompt_choice(MenuItemGroup.from_enum(Monitor), preset.monitor if preset else None, frame='Monitor', allow_reset=True)
+def select_monitor(
+	preset: MonitorConfiguration | None = None,
+) -> MonitorConfiguration | None:
+	choice = prompt_choice(
+		MenuItemGroup.from_enum(Monitor),
+		preset.monitor if preset else None,
+		frame='Monitor',
+		allow_reset=True,
+	)
 	return MonitorConfiguration(choice) if choice else None
 
 
-def select_editor(preset: EditorConfiguration | None = None) -> EditorConfiguration | None:
+def select_editor(
+	preset: EditorConfiguration | None = None,
+) -> EditorConfiguration | None:
 	header = 'Set an editor globally through /etc/environment?\n'
-	choice = prompt_choice(MenuItemGroup.from_enum(Editor), preset.editor if preset else None, header=header, frame='Editor', allow_reset=True)
+	choice = prompt_choice(
+		MenuItemGroup.from_enum(Editor),
+		preset.editor if preset else None,
+		header=header,
+		frame='Editor',
+		allow_reset=True,
+	)
 	return EditorConfiguration(choice) if choice else None
 
 
-def select_terminal(preset: TerminalConfiguration | None = None) -> TerminalConfiguration | None:
+def select_terminal(
+	preset: TerminalConfiguration | None = None,
+) -> TerminalConfiguration | None:
 	header = 'Set a terminal globally through /etc/environment?\n'
 	header += 'Window manager profiles bind it too (foot is Wayland only)\n'
-	choice = prompt_choice(MenuItemGroup.from_enum(Terminal), preset.terminal if preset else None, header=header, frame='Terminal', allow_reset=True)
+	choice = prompt_choice(
+		MenuItemGroup.from_enum(Terminal),
+		preset.terminal if preset else None,
+		header=header,
+		frame='Terminal',
+		allow_reset=True,
+	)
 	return TerminalConfiguration(choice) if choice else None
 
 
-def select_security(preset: SecurityConfiguration | None = None) -> SecurityConfiguration | None:
+def select_security(
+	preset: SecurityConfiguration | None = None,
+) -> SecurityConfiguration | None:
 	items = [MenuItem(s.value, value=s) for s in Security]
 	group = MenuItemGroup(items)
 

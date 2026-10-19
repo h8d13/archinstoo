@@ -7,7 +7,11 @@ from archinstoo.lib.output import debug, info, warn
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.network import DnsConfiguration, NetworkConfiguration, Nic
+	from archinstoo.lib.models.network import (
+		DnsConfiguration,
+		NetworkConfiguration,
+		Nic,
+	)
 	from archinstoo.lib.profile.config import ProfileConfiguration
 
 
@@ -27,12 +31,22 @@ class NetworkHandler:
 		info('Writing network configuration...')
 		match network_config.type:
 			case NicType.ISO:
-				_copy_iso_network_config(installation, enable_services=True)
+				_copy_iso_network_config(
+					installation, enable_services=True
+				)
 			case NicType.NM | NicType.NM_IWD:
-				installation.add_additional_packages(network_config.type.packages)
+				installation.add_additional_packages(
+					network_config.type.packages
+				)
 
-				if profile_config and profile_config.profiles and profile_config.has_desktop_profile():
-					installation.add_additional_packages(NM_DESKTOP_EXTRA)
+				if (
+					profile_config
+					and profile_config.profiles
+					and profile_config.has_desktop_profile()
+				):
+					installation.add_additional_packages(
+						NM_DESKTOP_EXTRA
+					)
 
 				installation.enable_service('NetworkManager')
 
@@ -41,7 +55,9 @@ class NetworkHandler:
 					installation.disable_service('iwd')
 
 			case NicType.IWD:
-				installation.add_additional_packages(network_config.type.packages)
+				installation.add_additional_packages(
+					network_config.type.packages
+				)
 				_configure_iwd_standalone(installation)
 				installation.enable_service('iwd')
 				installation.enable_service('systemd-networkd')
@@ -107,7 +123,9 @@ def _write_wired_dhcp(installation: Installer) -> None:
 	debug(f'Wrote {networkd_dir / "20-wired.network"}')
 
 
-def _copy_iso_network_config(installation: Installer, enable_services: bool = False) -> None:
+def _copy_iso_network_config(
+	installation: Installer, enable_services: bool = False
+) -> None:
 	# Copy (if any) iwd password and config files
 	iwd_dir = LPath(ISO_IWD_DIR)
 	if psk_files := list(iwd_dir.glob('*.psk')):
@@ -119,19 +137,26 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 			psk.copy(iwd_target / psk.name, preserve_metadata=True)
 
 		if enable_services:
-			# every script runs this after minimal_installation, the target takes packages
+			# every script runs this after minimal_installation, the
+			# target takes packages
 			installation.add_additional_packages(ISO_PSK_EXTRA)
 			installation.enable_service('iwd')
 
 	# Copy (if any) systemd-networkd config files
 	network_dir = LPath(ISO_NETWORK_DIR)
 	if netconfigurations := list(network_dir.glob('*')):
-		info(f'Copying {len(netconfigurations)} systemd-networkd config(s) to target')
+		info(
+			f'Copying {len(netconfigurations)} systemd-networkd '
+			'config(s) to target'
+		)
 		network_target = installation.target / network_dir.relative_to_root()
 		network_target.mkdir(parents=True, exist_ok=True)
 
 		for netconf_file in netconfigurations:
-			netconf_file.copy(network_target / netconf_file.name, preserve_metadata=True)
+			netconf_file.copy(
+				network_target / netconf_file.name,
+				preserve_metadata=True,
+			)
 
 		if enable_services:
 			installation.enable_service('systemd-networkd')
@@ -156,7 +181,9 @@ def _copy_iso_network_config(installation: Installer, enable_services: bool = Fa
 def _configure_nic(installation: Installer, nic: Nic) -> None:
 	conf = nic.as_systemd_config()
 
-	with (installation.target / f'etc/systemd/network/10-{nic.iface}.network').open('a') as netconf:
+	with (installation.target / f'etc/systemd/network/10-{nic.iface}.network').open(
+		'a'
+	) as netconf:
 		netconf.write(str(conf))
 	info(f'Wrote network config for {nic.iface}')
 

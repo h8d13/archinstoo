@@ -33,7 +33,12 @@ def main() -> int:
 		description=script_help(Path(__file__)),
 		formatter_class=argparse.RawDescriptionHelpFormatter,
 	)
-	parser.add_argument('inner', nargs='*', metavar='-- ARGS', help='archinstoo args, run inside the root')
+	parser.add_argument(
+		'inner',
+		nargs='*',
+		metavar='-- ARGS',
+		help='archinstoo args, run inside the root',
+	)
 	args = parser.parse_args()
 	try:
 		return bootstrap(args.inner)

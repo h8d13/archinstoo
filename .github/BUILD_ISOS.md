@@ -31,12 +31,16 @@ Flags (env vars, all optional):
 | `A2_ELEV` | `sudo` | Privilege escalation command (`doas`, etc.) |
 | `A2_ISO_PROFILE` | `ISOMOD_CACHE` | `ISOMOD_CACHE` reads `${A2_ISO_PROFILE}.conf` for the package list |
 
-Requires `archiso` and `pacman-contrib` if you enable caching. This is a flagship feature that allows for read-only installs (no network).
+Requires `archiso` and `pacman-contrib` if you enable caching.
+This is a flagship feature that allows for read-only installs (no network).
 
 **Don't run as root**, scripts elevate when needed. Output goes to `isos/a/`.
 
-> Do read through it (relatively short) to understand what is going on. Process takes 5 minutes depending on selections.
+> Do read through it (relatively short) to understand what is going on.
+> Process takes 5 minutes depending on selections.
 
-See [archiso-releng](https://gitlab.archlinux.org/archlinux/archiso/-/tree/master/configs/releng) and [archiso-baseline](https://gitlab.archlinux.org/archlinux/archiso/-/tree/master/configs/baseline) (used by `A2_MINIMAL=1`).
+See [archiso-releng](https://gitlab.archlinux.org/archlinux/archiso/-/tree/master/configs/releng)
+and [archiso-baseline](https://gitlab.archlinux.org/archlinux/archiso/-/tree/master/configs/baseline)
+(used by `A2_MINIMAL=1`).
 
 Size references: Minimal ~550M - Regular ~1.4G - Live ~2G
