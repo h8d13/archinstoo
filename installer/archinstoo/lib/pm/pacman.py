@@ -21,19 +21,22 @@ if TYPE_CHECKING:
 PACMAN_CONF: Final = LPath('/etc/pacman.conf')
 PACMAN_GNUPG: Final = LPath('/etc/pacman.d/gnupg')
 MIRRORLIST: Final = LPath('/etc/pacman.d/mirrorlist')
+PACMAN_DB: Final = LPath('/var/lib/pacman')
 
 
 @cache
-def _host_workdir() -> tempfile.TemporaryDirectory[str] | None:
-	# On an Arch host '/' is the user's own system: the run edits copies of its
-	# conf and mirrorlist, handed to pacman --config and pacstrap -C. Cached so
-	# the copy is taken once; its finalizer removes it at exit. The ISO and the
-	# bootstrap root are thrown away, so they edit /etc directly.
+def _workdir() -> tempfile.TemporaryDirectory[str]:
+	# this run's private pacman state; cached so it is made once, its
+	# finalizer removes it at exit. On an Arch host '/' is the user's own
+	# system: conf and mirrorlist are copied in and a sync db made, so menu
+	# edits and -Sy never reach /etc or /var/lib/pacman. The ISO and the
+	# bootstrap root are thrown away, so they use those directly.
+	tmp = tempfile.TemporaryDirectory(prefix='archinstoo-pm-')
 	if not Host.running_from_arch_host():
-		return None
+		return tmp
 
-	workdir = tempfile.TemporaryDirectory(prefix='archinstoo-pm-')
-	root = Path(workdir.name)
+	root = Path(tmp.name)
+	(root / PACMAN_DB.name).mkdir()
 	mirrorlist = MIRRORLIST.copy(root / MIRRORLIST.name)
 	# only the Arch mirrorlist moves, third-party Includes keep reading /etc
 	conf = re.sub(
@@ -44,14 +47,18 @@ def _host_workdir() -> tempfile.TemporaryDirectory[str] | None:
 	)
 	(root / PACMAN_CONF.name).write_text(conf)
 	debug(f'Host pacman.conf and mirrorlist copied to {root}')
-	return workdir
+	return tmp
+
+
+def workdir() -> Path:
+	return Path(_workdir().name)
 
 
 def live(path: LPath) -> LPath:
-	# the copy of PACMAN_CONF or MIRRORLIST this run reads and writes
-	if workdir := _host_workdir():
-		return LPath(workdir.name) / path.name
-	return path
+	# what this run reads and writes for PACMAN_CONF, MIRRORLIST or PACMAN_DB
+	if not Host.running_from_arch_host():
+		return path
+	return LPath(workdir()) / path.name
 
 
 # Helpers for exceptions
@@ -82,7 +89,6 @@ _QUIET_FLAGS = ' --noprogressbar' if '--silent' in sys.argv else ''
 
 class Pacman:
 	def __init__(self, target: Path) -> None:
-		self.synced = False
 		self.target = target
 
 	@staticmethod
@@ -126,6 +132,14 @@ class Pacman:
 	@staticmethod
 	def reset_keyring() -> bool:
 		# reset keyring in case of corrupted packages
+		if Host.running_from_arch_host():
+			# the user's own keyring: local signatures (third-party repo
+			# keys) would be lost, and killall reaches their gpg-agents too
+			warn(
+				'Not resetting the host keyring. Update it first: '
+				'pacman -Syu archlinux-keyring'
+			)
+			return False
 		try:
 			info('Reinitializing pacman keyring...')
 			with contextlib.suppress(Exception):
@@ -211,20 +225,9 @@ class Pacman:
 
 			raise RequirementError(f'{bail_message}: {err}') from err
 
-	def sync(self) -> None:
-		if self.synced:
-			return
-		self.ask(
-			'Could not sync a new package database',
-			'Could not sync mirrors',
-			self.run,
-			'-Syy',
-			default_cmd='pacman',
-		)
-		self.synced = True
-
 	def strap(self, packages: str | list[str]) -> None:
-		self.sync()
+		# no -Sy here: pacstrap syncs the target's own db, and '/' installs
+		# against the db _prepare synced (ISO) or the user keeps (Arch host)
 		if isinstance(packages, str):
 			packages = [packages]
 

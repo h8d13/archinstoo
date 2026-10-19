@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from archinstoo.lib.output import logger
-from archinstoo.lib.pm import pacman
+from archinstoo.lib.utils.host import Host
 
 
 @pytest.fixture(autouse=True)
@@ -15,10 +15,11 @@ def _isolate_logs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture(autouse=True)
-def _no_host_workdir(monkeypatch: pytest.MonkeyPatch) -> None:
-	# on an Arch dev box every live() would copy the real /etc pacman files;
-	# tests point PACMAN_CONF at their own. test_host_workdir covers the copy
-	monkeypatch.setattr(pacman, '_host_workdir', lambda: None)
+def _not_arch_host(monkeypatch: pytest.MonkeyPatch) -> None:
+	# an Arch dev box would otherwise run every test in H2T mode (live()
+	# copying the real /etc pacman files) where CI does not. Tests that need
+	# host mode patch it back on: test_host_workdir, test_prepare
+	monkeypatch.setattr(Host, 'running_from_arch_host', staticmethod(lambda: False))
 
 
 @pytest.fixture(scope='session')

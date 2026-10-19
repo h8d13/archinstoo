@@ -36,7 +36,7 @@ def _stub_pacman(monkeypatch: pytest.MonkeyPatch, output: list[bytes]) -> list[s
 
 	def run(args: str, **kwargs: object) -> list[bytes]:
 		calls.append(args)
-		return output if args == '-Sl' else []
+		return output if args.endswith('-Sl') else []
 
 	monkeypatch.setattr(Pacman, 'run', staticmethod(run))
 	return calls
@@ -47,8 +47,9 @@ def test_lists_every_repo_in_the_conf(monkeypatch: pytest.MonkeyPatch) -> None:
 
 	available = packages.list_available_packages()
 
-	# no repo names passed to pacman: the conf decides
-	assert calls == ['-Sy', '-Sl']
+	# no repo names passed to pacman: the conf decides. Off an Arch host the
+	# system db is the run's db
+	assert calls == ['--dbpath /var/lib/pacman -Sy', '--dbpath /var/lib/pacman -Sl']
 	assert set(available) == {
 		'linux',
 		'nano',
@@ -81,7 +82,7 @@ def test_repo_order_follows_the_conf(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_sync_failure_still_lists_packages(monkeypatch: pytest.MonkeyPatch) -> None:
 	def run(args: str, **kwargs: object) -> list[bytes]:
-		if args == '-Sy':
+		if args.endswith('-Sy'):
 			raise OSError('no network')
 		return _SL_OUTPUT
 
@@ -137,7 +138,7 @@ def conf(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> LPath:
 	monkeypatch.setattr(config, 'PACMAN_CONF', pacman_conf)
 
 	def run(args: str, **kwargs: object) -> list[bytes]:
-		if args != '-Sl':
+		if not args.endswith('-Sl'):
 			return []
 
 		lines = []

@@ -14,6 +14,9 @@ from archinstoo.lib.pm.pacman import Pacman
 from archinstoo.lib.utils.env import Env
 from archinstoo.lib.utils.host import Host
 
+# conftest pins tests off the Arch host, this is the real check
+_ARCH_HOST = Host.__dict__['running_from_arch_host']
+
 
 @pytest.mark.parametrize(
 	('distro_id', 'on_iso', 'bootstrap', 'arch_host'),
@@ -39,6 +42,7 @@ def test_arch_host(
 	monkeypatch.setattr(
 		Host, 'running_from_bootstrap', staticmethod(lambda: bootstrap)
 	)
+	monkeypatch.setattr(Host, 'running_from_arch_host', _ARCH_HOST)
 
 	assert Host.running_from_arch_host() is arch_host
 

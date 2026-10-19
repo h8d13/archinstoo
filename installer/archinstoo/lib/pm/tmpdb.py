@@ -1,15 +1,15 @@
 # Private pacman DBPath, as checkupdates (pacman-contrib) does it. Its own
 # pacman.conf holds only the asked repos: extra.files alone is ~50 MB
 
-import os
 import subprocess
-import tempfile
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.output import debug
+from archinstoo.lib.pm.pacman import PACMAN_CONF, live, workdir
 from archinstoo.lib.utils.host import is_root
 
-TMPDB_ROOT = Path(tempfile.gettempdir()) / f'archinstoo-db-{os.getuid()}'
+if TYPE_CHECKING:
+	from pathlib import Path
 
 # Arch's pacman.conf value; the compiled default refuses the unsigned files db
 _DEFAULT_SIGLEVEL = ['Required', 'DatabaseOptional']
@@ -24,7 +24,8 @@ def _run(argv: list[str]) -> subprocess.CompletedProcess[str]:
 
 def _conf_values(key: str, repo: str | None = None) -> list[str]:
 	scope = [f'--repo={repo}'] if repo else []
-	proc = _run(['pacman-conf', *scope, key])
+	# the run's conf, so repos and mirrors edited in the menu apply
+	proc = _run(['pacman-conf', '--config', str(live(PACMAN_CONF)), *scope, key])
 	return proc.stdout.split() if proc.returncode == 0 else []
 
 
@@ -49,10 +50,10 @@ def parse_files(text: str) -> list[tuple[str, str]]:
 
 
 class TmpDB:
-	def __init__(self, repos: tuple[str, ...], root: Path = TMPDB_ROOT) -> None:
+	def __init__(self, repos: tuple[str, ...], root: Path | None = None) -> None:
 		self.repos = repos
-		self.root = root
-		self.conf = root / 'pacman.conf'
+		self.root = root or workdir() / 'files'
+		self.conf = self.root / 'pacman.conf'
 
 	def _pacman(self, *args: str) -> list[str]:
 		return [

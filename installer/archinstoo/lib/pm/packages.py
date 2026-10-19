@@ -1,9 +1,18 @@
 from dataclasses import fields
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.models.packages import AvailablePackage
 from archinstoo.lib.output import debug
-from archinstoo.lib.pm.pacman import Pacman
+from archinstoo.lib.pm.pacman import PACMAN_DB, Pacman, live
+
+if TYPE_CHECKING:
+	from archinstoo.lib.general import SysCommand
+
+
+def _sync_db(args: str) -> SysCommand:
+	# the run's sync db: on an Arch host -Sy must not refresh the host's
+	return Pacman.run(f'--dbpath {live(PACMAN_DB)} {args}')
 
 
 def _create_package_stub(repo: str, name: str, version: str) -> AvailablePackage:
@@ -38,7 +47,7 @@ def enrich_package_info(
 		pkg_names = ' '.join(p.name for p in to_enrich)
 		current_package = []
 
-		for line in Pacman.run(f'-Si {pkg_names}'):
+		for line in _sync_db(f'-Si {pkg_names}'):
 			dec_line = line.decode().rstrip()
 			current_package.append(dec_line)
 
@@ -63,7 +72,7 @@ def list_available_packages() -> dict[str, AvailablePackage]:
 	packages: dict[str, AvailablePackage] = {}
 
 	try:
-		Pacman.run('-Sy')
+		_sync_db('-Sy')
 	except Exception as e:
 		debug(f'Failed to sync Arch Linux package database: {e}')
 
@@ -71,7 +80,7 @@ def list_available_packages() -> dict[str, AvailablePackage]:
 		# -Sl walks repos in conf order, so setdefault (not
 		# assignment) keeps the same winner pacman would pick when a
 		# name exists in more than one repo
-		for line in Pacman.run('-Sl'):
+		for line in _sync_db('-Sl'):
 			parts = line.decode().strip().split()
 			if len(parts) >= 3:
 				packages.setdefault(

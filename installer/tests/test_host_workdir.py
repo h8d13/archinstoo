@@ -1,20 +1,27 @@
-# On an Arch host the run edits copies of pacman.conf and the mirrorlist, so
-# the host's own files are never written.
+# On an Arch host the run edits copies of pacman.conf and the mirrorlist and
+# syncs into its own db, so the host's own pacman state is never written.
+import shutil
+import subprocess
 from typing import TYPE_CHECKING
 
 import pytest
 
 from archinstoo.lib.linux_path import LPath
-from archinstoo.lib.pm import pacman
-from archinstoo.lib.pm.pacman import MIRRORLIST, PACMAN_CONF, live
+from archinstoo.lib.pm import pacman, tmpdb
+from archinstoo.lib.pm.pacman import (
+	MIRRORLIST,
+	PACMAN_CONF,
+	PACMAN_DB,
+	Pacman,
+	live,
+	workdir,
+)
 from archinstoo.lib.utils.host import Host
 
 if TYPE_CHECKING:
 	from collections.abc import Iterator
 	from pathlib import Path
 
-# conftest stubs the module attribute, this is the real one
-_host_workdir = pacman._host_workdir
 
 _HOST_CONF = """\
 [options]
@@ -41,13 +48,12 @@ def host(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
 	(etc / PACMAN_CONF.name).write_text(_HOST_CONF.format(d=etc))
 	(etc / MIRRORLIST.name).write_text('Server = https://host/$repo\n')
 
-	_host_workdir.cache_clear()
-	monkeypatch.setattr(pacman, '_host_workdir', _host_workdir)
+	pacman._workdir.cache_clear()
 	monkeypatch.setattr(pacman, 'PACMAN_CONF', LPath(etc / PACMAN_CONF.name))
 	monkeypatch.setattr(pacman, 'MIRRORLIST', LPath(etc / MIRRORLIST.name))
 	monkeypatch.setattr(Host, 'running_from_arch_host', staticmethod(lambda: True))
 	yield etc
-	_host_workdir.cache_clear()
+	pacman._workdir.cache_clear()
 
 
 def test_edits_land_in_the_copy(host: Path) -> None:
@@ -81,3 +87,50 @@ def test_copy_is_taken_once(host: Path) -> None:
 def test_iso_edits_etc(host: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 	monkeypatch.setattr(Host, 'running_from_arch_host', staticmethod(lambda: False))
 	assert live(PACMAN_CONF) == PACMAN_CONF
+
+
+def test_sync_db_is_the_runs(host: Path) -> None:
+	db = live(PACMAN_DB)
+	assert db.parent == workdir()
+	assert db.is_dir()
+
+
+def test_host_keyring_is_never_reset(
+	host: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	calls: list[object] = []
+	monkeypatch.setattr(pacman, 'SysCommand', lambda *a, **_: calls.append(a))
+	monkeypatch.setattr(shutil, 'rmtree', calls.append)
+
+	assert Pacman.reset_keyring() is False
+	assert calls == []
+
+
+def test_files_db_lives_in_the_run(host: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+	calls: list[list[str]] = []
+
+	def run(argv: list[str]) -> subprocess.CompletedProcess[str]:
+		calls.append(argv)
+		return subprocess.CompletedProcess(argv, 1, '', '')
+
+	monkeypatch.setattr(tmpdb, '_run', run)
+	db = tmpdb.TmpDB(('core',))
+	db.sync_files()
+
+	assert db.root.parent == workdir()
+	# servers come from the run's conf, menu edits included
+	assert calls[0][:3] == ['pacman-conf', '--config', str(live(PACMAN_CONF))]
+
+
+def test_strap_leaves_syncing_to_pacstrap(
+	host: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+	commands: list[str] = []
+	monkeypatch.setattr(pacman, 'SysCommand', lambda cmd, **_: commands.append(cmd))
+	monkeypatch.setattr(Pacman, 'run', staticmethod(commands.append))
+
+	Pacman(tmp_path / 'target').strap(['base'])
+
+	target = tmp_path / 'target'
+	flags = '--noconfirm --needed'
+	assert commands == [f'pacstrap -C {live(PACMAN_CONF)} {target} base {flags}']
