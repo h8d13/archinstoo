@@ -1,7 +1,10 @@
 import contextlib
+import re
 import shutil
 import sys
+import tempfile
 import time
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -9,6 +12,7 @@ from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, error, info, logger, warn
+from archinstoo.lib.utils.host import Host
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -17,6 +21,37 @@ if TYPE_CHECKING:
 PACMAN_CONF: Final = LPath('/etc/pacman.conf')
 PACMAN_GNUPG: Final = LPath('/etc/pacman.d/gnupg')
 MIRRORLIST: Final = LPath('/etc/pacman.d/mirrorlist')
+
+
+@cache
+def _host_workdir() -> tempfile.TemporaryDirectory[str] | None:
+	# On an Arch host '/' is the user's own system: the run edits copies of its
+	# conf and mirrorlist, handed to pacman --config and pacstrap -C. Cached so
+	# the copy is taken once; its finalizer removes it at exit. The ISO and the
+	# bootstrap root are thrown away, so they edit /etc directly.
+	if not Host.running_from_arch_host():
+		return None
+
+	workdir = tempfile.TemporaryDirectory(prefix='archinstoo-pm-')
+	root = Path(workdir.name)
+	mirrorlist = MIRRORLIST.copy(root / MIRRORLIST.name)
+	# only the Arch mirrorlist moves, third-party Includes keep reading /etc
+	conf = re.sub(
+		rf'^([ \t]*Include[ \t]*=[ \t]*){re.escape(str(MIRRORLIST))}[ \t]*$',
+		rf'\g<1>{mirrorlist}',
+		PACMAN_CONF.read_text(),
+		flags=re.MULTILINE,
+	)
+	(root / PACMAN_CONF.name).write_text(conf)
+	debug(f'Host pacman.conf and mirrorlist copied to {root}')
+	return workdir
+
+
+def live(path: LPath) -> LPath:
+	# the copy of PACMAN_CONF or MIRRORLIST this run reads and writes
+	if workdir := _host_workdir():
+		return LPath(workdir.name) / path.name
+	return path
 
 
 # Helpers for exceptions
@@ -29,8 +64,9 @@ def reset_conf() -> bool:
 		from archinstoo.lib.utils.net import fetch_data_from_url
 
 		conf_data = fetch_data_from_url(default_pm_conf)
-		Path('/etc/pacman.conf').write_text(conf_data)
-		info('Replaced /etc/pacman.conf with upstream default.')
+		conf = live(PACMAN_CONF)
+		conf.write_text(conf_data)
+		info(f'Replaced {conf} with upstream default.')
 		return True
 	except Exception as e:
 		error(f'Config reset failed: {e}')
@@ -82,6 +118,8 @@ class Pacman:
 		# check into a failed call
 		if default_cmd == 'pacman' and not args.startswith(('-T', '-Q')):
 			args += _QUIET_FLAGS
+		if default_cmd == 'pacman':
+			args = f'--config {live(PACMAN_CONF)} {args}'
 
 		return SysCommand(f'{default_cmd} {args}', peek_output=peek_output)
 
@@ -193,9 +231,10 @@ class Pacman:
 		info(f'Installing packages: {packages}')
 
 		flags = '--noconfirm --needed' + _QUIET_FLAGS
+		conf = live(PACMAN_CONF)
 
 		if self.target == Path('/'):
-			cmd = f'pacman -S {" ".join(packages)} {flags}'
+			cmd = f'pacman --config {conf} -S {" ".join(packages)} {flags}'
 			bail = (
 				'Package installation failed. See '
 				f'{logger.host_path} or above message for error details'
@@ -207,7 +246,7 @@ class Pacman:
 			# with the host keyring, so let it copy that one in (its default
 			# when -K/-G are absent).
 			cmd = (
-				f'pacstrap -C {PACMAN_CONF} {self.target} '
+				f'pacstrap -C {conf} {self.target} '
 				f'{" ".join(packages)} {flags}'
 			)
 			bail = (

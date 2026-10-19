@@ -1,4 +1,3 @@
-import atexit
 import contextlib
 import re
 from typing import TYPE_CHECKING, assert_never
@@ -11,37 +10,9 @@ from archinstoo.lib.models.mirrors import (
 )
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug, info
-from archinstoo.lib.pm.pacman import PACMAN_CONF
+from archinstoo.lib.pm.pacman import PACMAN_CONF, live
 from archinstoo.lib.tui.curses_menu import EditMenu
 from archinstoo.lib.tui.result import ResultType
-from archinstoo.lib.utils.host import Host
-
-# On a running host (not the ISO) /etc/pacman.conf is permanent, so anything we change
-# to drive pacstrap must be reverted. Snapshot lives at a stable, namespaced path so a
-# user's own pacman.bak is never touched and a good snapshot is never clobbered.
-_HOST_CONF_BACKUP = PACMAN_CONF.with_name(f'{PACMAN_CONF.name}.archinstoo.bak')
-
-
-def _restore_host_conf() -> None:
-	if _HOST_CONF_BACKUP.exists():
-		debug(f'Restoring host {PACMAN_CONF} from {_HOST_CONF_BACKUP}')
-		_HOST_CONF_BACKUP.copy(PACMAN_CONF, preserve_metadata=True)
-		_HOST_CONF_BACKUP.unlink()
-
-
-def guard_host_conf() -> None:
-	# Call once at startup. On an Arch host: heal a backup left by a crashed run
-	# (live conf was modified but never reverted), then snapshot the clean conf and
-	# restore it on exit. No-op on the ISO and in the bootstrap root, where
-	# /etc/pacman.conf is thrown away after.
-	if not Host.running_from_arch_host():
-		debug('Not an Arch host install: skipping pacman.conf snapshot')
-		return
-
-	_restore_host_conf()
-	PACMAN_CONF.copy(_HOST_CONF_BACKUP, preserve_metadata=True)
-	debug(f'Snapshotted host pacman.conf to {_HOST_CONF_BACKUP}')
-	atexit.register(_restore_host_conf)
 
 
 def set_parallel_downloads(preset: int | None = None) -> int | None:
@@ -78,13 +49,14 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 			assert_never(result.type_)
 
 	debug(f'Setting ParallelDownloads = {downloads}')
+	conf = live(PACMAN_CONF)
 	pacman_conf = [
 		f'ParallelDownloads = {downloads}'
 		if 'ParallelDownloads' in line
 		else line
-		for line in PACMAN_CONF.read_text().splitlines()
+		for line in conf.read_text().splitlines()
 	]
-	PACMAN_CONF.write_text('\n'.join(pacman_conf) + '\n')
+	conf.write_text('\n'.join(pacman_conf) + '\n')
 
 	return downloads
 
@@ -105,7 +77,7 @@ class PacmanConfig:
 		self._conf_path = (
 			target / PACMAN_CONF.relative_to_root()
 			if target
-			else PACMAN_CONF
+			else live(PACMAN_CONF)
 		)
 
 		self._repositories: list[Repository] = []
@@ -254,8 +226,6 @@ class PacmanConfig:
 				f'{custom.url} ({place})'
 			)
 
-		# Host conf is snapshotted and restored on exit by
-		# guard_host_conf(); just write.
 		with self._conf_path.open('w') as f:
 			f.writelines(content)
 
@@ -279,7 +249,7 @@ class PacmanConfig:
 	@classmethod
 	def get_existing_custom_repos(cls) -> list[CustomRepository]:
 		# Parse pacman.conf for existing custom repositories.
-		content = PACMAN_CONF.read_text()
+		content = live(PACMAN_CONF).read_text()
 		repos: list[CustomRepository] = []
 		core = re.search(r'^\[core\]', content, re.MULTILINE)
 		core_pos = core.start() if core else 0

@@ -20,7 +20,7 @@ from archinstoo.lib.models.mirrors import (
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import FormattedOutput, debug, info, warn
 from archinstoo.lib.pm.config import PacmanConfig, set_parallel_downloads
-from archinstoo.lib.pm.pacman import MIRRORLIST
+from archinstoo.lib.pm.pacman import MIRRORLIST, live
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
@@ -437,9 +437,9 @@ class _MirrorCache:
 class MirrorListHandler:
 	def __init__(
 		self,
-		local_mirrorlist: Path = MIRRORLIST,
+		local_mirrorlist: Path | None = None,
 	) -> None:
-		self._local_mirrorlist = local_mirrorlist
+		self._local_mirrorlist = local_mirrorlist or live(MIRRORLIST)
 
 	def is_loaded(self) -> bool:
 		return bool(_MirrorCache.data)
@@ -661,7 +661,7 @@ def set_mirrors(
 	mirrorlist_path = (
 		installation.target / MIRRORLIST.relative_to_root()
 		if on_target
-		else MIRRORLIST
+		else live(MIRRORLIST)
 	)
 
 	# repos, custom repos, misc options and ParallelDownloads all land in
