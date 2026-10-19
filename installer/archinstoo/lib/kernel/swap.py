@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.disk.fstab import mounted_at
 from archinstoo.lib.exceptions import DiskError
+from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import info
 
@@ -41,7 +42,9 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 		)
 	else:
 		swapfile = '/swapfile'
-		installation.arch_chroot(
+		# run from host: mkswap refuses any path listed in /proc/swaps,
+		# and the chroot shares the host /proc (H2T host with /swapfile)
+		SysCommand(
 			[
 				'mkswap',
 				'-U',
@@ -49,7 +52,7 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 				'--size',
 				f'{size}G',
 				'--file',
-				swapfile,
+				str(installation.target / swapfile.lstrip('/')),
 			]
 		)
 

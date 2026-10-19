@@ -22,6 +22,7 @@ def _session(
 	installation._zram_enabled = False
 	chroot: list[list[str]] = []
 	monkeypatch.setattr(installation, 'arch_chroot', chroot.append, raising=False)
+	monkeypatch.setattr(swap_mod, 'SysCommand', chroot.append)
 	monkeypatch.setattr(installer_mod, 'setup_zram', lambda *_: None)
 
 	monkeypatch.setattr(
@@ -41,7 +42,15 @@ def test_ext4_swapfile_lands_in_fstab(
 	fstab_entry, kernel_params = swap_mod.setup_swapfile(installation, 4)
 
 	assert chroot == [
-		['mkswap', '-U', 'clear', '--size', '4G', '--file', '/swapfile']
+		[
+			'mkswap',
+			'-U',
+			'clear',
+			'--size',
+			'4G',
+			'--file',
+			str(tmp_path / 'swapfile'),
+		]
 	]
 	assert fstab_entry == '/swapfile\tnone\tswap\tdefaults\t0\t0'
 	assert kernel_params == []
