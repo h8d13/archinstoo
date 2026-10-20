@@ -144,10 +144,11 @@ Any related digging/testing is actually usually just as useful as the code itsel
 Docs, testing and code should originate
 from your arguments/command lines usages/reflection.
 Commit messages and PR bodies should also be written/reviewed by you.
-Ideally linked to issues/discussions/docs.
+Ideally linked to issues/discussions/docs. And short.
 
 Low-effort and large changes without proper scoping/testing
 will be closed without explaining, same is true for issues.
+
 Disclose usage/model in the PR/issues details
 and for what it was used (debugging, writing code, translating...).
 Smaller reproduced fixes are more likely to be accepted
