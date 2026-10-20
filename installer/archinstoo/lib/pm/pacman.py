@@ -98,8 +98,9 @@ class Pacman:
 		# A centralized function to call `pacman` from.
 		# It also protects us from colliding with other running pacman sessions
 		# (if used locally). The grace period is set to 10 minutes before
-		# exiting hard if another pacman instance is running.
-		pacman_db_lock = Path('/var/lib/pacman/db.lck')
+		# exiting hard if another pacman instance is running. The run's db:
+		# on an Arch host a pacman of the user's own holds no lock on it
+		pacman_db_lock = live(PACMAN_DB) / 'db.lck'
 
 		if pacman_db_lock.exists():
 			warn(

@@ -2,6 +2,7 @@
 # syncs into its own db, so the host's own pacman state is never written.
 import shutil
 import subprocess
+import time
 from typing import TYPE_CHECKING
 
 import pytest
@@ -93,6 +94,40 @@ def test_sync_db_is_the_runs(host: Path) -> None:
 	db = live(PACMAN_DB)
 	assert db.parent == workdir()
 	assert db.is_dir()
+
+
+def _lock_waits(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[float]:
+	# a held lock in the host db; sleep() releases it, so a wait is one call
+	db = tmp_path / 'var/lib/pacman'
+	db.mkdir(parents=True)
+	(db / 'db.lck').write_text('')
+	monkeypatch.setattr(pacman, 'PACMAN_DB', LPath(db))
+	monkeypatch.setattr(pacman, 'SysCommand', lambda *_a, **_kw: None)
+	waits: list[float] = []
+
+	def sleep(secs: float) -> None:
+		waits.append(secs)
+		(db / 'db.lck').unlink()
+
+	monkeypatch.setattr(time, 'sleep', sleep)
+	return waits
+
+
+def test_host_lock_does_not_block_the_run(
+	host: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+	waits = _lock_waits(monkeypatch, tmp_path)
+	Pacman.run('-Sy')
+	assert waits == []
+
+
+def test_iso_waits_on_the_lock(
+	host: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+	monkeypatch.setattr(Host, 'running_from_arch_host', staticmethod(lambda: False))
+	waits = _lock_waits(monkeypatch, tmp_path)
+	Pacman.run('-Sy')
+	assert waits == [0.25]
 
 
 def test_host_keyring_is_never_reset(
