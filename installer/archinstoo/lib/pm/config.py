@@ -1,5 +1,6 @@
 import contextlib
 import re
+from functools import cache
 from typing import TYPE_CHECKING, assert_never
 
 from archinstoo.lib.models.mirrors import (
@@ -56,6 +57,13 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
 
 
+@cache
+def _pristine(conf: Path) -> str:
+	# the conf as first read: each apply renders onto it, so a dropped
+	# pick goes away instead of piling up
+	return conf.read_text()
+
+
 class PacmanConfig:
 	def __init__(self, target: Path | None) -> None:
 		# reads and writes go to the conf this instance was built for: the
@@ -91,14 +99,6 @@ class PacmanConfig:
 		self._parallel_downloads = downloads
 
 	def apply(self) -> None:
-		if (
-			not self._repositories
-			and not self._custom_repositories
-			and not self._misc_options
-			and not self._parallel_downloads
-		):
-			return
-
 		repos_to_enable = []
 		for repo in self._repositories:
 			if repo == Repository.Testing:
@@ -112,7 +112,7 @@ class PacmanConfig:
 			else:
 				repos_to_enable.append(repo.value)
 
-		content = self._conf_path.read_text().splitlines(keepends=True)
+		content = _pristine(self._conf_path).splitlines(keepends=True)
 		options_found: set[str] = set()
 		# above [options] pacman rejects the file
 		last_opt_row = next(

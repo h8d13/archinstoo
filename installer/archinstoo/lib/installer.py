@@ -30,7 +30,6 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.output import copy_artifacts, debug, error, info, warn
 from archinstoo.lib.pm import Pacman, mirrors
-from archinstoo.lib.pm.config import PacmanConfig
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -42,7 +41,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.bootloader import Bootloader
 	from archinstoo.lib.models.localization import LocaleConfiguration
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
-	from archinstoo.lib.models.packages import Repository
 	from archinstoo.lib.models.service import UserService
 	from archinstoo.lib.models.swap import SwapConfiguration
 	from archinstoo.lib.models.sysctl import SysctlConfiguration
@@ -272,15 +270,11 @@ class Installer:
 
 	def minimal_installation(
 		self,
-		optional_repositories: list[Repository] | None = None,
 		mkinitcpio: bool = True,
 		hostname: str | None = None,
 		locale_config: LocaleConfiguration | None = None,
 		timezone: str | None = None,
 	) -> None:
-		if optional_repositories is None:
-			optional_repositories = []
-
 		info(
 			f'Installing base system: kernels={", ".join(self.kernels)}, '
 			f'hostname={hostname or "(unset)"}',
@@ -333,24 +327,13 @@ class Installer:
 		if SysInfo.arch() == 'aarch64':
 			self._base_packages.extend(ARCHPORTS_PACKAGES)
 
-		debug(f'Optional repositories: {optional_repositories}')
-
-		# pacstrap resolves packages through the live conf, so the repos have
-		# to be enabled there before it runs
-		live_conf = PacmanConfig(None)
-		live_conf.enable(optional_repositories)
-		live_conf.apply()
-
 		if locale_config:
 			self.set_vconsole(locale_config)
 			if locale_config.console_font.startswith('ter-'):
 				self._base_packages.extend(TER_FONT_PACKAGES)
 
+		# pacstrap resolves through the live conf set_mirrors rendered
 		self.pacman.strap(list(dict.fromkeys(self._base_packages)))
-		# same repos again, on the stock conf pacstrap just installed
-		target_conf = PacmanConfig(self.target)
-		target_conf.enable(optional_repositories)
-		target_conf.apply()
 
 		# Periodic TRIM may improve the performance and longevity of SSDs whilst
 		# having no adverse effect on other devices. Most distributions enable
