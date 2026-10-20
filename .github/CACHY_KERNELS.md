@@ -25,3 +25,11 @@ Details are available in the [repo](https://github.com/h8d13/cachyos-repos) itse
   **Whichever is higher takes precedence.**
 
 Can specify as `pacman -S cachyos/appname` or `cachyos-vX/linux-variant`
+
+## At install time
+
+1. Boot ISO
+2. Add [`Cachyos-repos`](https://github.com/h8d13/cachyos-repos)
+   then run `sudo ./cachyos-repo --install`
+3. In `kernel` menu, type the name of the kernel.
+4. Optionally, also install a standard one.
