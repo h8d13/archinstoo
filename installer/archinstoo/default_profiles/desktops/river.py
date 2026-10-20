@@ -26,6 +26,9 @@ class RiverProfile(WaylandProfile):
 		# is the 0.3 line with riverctl/rivertile, the one that runs standalone
 		return [
 			'xdg-desktop-portal-wlr',
+			# no river-portals.conf, wlr is picked via its UseIn and only
+			# covers screencast/screenshot; gtk backs the FileChooser
+			'xdg-desktop-portal-gtk',
 			'river-classic',
 			'foot',
 			# neither river-classic nor foot pulls a font (sway does via

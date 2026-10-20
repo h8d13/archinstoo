@@ -37,10 +37,20 @@ class NoctaliaProfile(WaylandProfile):
 	# noctalia v5: native wayland shell (bar, launcher, lock, notifications,
 	# clipboard, polkit agent), no qt/gtk deps; compositor is a free choice
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
-		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
+		'niri': [
+			'niri',
+			'xdg-desktop-portal-gnome',
+			'gnome-keyring',
+			'xorg-xwayland',
+		],
 		# uwsm backs the "Hyprland (uwsm)" session entry the
 		# hyprland package ships
-		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+		'hyprland': [
+			'hyprland',
+			'xdg-desktop-portal-hyprland',
+			'xdg-desktop-portal-gtk',
+			'uwsm',
+		],
 		'sway': ['sway', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
 		'labwc': ['labwc', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
 	}

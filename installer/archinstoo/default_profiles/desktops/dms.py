@@ -23,10 +23,20 @@ class DmsProfile(WaylandProfile):
 	# dms-shell is compositor-agnostic since 1.6.2-2 (replaces the old
 	# dms-shell-niri/-hyprland shims), so these only carry the compositor
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
-		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
+		'niri': [
+			'niri',
+			'xdg-desktop-portal-gnome',
+			'gnome-keyring',
+			'xorg-xwayland',
+		],
 		# uwsm backs the "Hyprland (uwsm)" session entry the
 		# hyprland package ships
-		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+		'hyprland': [
+			'hyprland',
+			'xdg-desktop-portal-hyprland',
+			'xdg-desktop-portal-gtk',
+			'uwsm',
+		],
 		# mango-portals.conf: gtk default, wlr for screencast;
 		# mangowm pulls neither
 		'mango': [
