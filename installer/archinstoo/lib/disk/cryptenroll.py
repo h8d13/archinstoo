@@ -8,7 +8,7 @@ from archinstoo.lib.output import info, warn
 from archinstoo.lib.utils.env import Env
 
 if TYPE_CHECKING:
-	from collections.abc import Iterator
+	from collections.abc import Generator
 	from pathlib import Path
 
 # systemd-cryptenroll adds a FIDO2 keyslot next to the passphrase one, which
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def _bootstrap_key(target: Path, name: str, passphrase: str) -> Iterator[Path]:
+def _bootstrap_key(target: Path, name: str, passphrase: str) -> Generator[Path]:
 	key = target / KEYFILE_DIR.relative_to('/') / name
 	key.parent.mkdir(parents=True, exist_ok=True)
 	try:

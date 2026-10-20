@@ -178,7 +178,7 @@ class Logger:
 # logging.getLogger() pattern.
 # See: https://github.com/archlinux/archinstall/issues/4149
 logger = Logger()
-log_level = logging.INFO
+log_level: int = logging.INFO
 
 # target-side dir for what the install leaves behind: run log, config,
 # and the pacman hook scripts the bootloaders drop

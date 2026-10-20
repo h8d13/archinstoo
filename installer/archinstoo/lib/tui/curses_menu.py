@@ -306,7 +306,7 @@ class AbstractViewport:
 			return ''
 
 		max_col = self._max_col(entries)
-		view = [max_col * ' '] * self._num_unique_rows(entries)
+		view: list[str] = [max_col * ' '] * self._num_unique_rows(entries)
 
 		for e in entries:
 			view[e.row] = self._replace_str(view[e.row], e.col, e.text)

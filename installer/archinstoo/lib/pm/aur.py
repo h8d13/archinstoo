@@ -9,7 +9,7 @@ from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.output import debug, info, warn
 
 if TYPE_CHECKING:
-	from collections.abc import Iterator
+	from collections.abc import Generator
 
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
@@ -69,7 +69,7 @@ def doas_aur_rules(username: str) -> str:
 
 # appended to the user's doas.conf, so cleanup strips only our lines
 @contextmanager
-def _doas_rule(target: Path, username: str) -> Iterator[None]:
+def _doas_rule(target: Path, username: str) -> Generator[None]:
 	conf = target / 'etc/doas.conf'
 	rules = doas_aur_rules(username)
 	debug(
@@ -92,7 +92,7 @@ def _doas_rule(target: Path, username: str) -> Iterator[None]:
 
 
 @contextmanager
-def _sudo_rule(target: Path, username: str) -> Iterator[None]:
+def _sudo_rule(target: Path, username: str) -> Generator[None]:
 	rule = target / 'etc/sudoers.d/99-aur-build'
 	try:
 		rule.write_text(sudo_aur_rule(username))
