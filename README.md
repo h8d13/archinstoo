@@ -139,7 +139,7 @@ Move fast (even if it means breaking and fixing).
 
 >[!NOTE]
 > For **DEV** top-level `PKGBUILD` has extra tools
-> like `archiso`, `pacman-contrib` and `nvchecker`.
+> like `archiso`, `qemu-*`, `pacman-contrib` and `nvchecker`.
 
 For **non-dev** see [`installer/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD)
 uses the repo without its top part from git.
