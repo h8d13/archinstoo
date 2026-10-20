@@ -26,7 +26,12 @@ class DmsProfile(WaylandProfile):
 		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
 		# uwsm backs the "Hyprland (uwsm)" session entry the
 		# hyprland package ships
-		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+		'hyprland': [
+			'hyprland',
+			'xdg-desktop-portal-hyprland',
+			'xdg-desktop-portal-gtk',
+			'uwsm',
+		],
 		# mango-portals.conf: gtk default, wlr for screencast;
 		# mangowm pulls neither
 		'mango': [

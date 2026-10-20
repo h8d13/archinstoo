@@ -30,6 +30,9 @@ class HyprlandProfile(WaylandProfile):
 			'uwsm',
 			'hyprlauncher',
 			'xdg-desktop-portal-hyprland',
+			# hyprland-portals.conf: hyprland;gtk, the hyprland backend has
+			# no FileChooser
+			'xdg-desktop-portal-gtk',
 			'qt5-wayland',
 			'qt6-wayland',
 			'hyprpolkitagent',

@@ -40,7 +40,12 @@ class NoctaliaProfile(WaylandProfile):
 		'niri': ['niri', 'xdg-desktop-portal-gnome', 'xorg-xwayland'],
 		# uwsm backs the "Hyprland (uwsm)" session entry the
 		# hyprland package ships
-		'hyprland': ['hyprland', 'xdg-desktop-portal-hyprland', 'uwsm'],
+		'hyprland': [
+			'hyprland',
+			'xdg-desktop-portal-hyprland',
+			'xdg-desktop-portal-gtk',
+			'uwsm',
+		],
 		'sway': ['sway', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
 		'labwc': ['labwc', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
 	}
