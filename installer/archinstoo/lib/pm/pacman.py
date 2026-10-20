@@ -94,9 +94,6 @@ class Pacman:
 	def run(
 		args: str, default_cmd: str = 'pacman', peek_output: bool = False
 	) -> SysCommand:
-		# no wait on db.lck: nothing on the ISO takes it and the host run syncs
-		# a private db, so a held lock is stale and pacman's own "unable to
-		# lock database" says so at once
 		# -T and the -Q family draw no progress bar and reject the flag with
 		# 'invalid option', which under --silent turned every dependency
 		# check into a failed call

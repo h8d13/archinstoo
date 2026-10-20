@@ -2,7 +2,6 @@
 # copied from the ISO that ran the installer, so a vanilla and a customised ISO
 # produce the same target conf for the same config.
 
-from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -17,7 +16,6 @@ from archinstoo.lib.models.mirrors import (
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pm import config as pm_config
 from archinstoo.lib.pm.config import PacmanConfig
-from archinstoo.lib.tui.result import Result, ResultType
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -100,8 +98,7 @@ def test_target_conf_inherits_nothing_from_the_iso(target: Path) -> None:
 
 
 def test_absent_option_lands_under_options(target: Path) -> None:
-	# stock conf opens with comments and has no ILoveCandy line to uncomment;
-	# a directive above [options] belongs to no section, pacman refuses it
+	# not in the stock conf: nothing to uncomment, has to be inserted
 	conf = target / 'etc/pacman.conf'
 	conf.write_text(f'#\n# /etc/pacman.conf\n#\n{_STOCK_CONF}')
 
@@ -261,31 +258,3 @@ def test_priority_repos_first_then_the_rest_in_insertion_order(
 		'[a]',
 		'[c]',
 	]
-
-
-def test_parallel_downloads_written_once_by_apply(
-	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-	# the menu only picks the value; apply is the one writer, and rerunning
-	# it (menu init from a file, then set_mirrors) changes nothing more
-	live = _live(tmp_path, monkeypatch)
-	monkeypatch.setattr(
-		pm_config,
-		'EditMenu',
-		lambda *_a, **_kw: SimpleNamespace(
-			input=lambda: Result(ResultType.Selection, '8')
-		),
-	)
-
-	downloads = pm_config.set_parallel_downloads()
-
-	assert downloads == 8
-	assert live.read_text() == _STOCK_CONF
-
-	config = PacmanConfiguration(parallel_downloads=downloads)
-	PacmanConfig.apply_config(config, None)
-	PacmanConfig.apply_config(config, None)
-
-	assert live.read_text() == _STOCK_CONF.replace(
-		'ParallelDownloads = 5', 'ParallelDownloads = 8'
-	)

@@ -44,7 +44,7 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 		case ResultType.Reset:
 			return 5
 		case ResultType.Selection:
-			# only the value: PacmanConfig.apply writes it with the rest
+			# written by PacmanConfig.apply
 			return int(result.text())
 		case _:
 			assert_never(result.type_)
@@ -114,8 +114,7 @@ class PacmanConfig:
 
 		content = self._conf_path.read_text().splitlines(keepends=True)
 		options_found: set[str] = set()
-		# options absent from the conf (ILoveCandy in the stock one) go
-		# under [options]: above it pacman rejects the whole file
+		# above [options] pacman rejects the file
 		last_opt_row = next(
 			(
 				i
