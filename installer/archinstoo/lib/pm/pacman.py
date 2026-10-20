@@ -3,7 +3,6 @@ import re
 import shutil
 import sys
 import tempfile
-import time
 from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -95,31 +94,9 @@ class Pacman:
 	def run(
 		args: str, default_cmd: str = 'pacman', peek_output: bool = False
 	) -> SysCommand:
-		# A centralized function to call `pacman` from.
-		# It also protects us from colliding with other running pacman sessions
-		# (if used locally). The grace period is set to 10 minutes before
-		# exiting hard if another pacman instance is running. The run's db:
-		# on an Arch host a pacman of the user's own holds no lock on it
-		pacman_db_lock = live(PACMAN_DB) / 'db.lck'
-
-		if pacman_db_lock.exists():
-			warn(
-				'Pacman is already running, waiting maximum '
-				'10 minutes for it to terminate.'
-			)
-
-		started = time.monotonic()
-		while pacman_db_lock.exists():
-			time.sleep(0.25)
-
-			if time.monotonic() - started > (60 * 10):
-				error(
-					'Pre-existing pacman lock never exited. Please '
-					'clean up any existing pacman sessions before '
-					'using archinstoo.'
-				)
-				raise SystemExit(1)
-
+		# no wait on db.lck: nothing on the ISO takes it and the host run syncs
+		# a private db, so a held lock is stale and pacman's own "unable to
+		# lock database" says so at once
 		# -T and the -Q family draw no progress bar and reject the flag with
 		# 'invalid option', which under --silent turned every dependency
 		# check into a failed call
