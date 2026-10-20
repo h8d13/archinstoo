@@ -99,6 +99,21 @@ def test_target_conf_inherits_nothing_from_the_iso(target: Path) -> None:
 	assert '\nColor\n' not in written, 'the ISO conf leaked into the target'
 
 
+def test_absent_option_lands_under_options(target: Path) -> None:
+	# stock conf opens with comments and has no ILoveCandy line to uncomment;
+	# a directive above [options] belongs to no section, pacman refuses it
+	conf = target / 'etc/pacman.conf'
+	conf.write_text(f'#\n# /etc/pacman.conf\n#\n{_STOCK_CONF}')
+
+	PacmanConfig.apply_config(
+		PacmanConfiguration(pacman_options=['ILoveCandy']), target
+	)
+
+	written = conf.read_text()
+	assert '\nILoveCandy\n' in written
+	assert written.index('[options]') < written.index('ILoveCandy')
+
+
 def test_file_url_repo_never_reaches_the_target(target: Path) -> None:
 	# an ISO-local cache path does not exist after reboot
 	PacmanConfig.apply_config(_config(), target)

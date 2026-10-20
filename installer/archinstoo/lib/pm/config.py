@@ -125,7 +125,16 @@ class PacmanConfig:
 
 		content = self._conf_path.read_text().splitlines(keepends=True)
 		options_found: set[str] = set()
-		last_opt_row = 0
+		# options absent from the conf (ILoveCandy in the stock one) go
+		# under [options]: above it pacman rejects the whole file
+		last_opt_row = next(
+			(
+				i
+				for i, line in enumerate(content)
+				if re.match(r'^\[options\]', line)
+			),
+			0,
+		)
 
 		for row, line in enumerate(content):
 			# Uncomment misc options (Color, ILoveCandy, etc.)
