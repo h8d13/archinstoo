@@ -44,21 +44,10 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 		case ResultType.Reset:
 			return 5
 		case ResultType.Selection:
-			downloads: int = int(result.text())
+			# written by PacmanConfig.apply
+			return int(result.text())
 		case _:
 			assert_never(result.type_)
-
-	debug(f'Setting ParallelDownloads = {downloads}')
-	conf = live(PACMAN_CONF)
-	pacman_conf = [
-		f'ParallelDownloads = {downloads}'
-		if 'ParallelDownloads' in line
-		else line
-		for line in conf.read_text().splitlines()
-	]
-	conf.write_text('\n'.join(pacman_conf) + '\n')
-
-	return downloads
 
 
 if TYPE_CHECKING:
@@ -125,7 +114,15 @@ class PacmanConfig:
 
 		content = self._conf_path.read_text().splitlines(keepends=True)
 		options_found: set[str] = set()
-		last_opt_row = 0
+		# above [options] pacman rejects the file
+		last_opt_row = next(
+			(
+				i
+				for i, line in enumerate(content)
+				if re.match(r'^\[options\]', line)
+			),
+			0,
+		)
 
 		for row, line in enumerate(content):
 			# Uncomment misc options (Color, ILoveCandy, etc.)
