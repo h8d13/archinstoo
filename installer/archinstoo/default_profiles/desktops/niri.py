@@ -31,6 +31,9 @@ class NiriProfile(WaylandProfile):
 			'swaylock',
 			'xdg-desktop-portal-gnome',
 			'xdg-desktop-portal-gtk',
+			# Secret portal backend (org.freedesktop.secrets):
+			# niri-portals.conf names it, niri only optdeps it
+			'gnome-keyring',
 			*seat_packages(self.custom_settings.get('seat_access')),
 		]
 
