@@ -194,6 +194,31 @@ def test_priority_repos_keep_list_order(
 	)
 
 
+def test_reapply_reverts_the_previous_pick(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+	# the menu applies on every pass, the package list reads the result
+	live = _live(tmp_path, monkeypatch)
+	moved = CustomRepository(
+		_NET_REPO.name,
+		'https://other.example/$arch',
+		SignCheck.Never,
+		SignOption.TrustAll,
+	)
+
+	PacmanConfig.apply_config(_config(), None)
+	PacmanConfig.apply_config(
+		PacmanConfiguration(custom_repositories=[moved]), None
+	)
+
+	written = live.read_text()
+	assert '\n[multilib]\n' not in written
+	assert '[isocache]' not in written
+	assert '\nVerbosePkgLists\n' not in written
+	assert f'Server = {moved.url}\n' in written
+	assert _NET_REPO.url not in written
+
+
 def test_existing_repo_position_survives_reread(
 	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

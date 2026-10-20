@@ -70,11 +70,6 @@ def perform_installation(
 		not config.bootloader_config or not config.bootloader_config.uki
 	)
 	locale_config = config.locale_config
-	optional_repositories = (
-		config.pacman_config.optional_repositories
-		if config.pacman_config
-		else []
-	)
 	mountpoint = disk_config.mountpoint or args.mountpoint
 
 	with Installer(
@@ -103,7 +98,6 @@ def perform_installation(
 			installation.set_mirrors(pacman_config, on_target=False)
 
 		installation.minimal_installation(
-			optional_repositories=optional_repositories,
 			mkinitcpio=run_mkinitcpio,
 			hostname=config.hostname,
 			locale_config=locale_config,
