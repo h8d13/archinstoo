@@ -818,32 +818,10 @@ class GlobalMenu(AbstractMenu[None]):
 	) -> PacmanConfiguration:
 		pacman_configuration = PMenu(preset=preset).run()
 
-		needs_apply = (
-			pacman_configuration.optional_repositories
-			or pacman_configuration.custom_repositories
-			or pacman_configuration.pacman_options
-		)
-
 		# the package list is keyed on nothing but the conf now, so any pass
 		# through this menu invalidates it
 		list_available_packages.cache_clear()
-
-		if needs_apply:
-			# enable the repositories and options in the config
-			pacman_config = PacmanConfig(None)
-			if pacman_configuration.optional_repositories:
-				pacman_config.enable(
-					pacman_configuration.optional_repositories
-				)
-			if pacman_configuration.custom_repositories:
-				pacman_config.enable_custom(
-					pacman_configuration.custom_repositories
-				)
-			if pacman_configuration.pacman_options:
-				pacman_config.enable_options(
-					pacman_configuration.pacman_options
-				)
-			pacman_config.apply()
+		PacmanConfig.apply_config(pacman_configuration)
 
 		return pacman_configuration
 
