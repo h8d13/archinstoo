@@ -55,6 +55,8 @@ class NoctaliaProfile(WaylandProfile):
 		'labwc': ['labwc', 'xdg-desktop-portal-wlr', 'xorg-xwayland'],
 	}
 
+	_default_greeter_non_seatd = GreeterType.Noctalia
+
 	def __init__(self) -> None:
 		super().__init__('noctalia', ProfileType.WindowMgr)
 
@@ -80,13 +82,6 @@ class NoctaliaProfile(WaylandProfile):
 	@override
 	def services(self) -> list[str]:
 		return seat_services(self.custom_settings.get('seat_access'))
-
-	@property
-	@override
-	def default_greeter_type(self) -> GreeterType:
-		# greetd hands the VT over like ly, so it suits seatd as well; its
-		# compositor reaches /run/seatd.sock through the greeter's seat group
-		return GreeterType.Noctalia
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
