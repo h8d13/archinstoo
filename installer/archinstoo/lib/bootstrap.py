@@ -282,9 +282,14 @@ def chroot_setup() -> None:
 
 def install_deps_cmd() -> str:
 	# the root is reused across runs: once the deps are in, skip syncing at
-	# all. -Syu: the tarball has no sync dbs
+	# all. -Syu: the tarball has no sync dbs. Only what -T lists as missing,
+	# the rest is in the tarball and each would warn 'up to date -- skipping'.
+	# -T reads the local db only: no repos, else each unsynced one warns
 	names = ' '.join(DEPENDS)
-	return f'pacman -T {names} || pacman -Syu --needed --noconfirm {names}'
+	return (
+		f'missing=$(pacman --config /dev/null -T {names}) || '
+		'pacman -Syu --noconfirm $missing'
+	)
 
 
 def run_inside(src: Source, args: list[str]) -> int:
@@ -309,7 +314,15 @@ def run_inside(src: Source, args: list[str]) -> int:
 	"""
 	# A2_BOOTSTRAP: '/' is this throwaway root, archinstoo blocks live/packages
 	# A2_BOOT_ROOT: archinstoo names its log by the path the host sees
-	env = Env.get_envir({'A2_BOOTSTRAP': '1', 'A2_BOOT_ROOT': str(ROOT)})
+	# LC_ALL: the host's locale is not generated in the root (perl hooks warn),
+	# glibc ships C.UTF-8 prebuilt
+	env = Env.get_envir(
+		{
+			'A2_BOOTSTRAP': '1',
+			'A2_BOOT_ROOT': str(ROOT),
+			'LC_ALL': 'C.UTF-8',
+		}
+	)
 	# own pid namespace, as arch-chroot does: what the run leaves behind
 	# (pacman-key's gpg-agent) dies with it instead of holding the root busy.
 	# This console, not SysCommand's pty: the menus read our stdin

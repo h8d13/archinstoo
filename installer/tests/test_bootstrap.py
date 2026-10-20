@@ -24,12 +24,15 @@ def _fake_bin(bin_dir: Path, name: str, body: str) -> None:
 def test_deps_only_synced_when_missing(
 	tmp_path: Path, deptest_exit: int, synced: bool
 ) -> None:
-	# the root is reused across runs: a rerun with every dep in must not sync
+	# the root is reused across runs: a rerun with every dep in must not sync.
+	# Only what -T reports goes to -Syu, the tarball's own warn 'up to date'
 	calls = tmp_path / 'pacman.args'
+	missing = 'python\nefibootmgr' if synced else ''
 	_fake_bin(
 		tmp_path,
 		'pacman',
-		f'case "$1" in -T) exit {deptest_exit};; esac\necho "$@" > {calls}',
+		f'case "$*" in *-T*) printf "{missing}"; exit {deptest_exit};; esac\n'
+		f'echo "$@" > {calls}',
 	)
 
 	subprocess.run(  # noqa: S603 - the bootstrap's own command
@@ -40,9 +43,12 @@ def test_deps_only_synced_when_missing(
 
 	assert calls.exists() is synced
 	if synced:
-		argv = calls.read_text().split()
-		assert argv[:3] == ['-Syu', '--needed', '--noconfirm']
-		assert argv[3:] == list(bootstrap.DEPENDS)
+		assert calls.read_text().split() == [
+			'-Syu',
+			'--noconfirm',
+			'python',
+			'efibootmgr',
+		]
 
 
 def test_python_and_both_dep_sets_inside() -> None:
