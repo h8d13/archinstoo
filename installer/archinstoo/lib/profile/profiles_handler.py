@@ -28,6 +28,8 @@ _GREETD_SESSION = {
 		'--sessions /usr/share/wayland-sessions'
 	),
 	GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
+	# the session wrapper starts the bundled compositor, then the greeter in it
+	GreeterType.Noctalia: '/usr/bin/noctalia-greeter-session',
 }
 
 
@@ -213,9 +215,9 @@ class ProfileHandler:
 				""")
 			)
 
-		# regreet runs the cage compositor as the greeter user; only seatd
-		# ships the seat group, logind needs no membership
-		if greeter == GreeterType.Regreet:
+		# regreet (cage) and noctalia run their compositor as the greeter user;
+		# only seatd ships the seat group, logind needs no membership
+		if greeter in {GreeterType.Regreet, GreeterType.Noctalia}:
 			add_to_group(install_session, 'seat', ['greeter'])
 
 	def install_gfx_driver(

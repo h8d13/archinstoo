@@ -84,6 +84,7 @@ class GreeterType(Enum):
 	Tuigreet = 'tuigreet'
 	Regreet = 'regreet'
 	CosmicSession = 'cosmic-greeter'
+	Noctalia = 'noctalia-greeter'
 
 	@property
 	def packages(self) -> list[str]:
@@ -111,6 +112,9 @@ class GreeterType(Enum):
 				return ['greetd', 'greetd-regreet', 'cage']
 			case GreeterType.CosmicSession:
 				return ['cosmic-greeter']
+			case GreeterType.Noctalia:
+				# ships its own wlroots compositor
+				return ['greetd', 'noctalia-greeter']
 
 	@property
 	def services(self) -> list[str]:
@@ -121,7 +125,11 @@ class GreeterType(Enum):
 				return ['plasmalogin']
 			case GreeterType.Ly:
 				return ['ly@tty1']
-			case GreeterType.Tuigreet | GreeterType.Regreet:
+			case (
+				GreeterType.Tuigreet
+				| GreeterType.Regreet
+				| GreeterType.Noctalia
+			):
 				return ['greetd']
 			case _:
 				return [self.value]
@@ -134,6 +142,7 @@ class GreeterType(Enum):
 				GreeterType.Ly
 				| GreeterType.Tuigreet
 				| GreeterType.Regreet
+				| GreeterType.Noctalia
 			):
 				return ['getty@tty1']
 			case _:
