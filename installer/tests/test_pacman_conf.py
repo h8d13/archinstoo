@@ -263,10 +263,11 @@ def test_priority_repos_first_then_the_rest_in_insertion_order(
 	]
 
 
-def test_parallel_downloads_is_idempotent(
+def test_parallel_downloads_written_once_by_apply(
 	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-	# a trailing newline used to be written back as an extra blank line per run
+	# the menu only picks the value; apply is the one writer, and rerunning
+	# it (menu init from a file, then set_mirrors) changes nothing more
 	live = _live(tmp_path, monkeypatch)
 	monkeypatch.setattr(
 		pm_config,
@@ -276,8 +277,14 @@ def test_parallel_downloads_is_idempotent(
 		),
 	)
 
-	pm_config.set_parallel_downloads()
-	pm_config.set_parallel_downloads()
+	downloads = pm_config.set_parallel_downloads()
+
+	assert downloads == 8
+	assert live.read_text() == _STOCK_CONF
+
+	config = PacmanConfiguration(parallel_downloads=downloads)
+	PacmanConfig.apply_config(config, None)
+	PacmanConfig.apply_config(config, None)
 
 	assert live.read_text() == _STOCK_CONF.replace(
 		'ParallelDownloads = 5', 'ParallelDownloads = 8'

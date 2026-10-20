@@ -44,21 +44,10 @@ def set_parallel_downloads(preset: int | None = None) -> int | None:
 		case ResultType.Reset:
 			return 5
 		case ResultType.Selection:
-			downloads: int = int(result.text())
+			# only the value: PacmanConfig.apply writes it with the rest
+			return int(result.text())
 		case _:
 			assert_never(result.type_)
-
-	debug(f'Setting ParallelDownloads = {downloads}')
-	conf = live(PACMAN_CONF)
-	pacman_conf = [
-		f'ParallelDownloads = {downloads}'
-		if 'ParallelDownloads' in line
-		else line
-		for line in conf.read_text().splitlines()
-	]
-	conf.write_text('\n'.join(pacman_conf) + '\n')
-
-	return downloads
 
 
 if TYPE_CHECKING:
