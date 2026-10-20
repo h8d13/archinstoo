@@ -329,6 +329,10 @@ class SysCommandWorker:
 			# carries the menu's handler: it would
 			# redraw curses into the pty
 			signal.signal(signal.SIGWINCH, signal.SIG_DFL)
+			# python ignores these, exec keeps them ignored: pipes in
+			# the child printed "Broken pipe" (mkinitcpio kver, arm)
+			signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+			signal.signal(signal.SIGXFSZ, signal.SIG_DFL)
 			termios.tcsetwinsize(0, (size.lines, size.columns))
 			_cmd_history(self.cmd)
 
