@@ -966,9 +966,14 @@ class DeviceHandler:
 		# Wipe filesystem/LVM signatures from newly created partitions
 		# to prevent "signature detected" errors
 		for part_mod in filtered_part:
-			if part_mod.dev_path:
-				self.wipefs(part_mod.dev_path)
-				self.udev_sync()
+			# deleted ones point at a node that's gone after commit
+			if (
+				part_mod.status == ModificationStatus.DELETE
+				or not part_mod.dev_path
+			):
+				continue
+			self.wipefs(part_mod.dev_path)
+			self.udev_sync()
 
 	@staticmethod
 	def _rebase(mountpoint: Path, base_mountpoint: Path) -> Path:
