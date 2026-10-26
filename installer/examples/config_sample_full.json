@@ -97,32 +97,12 @@
                                 "unit": "B"
                             }
                         },
-                        "fs_type": "btrfs",
+                        "fs_type": "lvm",
                         "mountpoint": null,
-                        "mount_options": [
-                            "noatime",
-                            "compress=zstd"
-                        ],
+                        "mount_options": [],
                         "flags": [],
                         "dev_path": null,
-                        "btrfs": [
-                            {
-                                "name": "@",
-                                "mountpoint": "/"
-                            },
-                            {
-                                "name": "@home",
-                                "mountpoint": "/home"
-                            },
-                            {
-                                "name": "@log",
-                                "mountpoint": "/var/log"
-                            },
-                            {
-                                "name": "@pkg",
-                                "mountpoint": "/var/cache/pacman/pkg"
-                            }
-                        ]
+                        "btrfs": []
                     }
                 ]
             }

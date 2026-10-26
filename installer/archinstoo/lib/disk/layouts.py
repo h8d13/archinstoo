@@ -305,38 +305,20 @@ def suggest_lvm_layout(
 		btrfs_subvols = get_default_btrfs_subvols(home_volume=home_volume)
 		home_volume = False
 
-	boot_part: PartitionModification | None = None
-	other_part: list[PartitionModification] = []
-	lvm_marked: list[PartitionModification] = []
+	parts = [p for mod in disk_config.device_modifications for p in mod.partitions]
 
-	efi_part: PartitionModification | None = None
-
-	for mod in disk_config.device_modifications:
-		for part in mod.partitions:
-			if part.is_boot():
-				boot_part = part
-			elif part.is_efi():
-				efi_part = part
-			elif part.fs_type == FilesystemType.LVM:
-				lvm_marked.append(part)
-			else:
-				other_part.append(part)
-
-	# explicit PVs (partitions marked as LVM) win; otherwise fall back to every
-	# remaining partition so the default-layout flow keeps working unchanged
-	if lvm_marked:
-		other_part = lvm_marked
-
-	if not boot_part:
-		boot_part = efi_part
-
-	if not boot_part:
+	if not any(p.is_boot() or p.is_efi() for p in parts):
 		raise ValueError(
 			'Unable to find boot partition in partition modifications'
 		)
 
+	# PVs are the partitions marked fs=lvm, nothing else is taken over
+	pvs = [p for p in parts if p.fs_type == FilesystemType.LVM]
+	if not pvs:
+		raise ValueError('No partition marked as an LVM physical volume')
+
 	total_vol_available = sum(
-		(p.length for p in other_part),
+		(p.length for p in pvs),
 		Size(0, Unit.B, SectorSize.default()),
 	)
 	if home_volume:
@@ -351,7 +333,7 @@ def suggest_lvm_layout(
 		root_vol_size = total_vol_available
 		home_vol_size = Size(0, Unit.B, SectorSize.default())
 
-	lvm_vol_group = LvmVolumeGroup(vg_grp_name, pvs=other_part)
+	lvm_vol_group = LvmVolumeGroup(vg_grp_name, pvs=pvs)
 
 	root_vol = LvmVolume(
 		status=ModificationStatus.CREATE,

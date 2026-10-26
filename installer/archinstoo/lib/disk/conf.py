@@ -38,6 +38,17 @@ def _manual_partitioning(
 	return manual_partitioning(preset, handler.partition_table)
 
 
+def _with_lvm(disk_config: DiskLayoutConfiguration) -> DiskLayoutConfiguration:
+	# a partition marked fs=lvm is a PV: pick its volume layout right away
+	if any(
+		p.fs_type == FilesystemType.LVM
+		for mod in disk_config.device_modifications
+		for p in mod.partitions
+	):
+		disk_config.lvm_config = select_lvm_config(disk_config)
+	return disk_config
+
+
 def select_disk_config(
 	preset: DiskLayoutConfiguration | None = None,
 	device_handler: DeviceHandler | None = None,
@@ -57,9 +68,11 @@ def select_disk_config(
 				preset_mod, preset_mod.device, handler
 			)
 		) is not None:
-			return DiskLayoutConfiguration(
-				config_type=DiskLayoutType.Manual,
-				device_modifications=[manual_modification],
+			return _with_lvm(
+				DiskLayoutConfiguration(
+					config_type=DiskLayoutType.Manual,
+					device_modifications=[manual_modification],
+				)
 			)
 		return None
 
@@ -135,21 +148,12 @@ def select_disk_config(
 				modification = get_default_partition_layout(
 					device, bootloader=bootloader
 				)
-				disk_config = DiskLayoutConfiguration(
-					config_type=DiskLayoutType.Default,
-					device_modifications=[modification],
-				)
-				# choosing lvm as the fs marks a PV, so open the volume
-				# menu (Default / Root only) inline
-				if any(
-					p.fs_type == FilesystemType.LVM
-					for mod in disk_config.device_modifications
-					for p in mod.partitions
-				):
-					disk_config.lvm_config = select_lvm_config(
-						disk_config
+				return _with_lvm(
+					DiskLayoutConfiguration(
+						config_type=DiskLayoutType.Default,
+						device_modifications=[modification],
 					)
-				return disk_config
+				)
 			if (
 				result.get_value() == manual_mode
 				and (
@@ -159,9 +163,13 @@ def select_disk_config(
 				)
 				is not None
 			):
-				return DiskLayoutConfiguration(
-					config_type=DiskLayoutType.Manual,
-					device_modifications=[manual_modification],
+				return _with_lvm(
+					DiskLayoutConfiguration(
+						config_type=DiskLayoutType.Manual,
+						device_modifications=[
+							manual_modification
+						],
+					)
 				)
 
 	return None

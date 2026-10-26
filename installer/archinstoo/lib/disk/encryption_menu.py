@@ -416,8 +416,8 @@ def select_partitions_to_encrypt(
 	for mod in modification:
 		partitions += [p for p in mod.partitions if not p.is_efi()]
 
-	# do not allow encrypting existing partitions that are not marked as wipe
-	avail_partitions = [p for p in partitions if not p.exists()]
+	# only new or reformatted partitions, deleted ones are going away
+	avail_partitions = [p for p in partitions if p.is_create_or_modify()]
 
 	if avail_partitions:
 		group = MenuHelper(data=avail_partitions).create_menu_group()
