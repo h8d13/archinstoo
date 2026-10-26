@@ -165,9 +165,14 @@ class DeviceHandler:
 				continue
 
 			# nothing installs onto these: optical drives (an empty one
-			# reports RO=0) and the live medium's read-only squashfs loop,
-			# whose mount sits outside the bootstrap root
-			if dev_lsblk_info.type == 'rom' or dev_lsblk_info.ro:
+			# reports RO=0), the live medium's read-only squashfs loop,
+			# whose mount sits outside the bootstrap root, and zram (RAM
+			# backed, lsblk calls it a plain disk)
+			if (
+				dev_lsblk_info.type == 'rom'
+				or dev_lsblk_info.ro
+				or dev_lsblk_info.name.startswith('zram')
+			):
 				continue
 
 			try:
