@@ -118,7 +118,6 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				text='Power management',
 				action=select_power_management,
 				preview_action=self._prev_power_management,
-				enabled=SysInfo.has_battery(),
 				key='power_management_config',
 			),
 			MenuItem(
