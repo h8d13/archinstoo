@@ -69,7 +69,13 @@ class _SysInfo:
 	def has_battery(self) -> bool:
 		for type_path in Path('/sys/class/power_supply/').glob('*/type'):
 			try:
-				if type_path.read_text().strip() == 'Battery':
+				if type_path.read_text().strip() != 'Battery':
+					continue
+				# wireless mice/headsets report scope=Device
+				scope = type_path.with_name('scope')
+				if not scope.exists():
+					return True
+				if scope.read_text().strip() != 'Device':
 					return True
 			except OSError:
 				continue
