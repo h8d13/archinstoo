@@ -45,6 +45,20 @@
   ],
   "packageRules": [
     {
+      "description": "Arch base image is rebuilt daily, land digest bumps once CI passes, no PR",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "archlinux/archlinux"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
       "description": "Python floor moves with Arch minor releases, not point releases",
       "matchDepNames": [
         "arch/python"
