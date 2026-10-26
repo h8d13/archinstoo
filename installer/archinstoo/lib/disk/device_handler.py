@@ -291,21 +291,16 @@ class DeviceHandler:
 		return self._devices.get(path, None)
 
 	def get_unique_path_for_device(self, dev_path: Path) -> Path | None:
-		paths = Path('/dev/disk/by-id').glob('*')
+		paths = list(Path('/dev/disk/by-id').glob('*'))
 		linked_targets = {p.resolve(): p for p in paths}
+		# match on the link name, the resolved keys are plain /dev/sdX
 		linked_wwn_targets = {
-			p: linked_targets[p]
-			for p in linked_targets
-			if p.name.startswith('wwn-') or p.name.startswith('nvme-eui.')
+			p.resolve(): p
+			for p in paths
+			if p.name.startswith(('wwn-', 'nvme-eui.'))
 		}
 
-		if dev_path in linked_wwn_targets:
-			return linked_wwn_targets[dev_path]
-
-		if dev_path in linked_targets:
-			return linked_targets[dev_path]
-
-		return None
+		return linked_wwn_targets.get(dev_path) or linked_targets.get(dev_path)
 
 	def get_btrfs_info(
 		self,

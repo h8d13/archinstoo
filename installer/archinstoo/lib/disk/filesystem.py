@@ -430,14 +430,12 @@ class FilesystemHandler:
 		enc_mods: dict[PartitionModification, Luks2] = {}
 
 		for mod in self._disk_config.device_modifications:
-			partitions = mod.partitions
-
-			# don't touch existing partitions
-			filtered_part = [p for p in partitions if not p.exists()]
+			# deleted ones are gone and keep their old fs_type (crypto_LUKS)
+			filtered_part = [
+				p for p in mod.partitions if p.is_create_or_modify()
+			]
 
 			self._validate_partitions(filtered_part)
-
-			enc_mods = {}
 
 			for part_mod in filtered_part:
 				if part_mod in enc_config.partitions:

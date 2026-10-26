@@ -200,7 +200,7 @@ def umount(mountpoint: Path | str, recursive: bool = False) -> None:
 		cmd.append('-R')
 
 	for path in lsblk_info.mountpoints:
-		# Skip [SWAP] - it's not a real mountpoint, swap is handled separately
+		# Handle [SWAP] it's not a real mountpoint
 		if str(path) == '[SWAP]':
 			swapoff(mountpoint)
 			continue

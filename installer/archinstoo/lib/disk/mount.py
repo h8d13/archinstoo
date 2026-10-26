@@ -212,30 +212,25 @@ class LayoutMounter:
 			)
 
 	def _mount_lvm_vol(self, volume: LvmVolume) -> None:
-		if (
-			volume.fs_type != FilesystemType.BTRFS
-			and volume.mountpoint
-			and volume.dev_path
-		):
-			target = self.target / volume.relative_mountpoint
+		if volume.dev_path:
+			self._mount_volume(volume.dev_path, volume)
+
+	def _mount_volume(self, dev_path: Path, volume: LvmVolume) -> None:
+		# same precedence as _mount_partition: a btrfs LV without
+		# subvolumes still mounts at its own mountpoint
+		if volume.fs_type == FilesystemType.BTRFS and volume.btrfs_subvols:
+			if self._has_mountable_subvols(dev_path, volume.btrfs_subvols):
+				self._mount_btrfs_subvol(
+					dev_path,
+					volume.btrfs_subvols,
+					volume.mount_options,
+				)
+		elif volume.mountpoint:
 			mount(
-				volume.dev_path,
-				target,
+				dev_path,
+				self.target / volume.relative_mountpoint,
 				mount_fs=volume.fs_type.fs_type_mount,
 				options=volume.mount_options,
-			)
-
-		if (
-			volume.fs_type == FilesystemType.BTRFS
-			and volume.dev_path
-			and self._has_mountable_subvols(
-				volume.dev_path, volume.btrfs_subvols
-			)
-		):
-			self._mount_btrfs_subvol(
-				volume.dev_path,
-				volume.btrfs_subvols,
-				volume.mount_options,
 			)
 
 	def _mount_luks_partition(
@@ -277,29 +272,8 @@ class LayoutMounter:
 			)
 
 	def _mount_luks_volume(self, volume: LvmVolume, luks_handler: Luks2) -> None:
-		mapper = luks_handler.mapper_dev
-
-		if (
-			volume.fs_type != FilesystemType.BTRFS
-			and volume.mountpoint
-			and mapper
-		):
-			target = self.target / volume.relative_mountpoint
-			mount(
-				mapper,
-				target,
-				mount_fs=volume.fs_type.fs_type_mount,
-				options=volume.mount_options,
-			)
-
-		if (
-			volume.fs_type == FilesystemType.BTRFS
-			and mapper
-			and self._has_mountable_subvols(mapper, volume.btrfs_subvols)
-		):
-			self._mount_btrfs_subvol(
-				mapper, volume.btrfs_subvols, volume.mount_options
-			)
+		if luks_handler.mapper_dev:
+			self._mount_volume(luks_handler.mapper_dev, volume)
 
 	def _has_mountable_subvols(
 		self, dev_path: Path, subvolumes: list[SubvolumeModification]

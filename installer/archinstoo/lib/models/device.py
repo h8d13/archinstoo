@@ -348,21 +348,23 @@ class DiskLayoutConfiguration:
 		return config
 
 	def has_default_btrfs_vols(self) -> bool:
-		for mod in self.device_modifications:
-			for part in mod.partitions:
-				if not (
-					part.is_create_or_modify()
-					and part.fs_type == FilesystemType.BTRFS
-				):
-					continue
+		# btrfs on LVM carries its subvolumes on the LV
+		vols: list[PartitionModification | LvmVolume] = [
+			part
+			for mod in self.device_modifications
+			for part in mod.partitions
+		]
+		if self.lvm_config:
+			vols += self.lvm_config.get_all_volumes()
 
-				if any(
-					subvol.is_default_root()
-					for subvol in part.btrfs_subvols
-				):
-					return True
-
-		return False
+		return any(
+			vol.is_create_or_modify()
+			and vol.fs_type == FilesystemType.BTRFS
+			and any(
+				subvol.is_default_root() for subvol in vol.btrfs_subvols
+			)
+			for vol in vols
+		)
 
 	def btrfs_snapshot_type(self) -> SnapshotType | None:
 		# snapper/timeshift only fit the default btrfs layout, anything else
@@ -1559,6 +1561,12 @@ class LvmVolume:
 	def is_exists_or_modify(self) -> bool:
 		return self.status in {
 			ModificationStatus.EXIST,
+			ModificationStatus.MODIFY,
+		}
+
+	def is_create_or_modify(self) -> bool:
+		return self.status in {
+			ModificationStatus.CREATE,
 			ModificationStatus.MODIFY,
 		}
 
