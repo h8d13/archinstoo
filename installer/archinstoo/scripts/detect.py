@@ -24,7 +24,6 @@ def _host() -> None:
 	_row('firmware', uefi if SysInfo.has_uefi() else 'BIOS')
 	_row('vm', SysInfo.is_vm())
 	_row('portable', detect.is_portable())
-	_row('battery', SysInfo.has_battery())
 	_row('thunderbolt', SysInfo.has_thunderbolt())
 
 

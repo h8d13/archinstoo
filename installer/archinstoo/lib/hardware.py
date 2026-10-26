@@ -66,23 +66,6 @@ class _SysInfo:
 			return None
 
 	@cached_property
-	def has_battery(self) -> bool:
-		for type_path in Path('/sys/class/power_supply/').glob('*/type'):
-			try:
-				if type_path.read_text().strip() != 'Battery':
-					continue
-				# wireless mice/headsets report scope=Device
-				scope = type_path.with_name('scope')
-				if not scope.exists():
-					return True
-				if scope.read_text().strip() != 'Device':
-					return True
-			except OSError:
-				continue
-
-		return False
-
-	@cached_property
 	def has_thunderbolt(self) -> bool:
 		# one domainN per host controller bound by the thunderbolt driver
 		# (USB4 hosts register on the same bus); disabled in firmware = absent
@@ -184,10 +167,6 @@ class SysInfo:
 	@staticmethod
 	def arch() -> str:
 		return platform.machine()
-
-	@staticmethod
-	def has_battery() -> bool:
-		return _sys_info.has_battery
 
 	@staticmethod
 	def has_thunderbolt() -> bool:
