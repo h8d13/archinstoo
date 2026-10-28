@@ -142,7 +142,7 @@ Move fast (even if it means breaking and fixing).
 > like `archiso`, `qemu-*`, `pacman-contrib` and `nvchecker`.
 
 For **non-dev** see [`installer/PKGBUILD`](https://github.com/h8d13/archinstoo/blob/master/installer/PKGBUILD)
-uses the repo without its top part from git.
+uses the repo without its top part.
 
 But it is recommended to use latest from git `master` instead.
 
