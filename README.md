@@ -11,8 +11,8 @@ An operating system installer (and tools) for [archlinux](https://archlinux.org)
 > Use `sudo` or equivalent, *when from an existing system.*
 
 Or from any Linux host: `./RUN --script bootstrap -- [archinstoo args...]`
-runs archinstoo inside the Arch bootstrap tarball,
-see [`distros/`](https://github.com/h8d13/archinstoo/tree/master/distros).
+
+See [`distros/`](https://github.com/h8d13/archinstoo/tree/master/distros).
 
 ## Setup / Usage
 
