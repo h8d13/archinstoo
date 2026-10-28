@@ -147,7 +147,7 @@ uses the repo without its top part.
 But it is recommended to use latest from git `master` instead.
 
 See [`archinstall`](https://github.com/archlinux/archinstall)
-and thanks to the many original contributors.
+and thanks to the many contributors.
 And the [arch-wiki](https://wiki.archlinux.org/title/Main_page).
 
 See [mirror](https://gitlab.archlinux.org/h8d13/archinstoo/)
