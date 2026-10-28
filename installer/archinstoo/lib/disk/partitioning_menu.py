@@ -31,8 +31,10 @@ from .subvolume_menu import SubvolumeMenu
 
 class FreeSpace:
 	def __init__(self, start: Size, end: Size) -> None:
-		self.start = start
-		self.end = end
+		# only the aligned span is usable, so a gap between off-grain
+		# neighbours that rounds below the buffer is never offered
+		self.start = start.align_up()
+		self.end = end.align_down()
 
 	@property
 	def length(self) -> Size:

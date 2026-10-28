@@ -1225,6 +1225,9 @@ class PartitionModification:
 				'If partition marked as existing a path must be set'
 			)
 
+		if self.status == ModificationStatus.CREATE and self.length.value <= 0:
+			raise ValueError('Partition to create must have a length')
+
 		if self.fs_type is None and self.status == ModificationStatus.MODIFY:
 			raise ValueError(
 				'FS type must not be empty on modifications '
