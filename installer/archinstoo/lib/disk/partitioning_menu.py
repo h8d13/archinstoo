@@ -150,7 +150,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		device_info = self._device.device_info
 		end = table.usable_end(
 			device_info.total_size, device_info.sector_size
-		).align()
+		).align_down()
 
 		# Reorder device_partitions to move all deleted partitions to the top
 		device_partitions.sort(key=lambda p: p.is_delete(), reverse=True)
@@ -661,11 +661,9 @@ class PartitioningList(ListManager[DiskSegment]):
 		# SI units and bare sectors land off the MiB grain, and the next
 		# free segment starts where this one ends: snap both to MiB,
 		# the same rule the config loader enforces
-		start = free_space.start.align()
-		if start < free_space.start:
-			start += self._buffer
+		start = free_space.start.align_up()
 		length = min(self._prompt_size(free_space), free_space.end - start)
-		length = length.align()
+		length = length.align_down()
 
 		fs_type = self._prompt_partition_fs_type()
 

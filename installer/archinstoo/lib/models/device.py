@@ -313,9 +313,9 @@ class DiskLayoutConfiguration:
 				continue
 
 			for part in create_partitions:
-				if (
-					part.start != part.start.align()
-					or part.length != part.length.align()
+				if not (
+					part.start.is_aligned()
+					and part.length.is_aligned()
 				):
 					raise ValueError('Partition is misaligned')
 
@@ -326,7 +326,7 @@ class DiskLayoutConfiguration:
 					raise ValueError(
 						'Partition overlaps backup GPT header'
 					)
-			elif last.end > total_size.align():
+			elif last.end > total_size.align_down():
 				raise ValueError('Partition too large for device')
 
 		# Parse LVM configuration from settings
@@ -637,10 +637,18 @@ class Size:
 	def is_valid_start(self) -> bool:
 		return self >= Size(1, Unit.MiB, self.sector_size)
 
-	def align(self) -> Size:
+	def align_down(self) -> Size:
 		align_norm = Unit.MiB.value
 		src_norm = self._normalize()
 		return self - Size(abs(src_norm % align_norm), Unit.B, self.sector_size)
+
+	def is_aligned(self) -> bool:
+		return self == self.align_down()
+
+	def align_up(self) -> Size:
+		if self.is_aligned():
+			return self
+		return self.align_down() + Size(1, Unit.MiB, self.sector_size)
 
 	def gpt_end(self) -> Size:
 		return self - Size(1, Unit.MiB, self.sector_size)
