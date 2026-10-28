@@ -184,7 +184,7 @@ def suggest_disk_layout(
 			f'{device.device_info.path} unused'
 		)
 
-	available_space = available_space.align()
+	available_space = available_space.align_down()
 
 	# Used for reference: https://wiki.archlinux.org/title/partitioning
 	boot_partitions = _boot_partition(
