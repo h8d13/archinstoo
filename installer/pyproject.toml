@@ -32,7 +32,7 @@ dev = [
     "pre-commit>=4.7.0",  # renovate: arch=pre-commit
     "ruff>=0.17.3",  # renovate: arch=ruff
     "pylint>=4.0.7",  # renovate: arch=python-pylint
-    "pytest>=9.1.1",  # renovate: arch=python-pytest
+    "pytest>=9.2.0",  # renovate: arch=python-pytest
 ]
 
 [project.scripts]
