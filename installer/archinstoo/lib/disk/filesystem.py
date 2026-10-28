@@ -252,7 +252,11 @@ class FilesystemHandler:
 		if not self._disk_config.lvm_config:
 			return
 
-		if self._enc_config:
+		if (
+			self._enc_config
+			and self._enc_config.encryption_type
+			!= EncryptionType.NO_ENCRYPTION
+		):
 			self._setup_lvm_encrypted(
 				self._disk_config.lvm_config,
 				self._enc_config,

@@ -338,6 +338,15 @@ class DiskLayoutConfiguration:
 				enc_arg, config
 			)
 
+		# plain luks has no lvm branch, the volume group would never exist
+		if (
+			config.lvm_config
+			and config.disk_encryption
+			and config.disk_encryption.encryption_type
+			== EncryptionType.LUKS
+		):
+			raise ValueError('lvm_config needs lvm_on_luks or luks_on_lvm')
+
 		if (
 			config.has_default_btrfs_vols()
 			and (btrfs_arg := disk_config.get('btrfs_options', None))
@@ -1225,6 +1234,9 @@ class PartitionModification:
 				'If partition marked as existing a path must be set'
 			)
 
+		if self.status == ModificationStatus.CREATE and self.length.value <= 0:
+			raise ValueError('Partition to create must have a length')
+
 		if self.fs_type is None and self.status == ModificationStatus.MODIFY:
 			raise ValueError(
 				'FS type must not be empty on modifications '
@@ -1764,18 +1776,22 @@ class DeviceModification:
 
 	def get_efi_partition(self) -> PartitionModification | None:
 		filtered = filter(
-			lambda x: x.is_efi() and x.mountpoint, self.partitions
+			lambda x: x.is_efi() and x.mountpoint and not x.is_delete(),
+			self.partitions,
 		)
 		return next(filtered, None)
 
 	def get_boot_partition(self) -> PartitionModification | None:
 		filtered = filter(
-			lambda x: x.is_boot() and x.mountpoint, self.partitions
+			lambda x: x.is_boot() and x.mountpoint and not x.is_delete(),
+			self.partitions,
 		)
 		return next(filtered, None)
 
 	def get_root_partition(self) -> PartitionModification | None:
-		filtered = filter(lambda x: x.is_root(), self.partitions)
+		filtered = filter(
+			lambda x: x.is_root() and not x.is_delete(), self.partitions
+		)
 		return next(filtered, None)
 
 	def json(self) -> _DeviceModificationSerialization:
