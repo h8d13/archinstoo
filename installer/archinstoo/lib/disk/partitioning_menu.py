@@ -658,7 +658,14 @@ class PartitioningList(ListManager[DiskSegment]):
 	def _create_new_partition(
 		self, free_space: FreeSpace, data: list[DiskSegment]
 	) -> PartitionModification:
-		length = self._prompt_size(free_space)
+		# SI units and bare sectors land off the MiB grain, and the next
+		# free segment starts where this one ends: snap both to MiB,
+		# the same rule the config loader enforces
+		start = free_space.start.align()
+		if start < free_space.start:
+			start += self._buffer
+		length = min(self._prompt_size(free_space), free_space.end - start)
+		length = length.align()
 
 		fs_type = self._prompt_partition_fs_type()
 
@@ -669,7 +676,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		partition = PartitionModification(
 			status=ModificationStatus.CREATE,
 			type=PartitionType.PRIMARY,
-			start=free_space.start,
+			start=start,
 			length=length,
 			fs_type=fs_type,
 			mountpoint=mountpoint,
