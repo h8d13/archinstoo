@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import select_compositor, select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.output import debug, info
+from archinstoo.lib.output import info
 from archinstoo.lib.profile.base import (
 	GreeterType,
 	ProfileType,
@@ -20,8 +20,8 @@ class DmsProfile(WaylandProfile):
 	# `dms setup` writes is pinned to alacritty, so that one ships here
 	needs_terminal = True
 
-	# dms-shell is compositor-agnostic since 1.6.2-2 (replaces the old
-	# dms-shell-niri/-hyprland shims), so these only carry the compositor
+	# dux-shell (dms-shell before 2.0.0) is compositor-agnostic, so these
+	# only carry the compositor
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
 		'niri': [
 			'niri',
@@ -65,7 +65,7 @@ class DmsProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			*self.compositor_packages[self.compositor],
-			'dms-shell',
+			'dux-shell',
 			'matugen',
 			'cava',
 			'kimageformats',
@@ -87,19 +87,12 @@ class DmsProfile(WaylandProfile):
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		super().provision(install_session, users)
 
-		# dms.service (WantedBy=graphical-session.target) autostarts the shell
-		# in any session that activates the target: niri natively, hyprland via
-		# the hyprland-session.target the setup below deploys. mango activates
-		# it too (mango-session.target), but setup gives mango `exec-once=dms
-		# run` instead, so the unit would start a second shell
-		if self.compositor != 'mango':
-			debug('Enabling dms.service globally for all users')
-			install_session.arch_chroot(
-				['systemctl', '--global', 'enable', 'dms.service']
-			)
-
-		# `dms setup headless` writes the compositor config, the dms/ overrides
-		# and (for hyprland) ~/.config/systemd/user/hyprland-session.target.
+		# `dms setup headless` writes the compositor config and the dms/
+		# overrides, then `systemctl --user add-wants` dms.service on the
+		# compositor's own unit (niri.service, hyprland-session.target,
+		# mango-session.target). if that fails the config starts the shell
+		# itself, so no global enable here: graphical-session.target would
+		# double it there and start it under any other DE too.
 		# it has to run as the user: everything lands under their $HOME
 		for user in users:
 			info(
@@ -123,7 +116,7 @@ class DmsProfile(WaylandProfile):
 	@override
 	def do_on_select(self) -> None:
 		self.custom_settings['dms_compositor'] = select_compositor(
-			'DankMaterialShell',
+			'Dux Shell',
 			list(self.compositor_packages),
 			self.compositor,
 		)

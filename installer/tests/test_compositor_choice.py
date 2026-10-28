@@ -49,9 +49,8 @@ def test_resolver_agrees_with_profile(
 def test_dms_shell_starts_once(
 	compositor: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-	# mango-session.target activates graphical-session.target like the others,
-	# but `dms setup` gives mango `exec-once=dms run`: enabling dms.service on
-	# top would start a second shell
+	# `dms setup` wants dms.service from the compositor unit, or falls back
+	# to starting it from the config: a global enable on top doubles it
 	calls: list[list[str]] = []
 	session = Installer.__new__(Installer)
 	session.target = tmp_path
@@ -65,6 +64,5 @@ def test_dms_shell_starts_once(
 	profile.custom_settings['dms_compositor'] = compositor
 	profile.provision(session, [User('ada', None, False)])
 
-	enabled = ['systemctl', '--global', 'enable', 'dms.service'] in calls
-	assert enabled == (compositor != 'mango')
+	assert not any(cmd[:1] == ['systemctl'] for cmd in calls)
 	assert any(cmd[:2] == ['dms', 'setup'] and compositor in cmd for cmd in calls)

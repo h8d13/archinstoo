@@ -42,6 +42,9 @@ source = "pacman"
 [lvm2]
 source = "pacman"
 
+[mdadm]
+source = "pacman"
+
 [pacman]
 source = "pacman"
 
@@ -52,9 +55,6 @@ source = "pacman"
 source = "pacman"
 
 [python-pyparted]
-source = "pacman"
-
-[systemd]
 source = "pacman"
 
 [util-linux]
@@ -76,6 +76,9 @@ source = "pacman"
 source = "pacman"
 
 [qemu-base]
+source = "pacman"
+
+[systemd]
 source = "pacman"
 
 [tree]
@@ -657,10 +660,10 @@ source = "pacman"
 [dmenu]
 source = "pacman"
 
-[dms-shell]
+[docker]
 source = "pacman"
 
-[docker]
+[docker-compose]
 source = "pacman"
 
 [docparser]
@@ -700,6 +703,9 @@ source = "pacman"
 source = "pacman"
 
 [dunst]
+source = "pacman"
+
+[dux-shell]
 source = "pacman"
 
 [efibootmgr]
@@ -1131,6 +1137,9 @@ source = "pacman"
 [noctalia]
 source = "pacman"
 
+[noctalia-greeter]
+source = "pacman"
+
 [ntsync-autoload]
 source = "pacman"
 
@@ -1204,6 +1213,9 @@ source = "pacman"
 source = "pacman"
 
 [pluma]
+source = "pacman"
+
+[pluma-plugins]
 source = "pacman"
 
 [postgresql]
