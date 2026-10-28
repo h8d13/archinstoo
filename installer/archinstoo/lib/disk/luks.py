@@ -235,10 +235,9 @@ class Luks2:
 
 		# For each child (sub-partition/sub-device)
 		for child in lsblk_info.children:
-			# Unmount the child location
-			for mountpoint in child.mountpoints:
-				debug(f'Unmounting {mountpoint}')
-				umount(mountpoint, recursive=True)
+			# by device: lsblk rejects a mountpoint
+			debug(f'Unmounting {child.path}')
+			umount(child.path, recursive=True)
 
 			# And close it if possible.
 			debug(f'Closing crypt device {child.name}')

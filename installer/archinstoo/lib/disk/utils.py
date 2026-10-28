@@ -185,6 +185,11 @@ def mount(
 def umount(mountpoint: Path | str, recursive: bool = False) -> None:
 	lsblk_info = get_lsblk_info(mountpoint)
 
+	# [SWAP] is dropped from mountpoints for the menu, so an active swap
+	# never shows up below; swapoff ignores an inactive area
+	if lsblk_info.fstype == 'swap':
+		swapoff(mountpoint)
+
 	if not lsblk_info.mountpoints:
 		debug(f'{mountpoint} has no mountpoints, nothing to unmount')
 		return
@@ -200,10 +205,6 @@ def umount(mountpoint: Path | str, recursive: bool = False) -> None:
 		cmd.append('-R')
 
 	for path in lsblk_info.mountpoints:
-		# Handle [SWAP] it's not a real mountpoint
-		if str(path) == '[SWAP]':
-			swapoff(mountpoint)
-			continue
 		debug(f'Unmounting mountpoint: {path}')
 		try:
 			SysCommand([*cmd, str(path)])
