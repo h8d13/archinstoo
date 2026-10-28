@@ -338,6 +338,15 @@ class DiskLayoutConfiguration:
 				enc_arg, config
 			)
 
+		# plain luks has no lvm branch, the volume group would never exist
+		if (
+			config.lvm_config
+			and config.disk_encryption
+			and config.disk_encryption.encryption_type
+			== EncryptionType.LUKS
+		):
+			raise ValueError('lvm_config needs lvm_on_luks or luks_on_lvm')
+
 		if (
 			config.has_default_btrfs_vols()
 			and (btrfs_arg := disk_config.get('btrfs_options', None))
