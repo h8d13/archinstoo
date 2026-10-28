@@ -74,13 +74,20 @@ class LayoutMounter:
 
 		# move the device with the root partition to the beginning of the list
 		for mod in self._disk_config.device_modifications:
-			if any(partition.is_root() for partition in mod.partitions):
+			if any(
+				p.is_root() and not p.is_delete()
+				for p in mod.partitions
+			):
 				sorted_device_mods.remove(mod)
 				sorted_device_mods.insert(0, mod)
 				break
 
 		for mod in sorted_device_mods:
-			not_pv_part_mods = [p for p in mod.partitions if p not in pvs]
+			not_pv_part_mods = [
+				p
+				for p in mod.partitions
+				if p not in pvs and not p.is_delete()
+			]
 
 			# partitions have to mounted in the right order on btrfs the
 			# mountpoint will be empty as the actual subvolumes are getting

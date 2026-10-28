@@ -296,7 +296,7 @@ class Installer:
 		else:
 			for mod in self._disk_config.device_modifications:
 				for part in mod.partitions:
-					if part.fs_type is None:
+					if part.is_delete() or part.fs_type is None:
 						continue
 
 					self._prepare_fs_type(part.fs_type)
