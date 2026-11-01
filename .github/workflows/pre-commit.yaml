@@ -14,7 +14,7 @@ jobs:
     pre-commit:
         runs-on: ubuntu-latest
         container:
-            image: archlinux/archlinux:latest@sha256:ef670f5eb71720bc3fe697123175901a4edcc74a03abd7a5594312c6b9601a80
+            image: archlinux/archlinux:latest@sha256:837194727013a6e81fb55be11e61d6dcfe7fdd095b3313f8f3cff9bb3f9b182d
         steps:
             - name: Prepare arch
               run: |
