@@ -13,7 +13,7 @@ jobs:
     zizmor:
         runs-on: ubuntu-latest
         container:
-            image: archlinux/archlinux:latest@sha256:ef670f5eb71720bc3fe697123175901a4edcc74a03abd7a5594312c6b9601a80
+            image: archlinux/archlinux:latest@sha256:837194727013a6e81fb55be11e61d6dcfe7fdd095b3313f8f3cff9bb3f9b182d
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
               with:
@@ -30,7 +30,7 @@ jobs:
     vulture:
         runs-on: ubuntu-latest
         container:
-            image: archlinux/archlinux:latest@sha256:ef670f5eb71720bc3fe697123175901a4edcc74a03abd7a5594312c6b9601a80
+            image: archlinux/archlinux:latest@sha256:837194727013a6e81fb55be11e61d6dcfe7fdd095b3313f8f3cff9bb3f9b182d
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
               with:
