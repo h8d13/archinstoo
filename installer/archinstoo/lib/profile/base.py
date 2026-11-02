@@ -33,6 +33,9 @@ class ProfileType(Enum):
 	ServerType = 'servertype'
 	WindowMgr = 'window manager'
 	DesktopEnv = 'desktop environment'
+	# bar/launcher/notifications on a compositor it provisions the config
+	# of: two would fight over that config, so a selection holds one
+	Shell = 'shell'
 	CustomType = 'customtype'
 
 	# Custom are place-holders
@@ -249,7 +252,11 @@ class Profile:
 		return self.profile_type in {
 			ProfileType.DesktopEnv,
 			ProfileType.WindowMgr,
+			ProfileType.Shell,
 		}
+
+	def is_shell_profile(self) -> bool:
+		return self.profile_type == ProfileType.Shell
 
 	def is_greeter_supported(self) -> bool:
 		return self.profile_type == ProfileType.Desktop

@@ -40,6 +40,16 @@ class ProfileSerialization(TypedDict):
 	path: NotRequired[str]
 
 
+def one_shell[P: Profile](profiles: list[P]) -> list[P]:
+	# shells provision the compositor config and start themselves: keep the
+	# first picked, two would fight over both
+	dropped = [p for p in profiles if p.is_shell_profile()][1:]
+	if dropped:
+		names = ', '.join(p.name for p in dropped)
+		warn(f'One shell per install, dropping: {names}')
+	return [p for p in profiles if p not in dropped]
+
+
 class ProfileHandler:
 	def __init__(self) -> None:
 		self._profiles: list[Profile] | None = None
@@ -123,7 +133,7 @@ class ProfileHandler:
 			)
 
 		custom_settings = profile_config.get('custom_settings', {})
-		profile.current_selection = valid_sub_profiles
+		profile.current_selection = one_shell(valid_sub_profiles)
 
 		for sub_profile in valid_sub_profiles:
 			sub_profile_settings = custom_settings.get(sub_profile.name, {})

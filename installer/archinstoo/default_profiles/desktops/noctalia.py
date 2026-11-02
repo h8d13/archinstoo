@@ -58,7 +58,7 @@ class NoctaliaProfile(WaylandProfile):
 	_default_greeter_non_seatd = GreeterType.Noctalia
 
 	def __init__(self) -> None:
-		super().__init__('noctalia', ProfileType.WindowMgr)
+		super().__init__('noctalia', ProfileType.Shell)
 
 		self.custom_settings = {
 			'noctalia_compositor': 'niri',

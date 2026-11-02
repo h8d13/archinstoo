@@ -53,10 +53,7 @@ class DmsProfile(WaylandProfile):
 	_default_greeter_non_seatd = GreeterType.Sddm
 
 	def __init__(self) -> None:
-		super().__init__(
-			'dms',
-			ProfileType.WindowMgr,
-		)
+		super().__init__('dms', ProfileType.Shell)
 
 		self.custom_settings = {'dms_compositor': 'niri', 'seat_access': None}
 

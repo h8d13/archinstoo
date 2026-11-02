@@ -75,14 +75,14 @@ Value = Packages | Table | dict[str, Table]
 # a non-standard kernel is what flips a driver to its DKMS variant
 _DKMS_KERNEL = ['linux-zen']
 
-# leaf profiles map 1:1 to the profiles table; the rest (desktop/server/xorg/
-# minimal) are the abstract tops the handler also discovers
-_LEAF_PROFILES = {ProfileType.DesktopEnv, ProfileType.WindowMgr, ProfileType.ServerType}
-
 
 def _leaves() -> list[Profile]:
+	# leaf profiles map 1:1 to the profiles table; the rest (desktop/server/
+	# xorg/minimal) are the abstract tops the handler also discovers
 	return [
-		p for p in ProfileHandler().profiles if p.profile_type in _LEAF_PROFILES
+		p
+		for p in ProfileHandler().profiles
+		if p.is_desktop_type_profile() or p.is_server_type_profile()
 	]
 
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Self, override
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType, SelectResult
-from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.lib.profile.profiles_handler import ProfileHandler, one_shell
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.result import ResultType
@@ -89,7 +89,7 @@ class DesktopProfile(Profile):
 
 		match result.type_:
 			case ResultType.Selection:
-				self.current_selection = result.get_values()
+				self.current_selection = one_shell(result.get_values())
 				self._do_on_select_profiles()
 				return SelectResult.NewSelection
 			case ResultType.Skip:
