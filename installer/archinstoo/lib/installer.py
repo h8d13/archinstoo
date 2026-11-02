@@ -118,6 +118,9 @@ class Installer:
 			self._base_packages.extend(ACCESSIBILITY_PACKAGES)
 
 		self.initramfs = Initramfs()
+		# the menu's graphical layout, for profiles whose own setup
+		# tooling takes it as an argument; empty until set_keyboard()
+		self.xkb_layout = ''
 		self._kernel_params: list[str] = []
 		self._fstab_entries: list[str] = []
 
@@ -448,6 +451,7 @@ class Installer:
 		configure.set_vconsole(self, locale_config)
 
 	def set_keyboard(self, locale_config: LocaleConfiguration) -> bool:
+		self.xkb_layout = locale_config.xkb_layout
 		return configure.set_keyboard(self, locale_config)
 
 	def set_environment(self, env_vars: dict[str, str]) -> None:

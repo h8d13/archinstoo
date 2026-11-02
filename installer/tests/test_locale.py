@@ -471,6 +471,19 @@ def test_xkb_rewrite_drops_stale_keys(tmp_path: Path) -> None:
 	assert vconsole.count('XKBLAYOUT=fr') == 1
 
 
+def test_set_keyboard_keeps_the_menu_layout(tmp_path: Path) -> None:
+	# profiles whose setup tool takes a layout argument read it from here
+	installation = Installer.__new__(Installer)
+	installation.target = tmp_path
+	config = LocaleConfiguration(
+		'be-latin1', 'en_US.UTF-8', 'UTF-8', xkb_layout='be'
+	)
+
+	installation.set_keyboard(config)
+
+	assert installation.xkb_layout == 'be'
+
+
 # The X11 lists come from xkeyboard-config's own registry, the same file
 # localectl parses to answer list-x11-keymap-*; the fetch is for hosts that
 # ship no xkeyboard-config at all.
