@@ -159,9 +159,6 @@ class SelectResult(Enum):
 
 
 class Profile:
-	# has a terminal keybind: install_profile_config() adds the Terminal choice
-	needs_terminal: bool = False
-
 	# profiles that run on top of a compositor of the user's choosing; the
 	# <name>_compositor custom_setting picks which of these sets to install
 	compositor_packages: ClassVar[dict[str, list[str]]] = {}

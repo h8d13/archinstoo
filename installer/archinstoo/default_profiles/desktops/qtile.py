@@ -5,8 +5,6 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 
 class QtileProfile(XorgProfile):
-	needs_terminal = True
-
 	def __init__(self) -> None:
 		super().__init__('qtile', ProfileType.WindowMgr)
 
@@ -21,6 +19,8 @@ class QtileProfile(XorgProfile):
 			'ttf-liberation',
 			'python-dbus-fast',
 			'xorg-xwayland',
+			# guess_terminal() ignores $TERMINAL, alacritty heads its list
+			'alacritty',
 		]
 
 	@property

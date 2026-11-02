@@ -6,8 +6,6 @@ from archinstoo.lib.profile.base import ProfileType, seat_packages, seat_service
 
 
 class SwayProfile(WaylandProfile):
-	needs_terminal = True
-
 	def __init__(self) -> None:
 		super().__init__(
 			'sway',

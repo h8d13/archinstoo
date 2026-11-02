@@ -11,8 +11,6 @@ from archinstoo.lib.profile.base import (
 
 
 class HyprlandProfile(WaylandProfile):
-	needs_terminal = True
-
 	_default_greeter_non_seatd = GreeterType.Sddm
 
 	def __init__(self) -> None:

@@ -16,10 +16,6 @@ if TYPE_CHECKING:
 
 
 class DmsProfile(WaylandProfile):
-	# the Terminal choice still lands in $TERMINAL, but the keybind
-	# `dms setup` writes is pinned to alacritty, so that one ships here
-	needs_terminal = True
-
 	# dux-shell (dms-shell before 2.0.0) is compositor-agnostic, so these
 	# only carry the compositor
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
@@ -66,6 +62,7 @@ class DmsProfile(WaylandProfile):
 			'matugen',
 			'cava',
 			'kimageformats',
+			# the keybind `dms setup` writes is pinned to alacritty
 			'alacritty',
 			# dms defaults: Inter Variable + Fira Code. the shell bundles
 			# both privately, but doctor <= 1.5.3 only checks fontconfig,

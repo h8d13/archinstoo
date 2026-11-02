@@ -6,7 +6,6 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.authentication.accounts import add_to_group
-from archinstoo.lib.models.applications import terminal_for
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import GreeterType, Profile
@@ -15,7 +14,6 @@ if TYPE_CHECKING:
 	from types import ModuleType
 
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.models.applications import ApplicationConfiguration
 	from archinstoo.lib.profile.config import ProfileConfiguration
 
 # greetd's stock config.toml runs the tty agreety greeter, so every front-end
@@ -262,23 +260,10 @@ class ProfileHandler:
 		self,
 		install_session: Installer,
 		profile_config: ProfileConfiguration,
-		app_config: ApplicationConfiguration | None,
 	) -> None:
 		if not profile_config.profiles:
 			debug('No profiles selected, skipping profile installation')
 			return
-
-		# one terminal for every profile that ships a
-		# keybind rather than its own
-		selected = [
-			p
-			for top in profile_config.profiles
-			for p in (top, *top.current_selection)
-		]
-		if any(p.needs_terminal for p in selected):
-			install_session.add_additional_packages(
-				[terminal_for(app_config)]
-			)
 
 		for server in profile_config.display_servers():
 			install_session.add_additional_packages(server.packages())

@@ -10,8 +10,6 @@ if TYPE_CHECKING:
 
 
 class AwesomeProfile(XorgProfile):
-	needs_terminal = True
-
 	def __init__(self) -> None:
 		super().__init__('awesome', ProfileType.WindowMgr)
 

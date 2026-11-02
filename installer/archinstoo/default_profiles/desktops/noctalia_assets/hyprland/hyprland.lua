@@ -78,8 +78,8 @@ hl.layer_rule({
 -- === Application Launchers ===
 local ipc = "noctalia msg "
 
-hl.bind("SUPER + T", hl.dsp.exec_cmd("$TERMINAL"))
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("$TERMINAL"))
+hl.bind("SUPER + T", hl.dsp.exec_cmd("${TERMINAL:-alacritty}"))
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("${TERMINAL:-alacritty}"))
 hl.bind("SUPER + space", hl.dsp.exec_cmd(ipc .. "panel-toggle launcher"))
 hl.bind("SUPER + S", hl.dsp.exec_cmd(ipc .. "panel-toggle control-center"))
 hl.bind("SUPER + comma", hl.dsp.exec_cmd(ipc .. "settings-toggle"))

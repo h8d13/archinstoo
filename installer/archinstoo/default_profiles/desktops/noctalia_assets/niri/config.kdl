@@ -157,8 +157,8 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // === Application Launchers ===
-    Mod+T hotkey-overlay-title="Open Terminal" { spawn "sh" "-c" "exec \"$TERMINAL\""; }
-    Mod+Return hotkey-overlay-title="Open Terminal" { spawn "sh" "-c" "exec \"$TERMINAL\""; }
+    Mod+T hotkey-overlay-title="Open Terminal" { spawn "sh" "-c" "exec \"${TERMINAL:-alacritty}\""; }
+    Mod+Return hotkey-overlay-title="Open Terminal" { spawn "sh" "-c" "exec \"${TERMINAL:-alacritty}\""; }
     Mod+Space hotkey-overlay-title="Application Launcher" {
         spawn-sh "noctalia msg panel-toggle launcher";
     }

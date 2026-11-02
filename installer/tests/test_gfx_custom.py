@@ -188,7 +188,6 @@ def test_profile_install_adds_its_display_server(
 	handler.install_profile_config(
 		session,  # type: ignore[arg-type]
 		ProfileConfiguration(profiles=[profile]),
-		None,
 	)
 
 	assert set(server.packages()) <= set(installed)

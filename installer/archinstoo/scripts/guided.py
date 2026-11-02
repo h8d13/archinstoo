@@ -195,7 +195,7 @@ def perform_installation(
 
 		if profile_config := config.profile_config:
 			profile_handler.install_profile_config(
-				installation, profile_config, config.app_config
+				installation, profile_config
 			)
 
 			# Set graphical keyboard config (Xorg + Wayland) for

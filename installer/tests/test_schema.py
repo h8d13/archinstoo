@@ -18,7 +18,6 @@ import pytest
 from archinstoo.lib import installer, schema, schema_gen
 from archinstoo.lib.hardware import CpuVendor
 from archinstoo.lib.models.applications import (
-	DEFAULT_TERMINAL,
 	ApplicationConfiguration,
 	ApplicationSerialization,
 	Audio,
@@ -141,21 +140,7 @@ def test_resolve_walks_the_picks() -> None:
 		| set(SCHEMA['cpu_scheduler']['packages'])
 		| {'htop', 'git'}
 	)
-	assert _resolve._application_packages(app, []) == expected
-
-
-def test_resolve_defaults_the_terminal_for_terminal_profiles() -> None:
-	# a skipped terminal entry still installs the default for a profile that
-	# ships a keybind; a profile that does not gets nothing
-	default = set(SCHEMA['terminals'][DEFAULT_TERMINAL])
-	assert (
-		_resolve._application_packages({}, _resolve._named_profiles(['sway']))
-		== default
-	)
-	assert (
-		_resolve._application_packages({}, _resolve._named_profiles(['gnome']))
-		== set()
-	)
+	assert _resolve._application_packages(app) == expected
 
 
 # -- reverse cover -----------------------------------------------------------

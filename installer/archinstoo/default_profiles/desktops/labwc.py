@@ -9,8 +9,6 @@ if TYPE_CHECKING:
 
 
 class LabwcProfile(WaylandProfile):
-	needs_terminal = True
-
 	def __init__(self) -> None:
 		super().__init__(
 			'labwc',
@@ -27,6 +25,8 @@ class LabwcProfile(WaylandProfile):
 			*seat_packages(self.custom_settings.get('seat_access')),
 			# labwc-portals.conf: default=wlr; labwc pulls no backend
 			'xdg-desktop-portal-wlr',
+			# first in lab-sensible-terminal's list after $TERMINAL
+			'alacritty',
 		]
 
 	@override

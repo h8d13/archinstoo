@@ -5,8 +5,6 @@ from archinstoo.lib.profile.base import GreeterType, ProfileType
 
 
 class I3wmProfile(XorgProfile):
-	needs_terminal = True
-
 	def __init__(self) -> None:
 		super().__init__('i3-wm', ProfileType.WindowMgr)
 
@@ -22,6 +20,8 @@ class I3wmProfile(XorgProfile):
 			'lightdm-gtk-greeter',
 			'lightdm',
 			'dmenu',
+			# i3-sensible-terminal searches a list, alacritty is in it
+			'alacritty',
 		]
 
 	@property

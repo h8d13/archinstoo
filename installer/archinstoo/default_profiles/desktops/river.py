@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
 
 class RiverProfile(WaylandProfile):
-	needs_terminal = True
-
 	def __init__(self) -> None:
 		super().__init__('river', ProfileType.WindowMgr)
 

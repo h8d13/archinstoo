@@ -1,10 +1,10 @@
 # A terminal choice is a package plus TERMINAL in /etc/environment, nothing
 # more: shipped WM configs keep their upstream terminal and the profile
-# installs it, only our own noctalia assets launch $TERMINAL.
+# installs it, only our own noctalia assets launch $TERMINAL (alacritty
+# when unset).
 
 import textwrap
 from pathlib import Path
-from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,34 +14,18 @@ from archinstoo.default_profiles.desktops.awesome import AwesomeProfile
 from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.default_profiles.desktops.qtile import QtileProfile
 from archinstoo.default_profiles.desktops.river import RiverProfile
-from archinstoo.lib import args
 from archinstoo.lib.applications.cat.terminal import TerminalApp
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.applications import (
-	DEFAULT_TERMINAL,
-	ApplicationConfiguration,
 	Terminal,
 	TerminalConfiguration,
 )
 from archinstoo.lib.models.users import User
-from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.sysconfig import write_environment
 
 if TYPE_CHECKING:
 	from archinstoo.lib.profile.base import Profile
-
-
-def _pin_terminal(
-	monkeypatch: pytest.MonkeyPatch, terminal: Terminal | None
-) -> ApplicationConfiguration:
-	app_config = ApplicationConfiguration()
-	if terminal is not None:
-		app_config.terminal_config = TerminalConfiguration(terminal=terminal)
-
-	handler = SimpleNamespace(config=SimpleNamespace(app_config=app_config))
-	monkeypatch.setattr(args._ArchConfigHandlerHolder, 'instance', handler)
-	return app_config
 
 
 def _session(target: Path, monkeypatch: pytest.MonkeyPatch) -> Installer:
@@ -173,10 +157,11 @@ def test_awesome_starts_from_a_user_xinitrc(
 
 
 _SHIPPED_TERMINAL = {
-	'i3-wm': None,
-	'qtile': None,
-	'labwc': None,
-	'noctalia': None,
+	# upstream launchers search a list: alacritty is in each of them
+	'i3-wm': 'alacritty',
+	'qtile': 'alacritty',
+	'labwc': 'alacritty',
+	'noctalia': 'alacritty',
 	'niri': 'alacritty',
 	'dms': 'alacritty',
 	'hyprland': 'kitty',
@@ -190,38 +175,11 @@ _TERMINALS = {'ghostty', 'alacritty', 'foot', 'kitty', 'xterm'}
 
 @pytest.mark.parametrize(('name', 'shipped'), _SHIPPED_TERMINAL.items())
 def test_profiles_ship_the_terminal_their_config_launches(
-	name: str, shipped: str | None
+	name: str, shipped: str
 ) -> None:
 	profile: Profile = next(p for p in ProfileHandler().profiles if p.name == name)
 
-	assert profile.needs_terminal
-	assert _TERMINALS & set(profile.packages) == ({shipped} if shipped else set())
-
-
-@pytest.mark.parametrize(
-	('pick', 'expected'), [(Terminal.GHOSTTY, 'ghostty'), (None, DEFAULT_TERMINAL)]
-)
-def test_install_adds_the_choice_once(
-	pick: Terminal | None,
-	expected: str,
-	tmp_path: Path,
-	monkeypatch: pytest.MonkeyPatch,
-) -> None:
-	# a skipped menu entry still has to leave those profiles with a terminal
-	app_config = _pin_terminal(monkeypatch, pick)
-	installed: list[str] = []
-	session = _session(tmp_path, monkeypatch)
-	monkeypatch.setattr(
-		session, 'add_additional_packages', installed.extend, raising=False
-	)
-
-	handler = ProfileHandler()
-	sway = next(p for p in handler.profiles if p.name == 'sway')
-	handler.install_profile_config(
-		session, ProfileConfiguration(profiles=[sway]), app_config
-	)
-
-	assert installed.count(expected) == 1
+	assert _TERMINALS & set(profile.packages) == {shipped}
 
 
 @pytest.mark.parametrize('compositor', list(NoctaliaProfile.compositor_packages))
@@ -229,5 +187,5 @@ def test_noctalia_assets_launch_the_exported_terminal(compositor: str) -> None:
 	assets = Path(noctalia.__file__).parent / 'noctalia_assets' / compositor
 	text = ''.join(f.read_text() for f in assets.iterdir())
 
-	assert '$TERMINAL' in text
+	assert '${TERMINAL:-alacritty}' in text
 	assert '{{' not in text, 'leftover template placeholder'

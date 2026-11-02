@@ -86,9 +86,7 @@ def perform_installation(
 		installation.add_additional_packages(['nano', 'wget', 'git'])
 
 		profile_config = ProfileConfiguration([MinimalProfile()])
-		profile_handler.install_profile_config(
-			installation, profile_config, config.app_config
-		)
+		profile_handler.install_profile_config(installation, profile_config)
 
 		user = User('devel', Password(plaintext='devel'), False)
 		installation.create_users(user)

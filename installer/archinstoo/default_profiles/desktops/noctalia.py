@@ -32,8 +32,6 @@ _COMPOSITOR_CONFIG_DIRS = {
 
 
 class NoctaliaProfile(WaylandProfile):
-	needs_terminal = True
-
 	# noctalia v5: native wayland shell (bar, launcher, lock, notifications,
 	# clipboard, polkit agent), no qt/gtk deps; compositor is a free choice
 	compositor_packages: ClassVar[dict[str, list[str]]] = {
@@ -71,6 +69,8 @@ class NoctaliaProfile(WaylandProfile):
 		return [
 			*self.compositor_packages[self.compositor],
 			'noctalia',
+			# keybinds run $TERMINAL, alacritty when no Terminal was picked
+			'alacritty',
 			# noctalia resolves fonts via fontconfig (sans-serif default);
 			# bare installs ship none, so seed one sans + one mono
 			'inter-font',

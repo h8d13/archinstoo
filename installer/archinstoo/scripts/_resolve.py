@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.models.applications import DEFAULT_TERMINAL
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.network import NicType
@@ -193,7 +192,7 @@ def _pick(app: dict[str, Any], section: Section) -> set[str]:
 	return set(table.get(value, []))
 
 
-def _application_packages(app: dict[str, Any], selected: list[Profile]) -> set[str]:
+def _application_packages(app: dict[str, Any]) -> set[str]:
 	# every app_config category is a section with a pick; what follows is the
 	# part a pick alone cannot say. schema_gen drags the installer in, so it
 	# stays a function-local import like installer above
@@ -210,15 +209,6 @@ def _application_packages(app: dict[str, Any], selected: list[Profile]) -> set[s
 			pkgs.update(audio_fw['sof'])
 		if SysInfo.requires_alsa_fw():
 			pkgs.update(audio_fw['alsa'])
-
-	# one terminal, shared by every profile that ships a keybind and no
-	# terminal. a skipped menu entry leaves those on the default, which
-	# install_profile_config() installs instead
-	terminal = (app.get('terminal_config') or {}).get('terminal', '')
-	if terminal not in SCHEMA['terminals'] and any(
-		p.needs_terminal for p in selected
-	):
-		pkgs.update(SCHEMA['terminals'][DEFAULT_TERMINAL])
 
 	return pkgs
 
@@ -343,7 +333,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 	if priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
-	pkgs.update(_application_packages(config.get('app_config') or {}, selected))
+	pkgs.update(_application_packages(config.get('app_config') or {}))
 
 	# shells (per-user in auth_config)
 	users = auth.get('users', []) or []

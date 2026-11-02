@@ -159,9 +159,6 @@ class Terminal(StrEnum):
 		return [self.value]
 
 
-DEFAULT_TERMINAL = Terminal.ALACRITTY.value
-
-
 class TerminalConfigSerialization(TypedDict):
 	terminal: str
 
@@ -312,12 +309,6 @@ class ApplicationConfiguration:
 		# class is the first arm
 		return {f.name: get_args(f.type)[0] for f in fields(cls)}
 
-	@property
-	def terminal_command(self) -> str:
-		if self.terminal_config:
-			return self.terminal_config.terminal.value
-		return DEFAULT_TERMINAL
-
 	@classmethod
 	def parse_arg(
 		cls,
@@ -345,8 +336,3 @@ class ApplicationConfiguration:
 			for attr in self._config_parsers()
 			if (obj := getattr(self, attr))
 		}  # type: ignore[return-value]
-
-
-def terminal_for(app_config: ApplicationConfiguration | None) -> str:
-	# a skipped application menu still has to leave keybind-only profiles a terminal
-	return app_config.terminal_command if app_config else DEFAULT_TERMINAL
