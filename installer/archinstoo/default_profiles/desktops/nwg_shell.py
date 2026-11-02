@@ -11,8 +11,22 @@ from archinstoo.lib.profile.base import (
 )
 
 if TYPE_CHECKING:
+	from pathlib import Path
+
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.users import User
+
+
+def _xkb_layout(target: Path) -> str:
+	# set_keyboard() ran before provisioning and keeps the graphical layout
+	# in vconsole.conf; without one, libxkbcommon's own default
+	vconsole = target / 'etc/vconsole.conf'
+	lines = vconsole.read_text().splitlines() if vconsole.is_file() else []
+	for line in lines:
+		key, _, value = line.partition('=')
+		if key.strip() == 'XKBLAYOUT' and value.strip():
+			return value.strip()
+	return 'us'
 
 
 class NwgShellProfile(WaylandProfile):
@@ -50,11 +64,13 @@ class NwgShellProfile(WaylandProfile):
 
 		# the package ships no configs: the installer copies its skel into
 		# the user's $HOME. -w skips the prompts, -s the `systemctl reboot`
-		# that -w otherwise ends on
+		# that -w otherwise ends on. -k because its fallback is localectl's
+		# "VC Keymap" (console, e.g. be-latin1), which sway's xkb rejects
+		layout = _xkb_layout(install_session.target)
 		for user in users:
 			info(f'Running nwg-shell-installer for {user.username}')
 			install_session.arch_chroot(
-				['nwg-shell-installer', '-w', '-s'],
+				['nwg-shell-installer', '-w', '-s', '-k', layout],
 				run_as=user.username,
 			)
 
