@@ -88,6 +88,7 @@ class GreeterType(Enum):
 	Regreet = 'regreet'
 	CosmicSession = 'cosmic-greeter'
 	Noctalia = 'noctalia-greeter'
+	NwgHello = 'nwg-hello'
 
 	@property
 	def packages(self) -> list[str]:
@@ -118,6 +119,9 @@ class GreeterType(Enum):
 			case GreeterType.Noctalia:
 				# ships its own wlroots compositor
 				return ['greetd', 'noctalia-greeter']
+			case GreeterType.NwgHello:
+				# gtk-layer-shell greeter, hosted by sway
+				return ['greetd', 'nwg-hello', 'sway']
 
 	@property
 	def services(self) -> list[str]:
@@ -132,6 +136,7 @@ class GreeterType(Enum):
 				GreeterType.Tuigreet
 				| GreeterType.Regreet
 				| GreeterType.Noctalia
+				| GreeterType.NwgHello
 			):
 				return ['greetd']
 			case _:
@@ -146,6 +151,7 @@ class GreeterType(Enum):
 				| GreeterType.Tuigreet
 				| GreeterType.Regreet
 				| GreeterType.Noctalia
+				| GreeterType.NwgHello
 			):
 				return ['getty@tty1']
 			case _:

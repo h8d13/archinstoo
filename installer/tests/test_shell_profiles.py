@@ -8,7 +8,7 @@ def test_shells_are_typed() -> None:
 	handler = ProfileHandler()
 	shells = {p.name for p in handler.profiles if p.is_shell_profile()}
 
-	assert {'dms', 'noctalia'} <= shells
+	assert {'dms', 'noctalia', 'nwg-shell'} <= shells
 
 
 def test_config_keeps_first_shell() -> None:

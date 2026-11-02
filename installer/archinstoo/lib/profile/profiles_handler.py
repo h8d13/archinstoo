@@ -28,6 +28,8 @@ _GREETD_SESSION = {
 	GreeterType.Regreet: 'dbus-run-session cage -s -mlast -d -- regreet',
 	# the session wrapper starts the bundled compositor, then the greeter in it
 	GreeterType.Noctalia: '/usr/bin/noctalia-greeter-session',
+	# the package ships a sway config that starts nwg-hello and exits with it
+	GreeterType.NwgHello: 'sway -c /etc/nwg-hello/sway-config',
 }
 
 
@@ -223,9 +225,14 @@ class ProfileHandler:
 				""")
 			)
 
-		# regreet (cage) and noctalia run their compositor as the greeter user;
-		# only seatd ships the seat group, logind needs no membership
-		if greeter in {GreeterType.Regreet, GreeterType.Noctalia}:
+		# regreet (cage), noctalia and nwg-hello (sway) run their compositor
+		# as the greeter user; only seatd ships the seat group, logind needs
+		# no membership
+		if greeter in {
+			GreeterType.Regreet,
+			GreeterType.Noctalia,
+			GreeterType.NwgHello,
+		}:
 			add_to_group(install_session, 'seat', ['greeter'])
 
 	def install_gfx_driver(
