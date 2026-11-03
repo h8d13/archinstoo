@@ -3,7 +3,7 @@
 ## With GRUB
 
 > Easiest way is to use **separate disks**
-> (this limits cases of over-writing important data)
+> (this limits cases of over-writing important data and W11 eating bootloader on update.)
 
 Second is to check that your hardware supports `Other OS` secure boot options
 if planning to use with Windows 11.
@@ -16,8 +16,7 @@ Make sure you have `os-prober` package installed
 
 2. Regen `grub-mkconfig -o /boot/grub/grub.cfg`
 
-This can also be achieved through custom entries
-using `blkid` in `/etc/grub.d/40_custom`
+This can also be achieved through custom entries.
 
 *Other bootloaders* have their own ways of doing this.
 
