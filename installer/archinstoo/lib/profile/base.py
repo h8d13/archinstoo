@@ -79,7 +79,6 @@ def seat_services(pref: object) -> list[str]:
 class GreeterType(Enum):
 	Lightdm = 'lightdm-gtk-greeter'
 	LightdmSlick = 'lightdm-slick-greeter'
-	LightdmPantheon = 'lightdm-pantheon-greeter'
 	PlasmaLoginManager = 'plasma-login-manager'
 	Sddm = 'sddm'
 	Gdm = 'gdm'
@@ -98,9 +97,6 @@ class GreeterType(Enum):
 				return ['lightdm', 'lightdm-gtk-greeter']
 			case GreeterType.LightdmSlick:
 				return ['lightdm', 'lightdm-slick-greeter']
-			case GreeterType.LightdmPantheon:
-				# its lightdm.conf.d drop-in sets greeter-session
-				return ['lightdm', 'lightdm-pantheon-greeter']
 			case GreeterType.PlasmaLoginManager:
 				return ['plasma-login-manager']
 			case GreeterType.Sddm:
@@ -130,11 +126,7 @@ class GreeterType(Enum):
 	@property
 	def services(self) -> list[str]:
 		match self:
-			case (
-				GreeterType.Lightdm
-				| GreeterType.LightdmSlick
-				| GreeterType.LightdmPantheon
-			):
+			case GreeterType.Lightdm | GreeterType.LightdmSlick:
 				return ['lightdm']
 			case GreeterType.PlasmaLoginManager:
 				return ['plasmalogin']
