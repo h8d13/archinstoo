@@ -502,27 +502,24 @@ def machine_args(opts: Opts) -> list[str]:
 	]
 
 
-def disk_args(opts: Opts, boot_order: str) -> list[str]:
-	if opts.x86:
-		# q35 has IDE for -cdrom and PS/2 input; -boot order is
-		# honored by both firmwares
-		return [
-			'-drive',
-			f'file={opts.disk},format=qcow2,if=virtio',
-			'-boot',
-			f'order={boot_order}',
-		]
-	# -boot order means nothing to edk2 on arm, bootindex does (fw_cfg), so
-	# the disk yields to the cdrom whenever one is attached.
-	disk_index = 1 if boot_order == 'd' else 0
-	return [
+def disk_args(opts: Opts, attach_iso: bool) -> list[str]:
+	# bootindex on both arches, never -boot order: OVMF rewrites BootOrder
+	# from QEMU's fw_cfg list and deletes the HD() entries (grub, systemd-boot,
+	# ...) it cannot match, so the disk has to be listed on every boot or a
+	# serial ISO run wipes the installed bootloader's entry. The disk yields
+	# to the cdrom whenever one is attached (bootindex 0 is left to -kernel,
+	# whose x86 linuxboot ROM claims it)
+	disk_index = 2 if attach_iso else 0
+	args = [
 		'-drive',
 		f'file={opts.disk},format=qcow2,if=none,id=hd0',
 		'-device',
 		f'virtio-blk-pci,drive=hd0,bootindex={disk_index}',
-		'-device',
-		'virtio-scsi-pci,id=scsi0',
 	]
+	if not opts.x86:
+		# virt has no IDE: the ISO rides virtio-scsi
+		args += ['-device', 'virtio-scsi-pci,id=scsi0']
+	return args
 
 
 def media_args(opts: Opts) -> list[str]:
@@ -530,15 +527,14 @@ def media_args(opts: Opts) -> list[str]:
 		return ['-kernel', str(opts.uki)]
 
 	iso = require_iso(opts)
-	if opts.x86:
-		args = ['-cdrom', str(iso)]
-	else:
-		args = [
-			'-drive',
-			f'file={iso},media=cdrom,if=none,id=cd0,readonly=on',
-			'-device',
-			'scsi-cd,drive=cd0,bootindex=0',
-		]
+	# q35 carries the cdrom on its AHCI bus, virt on virtio-scsi
+	cd_device = 'ide-cd' if opts.x86 else 'scsi-cd'
+	args = [
+		'-drive',
+		f'file={iso},media=cdrom,if=none,id=cd0,readonly=on',
+		'-device',
+		f'{cd_device},drive=cd0,bootindex=1',
+	]
 	if opts.console != 'window':
 		cmdline = extract_iso_kernel(opts, iso)
 		args += [
@@ -576,7 +572,6 @@ def launch(opts: Opts, mode: str) -> int:
 	# Returns once a serial VM is detached or a foreground one exits, so a
 	# caller (cloud) can keep serving it
 	attach_iso = mode != 'boot'
-	boot_order = 'd' if attach_iso else 'c'
 
 	check_host_deps(opts, attach_iso)
 	ensure_no_running_vm()
@@ -620,7 +615,7 @@ def launch(opts: Opts, mode: str) -> int:
 		opts.ram,
 		'-smp',
 		opts.cpus,
-		*disk_args(opts, boot_order),
+		*disk_args(opts, attach_iso),
 		'-device',
 		'virtio-net-pci,netdev=net0',
 		'-netdev',
