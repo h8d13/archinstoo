@@ -112,8 +112,8 @@
 #                       KVM only when the host is aarch64 too (TCG -cpu max
 #                       otherwise: slow, expect minutes to a shell). ISO
 #                       discovery filters on the arch in the filename. No
-#                       -cdrom on virt: the ISO rides virtio-scsi, boot order
-#                       goes through bootindex. Input is USB (xhci kbd+tablet).
+#                       IDE on virt: the ISO rides virtio-scsi. Input is USB
+#                       (xhci kbd+tablet).
 #                       Serial extracts the kernel the same way (arch/boot/aarch64/).
 #                       virt's own UART is a pl011 whose QEMU model stalls on
 #                       typed input past a few hundred bytes, so both lines
