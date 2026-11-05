@@ -28,11 +28,7 @@ def _lvm_info(
 	cmd: str,
 	info_type: Literal['lv', 'vg', 'pvseg'],
 ) -> LvmVolumeInfo | LvmGroupInfo | LvmPVInfo | None:
-	raw_info = SysCommand(cmd).decode().split('\n')
-
-	# for whatever reason the output sometimes contains
-	# "File descriptor X leaked leaked on vgs invocation
-	data = '\n'.join(raw for raw in raw_info if 'File descriptor' not in raw)
+	data = SysCommand(cmd).decode()
 
 	debug(f'LVM info: {data}')
 

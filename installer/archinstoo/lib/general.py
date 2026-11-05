@@ -335,6 +335,10 @@ class SysCommandWorker:
 			signal.signal(signal.SIGXFSZ, signal.SIG_DFL)
 			termios.tcsetwinsize(0, (size.lines, size.columns))
 			_cmd_history(self.cmd)
+			# C libs open fds without O_CLOEXEC (libdevmapper's
+			# /dev/mapper/control via pyparted): lvm warns about the
+			# leak in every child. subprocess does the same by default
+			os.closerange(3, os.sysconf('SC_OPEN_MAX'))
 
 			try:
 				os.execve(  # noqa: S606 - SysCommand intentionally runs without a shell
