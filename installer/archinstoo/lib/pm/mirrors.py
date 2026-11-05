@@ -605,15 +605,11 @@ class MirrorListHandler:
 			if line.startswith('### '):
 				current_region = line.removeprefix('### ').strip()
 				mirror_list.setdefault(current_region, [])
-			# ## header country on x86, city subheader on ARM
-			elif line.startswith('## '):
-				if not has_countries:
-					current_region = line.removeprefix(
-						'## '
-					).strip()
-					mirror_list.setdefault(current_region, [])
-				# else: city subheader under a ###
-				# country, keep current_region
+			# ## header is country on x86; on ARM it's a city
+			# subheader under ###, keep current_region
+			elif line.startswith('## ') and not has_countries:
+				current_region = line.removeprefix('## ').strip()
+				mirror_list.setdefault(current_region, [])
 
 			# pick up both "Server = ..." and "#Server = ..."
 			server_line = line.lstrip('#').strip()
