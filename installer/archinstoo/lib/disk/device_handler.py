@@ -538,41 +538,38 @@ class DeviceHandler:
 		if not which('pvs'):
 			debug('pvs not found, skipping LVM teardown')
 			return
-		# Deactivate any LVM VGs using partitions on this device.
-		# First try using partition_infos
-		for partition in device.partition_infos:
-			try:
-				result = SysCommand(
-					f'pvs --noheadings -o vg_name {partition.path}'
-				)
-				vg_name = result.decode().strip()
-				if vg_name:
-					debug(
-						f'Found LVM VG {vg_name} on '
-						f'{partition.path}'
-					)
-					self.lvm_vg_deactivate(vg_name)
-			except SysCallError:
-				pass  # Not an LVM PV
-
-		# Also check using device path directly (catches VGs after
-		# partition table changes)
 		try:
 			result = SysCommand('pvs --noheadings -o vg_name,pv_name')
-			for line in result.decode().strip().split('\n'):
-				parts = line.split()
-				if len(parts) >= 2:
-					vg_name, pv_path = parts[0], parts[1]
-					if pv_path.startswith(
-						str(device.device_info.path)
-					):
-						debug(
-							f'Found LVM VG {vg_name} on '
-							f'{pv_path}'
-						)
-						self.lvm_vg_deactivate(vg_name)
 		except SysCallError:
-			pass
+			return
+
+		for vg_name in self.vgs_on_device(
+			result.decode(), device.device_info.path
+		):
+			debug(f'Found LVM VG {vg_name} on {device.device_info.path}')
+			self.lvm_vg_deactivate(vg_name)
+
+	@classmethod
+	def vgs_on_device(
+		cls, pvs_out: str, device_path: Path, sysfs: Path = Path('/sys/block')
+	) -> list[str]:
+		# a PV on the disk is one of its partitions, or a mapper stacked on
+		# one (LVM on LUKS). sysfs, not partition_infos: that one is stale
+		# once a new table is committed
+		disk = sysfs / device_path.name
+		on_disk = {f'/dev/{device_path.name}'}
+		on_disk |= {f'/dev/{p.name}' for p in disk.glob(f'{device_path.name}*')}
+		on_disk |= {
+			f'/dev/mapper/{name}'
+			for name in cls.dm_names_on_device(device_path, sysfs)
+		}
+		vgs: list[str] = []
+		for line in pvs_out.splitlines():
+			match line.split():
+				case [vg_name, pv_path] if pv_path in on_disk:
+					if vg_name not in vgs:
+						vgs.append(vg_name)
+		return vgs
 
 	def lvm_vol_reduce(self, vol_path: Path, amount: Size) -> None:
 		val = amount.format_size(Unit.B, include_unit=False)

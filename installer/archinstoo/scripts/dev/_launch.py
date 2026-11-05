@@ -1,3 +1,4 @@
+import dataclasses
 import platform
 import re
 import shutil
@@ -22,7 +23,7 @@ from archinstoo.scripts.dev._vm import (
 )
 
 ISOMOD_OUT = ROOT / 'isos' / 'a'
-# vm cloud: the install target riding along a cloud image's boot disk
+# disk B: vm cloud's install target, or --target for H2T from disk A
 TARGET = ROOT / '.dev-target.qcow2'
 DEV_ISO_DIR = ROOT / '.dev-iso'
 BOOT_DIR = ROOT / '.dev-boot'
@@ -92,6 +93,8 @@ class Opts:
 	vga: str
 	audio: str
 	extra: tuple[str, ...]
+	# None: disk A alone. attach: B rides as vdb, A boots. boot: B boots
+	target: str | None = None
 
 	@property
 	def x86(self) -> bool:
@@ -509,13 +512,19 @@ def disk_args(opts: Opts, attach_iso: bool) -> list[str]:
 	# serial ISO run wipes the installed bootloader's entry. The disk yields
 	# to the cdrom whenever one is attached (bootindex 0 is left to -kernel,
 	# whose x86 linuxboot ROM claims it)
-	disk_index = 2 if attach_iso else 0
-	args = [
-		'-drive',
-		f'file={opts.disk},format=qcow2,if=none,id=hd0',
-		'-device',
-		f'virtio-blk-pci,drive=hd0,bootindex={disk_index}',
-	]
+	# A stays vda and B vdb whichever boots: only bootindex moves
+	first = 2 if attach_iso else 0
+	disks = [opts.disk, TARGET] if opts.target else [opts.disk]
+	swap = opts.target == 'boot'
+	args = []
+	for n, disk in enumerate(disks):
+		index = first + (1 - n if swap else n)
+		args += [
+			'-drive',
+			f'file={disk},format=qcow2,if=none,id=hd{n}',
+			'-device',
+			f'virtio-blk-pci,drive=hd{n},bootindex={index}',
+		]
 	if not opts.x86:
 		# virt has no IDE: the ISO rides virtio-scsi
 		args += ['-device', 'virtio-scsi-pci,id=scsi0']
@@ -563,8 +572,21 @@ def run_foreground(cmd: list[str]) -> int:
 			subprocess.run(['stty', 'sane'], check=False)
 
 
-def start(mode: str, console: str | None) -> None:
-	raise SystemExit(launch(read_opts(console), mode))
+def start(mode: str, console: str | None, target: str | None) -> None:
+	opts = dataclasses.replace(read_opts(console), target=target)
+	raise SystemExit(launch(opts, mode))
+
+
+def ensure_disk(path: Path, size: str) -> int:
+	if path.is_file():
+		return 0
+	rc = subprocess.run(
+		['qemu-img', 'create', '-f', 'qcow2', str(path), size],
+		check=False,
+	).returncode
+	if rc:
+		error(f'qemu-img could not create {path}')
+	return rc
 
 
 def launch(opts: Opts, mode: str) -> int:
@@ -585,19 +607,12 @@ def launch(opts: Opts, mode: str) -> int:
 	else:
 		require_media(opts)
 		opts.disk.unlink(missing_ok=True)
-		if rc := subprocess.run(
-			[
-				'qemu-img',
-				'create',
-				'-f',
-				'qcow2',
-				str(opts.disk),
-				opts.disk_size,
-			],
-			check=False,
-		).returncode:
-			error(f'qemu-img could not create {opts.disk}')
+		if rc := ensure_disk(opts.disk, opts.disk_size):
 			return rc
+
+	# B is kept across runs (clean drops it): an empty one the first time
+	if opts.target and (rc := ensure_disk(TARGET, opts.disk_size)):
+		return rc
 
 	if firmware and not opts.ovmf_vars.exists():
 		shutil.copy(firmware[1], opts.ovmf_vars)

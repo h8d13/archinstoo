@@ -18,6 +18,11 @@
 #     vm fresh [--console C]    new disk, boot ISO
 #     vm keep  [--console C]    reuse disk, boot ISO              (alias k)
 #     vm boot  [--console C]    boot the installed disk, no ISO   (alias b)
+#     fresh/keep/boot --target attach|boot
+#                               disk B (.dev-target.qcow2, created empty when
+#                               missing) rides as vdb, A stays vda. attach: A
+#                               boots, B is the H2T target. boot: B boots, A
+#                               still attached (host-side leftovers visible)
 #     vm cloud fed|deb [--console C] [--user-data FILE]
 #                               a distro cloud image as the host (overlay on
 #                               vda, empty install target on vdb), SeaBIOS,
@@ -86,10 +91,21 @@
 #       bootstrap -- --script guided --config examples/vm_cloud_bios.json \
 #       --silent' -t 3600
 #     vm quit && vm cloud target
+# H2T, install from installed system A onto disk B, then boot either:
+#     vm boot --target attach --console serial    # A up, B empty on vdb
+#     vm login -p test && vm push installer
+#     vm run 'cd /root/installer && . ./PKGBUILD && pacman -S --needed \
+#       --noconfirm "${depends[@]}"' -t 900     # a minimal A has no python
+#     vm run 'cd /root/installer && sed s#/dev/vda#/dev/vdb# \
+#       examples/vm_unattended.json > /root/h2t.json' -t 30
+#     vm run 'cd /root/installer && python3 -B -m archinstoo --script \
+#       guided --config /root/h2t.json --silent --advanced' -t 3600
+#     vm quit && vm boot --target boot --console serial   # B
+#     vm quit && vm boot --target attach --console serial # back to A
 #
 # Host artifacts (created in repo root, git-ignored):
 #   .dev-disk.qcow2     VM disk image (qemu-img), the overlay under vm cloud
-#   .dev-target.qcow2   vm cloud's install target (vdb)
+#   .dev-target.qcow2   disk B: vm cloud's or --target's install target (vdb)
 #   .dev-cloud/         cached cloud images
 #   .dev-ovmf-vars.fd   persistent UEFI NVRAM (copied from OVMF_VARS)
 #                       (both get a -<arch> suffix when A2_ARCH is not x86_64,
@@ -181,8 +197,15 @@ def vm() -> None:
 	)
 	for mode, aliases in (('fresh', []), ('keep', ['k']), ('boot', ['b'])):
 		p = sub.add_parser(mode, aliases=aliases, parents=[console])
+		p.add_argument(
+			'--target',
+			choices=('attach', 'boot'),
+			help='disk B as vdb: attach (A boots) or boot (B boots)',
+		)
 		p.set_defaults(
-			func=lambda args, mode=mode: launch.start(mode, args.console)
+			func=lambda args, mode=mode: launch.start(
+				mode, args.console, args.target
+			)
 		)
 	p = sub.add_parser('cloud', parents=[console])
 	p.add_argument('which', choices=('fed', 'deb', 'target'))
