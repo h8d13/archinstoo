@@ -61,3 +61,29 @@ def test_whole_disk_mapper_matches(tmp_path: Path) -> None:
 def test_disk_without_mappers_selects_nothing(tmp_path: Path) -> None:
 	sysfs = _fake_sysfs(tmp_path)
 	assert DeviceHandler.dm_names_on_device(Path('/dev/sdc'), sysfs) == []
+
+
+# pvs as lvm prints it: VG on a target partition, VG on the target's LUKS
+# mapper (LVM on LUKS, missed by the old /dev/vda prefix match), the host's
+# VG on its own LUKS, an orphan PV, and a lookalike disk name
+_PVS = """\
+  tvg   /dev/vda1
+  cryptvg /dev/mapper/target-luks
+  hostvg /dev/mapper/cryptroot
+        /dev/vda2
+  othervg /dev/vdaa1
+"""
+
+
+def test_vgs_on_target_partition_and_mapper(tmp_path: Path) -> None:
+	sysfs = _fake_sysfs(tmp_path)
+	assert DeviceHandler.vgs_on_device(_PVS, Path('/dev/vda'), sysfs) == [
+		'tvg',
+		'cryptvg',
+	]
+
+
+def test_vgs_leave_host_alone(tmp_path: Path) -> None:
+	sysfs = _fake_sysfs(tmp_path)
+	assert DeviceHandler.vgs_on_device(_PVS, Path('/dev/sdb'), sysfs) == ['hostvg']
+	assert DeviceHandler.vgs_on_device(_PVS, Path('/dev/sdc'), sysfs) == []
