@@ -1,15 +1,10 @@
 # Arch Linux on `aarch64`
 
 Status: unofficial. Packages come from [Arch Linux Ports](https://ports.archlinux.page/aarch64/),
-built outside Arch infrastructure and signed with the port's own key.
-Targets `ARMv8.2-A` and later (no Raspberry Pi 4 or Cortex-A53 class CPUs).
 
 ## ISO
 
 UEFI boards install with the regular `guided` script from the [aarch64 archiso](https://codeberg.org/ironrobin/archiso-aarch64/releases/latest)
-
-It boots through `EFI/BOOT/BOOTAA64.EFI`, ships `linux` as kernel, and its `pacman.conf`
-already points at the port's repositories, so nothing has to be pointed anywhere.
 
 ## Repositories
 
@@ -18,9 +13,6 @@ already points at the port's repositories, so nothing has to be pointed anywhere
 | `core`, `extra` | analogues of the x86_64 repositories |
 | `forge` | board kernels and firmware (`linux-rpi5`, `linux-mainline`, `linux-firmware-rpi5`), `archports-keyring`, Pi tooling |
 
-All three live on `https://arch-linux-repo.drzee.net/arch/$repo/os/$arch`.
-The port's own `pacman` package ships that conf,
-so the installed system resolves from it without a mirrorlist.
 What differs from x86_64 inside archinstoo:
 
 - Mirror regions are not offered (no mirror network).
