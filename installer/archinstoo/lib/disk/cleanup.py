@@ -47,29 +47,32 @@ def swapoff_layout(disk_config: DiskLayoutConfiguration) -> None:
 				swapoff_path(Path('/dev/mapper') / vol.mapper_name)
 
 
-def close_luks(dev_path: Path, mapper_name: str | None) -> None:
-	if mapper_name is None:
+def close_luks(dev_path: Path | None, mapper_name: str | None) -> None:
+	# no dev_path: disk ops failed before partitioning, nothing was opened
+	if dev_path is None or mapper_name is None:
 		return
 	Luks2(dev_path, mapper_name=mapper_name).lock()
 
 
 def teardown_layout(
-	target: Path,
+	target: Path | None,
 	disk_config: DiskLayoutConfiguration,
 	disk_encryption: DiskEncryption,
 	device_handler: DeviceHandler,
 ) -> None:
 	# Order: swapoff, unmount, deactivate VGs, close LUKS. Inner mappers close
-	# before the outer ones that hold them.
+	# before the outer ones that hold them. No target: the layout was never
+	# mounted (disk ops failed), only mappings to close
 	info('Tearing down target mounts and mappings...')
 
 	swapoff_layout(disk_config)
 
-	try:
-		SysCommand(['umount', '-R', str(target)])
-	except SysCallError:
-		warn(f'{target} busy, retrying with lazy unmount')
-		SysCommand(['umount', '-R', '-l', str(target)])
+	if target is not None:
+		try:
+			SysCommand(['umount', '-R', str(target)])
+		except SysCallError:
+			warn(f'{target} busy, retrying with lazy unmount')
+			SysCommand(['umount', '-R', '-l', str(target)])
 
 	lvm_cfg = disk_config.lvm_config
 
@@ -84,15 +87,15 @@ def teardown_layout(
 			# LUKS sits on top of LVs, close LUKS first,
 			# then deactivate VGs.
 			for vol in disk_encryption.lvm_volumes:
-				close_luks(vol.safe_dev_path, vol.mapper_name)
+				close_luks(vol.dev_path, vol.mapper_name)
 			_deactivate_vgs()
 		case EncryptionType.LVM_ON_LUKS:
 			# VGs sit on LUKS PV, deactivate VGs first, then close LUKS.
 			_deactivate_vgs()
 			for part in disk_encryption.partitions:
-				close_luks(part.safe_dev_path, part.mapper_name)
+				close_luks(part.dev_path, part.mapper_name)
 		case EncryptionType.LUKS:
 			for part in disk_encryption.partitions:
-				close_luks(part.safe_dev_path, part.mapper_name)
+				close_luks(part.dev_path, part.mapper_name)
 		case EncryptionType.NO_ENCRYPTION:
 			_deactivate_vgs()

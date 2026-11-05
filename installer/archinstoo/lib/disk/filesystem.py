@@ -20,10 +20,11 @@ from archinstoo.lib.models.device import (
 	Size,
 	Unit,
 )
-from archinstoo.lib.output import debug, info
+from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.tui.curses_menu import Tui
 from archinstoo.lib.tui.prompts import confirm_abort
 
+from .cleanup import teardown_layout
 from .device_handler import DeviceHandler
 from .lvm import lvm_group_info, lvm_vol_info
 
@@ -125,6 +126,26 @@ class FilesystemHandler:
 		if show_countdown:
 			self._final_warning(active_mods)
 
+		try:
+			self._apply_modifications(active_mods, device_mods)
+		except BaseException:
+			# open LUKS and active VGs would hold the disk on a retry
+			self._teardown()
+			raise
+
+	def _teardown(self) -> None:
+		enc = self._enc_config or DiskEncryption(EncryptionType.NO_ENCRYPTION)
+		handler = self._device_handler
+		try:
+			teardown_layout(None, self._disk_config, enc, handler)
+		except Exception as err:
+			warn(f'Failed to tear down after disk error: {err}')
+
+	def _apply_modifications(
+		self,
+		active_mods: list[DeviceModification],
+		device_mods: list[DeviceModification],
+	) -> None:
 		# Setup the blockdevice, filesystem (and optionally encryption).
 		# Once that's done, we'll hand over to perform_installation()
 
