@@ -8,7 +8,7 @@
 # Contributor: Demostanis Worlds <demostanis@protonmail.com>
 
 pkgname=archinstoo
-pkgver=0.1.17
+pkgver=0.1.18
 pkgrel=0
 pkgdesc="Archinstall revamped"
 arch=(any)
@@ -25,7 +25,6 @@ depends=(
 	'kbd'                  #For keyboard layout configuration
 	'pacman'
 	'git'
-	'dosfstools' #For FAT/EFI support
 )
 # base-devel tools are assumed for dev
 makedepends=(
@@ -45,6 +44,7 @@ makedepends=(
 optdepends=(
 	'systemd'          #For systemd-based operations (fallback otherwise)
 	'xkeyboard-config' #For offline X11/Wayland keymap lists (fetched otherwise)
+	'dosfstools'       #For FAT/EFI support
 	'e2fsprogs'        #For ext4 support
 	'btrfs-progs'      #For btrfs support
 	'f2fs-tools'       #For f2fs support
