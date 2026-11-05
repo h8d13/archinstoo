@@ -15,9 +15,9 @@ BASE = (
 	'git',  	        # Cloning stashes
 	'arch-install-scripts', # For pacstrap, chroot
 	'python-pyparted',
-	'dosfstools',  	        # FAT EFI filesystem support
 )
 DISK = (
+	'dosfstools',  		# FAT EFI filesystem support
 	'btrfs-progs', 		# btrfs filesystem support
 	'e2fsprogs',  		# ext4 filesystem support
 	'f2fs-tools',  		# f2fs filesystem support
