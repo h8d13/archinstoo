@@ -6,6 +6,7 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.disk.lvm import lvm_deactivate_vg_on
 from archinstoo.lib.disk.utils import get_lsblk_info, umount
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.general import SysCommand, SysCommandWorker, run
@@ -238,6 +239,8 @@ class Luks2:
 			# by device: lsblk rejects a mountpoint
 			debug(f'Unmounting {child.path}')
 			umount(child.path, recursive=True)
+			# LVM on LUKS: the VG on the mapper has to go first
+			lvm_deactivate_vg_on(child.path)
 
 			# And close it if possible.
 			debug(f'Closing crypt device {child.name}')

@@ -1,6 +1,7 @@
 import json
 import time
 from pathlib import Path
+from shutil import which
 from typing import Literal, overload
 
 from archinstoo.lib.exceptions import SysCallError
@@ -136,6 +137,20 @@ def lvm_vol_change(vol: LvmVolume, activate: bool) -> None:
 
 	debug(f'lvchange volume: {cmd}')
 	SysCommand(cmd)
+
+
+def lvm_deactivate_vg_on(pv_path: Path) -> None:
+	# an active VG on a PV holds it open: a LUKS mapper under it won't close.
+	# lvm2 is optional on an H2T host; without it no VG can be active
+	if not which('pvs'):
+		return
+	try:
+		out = SysCommand(f'pvs --noheadings -o vg_name {pv_path}')
+	except SysCallError:
+		return  # not a PV
+	if vg_name := out.decode().strip():
+		debug(f'Deactivating VG {vg_name} on {pv_path}')
+		SysCommand(f'vgchange -an {vg_name}')
 
 
 def lvm_import_vg(vg: LvmVolumeGroup) -> None:
