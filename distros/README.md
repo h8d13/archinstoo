@@ -8,7 +8,7 @@ Experimental ports `archinstoo` to run from **any Linux host** (not just Arch IS
 > Mostly tested from smallest **server type ISOs/cloud images**
 > (see `./RUN --script dev.vm cloud fed|deb`).
 
-Not fully cooked since it takes a lot of time, but at least all deps should be correct.
+All deps should be correct.
 
 Can be found below:
 
@@ -30,13 +30,10 @@ On aarch64 it takes the Arch Linux Ports tarball instead, see [`architecture/`](
 A host _only_ needs:
 
 ```
-python3 (>= 3.14) util-linux coreutils libarchive udev gnupg
+python3 util-linux coreutils libarchive udev gnupg
 ```
 
-`gnupg` is optional on x86_64 (checksum only without it, trusting TLS).
-
 Package names might differ per distro.
-`libarchive-tools` on Debian and Alpine, `bsdtar` on Fedora.
 
 From Alpine (mdev by default):
 `apk add python3 util-linux coreutils libarchive-tools gnupg eudev && setup-devd udev`
@@ -50,7 +47,5 @@ From Alpine (mdev by default):
 
 Everything runs inside the root: the tarball's own pacman, keyring and python,
 with archinstoo's deps installed there on the first run.
-Scripts that configure the running system (`packages`) are refused,
-the root is thrown away after.
-A layout mounted by hand on the host's `/mnt` is passed through for pre-mounted configs,
-and the log path printed is the one the host sees.
+
+A layout mounted by hand on the host's `/mnt` is passed through for pre-mounted configs.
