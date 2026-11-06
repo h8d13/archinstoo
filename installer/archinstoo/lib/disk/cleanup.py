@@ -7,7 +7,6 @@ from archinstoo.lib.models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,
 	EncryptionType,
-	FilesystemType,
 )
 from archinstoo.lib.output import debug, info, warn
 
@@ -27,6 +26,7 @@ def swapoff_path(path: Path | None) -> None:
 
 
 def swapoff_layout(disk_config: DiskLayoutConfiguration) -> None:
+	# partitions only: the mount stage never swaps on an LVM volume
 	for mod in disk_config.device_modifications:
 		for part in mod.partitions:
 			if part.is_swap():
@@ -35,16 +35,6 @@ def swapoff_layout(disk_config: DiskLayoutConfiguration) -> None:
 					swapoff_path(
 						Path('/dev/mapper') / part.mapper_name
 					)
-
-	lvm_cfg = disk_config.lvm_config
-	if not lvm_cfg:
-		return
-
-	for vol in lvm_cfg.get_all_volumes():
-		if vol.fs_type == FilesystemType.LINUX_SWAP:
-			swapoff_path(vol.dev_path)
-			if vol.mapper_name:
-				swapoff_path(Path('/dev/mapper') / vol.mapper_name)
 
 
 def close_luks(dev_path: Path | None, mapper_name: str | None) -> None:
