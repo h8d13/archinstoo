@@ -1,6 +1,7 @@
 import os
 import re
 from subprocess import CompletedProcess
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.disk.fstab import mounted_at
@@ -10,7 +11,27 @@ from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import info
 
 if TYPE_CHECKING:
+	from pathlib import Path
+
 	from archinstoo.lib.installer import Installer
+
+
+# @swap sits beside @, not inside it: a root restore (snapper rollback,
+# Timeshift) swaps @ out by name and a nested subvolume stays behind with
+# the old one, leaving /swap empty. Mounted before genfstab, so the fstab
+# entry comes from findmnt like every other subvolume
+def _mount_swap_subvol(target: Path, fs_uuid: str) -> None:
+	dev = f'UUID={fs_uuid}'
+	with TemporaryDirectory() as top:
+		SysCommand(['mount', '-o', 'subvolid=5', dev, top])
+		try:
+			SysCommand(['btrfs', 'subvolume', 'create', f'{top}/@swap'])
+		finally:
+			SysCommand(['umount', top])
+
+	swap_dir = target / 'swap'
+	swap_dir.mkdir(exist_ok=True)
+	SysCommand(['mount', '-o', 'subvol=@swap', dev, str(swap_dir)])
 
 
 # No resume hook (the systemd initramfs hook ships it) and no kernel
@@ -24,10 +45,8 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 	info(f'Setting up {size}GiB swap file on {fs_type}')
 
 	if fs_type == 'btrfs':
-		# nested subvolume: snapshots of the parent don't recurse into
-		# it, so root snapshots keep working with the swapfile in place
 		swapfile = '/swap/swapfile'
-		installation.arch_chroot(['btrfs', 'subvolume', 'create', '/swap'])
+		_mount_swap_subvol(installation.target, root_fs['uuid'])
 		installation.arch_chroot(
 			[
 				'btrfs',
