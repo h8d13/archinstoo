@@ -1,5 +1,5 @@
-import contextlib
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -182,20 +182,20 @@ def mount(
 		) from err
 
 
-def umount(mountpoint: Path | str, recursive: bool = False) -> None:
-	lsblk_info = get_lsblk_info(mountpoint)
+def umount(dev_path: Path | str, recursive: bool = False) -> None:
+	lsblk_info = get_lsblk_info(dev_path)
 
-	# [SWAP] is dropped from mountpoints for the menu, so an active swap
-	# never shows up below; swapoff ignores an inactive area
-	if lsblk_info.fstype == 'swap':
-		swapoff(mountpoint)
+	# swap first: a swap file keeps its fs busy, and the lazy fallback
+	# below would detach it still active, renamed in /proc/swaps
+	for area in swaps_on(Path(dev_path), lsblk_info.mountpoints):
+		swapoff(area)
 
 	if not lsblk_info.mountpoints:
-		debug(f'{mountpoint} has no mountpoints, nothing to unmount')
+		debug(f'{dev_path} has no mountpoints, nothing to unmount')
 		return
 
 	debug(
-		f'Partition {mountpoint} is currently mounted at: '
+		f'Partition {dev_path} is currently mounted at: '
 		f'{[str(m) for m in lsblk_info.mountpoints]}'
 	)
 
@@ -219,7 +219,37 @@ def umount(mountpoint: Path | str, recursive: bool = False) -> None:
 				raise
 
 
+def _unescape(field: str) -> str:
+	# /proc/swaps octal-escapes whitespace and backslash (space as \040)
+	return re.sub(r'\\([0-7]{3})', lambda m: chr(int(m[1], 8)), field)
+
+
+def active_swaps() -> list[Path]:
+	# the kernel's state: lsblk shows a swap device only as [SWAP]
+	# (dropped on parse) and a swap file not at all
+	lines = Path('/proc/swaps').read_text().splitlines()[1:]
+	return [
+		Path(_unescape(fields[0])) for line in lines if (fields := line.split())
+	]
+
+
+def swaps_on(dev_path: Path, mountpoints: list[Path]) -> list[Path]:
+	# the device itself (/proc/swaps names /dev/dm-N, so resolve a mapper
+	# link) or a swap file below one of its mountpoints
+	dev = dev_path.resolve()
+	return [
+		area
+		for area in active_swaps()
+		if area == dev or any(area.is_relative_to(m) for m in mountpoints)
+	]
+
+
 def swapon(path: Path) -> None:
+	# swap is machine-wide: a previous run may have left this area on
+	if swaps_on(path, []):
+		debug(f'Swap already active on {path}')
+		return
+
 	try:
 		SysCommand(['swapon', str(path)])
 	except SysCallError as err:
@@ -228,7 +258,11 @@ def swapon(path: Path) -> None:
 		) from err
 
 
-def swapoff(path: Path | str) -> None:
-	debug(f'Disabling swap on device: {path}')
-	with contextlib.suppress(SysCallError):
+def swapoff(path: Path) -> None:
+	debug(f'Disabling swap: {path}')
+	try:
 		SysCommand(['swapoff', str(path)])
+	except SysCallError as err:
+		raise DiskError(
+			f'Could not disable swap {path}:\n{err.message}'
+		) from err
