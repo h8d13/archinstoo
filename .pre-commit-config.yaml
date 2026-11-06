@@ -66,7 +66,7 @@ repos:
       entry: env PYTHONPATH=installer lint-imports --config installer/pyproject.toml --no-cache
       language: python
       additional_dependencies:
-        - import-linter==2.15
+        - import-linter==2.16
       pass_filenames: false
       files: ^installer/
       types_or: [python, pyi, toml]
