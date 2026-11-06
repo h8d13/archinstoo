@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.default_profiles.desktops.nwg_shell import NwgShellProfile
+from archinstoo.default_profiles.desktops.nwg import NwgShellProfile
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.users import User
 from archinstoo.lib.profile import profiles_handler
