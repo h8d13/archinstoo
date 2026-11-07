@@ -82,6 +82,7 @@ nav:
       - ARM / aarch64 ports: ARM_SUPPORT.md
       - AUR / out-of-tree: OUT_OF_TREE.md
       - Build ISOs: BUILD_ISOS.md
+      - Caeoma images: CAEOMA.md
       - Other Linux: DISTROS.md
   - Project:
       - Contributing: CONTRIBUTING.md
