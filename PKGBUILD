@@ -57,6 +57,7 @@ optdepends=(
 	'nvchecker'        #For bumping versions auto
 	'archiso'          #For creating your own ISOs
 	'qemu-base'        #For testing all of the above
+	'mkosi'            #For custom ISOs
 )
 # qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 # optionally arm64 qemu testing tools
