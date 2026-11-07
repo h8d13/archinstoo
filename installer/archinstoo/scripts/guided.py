@@ -97,12 +97,21 @@ def perform_installation(
 		if pacman_config := config.pacman_config:
 			installation.set_mirrors(pacman_config, on_target=False)
 
-		installation.minimal_installation(
-			mkinitcpio=run_mkinitcpio,
-			hostname=config.hostname,
-			locale_config=locale_config,
-			timezone=config.timezone,
-		)
+		if args.skip_base:
+			# the target ships base, kernel and initramfs: settings only
+			if locale_config:
+				installation.set_vconsole(locale_config)
+			installation.configure_system(
+				config.hostname, locale_config, config.timezone
+			)
+			installation.set_helper_flag('base', True)
+		else:
+			installation.minimal_installation(
+				mkinitcpio=run_mkinitcpio,
+				hostname=config.hostname,
+				locale_config=locale_config,
+				timezone=config.timezone,
+			)
 
 		# right after base: the target's cryptenroll and libfido2 do it, and
 		# the user is still watching for the touch prompt
@@ -181,7 +190,7 @@ def perform_installation(
 			)
 
 		# note we add these before profiles as they might affect vulkan-driver
-		if config.kernel_headers:
+		if config.kernel_headers and not args.skip_base:
 			headers = [f'{kernel}-headers' for kernel in config.kernels]
 			installation.add_additional_packages(headers)
 
@@ -248,7 +257,8 @@ def perform_installation(
 		if args.advanced and (cc := config.custom_commands):
 			run_custom_user_commands(installation, cc)
 
-		installation.genfstab()
+		if not args.skip_fstab:
+			installation.genfstab()
 
 		debug(f'Disk states after installing:\n{disk_layouts()}')
 

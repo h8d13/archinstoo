@@ -92,6 +92,21 @@ def build_parser() -> argparse.ArgumentParser:
 		default=False,
 	)
 	parser.add_argument(
+		'--skip-base',
+		action='store_true',
+		help=(
+			'Disables installing base, kernel and initramfs: the target '
+			'ships them (an image-based system), only its settings apply.'
+		),
+		default=False,
+	)
+	parser.add_argument(
+		'--skip-fstab',
+		action='store_true',
+		help='Disables writing /etc/fstab: the target mounts its own way.',
+		default=False,
+	)
+	parser.add_argument(
 		'--debug',
 		action='store_true',
 		default=False,

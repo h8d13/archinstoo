@@ -271,6 +271,26 @@ class Installer:
 		if fs_type == FilesystemType.BTRFS:
 			self._disable_fstrim = True
 
+	def configure_system(
+		self,
+		hostname: str | None,
+		locale_config: LocaleConfiguration | None,
+		timezone: str | None,
+	) -> None:
+		# machine settings over an installed base: minimal_installation ends
+		# with them, --skip-base (the target ships its base) runs only them
+		if hostname:
+			self.set_hostname(hostname)
+
+		if locale_config and not self.set_locale(locale_config):
+			warn(
+				'Failed to set locale: '
+				f'{locale_config.sys_lang} {locale_config.sys_enc}'
+			)
+
+		if timezone and not self.set_timezone(timezone):
+			warn(f'Failed to set timezone: {timezone}')
+
 	def minimal_installation(
 		self,
 		mkinitcpio: bool = True,
@@ -354,17 +374,7 @@ class Installer:
 		if self._on_raid:
 			write_mdadm_conf(self.target)
 
-		if hostname:
-			self.set_hostname(hostname)
-
-		if locale_config and not self.set_locale(locale_config):
-			warn(
-				'Failed to set locale: '
-				f'{locale_config.sys_lang} {locale_config.sys_enc}'
-			)
-
-		if timezone and not self.set_timezone(timezone):
-			warn(f'Failed to set timezone: {timezone}')
+		self.configure_system(hostname, locale_config, timezone)
 
 		if mkinitcpio and not self.mkinitcpio(['-P']):
 			error('Error generating initramfs (continuing anyway)')
