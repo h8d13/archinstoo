@@ -1,8 +1,9 @@
 # Caeoma
 
-[Caeoma](https://github.com/h8d13/caeoma) is an image-based Arch system
-(submodule `caeoma/`). Its image carries archinstoo: boot it, then configure
-it with the usual installer flow.
+An image-based Arch system [Caeoma](https://github.com/h8d13/caeoma)
+(submodule `caeoma/`).
+
+Its image carries `archinstoo`: boot it, then configure it with the usual installer flow.
 
 ## 0. Get it
 
@@ -45,7 +46,9 @@ Base and kernel come from Caeoma's
 machine: [`mkosi.local.conf`](https://github.com/h8d13/caeoma/blob/master/mkosi.local.conf.example)),
 its boot loader and mounts from its
 [design](https://github.com/h8d13/caeoma/blob/master/docs/DESIGN.md): change
-them there. In the menu:
+them there.
+
+In the TUI:
 
 - Disk configuration: **Pre-mounted configuration**, `/` (the box's own
   btrfs, as it is mounted; manual partitioning would have to unmount the disk
@@ -67,4 +70,3 @@ reboot
 `commit` turns the new packages and their config into a new Caeoma version.
 Users, passwords and hostname stay on the box either way.
 `caeoma rollback` goes back to the version before.
-
