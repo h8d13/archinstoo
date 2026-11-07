@@ -4,6 +4,14 @@
 (submodule `caeoma/`). Its image carries archinstoo: boot it, then configure
 it with the usual installer flow.
 
+## 0. Get it
+
+```console
+git clone --recurse-submodules https://github.com/h8d13/archinstoo
+```
+
+In an existing checkout: `git submodule update --init`.
+
 ## 1. Build
 
 Needs `mkosi`.
