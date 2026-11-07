@@ -83,7 +83,8 @@ def reset_conf() -> bool:
 # unattended: hundreds of redraw lines per package in a --silent log.
 # argv peek at import: _prepare() syncs before argparse (same as --offline),
 # and pass_args_to_subscript() strips parsed flags from sys.argv afterwards.
-_QUIET_FLAGS = ' --noprogressbar' if '--silent' in sys.argv else ''
+_SILENT = '--silent' in sys.argv
+_QUIET_FLAGS = ' --noprogressbar' if _SILENT else ''
 
 
 class Pacman:
@@ -187,7 +188,8 @@ class Pacman:
 						f'{bail_message}: {retry_err}'
 					) from retry_err
 
-			if input(
+			# --silent has nobody to answer: fail instead of waiting forever
+			if not _SILENT and input(
 				'Would you like to re-try this download? (Y/n): '
 			).lower().strip() in {'', 'y'}:
 				try:
