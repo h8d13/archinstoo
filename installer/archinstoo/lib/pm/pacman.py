@@ -208,6 +208,11 @@ class Pacman:
 		if isinstance(packages, str):
 			packages = [packages]
 
+		# nothing asked (a Wayland display server, a driver without extras):
+		# pacman fails on no targets, so do nothing instead
+		if not packages:
+			return
+
 		info(f'Installing packages: {packages}')
 
 		flags = '--noconfirm --needed' + _QUIET_FLAGS
