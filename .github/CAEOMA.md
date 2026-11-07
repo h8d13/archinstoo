@@ -48,6 +48,11 @@ its boot loader and mounts from its
 [design](https://github.com/h8d13/caeoma/blob/master/docs/DESIGN.md): change
 them there.
 
+> [!IMPORTANT]
+> Only wired networking is set up by default. Firmware (`linux-firmware`, many
+> NICs need it too), microcode (`*-ucode`) and wifi (`iwd`) go in
+> `mkosi.local.conf` before building.
+
 In the TUI:
 
 - Disk configuration: **Pre-mounted configuration**, `/` (the box's own
