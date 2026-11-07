@@ -459,6 +459,9 @@ class PartitioningList(ListManager[DiskSegment]):
 		if partition.is_home():
 			partition.invert_flag(PartitionFlag.LINUX_HOME)
 		partition.mountpoint = mountpoint
+		# see _set_subvols: the partition is mounted itself now
+		if partition.fs_type == FilesystemType.BTRFS:
+			partition.btrfs_subvols = []
 		if partition.is_root():
 			partition.flags = []
 		if partition.mountpoint == Path('/efi'):
@@ -519,11 +522,21 @@ class PartitioningList(ListManager[DiskSegment]):
 				o for o in partition.mount_options if o != option.value
 			]
 
+	@staticmethod
+	def _set_subvols(
+		partition: PartitionModification,
+		subvols: list[SubvolumeModification],
+	) -> None:
+		# subvolumes and the partition's own mountpoint exclude each other:
+		# the mount stage lets subvolumes win, while is_root() and the
+		# layout checks read the partition's mountpoint
+		partition.btrfs_subvols = subvols
+		if subvols:
+			partition.mountpoint = None
+
 	def _set_btrfs_subvolumes(self, partition: PartitionModification) -> None:
-		partition.btrfs_subvols = SubvolumeMenu(
-			partition.btrfs_subvols,
-			None,
-		).run()
+		subvols = SubvolumeMenu(partition.btrfs_subvols, None).run()
+		self._set_subvols(partition, subvols)
 
 	def _prompt_formatting(self, partition: PartitionModification) -> None:
 		# an existing partition can toggle between Exist or Modify. A format
@@ -531,7 +544,7 @@ class PartitioningList(ListManager[DiskSegment]):
 		# recreated empty after mkfs, so they go and come back on unmark
 		if partition.is_modify():
 			partition.status = ModificationStatus.EXIST
-			partition.btrfs_subvols = self._scanned_subvols(partition)
+			self._set_subvols(partition, self._scanned_subvols(partition))
 			return
 		if partition.exists():
 			partition.status = ModificationStatus.MODIFY
