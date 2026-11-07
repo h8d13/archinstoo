@@ -84,7 +84,6 @@ class Opts:
 	bios: bool
 	gl: bool
 	dry: bool
-	uki: Path | None
 	iso: Path | None
 	disk_size: str
 	ram: str
@@ -141,7 +140,6 @@ def read_opts(console: str | None = None) -> Opts:
 		gl=Env.get_bool('A2_GL'),
 		dry=Env.get_bool('A2_DRY'),
 		# ./RUN cds into installer/, so a relative path means the repo root
-		uki=Env.get_path('A2_UKI', ROOT),
 		iso=Env.get_path('A2_DEV_ISO', ROOT),
 		disk_size=Env.get_value('A2_DISK_SIZE', '64G'),
 		ram=Env.get_value('A2_RAM', '4G'),
@@ -216,16 +214,8 @@ def check_host_deps(opts: Opts, attach_iso: bool) -> None:
 	if not opts.x86 and opts.bios:
 		error('A2_BIOS is x86_64 only (no SeaBIOS on virt)')
 		raise SystemExit(1)
-	if not opts.x86 and opts.uki:
-		error('A2_UKI is x86_64 only (UKIMOD builds x86_64 images)')
-		raise SystemExit(1)
 	# bsdtar reads the kernel out of the ISO, no mount (and no root) needed
-	if (
-		attach_iso
-		and opts.console != 'window'
-		and not opts.uki
-		and not shutil.which('bsdtar')
-	):
+	if attach_iso and opts.console != 'window' and not shutil.which('bsdtar'):
 		error(
 			f'--console {opts.console} needs bsdtar to read the '
 			'ISO (install libarchive)'
@@ -376,19 +366,6 @@ def require_iso(opts: Opts) -> Path:
 	raise SystemExit(1)
 
 
-def require_media(opts: Opts) -> None:
-	# ISO by default, a UKI when asked for: both are "boot media" to the modes
-	if not opts.uki:
-		require_iso(opts)
-		return
-	if not opts.uki.is_file():
-		error(f'A2_UKI={opts.uki} not found (build one with isos/UKIMOD)')
-		raise SystemExit(1)
-	if opts.bios:
-		error('A2_UKI needs OVMF, unset A2_BIOS')
-		raise SystemExit(1)
-
-
 def require_disk(opts: Opts) -> None:
 	if not opts.disk.is_file():
 		error(f'Disk missing, start with {VM} fresh first')
@@ -532,9 +509,6 @@ def disk_args(opts: Opts, attach_iso: bool) -> list[str]:
 
 
 def media_args(opts: Opts) -> list[str]:
-	if opts.uki:
-		return ['-kernel', str(opts.uki)]
-
 	iso = require_iso(opts)
 	# q35 carries the cdrom on its AHCI bus, virt on virtio-scsi
 	cd_device = 'ide-cd' if opts.x86 else 'scsi-cd'
@@ -603,9 +577,9 @@ def launch(opts: Opts, mode: str) -> int:
 		require_disk(opts)
 	elif mode == 'keep':
 		require_disk(opts)
-		require_media(opts)
+		require_iso(opts)
 	else:
-		require_media(opts)
+		require_iso(opts)
 		opts.disk.unlink(missing_ok=True)
 		if rc := ensure_disk(opts.disk, opts.disk_size):
 			return rc
