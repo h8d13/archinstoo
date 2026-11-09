@@ -14,6 +14,20 @@ error: unresolvable package conflicts detected
 error: failed to prepare transaction (conflicting dependencies)
 """
 
+# recorded on an archinstoo ISO: current pacman names both sides with their
+# full version, epoch included
+CONFLICT_VERSIONED = """\
+warning: pipewire-jack-1:1.6.10-1 is up to date -- skipping
+resolving dependencies...
+looking for conflicting packages...
+:: jack2-1.9.22-2 and pipewire-jack-1:1.6.10-1 are in conflict (jack). \
+Remove pipewire-jack? [y/N]
+error: unresolvable package conflicts detected
+error: failed to prepare transaction (conflicting dependencies)
+:: jack2-1.9.22-2 and pipewire-jack-1:1.6.10-1 are in conflict
+==> ERROR: Failed to install packages to new root
+"""
+
 CONFLICT_WITH_PROVIDER = """\
 :: iptables-nft and iptables are in conflict (iptables)
 error: unresolvable package conflicts detected
@@ -55,6 +69,24 @@ def test_classify_conflict() -> None:
 	assert failure.kind == FailureKind.CONFLICT
 	# 'are in conflict. Remove jack2?': the '.' is not part of the name
 	assert failure.candidates == ('pipewire-jack', 'jack2')
+
+
+def test_classify_conflict_drops_pacman_versions() -> None:
+	# with the versions left on, neither name matched the request list and
+	# a conflict between two requested packages read as one between deps
+	failure = classify(CONFLICT_VERSIONED)
+
+	assert failure.kind == FailureKind.CONFLICT
+	assert failure.candidates == ('jack2', 'pipewire-jack')
+	assert _keys(
+		CONFLICT_VERSIONED, ['jack2', 'pipewire-jack'], repeated=False
+	) == ['keep_first', 'keep_second', 'drop']
+
+
+def test_classify_conflict_keeps_names_that_end_in_a_number() -> None:
+	failure = classify(':: dotnet-runtime-8.0 and dotnet-host are in conflict')
+
+	assert failure.candidates == ('dotnet-runtime-8.0', 'dotnet-host')
 
 
 def test_classify_conflict_with_provider_suffix() -> None:

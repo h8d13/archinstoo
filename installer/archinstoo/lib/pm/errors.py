@@ -15,6 +15,9 @@ _UNSATISFIED = re.compile(
 	r"required by '?(?P<pkg>[^'\s]+)'?"
 )
 _ERROR_LINE = re.compile(r'^error:\s*(?P<message>.+)$')
+# pkgver starts with a digit (after an optional epoch) and pkgrel is numeric,
+# so a name that merely ends in a number, like dotnet-runtime-8.0, stays whole
+_NAME_VERSION = re.compile(r'^(?P<name>.+)-(?:\d+:)?\d[^-]*-\d+(?:\.\d+)?$')
 
 # package names may contain dots, so only strip the punctuation pacman adds
 # around them when it builds a sentence
@@ -62,7 +65,8 @@ def strip_version(name: str) -> str:
 def _conflict(lines: list[str]) -> Failure | None:
 	for line in lines:
 		if match := _CONFLICT.search(line):
-			pkg_a, pkg_b = _clean(match['pkg_a']), _clean(match['pkg_b'])
+			pkg_a = _unversioned(_clean(match['pkg_a']))
+			pkg_b = _unversioned(_clean(match['pkg_b']))
 			if pkg_a and pkg_b:
 				return Failure(
 					FailureKind.CONFLICT,
@@ -120,3 +124,12 @@ def _last_error(lines: list[str]) -> str:
 
 def _clean(name: str) -> str:
 	return name.strip(_TRAILING)
+
+
+def _unversioned(name: str) -> str:
+	# pacman names conflicting packages as name-pkgver-pkgrel
+	# ('pipewire-jack-1:1.6.10-1'); without the cut they never match the
+	# request list and every conflict looks like one between dependencies
+	if match := _NAME_VERSION.match(name):
+		return match['name']
+	return name
