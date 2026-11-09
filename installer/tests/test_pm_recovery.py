@@ -3,6 +3,8 @@
 # a retry only happens when something changed, and --silent stops instead of
 # guessing, as archinstoo always did.
 
+import sys
+import termios
 from pathlib import Path
 
 import pytest
@@ -61,6 +63,31 @@ def test_selecting_an_option_returns_its_key(
 	_answers(monkeypatch, 'yes', '', '9', '1')
 
 	assert prompt('Package conflict', OPTIONS) == 'keep_first'
+
+
+def test_wrong_answers_do_not_redraw_the_choices(
+	monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+	# stray Enters from the pacstrap run used to stack copies of the block
+	_answers(monkeypatch, '', '', '', 'nope', '2')
+
+	assert prompt('Package conflict', OPTIONS) == 'drop'
+
+	out = capsys.readouterr().out
+	assert out.count('Package conflict') == 1
+	assert out.count('Please enter a number') == 1
+
+
+def test_keys_pressed_before_the_question_are_discarded(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	flushed: list[int] = []
+	monkeypatch.setattr(termios, 'tcflush', lambda _fd, how: flushed.append(how))
+	monkeypatch.setattr('builtins.input', lambda _q: '1')
+	monkeypatch.setattr(sys.stdin, 'fileno', lambda: 0, raising=False)
+
+	assert recovery._read_line('Select an option [1-4]: ') == '1'
+	assert flushed == [termios.TCIFLUSH]
 
 
 def test_exit_is_always_the_last_choice(

@@ -4,10 +4,12 @@
 # appended here. Plain print/input: only used during the install itself,
 # never while a menu is on screen.
 
+import contextlib
 import os
 import re
 import subprocess
 import sys
+import termios
 from dataclasses import dataclass
 
 from archinstoo.lib.output import debug, info, stylize, warn
@@ -64,17 +66,7 @@ def prompt(
 
 	while True:
 		_render(header, detail, choices)
-		answer = _read_line(f'Select an option [1-{len(choices)}]: ')
-
-		if answer is None:
-			# stdin went away, nothing can be asked anymore
-			raise InstallationAbortedError(header)
-
-		if not answer.isdigit() or not 1 <= int(answer) <= len(choices):
-			print(f'Please enter a number between 1 and {len(choices)}.')
-			continue
-
-		key = choices[int(answer) - 1].key
+		key = _pick(header, choices)
 
 		if key == _EXIT:
 			raise InstallationAbortedError(header)
@@ -141,6 +133,21 @@ def _render(header: str, detail: str, choices: list[Recovery]) -> None:
 	print()
 
 
+def _pick(header: str, choices: list[Recovery]) -> str:
+	# a wrong answer asks again on one line: re-rendering the whole block
+	# per stray line buried the choices under copies of themselves
+	question = f'Select an option [1-{len(choices)}]: '
+	while True:
+		answer = _read_line(question)
+		if answer is None:
+			# stdin went away, nothing can be asked anymore
+			raise InstallationAbortedError(header)
+		if answer.isdigit() and 1 <= int(answer) <= len(choices):
+			return choices[int(answer) - 1].key
+		if answer:
+			print(f'Please enter a number between 1 and {len(choices)}.')
+
+
 def _can_prompt() -> bool:
 	try:
 		return sys.stdin.isatty()
@@ -149,6 +156,10 @@ def _can_prompt() -> bool:
 
 
 def _read_line(question: str) -> str | None:
+	# drop keys pressed while pacstrap was running (an impatient Enter or
+	# two): they would otherwise answer this question unseen
+	with contextlib.suppress(OSError, ValueError, termios.error):
+		termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)
 	try:
 		return input(question).strip()
 	except EOFError:
