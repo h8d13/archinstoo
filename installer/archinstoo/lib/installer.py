@@ -30,6 +30,7 @@ from archinstoo.lib.models.device import (
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.output import copy_artifacts, debug, error, info, warn
 from archinstoo.lib.pm import Pacman, mirrors
+from archinstoo.lib.pm.recovery import report_dropped
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -170,6 +171,7 @@ class Installer:
 				info('Syncing the system...')
 				os.sync()
 				self.sync_artifacts()
+				report_dropped(self.pacman.dropped_packages)
 				checkpoints.report_outcome(
 					self.target, self._helper_flags
 				)

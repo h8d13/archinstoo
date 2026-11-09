@@ -1,5 +1,6 @@
 import contextlib
 import re
+import shlex
 import shutil
 import sys
 import tempfile
@@ -7,10 +8,23 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from archinstoo.lib.exceptions import RequirementError
+from archinstoo.lib.exceptions import RequirementError, SysCallError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, error, info, logger, warn
+from archinstoo.lib.pm.errors import (
+	Failure,
+	FailureKind,
+	classify,
+	strip_version,
+)
+from archinstoo.lib.pm.recovery import (
+	RETRY,
+	Recovery,
+	ask_text,
+	package,
+	prompt,
+)
 from archinstoo.lib.utils.host import Host
 
 if TYPE_CHECKING:
@@ -90,6 +104,8 @@ _QUIET_FLAGS = ' --noprogressbar' if _SILENT else ''
 class Pacman:
 	def __init__(self, target: Path) -> None:
 		self.target = target
+		# skipped while recovering, re-listed when the install ends
+		self.dropped_packages: list[str] = []
 
 	@staticmethod
 	def run(
@@ -141,67 +157,6 @@ class Pacman:
 			error(f'Keyring reset failed: {e}')
 			return False
 
-	def ask(
-		self,
-		error_message: str,
-		bail_message: str,
-		func: Callable[..., object],
-		*args: object,
-		**kwargs: object,
-	) -> None:
-		try:
-			func(*args, **kwargs)
-		except Exception as err:
-			err_str = str(err).lower()
-			error(f'{error_message}: {err}')
-
-			recovery = None
-			if 'invalid or corrupted package' in err_str:
-				warn(
-					'Detected corrupted package: '
-					'resetting keyring and retrying...'
-				)
-				recovery = Pacman.reset_keyring
-			elif (
-				'gpgme error' in err_str
-				or 'no data' in err_str
-				or 'signature' in err_str
-			):
-				warn(
-					'Detected keyring/signature issue: '
-					'resetting keyring and retrying...'
-				)
-				recovery = Pacman.reset_keyring
-			elif 'could not satisfy dependencies' in err_str:
-				warn(
-					'Detected dependency issue: resetting '
-					'pacman.conf and retrying...'
-				)
-				recovery = reset_conf
-
-			if recovery and recovery():
-				try:
-					func(*args, **kwargs)
-					return
-				except Exception as retry_err:
-					raise RequirementError(
-						f'{bail_message}: {retry_err}'
-					) from retry_err
-
-			# --silent has nobody to answer: fail instead of waiting forever
-			if not _SILENT and input(
-				'Would you like to re-try this download? (Y/n): '
-			).lower().strip() in {'', 'y'}:
-				try:
-					func(*args, **kwargs)
-					return
-				except Exception as retry_err:
-					raise RequirementError(
-						f'{bail_message}: {retry_err}'
-					) from retry_err
-
-			raise RequirementError(f'{bail_message}: {err}') from err
-
 	def strap(self, packages: str | list[str]) -> None:
 		# no -Sy here: pacstrap syncs the target's own db, and '/' installs
 		# against the db _prepare synced (ISO) or the user keeps (Arch host)
@@ -213,36 +168,243 @@ class Pacman:
 		if not packages:
 			return
 
-		info(f'Installing packages: {packages}')
+		packages = list(packages)
+		overwrite: list[str] = []
+		seen: set[str] = set()
 
+		while packages:
+			info(f'Installing packages: {packages}')
+			try:
+				SysCommand(
+					self._strap_cmd(packages, overwrite),
+					peek_output=True,
+				)
+				return
+			except SysCallError as err:
+				error(f'Could not strap in packages: {err}')
+				if not self._recover(err, packages, overwrite, seen):
+					raise RequirementError(
+						self._bail_message()
+					) from err
+
+		# everything asked for got skipped on the way; report_dropped lists
+		# it again once the install ends
+		warn('Continuing without the remaining packages')
+
+	def _strap_cmd(self, packages: list[str], overwrite: list[str]) -> str:
 		flags = '--noconfirm --needed' + _QUIET_FLAGS
+		flags += ''.join(f' --overwrite {shlex.quote(p)}' for p in overwrite)
 		conf = live(PACMAN_CONF)
+		names = ' '.join(packages)
 
 		if self.target == Path('/'):
-			cmd = f'pacman --config {conf} -S {" ".join(packages)} {flags}'
-			bail = (
-				'Package installation failed. See '
-				f'{logger.host_path} or above message for error details'
-			)
-		else:
-			# no -K: that inits an empty target keyring (RSA-4096 master key
-			# gen, then archlinux-keyring's post_install lsigns every
-			# trusted key from scratch). pacstrap already verified packages
-			# with the host keyring, so let it copy that one in (its default
-			# when -K/-G are absent).
-			cmd = (
-				f'pacstrap -C {conf} {self.target} '
-				f'{" ".join(packages)} {flags}'
-			)
-			bail = (
-				f'Pacstrap failed. See {logger.host_path} or above '
-				'message for error details'
+			return f'pacman --config {conf} -S {names} {flags}'
+		# no -K: that inits an empty target keyring (RSA-4096 master key
+		# gen, then archlinux-keyring's post_install lsigns every
+		# trusted key from scratch). pacstrap already verified packages
+		# with the host keyring, so let it copy that one in (its default
+		# when -K/-G are absent).
+		return f'pacstrap -C {conf} {self.target} {names} {flags}'
+
+	def _bail_message(self) -> str:
+		what = (
+			'Package installation'
+			if self.target == Path('/')
+			else 'Pacstrap'
+		)
+		return (
+			f'{what} failed. See {logger.host_path} or above '
+			'message for error details'
+		)
+
+	def _hint(self) -> str:
+		if self.target == Path('/'):
+			return 'Installing onto the running system: fix it with pacman.'
+		return (
+			f'The target is mounted at {self.target}: '
+			f'"arch-chroot {self.target}" works inside it.'
+		)
+
+	def _recover(
+		self,
+		err: SysCallError,
+		packages: list[str],
+		overwrite: list[str],
+		seen: set[str],
+	) -> bool:
+		# packages and overwrite change in place. True when something
+		# changed and a retry makes sense, False to raise the original error
+		output = _error_output(err)
+		failure = classify(output)
+
+		# keyring and pacman.conf resets fix whole classes of failures with
+		# no question asked: each gets one try before the prompt
+		if fix := _auto_fix(failure, output.lower()):
+			name = f'auto:{fix.__name__}'
+			if name not in seen:
+				seen.add(name)
+				if fix():
+					return True
+
+		# the same failure twice in a row: what was offered last time did
+		# not help, so stop offering it
+		signature = f'{failure.kind}:{",".join(failure.candidates)}'
+		repeated = signature in seen
+		seen.add(signature)
+
+		droppable = [n for n in failure.candidates if _requested(packages, n)]
+		options = _recovery_options(failure, droppable, repeated)
+
+		detail = failure.summary
+		if not options and failure.candidates and not droppable:
+			detail += (
+				f'\n{", ".join(failure.candidates)} was pulled in as a '
+				'dependency, so it cannot be dropped from the request.'
 			)
 
-		self.ask(
-			'Could not strap in packages',
-			bail,
-			SysCommand,
-			cmd,
-			peek_output=True,
+		choice = prompt(
+			_HEADERS[failure.kind],
+			options,
+			detail=detail,
+			hint=self._hint(),
+			interactive=not _SILENT,
 		)
+
+		if choice == RETRY:
+			return True
+		if choice == 'overwrite':
+			overwrite.extend(failure.paths)
+			return True
+
+		before = list(packages)
+		# each branch is only offered when droppable holds what it names
+		match choice:
+			case 'keep_first':
+				self._drop(packages, droppable[1])
+			case 'keep_second':
+				self._drop(packages, droppable[0])
+			case 'drop':
+				self._drop(packages, *droppable)
+			case 'rename':
+				self._rename(packages, droppable[0])
+			case 'abandon':
+				self._drop(packages, *packages)
+			case _:
+				# not a key this loop offered: nothing to change
+				pass
+
+		if packages == before:
+			warn('Nothing changed, so a retry would fail the same way')
+			return False
+		return True
+
+	def _drop(self, packages: list[str], *names: str) -> None:
+		targets = {strip_version(name) for name in names}
+		kept = []
+		for entry in packages:
+			if strip_version(entry) in targets:
+				warn(f'Skipping {entry}')
+				self.dropped_packages.append(entry)
+			else:
+				kept.append(entry)
+		packages[:] = kept
+
+	def _rename(self, packages: list[str], name: str) -> None:
+		replacement = ask_text(f'Package name to use instead of {name}: ')
+		if not replacement:
+			warn(f'No replacement given, keeping {name}')
+			return
+
+		target = strip_version(name)
+		packages[:] = [
+			replacement if strip_version(entry) == target else entry
+			for entry in packages
+		]
+		info(f'Replaced {name} with {replacement}')
+
+
+_HEADERS: Final = {
+	FailureKind.CONFLICT: 'Package conflict',
+	FailureKind.FILE_EXISTS: 'Conflicting files on the target',
+	FailureKind.MISSING_TARGET: 'Package not found',
+	FailureKind.UNSATISFIED_DEPENDENCY: 'Unsatisfiable dependency',
+	FailureKind.UNKNOWN: 'Package installation failed',
+}
+
+
+def _auto_fix(failure: Failure, output: str) -> Callable[[], bool] | None:
+	# the resets archinstoo always applied, now ahead of the prompt
+	if failure.kind not in {
+		FailureKind.UNKNOWN,
+		FailureKind.UNSATISFIED_DEPENDENCY,
+	}:
+		return None
+	if 'invalid or corrupted package' in output:
+		warn('Detected corrupted package: resetting keyring and retrying...')
+		return Pacman.reset_keyring
+	if any(s in output for s in ('gpgme error', 'no data', 'signature')):
+		warn('Detected keyring/signature issue: resetting keyring...')
+		return Pacman.reset_keyring
+	if 'could not satisfy dependencies' in output:
+		warn('Detected dependency issue: resetting pacman.conf...')
+		return reset_conf
+	return None
+
+
+_SKIP_REST: Final = 'Skip the remaining packages and continue the installation'
+_SKIP_THESE: Final = 'Skip these packages and continue the installation'
+
+
+def _recovery_options(
+	failure: Failure, droppable: list[str], repeated: bool
+) -> list[Recovery]:
+	if repeated:
+		return [Recovery('abandon', _SKIP_REST)]
+
+	first, *rest = failure.candidates or ('',)
+	second = rest[0] if rest else ''
+	drop = None
+	if droppable:
+		drop = Recovery('drop', f'Drop {package(droppable[0])} and continue')
+
+	match failure.kind:
+		case FailureKind.CONFLICT if len(droppable) == 2:
+			a, b = package(first), package(second)
+			return [
+				Recovery('keep_first', f'Keep {a} and drop {b}'),
+				Recovery('keep_second', f'Keep {b} and drop {a}'),
+				Recovery(
+					'drop', f'Keep neither {a} nor {b} and continue'
+				),
+			]
+		case FailureKind.MISSING_TARGET if drop:
+			rename = f'Replace {package(first)} with another package name'
+			return [Recovery('rename', rename), drop]
+		case FailureKind.CONFLICT | FailureKind.UNSATISFIED_DEPENDENCY if drop:
+			return [drop]
+		case FailureKind.FILE_EXISTS:
+			overwrite = Recovery(
+				'overwrite', 'Overwrite the conflicting files and retry'
+			)
+			return [overwrite, drop] if drop else [overwrite]
+		case FailureKind.UNKNOWN:
+			return [
+				Recovery(RETRY, 'Retry installing these packages'),
+				Recovery('abandon', _SKIP_THESE),
+			]
+		case _:
+			return []
+
+
+def _requested(packages: list[str], name: str) -> bool:
+	# asked for directly, as opposed to pulled in as a dependency
+	target = strip_version(name)
+	return any(strip_version(entry) == target for entry in packages)
+
+
+def _error_output(err: SysCallError) -> str:
+	# str(err) keeps only the last 500 characters, which routinely cuts
+	# the line naming the conflict; worker_log is the whole, cleaned run
+	if err.worker_log:
+		return err.worker_log.decode('utf-8', errors='replace')
+	return str(err)

@@ -273,6 +273,14 @@ def _stylize_output(
 	return f'\033[{ansi}m{text}\033[0m'
 
 
+def stylize(text: str, fg: str) -> str:
+	# colour a fragment for embedding in a larger line; plain text when the
+	# terminal has no colour, so the result is safe to log or pipe
+	if not _supports_color():
+		return text
+	return _stylize_output(text, fg, None, reset=False)
+
+
 def info(
 	*msgs: str,
 	level: int = logging.INFO,

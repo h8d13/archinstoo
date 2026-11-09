@@ -87,6 +87,7 @@ from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.pacman import Pacman
+from .lib.pm.recovery import InstallationAbortedError
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Env
 from .lib.utils.host import Host, is_root, is_venv, kernel_info
@@ -399,6 +400,12 @@ def run_as_a_module() -> int:
 			# tell it from a failure
 			warn('Aborted by user.')
 			rc = 130
+		except InstallationAbortedError as e:
+			# left from a recovery prompt: a decision, not a bug to report.
+			# The selections were saved before the install began, so the
+			# next run offers to resume them
+			warn(f'Installation stopped: {e.reason}')
+			rc = 1
 		except Exception as e:
 			exc = e
 		finally:
