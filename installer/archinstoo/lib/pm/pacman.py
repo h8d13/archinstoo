@@ -169,20 +169,20 @@ class Pacman:
 			return
 
 		packages = list(packages)
-		overwrite: list[str] = []
+		extra: list[str] = []
 		seen: set[str] = set()
 
 		while packages:
 			info(f'Installing packages: {packages}')
 			try:
 				SysCommand(
-					self._strap_cmd(packages, overwrite),
+					self._strap_cmd(packages, extra),
 					peek_output=True,
 				)
 				return
 			except SysCallError as err:
 				error(f'Could not strap in packages: {err}')
-				if not self._recover(err, packages, overwrite, seen):
+				if not self._recover(err, packages, extra, seen):
 					raise RequirementError(
 						self._bail_message()
 					) from err
@@ -191,9 +191,10 @@ class Pacman:
 		# it again once the install ends
 		warn('Continuing without the remaining packages')
 
-	def _strap_cmd(self, packages: list[str], overwrite: list[str]) -> str:
+	def _strap_cmd(self, packages: list[str], extra: list[str]) -> str:
+		# extra: flags recovery added, --overwrite or --ask, already quoted
 		flags = '--noconfirm --needed' + _QUIET_FLAGS
-		flags += ''.join(f' --overwrite {shlex.quote(p)}' for p in overwrite)
+		flags += ''.join(f' {flag}' for flag in extra)
 		conf = live(PACMAN_CONF)
 		names = ' '.join(packages)
 
@@ -229,10 +230,10 @@ class Pacman:
 		self,
 		err: SysCallError,
 		packages: list[str],
-		overwrite: list[str],
+		extra: list[str],
 		seen: set[str],
 	) -> bool:
-		# packages and overwrite change in place. True when something
+		# packages and extra flags change in place. True when something
 		# changed and a retry makes sense, False to raise the original error
 		output = _error_output(err)
 		failure = classify(output)
@@ -273,7 +274,9 @@ class Pacman:
 		if choice == RETRY:
 			return True
 		if choice == 'overwrite':
-			overwrite.extend(failure.paths)
+			extra.extend(
+				f'--overwrite {shlex.quote(p)}' for p in failure.paths
+			)
 			return True
 
 		before = list(packages)
@@ -281,8 +284,10 @@ class Pacman:
 		match choice:
 			case 'keep_first':
 				self._drop(packages, droppable[1])
+				_replace_conflicting(extra)
 			case 'keep_second':
 				self._drop(packages, droppable[0])
+				_replace_conflicting(extra)
 			case 'drop':
 				self._drop(packages, *droppable)
 			case 'rename':
@@ -394,6 +399,19 @@ def _recovery_options(
 			]
 		case _:
 			return []
+
+
+# answers pacman's "Remove <package>? [y/N]" conflict question with yes
+# (ALPM_QUESTION_CONFLICT_PKG)
+_REPLACE_CONFLICTING: Final = '--ask=4'
+
+
+def _replace_conflicting(extra: list[str]) -> None:
+	# the side the user dropped may already be on the target from an earlier
+	# step: then --noconfirm answers pacman's removal question with no and
+	# the retry fails the same way. Only after an explicit keep choice
+	if _REPLACE_CONFLICTING not in extra:
+		extra.append(_REPLACE_CONFLICTING)
 
 
 def _requested(packages: list[str], name: str) -> bool:

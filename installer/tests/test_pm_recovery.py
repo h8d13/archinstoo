@@ -148,6 +148,20 @@ def test_keeping_one_side_of_a_conflict_retries_without_the_other(
 	assert len(calls) == 2
 	assert 'pipewire-jack' not in calls[1]
 	assert pm.dropped_packages == ['pipewire-jack']
+	# pipewire-jack may already be on the target from an earlier step:
+	# keeping jack2 has to let pacman replace it, not just skip asking
+	assert calls[1].endswith('--ask=4')
+
+
+def test_dropping_both_never_removes_anything_from_the_target(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	calls = _pacstrap(monkeypatch, JACK)
+	_answers(monkeypatch, '3')
+
+	Pacman(Path('/mnt')).strap(['base', 'jack2', 'pipewire-jack'])
+
+	assert '--ask' not in ' '.join(calls)
 
 
 def test_a_dependency_conflict_offers_to_skip_once_a_fix_did_not_help(
