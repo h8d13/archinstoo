@@ -1,6 +1,7 @@
 from typing import override
 
 from archinstoo.lib.localization.catalog import (
+	get_kb_layout,
 	list_console_fonts,
 	list_keyboard_languages,
 	list_locale_encodings,
@@ -108,7 +109,7 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		]
 
 	def _prev_locale(self, _item: MenuItem) -> str:
-		default = LocaleConfiguration.default()
+		default = LocaleConfiguration.default(get_kb_layout())
 		kb_layout = (
 			self._menu_item_group.find_by_key('kb_layout').value
 			or default.kb_layout
@@ -157,7 +158,7 @@ class LocaleMenu(AbstractSubMenu[LocaleConfiguration]):
 		# Note: kb_layout can be None at runtime after reset
 		# despite type annotation
 		if getattr(self._locale_conf, 'kb_layout', None) is None:
-			return LocaleConfiguration.default()
+			return LocaleConfiguration.default(get_kb_layout())
 		return self._locale_conf
 
 	def _select_kb_layout(self, preset: str | None) -> str | None:

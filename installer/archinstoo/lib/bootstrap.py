@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import NamedTuple
 
 from archinstoo import deps
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import FetchError, SysCallError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import info, warn
 from archinstoo.lib.utils.env import Env

@@ -12,7 +12,7 @@ from archinstoo.lib.exceptions import RequirementError
 from archinstoo.scripts._resolve import collect, resolve_deps
 
 
-def count() -> None:
+def main() -> None:
 	parser = argparse.ArgumentParser(
 		prog='python -m archinstoo --script count',
 		description='Count packages from a saved config (resolves deps)',
@@ -54,6 +54,3 @@ def count() -> None:
 				print(f'  {root}')
 		elif args.why not in explicit:
 			print(f"\n'{args.why}' is not pulled in by this config.")
-
-
-count()

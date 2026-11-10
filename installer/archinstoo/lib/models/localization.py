@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Self
 
-from archinstoo.lib.localization.catalog import get_kb_layout
-
 
 @dataclass
 class LocaleConfiguration:
@@ -20,11 +18,10 @@ class LocaleConfiguration:
 	xkb_options: str = ''
 
 	@classmethod
-	def default(cls) -> Self:
-		layout = get_kb_layout()
-		if not layout:
-			layout = 'us'
-		return cls(layout, 'en_US.UTF-8', 'UTF-8')
+	def default(cls, kb_layout: str | None = None) -> Self:
+		# kb_layout: the host's console keymap, probed by the caller
+		# (localization.catalog.get_kb_layout). Nothing here asks the system
+		return cls(kb_layout or 'us', 'en_US.UTF-8', 'UTF-8')
 
 	def json(self) -> dict[str, str]:
 		return {
@@ -73,7 +70,7 @@ class LocaleConfiguration:
 			self.xkb_options = args['xkb_options']
 
 	@classmethod
-	def parse_arg(cls, args: dict[str, str]) -> Self:
-		default = cls.default()
+	def parse_arg(cls, args: dict[str, str], kb_layout: str | None = None) -> Self:
+		default = cls.default(kb_layout)
 		default._load_config(args)
 		return default

@@ -7,7 +7,7 @@ from archinstoo.lib.output import debug
 from archinstoo.lib.pm.pacman import PACMAN_DB, Pacman, live
 
 if TYPE_CHECKING:
-	from archinstoo.lib.general import SysCommand
+	from archinstoo.lib.command import SysCommand
 
 
 def _sync_db(args: str) -> SysCommand:

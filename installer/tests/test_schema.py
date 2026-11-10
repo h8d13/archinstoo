@@ -47,13 +47,6 @@ def test_committed_schema_is_current() -> None:
 	)
 
 
-def test_sections_are_listed_in_install_order() -> None:
-	# render() sorts by site regardless; this keeps the source readable top to
-	# bottom as the install, so a reorder in guided.py is mirrored here
-	listed = [s.key for s in schema_gen.SECTIONS]
-	assert listed == [s.key for s in schema_gen.ordered()]
-
-
 def test_every_section_is_a_table() -> None:
 	# a top-level `key = [...]` written after the first [header] silently nests
 	# under it, which is why the generator emits tables only

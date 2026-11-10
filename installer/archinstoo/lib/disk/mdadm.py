@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, info, warn
 
 if TYPE_CHECKING:

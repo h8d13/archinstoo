@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.pm import pacman, tmpdb
 from archinstoo.lib.pm.pacman import (
 	MIRRORLIST,
@@ -17,6 +16,7 @@ from archinstoo.lib.pm.pacman import (
 	workdir,
 )
 from archinstoo.lib.utils.host import Host
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from collections.abc import Iterator

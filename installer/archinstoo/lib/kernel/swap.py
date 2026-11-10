@@ -4,9 +4,9 @@ from subprocess import CompletedProcess
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.disk.fstab import mounted_at
 from archinstoo.lib.exceptions import DiskError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.output import info
 

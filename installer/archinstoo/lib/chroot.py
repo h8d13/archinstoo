@@ -1,13 +1,16 @@
+import os
 import shlex
+import signal
 import subprocess
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.command import SysCommand, run
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.general import SysCommand, run
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, info, warn
 from archinstoo.lib.utils.host import Host
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from subprocess import CompletedProcess
@@ -86,6 +89,21 @@ def drop_to_shell(target: Path) -> None:
 	if proc.returncode:
 		# non-zero is normal: it carries out whatever the user last ran
 		debug(f'arch-chroot exited {proc.returncode}')
+	_reclaim_tty()
+
+
+def _reclaim_tty() -> None:
+	# the shell took the terminal for its job control and, from inside
+	# arch-chroot's pid namespace, cannot name our group to hand it back.
+	# Left in the background, our next prompt would stop us with SIGTTOU
+	previous = signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+	try:
+		os.tcsetpgrp(sys.stdin.fileno(), os.getpgrp())
+	except OSError, ValueError:
+		# no terminal on stdin: nothing was taken
+		pass
+	finally:
+		signal.signal(signal.SIGTTOU, previous)
 
 
 def chown_tree(installation: Installer, username: str, path: str) -> None:

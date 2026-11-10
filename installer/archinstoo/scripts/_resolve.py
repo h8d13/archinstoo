@@ -10,16 +10,16 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import RequirementError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
-from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.utils.paths import locate_binary
 
 if TYPE_CHECKING:

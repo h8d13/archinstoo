@@ -79,81 +79,81 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				text='Bluetooth',
 				action=select_bluetooth,
 				value=self._app_config.bluetooth_config,
-				preview_action=self._prev_bluetooth,
+				preview_action=self._prev,
 				key='bluetooth_config',
 			),
 			MenuItem(
 				text='Thunderbolt',
 				action=select_thunderbolt,
 				value=self._app_config.thunderbolt_config,
-				preview_action=self._prev_thunderbolt,
+				preview_action=self._prev,
 				enabled=SysInfo.has_thunderbolt(),
 				key='thunderbolt_config',
 			),
 			MenuItem(
 				text='Audio',
 				action=select_audio,
-				preview_action=self._prev_audio,
+				preview_action=self._prev,
 				key='audio_config',
 			),
 			MenuItem(
 				text='Print service',
 				action=select_print_service,
-				preview_action=self._prev_print_service,
+				preview_action=self._prev,
 				key='print_service_config',
 			),
 			MenuItem(
 				text='Media codecs',
 				action=select_media_codecs,
-				preview_action=self._prev_media_codecs,
+				preview_action=self._prev,
 				key='media_codecs_config',
 			),
 			MenuItem(
 				text='Flatpak',
 				action=select_flatpak,
-				preview_action=self._prev_flatpak,
+				preview_action=self._prev,
 				key='flatpak_config',
 			),
 			MenuItem(
 				text='Power management',
 				action=select_power_management,
-				preview_action=self._prev_power_management,
+				preview_action=self._prev,
 				key='power_management_config',
 			),
 			MenuItem(
 				text='Firewall',
 				action=select_firewall,
-				preview_action=self._prev_firewall,
+				preview_action=self._prev,
 				key='firewall_config',
 			),
 			MenuItem(
 				text='Management',
 				action=select_management,
-				preview_action=self._prev_management,
+				preview_action=self._prev,
 				key='management_config',
 			),
 			MenuItem(
 				text='Monitor',
 				action=select_monitor,
-				preview_action=self._prev_monitor,
+				preview_action=self._prev,
 				key='monitor_config',
 			),
 			MenuItem(
 				text='Editor',
 				action=select_editor,
-				preview_action=self._prev_editor,
+				preview_action=self._prev,
 				key='editor_config',
 			),
 			MenuItem(
 				text='Terminal',
 				action=select_terminal,
-				preview_action=self._prev_terminal,
+				preview_action=self._prev,
 				key='terminal_config',
 			),
 			MenuItem(
 				text='Security',
 				action=select_security,
-				preview_action=self._prev_security,
+				preview_action=self._prev,
 				key='security_config',
 			),
 		]
@@ -164,98 +164,25 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 				MenuItem(
 					text='CPU scheduler',
 					action=select_cpu_scheduler,
-					preview_action=self._prev_cpu_scheduler,
+					preview_action=self._prev,
 					key='cpu_scheduler_config',
 				),
 			)
 
 		return items
 
-	def _prev_power_management(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: PowerManagementConfiguration = item.value
-			return f'Power management: {config.power_management.value}'
-		return None
+	def _prev(self, item: MenuItem) -> str | None:
+		# every category holds one field (models/applications._Category): a
+		# flag, a choice or a list of them, shown under the item's own label
+		if item.value is None:
+			return None
 
-	def _prev_cpu_scheduler(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: CPUSchedulerConfiguration = item.value
-			return f'CPU scheduler: {config.scheduler.value}'
-		return None
-
-	def _prev_bluetooth(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: BluetoothConfiguration = item.value
-			return _enabled_text('Bluetooth', config.enabled)
-		return None
-
-	def _prev_thunderbolt(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: ThunderboltConfiguration = item.value
-			return _enabled_text('Thunderbolt', config.enabled)
-		return None
-
-	def _prev_audio(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: AudioConfiguration = item.value
-			return f'Audio: {config.audio.value}'
-		return None
-
-	def _prev_print_service(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: PrintServiceConfiguration = item.value
-			return _enabled_text('Print service', config.enabled)
-		return None
-
-	def _prev_media_codecs(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: MediaCodecsConfiguration = item.value
-			return _enabled_text('Media codecs', config.enabled)
-		return None
-
-	def _prev_flatpak(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: FlatpakConfiguration = item.value
-			return _enabled_text('Flatpak', config.enabled)
-		return None
-
-	def _prev_firewall(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: FirewallConfiguration = item.value
-			return f'Firewall: {config.firewall.value}'
-		return None
-
-	def _prev_management(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: ManagementConfiguration = item.value
-			tools = ', '.join([t.value for t in config.tools])
-			return f'Management: {tools}'
-		return None
-
-	def _prev_monitor(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: MonitorConfiguration = item.value
-			return f'Monitor: {config.monitor.value}'
-		return None
-
-	def _prev_editor(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: EditorConfiguration = item.value
-			return f'Editor: {config.editor.value}'
-		return None
-
-	def _prev_terminal(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: TerminalConfiguration = item.value
-			return f'Terminal: {config.terminal.value}'
-		return None
-
-	def _prev_security(self, item: MenuItem) -> str | None:
-		if item.value is not None:
-			config: SecurityConfiguration = item.value
-			tools = ', '.join([t.value for t in config.tools])
-			return f'Security: {tools}'
-		return None
+		(value,) = vars(item.value).values()
+		if isinstance(value, bool):
+			return _enabled_text(item.text, value)
+		if isinstance(value, list):
+			return f'{item.text}: {", ".join(v.value for v in value)}'
+		return f'{item.text}: {value.value}'
 
 
 def select_power_management(

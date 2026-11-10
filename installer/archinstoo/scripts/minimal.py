@@ -1,26 +1,30 @@
 import time
+from typing import TYPE_CHECKING
 
 from archinstoo.default_profiles.minimal import MinimalProfile
 from archinstoo.lib.args import (
 	ArchConfig,
 	ArchConfigHandler,
-	Arguments,
 	get_arch_config_handler,
 )
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
 from archinstoo.lib.disk.filesystem import FilesystemHandler
-from archinstoo.lib.disk.utils import disk_layouts
+from archinstoo.lib.disk.lsblk import disk_layouts
 from archinstoo.lib.installer import Installer
+from archinstoo.lib.localization.catalog import get_kb_layout
 from archinstoo.lib.models import Bootloader
 from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.models.users import Password, User
-from archinstoo.lib.network.network_handler import NetworkHandler
+from archinstoo.lib.network.network_handler import install_network_config
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
+
+if TYPE_CHECKING:
+	from archinstoo.lib.cli import Arguments
 
 
 def show_menu(config: ArchConfig, _args: Arguments) -> None:
@@ -45,7 +49,6 @@ def perform_installation(
 	handler: ArchConfigHandler,
 	device_handler: DeviceHandler,
 	profile_handler: ProfileHandler,
-	network_handler: NetworkHandler,
 ) -> None:
 	config = handler.config
 
@@ -70,14 +73,14 @@ def perform_installation(
 		# some other minor details as specified by this profile and user.
 		installation.mount_ordered_layout()
 		installation.minimal_installation(
-			locale_config=LocaleConfiguration.default()
+			locale_config=LocaleConfiguration.default(get_kb_layout())
 		)
 		installation.set_hostname('minimal-arch')
 		installation.enroll_fido2()
 		installation.add_bootloader(Bootloader.Systemd)
 
 		if network_config := config.network_config:
-			network_handler.install_network_config(
+			install_network_config(
 				network_config,
 				installation,
 				config.profile_config,
@@ -106,13 +109,12 @@ def perform_installation(
 	info(' * devel (password: devel)')
 
 
-def _minimal() -> None:
+def main() -> None:
 	handler = get_arch_config_handler()
 
-	# Create handler instances once at the entry point and pass them through
+	# built once at the entry point and passed through: both keep state
 	device_handler = DeviceHandler()
 	profile_handler = ProfileHandler()
-	network_handler = NetworkHandler()
 
 	# same resolve/save/confirm path as guided, so --silent and --dry-run work
 	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
@@ -123,7 +125,4 @@ def _minimal() -> None:
 		)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(handler, device_handler, profile_handler, network_handler)
-
-
-_minimal()
+	perform_installation(handler, device_handler, profile_handler)

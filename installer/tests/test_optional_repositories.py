@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 import pytest
 
 from archinstoo.lib import hardware
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pm import config as pm_config
 from archinstoo.lib.pm.config import PacmanConfig
 from archinstoo.lib.pm.mirrors import optional_repositories
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from pathlib import Path

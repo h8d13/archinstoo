@@ -3,5 +3,6 @@
 # add a new script in this folder
 # then simply --script {name}
 # will look for a file with .py
+# and call its main()
 
 # can also use --script list to see all available

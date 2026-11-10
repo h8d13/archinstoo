@@ -1,5 +1,7 @@
+import stat
 from pathlib import Path
 from shutil import which
+from typing import Self
 
 from archinstoo.lib.exceptions import RequirementError
 
@@ -31,3 +33,22 @@ def data_paths(anchor: str, *relative: str) -> list[Path]:
 		for data in _DATA_DIRS
 		for rel in relative
 	]
+
+
+class LPath(Path):
+	@classmethod
+	def fs_root(cls) -> Self:
+		return cls('/')
+
+	def relative_to_root(self) -> Self:
+		return self.relative_to(self.fs_root())
+
+	def add_exec(self) -> None:
+		# Add execute permissions (mirrors `chmod +x`).
+		mode = self.stat().st_mode
+		self.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+	def remove_exec(self) -> None:
+		# Remove execute permissions (mirrors `chmod -x`).
+		mode = self.stat().st_mode
+		self.chmod(mode & ~(stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))

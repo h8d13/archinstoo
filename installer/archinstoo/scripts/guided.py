@@ -2,17 +2,18 @@ import subprocess
 import time
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.applications.application_handler import ApplicationHandler
-from archinstoo.lib.args import ArchConfig, Arguments, get_arch_config_handler
-from archinstoo.lib.authentication.shell import ShellApp
+from archinstoo.lib.applications.application_handler import install_applications
+from archinstoo.lib.args import ArchConfig, get_arch_config_handler
+from archinstoo.lib.authentication.shell import install_shells
 from archinstoo.lib.bootloader.validation import validate_bootloader
 from archinstoo.lib.chroot import drop_to_shell, run_custom_user_commands
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
-from archinstoo.lib.disk.utils import disk_layouts
+from archinstoo.lib.disk.lsblk import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.interactions.general_conf import (
 	PostInstallationAction,
@@ -23,15 +24,15 @@ from archinstoo.lib.models.device import (
 	EncryptionType,
 )
 from archinstoo.lib.models.users import User
-from archinstoo.lib.network.network_handler import NetworkHandler
+from archinstoo.lib.network.network_handler import install_network_config
 from archinstoo.lib.output import debug, error, info
 from archinstoo.lib.pm.aur import run_grimoire_installation
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
-from archinstoo.lib.systemd import accessibility_tools_in_use
 from archinstoo.lib.tui import Tui
 
 if TYPE_CHECKING:
 	from archinstoo.lib.args import ArchConfigHandler
+	from archinstoo.lib.cli import Arguments
 
 
 def show_menu(config: ArchConfig, args: Arguments) -> None:
@@ -49,8 +50,6 @@ def perform_installation(
 	handler: ArchConfigHandler,
 	device_handler: DeviceHandler,
 	profile_handler: ProfileHandler,
-	application_handler: ApplicationHandler,
-	network_handler: NetworkHandler,
 ) -> None:
 	# Performs the installation steps on a block device.
 	# Only requirement is that the block devices are
@@ -133,15 +132,13 @@ def perform_installation(
 				config.auth_config.users,
 				config.auth_config.privilege_escalation,
 			)
-			ShellApp().install(installation, config.auth_config.users)
+			install_shells(installation, config.auth_config.users)
 
 		# Install applications before bootloader so kernel params (e.g.
 		# AppArmor LSM) are included
 		if app_config := config.app_config:
 			users = config.auth_config.users if config.auth_config else None
-			application_handler.install_applications(
-				installation, app_config, users
-			)
+			install_applications(installation, app_config, users)
 
 		# before the bootloader: grub-btrfs ships
 		# /etc/grub.d/41_snapshots-btrfs, and grub-mkconfig only runs once, so
@@ -183,7 +180,7 @@ def perform_installation(
 		# If user selected to copy the current ISO network configuration
 		# Perform a copy of the config
 		if network_config := config.network_config:
-			network_handler.install_network_config(
+			install_network_config(
 				network_config,
 				installation,
 				config.profile_config,
@@ -318,14 +315,12 @@ def _validate_silent(config: ArchConfig) -> None:
 		raise SystemExit(1)
 
 
-def guided() -> None:
+def main() -> None:
 	handler = get_arch_config_handler()
 
-	# Create handler instances once at the entry point and pass them through
+	# built once at the entry point and passed through: both keep state
 	device_handler = DeviceHandler()
 	profile_handler = ProfileHandler()
-	application_handler = ApplicationHandler()
-	network_handler = NetworkHandler()
 
 	config = resolve_config(handler, show_menu, validate_silent=_validate_silent)
 
@@ -335,13 +330,4 @@ def guided() -> None:
 		)
 		fs_handler.perform_filesystem_operations()
 
-	perform_installation(
-		handler,
-		device_handler,
-		profile_handler,
-		application_handler,
-		network_handler,
-	)
-
-
-guided()
+	perform_installation(handler, device_handler, profile_handler)

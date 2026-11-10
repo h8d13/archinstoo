@@ -4,8 +4,8 @@ from pathlib import Path
 from shutil import which
 from typing import Literal, overload
 
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import (
 	LvmGroupInfo,
 	LvmPVInfo,

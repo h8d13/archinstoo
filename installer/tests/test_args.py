@@ -5,7 +5,8 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.args import ArchConfig, ArchConfigHandler, Arguments
+from archinstoo.lib.args import ArchConfig, ArchConfigHandler
+from archinstoo.lib.cli import Arguments
 from archinstoo.lib.models.applications import (
 	ApplicationConfiguration,
 	Audio,

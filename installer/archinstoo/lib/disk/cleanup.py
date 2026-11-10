@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import DiskError, SysCallError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import (
 	DiskEncryption,
 	DiskLayoutConfiguration,

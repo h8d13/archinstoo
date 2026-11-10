@@ -1,7 +1,7 @@
 import os
 from typing import TYPE_CHECKING, Self
 
-from archinstoo.lib import checkpoints, chroot, sysconfig, systemd
+from archinstoo.lib import checkpoints, chroot, host_services, sysconfig, systemd
 from archinstoo.lib.authentication import accounts
 from archinstoo.lib.bootloader.install import BootloaderInstaller
 from archinstoo.lib.disk import snapshots
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 	from types import TracebackType
 
 	from archinstoo.lib.args import ArchConfigHandler
-	from archinstoo.lib.general import SysCommand
+	from archinstoo.lib.command import SysCommand
 	from archinstoo.lib.models.bootloader import Bootloader
 	from archinstoo.lib.models.localization import LocaleConfiguration
 	from archinstoo.lib.models.mirrors import PacmanConfiguration
@@ -114,7 +114,7 @@ class Installer:
 
 		# If using accessibility tools in the live environment, append those
 		# to the packages list
-		if systemd.accessibility_tools_in_use():
+		if host_services.accessibility_tools_in_use():
 			self._base_packages.extend(ACCESSIBILITY_PACKAGES)
 
 		self.initramfs = Initramfs()
@@ -193,7 +193,7 @@ class Installer:
 		self._layout_teardown_required = False
 
 	def sanity_check(self) -> None:
-		systemd.wait_iso_services(
+		host_services.wait_iso_services(
 			self._handler.args.skip_ntp, self._handler.args.skip_wkd
 		)
 

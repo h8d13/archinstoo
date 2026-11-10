@@ -13,7 +13,7 @@ from archinstoo.lib.models.network import (
 	NicType,
 )
 from archinstoo.lib.network import network_handler
-from archinstoo.lib.network.network_handler import NetworkHandler
+from archinstoo.lib.network.network_handler import install_network_config
 
 STUB = '/run/systemd/resolve/stub-resolv.conf'
 
@@ -51,9 +51,7 @@ def test_network_types_resolve_through_resolved(
 	(tmp_path / 'etc').mkdir()
 	installation, enabled = _session(tmp_path, monkeypatch)
 
-	NetworkHandler().install_network_config(
-		NetworkConfiguration(nic_type), installation
-	)
+	install_network_config(NetworkConfiguration(nic_type), installation)
 
 	assert 'systemd-resolved' in enabled
 	assert (tmp_path / 'etc/resolv.conf').readlink() == Path(STUB)
@@ -65,9 +63,7 @@ def test_nm_iwd_keeps_its_backend_drop_in(
 	(tmp_path / 'etc').mkdir()
 	installation, _ = _session(tmp_path, monkeypatch)
 
-	NetworkHandler().install_network_config(
-		NetworkConfiguration(NicType.NM_IWD), installation
-	)
+	install_network_config(NetworkConfiguration(NicType.NM_IWD), installation)
 
 	assert (
 		tmp_path / 'etc/NetworkManager/conf.d/wifi_backend.conf'
@@ -105,7 +101,7 @@ def test_dns_choice_lands_in_resolved_conf_d(
 	(tmp_path / 'etc').mkdir()
 	installation, _ = _session(tmp_path, monkeypatch)
 
-	NetworkHandler().install_network_config(
+	install_network_config(
 		NetworkConfiguration(nic_type, dns=DnsConfiguration(DnsProvider.QUAD9)),
 		installation,
 	)
@@ -121,9 +117,7 @@ def test_no_dns_choice_writes_nothing(
 	(tmp_path / 'etc').mkdir()
 	installation, _ = _session(tmp_path, monkeypatch)
 
-	NetworkHandler().install_network_config(
-		NetworkConfiguration(NicType.NM), installation
-	)
+	install_network_config(NetworkConfiguration(NicType.NM), installation)
 
 	assert not (tmp_path / 'etc/systemd/resolved.conf.d').exists()
 
@@ -158,9 +152,7 @@ def test_iso_copy_falls_back_to_wired_dhcp(
 	installation, enabled = _session(tmp_path, monkeypatch)
 	_iso_sources(monkeypatch, tmp_path)
 
-	NetworkHandler().install_network_config(
-		NetworkConfiguration(NicType.ISO), installation
-	)
+	install_network_config(NetworkConfiguration(NicType.ISO), installation)
 
 	wired = (tmp_path / 'etc/systemd/network/20-wired.network').read_text()
 	assert 'DHCP=yes' in wired

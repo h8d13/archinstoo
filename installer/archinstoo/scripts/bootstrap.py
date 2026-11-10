@@ -18,7 +18,6 @@
 # BOOT_MIRROR x86_64 mirror the tarball and packages come from
 
 import argparse
-import sys
 from pathlib import Path
 
 from archinstoo.lib.bootstrap import BootError, bootstrap
@@ -47,6 +46,3 @@ def main() -> int:
 		return 1
 	except KeyboardInterrupt:
 		return 130
-
-
-sys.exit(main())

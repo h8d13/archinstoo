@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.mirrors import (
 	CustomRepository,
 	PacmanConfiguration,
@@ -16,6 +15,7 @@ from archinstoo.lib.models.mirrors import (
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pm import config as pm_config
 from archinstoo.lib.pm.config import PacmanConfig
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from pathlib import Path

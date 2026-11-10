@@ -5,5 +5,7 @@
 from archinstoo.lib.schema import SCHEMA_PATH
 from archinstoo.lib.schema_gen import write
 
-write()
-print(f'wrote {SCHEMA_PATH}')
+
+def main() -> None:
+	write()
+	print(f'wrote {SCHEMA_PATH}')

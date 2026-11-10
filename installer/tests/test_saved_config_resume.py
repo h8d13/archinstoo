@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-from archinstoo.lib.general import jsonify
 from archinstoo.lib.models.device import (
 	BDevice,
 	DiskLayoutConfiguration,
@@ -17,6 +16,7 @@ from archinstoo.lib.models.device import (
 	Unit,
 	_DeviceInfo,
 )
+from archinstoo.lib.serialize import jsonify
 
 
 class _StubDeviceHandler:

@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
+from archinstoo.lib.command import run
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.general import run
 
 
 def test_run_failure_caught_by_either_vocabulary() -> None:

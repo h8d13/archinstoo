@@ -3,8 +3,8 @@ from enum import Enum
 from functools import cached_property
 from pathlib import Path
 
+from .command import SysCommand
 from .exceptions import RequirementError, SysCallError
-from .general import SysCommand
 from .output import debug
 
 

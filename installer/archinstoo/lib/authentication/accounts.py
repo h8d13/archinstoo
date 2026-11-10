@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.authentication.crypt import hash_password
 from archinstoo.lib.authentication.stash import clone_user_stash
 from archinstoo.lib.chroot import chroot_prefix
+from archinstoo.lib.command import run
 from archinstoo.lib.exceptions import SysCallError
-from archinstoo.lib.general import run
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug, error, info, warn

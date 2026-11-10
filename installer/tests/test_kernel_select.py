@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.lib.interactions import system_conf
+from archinstoo.lib.kernel import selectors
 from archinstoo.lib.models.kernel import kernel_names_error
 from archinstoo.lib.pm import packages
 from archinstoo.lib.tui.result import Result, ResultType
@@ -51,11 +51,11 @@ def _pick(
 		prompts.append((header, preset))
 		return queue.pop(0)
 
-	monkeypatch.setattr(system_conf, 'SelectMenu', FakeMenu)
+	monkeypatch.setattr(selectors, 'SelectMenu', FakeMenu)
 	monkeypatch.setattr(FakeMenu, 'picks', picks, raising=False)
-	monkeypatch.setattr(system_conf, 'prompt_text', fake_prompt)
+	monkeypatch.setattr(selectors, 'prompt_text', fake_prompt)
 	monkeypatch.setattr(
-		system_conf,
+		selectors,
 		'missing_packages',
 		lambda names: [n for n in names if n not in _REPOS],
 	)
@@ -65,31 +65,31 @@ def _pick(
 def test_stock_pick_skips_the_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
 	prompts = _pick(monkeypatch, ['linux', 'linux-lts'])
 
-	assert system_conf.select_kernel(['linux']) == ['linux', 'linux-lts']
+	assert selectors.select_kernel(['linux']) == ['linux', 'linux-lts']
 	assert prompts == []
 
 
 def test_typed_names_join_the_picks(monkeypatch: pytest.MonkeyPatch) -> None:
-	_pick(monkeypatch, ['linux', system_conf._TYPE_KERNEL], ['linux-rpi5 linux'])
+	_pick(monkeypatch, ['linux', selectors._TYPE_KERNEL], ['linux-rpi5 linux'])
 
-	assert system_conf.select_kernel([]) == ['linux', 'linux-rpi5']
+	assert selectors.select_kernel([]) == ['linux', 'linux-rpi5']
 
 
 def test_skipped_prompt_keeps_the_ticked(monkeypatch: pytest.MonkeyPatch) -> None:
-	_pick(monkeypatch, ['linux-zen', system_conf._TYPE_KERNEL], [None])
+	_pick(monkeypatch, ['linux-zen', selectors._TYPE_KERNEL], [None])
 
-	assert system_conf.select_kernel([]) == ['linux-zen']
+	assert selectors.select_kernel([]) == ['linux-zen']
 
 
 def test_unknown_name_is_asked_again(monkeypatch: pytest.MonkeyPatch) -> None:
 	# a typo never reaches pacstrap: the found names stay in the field
 	prompts = _pick(
 		monkeypatch,
-		[system_conf._TYPE_KERNEL],
+		[selectors._TYPE_KERNEL],
 		['linux-rpi5 linux-rpi6', 'linux-rpi5 linux-mainline'],
 	)
 
-	assert system_conf.select_kernel([]) == ['linux-rpi5', 'linux-mainline']
+	assert selectors.select_kernel([]) == ['linux-rpi5', 'linux-mainline']
 	(_, first), (header, second) = prompts
 	assert first is None
 	assert second == 'linux-rpi5'
@@ -100,7 +100,7 @@ def test_typed_name_stays_tickable(monkeypatch: pytest.MonkeyPatch) -> None:
 	# a config's board kernel used to be dropped on reopening the menu
 	_pick(monkeypatch, ['linux-rpi5'])
 
-	assert system_conf.select_kernel(['linux-rpi5']) == ['linux-rpi5']
+	assert selectors.select_kernel(['linux-rpi5']) == ['linux-rpi5']
 	assert [i.value for i in FakeMenu.group.selected_items] == ['linux-rpi5']
 
 
