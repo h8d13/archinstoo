@@ -1,9 +1,9 @@
 import textwrap
 from typing import TYPE_CHECKING
 
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.output import debug, info, warn
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -21,56 +21,50 @@ ISO_IWD_DIR = '/var/lib/iwd'
 ISO_NETWORK_DIR = '/etc/systemd/network'
 
 
-class NetworkHandler:
-	def install_network_config(
-		self,
-		network_config: NetworkConfiguration,
-		installation: Installer,
-		profile_config: ProfileConfiguration | None = None,
-	) -> None:
-		info('Writing network configuration...')
-		match network_config.type:
-			case NicType.ISO:
-				_copy_iso_network_config(
-					installation, enable_services=True
-				)
-			case NicType.NM | NicType.NM_IWD:
-				installation.add_additional_packages(
-					network_config.type.packages
-				)
+def install_network_config(
+	network_config: NetworkConfiguration,
+	installation: Installer,
+	profile_config: ProfileConfiguration | None = None,
+) -> None:
+	info('Writing network configuration...')
+	match network_config.type:
+		case NicType.ISO:
+			_copy_iso_network_config(installation, enable_services=True)
+		case NicType.NM | NicType.NM_IWD:
+			installation.add_additional_packages(
+				network_config.type.packages
+			)
 
-				if (
-					profile_config
-					and profile_config.profiles
-					and profile_config.has_desktop_profile()
-				):
-					installation.add_additional_packages(
-						NM_DESKTOP_EXTRA
-					)
+			if (
+				profile_config
+				and profile_config.profiles
+				and profile_config.has_desktop_profile()
+			):
+				installation.add_additional_packages(NM_DESKTOP_EXTRA)
 
-				installation.enable_service('NetworkManager')
+			installation.enable_service('NetworkManager')
 
-				if network_config.type == NicType.NM_IWD:
-					_configure_nm_iwd(installation)
-					installation.disable_service('iwd')
+			if network_config.type == NicType.NM_IWD:
+				_configure_nm_iwd(installation)
+				installation.disable_service('iwd')
 
-			case NicType.IWD:
-				installation.add_additional_packages(
-					network_config.type.packages
-				)
-				_configure_iwd_standalone(installation)
-				installation.enable_service('iwd')
-				installation.enable_service('systemd-networkd')
+		case NicType.IWD:
+			installation.add_additional_packages(
+				network_config.type.packages
+			)
+			_configure_iwd_standalone(installation)
+			installation.enable_service('iwd')
+			installation.enable_service('systemd-networkd')
 
-			case NicType.MANUAL:
-				for nic in network_config.nics:
-					_configure_nic(installation, nic)
-				installation.enable_service('systemd-networkd')
+		case NicType.MANUAL:
+			for nic in network_config.nics:
+				_configure_nic(installation, nic)
+			installation.enable_service('systemd-networkd')
 
-		_use_resolved(installation)
+	_use_resolved(installation)
 
-		if network_config.dns:
-			_configure_dns(installation, network_config.dns)
+	if network_config.dns:
+		_configure_dns(installation, network_config.dns)
 
 
 def _configure_dns(installation: Installer, dns: DnsConfiguration) -> None:

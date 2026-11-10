@@ -6,18 +6,16 @@
 # Generating rather than transcribing is what keeps them from disagreeing with
 # the install; tests/test_schema.py fails when the committed file goes stale.
 #
-# Sections come out in the order the install runs them: each names the call in
-# scripts/guided.py:perform_installation that straps it, and render() sorts by
-# where that call sits in the source. Reorder guided.py and the schema follows;
-# nothing here is hand-ordered past the sections sharing one call.
+# Sections come out in the order SECTIONS lists them, which is the order the
+# install runs them. `site` names the call in
+# scripts/guided.py:perform_installation that straps a section; it is the
+# banner above it in the file, nothing parses it.
 #
 #     python -m archinstoo --script schema
 
-import ast
 import json
 from dataclasses import dataclass
-from pathlib import Path
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 from archinstoo.lib import installer
 from archinstoo.lib.applications.cat.audio import AudioApp
@@ -64,6 +62,7 @@ from archinstoo.lib.schema import SCHEMA_PATH
 if TYPE_CHECKING:
 	from collections.abc import Callable
 	from enum import StrEnum
+	from pathlib import Path
 
 	from archinstoo.lib.profile.base import Profile
 
@@ -104,9 +103,8 @@ def _power_management() -> Table:
 class Section:
 	key: str
 	value: Callable[[], Value]
-	# the call in perform_installation that straps this section, as written
-	# there. sections sharing one keep their order below, which is the order
-	# inside that method (minimal_installation, install_applications)
+	# the call in perform_installation that straps this section: the banner
+	# it is filed under in schema.toml
 	site: str
 	# where a saved config keeps the choice this section answers, as a key path
 	# under app_config. _resolve walks these instead of naming each category
@@ -186,19 +184,19 @@ SECTIONS: tuple[Section, ...] = (
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
-		site='ShellApp().install',
+		site='install_shells',
 	),
 	Section(
 		'bluetooth',
 		lambda: BluetoothApp().packages,
 		pick=('bluetooth_config', 'enabled'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'thunderbolt',
 		lambda: ThunderboltApp().packages,
 		pick=('thunderbolt_config', 'enabled'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'audio_firmware',
@@ -206,7 +204,7 @@ SECTIONS: tuple[Section, ...] = (
 			'sof': AudioApp().sof_packages,
 			'alsa': AudioApp().alsa_packages,
 		},
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'audio',
@@ -215,37 +213,37 @@ SECTIONS: tuple[Section, ...] = (
 			Audio.PULSEAUDIO.value: AudioApp().pulseaudio_packages,
 		},
 		pick=('audio_config', 'audio'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'media_codecs',
 		lambda: MediaCodecsApp().packages,
 		pick=('media_codecs_config', 'enabled'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'flatpak',
 		lambda: FlatpakApp().packages,
 		pick=('flatpak_config', 'enabled'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'power_management',
 		_power_management,
 		pick=('power_management_config', 'power_management'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'cpu_scheduler',
 		lambda: CPUSchedulerApp().packages,
 		pick=('cpu_scheduler_config', 'scheduler'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'printing',
 		lambda: PrintServiceApp().packages,
 		pick=('print_service_config', 'enabled'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'firewalls',
@@ -254,31 +252,31 @@ SECTIONS: tuple[Section, ...] = (
 			Firewall.FWD.value: FirewallApp().fwd_packages,
 		},
 		pick=('firewall_config', 'firewall'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'management',
 		lambda: _one_to_one(Management),
 		pick=('management_config', 'tools'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'monitors',
 		lambda: _one_to_one(Monitor),
 		pick=('monitor_config', 'monitor'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'editors',
 		lambda: {e.value: e.packages for e in Editor},
 		pick=('editor_config', 'editor'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'terminals',
 		lambda: {t.value: t.packages for t in Terminal},
 		pick=('terminal_config', 'terminal'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'security',
@@ -298,7 +296,7 @@ SECTIONS: tuple[Section, ...] = (
 			},
 		},
 		pick=('security_config', 'tools'),
-		site='application_handler.install_applications',
+		site='install_applications',
 	),
 	Section(
 		'snapshots',
@@ -327,17 +325,17 @@ SECTIONS: tuple[Section, ...] = (
 	Section(
 		'network_iso_extra',
 		lambda: ISO_PSK_EXTRA,
-		site='network_handler.install_network_config',
+		site='install_network_config',
 	),
 	Section(
 		'network',
 		lambda: {n.value: n.packages for n in NicType},
-		site='network_handler.install_network_config',
+		site='install_network_config',
 	),
 	Section(
 		'network_desktop_extra',
 		lambda: NM_DESKTOP_EXTRA,
-		site='network_handler.install_network_config',
+		site='install_network_config',
 	),
 	Section(
 		'gfx_drivers',
@@ -453,50 +451,11 @@ def _tables(section: Section) -> list[tuple[str, Table]]:
 	return nested or [(_key(section.key), flat)]
 
 
-_GUIDED = Path(__file__).parents[1] / 'scripts' / 'guided.py'
-
-
-class _Calls(ast.NodeVisitor):
-	# every call in perform_installation, in source order, as the callee is
-	# written: `installation.setup_swap`, `ShellApp().install`, `Installer`
-	def __init__(self) -> None:
-		self.order: list[str] = []
-
-	@override
-	def visit_Call(self, node: ast.Call) -> None:
-		name = ast.unparse(node.func)
-		if name not in self.order:
-			self.order.append(name)
-		self.generic_visit(node)
-
-
-def site_order() -> list[str]:
-	tree = ast.parse(_GUIDED.read_text())
-	fn = next(
-		n
-		for n in tree.body
-		if isinstance(n, ast.FunctionDef) and n.name == 'perform_installation'
-	)
-	calls = _Calls()
-	calls.visit(fn)
-	return calls.order
-
-
-def ordered() -> list[Section]:
-	# SECTIONS in install order. a site perform_installation no longer calls
-	# is a rename or a dropped step, either way the section has to follow
-	order = site_order()
-	missing = sorted({s.site for s in SECTIONS} - set(order))
-	if missing:
-		raise ValueError(f'sites not called in perform_installation: {missing}')
-	return sorted(SECTIONS, key=lambda s: order.index(s.site))
-
-
 def render() -> str:
 	lines = [_HEADER]
 
 	site = None
-	for section in ordered():
+	for section in SECTIONS:
 		if section.site != site:
 			site = section.site
 			lines.append(f'# -- {site} --')

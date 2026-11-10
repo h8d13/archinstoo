@@ -1,8 +1,5 @@
-import http.client
 import json
-import urllib.error
 import urllib.parse
-import urllib.request
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
@@ -10,7 +7,6 @@ from typing import NotRequired, Self, TypedDict
 
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import debug
-from archinstoo.lib.utils.net import DownloadTimer, ping
 
 
 def _parse_datetime(value: str | datetime | None) -> datetime | None:
@@ -72,19 +68,19 @@ class MirrorStatusEntryV3:
 	duration_stddev: float | None = None
 	completion_pct: float | None = None
 	score: float | None = None
-	_latency: float | None = field(default=None, repr=False)
-	_speed: float | None = field(default=None, repr=False)
-	_hostname: str | None = field(default=None, repr=False)
-	_speedtest_retries: int | None = field(default=None, repr=False)
+	# measured by pm/speedtest.py, which caches it here: bytes/s off a
+	# core.db download. None until someone asked
+	speed: float | None = field(default=None, repr=False)
+	hostname: str | None = field(default=None, repr=False)
 
 	def __post_init__(self) -> None:
 		if self.score is not None:
 			self.score = round(self.score)
 
-		self._hostname = urllib.parse.urlparse(self.url).netloc.split(':', 1)[0]
+		self.hostname = urllib.parse.urlparse(self.url).netloc.split(':', 1)[0]
 
 		debug(
-			f'Loaded mirror {self._hostname}'
+			f'Loaded mirror {self.hostname}'
 			+ (f' with score {self.score}' if self.score else '')
 		)
 
@@ -111,94 +107,6 @@ class MirrorStatusEntryV3:
 	@property
 	def server_url(self) -> str:
 		return f'{self.url}$repo/os/$arch'
-
-	@property
-	def speed(self) -> float:
-		if self._speed is None:
-			if not self._speedtest_retries:
-				self._speedtest_retries = 3
-			elif self._speedtest_retries < 1:
-				self._speedtest_retries = 1
-
-			from archinstoo.lib.hardware import SysInfo
-
-			test_db = f'{self.url}core/os/{SysInfo.arch()}/core.db'
-
-			retry = 0
-			while retry < self._speedtest_retries and self._speed is None:
-				debug(
-					'Checking download speed of '
-					f'{self._hostname}[{self.score}] by '
-					f'fetching: {test_db}'
-				)
-
-				req = urllib.request.Request(url=test_db)  # noqa: S310
-
-				try:
-					# timer first: arms SIGALRM before urlopen so
-					# the timeout bounds the connect phase too, not
-					# just read(). Else a multi-homed unreachable
-					# mirror walks every dead address at 5s each
-					# (Errno 101 / pre-403 stalls) before skipping.
-					with (
-						DownloadTimer(timeout=5) as timer,
-						urllib.request.urlopen(  # noqa: S310
-							req, None, 5
-						) as handle,
-					):
-						size = len(handle.read())
-
-					if timer.time is None:
-						raise RuntimeError(
-							'DownloadTimer exited without '
-							'recording time'
-						)
-					self._speed = size / timer.time
-					mib = int(self._speed / 1024 / 1024 * 100) / 100
-					debug(f'    speed: {self._speed} ({mib}MiB/s)')
-				# Do not retry error
-				except urllib.error.URLError as error:
-					debug(
-						'    speed: <undetermined> '
-						f'({error}), skip'
-					)
-					self._speed = 0
-				# Do retry error
-				except (
-					http.client.IncompleteRead,
-					ConnectionResetError,
-				) as error:
-					debug(
-						'    speed: <undetermined> '
-						f'({error}), retry'
-					)
-				# Catch all
-				except Exception as error:
-					debug(
-						'    speed: <undetermined> '
-						f'({error}), skip'
-					)
-					self._speed = 0
-
-				retry += 1
-
-			if self._speed is None:
-				self._speed = 0
-
-		return self._speed
-
-	@property
-	def latency(self) -> float | None:
-		if self._latency is None:
-			debug(f'Checking latency for {self.url}')
-			if self._hostname is None:
-				raise RuntimeError(
-					f'Mirror has no hostname: {self.url}'
-				)
-			self._latency = ping(self._hostname, timeout=2)
-			debug(f'  latency: {self._latency}')
-
-		return self._latency
 
 
 @dataclass

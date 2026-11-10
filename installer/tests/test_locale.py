@@ -14,8 +14,7 @@ import pytest
 
 from archinstoo.lib.exceptions import FetchError, SysCallError
 from archinstoo.lib.installer import Installer
-from archinstoo.lib.localization import catalog
-from archinstoo.lib.menu import locale_menu
+from archinstoo.lib.localization import catalog, locale_menu
 from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.utils.host import Host
 from archinstoo.lib.utils.paths import data_paths
@@ -778,7 +777,7 @@ def test_preselected_layout_can_be_cleared_back_to_none(
 	assert not menu._locale_conf.xkb_variant
 
 
-# LocaleConfiguration.default() reads the host keymap, and the locale menu
+# LocaleConfiguration.default() is fed the host keymap, and the locale menu
 # builds a default on every preview redraw, so the probe has to be cached or
 # it forks localectl per keystroke (on a host without one, per keystroke in
 # the log too, which is how this was spotted on alpine).
@@ -794,7 +793,7 @@ def test_host_keymap_probe_is_cached(monkeypatch: pytest.MonkeyPatch) -> None:
 
 	assert not catalog.get_kb_layout()
 	assert not catalog.get_kb_layout()
-	assert LocaleConfiguration.default().kb_layout == 'us'
+	assert LocaleConfiguration.default(catalog.get_kb_layout()).kb_layout == 'us'
 	assert len(calls) == 1
 
 	catalog.get_kb_layout.cache_clear()

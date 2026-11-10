@@ -6,10 +6,11 @@ from pathlib import Path
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.command import SysCommand, SysCommandWorker, run
+from archinstoo.lib.disk.lsblk import get_lsblk_info
 from archinstoo.lib.disk.lvm import lvm_deactivate_vg_on
-from archinstoo.lib.disk.utils import get_lsblk_info, umount
+from archinstoo.lib.disk.utils import umount
 from archinstoo.lib.exceptions import DiskError, SysCallError
-from archinstoo.lib.general import SysCommand, SysCommandWorker, run
 from archinstoo.lib.models.device import DEFAULT_ITER_TIME, EncryptionCipher, LuksPbkdf
 from archinstoo.lib.output import debug, info
 

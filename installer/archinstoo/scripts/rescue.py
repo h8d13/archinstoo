@@ -5,10 +5,11 @@ from pathlib import Path
 
 from archinstoo.lib.args import get_arch_config_handler
 from archinstoo.lib.chroot import drop_to_shell
+from archinstoo.lib.command import SysCommand
+from archinstoo.lib.disk.lsblk import get_all_lsblk_info, get_lsblk_by_mountpoint
 from archinstoo.lib.disk.luks import Luks2
-from archinstoo.lib.disk.utils import get_all_lsblk_info, get_lsblk_by_mountpoint, mount
+from archinstoo.lib.disk.utils import mount
 from archinstoo.lib.exceptions import DiskError, SysCallError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.device import FilesystemType, LsblkInfo, Unit
 from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, error, info, warn
@@ -365,7 +366,7 @@ def select_luks_partitions(partitions: list[LsblkInfo]) -> list[LsblkInfo]:
 			return []
 
 
-def rescue() -> None:
+def main() -> None:
 	# Main rescue mode entry point.
 	handler = get_arch_config_handler()
 	args = handler.args
@@ -498,6 +499,3 @@ def rescue() -> None:
 				warn(f'Failed to lock {luks.luks_dev_path}: {e}')
 
 	info('Rescue mode completed.')
-
-
-rescue()

@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from archinstoo.lib.chroot import drop_to_shell
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import RequirementError
-from archinstoo.lib.general import SysCommand
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.output import debug, error, info, logger, warn
 from archinstoo.lib.utils.host import Host
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
@@ -89,20 +89,31 @@ _SILENT: Final = '--silent' in sys.argv
 _QUIET_FLAGS = ' --noprogressbar' if _SILENT else ''
 
 
-def _auto_recovery(err: Exception) -> Callable[[], bool] | None:
-	# the tail str(err) keeps is enough: pacman ends a failed transaction
-	# with the line naming its cause
-	out = str(err).lower()
+_KEYRING_ERRORS: Final = (
+	'gpgme error',
+	'no data',
+	'signature',
+	'keyring is not writable',
+	'key missing from keyring',
+)
+
+
+def _auto_recovery(err: Exception) -> tuple[str, Callable[[], bool]] | None:
+	# pacman's output alone when the error carries it: the message leads
+	# with the argv, and a package name there ('...-signature-plugin')
+	# would read as a cause
+	log = getattr(err, 'worker_log', b'')
+	out = (log.decode(errors='ignore') if log else str(err)).lower()
 
 	if 'invalid or corrupted package' in out:
-		warn('Detected corrupted package: resetting keyring...')
-		return Pacman.reset_keyring
-	if any(s in out for s in ('gpgme error', 'no data', 'signature')):
-		warn('Detected keyring/signature issue: resetting keyring...')
-		return Pacman.reset_keyring
+		return 'corrupted package: resetting keyring', Pacman.reset_keyring
+	if any(s in out for s in _KEYRING_ERRORS):
+		return (
+			'keyring/signature issue: resetting keyring',
+			Pacman.reset_keyring,
+		)
 	if 'could not satisfy dependencies' in out:
-		warn('Detected dependency issue: resetting pacman.conf...')
-		return reset_conf
+		return 'dependency issue: resetting pacman.conf', reset_conf
 	return None
 
 
@@ -196,37 +207,49 @@ class Pacman:
 		*args: object,
 		**kwargs: object,
 	) -> None:
-		def attempt() -> Exception | None:
+		# a known cause gets its fix before anyone is asked, on whichever
+		# attempt it shows up; once each, a fix that did not help would loop
+		tried: set[Callable[[], bool]] = set()
+		while True:
 			try:
 				func(*args, **kwargs)
-			except Exception as err:
+			except Exception as e:
+				err = e
 				error(f'{error_message}: {err}')
-				return err
-			return None
-
-		if not (err := attempt()):
-			return
-		recovery = _auto_recovery(err)
-		if recovery and recovery() and not (err := attempt()):
-			return
-		while not _SILENT and _can_prompt():
-			choice = _choose()
-			if choice == 'exit':
-				break
-			if choice == 'shell':
-				self._shell()
-			if (retry_err := attempt()) is None:
+			else:
 				return
-			err = retry_err
-		raise RequirementError(f'{bail_message}: {err}') from err
 
-	def _shell(self) -> None:
+			found = _auto_recovery(err)
+			if found and found[1] not in tried:
+				cause, recovery = found
+				tried.add(recovery)
+				warn(f'Detected {cause}...')
+				if recovery():
+					continue
+
+			if _SILENT or not _can_prompt() or not self._wants_retry():
+				raise RequirementError(
+					f'{bail_message}: {err}'
+				) from err
+
+	def _wants_retry(self) -> bool:
+		# no shell to fix it in: ask again rather than retry unchanged
+		while (choice := _choose()) == 'shell' and not self._shell():
+			pass
+		return choice != 'exit'
+
+	def _shell(self) -> bool:
 		if self.target == Path('/'):
 			# the running system: arch-chroot / would remount /proc, /dev
 			info('Fix it with pacman from another terminal, then retry.')
-			return
+			return False
+		if not (self.target / 'usr/bin/bash').exists():
+			# a failed base strap: nothing in there for arch-chroot to run
+			info('No shell in the target yet: use another terminal.')
+			return False
 		info("Chrooting into the target, 'exit' or Ctrl+D retries")
 		drop_to_shell(self.target)
+		return True
 
 	def strap(self, packages: str | list[str]) -> None:
 		# no -Sy here: pacstrap syncs the target's own db, and '/' installs

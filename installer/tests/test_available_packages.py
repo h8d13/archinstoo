@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.mirrors import CustomRepository, SignCheck, SignOption
 from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.pm import config, packages
 from archinstoo.lib.pm.config import PacmanConfig
 from archinstoo.lib.pm.pacman import Pacman
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from pathlib import Path

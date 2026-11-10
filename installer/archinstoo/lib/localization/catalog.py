@@ -4,13 +4,13 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import (
 	FetchError,
 	RequirementError,
 	ServiceError,
 	SysCallError,
 )
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.utils.env import Env
 from archinstoo.lib.utils.host import Host
@@ -366,7 +366,7 @@ def verify_x11_keyboard_layout(layout: str) -> bool:
 
 @cache
 def get_kb_layout() -> str:
-	# cached: LocaleConfiguration.default() calls this, and the locale menu
+	# cached: every LocaleConfiguration.default() is fed this, and the locale menu
 	# builds a default per preview redraw, so an uncached probe forks
 	# localectl on every keystroke (and on a host without one, logs the same
 	# failure that many times). set_kb_layout() clears it when it moves

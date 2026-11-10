@@ -5,16 +5,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.chroot import chroot_prefix
+from archinstoo.lib.command import SysCommand
+from archinstoo.lib.disk.lsblk import get_lsblk_info, get_parent_device_path
 from archinstoo.lib.disk.lvm import lvm_pvseg_info
-from archinstoo.lib.disk.utils import get_lsblk_info, get_parent_device_path
 from archinstoo.lib.exceptions import (
 	DiskError,
 	HardwareIncompatibilityError,
 	SysCallError,
 )
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.linux_path import LPath
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	DiskEncryption,
@@ -25,6 +24,7 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.utils.host import Host
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer

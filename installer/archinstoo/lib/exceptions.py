@@ -14,7 +14,7 @@ class UnknownFilesystemFormatError(Exception):
 	pass
 
 
-# CalledProcessError subclass so both exec paths (SysCommand and general.run)
+# CalledProcessError subclass so both exec paths (SysCommand and command.run)
 # raise one type: 'except SysCallError' and 'except CalledProcessError' each
 # catch either path, whichever vocabulary the call site was written for.
 class SysCallError(CalledProcessError):

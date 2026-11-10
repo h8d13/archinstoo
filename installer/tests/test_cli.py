@@ -1,8 +1,10 @@
 # The early parse: run before bootstrap, it decides help, root and prepare.
 
+from dataclasses import fields
+
 import pytest
 
-from archinstoo.lib.cli import parse_early
+from archinstoo.lib.cli import Arguments, build_parser, parse_early
 
 
 @pytest.mark.parametrize(
@@ -30,3 +32,11 @@ def test_parse_early(
 
 	assert early.script == script
 	assert help_given is is_help
+
+
+def test_arguments_mirror_parser() -> None:
+	# ArchConfigHandler builds Arguments(**vars(namespace)): a flag added to
+	# one side only is a TypeError at startup, or a field no flag can set
+	parsed = vars(build_parser().parse_args([]))
+
+	assert set(parsed) == {f.name for f in fields(Arguments)}

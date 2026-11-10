@@ -1,7 +1,14 @@
 import json
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.models.mirrors import MirrorStatusListV3
+from archinstoo.lib.pm import speedtest
+
+if TYPE_CHECKING:
+	import pytest
+
+	from archinstoo.lib.models.mirrors import MirrorStatusEntryV3
 
 # Minimal slice of archlinux.org/mirrors/status/json/ (version 3)
 _ORG_JSON = json.dumps(
@@ -54,4 +61,22 @@ def test_mirror_entry_is_slotted() -> None:
 
 	assert not hasattr(entry, '__dict__')
 	# lazy probes still write back into their slots
-	assert entry._hostname == 'mirror.example.org'
+	assert entry.hostname == 'mirror.example.org'
+
+
+def test_mirror_speed_is_measured_once(monkeypatch: pytest.MonkeyPatch) -> None:
+	# the entry is plain data: pm/speedtest.py measures and keeps the result
+	# on it, so sorting a region never fetches a core.db twice
+	entry = MirrorStatusListV3.from_json(_ORG_JSON).urls[0]
+	runs: list[str] = []
+
+	def measure(mirror: MirrorStatusEntryV3, _retries: int) -> float:
+		runs.append(mirror.url)
+		return 2048.0
+
+	monkeypatch.setattr(speedtest, '_measure_speed', measure)
+
+	assert entry.speed is None
+	assert speedtest.mirror_speed(entry) == 2048.0
+	assert speedtest.mirror_speed(entry) == 2048.0
+	assert len(runs) == 1

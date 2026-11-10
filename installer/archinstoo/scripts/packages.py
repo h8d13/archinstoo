@@ -1,11 +1,11 @@
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from archinstoo.lib.applications.application_handler import ApplicationHandler
+from archinstoo.lib.applications.application_handler import install_applications
 from archinstoo.lib.args import (
 	ArchConfig,
 	ArchConfigHandler,
-	Arguments,
 	get_arch_config_handler,
 )
 from archinstoo.lib.configuration import resolve_config
@@ -17,6 +17,9 @@ from archinstoo.lib.output import info
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui import Tui
 from archinstoo.lib.utils.host import Host
+
+if TYPE_CHECKING:
+	from archinstoo.lib.cli import Arguments
 
 
 def show_menu(config: ArchConfig, _args: Arguments) -> None:
@@ -41,7 +44,6 @@ def show_menu(config: ArchConfig, _args: Arguments) -> None:
 def perform_installation(
 	handler: ArchConfigHandler,
 	profile_handler: ProfileHandler,
-	application_handler: ApplicationHandler,
 ) -> None:
 	# Installs profiles, applications, and packages on the running system.
 	# No disk ops, no bootloader, no kernel, no users.
@@ -61,9 +63,7 @@ def perform_installation(
 
 		# Applications
 		if app_config := config.app_config:
-			application_handler.install_applications(
-				installation, app_config, None
-			)
+			install_applications(installation, app_config, None)
 
 		# Profile (desktop environment, etc.)
 		if profile_config := config.profile_config:
@@ -97,19 +97,11 @@ def perform_installation(
 		info(f'Package installation completed in {elapsed_time:.1f}s')
 
 
-def packages() -> None:
+def main() -> None:
 	handler = get_arch_config_handler()
 
 	profile_handler = ProfileHandler()
-	application_handler = ApplicationHandler()
 
 	resolve_config(handler, show_menu)
 
-	perform_installation(
-		handler,
-		profile_handler,
-		application_handler,
-	)
-
-
-packages()
+	perform_installation(handler, profile_handler)

@@ -176,7 +176,7 @@ from archinstoo.scripts.dev import _launch as launch
 from archinstoo.scripts.dev._vm import CONSOLES, need_serial
 
 
-def vm() -> None:
+def main() -> None:
 	parser = argparse.ArgumentParser(
 		prog='python -m archinstoo --script dev.vm',
 		description=script_help(Path(__file__)),
@@ -282,6 +282,3 @@ def vm() -> None:
 	if getattr(args, 'serial', False):
 		need_serial()
 	args.func(args)
-
-
-vm()

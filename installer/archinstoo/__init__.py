@@ -75,7 +75,7 @@ from typing import TYPE_CHECKING
 from . import deps
 from ._version import GITSTAT, PKGVER, VERSION
 from .lib import output
-from .lib.checkpoints import _check_script, _run_script, clean_cache, clean_logs
+from .lib.checkpoints import clean_cache, clean_logs
 from .lib.cli import (
 	NO_DISK_SCRIPTS,
 	ROOTLESS_SCRIPTS,
@@ -87,13 +87,15 @@ from .lib.exceptions import SysCallError
 from .lib.hardware import SysInfo
 from .lib.output import FormattedOutput, debug, error, info, log, logger, warn
 from .lib.pm.pacman import Pacman
+from .lib.script_runner import _check_script, _run_script
 from .lib.tui.curses_menu import Tui
 from .lib.utils.env import Env
 from .lib.utils.host import Host, is_root, is_venv, kernel_info
 from .lib.utils.net import ping
 
 if TYPE_CHECKING:
-	from .lib.args import ArchConfigHandler, Arguments
+	from .lib.args import ArchConfigHandler
+	from .lib.cli import Arguments
 
 
 def _log_env_info() -> None:
@@ -260,7 +262,7 @@ def _log_sys_info(args: Arguments) -> None:
 	debug(f'Virtualization detected is VM: {SysInfo.is_vm()}')
 
 	if args.debug:
-		from .lib.disk.utils import disk_layouts
+		from .lib.disk.lsblk import disk_layouts
 
 		debug(f'Disk states before installing:\n{disk_layouts()}')
 

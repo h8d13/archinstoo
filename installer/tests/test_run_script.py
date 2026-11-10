@@ -6,7 +6,7 @@ from unittest import mock
 
 import pytest
 
-from archinstoo.lib import checkpoints
+from archinstoo.lib import script_runner
 
 
 def _raise_missing(name: str) -> None:
@@ -18,7 +18,7 @@ def test_missing_script_exits_with_hint() -> None:
 		mock.patch('importlib.import_module', _raise_missing),
 		pytest.raises(SystemExit) as exc,
 	):
-		checkpoints._run_script('nope')
+		script_runner._run_script('nope')
 	assert exc.value.code == 1
 
 
@@ -30,12 +30,12 @@ def test_missing_import_inside_script_propagates() -> None:
 		mock.patch('importlib.import_module', import_module),
 		pytest.raises(ModuleNotFoundError, match='yaml'),
 	):
-		checkpoints._run_script('guided')
+		script_runner._run_script('guided')
 
 
 def test_nested_script_resolves_to_subpackage() -> None:
 	with mock.patch('importlib.import_module') as import_module:
-		checkpoints._run_script('dev.vm')
+		script_runner._run_script('dev.vm')
 	import_module.assert_called_once_with('archinstoo.scripts.dev.vm')
 
 
@@ -50,7 +50,7 @@ def test_missing_namespace_or_nested_script_exits_with_hint(missing: str) -> Non
 		mock.patch('importlib.import_module', import_module),
 		pytest.raises(SystemExit) as exc,
 	):
-		checkpoints._run_script('dev.vm')
+		script_runner._run_script('dev.vm')
 	assert exc.value.code == 1
 
 
@@ -62,7 +62,7 @@ def test_missing_import_inside_nested_script_propagates() -> None:
 		mock.patch('importlib.import_module', import_module),
 		pytest.raises(ModuleNotFoundError),
 	):
-		checkpoints._run_script('dev.vm')
+		script_runner._run_script('dev.vm')
 
 
 @pytest.mark.parametrize(
@@ -73,7 +73,7 @@ def test_malformed_name_exits_with_hint(script: str) -> None:
 		mock.patch('importlib.import_module') as import_module,
 		pytest.raises(SystemExit) as exc,
 	):
-		checkpoints._run_script(script)
+		script_runner._run_script(script)
 	assert exc.value.code == 1
 	import_module.assert_not_called()
 
@@ -81,7 +81,7 @@ def test_malformed_name_exits_with_hint(script: str) -> None:
 @pytest.mark.parametrize('script', ['guided', 'list', 'dev.vm'])
 def test_check_script_finds_real_scripts(script: str) -> None:
 	with mock.patch('importlib.import_module') as import_module:
-		checkpoints._check_script(script)
+		script_runner._check_script(script)
 	# found by spec alone: importing would run it
 	import_module.assert_not_called()
 
@@ -89,5 +89,5 @@ def test_check_script_finds_real_scripts(script: str) -> None:
 @pytest.mark.parametrize('script', ['nope', 'dev.nope', 'nope.vm', 'dev', 'dev/vm'])
 def test_check_script_rejects_missing_names(script: str) -> None:
 	with pytest.raises(SystemExit) as exc:
-		checkpoints._check_script(script)
+		script_runner._check_script(script)
 	assert exc.value.code == 1

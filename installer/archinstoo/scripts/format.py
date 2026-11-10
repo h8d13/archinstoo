@@ -1,19 +1,22 @@
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from archinstoo import debug, error, info
 from archinstoo.lib.args import (
 	ArchConfig,
 	ArchConfigHandler,
-	Arguments,
 	get_arch_config_handler,
 )
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
-from archinstoo.lib.disk.utils import disk_layouts
+from archinstoo.lib.disk.lsblk import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.tui import Tui
+
+if TYPE_CHECKING:
+	from archinstoo.lib.cli import Arguments
 
 
 def show_menu(config: ArchConfig, _args: Arguments) -> None:
@@ -82,7 +85,7 @@ def _validate_silent(config: ArchConfig) -> None:
 		raise SystemExit(1)
 
 
-def format_disk() -> None:
+def main() -> None:
 	handler = get_arch_config_handler()
 
 	# Create handler instance once at the entry point and pass it through
@@ -98,6 +101,3 @@ def format_disk() -> None:
 		fs_handler.perform_filesystem_operations()
 
 	perform_installation(handler, device_handler)
-
-
-format_disk()

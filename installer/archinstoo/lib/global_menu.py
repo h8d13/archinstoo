@@ -26,21 +26,16 @@ from .bootloader.validation import validate_bootloader
 from .configuration import ConfigStore
 from .hardware import SysInfo
 from .interactions.general_conf import (
-	select_additional_packages,
-	select_aur_packages,
 	select_hostname,
 	select_ntp,
 	select_timezone,
 )
-from .interactions.system_conf import (
-	select_firmware,
-	select_kernel,
-	select_swap,
-	select_sysctl,
-)
+from .interactions.system_conf import select_firmware
+from .kernel.selectors import select_kernel, select_swap, select_sysctl
+from .localization.catalog import get_kb_layout
+from .localization.locale_menu import LocaleMenu
 from .menu.abstract_menu import CONFIG_KEY, AbstractMenu
 from .menu.driver_select import select_driver, select_gfx_packages
-from .menu.locale_menu import LocaleMenu
 from .models.bootloader import Bootloader, BootloaderConfiguration
 from .models.firmware import FirmwareConfiguration
 from .models.localization import LocaleConfiguration
@@ -49,6 +44,7 @@ from .network.network_menu import select_network
 from .output import FormattedOutput
 from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
+from .pm.selectors import select_additional_packages, select_aur_packages
 from .profile.config import ProfileConfiguration
 
 if TYPE_CHECKING:
@@ -419,7 +415,7 @@ class GlobalMenu(AbstractMenu[None]):
 	def _prev_locale(self, item: MenuItem) -> str:
 		config: LocaleConfiguration | None = item.value
 		if config is None or config.kb_layout is None:
-			config = LocaleConfiguration.default()
+			config = LocaleConfiguration.default(get_kb_layout())
 		return config.preview()
 
 	def _prev_network_config(self, item: MenuItem) -> str | None:

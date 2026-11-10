@@ -8,13 +8,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, TypeIs, runtime_checkable
 
 if TYPE_CHECKING:
-	from collections.abc import Sequence
+	from collections.abc import Callable, Sequence
 
 	from _typeshed import DataclassInstance
 
-from .linux_path import LPath
 from .utils.env import Env
 from .utils.host import Host
+from .utils.paths import LPath
 from .utils.unicode import unicode_ljust, unicode_rjust
 
 
@@ -185,6 +185,24 @@ log_level: int = logging.INFO
 TARGET_STATE_DIR = LPath('/etc/archinstoo.d')
 
 
+def _print_plain(text: str) -> None:
+	# the user's shell: never cleared, the startup output and scrollback
+	# stay ahead of the install log
+	print(text)
+	sys.stdout.flush()
+
+
+class _SinkHolder:
+	sink: Callable[[str], None] | None = None
+
+
+def set_sink(sink: Callable[[str], None] | None = None) -> None:
+	# where non-debug lines are shown. Whoever owns the screen registers
+	# itself (the TUI while curses is up) and clears it on the way out, so
+	# this module never has to know who that is
+	_SinkHolder.sink = sink
+
+
 def copy_artifacts(target: Path) -> None:
 	# Copy the run log and saved user config into the target so they survive reboot
 	# at /etc/archinstoo.d/<timestamp>_{install.log,config.json} for
@@ -351,6 +369,4 @@ def log(
 		text = _stylize_output(text, fg, bg, reset)
 
 	if level != logging.DEBUG:
-		from archinstoo.lib.tui.curses_menu import Tui
-
-		Tui.print(text)
+		(_SinkHolder.sink or _print_plain)(text)

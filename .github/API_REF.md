@@ -2,7 +2,7 @@
 
 How to extend, run, or edit the installer. Default flow:
 [guided.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/guided.py):
-`guided()` -> `resolve_config` (menu/save/confirm, or `--silent`) ->
+`main()` -> `resolve_config` (menu/save/confirm, or `--silent`) ->
 `FilesystemHandler` (partition/format, before anything is mounted) ->
 `perform_installation` (`with Installer(...)`, steps in order).
 
@@ -17,15 +17,16 @@ Dispatch:
 [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/__init__.py)
 `run_as_a_module()` -> `_prepare()` (deps bootstrap) ->
 `main()` (root check, host `pacman.conf` guard) ->
-[`_run_script`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/checkpoints.py),
-which just `import`s `archinstoo.scripts.<name>`. Rootless scripts skip
+[`_run_script`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/script_runner.py),
+which imports `archinstoo.scripts.<name>` and calls its `main()`. Rootless scripts skip
 `_prepare()` and `main()`: `run_as_a_module()` calls `_run_script` directly.
 
 Each script
 ([scripts/](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts))
-**runs on import** (calls its entry fn at file bottom, e.g. `guided()`), so
-importing == running. Files starting with `_` are helpers shared between
-scripts, not scripts (`_resolve.py`).
+defines `main()`, the entry the runner calls: importing one is safe, running
+it is `main()`. An int it returns is the exit status. A file without `main()`
+still runs on import, at module level. Files starting with `_` are helpers
+shared between scripts, not scripts (`_resolve.py`).
 
 - `--dry-run`: build + save config, then `SystemExit(0)`.
 - `--config <file>` / `--config-url <url>`: load saved selections, skip
@@ -38,7 +39,7 @@ scripts, not scripts (`_resolve.py`).
   [`cli.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/cli.py).
   `NO_DISK_SCRIPTS` (same file) skip the disk deps and are refused under
   `--script bootstrap`: their target is `/`.
-- New script = new file in `scripts/` that defines + calls an entry fn.
+- New script = new file in `scripts/` that defines `main()`.
   Reuse `get_arch_config_handler()` from
   [args.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/args.py)
   for config/args and `resolve_config(handler, show_menu)` from
@@ -67,8 +68,9 @@ flag for an enum, the way `firewall`/`management` do.
    `if app_config.media_codecs_config and ...enabled: MediaCodecsApp().install(...)`.
    Order is install order (apps run before bootloader, after users).
 4. [application_menu.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/application_menu.py):
-   a `MenuItem` with `key='media_codecs_config'`, its `_prev_media_codecs`
-   and `select_media_codecs`. Flags reuse `_select_enabled` / `_enabled_text`.
+   a `MenuItem` with `key='media_codecs_config'`, `preview_action=self._prev`
+   (one preview serves every category, labelled by the item's text) and
+   `select_media_codecs`. Flags reuse `_select_enabled` / `_enabled_text`.
    The global menu's Applications preview reads these previews, nothing to
    add there.
 5. [schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py):
@@ -125,24 +127,24 @@ set `ProfileType` (`ServerType` / `DesktopEnv` / `WindowMgr`). Contract
 The general case: work that is neither a category app nor a profile. Two
 decoupled parts.
 
-1. **The worker.** A plain class/module anywhere sensible under `lib/`,
-   exposing `install(install_session, <config it needs>)` and using the
+1. **The worker.** A plain function anywhere sensible under `lib/`,
+   taking `(install_session, <config it needs>)` and using the
    Installer primitives below. Canonical example, user shells:
    [shell.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/authentication/shell.py)
-   `ShellApp.install(install_session, users)` installs non-bash shells then
+   `install_shells(install_session, users)` installs non-bash shells then
    `chsh` per user. No `cat/` entry, no menu of its own.
 2. **The hook.** Call it from `perform_installation` in
    [guided.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/guided.py),
-   gated on the config it needs, at the right point in the order (`ShellApp`
+   gated on the config it needs, at the right point in the order (`install_shells`
    runs right after `create_users`). Mirror into
    [live.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/live.py)
    if it applies to live mode, and
    [packages.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/packages.py)
    if it concerns profiles/apps/packages/services. Each script holds
-   its own copy of the order, there is no shared list. Either inline
-   `Worker().install(...)` (the ShellApp style) or build a handler once in
-   the entry fn and thread it through the signature (the
-   `ProfileHandler`/`ApplicationHandler` style).
+   its own copy of the order, there is no shared list. Call the
+   function inline (`install_shells`, `install_applications`,
+   `install_network_config`); only a worker that keeps state is built once
+   in the entry fn and threaded through the signature (`ProfileHandler`).
 
 Order of Operations: place the hook relative to the steps it depends on
 (after users, before bootloader, ...). The `Installer` context isn't open
@@ -170,10 +172,10 @@ over a `MenuItemGroup` of `MenuItem`s
 ([menu_item.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/tui/menu_item.py)).
 
 - single-select: returns `result.get_value()`, e.g.
-  [`select_kb_layout`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/menu/locale_menu.py).
+  [`select_kb_layout`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/localization/locale_menu.py).
 - multi-select: pass `multi=True`, collect `result.get_values()` (often
   joined), e.g.
-  [`select_xkb_options`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/menu/locale_menu.py).
+  [`select_xkb_options`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/localization/locale_menu.py).
 
 ## Edit an existing install step
 

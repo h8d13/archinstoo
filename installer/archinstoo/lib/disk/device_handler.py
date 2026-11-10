@@ -26,13 +26,13 @@ try:
 except ModuleNotFoundError:
 	_HAS_PARTED = False
 
+from archinstoo.lib.command import SysCommand, SysCommandWorker
 from archinstoo.lib.exceptions import (
 	DiskError,
 	RequirementError,
 	SysCallError,
 	UnknownFilesystemFormatError,
 )
-from archinstoo.lib.general import SysCommand, SysCommandWorker
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.device import (
 	DEFAULT_ITER_TIME,
@@ -60,14 +60,9 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.output import debug, error, info
 
+from .lsblk import find_lsblk_info, get_all_lsblk_info, get_lsblk_info
 from .luks import Luks2, unlock_luks2_dev
-from .utils import (
-	find_lsblk_info,
-	get_all_lsblk_info,
-	get_lsblk_info,
-	mount,
-	umount,
-)
+from .utils import mount, umount
 
 if TYPE_CHECKING:
 	from collections.abc import Iterable

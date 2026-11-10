@@ -11,14 +11,15 @@ from archinstoo.lib.tui.types import (
 	PreviewStyle,
 )
 
-from .general import JSON
 from .output import debug, error, info, logger, restore_perms, warn
+from .serialize import JSON
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
 	from pathlib import Path
 
-	from .args import ArchConfig, ArchConfigHandler, Arguments
+	from .args import ArchConfig, ArchConfigHandler
+	from .cli import Arguments
 
 
 class ConfigStore:

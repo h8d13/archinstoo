@@ -61,14 +61,14 @@ run0 = ["polkit"]
 [stash]
 packages = ["git"]
 
-# -- ShellApp().install --
+# -- install_shells --
 [shells]
 bash = []
 zsh = ["zsh"]
 fish = ["fish"]
 rbash = []
 
-# -- application_handler.install_applications --
+# -- install_applications --
 [bluetooth]
 packages = ["bluez", "bluez-utils"]
 
@@ -165,7 +165,7 @@ refind = ["refind"]
 grub = ["grub"]
 limine = ["limine"]
 
-# -- network_handler.install_network_config --
+# -- install_network_config --
 [network_iso_extra]
 packages = ["iwd"]
 

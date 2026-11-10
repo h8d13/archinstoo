@@ -2,6 +2,7 @@
 # installs what lib.args needs, ArchConfigHandler parses it again after.
 
 import argparse
+from dataclasses import dataclass
 from pathlib import Path
 
 from archinstoo._version import VERSION
@@ -27,6 +28,27 @@ def script_help(path: Path) -> str:
 			break
 		lines.append(line.removeprefix('#').removeprefix(' '))
 	return '\n'.join(lines)
+
+
+# one field per build_parser() flag: ArchConfigHandler fills it from the
+# parsed namespace, tests/test_cli.py keeps the two in step
+@dataclass
+class Arguments:
+	config: Path | None = None
+	config_url: str | None = None
+	dry_run: bool = False
+	script: str | None = None
+	mountpoint: Path = Path('/mnt')
+	skip_ntp: bool = False
+	skip_wkd: bool = False
+	skip_boot: bool = False
+	skip_base: bool = False
+	skip_fstab: bool = False
+	debug: bool = False
+	offline: bool = False
+	advanced: bool = False
+	clean: bool = False
+	silent: bool = False
 
 
 def build_parser() -> argparse.ArgumentParser:

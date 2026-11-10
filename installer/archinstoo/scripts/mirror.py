@@ -5,34 +5,45 @@ import argparse
 #   archinstoo --script mirror -l
 #   archinstoo --script mirror France
 from archinstoo.lib.pm.mirrors import MirrorListHandler
+from archinstoo.lib.pm.speedtest import mirror_speed
 
-parser = argparse.ArgumentParser(
-	prog='python -m archinstoo --script mirror',
-	description='Test mirror speed sorting',
-)
-parser.add_argument(
-	'region', nargs='?', default='Germany', help='Region to test (default: Germany)'
-)
-parser.add_argument('--list', '-l', action='store_true', help='List available regions')
-args = parser.parse_args()
 
-handler = MirrorListHandler()
-handler.load_mirrors()
-regions = handler.get_mirror_regions()
+def main() -> None:
+	parser = argparse.ArgumentParser(
+		prog='python -m archinstoo --script mirror',
+		description='Test mirror speed sorting',
+	)
+	parser.add_argument(
+		'region',
+		nargs='?',
+		default='Germany',
+		help='Region to test (default: Germany)',
+	)
+	parser.add_argument(
+		'--list', '-l', action='store_true', help='List available regions'
+	)
+	args = parser.parse_args()
 
-if args.list:
-	print('Available regions:')
-	for r in regions:
-		print(f'  {r.name}')
-	raise SystemExit(0)
+	handler = MirrorListHandler()
+	handler.load_mirrors()
+	regions = handler.get_mirror_regions()
 
-region_name = args.region
-if region_name not in [r.name for r in regions]:
-	print(f'Region "{region_name}" not found. Use --list to see available regions.')
-	raise SystemExit(1)
+	if args.list:
+		print('Available regions:')
+		for r in regions:
+			print(f'  {r.name}')
+		raise SystemExit(0)
 
-mirrors = handler.get_status_by_region(region_name, speed_sort=True)
+	region_name = args.region
+	if region_name not in [r.name for r in regions]:
+		print(
+			f'Region "{region_name}" not found. '
+			'Use --list to see available regions.'
+		)
+		raise SystemExit(1)
 
-print(f'\nTop 3 mirrors for {region_name}:')
-for m in mirrors[:3]:
-	print(f'  {m.speed / 1024 / 1024:.1f} MiB/s - {m.url}')
+	mirrors = handler.get_status_by_region(region_name, speed_sort=True)
+
+	print(f'\nTop 3 mirrors for {region_name}:')
+	for m in mirrors[:3]:
+		print(f'  {mirror_speed(m) / 1024 / 1024:.1f} MiB/s - {m.url}')

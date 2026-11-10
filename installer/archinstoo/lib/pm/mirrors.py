@@ -21,6 +21,7 @@ from archinstoo.lib.models.packages import Repository
 from archinstoo.lib.output import FormattedOutput, debug, info, warn
 from archinstoo.lib.pm.config import PacmanConfig, set_parallel_downloads
 from archinstoo.lib.pm.pacman import MIRRORLIST, live
+from archinstoo.lib.pm.speedtest import mirror_speed
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_text, prompt_yes_no
@@ -537,8 +538,8 @@ class MirrorListHandler:
 			# simple counter to show progress
 			total = len(region_list)
 			for i, mirror in enumerate(region_list, 1):
-				# speed is lazy, access runs the test for this tick
-				_ = mirror.speed
+				# measured once and kept on the entry, this tick runs it
+				mirror_speed(mirror)
 				print(
 					f'\rTesting mirror speeds {i}/{total}',
 					end='',
@@ -548,7 +549,9 @@ class MirrorListHandler:
 
 			# Sort by speed descending (higher is better in bitrate
 			# form core.db download)
-			return sorted(region_list, key=lambda mirror: -mirror.speed)
+			return sorted(
+				region_list, key=lambda mirror: -mirror_speed(mirror)
+			)
 		# just return as-is without sorting?
 		return region_list
 

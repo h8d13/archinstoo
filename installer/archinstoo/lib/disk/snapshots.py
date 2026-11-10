@@ -2,8 +2,8 @@ import textwrap
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.chroot import chroot_prefix
+from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import DiskError, SysCallError
-from archinstoo.lib.general import SysCommand
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import SnapshotType
 from archinstoo.lib.output import debug, info

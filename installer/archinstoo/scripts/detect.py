@@ -83,11 +83,8 @@ def _firmware(offline: bool) -> None:
 		print(f'    {split:<26}{", ".join(modules)}')
 
 
-def detect_hw() -> None:
+def main() -> None:
 	offline = get_arch_config_handler().args.offline
 	_host()
 	_graphics()
 	_firmware(offline)
-
-
-detect_hw()

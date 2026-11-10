@@ -8,6 +8,8 @@ from curses.ascii import isprint
 from curses.textpad import Textbox
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, override
 
+from archinstoo.lib.output import set_sink
+
 from .help import Help
 from .menu_item import MenuItem, MenuItemGroup, MenuItemsState
 from .result import Result, ResultType
@@ -1490,6 +1492,8 @@ class Tui:
 		if Tui._t is None:
 			tui = self.init()
 			Tui._t = tui
+			# log lines land on the curses screen from here on
+			set_sink(Tui.print)
 
 	def __exit__(
 		self,
@@ -1566,6 +1570,7 @@ class Tui:
 			)
 
 		Tui._t = None
+		set_sink()
 
 	@staticmethod
 	def print(

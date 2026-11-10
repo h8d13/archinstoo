@@ -4,15 +4,16 @@ import urllib.error
 import urllib.parse
 from dataclasses import dataclass, field
 from json import JSONDecodeError
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self
 from urllib.request import Request, urlopen
 
 if TYPE_CHECKING:
 	from collections.abc import Callable
+	from pathlib import Path
 
-from archinstoo.lib.cli import DEFAULT_SCRIPT, build_parser
+from archinstoo.lib.cli import DEFAULT_SCRIPT, Arguments, build_parser
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.localization.catalog import get_kb_layout
 from archinstoo.lib.models.applications import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
@@ -46,25 +47,6 @@ def _set_parsed(
 			setattr(obj, key, parser(value))
 		elif key in config:
 			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
-
-
-@dataclass
-class Arguments:
-	config: Path | None = None
-	config_url: str | None = None
-	dry_run: bool = False
-	script: str | None = None
-	mountpoint: Path = Path('/mnt')
-	skip_ntp: bool = False
-	skip_wkd: bool = False
-	skip_boot: bool = False
-	skip_base: bool = False
-	skip_fstab: bool = False
-	debug: bool = False
-	offline: bool = False
-	advanced: bool = False
-	clean: bool = False
-	silent: bool = False
 
 
 @dataclass
@@ -196,7 +178,7 @@ class ArchConfig:
 
 		# Special cases that don't fit the pattern
 		arch_config.locale_config = LocaleConfiguration.parse_arg(
-			args_config.get('locale_config', {})
+			args_config.get('locale_config', {}), get_kb_layout()
 		)
 
 		if bootloader := args_config.get('bootloader_config'):

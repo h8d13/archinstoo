@@ -91,6 +91,7 @@
 │   │   ├── checkpoints
 │   │   ├── chroot
 │   │   ├── cli
+│   │   ├── command
 │   │   ├── configuration
 │   │   ├── detect
 │   │   ├── disk/
@@ -106,6 +107,7 @@
 │   │   │   ├── keyfiles
 │   │   │   ├── layouts
 │   │   │   ├── luks
+│   │   │   ├── lsblk
 │   │   │   ├── lvm
 │   │   │   ├── mdadm
 │   │   │   ├── mount
@@ -115,28 +117,28 @@
 │   │   │   ├── subvolume_menu
 │   │   │   └── utils
 │   │   ├── exceptions
-│   │   ├── general
 │   │   ├── global_menu
 │   │   ├── grimoire*
 │   │   ├── hardware
+│   │   ├── host_services
 │   │   ├── installer
 │   │   ├── interactions/
 │   │   │   ├── general_conf
 │   │   │   └── system_conf
 │   │   ├── kernel/
 │   │   │   ├── initramfs
+│   │   │   ├── selectors
 │   │   │   ├── swap
 │   │   │   ├── sysctl
 │   │   │   └── zram
-│   │   ├── linux_path
 │   │   ├── localization/
 │   │   │   ├── catalog
-│   │   │   └── configure
+│   │   │   ├── configure
+│   │   │   └── locale_menu
 │   │   ├── menu/
 │   │   │   ├── abstract_menu
 │   │   │   ├── driver_select
 │   │   │   ├── list_manager
-│   │   │   ├── locale_menu
 │   │   │   └── menu_helper
 │   │   ├── models/
 │   │   │   ├── applications
@@ -166,6 +168,8 @@
 │   │   │   ├── mirrors
 │   │   │   ├── packages
 │   │   │   ├── pacman
+│   │   │   ├── selectors
+│   │   │   ├── speedtest
 │   │   │   └── tmpdb
 │   │   ├── profile/
 │   │   │   ├── base
@@ -174,6 +178,8 @@
 │   │   │   └── profiles_handler
 │   │   ├── schema_gen
 │   │   ├── schema
+│   │   ├── script_runner
+│   │   ├── serialize
 │   │   ├── sysconfig
 │   │   ├── systemd
 │   │   ├── tui/
@@ -227,5 +233,5 @@
     └── parted/
         └── __init__
 
-31 directories, 195 files
+31 directories, 200 files
 ```
