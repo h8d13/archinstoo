@@ -7,6 +7,104 @@ Historical changes/commits before I went rogue:
 > This means that its always labeled as "Alpha" and recommend latest.
 > Simply because of the true evolving state of Arch-based systems.
 
+## 0.1.18-1
+
+	- Caeoma: `isos/CAEOMA` builds the `caeoma/` submodule untouched,
+	  layering one mkosi `--include` (runtime deps from
+	  `installer/PKGBUILD`, the checkout under `/usr/share/archinstoo`,
+	  a serial console). Replaces the mkosi live UKI (`isos/UKIMOD`,
+	  `isos/mkosi/`, dev VM `A2_UKI`)
+		- `--skip-base` (no base, kernel or initramfs; vconsole,
+		  hostname, locale and timezone still apply) and `--skip-fstab`
+		  for a target that ships its own base and mounts, next to
+		  `--skip-boot`
+	- Swap
+		- active areas are read from `/proc/swaps`: lsblk hides swap
+		  files and shows swap devices only as `[SWAP]`. `umount()`
+		  swaps off the device or any swap file below it first (the
+		  lazy fallback detached an active one, wipefs/mkfs then
+		  failed), `swapon()` skips an active area, `swapoff()` raises
+		- btrfs swap subvolume sits beside `@`, mounted at `/swap`
+		  before genfstab: nested in `@`, a snapper/Timeshift rollback
+		  booted with an empty `/swap`
+	- Disk
+		- marking btrfs for format drops its old subvolumes (upstream
+		  #4299); a mountpoint and subvolumes on one btrfs partition are
+		  exclusive, the menu could pass with nothing mounted at `/`
+		- existing partitions kept by a config read partn, PARTUUID and
+		  UUID from the scan: replays wrote `root=UUID=None`
+	- `--silent` no longer waits on the package retry prompt
+	- Config format
+		- profile `nwg_shell` is renamed `nwg`
+
+## 0.1.18-0
+
+	- Package manager
+		- Arch host (H2T): pacman.conf and mirrorlist are copied to a
+		  temporary directory and passed with `--config` / `-C`, sync
+		  dbs live in the run's dir (`--dbpath`), `reset_keyring`
+		  refuses there. `/etc` and the host keyring are never touched
+		- pacman.conf is rendered from the run's starting conf on every
+		  apply: a repo or option dropped in the menu stayed, an edited
+		  custom repo kept its old `Server`
+		- an option absent from the stock conf (`ILoveCandy`) picked
+		  alone landed above `[options]`, pacman refused the file
+		- the db lock wait is gone: a stale lock hung the run 10
+		  minutes, pacman fails at once on its own
+	- Disk
+		- H2T teardown: VGs on mappers stacked on the target disk are
+		  found (LVM on LUKS), `Luks2.lock()` deactivates a VG before
+		  closing its mapper, a failed partition/format step tears
+		  mappers and VGs down (credits to nwkyn)
+		- H2T swap file: `mkswap` runs from the host, it refuses any
+		  path in `/proc/swaps` and the chroot shares the host's
+		- children of `SysCommand` close inherited fds (libdevmapper's
+		  `/dev/mapper/control` leaked into every lvm call) and reset
+		  SIGPIPE/SIGXFSZ ("Broken pipe" from aarch64 `mkinitcpio -P`)
+		- manual partitions snap start up and length down to MiB, an
+		  off-grain answer shifted every later partition (upstream
+		  #4860); `Size.align()` becomes `align_down()`/`align_up()`
+		- zram devices are not offered as targets
+		- LVM: PVs are only the partitions marked `fs=lvm`, picked
+		  together with the layout (the separate LVM menu item is gone).
+		  btrfs LVs mount like partitions (subvolumes win), the root LV
+		  spans the VG without a `/home` LV, `has_default_btrfs_vols`
+		  sees LVs (snapper/timeshift)
+		- deleted partitions are skipped when mounting, booting, wiping
+		  and encrypting; zero-length creates are rejected
+		- plain `luks` with an `lvm_config` is rejected,
+		  `no_encryption` routes to plain LVM
+		- `get_unique_path_for_device` matches wwn/nvme-eui on the link
+		  name
+		- ports of upstream #4849, #4854, #4856, #4857, #4861-#4865
+		  (credits to Kolgrim33, xander-lin)
+	- Profiles
+		- `nwg_shell` for sway, given the XKB layout from the menu
+		  (its fallback read the console keymap, which xkbcommon
+		  rejects)
+		- one shell per desktop selection (`ProfileType.Shell` for
+		  dms/noctalia) (#275)
+		- terminals: i3/qtile/labwc/noctalia install alacritty, which
+		  every upstream launcher list has; `needs_terminal` is gone
+		- `noctalia-greeter` (in extra since 1.6.0-2) via greetd,
+		  default for noctalia, the sddm fallback goes
+		- portals: gtk wherever hyprland runs and on river (no
+		  FileChooser otherwise), gnome-keyring wherever niri runs
+		- dms follows the `dux-shell` 2.0.0 rename, no global
+		  `dms.service` enable
+	- Power management: PPD/tuned are no longer gated on a battery,
+	  they help desktops too (EPP, platform_profile). Battery
+	  detection goes, chassis type already covers it
+	- CLI: argument parsing moves to `lib/cli.py` with
+	  `ROOTLESS_SCRIPTS` and `NO_DISK_SCRIPTS`
+	- Bootstrap: `LC_ALL=C.UTF-8` in the root (host locale not
+	  generated there), `-Syu` only the deps `pacman -T` reports
+	  missing
+	- Config format
+		- LVM needs its PVs marked `"fs_type": "lvm"`, other partitions
+		  are no longer taken over; plain `luks` with `lvm_config` fails
+		  to load
+
 ## 0.1.17-0
 
 	- `distros/BOOT`: any-host bootstrap through the Arch tarball,
