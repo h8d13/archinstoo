@@ -14,6 +14,7 @@ from archinstoo.lib.models.device import (
 	PartitionType,
 	SectorSize,
 	Size,
+	SubvolumeModification,
 	Unit,
 )
 from archinstoo.lib.output import FormattedOutput
@@ -458,6 +459,9 @@ class PartitioningList(ListManager[DiskSegment]):
 		if partition.is_home():
 			partition.invert_flag(PartitionFlag.LINUX_HOME)
 		partition.mountpoint = mountpoint
+		# see _set_subvols: the partition is mounted itself now
+		if partition.fs_type == FilesystemType.BTRFS:
+			partition.btrfs_subvols = []
 		if partition.is_root():
 			partition.flags = []
 		if partition.mountpoint == Path('/efi'):
@@ -518,19 +522,33 @@ class PartitioningList(ListManager[DiskSegment]):
 				o for o in partition.mount_options if o != option.value
 			]
 
+	@staticmethod
+	def _set_subvols(
+		partition: PartitionModification,
+		subvols: list[SubvolumeModification],
+	) -> None:
+		# subvolumes and the partition's own mountpoint exclude each other:
+		# the mount stage lets subvolumes win, while is_root() and the
+		# layout checks read the partition's mountpoint
+		partition.btrfs_subvols = subvols
+		if subvols:
+			partition.mountpoint = None
+
 	def _set_btrfs_subvolumes(self, partition: PartitionModification) -> None:
-		partition.btrfs_subvols = SubvolumeMenu(
-			partition.btrfs_subvols,
-			None,
-		).run()
+		subvols = SubvolumeMenu(partition.btrfs_subvols, None).run()
+		self._set_subvols(partition, subvols)
 
 	def _prompt_formatting(self, partition: PartitionModification) -> None:
-		# an existing partition can toggle between Exist or Modify
+		# an existing partition can toggle between Exist or Modify. A format
+		# is a new filesystem: subvolumes scanned from the old one would be
+		# recreated empty after mkfs, so they go and come back on unmark
 		if partition.is_modify():
 			partition.status = ModificationStatus.EXIST
+			self._set_subvols(partition, self._scanned_subvols(partition))
 			return
 		if partition.exists():
 			partition.status = ModificationStatus.MODIFY
+			partition.btrfs_subvols = []
 
 		# If we mark a partition for formatting, but the format is CRYPTO LUKS,
 		# there's no point in formatting it really without asking the user which
@@ -546,6 +564,15 @@ class PartitioningList(ListManager[DiskSegment]):
 
 			if fs_type == FilesystemType.BTRFS:
 				partition.mountpoint = None
+
+	def _scanned_subvols(
+		self, partition: PartitionModification
+	) -> list[SubvolumeModification]:
+		scan = {i.path: i for i in self._device.partition_infos}
+		if (info := scan.get(partition.safe_dev_path)) is None:
+			return []
+		existing = PartitionModification.from_existing_partition(info)
+		return existing.btrfs_subvols
 
 	def _prompt_mountpoint(self) -> Path:
 		header = (

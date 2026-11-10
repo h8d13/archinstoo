@@ -262,6 +262,8 @@ class DiskLayoutConfiguration:
 					),
 					obj_id=str(partition['obj_id']),
 				)
+				if device_partition.exists():
+					_take_live_ids(device_partition, device)
 				device_partitions.append(device_partition)
 
 			device_modification.partitions = device_partitions
@@ -1156,6 +1158,17 @@ class _PartitionModificationSerialization(TypedDict):
 	flags: list[str]
 	btrfs: list[_SubvolumeModificationSerialization]
 	dev_path: NotRequired[str | None]
+
+
+def _take_live_ids(part_mod: PartitionModification, device: BDevice) -> None:
+	# an existing partition's ids are live disk state, never saved in a
+	# config: without them the bootloader writes root=UUID=None
+	for info in device.partition_infos:
+		if info.path == part_mod.dev_path:
+			part_mod.partn = info.partn
+			part_mod.partuuid = info.partuuid
+			part_mod.uuid = info.uuid
+			return
 
 
 def has_separate_boot(

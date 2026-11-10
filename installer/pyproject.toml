@@ -60,7 +60,8 @@ archinstoo = "archinstoo"
 cache_dir = "~/.cache/archinstoo/mypy"
 files = "."
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
-exclude = "^build/"
+# caeoma/: submodule, its mkosi tools tree carries a whole python stdlib
+exclude = "^(build|caeoma)/"
 disallow_any_explicit = false
 disallow_any_expr = false
 disallow_any_unimported = true

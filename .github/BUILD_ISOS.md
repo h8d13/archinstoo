@@ -11,6 +11,8 @@ Scripts in `isos/` wrap `mkarchiso` to produce custom Arch ISOs.
 
 Additional documentation is [available here](https://wiki.archlinux.org/title/Archiso).
 
+For an image-based disk (`mkosi`) instead of an ISO, see [Caeoma](CAEOMA.md).
+
 ## Configure
 
 Flags (env vars, all optional):

@@ -1,0 +1,3 @@
+[submodule "caeoma"]
+	path = caeoma
+	url = https://github.com/h8d13/caeoma.git

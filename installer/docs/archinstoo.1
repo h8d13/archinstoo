@@ -38,6 +38,12 @@ Skip archlinux-keyring WKD sync.
 .B \-\-skip\-boot
 Skip bootloader installation.
 .TP
+.B \-\-skip\-base
+Skip base, kernel and initramfs: the target ships them, only its settings apply.
+.TP
+.B \-\-skip\-fstab
+Skip writing /etc/fstab: the target mounts its own way.
+.TP
 .B \-\-offline
 Skip db refresh, bootstrap and keyring update.
 .TP

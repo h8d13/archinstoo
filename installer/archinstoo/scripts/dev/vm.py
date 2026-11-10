@@ -135,16 +135,12 @@
 #                       typed input past a few hundred bytes, so both lines
 #                       ride a dual-port PCI 16550 instead: ttyS0/ttyS1 in
 #                       the guest, same as q35, same sockets on the host.
-#                       A2_BIOS and A2_UKI are x86_64 only.
+#                       A2_BIOS is x86_64 only.
 #   A2_BIOS             on boots SeaBIOS instead of OVMF: no pflash, no
 #                       NVRAM. The installed disk must carry a BIOS-capable
 #                       bootloader (grub with a bios_grub partition).
-#   A2_DEV_ISO          explicit ISO path (skips discovery)
-#   A2_UKI              path to a live UKI (isos/UKIMOD output, isos/a/archinstoo.efi).
-#                       Boots it via -kernel in place of an ISO: no cdrom, no
-#                       kernel extraction, its baked cmdline already has ttyS0.
-#                       Disk handling per mode is unchanged. OVMF only.
-#                       Relative paths here and in push mean the repo root.
+#   A2_DEV_ISO          explicit ISO path (skips discovery). Relative paths
+#                       here and in push mean the repo root.
 #   A2_RAM, A2_CPUS     VM resources (default 4G, 4)
 #   A2_DISK_SIZE        new disk size (default 64G)
 #   A2_DISPLAY_BACKEND  qemu -display value (default 'gtk,zoom-to-fit=off')

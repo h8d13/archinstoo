@@ -58,6 +58,8 @@ class Arguments:
 	skip_ntp: bool = False
 	skip_wkd: bool = False
 	skip_boot: bool = False
+	skip_base: bool = False
+	skip_fstab: bool = False
 	debug: bool = False
 	offline: bool = False
 	advanced: bool = False

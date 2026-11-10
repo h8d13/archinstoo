@@ -9,7 +9,7 @@
 
 pkgname=archinstoo
 pkgver=0.1.18
-pkgrel=0
+pkgrel=1
 pkgdesc="Archinstall revamped"
 arch=(any)
 url="https://github.com/h8d13/archinstoo"
@@ -57,6 +57,7 @@ optdepends=(
 	'nvchecker'        #For bumping versions auto
 	'archiso'          #For creating your own ISOs
 	'qemu-base'        #For testing all of the above
+	'mkosi'            #For custom ISOs
 )
 # qemu-ui-gtk qemu-audio-pipewire edk2-ovmf
 # optionally arm64 qemu testing tools
