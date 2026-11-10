@@ -3,10 +3,12 @@ import re
 import shutil
 import sys
 import tempfile
+import termios
 from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from archinstoo.lib.chroot import drop_to_shell
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.general import SysCommand
 from archinstoo.lib.linux_path import LPath
@@ -83,8 +85,53 @@ def reset_conf() -> bool:
 # unattended: hundreds of redraw lines per package in a --silent log.
 # argv peek at import: _prepare() syncs before argparse (same as --offline),
 # and pass_args_to_subscript() strips parsed flags from sys.argv afterwards.
-_SILENT = '--silent' in sys.argv
+_SILENT: Final = '--silent' in sys.argv
 _QUIET_FLAGS = ' --noprogressbar' if _SILENT else ''
+
+
+def _auto_recovery(err: Exception) -> Callable[[], bool] | None:
+	# the tail str(err) keeps is enough: pacman ends a failed transaction
+	# with the line naming its cause
+	out = str(err).lower()
+
+	if 'invalid or corrupted package' in out:
+		warn('Detected corrupted package: resetting keyring...')
+		return Pacman.reset_keyring
+	if any(s in out for s in ('gpgme error', 'no data', 'signature')):
+		warn('Detected keyring/signature issue: resetting keyring...')
+		return Pacman.reset_keyring
+	if 'could not satisfy dependencies' in out:
+		warn('Detected dependency issue: resetting pacman.conf...')
+		return reset_conf
+	return None
+
+
+def _can_prompt() -> bool:
+	try:
+		return sys.stdin.isatty()
+	except AttributeError, OSError, ValueError:
+		return False
+
+
+def _choose() -> str:
+	# keys pressed while pacstrap ran (an impatient Enter) would otherwise
+	# answer unseen
+	with contextlib.suppress(OSError, ValueError, termios.error):
+		termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)
+	while True:
+		try:
+			answer = input('[R]etry, open a [s]hell to fix it, or [e]xit? ')
+		except EOFError:
+			return 'exit'
+		match answer.strip().lower():
+			case '' | 'r' | 'retry':
+				return 'retry'
+			case 's' | 'shell':
+				return 'shell'
+			case 'e' | 'exit':
+				return 'exit'
+			case _:
+				pass
 
 
 class Pacman:
@@ -149,58 +196,37 @@ class Pacman:
 		*args: object,
 		**kwargs: object,
 	) -> None:
-		try:
-			func(*args, **kwargs)
-		except Exception as err:
-			err_str = str(err).lower()
-			error(f'{error_message}: {err}')
+		def attempt() -> Exception | None:
+			try:
+				func(*args, **kwargs)
+			except Exception as err:
+				error(f'{error_message}: {err}')
+				return err
+			return None
 
-			recovery = None
-			if 'invalid or corrupted package' in err_str:
-				warn(
-					'Detected corrupted package: '
-					'resetting keyring and retrying...'
-				)
-				recovery = Pacman.reset_keyring
-			elif (
-				'gpgme error' in err_str
-				or 'no data' in err_str
-				or 'signature' in err_str
-			):
-				warn(
-					'Detected keyring/signature issue: '
-					'resetting keyring and retrying...'
-				)
-				recovery = Pacman.reset_keyring
-			elif 'could not satisfy dependencies' in err_str:
-				warn(
-					'Detected dependency issue: resetting '
-					'pacman.conf and retrying...'
-				)
-				recovery = reset_conf
+		if not (err := attempt()):
+			return
+		recovery = _auto_recovery(err)
+		if recovery and recovery() and not (err := attempt()):
+			return
+		while not _SILENT and _can_prompt():
+			choice = _choose()
+			if choice == 'exit':
+				break
+			if choice == 'shell':
+				self._shell()
+			if (retry_err := attempt()) is None:
+				return
+			err = retry_err
+		raise RequirementError(f'{bail_message}: {err}') from err
 
-			if recovery and recovery():
-				try:
-					func(*args, **kwargs)
-					return
-				except Exception as retry_err:
-					raise RequirementError(
-						f'{bail_message}: {retry_err}'
-					) from retry_err
-
-			# --silent has nobody to answer: fail instead of waiting forever
-			if not _SILENT and input(
-				'Would you like to re-try this download? (Y/n): '
-			).lower().strip() in {'', 'y'}:
-				try:
-					func(*args, **kwargs)
-					return
-				except Exception as retry_err:
-					raise RequirementError(
-						f'{bail_message}: {retry_err}'
-					) from retry_err
-
-			raise RequirementError(f'{bail_message}: {err}') from err
+	def _shell(self) -> None:
+		if self.target == Path('/'):
+			# the running system: arch-chroot / would remount /proc, /dev
+			info('Fix it with pacman from another terminal, then retry.')
+			return
+		info("Chrooting into the target, 'exit' or Ctrl+D retries")
+		drop_to_shell(self.target)
 
 	def strap(self, packages: str | list[str]) -> None:
 		# no -Sy here: pacstrap syncs the target's own db, and '/' installs
