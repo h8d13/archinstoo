@@ -9,18 +9,10 @@ Historical changes/commits before I went rogue:
 
 ## 0.1.18-2
 
-	- Failed strap (#302): the blind "re-try download? (Y/n)" retried
-	  once or raised
-		- a known cause (corrupted package, keyring/signature, broken
-		  dependency) gets its fix before anyone is asked, on whichever
-		  attempt it shows, once per fix so a fix that did not help
-		  cannot loop. The cause is read from pacman's output, not the
-		  argv: a `...-signature-plugin` package read as a keyring error
-		- then ask: retry, chroot into the target (then retry) or exit.
-		  Keys typed during pacstrap are flushed so a stray Enter cannot
-		  answer; no usable shell asks again instead of retrying
-		- no terminal fails straight away, like `--silent` (credits to
-		  serainox420 for the idea)
+	- Failed strap (#302): known causes (keyring, corrupted package,
+	  dependency) are fixed once each, read from pacman's output, then
+	  it asks retry/shell/exit instead of a blind "re-try download?".
+	  No terminal fails straight away (credits to serainox420)
 	- An empty package list skips pacman: Plasma (Wayland, no display
 	  server packages) ran `pacman -S` with no targets, and pacstrap
 	  took its trailing flags as the package list
