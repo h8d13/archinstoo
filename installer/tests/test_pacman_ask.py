@@ -88,12 +88,21 @@ def test_no_shell_asks_again_instead_of_retrying(
 	assert len(calls) == 1
 
 
+def _counting_reset(resets: list[int]) -> Callable[[], bool]:
+	# stands in for Pacman.reset_keyring: records the run and reports success
+	def reset() -> bool:
+		resets.append(1)
+		return True
+
+	return reset
+
+
 def test_sniffed_cause_fixed_before_asking(
 	monkeypatch: pytest.MonkeyPatch,
 ) -> None:
 	# shows up on the retry, not the first failure: still fixed unasked
 	resets: list[int] = []
-	monkeypatch.setattr(Pacman, 'reset_keyring', lambda: not resets.append(1))
+	monkeypatch.setattr(Pacman, 'reset_keyring', _counting_reset(resets))
 	_answers(monkeypatch, 'r')
 	calls, func = _failing(
 		SysCallError('boom', 1),
@@ -108,7 +117,7 @@ def test_sniffed_cause_fixed_before_asking(
 
 def test_same_fix_runs_once(monkeypatch: pytest.MonkeyPatch) -> None:
 	resets: list[int] = []
-	monkeypatch.setattr(Pacman, 'reset_keyring', lambda: not resets.append(1))
+	monkeypatch.setattr(Pacman, 'reset_keyring', _counting_reset(resets))
 	monkeypatch.setattr(pacman, '_SILENT', True)
 	calls, func = _failing(
 		SysCallError('signature is invalid', 1),
