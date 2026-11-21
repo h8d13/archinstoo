@@ -15,7 +15,7 @@ jobs:
             run:
                 working-directory: installer
         container:
-            image: archlinux/archlinux:latest@sha256:66876082fe42b95d8778e581395b4f4e73d7043491470276bb3aa5a1f2009b5b
+            image: archlinux/archlinux:latest@sha256:8c00f39dd0e89e19f32e1f4887389271fe161c47654d31bd70c303cbc6c17785
             options: --privileged
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
