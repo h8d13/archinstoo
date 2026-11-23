@@ -111,3 +111,30 @@ def test_stacked_mount_hidden(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
 		'UUID=root-uuid\t/\text4\trw,relatime\t0\t1',
 		'/swapfile\tnone\tswap\tdefaults\t0\t0',
 	]
+
+
+def test_whitespace_escaped(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+	# a space in a pre-mounted path or subvolume cut the line for every reader
+	target = str(tmp_path)
+	tree = {
+		'filesystems': [
+			_fs(
+				target,
+				'btrfs',
+				'rw,subvol=/@',
+				'root-uuid',
+				[
+					_fs(
+						f'{target}/a b',
+						'btrfs',
+						'rw,subvolid=258,subvol=/@c d',
+						'root-uuid',
+					),
+				],
+			),
+		],
+	}
+	assert _write(monkeypatch, tmp_path, tree)[:2] == [
+		'UUID=root-uuid\t/\tbtrfs\trw,subvol=/@\t0\t0',
+		'UUID=root-uuid\t/a\\040b\tbtrfs\trw,subvol=/@c\\040d\t0\t0',
+	]

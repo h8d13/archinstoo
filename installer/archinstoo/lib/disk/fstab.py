@@ -26,6 +26,14 @@ def fs_uuid(dev_path: Path | str) -> str:
 	)
 
 
+# fstab(5): fields split on whitespace, so it is written as octal escapes
+_ESCAPES = str.maketrans({'\\': '\\134', ' ': '\\040', '\t': '\\011', '\n': '\\012'})
+
+
+def _escape(field: str) -> str:
+	return field.translate(_ESCAPES)
+
+
 def _options(raw: str) -> str:
 	return ','.join(o for o in raw.split(',') if not o.startswith(_RUNTIME_OPTIONS))
 
@@ -68,9 +76,9 @@ def _mount_entries(target: Path) -> list[str]:
 		# one block per mount: the source as a comment, a blank line after
 		fields = (
 			f'UUID={fs["uuid"]}',
-			mountpoint,
+			_escape(mountpoint),
 			fstype,
-			_options(fs['options']),
+			_escape(_options(fs['options'])),
 			'0',
 			str(_fsck_pass(fstype, mountpoint)),
 		)
