@@ -132,11 +132,14 @@ or edit it and merge directly.
 To get your pull request merged sooner,
 you should explain why you are making the change (and small patches).
 
+Tests commits should be separate from patched changes.
+To make it easier to test pre/post fix...
+
 For example, you can point to a code sample
 that is outdated in terms of Arch Linux command lines.
 
 It is also helpful to add links to online documentation
-or to the implementation of the code you are changing.
+or to the implementation of the code you are changing. I.e man pages.
 Any related digging/testing is actually usually just as useful as the code itself.
 
 ## AI Usage
