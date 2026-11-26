@@ -6,6 +6,7 @@ from pathlib import Path
 from archinstoo.lib.args import get_arch_config_handler
 from archinstoo.lib.chroot import drop_to_shell
 from archinstoo.lib.command import SysCommand
+from archinstoo.lib.disk.fstab import FSTAB
 from archinstoo.lib.disk.lsblk import get_all_lsblk_info, get_lsblk_by_mountpoint
 from archinstoo.lib.disk.luks import Luks2
 from archinstoo.lib.disk.utils import mount
@@ -132,10 +133,10 @@ def fstab_device(spec: str) -> Path:
 
 
 def mount_additional_filesystems(mount_point: Path) -> None:
-	fstab_path = mount_point / 'etc' / 'fstab'
+	fstab_path = mount_point / FSTAB.relative_to_root()
 
 	if not fstab_path.exists():
-		warn('No /etc/fstab found, skipping additional mounts')
+		warn(f'No {FSTAB} found, skipping additional mounts')
 		return
 
 	info('Reading /etc/fstab to mount additional filesystems...')

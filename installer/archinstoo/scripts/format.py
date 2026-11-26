@@ -10,6 +10,7 @@ from archinstoo.lib.args import (
 from archinstoo.lib.configuration import resolve_config
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.disk.filesystem import FilesystemHandler
+from archinstoo.lib.disk.fstab import FSTAB
 from archinstoo.lib.disk.lsblk import disk_layouts
 from archinstoo.lib.global_menu import GlobalMenu
 from archinstoo.lib.installer import Installer
@@ -69,7 +70,7 @@ def perform_installation(
 
 		# to generate a fstab directory holder. Avoids an error on exit and at
 		# the same time checks the procedure
-		target = Path(f'{mountpoint}/etc/fstab')
+		target = Path(f'{mountpoint}{FSTAB}')
 		if not target.parent.exists():
 			target.parent.mkdir(parents=True)
 			debug(f'Created {target.parent} to anchor fstab')
