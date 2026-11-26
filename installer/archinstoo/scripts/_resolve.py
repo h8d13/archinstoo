@@ -166,8 +166,7 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
 	dkms = SCHEMA['gfx_drivers_dkms'].get(gfx) if build else None
 
 	if gfx == GfxDriver.Custom.value:
-		# names outside the pool are dropped, as
-		# ProfileConfiguration.parse_arg does
+		# names outside the pool are dropped, as ArchConfig.from_config does
 		pkgs = set(custom) & set(_flat('gfx_custom_choices'))
 		if build and GfxPackage.NvidiaOpen.value in pkgs:
 			pkgs.remove(GfxPackage.NvidiaOpen.value)
