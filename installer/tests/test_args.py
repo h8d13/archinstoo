@@ -49,6 +49,7 @@ from archinstoo.lib.models.profile import GreeterType
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.users import Password, Shell, User
+from archinstoo.lib.serialize import JSON
 
 if TYPE_CHECKING:
 	import pytest
@@ -345,3 +346,32 @@ def test_example_config_partitions(example_config_fixture: Path) -> None:
 				assert start >= previous_end
 
 			previous_end = end
+
+
+def test_privilege_escalation_survives_a_saved_config() -> None:
+	# the file is what resume and --config read: None used to be written as
+	# null, dropped on save, and read back as the sudo default
+	for choice in (None, *PrivilegeEscalation):
+		# with a user: an auth section left empty is not saved at all
+		auth = AuthenticationConfiguration(
+			users=[User('ada', None, True)], privilege_escalation=choice
+		)
+		config = ArchConfig(auth_config=auth)
+		saved = json.loads(json.dumps(config.safe_json(), cls=JSON))
+		loaded = ArchConfig.from_config(saved).auth_config
+
+		assert loaded is not None
+		assert loaded.privilege_escalation is choice
+		if choice is None:
+			assert saved['auth_config']['privilege_escalation'] == 'none'
+
+	# hand-written spellings of none keep working, an absent key is sudo
+	for unset in ('none', '', None):
+		parsed = AuthenticationConfiguration.parse_arg(
+			{'privilege_escalation': unset}
+		)
+		assert parsed.privilege_escalation is None
+	assert (
+		AuthenticationConfiguration.parse_arg({}).privilege_escalation
+		is PrivilegeEscalation.Sudo
+	)
