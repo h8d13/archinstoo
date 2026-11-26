@@ -83,8 +83,10 @@ def run_grimoire_installation(
 
 	build_user = next((u for u in auth_config.users if u.elev), None)
 
-	if not build_user:
-		warn('No elevated user found, skipping AUR packages')
+	# create_users sets sudo/doas up only when an elevated user has a
+	# password, and the build cannot install anything without one of them
+	if not build_user or not auth_config.has_elevated_users:
+		warn('No elevated user with a password, skipping AUR packages')
 		return
 
 	installation.add_additional_packages(AUR_BOOTSTRAP_PACKAGES)

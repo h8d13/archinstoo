@@ -355,10 +355,13 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 	# users: an entry without a username is none, as User.parse_arguments has it
 	auth = config.get('auth_config') or {}
 	users = [u for u in auth.get('users') or [] if u.get('username')]
-	elevated = any(user.get('elev', False) for user in users)
+	# create_users wants the elevated user to have a password as well
+	# (User.any_elevated). A saved config never holds one: the menu install it
+	# was saved from did, and asks again before the next. So here an elevated
+	# user counts as having theirs
+	elevated = any(user.get('elev') is True for user in users)
 
-	# privilege escalation: create_users straps it once a user is elevated.
-	# their password is not asked for here, a saved config never holds it
+	# privilege escalation: create_users straps it once a user can use it
 	priv_esc: str | None = auth.get('privilege_escalation', 'sudo')
 	if elevated and priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
@@ -398,8 +401,8 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
 	# grimoire builds AUR packages on the target, so its toolchain lands there.
-	# it needs an elevated user to build as, and the AUR packages themselves are
-	# in no repo, so nothing here can resolve them
+	# it needs an elevated user to build as and their sudo/doas, and the AUR
+	# packages themselves are in no repo, so nothing here can resolve them
 	aur: list[str] = config.get('aur_packages') or []
 	if aur and elevated:
 		pkgs.update(_flat('aur_bootstrap'))

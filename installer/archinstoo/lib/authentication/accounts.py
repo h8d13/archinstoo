@@ -94,8 +94,17 @@ def create_users(
 		step=True,
 	)
 
+	# an elevated user without a password could not use sudo/doas: no
+	# package then, and no rules or makepkg override for it either. wheel
+	# and su remain
+	if privilege_escalation and not User.any_elevated(users):
+		if any(user.elev for user in users):
+			tool = privilege_escalation.value
+			warn(f'No elevated user has a password: {tool} is not set up')
+		privilege_escalation = None
+
 	# Install the privilege escalation package
-	if privilege_escalation is not None and User.any_elevated(users):
+	if privilege_escalation is not None:
 		installation.pacman.strap(privilege_escalation.packages())
 
 	_configure_makepkg(installation, privilege_escalation)
