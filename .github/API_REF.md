@@ -65,29 +65,38 @@ flag for an enum, the way `firewall`/`management` do.
    `install(self, install_session, ...)` using the Installer primitives
    (below).
 3. [application_handler.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/application_handler.py):
-   `if app_config.media_codecs_config and ...enabled: MediaCodecsApp().install(...)`.
-   Order is install order (apps run before bootloader, after users).
+   one row in `CATEGORIES`, `Category('media_codecs_config', MediaCodecsApp)`.
+   Row order is install order (apps run before bootloader, after users).
+   The handler installs a category when its one field is set (flag on, a
+   choice made, a non-empty list): a flag App gets `install(install_session)`,
+   a choice App `install(install_session, config)`. The same row is the
+   category's `schema.toml` section and the pick `--script count` walks, so
+   `schema_gen.py` and `_resolve.py` need no edit. `section=` names the
+   section where it is not the key less `_config`.
 4. [application_menu.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/application_menu.py):
    a `MenuItem` with `key='media_codecs_config'`, `preview_action=self._prev`
    (one preview serves every category, labelled by the item's text) and
-   `select_media_codecs`. Flags reuse `_select_enabled` / `_enabled_text`.
-   The global menu's Applications preview reads these previews, nothing to
-   add there.
-5. [schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py):
-   one `Section` in install order, with `pick=('media_codecs_config', 'enabled')`,
-   the key path the choice lives at under `app_config`. The pick is what
-   `--script count` walks, so `_resolve.py` needs no edit. Then:
+   `action=_select_enabled('<prompt>\n', MediaCodecsConfiguration)`. A
+   choice category writes its own `select_*` instead. The global menu's
+   Applications preview reads these previews, nothing to add there.
 
-   ```shell
-   python -m archinstoo --script schema   # regenerates schema.toml
-   ./nvchecker/NVGEN gen                  # tracks the new packages
-   ```
+Then:
 
-`tests/test_schema.py` fails until 5 is done: every `_config_parsers` key
-needs a section with a pick, every pick path has to exist in the
-serialization, and the committed `schema.toml`/`nvchecker.toml` must match.
-Add the category to `examples/config_sample_full.json` so `--config` users
-see it.
+```shell
+python -m archinstoo --script schema   # regenerates schema.toml
+./nvchecker/NVGEN gen                  # tracks the new packages
+```
+
+A section lists the App's flat `packages` unless the category has a table
+of options (`audio`, `firewalls`, ...): that one adds its table to
+`_APP_TABLES` in
+[schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py),
+keyed by the same config key.
+
+`tests/test_schema.py` fails until 3 is done: every `_config_parsers` key
+needs a `CATEGORIES` row, and the committed `schema.toml`/`nvchecker.toml`
+must match. Add the category to `examples/config_sample_full.json` so
+`--config` users see it.
 
 ## Add a profile (server or desktop)
 
