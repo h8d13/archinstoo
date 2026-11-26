@@ -14,6 +14,7 @@ from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.host_services import accessibility_tools_in_use
+from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.network import NicType
@@ -24,6 +25,9 @@ from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.utils.paths import locate_binary
 
 if TYPE_CHECKING:
+	from archinstoo.lib.args import ArchConfigSerialization
+	from archinstoo.lib.models.applications import ApplicationSerialization
+	from archinstoo.lib.models.device import _DiskLayoutConfigurationSerialization
 	from archinstoo.lib.models.profile import ProfileSerialization
 	from archinstoo.lib.profile.base import Profile
 	from archinstoo.lib.schema_gen import Section
@@ -45,14 +49,17 @@ def _requirements(*binaries: str) -> bool:
 		return False
 
 
-def _firmware_packages(config: dict[str, Any]) -> set[str]:
+def _firmware_packages(config: ArchConfigSerialization) -> set[str]:
 	# mirrors FirmwareConfiguration.packages(): the schema holds what is
 	# static, the picked vendors come from the config
-	firmware_cfg = config.get('firmware') or {}
-	firmware_type = firmware_cfg.get('firmware_type', FirmwareType.FULL.value)
+	firmware_type = FirmwareType.FULL.value
+	vendors: list[str] = []
+	if firmware_cfg := config.get('firmware'):
+		firmware_type = firmware_cfg.get('firmware_type', firmware_type)
+		vendors = firmware_cfg.get('vendors') or []
 	pkgs = set(SCHEMA['firmware'].get(firmware_type, []))
 	if firmware_type != FirmwareType.MINIMAL.value:
-		pkgs.update(firmware_cfg.get('vendors', []) or [])
+		pkgs.update(vendors)
 
 	return pkgs
 
@@ -80,23 +87,22 @@ def _host_packages() -> set[str]:
 	return pkgs
 
 
-def _filesystem_packages(disk: dict[str, Any]) -> set[str]:
+def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str]:
 	# minimal_installation() prepares LVM volumes or partitions, never both, and
 	# lvm_config sits next to device_modifications rather than inside them
 	fs_tools = SCHEMA['filesystem_tools']
 	fs_types: set[str] = set()
-	lvm_config = disk.get('lvm_config') or {}
 
-	if lvm_config:
-		for group in lvm_config.get('vol_groups', []) or []:
+	if lvm_config := disk.get('lvm_config'):
+		for group in lvm_config.get('vol_groups') or []:
 			fs_types.update(
 				vol.get('fs_type', '')
 				for vol in group.get('volumes') or []
 			)
 	else:
-		for dev in disk.get('device_modifications', []) or []:
+		for dev in disk.get('device_modifications') or []:
 			fs_types.update(
-				part.get('fs_type', '')
+				part.get('fs_type') or ''
 				for part in dev.get('partitions') or []
 			)
 
@@ -132,7 +138,11 @@ def _named_profiles(names: list[str]) -> list[Profile]:
 def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
 	# custom 'path' profiles are code, not schema entries; load them the same
 	# way the installer does so their packages and desktop-typing count too
-	entries = [tp for tp in top_profiles if tp.get('path')]
+	entries = [
+		tp
+		for tp in top_profiles
+		if 'path' in tp and tp['path']  # noqa: RUF019 - .get() takes any key
+	]
 	if not entries:
 		return []
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
@@ -174,7 +184,7 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
 	return pkgs
 
 
-def _pick(app: dict[str, Any], section: Section) -> set[str]:
+def _pick(app: ApplicationSerialization, section: Section) -> set[str]:
 	# walk the section's pick path into app_config. the value's shape says how
 	# the section is read: a flag or a name takes a flat section whole, a name
 	# indexes a table, a list unions its rows
@@ -193,7 +203,7 @@ def _pick(app: dict[str, Any], section: Section) -> set[str]:
 	return set(table.get(value, []))
 
 
-def _application_packages(app: dict[str, Any]) -> set[str]:
+def _application_packages(app: ApplicationSerialization) -> set[str]:
 	# every app_config category is a section with a pick; what follows is the
 	# part a pick alone cannot say. schema_gen drags the installer in, so it
 	# stays a function-local import like installer above
@@ -204,7 +214,9 @@ def _application_packages(app: dict[str, Any]) -> set[str]:
 		if section.pick:
 			pkgs.update(_pick(app, section))
 
-	if (app.get('audio_config') or {}).get('audio', '') in SCHEMA['audio']:
+	audio = app.get('audio_config')
+	audio_name: str = audio.get('audio', '') if audio else ''
+	if audio_name in SCHEMA['audio']:
 		audio_fw = SCHEMA['audio_firmware']
 		if SysInfo.requires_sof_fw():
 			pkgs.update(audio_fw['sof'])
@@ -214,7 +226,7 @@ def _application_packages(app: dict[str, Any]) -> set[str]:
 	return pkgs
 
 
-def collect(config: dict[str, Any]) -> set[str]:
+def collect(config: ArchConfigSerialization) -> set[str]:
 	pkgs: set[str] = set()
 
 	# base + firmware + whatever the host itself dictates
@@ -227,12 +239,13 @@ def collect(config: dict[str, Any]) -> set[str]:
 	pkgs.update(kernels)
 
 	# kernel headers
-	if config.get('kernel_headers', False):
+	kernel_headers: bool = config.get('kernel_headers', False)
+	if kernel_headers:
 		pkgs.update(f'{k}-headers' for k in kernels)
 
 	# bootloader
 	bl = config.get('bootloader_config') or {}
-	bl_name = bl.get('bootloader', '')
+	bl_name: str | None = bl.get('bootloader', '')
 	bl_table = (
 		SCHEMA['bootloaders']
 		if SysInfo.has_uefi()
@@ -247,8 +260,8 @@ def collect(config: dict[str, Any]) -> set[str]:
 			pkgs.add(p)
 
 	# profile
-	pc = config.get('profile_config') or {}
-	top_profiles = pc.get('profiles') or []
+	pc = config.get('profile_config')
+	top_profiles = (pc.get('profiles') if pc else None) or []
 	profiles = SCHEMA['profiles']
 	mains: set[str] = set()
 	details: list[str] = []
@@ -265,7 +278,8 @@ def collect(config: dict[str, Any]) -> set[str]:
 		custom_settings = tp.get('custom_settings') or {}
 
 		for name in tp_details:
-			settings = custom_settings.get(name) or {}
+			# free-form per profile, no TypedDict names these keys
+			settings: dict[str, Any] = custom_settings.get(name) or {}
 			excluded = set(settings.get('excluded_packages') or [])
 
 			if name in profiles:
@@ -305,21 +319,21 @@ def collect(config: dict[str, Any]) -> set[str]:
 	main = next(iter(mains), '')
 
 	# greeter
-	greeter = pc.get('greeter', '')
+	greeter: str | None = pc.get('greeter') if pc else None
 	if greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
 	pkgs.update(
 		_gfx_packages(
-			config.get('gfx_driver', ''),
+			config.get('gfx_driver') or '',
 			config.get('gfx_packages') or [],
 			kernels,
 		)
 	)
 
 	# network
-	net = config.get('network_config') or {}
-	net_type = net.get('type', '')
+	net = config.get('network_config')
+	net_type: str = net.get('type', '') if net else ''
 	if net_type in SCHEMA['network']:
 		pkgs.update(SCHEMA['network'][net_type])
 		if has_desktop and net_type in {NicType.NM.value, NicType.NM_IWD.value}:
@@ -330,7 +344,7 @@ def collect(config: dict[str, Any]) -> set[str]:
 
 	# privilege escalation
 	auth = config.get('auth_config') or {}
-	priv_esc = auth.get('privilege_escalation', 'sudo')
+	priv_esc: str | None = auth.get('privilege_escalation', 'sudo')
 	if priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
@@ -339,42 +353,45 @@ def collect(config: dict[str, Any]) -> set[str]:
 	# shells (per-user in auth_config)
 	users = auth.get('users', []) or []
 	for user in users:
-		shell = user.get('shell', '')
+		shell: str = user.get('shell', '')
 		if shell in SCHEMA['shells']:
 			pkgs.update(SCHEMA['shells'][shell])
 
 	# filesystem tools, lvm
-	disk = config.get('disk_config') or {}
-	pkgs.update(_filesystem_packages(disk))
+	disk = config.get('disk_config')
+	pkgs.update(_filesystem_packages(disk) if disk else ())
 
 	# console font: the ISO has terminus, the target only gets it on request
-	if str((config.get('locale_config') or {}).get('console_font', '')).startswith(
-		'ter-'
-	):
+	font: str = (config.get('locale_config') or {}).get('console_font', '')
+	if str(font).startswith('ter-'):
 		pkgs.update(_flat('ter_fonts'))
 
 	# snapshots
-	btrfs = disk.get('btrfs_options') or {}
-	snapshot = btrfs.get('snapshot_config') or {}
-	snap_type = snapshot.get('type', '')
+	btrfs = (disk.get('btrfs_options') if disk else None) or {}
+	snapshot = btrfs.get('snapshot_config')
+	snap_type: str = snapshot.get('type', '') if snapshot else ''
 	if snap_type in SCHEMA['snapshots']:
 		pkgs.update(SCHEMA['snapshots'][snap_type])
 		# grub + btrfs snapshots
-		if bl_name == 'grub':
+		if bl_name == Bootloader.Grub.value:
 			pkgs.update(_flat('grub_extra'))
 
 	# swap: only zram pulls a package, a swap file is plain tooling
-	swap = config.get('swap') or {}
-	if swap.get('zram', False):
+	swap = config.get('swap')
+	zram: bool = swap.get('zram', False) if swap else False
+	if zram:
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
 	# grimoire builds AUR packages on the target, so its toolchain lands there.
 	# it needs an elevated user to build as, and the AUR packages themselves are
 	# in no repo, so nothing here can resolve them
-	if config.get('aur_packages') and any(user.get('elev') for user in users):
+	aur: list[str] = config.get('aur_packages') or []
+	elev: list[bool] = [user.get('elev', False) for user in users]
+	if aur and any(elev):
 		pkgs.update(_flat('aur_bootstrap'))
 
-	if any(user.get('stash_urls') for user in users):
+	stash_urls: list[list[str]] = [user.get('stash_urls') or [] for user in users]
+	if any(stash_urls):
 		pkgs.update(_flat('stash'))
 
 	return pkgs
