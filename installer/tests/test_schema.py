@@ -168,7 +168,9 @@ def test_resolve_agrees_with_the_install_on_kernels(kernels: list[str] | None) -
 	raw: Any = {'kernels': kernels, 'kernel_headers': True}
 	installed = ArchConfig.from_config(raw).kernels
 	expected = {*installed, *(f'{k}-headers' for k in installed)}
-	assert expected <= _resolve.collect(raw)
+	# both ways: no kernel the install leaves out either
+	listed = _resolve.collect(raw) - _resolve.collect({'kernels': ['none']})
+	assert listed - {'none'} == expected
 
 
 @pytest.mark.parametrize('is_vm', [True, False])
@@ -241,7 +243,9 @@ def test_resolve_lists_the_aur_bootstrap_where_it_builds(
 @pytest.mark.parametrize(
 	'profiles', [[], [{'main': 'server'}], [{'main': 'desktop'}]], ids=str
 )
-def test_resolve_agrees_with_the_install_on_greeter(profiles: Any) -> None:  # noqa: ANN401
+def test_resolve_agrees_with_the_install_on_greeter(
+	profiles: Any,  # noqa: ANN401
+) -> None:
 	# install_profile_config skips a greeter no selected profile supports
 	raw: Any = {'profiles': profiles, 'greeter': 'sddm'}
 	config = ProfileHandler().parse_config(raw)
@@ -439,6 +443,15 @@ def test_resolve_straps_what_install_profile_config_does(
 	counted = _resolve.collect({'profile_config': raw})
 	assert strapped <= counted
 	assert counted - _resolve.collect({}) <= strapped
+
+
+@pytest.mark.parametrize('disk', [{}, [], '', 0, False], ids=repr)
+def test_resolve_reads_an_empty_disk_section_as_unset(
+	disk: Any,  # noqa: ANN401
+) -> None:
+	# from_config ignores an empty section whatever its type, the snapshot
+	# check asked it for its layout
+	assert _resolve.collect({'disk_config': disk}) == _resolve.collect({})
 
 
 def test_resolve_skips_deleted_partitions() -> None:
