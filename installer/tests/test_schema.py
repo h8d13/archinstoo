@@ -239,6 +239,21 @@ def test_resolve_defaults_the_compositor_like_the_profile() -> None:
 	assert installed <= _resolve.collect({'profile_config': {'profiles': [entry]}})
 
 
+def test_resolve_skips_deleted_partitions() -> None:
+	# minimal_installation prepares no filesystem for a partition it removes
+	disk: Any = {
+		'device_modifications': [
+			{
+				'partitions': [
+					{'status': 'delete', 'fs_type': 'btrfs'},
+					{'status': 'create', 'fs_type': 'xfs'},
+				]
+			}
+		]
+	}
+	assert _resolve._filesystem_packages(disk) == {'xfsprogs'}
+
+
 # -- reverse cover -----------------------------------------------------------
 
 
