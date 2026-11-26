@@ -258,6 +258,28 @@ def test_resolve_skips_profile_entries_the_install_drops(main: str | None) -> No
 	assert bool(added) == installed
 
 
+@pytest.mark.parametrize(
+	'details', [['dms', 'noctalia', 'sway'], ['noctalia', 'sway', 'dms']], ids=str
+)
+def test_resolve_keeps_one_shell_like_the_install(details: list[str]) -> None:
+	# one_shell keeps the first shell picked, count added both
+	entry: Any = {'main': 'desktop', 'details': details}
+	profile = ProfileHandler().parse_profile_config(entry)
+	assert profile is not None
+	installed = {
+		pkg
+		for sub in profile.current_selection
+		for pkg in sub.effective_packages()
+	}
+	every = {pkg for name in details for pkg in SCHEMA['profiles'][name]}
+	dropped = every - installed
+	assert dropped
+
+	pkgs = _resolve.collect({'profile_config': {'profiles': [entry]}})
+	assert installed <= pkgs
+	assert not dropped & pkgs
+
+
 def test_resolve_skips_deleted_partitions() -> None:
 	# minimal_installation prepares no filesystem for a partition it removes
 	disk: Any = {
