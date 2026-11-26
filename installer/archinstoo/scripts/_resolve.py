@@ -17,7 +17,7 @@ from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import ModificationStatus
 from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType
-from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
+from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, needs_dkms_build
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.profile import DisplayServer
@@ -172,7 +172,7 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
 
 	# a non-standard kernel swaps nvidia-open for its DKMS build: the whole
 	# preset set from the schema, or the one package in a hand-picked list
-	build = any('-' in k for k in kernels)
+	build = needs_dkms_build(kernels)
 	dkms = SCHEMA['gfx_drivers_dkms'].get(gfx) if build else None
 
 	if gfx == GfxDriver.Custom.value:
