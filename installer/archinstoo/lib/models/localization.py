@@ -1,5 +1,16 @@
 from dataclasses import dataclass
-from typing import Self
+from typing import Self, TypedDict
+
+
+class LocaleConfigSerialization(TypedDict, total=False):
+	kb_layout: str
+	sys_lang: str
+	sys_enc: str
+	console_font: str
+	xkb_layout: str
+	xkb_model: str
+	xkb_variant: str
+	xkb_options: str
 
 
 @dataclass
@@ -23,7 +34,7 @@ class LocaleConfiguration:
 		# (localization.catalog.get_kb_layout). Nothing here asks the system
 		return cls(kb_layout or 'us', 'en_US.UTF-8', 'UTF-8')
 
-	def json(self) -> dict[str, str]:
+	def json(self) -> LocaleConfigSerialization:
 		return {
 			'kb_layout': self.kb_layout,
 			'sys_lang': self.sys_lang,
@@ -51,7 +62,7 @@ class LocaleConfiguration:
 				output += f'\nXKB options: {self.xkb_options}'
 		return output
 
-	def _load_config(self, args: dict[str, str]) -> None:
+	def _load_config(self, args: LocaleConfigSerialization) -> None:
 		if 'sys_lang' in args:
 			self.sys_lang = args['sys_lang']
 		if 'sys_enc' in args:
@@ -70,7 +81,9 @@ class LocaleConfiguration:
 			self.xkb_options = args['xkb_options']
 
 	@classmethod
-	def parse_arg(cls, args: dict[str, str], kb_layout: str | None = None) -> Self:
+	def parse_arg(
+		cls, args: LocaleConfigSerialization, kb_layout: str | None = None
+	) -> Self:
 		default = cls.default(kb_layout)
 		default._load_config(args)
 		return default
