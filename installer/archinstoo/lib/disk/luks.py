@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 # where sd-encrypt looks for <mapper>.key at boot; every keyfile writer
 # (auto-unlock slot, cryptenroll bootstrap) lands under it
 KEYFILE_DIR = Path('/etc/cryptsetup-keys.d')
+CRYPTTAB = Path('/etc/crypttab')
 
 
 def generate_password(length: int = 64) -> str:
@@ -251,7 +252,7 @@ class Luks2:
 		# Create a crypttab entry without a keyfile so systemd prompts for a
 		# passphrase at boot. Used when the root partition is unencrypted
 		# writing a keyfile there would expose it in plaintext.
-		crypttab_path = target_path / 'etc/crypttab'
+		crypttab_path = target_path / CRYPTTAB.relative_to('/')
 		self._crypttab(crypttab_path, Path('none'), options=['luks'])
 
 	def create_keyfile(
@@ -270,7 +271,7 @@ class Luks2:
 		# automatically load this key if we name the device to "xyzloop"
 		kf_path = KEYFILE_DIR / f'{self.mapper_name}.key'
 		key_file = target_path / kf_path.relative_to(kf_path.root)
-		crypttab_path = target_path / 'etc/crypttab'
+		crypttab_path = target_path / CRYPTTAB.relative_to('/')
 
 		if key_file.exists():
 			if not override:
