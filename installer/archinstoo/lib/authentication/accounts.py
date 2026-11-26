@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 # on the running system; under a target, relative_to_root()
 DOAS_CONF: Final = LPath('/etc/doas.conf')
 SUDOERS_DIR: Final = LPath('/etc/sudoers.d')
+# makepkg.conf as pacman ships it: sudo when installed, su otherwise
+PACMAN_AUTH_UNSET: Final = '#PACMAN_AUTH=()'
 
 
 def _enable_sudo(installation: Installer, user: User, group: bool = False) -> None:
@@ -138,7 +140,7 @@ def _configure_makepkg(
 		return
 
 	content = makepkg_conf.read_text()
-	content = content.replace('#PACMAN_AUTH=()', f'PACMAN_AUTH=({auth_binary})')
+	content = content.replace(PACMAN_AUTH_UNSET, f'PACMAN_AUTH=({auth_binary})')
 	makepkg_conf.write_text(content)
 	debug(f'Set PACMAN_AUTH=({auth_binary}) in makepkg.conf')
 

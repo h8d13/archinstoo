@@ -37,6 +37,12 @@ class AuthenticationConfiguration:
 	def has_elevated_users(self) -> bool:
 		return User.any_elevated(self.users)
 
+	@property
+	def effective_escalation(self) -> PrivilegeEscalation | None:
+		# what create_users sets up: nothing where no elevated user has a
+		# password to use it with, and su is all there is
+		return self.privilege_escalation if self.has_elevated_users else None
+
 	@classmethod
 	def parse_arg(cls, args: AuthenticationSerialization) -> Self:
 		auth_config = cls()

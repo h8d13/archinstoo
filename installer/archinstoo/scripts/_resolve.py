@@ -14,6 +14,7 @@ from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.host_services import accessibility_tools_in_use
+from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.device import (
 	FilesystemType,
@@ -403,7 +404,9 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 	elevated = any(user.get('elev') is True for user in users)
 
 	# privilege escalation: create_users straps it once a user can use it
-	priv_esc: str | None = auth.get('privilege_escalation', 'sudo')
+	priv_esc: str | None = auth.get(
+		'privilege_escalation', PrivilegeEscalation.Sudo.value
+	)
 	if elevated and priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
@@ -443,10 +446,11 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
 	# grimoire builds AUR packages on the target, so its toolchain lands there.
-	# it needs an elevated user to build as and their sudo/doas, and the AUR
-	# packages themselves are in no repo, so nothing here can resolve them
+	# an elevated user builds them, through sudo, doas or su: run0 needs a
+	# booted system. The AUR packages themselves are in no repo, so nothing
+	# here can resolve them
 	aur: list[str] = config.get('aur_packages') or []
-	if aur and elevated:
+	if aur and elevated and priv_esc != PrivilegeEscalation.Run0.value:
 		pkgs.update(_flat('aur_bootstrap'))
 
 	stash_urls: list[list[str]] = [user.get('stash_urls') or [] for user in users]
