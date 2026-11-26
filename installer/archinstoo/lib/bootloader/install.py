@@ -189,7 +189,7 @@ class BootloaderInstaller:
 				)
 			case Bootloader.Efistub:
 				self._add_efistub_bootloader(
-					boot_partition, root, uki_enabled
+					boot_partition, efi_partition, root, uki_enabled
 				)
 			case Bootloader.Limine:
 				self._add_limine_bootloader(
@@ -923,6 +923,7 @@ class BootloaderInstaller:
 	def _add_efistub_bootloader(
 		self,
 		boot_partition: PartitionModification,
+		efi_partition: PartitionModification | None,
 		root: PartitionModification | LvmVolume,
 		uki_enabled: bool = False,
 	) -> None:
@@ -947,7 +948,12 @@ class BootloaderInstaller:
 			loader = '/EFI/Linux/arch-{kernel}.efi'
 			cmdline = []
 
-		parent_dev_path = get_parent_device_path(boot_partition.safe_dev_path)
+		# efibootmgr(8): --disk/--part name the partition holding the loader.
+		# _config_uki writes the UKI to the ESP, a plain kernel sits in /boot
+		loader_partition = (
+			efi_partition if uki_enabled else None
+		) or boot_partition
+		parent_dev_path = get_parent_device_path(loader_partition.safe_dev_path)
 
 		cmd_template = (
 			'efibootmgr',
@@ -955,7 +961,7 @@ class BootloaderInstaller:
 			'--disk',
 			str(parent_dev_path),
 			'--part',
-			str(boot_partition.partn),
+			str(loader_partition.partn),
 			'--label',
 			'Arch Linux ({kernel})',
 			'--loader',
@@ -978,7 +984,7 @@ class BootloaderInstaller:
 						f'{kernel} and a plain kernel has no '
 						f'removable fallback: {err}'
 					) from err
-				esp = self.target / boot_partition.relative_mountpoint
+				esp = self.target / loader_partition.relative_mountpoint
 				fallback = (
 					esp
 					/ 'EFI/BOOT'
