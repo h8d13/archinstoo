@@ -487,11 +487,13 @@ def list_timezones() -> list[str]:
 
 
 def _scan_timezones() -> list[str]:
-	# zone1970.tab / zone.tab list the canonical zone names in their last
-	# tab-separated column (lines starting with # are comments). Honor glibc's
-	# TZDIR so non-FHS hosts (NixOS) can point at the tzdata store path.
+	# zone.tab / zone1970.tab list the canonical zone names in their third
+	# tab-separated column (lines starting with # are comments). zone.tab
+	# first: zone1970.tab merges zones alike since 1970, so it has no
+	# Europe/Amsterdam, Europe/Oslo... Honor glibc's TZDIR so non-FHS hosts
+	# (NixOS) can point at the tzdata store path.
 	root = Path(Env.get_value('TZDIR', '/usr/share/zoneinfo'))
-	for tab in ('zone1970.tab', 'zone.tab'):
+	for tab in ('zone.tab', 'zone1970.tab'):
 		tabfile = root / tab
 		if not tabfile.is_file():
 			continue
