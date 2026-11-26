@@ -309,6 +309,10 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 
 	for tp in top_profiles:
 		main = tp.get('main', '')
+		# parse_profile_config drops an entry whose main names no profile,
+		# details and all. A 'path' entry is _path_profiles' to judge
+		if not _named_profiles([main]) and not tp.get('path'):
+			continue
 		if main:
 			mains.add(main)
 			# desktop and server carry different base sets
