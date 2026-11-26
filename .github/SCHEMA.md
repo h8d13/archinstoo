@@ -85,23 +85,13 @@ following other profiles as example or modify existing ones.
 ### The package schema
 
 [`schema.toml`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/schema.toml)
-lists the packages an install can pull, in the order the install pulls them.
+lists every package an install can pull, in the order the install pulls them.
 It is **generated**, the package lists live in the code that installs them
-(profiles under `default_profiles/`, the constants and enums under `lib/models/`,
+(profiles under `default_profiles/`, the enums under `lib/models/`,
 the app handlers under `lib/applications/cat/`), and
 [`lib/schema_gen.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py)
-flattens them out. The installer never reads the file.
-
-| Who | Package names from | `schema.toml` |
-|---|---|---|
-| An install | the code | never read |
-| `--script schema` | the code | written |
-| `--script count` | the file; what a config selects is asked of the code, or mirrored | read |
-| `nvchecker/NVGEN` | the file, plus the kernel and vendor firmware enums | read |
-| `tests/test_schema.py` | both, held to agree | read |
-
-Not in the file: kernels and headers, vendor firmware, additional and AUR packages,
-a custom `path` profile.
+flattens them out.
+The schema purely follows the code, the installer never reads it.
 
 So to change what gets installed, change the codepath, then regenerate:
 
@@ -109,11 +99,15 @@ So to change what gets installed, change the codepath, then regenerate:
 python -m archinstoo --script schema
 ```
 
-`tests/test_schema.py` fails if the committed file is stale.
+`tests/test_schema.py` fails if the committed file is stale. `nvchecker/NVGEN` reads
+only the generated file (kernels and vendor firmware aside, from their enums).
+`--script count` takes its package lists from it too, but
+reads a config's `profile_config` through the installer's own `parse_profile_config`:
+which profiles an entry selects comes from the code, and so do the packages of one
+the file does not list (a `path` profile).
 
-Each application category is one row of `CATEGORIES` in `application_handler.py`.
-Its section follows from the row, with its `pick`:
+Each application category's `Section` also carries a `pick`:
 the key path under `app_config` where a saved config keeps that choice.
-`count` walks the picks, so a new category is one row and a regenerate;
+`count` walks the picks, so a new category is one `CATEGORIES` row and a regenerate;
 the test fails on a category without one. The step list is in
 [API_REF.md](API_REF.md), "Add an application".
