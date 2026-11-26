@@ -11,11 +11,12 @@ import importlib.machinery
 import importlib.util
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, Any, get_type_hints
 
 import pytest
 
 from archinstoo.lib import installer, schema, schema_gen
+from archinstoo.lib.args import ArchConfig
 from archinstoo.lib.models.applications import (
 	ApplicationConfiguration,
 	ApplicationSerialization,
@@ -147,6 +148,15 @@ def test_resolve_agrees_with_the_install_on_zram(
 	installed = swap is not None and SwapConfiguration.parse_arg(swap).zram
 	listed = 'zram-generator' in _resolve.collect({'swap': swap})
 	assert listed == installed
+
+
+@pytest.mark.parametrize('kernels', [None, [], ['linux-zen']])
+def test_resolve_agrees_with_the_install_on_kernels(kernels: list[str] | None) -> None:
+	# from_config keeps the default for an empty list, count listed no kernel
+	raw: Any = {'kernels': kernels, 'kernel_headers': True}
+	installed = ArchConfig.from_config(raw).kernels
+	expected = {*installed, *(f'{k}-headers' for k in installed)}
+	assert expected <= _resolve.collect(raw)
 
 
 # -- reverse cover -----------------------------------------------------------
