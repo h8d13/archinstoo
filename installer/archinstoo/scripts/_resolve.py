@@ -348,17 +348,20 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 		if net_type == NicType.ISO.value and _iso_has_psks():
 			pkgs.update(_flat('network_iso_extra'))
 
-	# privilege escalation
+	# users: an entry without a username is none, as User.parse_arguments has it
 	auth = config.get('auth_config') or {}
+	users = [u for u in auth.get('users') or [] if u.get('username')]
+	elevated = any(user.get('elev', False) for user in users)
+
+	# privilege escalation: create_users straps it once a user is elevated.
+	# their password is not asked for here, a saved config never holds it
 	priv_esc: str | None = auth.get('privilege_escalation', 'sudo')
-	if priv_esc in SCHEMA['privilege_escalation']:
+	if elevated and priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
 	pkgs.update(_application_packages(config.get('app_config') or {}))
 
-	# shells (per-user in auth_config). an entry without a username is no
-	# user, as User.parse_arguments has it
-	users = [u for u in auth.get('users') or [] if u.get('username')]
+	# shells (per-user in auth_config)
 	for user in users:
 		shell: str = user.get('shell', '')
 		if shell in SCHEMA['shells']:
@@ -394,8 +397,7 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 	# it needs an elevated user to build as, and the AUR packages themselves are
 	# in no repo, so nothing here can resolve them
 	aur: list[str] = config.get('aur_packages') or []
-	elev: list[bool] = [user.get('elev', False) for user in users]
-	if aur and any(elev):
+	if aur and elevated:
 		pkgs.update(_flat('aur_bootstrap'))
 
 	stash_urls: list[list[str]] = [user.get('stash_urls') or [] for user in users]
