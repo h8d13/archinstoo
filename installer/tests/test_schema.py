@@ -9,6 +9,7 @@
 import ast
 import importlib.machinery
 import importlib.util
+import re
 import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, get_type_hints
@@ -538,11 +539,70 @@ def test_resolve_lists_snapshots_on_a_default_btrfs_layout_only(
 # -- reverse cover -----------------------------------------------------------
 
 
+def _string_consts(tree: ast.Module) -> dict[str, str]:
+	return {
+		target.id: node.value.value
+		for node in ast.walk(tree)
+		if isinstance(node, ast.Assign)
+		and isinstance(node.value, ast.Constant)
+		and isinstance(node.value.value, str)
+		for target in node.targets
+		if isinstance(target, ast.Name)
+	}
+
+
+def _named_lists(trees: list[ast.Module]) -> dict[str, set[str]]:
+	# NAME = ['pkg', ...] at module level, wherever it is defined: the
+	# installer imports these and straps them by name (RAID_PACKAGES)
+	lists: dict[str, set[str]] = {}
+	for tree in trees:
+		consts = _string_consts(tree)
+		for node in tree.body:
+			targets: list[ast.expr]
+			value: ast.expr | None
+			if isinstance(node, ast.Assign):
+				targets, value = node.targets, node.value
+			elif isinstance(node, ast.AnnAssign):
+				targets, value = [node.target], node.value
+			else:
+				continue
+			if not isinstance(value, ast.List | ast.Tuple):
+				continue
+			for target in targets:
+				# constants only: a local of that name in some
+				# other module is not this list
+				if isinstance(target, ast.Name) and target.id.isupper():
+					lists.setdefault(target.id, set()).update(
+						_literals(value, consts, {})
+					)
+	return lists
+
+
+def _literals(
+	node: ast.expr | None, consts: dict[str, str], lists: dict[str, set[str]]
+) -> set[str]:
+	if isinstance(node, ast.Constant) and isinstance(node.value, str):
+		return {node.value}
+	if isinstance(node, ast.Name):
+		# a string constant of the module, or a list one of any module
+		if node.id in consts:
+			return {consts[node.id]}
+		return lists.get(node.id, set())
+	if isinstance(node, ast.List | ast.Tuple):
+		return {
+			name
+			for elt in node.elts
+			for name in _literals(elt, consts, lists)
+		}
+	return set()
+
+
 def _installed_literals() -> dict[str, set[str]]:
 	# every package name the package installs outright, anywhere: handed to
 	# add_additional_packages/strap, appended to _base_packages, or returned as
-	# a literal list from a *_packages property. f-strings and enum lookups are
-	# runtime values and drop out
+	# a literal list from a *_packages property. A list constant passed by its
+	# bare name counts, whichever module holds it. Anything computed (a splice,
+	# a sum, an f-string, an enum lookup) drops out
 	found: dict[str, set[str]] = {}
 
 	def record(name: str, path: Path) -> None:
@@ -550,35 +610,18 @@ def _installed_literals() -> dict[str, set[str]]:
 			str(path.relative_to(Path(installer.__file__).parents[1]))
 		)
 
-	for path in sorted(Path(installer.__file__).parent.parent.rglob('*.py')):
-		tree = ast.parse(path.read_text())
+	paths = sorted(Path(installer.__file__).parent.parent.rglob('*.py'))
+	trees = {path: ast.parse(path.read_text()) for path in paths}
+	lists = _named_lists(list(trees.values()))
 
-		consts = {
-			target.id: node.value.value
-			for node in ast.walk(tree)
-			if isinstance(node, ast.Assign)
-			and isinstance(node.value, ast.Constant)
-			and isinstance(node.value.value, str)
-			for target in node.targets
-			if isinstance(target, ast.Name)
-		}
+	for path, tree in trees.items():
+		consts = _string_consts(tree)
 
 		def literals(
-			node: ast.expr, consts: dict[str, str] = consts
+			node: ast.expr,
+			consts: dict[str, str] = consts,
 		) -> set[str]:
-			if isinstance(node, ast.Constant) and isinstance(
-				node.value, str
-			):
-				return {node.value}
-			if isinstance(node, ast.Name):
-				return {consts[node.id]} if node.id in consts else set()
-			if isinstance(node, ast.List | ast.Tuple):
-				return {
-					name
-					for elt in node.elts
-					for name in literals(elt)
-				}
-			return set()
+			return _literals(node, consts, lists)
 
 		for node in ast.walk(tree):
 			# install calls
@@ -629,20 +672,33 @@ def test_every_installed_package_is_in_the_schema() -> None:
 	)
 
 
-# disk_encryption is never written to a saved config (the password would go
-# with it), so nothing count can be handed reaches this
-_NOT_READ = {'fido2'}
+# the sections count does not read; nvchecker still tracks what they list
+_NOT_READ = {
+	# disk_encryption is never written to a config (the password would go
+	# with it)
+	'fido2',
+	# an md array is found on the mounted devices of a pre-mount layout,
+	# which the config does not describe
+	'raid',
+	# the saved value is the package name itself (seat_packages), and count
+	# takes it from there like the install does
+	'seat_access',
+}
 
 
 def test_resolve_reads_every_section() -> None:
 	# a section nobody consumes silently does nothing. picked sections are read
-	# by construction; _resolve names the rest as string literals, so read
-	# them back the same way
+	# by construction; _resolve reads the rest as SCHEMA['x'] or _flat('x').
+	# Looked for as exactly that: a config key of the same name is no read
 	source = Path(_resolve.__file__).read_text()
-	picked = {s.key for s in _PICKED}
-	unread = {
-		key for key in SCHEMA if f"'{key}'" not in source and key not in picked
+	read = {
+		key
+		for found in re.findall(r"SCHEMA\['(\w+)'\]|_flat\('(\w+)'\)", source)
+		for key in found
+		if key
 	}
+	picked = {s.key for s in _PICKED}
+	unread = set(SCHEMA) - read - picked
 	assert unread == _NOT_READ, (
 		f'sections _resolve.py never reads: {sorted(unread - _NOT_READ)}; '
 		f'exempted but now read: {sorted(_NOT_READ - unread)}'
