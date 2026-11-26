@@ -12,6 +12,8 @@ import pytest
 import archinstoo
 from archinstoo.lib.args import ArchConfig
 from archinstoo.lib.models.applications import ApplicationConfiguration
+from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
+from archinstoo.lib.models.sysctl import SysctlConfiguration
 
 EXAMPLES = Path(__file__).parent.parent / 'examples'
 FULL = EXAMPLES / 'config_sample_full.json'
@@ -58,3 +60,17 @@ def test_global_menu_keys_are_config_fields() -> None:
 	assert keys
 	unknown = keys - {f.name for f in fields(ArchConfig)}
 	assert not unknown, f'global_menu.py keys ArchConfig lacks: {sorted(unknown)}'
+
+
+def test_swap_and_sysctl_save_what_they_load() -> None:
+	# both once went out as raw dataclass fields: a null recomp_algorithm in
+	# the file, a key its serialization does not allow
+	swap = SwapConfiguration(hibernation=True)
+	assert None not in swap.json().values()
+	assert SwapConfiguration.parse_arg(swap.json()) == swap
+
+	recomp = SwapConfiguration(recomp_algorithm=ZramAlgorithm.ZSTD)
+	assert SwapConfiguration.parse_arg(recomp.json()) == recomp
+
+	sysctl = SysctlConfiguration(optimized=True, entries=('vm.swappiness = 10',))
+	assert SysctlConfiguration.parse_arg(sysctl.json()) == sysctl
