@@ -5,8 +5,8 @@ from archinstoo.lib.models.profile import DisplayServer, GreeterType
 from archinstoo.lib.output import warn
 
 if TYPE_CHECKING:
+	from archinstoo.lib.models.profile import ProfileSerialization
 	from archinstoo.lib.profile.base import Profile
-	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
 
 
 class _ProfileConfigurationSerialization(TypedDict):

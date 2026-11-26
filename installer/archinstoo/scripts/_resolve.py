@@ -23,8 +23,8 @@ from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.utils.paths import locate_binary
 
 if TYPE_CHECKING:
+	from archinstoo.lib.models.profile import ProfileSerialization
 	from archinstoo.lib.profile.base import Profile
-	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
 	from archinstoo.lib.schema_gen import Section
 
 

@@ -3,11 +3,11 @@ import inspect
 from collections import Counter
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING, NotRequired, TypedDict
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
-from archinstoo.lib.models.profile import GreeterType
+from archinstoo.lib.models.profile import GreeterType, ProfileSerialization
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import Profile
 
@@ -32,13 +32,6 @@ _GREETD_SESSION = {
 	# the package ships a sway config that starts nwg-hello and exits with it
 	GreeterType.NwgHello: 'sway -c /etc/nwg-hello/sway-config',
 }
-
-
-class ProfileSerialization(TypedDict):
-	main: NotRequired[str]
-	details: NotRequired[list[str]]
-	custom_settings: NotRequired[dict[str, dict[str, str | list[str] | None]]]
-	path: NotRequired[str]
 
 
 def one_shell[P: Profile](profiles: list[P]) -> list[P]:

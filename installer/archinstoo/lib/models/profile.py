@@ -1,4 +1,5 @@
 from enum import Enum, StrEnum, auto
+from typing import NotRequired, TypedDict
 
 
 class DisplayServer(Enum):
@@ -155,3 +156,10 @@ class SelectResult(Enum):
 	NewSelection = auto()
 	SameSelection = auto()
 	ResetCurrent = auto()
+
+
+class ProfileSerialization(TypedDict):
+	main: NotRequired[str]
+	details: NotRequired[list[str]]
+	custom_settings: NotRequired[dict[str, dict[str, str | list[str] | None]]]
+	path: NotRequired[str]
