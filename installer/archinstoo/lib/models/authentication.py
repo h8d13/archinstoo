@@ -54,8 +54,11 @@ class AuthenticationConfiguration:
 
 		if 'privilege_escalation' in args:
 			priv_esc = args.get('privilege_escalation')
+			# 'none' is how json() saves the menu's None entry
 			auth_config.privilege_escalation = (
-				PrivilegeEscalation(priv_esc) if priv_esc else None
+				PrivilegeEscalation(priv_esc)
+				if priv_esc and priv_esc != 'none'
+				else None
 			)
 
 		return auth_config
@@ -66,11 +69,12 @@ class AuthenticationConfiguration:
 		if self.lock_root_account:
 			config['lock_root_account'] = self.lock_root_account
 
+		# a null would be dropped on save and read back as the sudo default
 		if self.privilege_escalation != PrivilegeEscalation.Sudo:
 			config['privilege_escalation'] = (
 				self.privilege_escalation.value
 				if self.privilege_escalation
-				else None
+				else 'none'
 			)
 
 		if self.users:
