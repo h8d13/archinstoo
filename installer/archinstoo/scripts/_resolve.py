@@ -376,8 +376,9 @@ def collect(config: ArchConfigSerialization) -> set[str]:
 			pkgs.update(_flat('grub_extra'))
 
 	# swap: only zram pulls a package, a swap file is plain tooling
+	# a swap section defaults to zram on, as SwapConfiguration.parse_arg does
 	swap = config.get('swap')
-	zram: bool = swap.get('zram', False) if swap else False
+	zram: bool = swap.get('zram', True) if swap is not None else False
 	if zram:
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
