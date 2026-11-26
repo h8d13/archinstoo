@@ -34,7 +34,6 @@ from archinstoo.lib.models.authentication import (
 )
 from archinstoo.lib.models.firmware import (
 	FULL_FIRMWARE,
-	CpuVendor,
 	FirmwareType,
 	FirmwareVendor,
 )
@@ -707,12 +706,12 @@ def test_resolve_reads_every_section() -> None:
 
 # -- nvchecker/NVGEN ---------------------------------------------------------
 #
-# NVGEN tracks package versions from schema.toml plus the enums that hold
-# package names the schema never sees (kernels, vendor firmware, driver extras,
-# microcode, seat access). It parses those enums statically (ast) to stay
+# NVGEN tracks package versions from schema.toml plus the two enums no section
+# is generated from: kernels and vendor firmware, which a config names
+# directly. It parses those enums statically (ast) to stay
 # importable without the archinstoo runtime, so the checks below are: the parse
-# still matches the real enums, and the committed nvchecker.toml still covers
-# what they yield.
+# still matches the real enums, the committed nvchecker.toml still covers what
+# they yield, and every other enum of package names is in a section.
 
 _NVDIR = Path(__file__).parents[2] / 'nvchecker'
 
@@ -720,9 +719,6 @@ _NVDIR = Path(__file__).parents[2] / 'nvchecker'
 _NVGEN_ENUMS: dict[str, type[Enum]] = {
 	'Kernel': Kernel,
 	'FirmwareVendor': FirmwareVendor,
-	'GfxPackage': GfxPackage,
-	'CpuVendor': CpuVendor,
-	'SeatAccess': SeatAccess,
 }
 
 
@@ -756,7 +752,7 @@ def test_nvgen_enum_paths_resolve() -> None:
 def test_nvgen_enum_parse_matches_code() -> None:
 	# guards the static parse: a member turned into a computed value, or an enum
 	# moved to another module, would silently drop packages from tracking.
-	# private members (CpuVendor._Unknown) are skipped by both sides on purpose
+	# private members are skipped by both sides on purpose
 	nvgen = _load_nvgen()
 	for path, class_name, _ in nvgen.PKG_ENUMS:
 		parsed = nvgen.enum_values(path, class_name)
@@ -770,6 +766,14 @@ def test_nvgen_enum_parse_matches_code() -> None:
 			f'parsed-only={sorted(parsed - live)} '
 			f'code-only={sorted(live - parsed)}'
 		)
+
+
+def test_schema_lists_what_the_other_package_enums_name() -> None:
+	# NVGEN takes these from schema.toml alone: a member in no section would
+	# drop out of tracking unseen
+	named = {p.value for p in GfxPackage} | {s.value for s in SeatAccess}
+	missing = sorted(named - schema.package_names(SCHEMA))
+	assert not missing, f'package enum members in no schema section: {missing}'
 
 
 def test_nvgen_toml_tracks_code_packages() -> None:
