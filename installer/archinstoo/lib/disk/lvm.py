@@ -18,6 +18,8 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.output import debug
 
+_InfoType = Literal['lv', 'vg', 'pvseg']
+
 
 # lvs/vgs report nothing until a fresh volume settles: the only failure
 # worth waiting out. Parse errors are bugs and surface as is
@@ -26,8 +28,7 @@ class _EmptyReportError(Exception):
 
 
 def _lvm_info(
-	cmd: str,
-	info_type: Literal['lv', 'vg', 'pvseg'],
+	cmd: str, info_type: _InfoType
 ) -> LvmVolumeInfo | LvmGroupInfo | LvmPVInfo | None:
 	data = SysCommand(cmd).decode()
 
@@ -86,8 +87,7 @@ def _lvm_info_with_retry(cmd: str, info_type: Literal['pvseg']) -> LvmPVInfo | N
 
 
 def _lvm_info_with_retry(
-	cmd: str,
-	info_type: Literal['lv', 'vg', 'pvseg'],
+	cmd: str, info_type: _InfoType
 ) -> LvmVolumeInfo | LvmGroupInfo | LvmPVInfo | None:
 	# Retry for up to 5 mins
 	max_retries = 100
