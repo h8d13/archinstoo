@@ -229,6 +229,16 @@ def test_resolve_agrees_with_the_install_on_greeter(profiles: Any) -> None:  # n
 	assert ('sddm' in _resolve.collect({'profile_config': raw})) == installed
 
 
+def test_resolve_defaults_the_compositor_like_the_profile() -> None:
+	# no custom_settings in the config: the profile's own default, count
+	# raised KeyError
+	entry: Any = {'main': 'desktop', 'details': ['dms']}
+	profile = ProfileHandler().parse_profile_config(entry)
+	assert profile is not None
+	installed = set(profile.current_selection[0].effective_packages())
+	assert installed <= _resolve.collect({'profile_config': {'profiles': [entry]}})
+
+
 # -- reverse cover -----------------------------------------------------------
 
 
