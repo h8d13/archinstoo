@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.models.packages import LVM
 from archinstoo.lib.output import debug, info, log, warn
 
 if TYPE_CHECKING:
@@ -10,7 +11,6 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.installer import Installer
 
-LVM = 'lvm2'  # package and mkinitcpio hook share the name
 RAID = 'mdadm_udev'  # hook only; the package it needs is mdadm
 
 

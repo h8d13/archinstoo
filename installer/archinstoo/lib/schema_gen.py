@@ -17,7 +17,6 @@ import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from archinstoo.lib import installer
 from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
 from archinstoo.lib.applications.cat.cpu_scheduler import CPUSchedulerApp
@@ -48,6 +47,14 @@ from archinstoo.lib.models.device import FilesystemType, SnapshotType
 from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
 from archinstoo.lib.models.graphics import GFX_CUSTOM_CHOICES, GFX_PACKAGES, GfxDriver
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
+from archinstoo.lib.models.packages import (
+	ACCESSIBILITY_PACKAGES,
+	ARCHPORTS_PACKAGES,
+	BASE_PACKAGES,
+	FIDO2_PACKAGES,
+	LVM_PACKAGES,
+	TER_FONT_PACKAGES,
+)
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.pm import aur
 from archinstoo.lib.profile.base import (
@@ -115,7 +122,7 @@ class Section:
 
 
 SECTIONS: tuple[Section, ...] = (
-	Section('base', lambda: installer.BASE_PACKAGES, site='Installer'),
+	Section('base', lambda: BASE_PACKAGES, site='Installer'),
 	Section(
 		'firmware',
 		lambda: {
@@ -127,12 +134,12 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'accessibility',
-		lambda: installer.ACCESSIBILITY_PACKAGES,
+		lambda: ACCESSIBILITY_PACKAGES,
 		site='Installer',
 	),
 	Section(
 		'lvm',
-		lambda: installer.LVM_PACKAGES,
+		lambda: LVM_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
@@ -146,12 +153,12 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'fido2',
-		lambda: installer.FIDO2_PACKAGES,
+		lambda: FIDO2_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
 		'archports',
-		lambda: installer.ARCHPORTS_PACKAGES,
+		lambda: ARCHPORTS_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
@@ -165,7 +172,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'ter_fonts',
-		lambda: installer.TER_FONT_PACKAGES,
+		lambda: TER_FONT_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
