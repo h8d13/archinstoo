@@ -158,6 +158,23 @@ def test_systemd_esp_at_efi_without_boot_needs_uki() -> None:
 	)
 
 
+def test_efistub_non_fat_boot_rejected() -> None:
+	# firmware loads vmlinuz straight from /boot and only reads FAT
+	errors = _errors(Bootloader.Efistub, [ESP_EFI, BOOT_EXT4, ROOT_BTRFS])
+	assert (
+		'Efistub does not support booting with a non-FAT boot partition'
+		in errors
+	)
+
+
+def test_efistub_non_fat_boot_allowed_under_uki() -> None:
+	# the UKI is written to the ESP, firmware never touches /boot
+	assert (
+		_errors(Bootloader.Efistub, [ESP_EFI, BOOT_EXT4, ROOT_BTRFS], uki=True)
+		== []
+	)
+
+
 def test_limine_esp_at_boot_accepted() -> None:
 	# row O: kernels land on the FAT ESP, which is all limine can read
 	assert _errors(Bootloader.Limine, [ESP_BOOT, ROOT_BTRFS]) == []
