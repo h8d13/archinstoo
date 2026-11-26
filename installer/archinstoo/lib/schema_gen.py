@@ -21,7 +21,6 @@ from archinstoo.lib.applications.application_handler import CATEGORIES
 from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.firewall import FirewallApp
 from archinstoo.lib.applications.cat.power_management import PowerManagementApp
-from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.models.applications import (
 	ApplicationSerialization,
 	Audio,
@@ -134,21 +133,7 @@ _APP_TABLES: dict[str, Callable[[], Value]] = {
 	'monitor_config': lambda: _one_to_one(Monitor),
 	'editor_config': lambda: {e.value: e.packages for e in Editor},
 	'terminal_config': lambda: {t.value: t.packages for t in Terminal},
-	'security_config': lambda: {
-		Security.APPARMOR.value: SecurityApp().apparmor_packages,
-		Security.FIREJAIL.value: SecurityApp().firejail_packages,
-		Security.BUBBLEWRAP.value: SecurityApp().bubblewrap_packages,
-		**{
-			s.value: [s.value]
-			for s in Security
-			if s
-			not in {
-				Security.APPARMOR,
-				Security.FIREJAIL,
-				Security.BUBBLEWRAP,
-			}
-		},
-	},
+	'security_config': lambda: _one_to_one(Security),
 }
 
 
