@@ -1724,6 +1724,10 @@ class SnapshotType(Enum):
 				return 'Timeshift'
 
 
+# grub integration for either snapshot tool
+GRUB_SNAPSHOT_PACKAGES = ['grub-btrfs', 'inotify-tools']
+
+
 @dataclass
 class SnapshotConfig:
 	snapshot_type: SnapshotType
