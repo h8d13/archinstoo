@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import NotRequired, Self, TypedDict
 
-from archinstoo.lib.output import warn
-
 # writes the EFI boot entry, for every bootloader that does not manage its own
 EFIBOOTMGR = 'efibootmgr'
 
@@ -68,11 +66,10 @@ class Bootloader(Enum):
 
 		if bootloader not in bootloader_options:
 			values = ', '.join(bootloader_options)
-			warn(
+			raise ValueError(
 				f'Invalid bootloader value "{bootloader}". '
 				f'Allowed values: {values}'
 			)
-			raise SystemExit(1)
 
 		return cls(bootloader)
 
