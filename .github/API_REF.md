@@ -91,7 +91,10 @@ A section lists the App's flat `packages` unless the category has a table
 of options (`audio`, `firewalls`, ...): that one adds its table to
 `_APP_TABLES` in
 [schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py),
-keyed by the same config key.
+keyed by the same config key. Where every option is its own package
+(`management`, `monitors`, `security`) the enum value is the package name:
+the App straps `[member.value]` and the table is `_one_to_one(Enum)`, the
+name is spelled once.
 
 `tests/test_schema.py` fails until 3 is done: every `_config_parsers` key
 needs a `CATEGORIES` row, and the committed `schema.toml`/`nvchecker.toml`
@@ -130,6 +133,13 @@ set `ProfileType` (`ServerType` / `DesktopEnv` / `WindowMgr`). Contract
 - `do_on_select()`: menu-time hook run when the profile is picked.
 - `default_greeter_type` / `display_servers()`: graphical metadata (greeter
   default, Xorg/Wayland advertised).
+- Seat access (compositors under `WaylandProfile`, see
+  [sway.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/default_profiles/desktops/sway.py)):
+  seed `custom_settings['seat_access']`, ask with `select_seat_access` in
+  `do_on_select()`, add `*seat_packages(self.seat_access)` to `packages`.
+  The base does the rest off `self.seat_access` / `self.uses_seatd`: the
+  seatd service, the `seat` group, the greeter fallback. No `services`
+  override.
 
 ## Add a new install step (outside cat/ and profiles)
 
@@ -219,3 +229,7 @@ Primitives reused inside any step / app / profile (on `Installer`):
   `ArchConfig`, e.g. read `app_config.firewall_config`).
 - bootloader/keymap/fs: `add_bootloader()`, `enroll_fido2()`,
   `set_keyboard()`, `minimal_installation()`, `genfstab()`.
+- Host facts come from `SysInfo`
+  ([hardware.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/hardware.py)):
+  `is_x86_64()` / `is_aarch64()` for arch checks, `is_vm()`, `has_uefi()`.
+  Models take them as arguments, they never probe.
