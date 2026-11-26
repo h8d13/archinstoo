@@ -8,7 +8,6 @@ from archinstoo.lib.models.profile import (
 	GreeterType,
 	ProfileType,
 	seat_packages,
-	seat_services,
 )
 from archinstoo.lib.output import debug
 
@@ -75,13 +74,8 @@ class NoctaliaProfile(WaylandProfile):
 			# bare installs ship none, so seed one sans + one mono
 			'inter-font',
 			'ttf-jetbrains-mono-nerd',
-			*seat_packages(self.custom_settings.get('seat_access')),
+			*seat_packages(self.seat_access),
 		]
-
-	@property
-	@override
-	def services(self) -> list[str]:
-		return seat_services(self.custom_settings.get('seat_access'))
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
@@ -116,6 +110,5 @@ class NoctaliaProfile(WaylandProfile):
 			self.compositor,
 		)
 		self.custom_settings['seat_access'] = select_seat_access(
-			'Noctalia',
-			self.custom_settings.get('seat_access'),
+			'Noctalia', self.seat_access
 		)

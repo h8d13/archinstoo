@@ -4,6 +4,7 @@ from archinstoo.lib.models.profile import (
 	DisplayServer,
 	GreeterType,
 	ProfileType,
+	SeatAccess,
 	SelectResult,
 )
 from archinstoo.lib.output import debug
@@ -40,6 +41,16 @@ class Profile:
 	def compositor(self) -> str:
 		# set by the menu, one of compositor_packages
 		return str(self.custom_settings[f'{self.name}_compositor'])
+
+	@property
+	def seat_access(self) -> str | list[str] | None:
+		# a SeatAccess value as saved; None until the menu runs, and on
+		# profiles that never ask
+		return self.custom_settings.get('seat_access')
+
+	@property
+	def uses_seatd(self) -> bool:
+		return self.seat_access == SeatAccess.seatd
 
 	@property
 	def packages(self) -> list[str]:

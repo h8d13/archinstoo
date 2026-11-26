@@ -6,7 +6,6 @@ from archinstoo.lib.models.profile import (
 	GreeterType,
 	ProfileType,
 	seat_packages,
-	seat_services,
 )
 from archinstoo.lib.output import info
 
@@ -69,13 +68,8 @@ class DmsProfile(WaylandProfile):
 			# and the terminal needs a real mono font anyway
 			'inter-font',
 			'ttf-fira-code',
-			*seat_packages(self.custom_settings.get('seat_access')),
+			*seat_packages(self.seat_access),
 		]
-
-	@property
-	@override
-	def services(self) -> list[str]:
-		return seat_services(self.custom_settings.get('seat_access'))
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
@@ -115,6 +109,5 @@ class DmsProfile(WaylandProfile):
 			self.compositor,
 		)
 		self.custom_settings['seat_access'] = select_seat_access(
-			'DMS',
-			self.custom_settings.get('seat_access'),
+			'DMS', self.seat_access
 		)

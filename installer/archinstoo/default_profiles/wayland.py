@@ -1,7 +1,12 @@
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.authentication.accounts import add_to_group
-from archinstoo.lib.models.profile import DisplayServer, GreeterType, ProfileType
+from archinstoo.lib.models.profile import (
+	DisplayServer,
+	GreeterType,
+	ProfileType,
+	seat_services,
+)
 from archinstoo.lib.output import debug
 from archinstoo.lib.profile.base import Profile
 
@@ -28,7 +33,7 @@ class WaylandProfile(Profile):
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
 		# compositors need seat membership to reach /run/seatd.sock (DRM/input)
-		if self.custom_settings.get('seat_access') == 'seatd':
+		if self.uses_seatd:
 			add_to_group(
 				install_session,
 				'seat',
@@ -37,12 +42,22 @@ class WaylandProfile(Profile):
 
 	@property
 	@override
+	def services(self) -> list[str]:
+		# empty unless seatd was picked, and only where the profile places
+		# the package too: a config can hand any profile the key, and
+		# enabling a unit nothing strapped aborts the install
+		return [
+			s for s in seat_services(self.seat_access) if s in self.packages
+		]
+
+	@property
+	@override
 	def default_greeter_type(self) -> GreeterType:
 		# Graphical display managers hold a session with DRM master open at
 		# handoff, so a seatd-based compositor (sway/niri/etc.) can't take over
 		# the GPU. TTY/session-transparent greeters (ly, greetd,
 		# cosmic-greeter) don't.
-		if self.custom_settings.get('seat_access') == 'seatd':
+		if self.uses_seatd:
 			debug(
 				f'{self.name}: seatd selected, using Ly instead of '
 				f'{self._default_greeter_non_seatd.value}'
