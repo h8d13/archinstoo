@@ -17,6 +17,7 @@ from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.models.bootloader import Bootloader
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
+from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.profile import DisplayServer
 from archinstoo.lib.network.network_handler import ISO_IWD_DIR
@@ -233,8 +234,8 @@ def collect(config: ArchConfigSerialization) -> set[str]:
 	pkgs.update(_firmware_packages(config))
 	pkgs.update(_host_packages())
 
-	# kernels
-	kernels = config.get('kernels', ['linux'])
+	# kernels: an empty list keeps the default, as ArchConfig.from_config does
+	kernels = config.get('kernels') or [DEFAULT_KERNEL.value]
 	pkgs.update(kernels)
 
 	# kernel headers
