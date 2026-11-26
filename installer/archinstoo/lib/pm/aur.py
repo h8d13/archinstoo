@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.authentication.accounts import DOAS_CONF, SUDOERS_DIR
 from archinstoo.lib.chroot import KEEP_ENV
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.models.authentication import PrivilegeEscalation
@@ -39,7 +40,7 @@ def doas_aur_rules(username: str) -> str:
 # appended to the user's doas.conf, so cleanup strips only our lines
 @contextmanager
 def _doas_rule(target: Path, username: str) -> Generator[None]:
-	conf = target / 'etc/doas.conf'
+	conf = target / DOAS_CONF.relative_to_root()
 	rules = doas_aur_rules(username)
 	debug(
 		'Adding temporary doas rules for AUR build: permit nopass '
@@ -62,7 +63,7 @@ def _doas_rule(target: Path, username: str) -> Generator[None]:
 
 @contextmanager
 def _sudo_rule(target: Path, username: str) -> Generator[None]:
-	rule = target / 'etc/sudoers.d/99-aur-build'
+	rule = target / SUDOERS_DIR.relative_to_root() / '99-aur-build'
 	try:
 		rule.write_text(sudo_aur_rule(username))
 		rule.chmod(0o440)
