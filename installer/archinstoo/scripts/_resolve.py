@@ -15,6 +15,7 @@ from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.models.bootloader import Bootloader
+from archinstoo.lib.models.device import ModificationStatus
 from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
@@ -106,9 +107,11 @@ def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str
 			)
 	else:
 		for dev in disk.get('device_modifications') or []:
+			# a partition on its way out gets no filesystem prepared
 			fs_types.update(
 				part.get('fs_type') or ''
 				for part in dev.get('partitions') or []
+				if part.get('status') != ModificationStatus.DELETE.value
 			)
 
 	pkgs = {p for fs in fs_types if fs in fs_tools for p in fs_tools[fs]}
