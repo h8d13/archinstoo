@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from typing import NotRequired, Self, TypedDict
 
+ZRAM_PACKAGES = ['zram-generator']
+
 
 class ZramAlgorithm(StrEnum):
 	Default = 'default'

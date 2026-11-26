@@ -1,14 +1,12 @@
 from typing import TYPE_CHECKING
 
 from archinstoo.lib.kernel.sysctl import write_sysctl
-from archinstoo.lib.models.swap import ZramAlgorithm
+from archinstoo.lib.models.swap import ZRAM_PACKAGES, ZramAlgorithm
 from archinstoo.lib.models.sysctl import ZRAM_CONF, ZRAM_DEFAULTS
 from archinstoo.lib.output import info
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-
-ZRAM_PACKAGES = ['zram-generator']
 
 
 def setup_zram(

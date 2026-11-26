@@ -30,7 +30,6 @@ from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
 from archinstoo.lib.authentication import stash
 from archinstoo.lib.disk import snapshots
 from archinstoo.lib.hardware import CpuVendor
-from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.applications import (
 	Audio,
 	Editor,
@@ -55,6 +54,7 @@ from archinstoo.lib.models.packages import (
 	LVM_PACKAGES,
 	TER_FONT_PACKAGES,
 )
+from archinstoo.lib.models.swap import ZRAM_PACKAGES
 from archinstoo.lib.models.users import Shell
 from archinstoo.lib.pm import aur
 from archinstoo.lib.profile.base import (
@@ -177,7 +177,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'swap',
-		lambda: {'zram': zram.ZRAM_PACKAGES},
+		lambda: {'zram': ZRAM_PACKAGES},
 		site='installation.setup_swap',
 	),
 	Section(
