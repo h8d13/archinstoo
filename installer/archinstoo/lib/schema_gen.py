@@ -51,6 +51,7 @@ from archinstoo.lib.models.packages import (
 	BASE_PACKAGES,
 	FIDO2_PACKAGES,
 	LVM_PACKAGES,
+	RAID_PACKAGES,
 	TER_FONT_PACKAGES,
 )
 from archinstoo.lib.models.profile import (
@@ -192,6 +193,11 @@ SECTIONS: tuple[Section, ...] = (
 			for fs in FilesystemType
 			if (pkg := fs.installation_pkg)
 		},
+		site='installation.minimal_installation',
+	),
+	Section(
+		'raid',
+		lambda: RAID_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(

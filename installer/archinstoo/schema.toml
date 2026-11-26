@@ -35,6 +35,9 @@ btrfs = ["btrfs-progs"]
 f2fs = ["f2fs-tools"]
 xfs = ["xfsprogs"]
 
+[raid]
+packages = ["mdadm"]
+
 [fido2]
 packages = ["libfido2"]
 
