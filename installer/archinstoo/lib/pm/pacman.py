@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 # pacman's own files on the running system; under a target, relative_to_root()
 PACMAN_CONF: Final = LPath('/etc/pacman.conf')
 PACMAN_GNUPG: Final = LPath('/etc/pacman.d/gnupg')
+PACMAN_HOOKS: Final = LPath('/etc/pacman.d/hooks')
 MIRRORLIST: Final = LPath('/etc/pacman.d/mirrorlist')
 PACMAN_DB: Final = LPath('/var/lib/pacman')
 
