@@ -1,7 +1,8 @@
 import pytest
 
 from archinstoo.lib import hardware
-from archinstoo.lib.kernel.initramfs import LVM, Initramfs
+from archinstoo.lib.kernel.initramfs import Initramfs
+from archinstoo.lib.models.packages import LVM
 
 
 def _order(hooks: list[str], *names: str) -> list[int]:

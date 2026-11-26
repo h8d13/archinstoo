@@ -1,5 +1,5 @@
 import textwrap
-from typing import override
+from typing import TYPE_CHECKING, Protocol, override
 
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.menu.abstract_menu import AbstractSubMenu
@@ -35,6 +35,9 @@ from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice, prompt_yes_no
 from archinstoo.lib.tui.result import ResultType
 from archinstoo.lib.tui.types import Alignment, FrameProperties
+
+if TYPE_CHECKING:
+	from collections.abc import Callable
 
 
 class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
@@ -77,14 +80,20 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 		items = [
 			MenuItem(
 				text='Bluetooth',
-				action=select_bluetooth,
+				action=_select_enabled(
+					'Would you like to configure Bluetooth?\n',
+					BluetoothConfiguration,
+				),
 				value=self._app_config.bluetooth_config,
 				preview_action=self._prev,
 				key='bluetooth_config',
 			),
 			MenuItem(
 				text='Thunderbolt',
-				action=select_thunderbolt,
+				action=_select_enabled(
+					_THUNDERBOLT_PROMPT,
+					ThunderboltConfiguration,
+				),
 				value=self._app_config.thunderbolt_config,
 				preview_action=self._prev,
 				enabled=SysInfo.has_thunderbolt(),
@@ -98,19 +107,31 @@ class ApplicationMenu(AbstractSubMenu[ApplicationConfiguration]):
 			),
 			MenuItem(
 				text='Print service',
-				action=select_print_service,
+				action=_select_enabled(
+					'Would you like to configure the '
+					'print service?\n',
+					PrintServiceConfiguration,
+				),
 				preview_action=self._prev,
 				key='print_service_config',
 			),
 			MenuItem(
 				text='Media codecs',
-				action=select_media_codecs,
+				action=_select_enabled(
+					'Install the media codec set '
+					'(gstreamer bad/ugly/libav, dvd, raw)?\n',
+					MediaCodecsConfiguration,
+				),
 				preview_action=self._prev,
 				key='media_codecs_config',
 			),
 			MenuItem(
 				text='Flatpak',
-				action=select_flatpak,
+				action=_select_enabled(
+					'Install flatpak with the flathub remote '
+					'and a portal fallback?\n',
+					FlatpakConfiguration,
+				),
 				preview_action=self._prev,
 				key='flatpak_config',
 			),
@@ -226,57 +247,28 @@ def _enabled_text(label: str, enabled: bool) -> str:
 	return f'{label}: {"Enabled" if enabled else "Disabled"}'
 
 
-def select_bluetooth(
-	preset: BluetoothConfiguration | None,
-) -> BluetoothConfiguration | None:
-	enabled = prompt_yes_no(
-		'Would you like to configure Bluetooth?\n',
-		preset.enabled if preset else False,
-	)
-	return preset if enabled is None else BluetoothConfiguration(enabled)
+class _Flag(Protocol):
+	enabled: bool
 
 
-def select_thunderbolt(
-	preset: ThunderboltConfiguration | None,
-) -> ThunderboltConfiguration | None:
-	enabled = prompt_yes_no(
-		textwrap.dedent("""\
-			Would you like to configure Thunderbolt device authorization
-			(bolt)? New devices are auto-enrolled when the desktop asks or
-			IOMMU DMA protection is on, otherwise once with:
-			boltctl enroll --policy auto <uuid>
-		"""),
-		preset.enabled if preset else False,
-	)
-	return preset if enabled is None else ThunderboltConfiguration(enabled)
+def _select_enabled[C: _Flag](
+	prompt: str,
+	config_cls: Callable[[bool], C],
+) -> Callable[[C | None], C | None]:
+	# the select for a yes/no category; skipping keeps the preset
+	def select(preset: C | None) -> C | None:
+		enabled = prompt_yes_no(prompt, preset.enabled if preset else False)
+		return preset if enabled is None else config_cls(enabled)
+
+	return select
 
 
-def select_print_service(
-	preset: PrintServiceConfiguration | None,
-) -> PrintServiceConfiguration | None:
-	enabled = prompt_yes_no(
-		'Would you like to configure the print service?\n',
-		preset.enabled if preset else False,
-	)
-	return preset if enabled is None else PrintServiceConfiguration(enabled)
-
-
-def select_flatpak(preset: FlatpakConfiguration | None) -> FlatpakConfiguration | None:
-	enabled = prompt_yes_no(
-		'Install flatpak with the flathub remote and a portal fallback?\n',
-		preset.enabled if preset else False,
-	)
-	return preset if enabled is None else FlatpakConfiguration(enabled)
-
-
-def select_media_codecs(
-	preset: MediaCodecsConfiguration | None,
-) -> MediaCodecsConfiguration | None:
-	enabled = prompt_yes_no(
-		'Install the media codec set (gstreamer bad/ugly/libav, dvd, raw)?\n',
-		preset.enabled if preset else False,
-	)
-	return preset if enabled is None else MediaCodecsConfiguration(enabled)
+_THUNDERBOLT_PROMPT = textwrap.dedent("""\
+	Would you like to configure Thunderbolt device authorization
+	(bolt)? New devices are auto-enrolled when the desktop asks or
+	IOMMU DMA protection is on, otherwise once with:
+	boltctl enroll --policy auto <uuid>
+""")
 
 
 def select_audio(preset: AudioConfiguration | None = None) -> AudioConfiguration | None:

@@ -11,12 +11,11 @@ import importlib.machinery
 import importlib.util
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, get_type_hints
+from typing import TYPE_CHECKING, get_type_hints
 
 import pytest
 
 from archinstoo.lib import installer, schema, schema_gen
-from archinstoo.lib.hardware import CpuVendor
 from archinstoo.lib.models.applications import (
 	ApplicationConfiguration,
 	ApplicationSerialization,
@@ -25,11 +24,12 @@ from archinstoo.lib.models.applications import (
 	PowerManagement,
 	Security,
 )
-from archinstoo.lib.models.firmware import FirmwareType, FirmwareVendor
+from archinstoo.lib.models.firmware import CpuVendor, FirmwareType, FirmwareVendor
 from archinstoo.lib.models.graphics import GfxPackage
 from archinstoo.lib.models.kernel import Kernel
+from archinstoo.lib.models.profile import SeatAccess
+from archinstoo.lib.models.swap import SwapConfigSerialization, SwapConfiguration
 from archinstoo.lib.pm import groups
-from archinstoo.lib.profile.base import SeatAccess
 from archinstoo.lib.schema import SCHEMA, SCHEMA_PATH
 from archinstoo.scripts import _resolve
 
@@ -120,7 +120,7 @@ def test_pick_paths_exist_in_the_serialization(section: schema_gen.Section) -> N
 def test_resolve_walks_the_picks() -> None:
 	# one of each shape: flag on a flat section, name on a flat section, name
 	# on a table, list on a table; an unknown name drops out
-	app: dict[str, Any] = {
+	app: ApplicationSerialization = {
 		'media_codecs_config': {'enabled': True},
 		'print_service_config': {'enabled': False},
 		'cpu_scheduler_config': {'scheduler': 'scx_lavd'},
@@ -134,6 +134,19 @@ def test_resolve_walks_the_picks() -> None:
 		| {'htop', 'git'}
 	)
 	assert _resolve._application_packages(app) == expected
+
+
+@pytest.mark.parametrize(
+	'swap',
+	[None, {}, {'hibernation': True}, {'zram': False}, {'zram': True}],
+)
+def test_resolve_agrees_with_the_install_on_zram(
+	swap: SwapConfigSerialization | None,
+) -> None:
+	# count once read a section without the key as zram off
+	installed = swap is not None and SwapConfiguration.parse_arg(swap).zram
+	listed = 'zram-generator' in _resolve.collect({'swap': swap})
+	assert listed == installed
 
 
 # -- reverse cover -----------------------------------------------------------

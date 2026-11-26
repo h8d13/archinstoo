@@ -1,12 +1,16 @@
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import RequirementError, SysCallError
 from archinstoo.lib.output import debug, info
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from pathlib import Path
+
+# on the running system; under a target, relative_to_root()
+FSTAB: Final = LPath('/etc/fstab')
 
 # every block-backed mount under the target, by UUID. The API mounts (proc,
 # sys, dev, run, tmp) have no UUID and drop out on their own
@@ -106,7 +110,7 @@ def mounted_at(target: Path) -> dict[str, str]:
 
 def write_fstab(target: Path, extra_entries: list[str]) -> None:
 	# the mounts plus what the install learned that findmnt cannot see (swap)
-	fstab_path = target / 'etc' / 'fstab'
+	fstab_path = target / FSTAB.relative_to_root()
 	info(f'Generating {fstab_path}', step=True)
 	try:
 		entries = _mount_entries(target)

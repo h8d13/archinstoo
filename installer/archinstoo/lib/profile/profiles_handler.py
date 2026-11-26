@@ -3,18 +3,23 @@ import inspect
 from collections import Counter
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING, NotRequired, TypedDict
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
+from archinstoo.lib.models.profile import (
+	GreeterType,
+	ProfileConfigurationSerialization,
+	ProfileSerialization,
+)
 from archinstoo.lib.output import debug, error, info, warn
-from archinstoo.lib.profile.base import GreeterType, Profile
+from archinstoo.lib.profile.base import Profile
+from archinstoo.lib.profile.config import ProfileConfiguration
 
 if TYPE_CHECKING:
 	from types import ModuleType
 
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.profile.config import ProfileConfiguration
 
 # greetd's stock config.toml runs the tty agreety greeter, so every front-end
 # here replaces it wholesale. tuigreet reads the sessions each compositor ships
@@ -33,13 +38,6 @@ _GREETD_SESSION = {
 }
 
 
-class ProfileSerialization(TypedDict):
-	main: NotRequired[str]
-	details: NotRequired[list[str]]
-	custom_settings: NotRequired[dict[str, dict[str, str | list[str] | None]]]
-	path: NotRequired[str]
-
-
 def one_shell[P: Profile](profiles: list[P]) -> list[P]:
 	# shells provision the compositor config and start themselves: keep the
 	# first picked, two would fight over both
@@ -53,10 +51,6 @@ def one_shell[P: Profile](profiles: list[P]) -> list[P]:
 class ProfileHandler:
 	def __init__(self) -> None:
 		self._profiles: list[Profile] | None = None
-
-		# custom profile file from the config, kept to export it again when
-		# the user saves the configuration
-		self._custom_path: str | None = None
 
 	def to_json(self, profile: Profile | None) -> ProfileSerialization:
 		# Serialize the selected profile setting to JSON
@@ -74,9 +68,8 @@ class ProfileHandler:
 					for profile in profile.current_selection
 				},
 			}
-
-		if self._custom_path is not None:
-			data['path'] = self._custom_path
+			if profile.custom_path is not None:
+				data['path'] = profile.custom_path
 
 		return data
 
@@ -92,7 +85,6 @@ class ProfileHandler:
 		custom_profiles: list[Profile] = []
 
 		if custom_path := profile_config.get('path', None):
-			self._custom_path = custom_path
 			local_path = Path(custom_path)
 
 			# local files only: a profile is code run as root, fetch and
@@ -115,6 +107,8 @@ class ProfileHandler:
 
 		if not profile:
 			return None
+
+		profile.custom_path = custom_path
 
 		valid_sub_profiles: list[Profile] = []
 		invalid_sub_profiles: list[str] = []
@@ -141,6 +135,41 @@ class ProfileHandler:
 				sub_profile.custom_settings = sub_profile_settings
 
 		return profile
+
+	def config_json(
+		self, config: ProfileConfiguration
+	) -> ProfileConfigurationSerialization:
+		return {
+			'profiles': [self.to_json(p) for p in config.profiles],
+			'greeter': config.greeter.value if config.greeter else None,
+		}
+
+	def parse_config(
+		self, arg: ProfileConfigurationSerialization
+	) -> ProfileConfiguration:
+		profiles = [
+			profile
+			for profile_data in arg.get('profiles', [])
+			if (profile := self.parse_profile_config(profile_data))
+		]
+
+		greeter = arg.get('greeter', None)
+
+		config = ProfileConfiguration(
+			profiles,
+			GreeterType(greeter) if greeter else None,
+		)
+
+		# the menu gates this on the selection; a hand-written config does not,
+		# and install_profile_config would drop it without a word after pacstrap
+		# had already run
+		if config.greeter and not config.is_greeter_supported():
+			warn(
+				f'Greeter {config.greeter.value} in the config: no '
+				'selected profile supports one, it will be skipped'
+			)
+
+		return config
 
 	@property
 	def profiles(self) -> list[Profile]:

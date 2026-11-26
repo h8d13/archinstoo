@@ -61,8 +61,8 @@ PKG_ENUMS = (
 	(PKG / 'lib' / 'models' / 'kernel.py', 'Kernel', ('', '-headers')),
 	(PKG / 'lib' / 'models' / 'firmware.py', 'FirmwareVendor', ('',)),
 	(PKG / 'lib' / 'models' / 'graphics.py', 'GfxPackage', ('',)),
-	(PKG / 'lib' / 'hardware.py', 'CpuVendor', ('-ucode',)),
-	(PKG / 'lib' / 'profile' / 'base.py', 'SeatAccess', ('',)),
+	(PKG / 'lib' / 'models' / 'firmware.py', 'CpuVendor', ('-ucode',)),
+	(PKG / 'lib' / 'models' / 'profile.py', 'SeatAccess', ('',)),
 )
 
 

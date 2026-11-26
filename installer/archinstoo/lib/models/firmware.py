@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from enum import StrEnum, auto
+from enum import Enum, StrEnum, auto
+from pathlib import Path
 from typing import NotRequired, Self, TypedDict
 
 
@@ -45,6 +46,30 @@ FIRMWARE_OPTDEPS = frozenset(
 FULL_FIRMWARE = ['linux-firmware']
 
 
+class CpuVendor(Enum):
+	AuthenticAMD = 'amd'
+	GenuineIntel = 'intel'
+	_Unknown = 'unknown'
+
+	@classmethod
+	def get_vendor(cls, name: str) -> CpuVendor:
+		if name in cls.__members__:
+			return cls[name]
+		return cls._Unknown
+
+	def _has_microcode(self) -> bool:
+		match self:
+			case CpuVendor.AuthenticAMD | CpuVendor.GenuineIntel:
+				return True
+			case _:
+				return False
+
+	def get_ucode(self) -> Path | None:
+		if self._has_microcode():
+			return Path(self.value + '-ucode.img')
+		return None
+
+
 class FirmwareConfigSerialization(TypedDict):
 	firmware_type: str
 	vendors: NotRequired[list[str]]
@@ -56,13 +81,11 @@ class FirmwareConfiguration:
 	vendors: list[FirmwareVendor] = field(default_factory=list)
 
 	@classmethod
-	def default(cls) -> Self:
+	def default(cls, is_vm: bool) -> Self:
 		# Guests boot on virtio/emulated devices that ship no blobs. Bare
 		# metal keeps FULL: a missed blob can cost the only NIC, with no
 		# network left to fix it.
-		from archinstoo.lib.hardware import SysInfo
-
-		if SysInfo.is_vm():
+		if is_vm:
 			return cls(firmware_type=FirmwareType.MINIMAL)
 		return cls()
 

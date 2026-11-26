@@ -23,6 +23,7 @@ from archinstoo.lib.models.device import (
 	has_separate_boot,
 )
 from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.pm.pacman import PACMAN_HOOKS
 from archinstoo.lib.utils.host import Host
 from archinstoo.lib.utils.paths import LPath
 
@@ -878,7 +879,7 @@ class BootloaderInstaller:
 			''',
 		)
 
-		hooks_dir = self.target / 'etc' / 'pacman.d' / 'hooks'
+		hooks_dir = self.target / PACMAN_HOOKS.relative_to_root()
 		hooks_dir.mkdir(parents=True, exist_ok=True)
 
 		hook_path = hooks_dir / '99-limine.hook'
@@ -1094,7 +1095,7 @@ class BootloaderInstaller:
 			"""
 		)
 
-		hooks_dir = self.target / 'etc' / 'pacman.d' / 'hooks'
+		hooks_dir = self.target / PACMAN_HOOKS.relative_to_root()
 		hooks_dir.mkdir(parents=True, exist_ok=True)
 
 		hook_path = hooks_dir / '99-refind.hook'

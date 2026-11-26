@@ -1,4 +1,4 @@
-from archinstoo.lib.profile.base import SeatAccess
+from archinstoo.lib.models.profile import SeatAccess
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.types import Alignment, FrameProperties

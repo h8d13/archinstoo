@@ -5,16 +5,13 @@ from archinstoo.lib.chroot import chroot_prefix
 from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.models.bootloader import Bootloader
-from archinstoo.lib.models.device import SnapshotType
+from archinstoo.lib.models.device import GRUB_SNAPSHOT_PACKAGES, SnapshotType
 from archinstoo.lib.output import debug, info
 
 if TYPE_CHECKING:
 	from pathlib import Path
 
 	from archinstoo.lib.installer import Installer
-
-# grub integration for either snapshot tool
-GRUB_SNAPSHOT_PACKAGES = ['grub-btrfs', 'inotify-tools']
 
 
 def setup_btrfs_snapshot(

@@ -113,12 +113,8 @@ def test_is_vm_forks_once(monkeypatch: pytest.MonkeyPatch) -> None:
 		(False, FirmwareType.FULL),
 	],
 )
-def test_firmware_default_per_host(
-	monkeypatch: pytest.MonkeyPatch, is_vm: bool, expected: FirmwareType
-) -> None:
-	monkeypatch.setattr(hardware.SysInfo, 'is_vm', staticmethod(lambda: is_vm))
-
-	assert FirmwareConfiguration.default().firmware_type is expected
+def test_firmware_default_per_host(is_vm: bool, expected: FirmwareType) -> None:
+	assert FirmwareConfiguration.default(is_vm).firmware_type is expected
 
 
 @pytest.mark.parametrize(

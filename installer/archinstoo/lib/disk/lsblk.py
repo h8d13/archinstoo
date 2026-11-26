@@ -1,31 +1,10 @@
-import json
-from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
 
 from archinstoo.lib.command import run
 from archinstoo.lib.exceptions import DiskError, SysCallError
-from archinstoo.lib.models.device import LsblkInfo
+from archinstoo.lib.models.device import LsblkInfo, LsblkOutput
 from archinstoo.lib.output import debug, warn
-
-
-@dataclass
-class LsblkOutput:
-	blockdevices: list[LsblkInfo]
-
-	@classmethod
-	def from_json(cls, data: str) -> LsblkOutput:
-		parsed = json.loads(data)
-		devices = [
-			LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])
-		]
-		return cls(blockdevices=devices)
-
-	def to_json(self) -> str:
-		return json.dumps(
-			{'blockdevices': [d.to_dict() for d in self.blockdevices]},
-			indent=4,
-		)
 
 
 def _fetch_lsblk_info(

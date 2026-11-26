@@ -2,6 +2,10 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from typing import NotRequired, Self, TypedDict, override
 
+# a user's dotfiles repo, cloned into ~/.stash right after useradd
+# cloning a user stash
+STASH_PACKAGES = ['git']
+
 
 class Shell(StrEnum):
 	BASH = auto()

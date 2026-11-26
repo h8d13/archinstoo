@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Self
-
-from archinstoo.lib.output import warn
+from typing import NotRequired, Self, TypedDict
 
 # writes the EFI boot entry, for every bootloader that does not manage its own
 EFIBOOTMGR = 'efibootmgr'
@@ -68,13 +66,21 @@ class Bootloader(Enum):
 
 		if bootloader not in bootloader_options:
 			values = ', '.join(bootloader_options)
-			warn(
+			raise ValueError(
 				f'Invalid bootloader value "{bootloader}". '
 				f'Allowed values: {values}'
 			)
-			raise SystemExit(1)
 
 		return cls(bootloader)
+
+
+class BootloaderConfigSerialization(TypedDict):
+	bootloader: NotRequired[str | None]
+	uki: NotRequired[bool]
+	removable: NotRequired[bool]
+	quiet: NotRequired[bool]
+	splash: NotRequired[bool]
+	serial_console: NotRequired[str | None]
 
 
 @dataclass
@@ -88,7 +94,7 @@ class BootloaderConfiguration:
 	# kernel 'console=' value (e.g. 'ttyS0,115200'); None = no serial console
 	serial_console: str | None = None
 
-	def json(self) -> dict[str, Any]:
+	def json(self) -> BootloaderConfigSerialization:
 		return {
 			'bootloader': self.bootloader.json()
 			if self.bootloader
@@ -101,7 +107,7 @@ class BootloaderConfiguration:
 		}
 
 	@classmethod
-	def parse_arg(cls, config: dict[str, Any]) -> Self:
+	def parse_arg(cls, config: BootloaderConfigSerialization) -> Self:
 		raw = config.get('bootloader')
 		bootloader = Bootloader.from_arg(raw) if raw else None
 		uki = config.get('uki', False)

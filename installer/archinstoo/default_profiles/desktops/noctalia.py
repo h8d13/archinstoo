@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from archinstoo.default_profiles.desktops import select_compositor, select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.output import debug
-from archinstoo.lib.profile.base import (
+from archinstoo.lib.models.profile import (
 	GreeterType,
 	ProfileType,
 	seat_packages,
 	seat_services,
 )
+from archinstoo.lib.output import debug
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer

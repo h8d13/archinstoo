@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from archinstoo.lib.disk.partitioning_menu import FreeSpace
 from archinstoo.lib.models.device import (
 	BDevice,
 	DeviceModification,
 	FilesystemType,
+	FreeSpace,
 	ModificationStatus,
 	PartitionFlag,
 	PartitionModification,

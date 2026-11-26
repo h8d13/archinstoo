@@ -15,9 +15,8 @@ if TYPE_CHECKING:
 	from parted import Disk, Geometry, Partition
 
 	from archinstoo.lib.disk.device_handler import DeviceHandler
-	from archinstoo.lib.models.users import Password
 
-
+from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, warn
 
 # libparted PED_PARTITION_* values, re-exported verbatim by pyparted.
@@ -1001,6 +1000,30 @@ class DeviceGeometry:
 		}
 
 
+class FreeSpace:
+	def __init__(self, start: Size, end: Size) -> None:
+		# only the aligned span is usable, so a gap between off-grain
+		# neighbours that rounds below the buffer is never offered
+		self.start = start.align_up()
+		self.end = end.align_down()
+
+	@property
+	def length(self) -> Size:
+		return self.end - self.start
+
+	def table_data(self) -> dict[str, str]:
+		# Called for displaying size data in table format
+		return {
+			'Start': self.start.format_size(
+				Unit.sectors, self.start.sector_size, include_unit=False
+			),
+			'End': self.end.format_size(
+				Unit.sectors, self.start.sector_size, include_unit=False
+			),
+			'Size': self.length.format_highest(),
+		}
+
+
 @dataclass
 class BDevice:
 	disk: Disk
@@ -1070,12 +1093,10 @@ class PartitionGUID(Enum):
 	LINUX_ROOT_X86_64 = '4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709'
 
 	@classmethod
-	def linux_root(cls) -> PartitionGUID:
+	def linux_root(cls, arch: str) -> PartitionGUID:
 		# discoverable partitions spec keys root by arch: the wrong GUID
 		# leaves systemd-gpt-auto-generator unable to find /
-		from archinstoo.lib.hardware import SysInfo
-
-		if SysInfo.arch() == 'aarch64':
+		if arch == 'aarch64':
 			return cls.LINUX_ROOT_AARCH64
 		return cls.LINUX_ROOT_X86_64
 
@@ -1724,6 +1745,10 @@ class SnapshotType(Enum):
 				return 'Timeshift'
 
 
+# grub integration for either snapshot tool
+GRUB_SNAPSHOT_PACKAGES = ['grub-btrfs', 'inotify-tools']
+
+
 @dataclass
 class SnapshotConfig:
 	snapshot_type: SnapshotType
@@ -1947,9 +1972,6 @@ class DiskEncryption:
 		arg: _DiskEncryptionSerialization,
 		disk_config: DiskLayoutConfiguration,
 	) -> Self:
-		# users imports stay lazy here: device.py only type-checks Password
-		from archinstoo.lib.models.users import Password
-
 		encryption_type = EncryptionType(arg['encryption_type'])
 
 		password: Password | None = None
@@ -2142,3 +2164,22 @@ class LsblkInfo:
 			'fsroots',
 			'serial',
 		]
+
+
+@dataclass
+class LsblkOutput:
+	blockdevices: list[LsblkInfo]
+
+	@classmethod
+	def from_json(cls, data: str) -> LsblkOutput:
+		parsed = json.loads(data)
+		devices = [
+			LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])
+		]
+		return cls(blockdevices=devices)
+
+	def to_json(self) -> str:
+		return json.dumps(
+			{'blockdevices': [d.to_dict() for d in self.blockdevices]},
+			indent=4,
+		)

@@ -1,5 +1,6 @@
 from typing import assert_never
 
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.firmware import (
 	FIRMWARE_OPTDEPS,
 	FirmwareConfiguration,
@@ -16,7 +17,7 @@ def select_firmware(
 	preset: FirmwareConfiguration | None = None,
 ) -> FirmwareConfiguration:
 	# Host-dependent (MINIMAL in a VM), so it cannot be a signature default
-	default = FirmwareConfiguration.default()
+	default = FirmwareConfiguration.default(SysInfo.is_vm())
 	preset = preset or default
 
 	header = (

@@ -3,9 +3,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.authentication.accounts import DOAS_CONF, SUDOERS_DIR
 from archinstoo.lib.chroot import KEEP_ENV
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.models.authentication import PrivilegeEscalation
+from archinstoo.lib.models.packages import AUR_BOOTSTRAP_PACKAGES
 from archinstoo.lib.output import debug, info, warn
 
 if TYPE_CHECKING:
@@ -13,38 +15,6 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
-
-# what grimoire needs on the target before it can build anything from the AUR.
-# base-devel spelled out (its member list minus sudo) so a doas install does
-# not drag sudo in as a side effect of wanting a toolchain
-AUR_BOOTSTRAP_PACKAGES = [
-	'git',
-	'archlinux-keyring',
-	'autoconf',
-	'automake',
-	'binutils',
-	'bison',
-	'debugedit',
-	'fakeroot',
-	'file',
-	'findutils',
-	'flex',
-	'gawk',
-	'gcc',
-	'gettext',
-	'grep',
-	'groff',
-	'gzip',
-	'libtool',
-	'm4',
-	'make',
-	'pacman',
-	'patch',
-	'pkgconf',
-	'sed',
-	'texinfo',
-	'which',
-]
 
 
 # grimoire elevates `pacman -S` for official repo deps: those downloads need
@@ -70,7 +40,7 @@ def doas_aur_rules(username: str) -> str:
 # appended to the user's doas.conf, so cleanup strips only our lines
 @contextmanager
 def _doas_rule(target: Path, username: str) -> Generator[None]:
-	conf = target / 'etc/doas.conf'
+	conf = target / DOAS_CONF.relative_to_root()
 	rules = doas_aur_rules(username)
 	debug(
 		'Adding temporary doas rules for AUR build: permit nopass '
@@ -93,7 +63,7 @@ def _doas_rule(target: Path, username: str) -> Generator[None]:
 
 @contextmanager
 def _sudo_rule(target: Path, username: str) -> Generator[None]:
-	rule = target / 'etc/sudoers.d/99-aur-build'
+	rule = target / SUDOERS_DIR.relative_to_root() / '99-aur-build'
 	try:
 		rule.write_text(sudo_aur_rule(username))
 		rule.chmod(0o440)

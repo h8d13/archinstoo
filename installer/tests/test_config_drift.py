@@ -2,13 +2,18 @@
 # land in models and schema and never reach them.
 
 import json
+import re
+from dataclasses import fields
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+import archinstoo
 from archinstoo.lib.args import ArchConfig
 from archinstoo.lib.models.applications import ApplicationConfiguration
+from archinstoo.lib.models.swap import SwapConfiguration, ZramAlgorithm
+from archinstoo.lib.models.sysctl import SysctlConfiguration
 
 EXAMPLES = Path(__file__).parent.parent / 'examples'
 FULL = EXAMPLES / 'config_sample_full.json'
@@ -45,3 +50,27 @@ def test_example_app_config_round_trips(path: Path) -> None:
 	# parse_arg raises ValueError on an enum value the code no longer knows
 	parsed = ApplicationConfiguration.parse_arg(raw)
 	assert parsed.json() == raw
+
+
+def test_global_menu_keys_are_config_fields() -> None:
+	# AbstractMenu syncs items by getattr/setattr on ArchConfig: a key that
+	# is no field only fails once the menu is on screen
+	source = (Path(archinstoo.__file__).parent / 'lib/global_menu.py').read_text()
+	keys = set(re.findall(r"(?:key=|find_by_key\()\s*'(\w+)'", source))
+	assert keys
+	unknown = keys - {f.name for f in fields(ArchConfig)}
+	assert not unknown, f'global_menu.py keys ArchConfig lacks: {sorted(unknown)}'
+
+
+def test_swap_and_sysctl_save_what_they_load() -> None:
+	# both once went out as raw dataclass fields: a null recomp_algorithm in
+	# the file, a key its serialization does not allow
+	swap = SwapConfiguration(hibernation=True)
+	assert None not in swap.json().values()
+	assert SwapConfiguration.parse_arg(swap.json()) == swap
+
+	recomp = SwapConfiguration(recomp_algorithm=ZramAlgorithm.ZSTD)
+	assert SwapConfiguration.parse_arg(recomp.json()) == recomp
+
+	sysctl = SysctlConfiguration(optimized=True, entries=('vm.swappiness = 10',))
+	assert SysctlConfiguration.parse_arg(sysctl.json()) == sysctl

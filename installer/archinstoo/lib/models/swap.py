@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from typing import NotRequired, Self, TypedDict
 
+ZRAM_PACKAGES = ['zram-generator']
+
 
 class ZramAlgorithm(StrEnum):
 	Default = 'default'
@@ -37,6 +39,17 @@ class SwapConfiguration:
 	@property
 	def enabled(self) -> bool:
 		return self.zram or self.hibernation
+
+	def json(self) -> SwapConfigSerialization:
+		config: SwapConfigSerialization = {
+			'zram': self.zram,
+			'algorithm': self.algorithm.value,
+			'hibernation': self.hibernation,
+			'size_gib': self.size_gib,
+		}
+		if self.recomp_algorithm:
+			config['recomp_algorithm'] = self.recomp_algorithm.value
+		return config
 
 	@classmethod
 	def parse_arg(cls, arg: SwapConfigSerialization) -> Self:

@@ -1,11 +1,10 @@
-from typing import TYPE_CHECKING, override
-
-if TYPE_CHECKING:
-	from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from typing import override
 
 from archinstoo.lib.menu.abstract_menu import CONFIG_KEY, AbstractSubMenu
-from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
+from archinstoo.lib.models.profile import GreeterType, ProfileType
+from archinstoo.lib.profile.base import Profile
 from archinstoo.lib.profile.config import ProfileConfiguration
+from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
 from archinstoo.lib.tui.prompts import prompt_choice
@@ -262,8 +261,6 @@ def select_profiles(
 	allow_reset: bool = True,
 	profile_handler: ProfileHandler | None = None,
 ) -> list[Profile]:
-	from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
 	handler = profile_handler or ProfileHandler()
 	top_level_profiles = handler.get_top_level_profiles()
 

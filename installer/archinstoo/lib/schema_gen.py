@@ -15,24 +15,15 @@
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, get_type_hints
 
-from archinstoo.lib import installer
+from archinstoo.lib.applications.application_handler import CATEGORIES
 from archinstoo.lib.applications.cat.audio import AudioApp
-from archinstoo.lib.applications.cat.bluetooth import BluetoothApp
-from archinstoo.lib.applications.cat.cpu_scheduler import CPUSchedulerApp
 from archinstoo.lib.applications.cat.firewall import FirewallApp
-from archinstoo.lib.applications.cat.flatpak import FlatpakApp
-from archinstoo.lib.applications.cat.media_codecs import MediaCodecsApp
 from archinstoo.lib.applications.cat.power_management import PowerManagementApp
-from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
-from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
-from archinstoo.lib.authentication import stash
-from archinstoo.lib.disk import snapshots
-from archinstoo.lib.hardware import CpuVendor
-from archinstoo.lib.kernel import zram
 from archinstoo.lib.models.applications import (
+	ApplicationSerialization,
 	Audio,
 	Editor,
 	Firewall,
@@ -44,18 +35,31 @@ from archinstoo.lib.models.applications import (
 )
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
-from archinstoo.lib.models.device import FilesystemType, SnapshotType
-from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
+from archinstoo.lib.models.device import (
+	GRUB_SNAPSHOT_PACKAGES,
+	FilesystemType,
+	SnapshotType,
+)
+from archinstoo.lib.models.firmware import FULL_FIRMWARE, CpuVendor, FirmwareType
 from archinstoo.lib.models.graphics import GFX_CUSTOM_CHOICES, GFX_PACKAGES, GfxDriver
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
-from archinstoo.lib.models.users import Shell
-from archinstoo.lib.pm import aur
-from archinstoo.lib.profile.base import (
+from archinstoo.lib.models.packages import (
+	ACCESSIBILITY_PACKAGES,
+	ARCHPORTS_PACKAGES,
+	AUR_BOOTSTRAP_PACKAGES,
+	BASE_PACKAGES,
+	FIDO2_PACKAGES,
+	LVM_PACKAGES,
+	TER_FONT_PACKAGES,
+)
+from archinstoo.lib.models.profile import (
 	DisplayServer,
 	GreeterType,
 	ProfileType,
 	SeatAccess,
 )
+from archinstoo.lib.models.swap import ZRAM_PACKAGES
+from archinstoo.lib.models.users import STASH_PACKAGES, Shell
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
 
@@ -114,8 +118,67 @@ class Section:
 	pick: tuple[str, ...] = ()
 
 
+# categories whose section is a table of options; the rest list their App's
+# flat `packages`
+_APP_TABLES: dict[str, Callable[[], Value]] = {
+	'audio_config': lambda: {
+		Audio.PIPEWIRE.value: AudioApp().pipewire_packages,
+		Audio.PULSEAUDIO.value: AudioApp().pulseaudio_packages,
+	},
+	'power_management_config': _power_management,
+	'firewall_config': lambda: {
+		Firewall.UFW.value: FirewallApp().ufw_packages,
+		Firewall.FWD.value: FirewallApp().fwd_packages,
+	},
+	'management_config': lambda: _one_to_one(Management),
+	'monitor_config': lambda: _one_to_one(Monitor),
+	'editor_config': lambda: {e.value: e.packages for e in Editor},
+	'terminal_config': lambda: {t.value: t.packages for t in Terminal},
+	'security_config': lambda: {
+		Security.APPARMOR.value: SecurityApp().apparmor_packages,
+		Security.FIREJAIL.value: SecurityApp().firejail_packages,
+		Security.BUBBLEWRAP.value: SecurityApp().bubblewrap_packages,
+		**{
+			s.value: [s.value]
+			for s in Security
+			if s
+			not in {
+				Security.APPARMOR,
+				Security.FIREJAIL,
+				Security.BUBBLEWRAP,
+			}
+		},
+	},
+}
+
+
+def _app_sections() -> list[Section]:
+	# one section per CATEGORIES row, in install order. the pick is the row's
+	# key plus the one field its serialization holds
+	site = 'install_applications'
+	configs = get_type_hints(ApplicationSerialization)
+	sections = []
+	for cat in CATEGORIES:
+		if cat.app is AudioApp:
+			# strapped by the audio install off detected hardware: no pick
+			sections.append(
+				Section(
+					'audio_firmware',
+					lambda: {
+						'sof': AudioApp().sof_packages,
+						'alsa': AudioApp().alsa_packages,
+					},
+					site=site,
+				)
+			)
+		(field,) = get_type_hints(configs[cat.key])
+		value = _APP_TABLES.get(cat.key, lambda cat=cat: cat.app().packages)
+		sections.append(Section(cat.name, value, site, (cat.key, field)))
+	return sections
+
+
 SECTIONS: tuple[Section, ...] = (
-	Section('base', lambda: installer.BASE_PACKAGES, site='Installer'),
+	Section('base', lambda: BASE_PACKAGES, site='Installer'),
 	Section(
 		'firmware',
 		lambda: {
@@ -127,12 +190,12 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'accessibility',
-		lambda: installer.ACCESSIBILITY_PACKAGES,
+		lambda: ACCESSIBILITY_PACKAGES,
 		site='Installer',
 	),
 	Section(
 		'lvm',
-		lambda: installer.LVM_PACKAGES,
+		lambda: LVM_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
@@ -146,12 +209,12 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'fido2',
-		lambda: installer.FIDO2_PACKAGES,
+		lambda: FIDO2_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
 		'archports',
-		lambda: installer.ARCHPORTS_PACKAGES,
+		lambda: ARCHPORTS_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
@@ -165,12 +228,12 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'ter_fonts',
-		lambda: installer.TER_FONT_PACKAGES,
+		lambda: TER_FONT_PACKAGES,
 		site='installation.minimal_installation',
 	),
 	Section(
 		'swap',
-		lambda: {'zram': zram.ZRAM_PACKAGES},
+		lambda: {'zram': ZRAM_PACKAGES},
 		site='installation.setup_swap',
 	),
 	Section(
@@ -178,126 +241,13 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
 		site='installation.create_users',
 	),
-	Section(
-		'stash', lambda: stash.STASH_PACKAGES, site='installation.create_users'
-	),
+	Section('stash', lambda: STASH_PACKAGES, site='installation.create_users'),
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
 		site='install_shells',
 	),
-	Section(
-		'bluetooth',
-		lambda: BluetoothApp().packages,
-		pick=('bluetooth_config', 'enabled'),
-		site='install_applications',
-	),
-	Section(
-		'thunderbolt',
-		lambda: ThunderboltApp().packages,
-		pick=('thunderbolt_config', 'enabled'),
-		site='install_applications',
-	),
-	Section(
-		'audio_firmware',
-		lambda: {
-			'sof': AudioApp().sof_packages,
-			'alsa': AudioApp().alsa_packages,
-		},
-		site='install_applications',
-	),
-	Section(
-		'audio',
-		lambda: {
-			Audio.PIPEWIRE.value: AudioApp().pipewire_packages,
-			Audio.PULSEAUDIO.value: AudioApp().pulseaudio_packages,
-		},
-		pick=('audio_config', 'audio'),
-		site='install_applications',
-	),
-	Section(
-		'media_codecs',
-		lambda: MediaCodecsApp().packages,
-		pick=('media_codecs_config', 'enabled'),
-		site='install_applications',
-	),
-	Section(
-		'flatpak',
-		lambda: FlatpakApp().packages,
-		pick=('flatpak_config', 'enabled'),
-		site='install_applications',
-	),
-	Section(
-		'power_management',
-		_power_management,
-		pick=('power_management_config', 'power_management'),
-		site='install_applications',
-	),
-	Section(
-		'cpu_scheduler',
-		lambda: CPUSchedulerApp().packages,
-		pick=('cpu_scheduler_config', 'scheduler'),
-		site='install_applications',
-	),
-	Section(
-		'printing',
-		lambda: PrintServiceApp().packages,
-		pick=('print_service_config', 'enabled'),
-		site='install_applications',
-	),
-	Section(
-		'firewalls',
-		lambda: {
-			Firewall.UFW.value: FirewallApp().ufw_packages,
-			Firewall.FWD.value: FirewallApp().fwd_packages,
-		},
-		pick=('firewall_config', 'firewall'),
-		site='install_applications',
-	),
-	Section(
-		'management',
-		lambda: _one_to_one(Management),
-		pick=('management_config', 'tools'),
-		site='install_applications',
-	),
-	Section(
-		'monitors',
-		lambda: _one_to_one(Monitor),
-		pick=('monitor_config', 'monitor'),
-		site='install_applications',
-	),
-	Section(
-		'editors',
-		lambda: {e.value: e.packages for e in Editor},
-		pick=('editor_config', 'editor'),
-		site='install_applications',
-	),
-	Section(
-		'terminals',
-		lambda: {t.value: t.packages for t in Terminal},
-		pick=('terminal_config', 'terminal'),
-		site='install_applications',
-	),
-	Section(
-		'security',
-		lambda: {
-			Security.APPARMOR.value: SecurityApp().apparmor_packages,
-			Security.FIREJAIL.value: SecurityApp().firejail_packages,
-			Security.BUBBLEWRAP.value: SecurityApp().bubblewrap_packages,
-			**{
-				s.value: [s.value]
-				for s in Security
-				if s
-				not in {
-					Security.APPARMOR,
-					Security.FIREJAIL,
-					Security.BUBBLEWRAP,
-				}
-			},
-		},
-		pick=('security_config', 'tools'),
-		site='install_applications',
-	),
+	*_app_sections(),
 	Section(
 		'snapshots',
 		lambda: {s.value: s.packages for s in SnapshotType},
@@ -305,7 +255,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'grub_extra',
-		lambda: snapshots.GRUB_SNAPSHOT_PACKAGES,
+		lambda: GRUB_SNAPSHOT_PACKAGES,
 		site='installation.setup_btrfs_snapshot',
 	),
 	Section(
@@ -398,7 +348,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'aur_bootstrap',
-		lambda: aur.AUR_BOOTSTRAP_PACKAGES,
+		lambda: AUR_BOOTSTRAP_PACKAGES,
 		site='run_grimoire_installation',
 	),
 )

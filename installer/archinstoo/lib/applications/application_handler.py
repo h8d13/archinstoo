@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from archinstoo.lib.output import info
 
@@ -23,6 +24,42 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.users import User
 
 
+@dataclass(frozen=True)
+class Category:
+	# the ApplicationConfiguration field this category's config sits in
+	key: str
+	app: type[Any]
+	# schema.toml section, where it is not the key less its _config
+	section: str = ''
+	# install() also takes the users (audio enables per-user units)
+	users: bool = False
+
+	@property
+	def name(self) -> str:
+		return self.section or self.key.removesuffix('_config')
+
+
+# every application category, in install order (apps run before bootloader,
+# after users). install_applications walks this and so do the app sections of
+# schema.toml (schema_gen._app_sections), so a category is registered here once
+CATEGORIES: tuple[Category, ...] = (
+	Category('bluetooth_config', BluetoothApp),
+	Category('thunderbolt_config', ThunderboltApp),
+	Category('audio_config', AudioApp, users=True),
+	Category('media_codecs_config', MediaCodecsApp),
+	Category('flatpak_config', FlatpakApp),
+	Category('power_management_config', PowerManagementApp),
+	Category('cpu_scheduler_config', CPUSchedulerApp),
+	Category('print_service_config', PrintServiceApp, section='printing'),
+	Category('firewall_config', FirewallApp, section='firewalls'),
+	Category('management_config', ManagementApp),
+	Category('monitor_config', MonitorApp, section='monitors'),
+	Category('editor_config', EditorApp, section='editors'),
+	Category('terminal_config', TerminalApp, section='terminals'),
+	Category('security_config', SecurityApp),
+)
+
+
 def install_applications(
 	install_session: Installer,
 	app_config: ApplicationConfiguration,
@@ -30,72 +67,20 @@ def install_applications(
 ) -> None:
 	info('Installing applications', step=True)
 
-	if app_config.bluetooth_config and app_config.bluetooth_config.enabled:
-		BluetoothApp().install(install_session)
+	for cat in CATEGORIES:
+		config = getattr(app_config, cat.key)
+		if config is None:
+			continue
 
-	if app_config.thunderbolt_config and app_config.thunderbolt_config.enabled:
-		ThunderboltApp().install(install_session)
+		# one field per category (models/applications._Category): a flag, a
+		# choice or a list of them. off and empty install nothing
+		(value,) = vars(config).values()
+		if not value:
+			continue
 
-	if app_config.audio_config:
-		AudioApp().install(
-			install_session,
-			app_config.audio_config,
-			users,
-		)
-
-	if app_config.media_codecs_config and app_config.media_codecs_config.enabled:
-		MediaCodecsApp().install(install_session)
-
-	if app_config.flatpak_config and app_config.flatpak_config.enabled:
-		FlatpakApp().install(install_session)
-
-	if app_config.power_management_config:
-		PowerManagementApp().install(
-			install_session,
-			app_config.power_management_config,
-		)
-
-	if app_config.cpu_scheduler_config:
-		CPUSchedulerApp().install(
-			install_session,
-			app_config.cpu_scheduler_config,
-		)
-
-	if app_config.print_service_config and app_config.print_service_config.enabled:
-		PrintServiceApp().install(install_session)
-
-	if app_config.firewall_config:
-		FirewallApp().install(
-			install_session,
-			app_config.firewall_config,
-		)
-
-	if app_config.management_config and app_config.management_config.tools:
-		ManagementApp().install(
-			install_session,
-			app_config.management_config,
-		)
-
-	if app_config.monitor_config:
-		MonitorApp().install(
-			install_session,
-			app_config.monitor_config,
-		)
-
-	if app_config.editor_config:
-		EditorApp().install(
-			install_session,
-			app_config.editor_config,
-		)
-
-	if app_config.terminal_config:
-		TerminalApp().install(
-			install_session,
-			app_config.terminal_config,
-		)
-
-	if app_config.security_config and app_config.security_config.tools:
-		SecurityApp().install(
-			install_session,
-			app_config.security_config,
-		)
+		if isinstance(value, bool):
+			cat.app().install(install_session)
+		elif cat.users:
+			cat.app().install(install_session, config, users)
+		else:
+			cat.app().install(install_session, config)

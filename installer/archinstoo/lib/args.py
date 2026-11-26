@@ -4,15 +4,29 @@ import urllib.error
 import urllib.parse
 from dataclasses import dataclass, field
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, TypedDict
 from urllib.request import Request, urlopen
 
 if TYPE_CHECKING:
-	from collections.abc import Callable
 	from pathlib import Path
+
+	from archinstoo.lib.models.applications import ApplicationSerialization
+	from archinstoo.lib.models.authentication import AuthenticationSerialization
+	from archinstoo.lib.models.bootloader import BootloaderConfigSerialization
+	from archinstoo.lib.models.device import _DiskLayoutConfigurationSerialization
+	from archinstoo.lib.models.firmware import FirmwareConfigSerialization
+	from archinstoo.lib.models.localization import LocaleConfigSerialization
+	from archinstoo.lib.models.mirrors import _PacmanConfigurationSerialization
+	from archinstoo.lib.models.network import _NetworkConfigurationSerialization
+	from archinstoo.lib.models.profile import ProfileConfigurationSerialization
+	from archinstoo.lib.models.service import UserServiceSerialization
+	from archinstoo.lib.models.swap import SwapConfigSerialization
+	from archinstoo.lib.models.sysctl import SysctlConfigSerialization
+	from archinstoo.lib.profile.config import ProfileConfiguration
 
 from archinstoo.lib.cli import DEFAULT_SCRIPT, Arguments, build_parser
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.localization.catalog import get_kb_layout
 from archinstoo.lib.models.applications import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
@@ -28,25 +42,41 @@ from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.output import debug, error, warn
-from archinstoo.lib.profile.config import ProfileConfiguration
+from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 
-def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) -> None:
-	for key, attr in mapping.items():
-		if value := config.get(key):
-			setattr(obj, attr, value)
-		elif key in config:
-			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
+def _ignored(key: str, value: object) -> None:
+	debug(f'Ignoring config key {key!r}: {value!r} is empty')
 
 
-def _set_parsed(
-	obj: object, config: dict[str, Any], mapping: dict[str, Callable[[Any], object]]
-) -> None:
-	for key, parser in mapping.items():
-		if value := config.get(key):
-			setattr(obj, key, parser(value))
-		elif key in config:
-			debug(f'Ignoring config key {key!r}: {config[key]!r} is empty')
+# the saved-config format: safe_json() writes it, from_config() and
+# scripts/_resolve.py read it. total=False because from_config tolerates any key
+# missing; None is an unset section, which serialize.jsonify drops from the file
+class ArchConfigSerialization(TypedDict, total=False):
+	bug_report_url: str
+	script: str
+	locale_config: LocaleConfigSerialization | None
+	pacman_config: _PacmanConfigurationSerialization | None
+	bootloader_config: BootloaderConfigSerialization | None
+	disk_config: _DiskLayoutConfigurationSerialization | None
+	swap: SwapConfigSerialization | None
+	kernels: list[str]
+	kernel_headers: bool
+	firmware: FirmwareConfigSerialization
+	profile_config: ProfileConfigurationSerialization | None
+	gfx_driver: str | None
+	gfx_packages: list[str]
+	hostname: str
+	auth_config: AuthenticationSerialization | None
+	app_config: ApplicationSerialization | None
+	network_config: _NetworkConfigurationSerialization | None
+	timezone: str | None
+	ntp: bool
+	packages: list[str]
+	aur_packages: list[str]
+	services: list[str | UserServiceSerialization]
+	sysctl: SysctlConfigSerialization | None
+	custom_commands: list[str]
 
 
 @dataclass
@@ -68,7 +98,7 @@ class ArchConfig:
 	kernels: list[str] = field(default_factory=lambda: [DEFAULT_KERNEL.value])
 	kernel_headers: bool = False
 	firmware: FirmwareConfiguration = field(
-		default_factory=FirmwareConfiguration.default
+		default_factory=lambda: FirmwareConfiguration.default(SysInfo.is_vm())
 	)
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)
@@ -78,9 +108,9 @@ class ArchConfig:
 	sysctl: SysctlConfiguration | None = None
 	custom_commands: list[str] = field(default_factory=list)
 
-	def safe_json(self) -> dict[str, Any]:
+	def safe_json(self) -> ArchConfigSerialization:
 		# Order matches global menu
-		config: dict[str, Any] = {
+		config: ArchConfigSerialization = {
 			'bug_report_url': self.bug_report_url,
 			'script': self.script,
 			'locale_config': self.locale_config.json()
@@ -95,11 +125,13 @@ class ArchConfig:
 			'disk_config': self.disk_config.json()
 			if self.disk_config
 			else None,
-			'swap': self.swap,
+			'swap': self.swap.json() if self.swap else None,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
 			'firmware': self.firmware.json(),
-			'profile_config': self.profile_config.json()
+			'profile_config': ProfileHandler().config_json(
+				self.profile_config
+			)
 			if self.profile_config
 			else None,
 			'gfx_driver': self.gfx_driver.value
@@ -124,30 +156,32 @@ class ArchConfig:
 				s.json() if isinstance(s, UserService) else s
 				for s in self.services
 			],
-			'sysctl': self.sysctl,
+			'sysctl': self.sysctl.json() if self.sysctl else None,
 			'custom_commands': self.custom_commands,
 		}
-
 		return config
 
 	@classmethod
-	def from_config(cls, args_config: dict[str, Any]) -> Self:
+	def from_config(cls, args_config: ArchConfigSerialization) -> Self:
 		arch_config = cls()
 
-		_set_direct(
-			arch_config,
-			args_config,
-			{
-				'bug_report_url': 'bug_report_url',
-				'script': 'script',
-				'hostname': 'hostname',
-				'timezone': 'timezone',
-				'kernels': 'kernels',
-				'packages': 'packages',
-				'aur_packages': 'aur_packages',
-				'custom_commands': 'custom_commands',
-			},
-		)
+		# subscripted, not .get(): mypy checks a looped key only that way
+		for key in (
+			'bug_report_url',
+			'script',
+			'hostname',
+			'timezone',
+			'kernels',
+			'packages',
+			'aur_packages',
+			'custom_commands',
+		):
+			if key not in args_config:
+				continue
+			if value := args_config[key]:
+				setattr(arch_config, key, value)
+			else:
+				_ignored(key, value)
 
 		# a hand-written "packages": [""] reached pacman as an empty name
 		arch_config.packages = [p for p in arch_config.packages if p]
@@ -159,26 +193,43 @@ class ArchConfig:
 				for s in raw_services
 			]
 
-		_set_parsed(
-			arch_config,
-			args_config,
-			{
-				'pacman_config': PacmanConfiguration.parse_args,
-				'disk_config': lambda arg: (
-					DiskLayoutConfiguration.parse_arg(
-						arg, DeviceHandler()
-					)
-				),
-				'profile_config': ProfileConfiguration.parse_arg,
-				'auth_config': AuthenticationConfiguration.parse_arg,
-				'app_config': ApplicationConfiguration.parse_arg,
-				'network_config': NetworkConfiguration.parse_arg,
-			},
-		)
+		for section in (
+			'pacman_config',
+			'disk_config',
+			'profile_config',
+			'auth_config',
+			'app_config',
+			'network_config',
+		):
+			if section in args_config and not args_config[section]:
+				_ignored(section, args_config[section])
+
+		if pacman := args_config.get('pacman_config'):
+			arch_config.pacman_config = PacmanConfiguration.parse_args(
+				pacman
+			)
+		if disk := args_config.get('disk_config'):
+			arch_config.disk_config = DiskLayoutConfiguration.parse_arg(
+				disk, DeviceHandler()
+			)
+		if profile := args_config.get('profile_config'):
+			arch_config.profile_config = ProfileHandler().parse_config(
+				profile
+			)
+		if auth := args_config.get('auth_config'):
+			arch_config.auth_config = AuthenticationConfiguration.parse_arg(
+				auth
+			)
+		if app := args_config.get('app_config'):
+			arch_config.app_config = ApplicationConfiguration.parse_arg(app)
+		if network := args_config.get('network_config'):
+			arch_config.network_config = NetworkConfiguration.parse_arg(
+				network
+			)
 
 		# Special cases that don't fit the pattern
 		arch_config.locale_config = LocaleConfiguration.parse_arg(
-			args_config.get('locale_config', {}), get_kb_layout()
+			args_config.get('locale_config') or {}, get_kb_layout()
 		)
 
 		if bootloader := args_config.get('bootloader_config'):
@@ -192,8 +243,9 @@ class ArchConfig:
 		if (sysctl := args_config.get('sysctl')) is not None:
 			arch_config.sysctl = SysctlConfiguration.parse_arg(sysctl)
 
-		if gfx_driver := args_config.get('gfx_driver'):
-			arch_config.gfx_driver = GfxDriver(gfx_driver)
+		# subscripted: GfxDriver() takes any object, .get() any key
+		if args_config.get('gfx_driver'):
+			arch_config.gfx_driver = GfxDriver(args_config['gfx_driver'])
 		# unknown names are dropped, the same way kernels are parsed
 		arch_config.gfx_packages = [
 			GfxPackage(p)
@@ -252,7 +304,7 @@ class ArchConfigHandler:
 
 		return args
 
-	def _parse_config(self) -> dict[str, Any]:
+	def _parse_config(self) -> ArchConfigSerialization:
 		config: dict[str, Any] = {}
 		config_data: str | None = None
 
@@ -272,7 +324,9 @@ class ArchConfigHandler:
 				)
 				raise SystemExit(1) from e
 
-		return self._cleanup_config(config)
+		# the JSON boundary: nothing checks the shape, from_config tolerates it
+		cleaned: ArchConfigSerialization = self._cleanup_config(config)
+		return cleaned
 
 	def _fetch_from_url(self, url: str) -> str:
 		if urllib.parse.urlparse(url).scheme in {'http', 'https'}:
@@ -295,7 +349,7 @@ class ArchConfigHandler:
 
 		return path.read_text()
 
-	def _cleanup_config(self, config: dict[str, Any]) -> dict[str, Any]:
+	def _cleanup_config(self, config: dict[str, Any]) -> Any:  # noqa: ANN401 - JSON boundary
 		clean_args = {}
 		for key, raw in config.items():
 			val = (

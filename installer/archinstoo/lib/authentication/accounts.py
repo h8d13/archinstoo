@@ -1,6 +1,6 @@
 import re
 from subprocess import CalledProcessError
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from archinstoo.lib.authentication.crypt import hash_password
 from archinstoo.lib.authentication.stash import clone_user_stash
@@ -10,15 +10,20 @@ from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.users import User
 from archinstoo.lib.output import debug, error, info, warn
+from archinstoo.lib.utils.paths import LPath
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
+
+# on the running system; under a target, relative_to_root()
+DOAS_CONF: Final = LPath('/etc/doas.conf')
+SUDOERS_DIR: Final = LPath('/etc/sudoers.d')
 
 
 def _enable_sudo(installation: Installer, user: User, group: bool = False) -> None:
 	info(f'Enabling sudo permissions for {user.username}')
 
-	sudoers_dir = installation.target / 'etc/sudoers.d'
+	sudoers_dir = installation.target / SUDOERS_DIR.relative_to_root()
 
 	# Creates directory if not exists
 	if not sudoers_dir.exists():
@@ -28,7 +33,7 @@ def _enable_sudo(installation: Installer, user: User, group: bool = False) -> No
 		# Appends a reference to the sudoers file, because if we are here
 		# sudoers.d did not exist yet
 		with (installation.target / 'etc/sudoers').open('a') as sudoers:
-			sudoers.write('@includedir /etc/sudoers.d\n')
+			sudoers.write(f'@includedir {SUDOERS_DIR}\n')
 
 	# We count how many files are there already so we know which number to
 	# prefix the file with
@@ -66,7 +71,7 @@ def add_to_group(installation: Installer, group: str, usernames: list[str]) -> N
 def _enable_doas(installation: Installer, user: User) -> None:
 	info(f'Enabling doas permissions for {user.username}')
 
-	doas_conf = installation.target / 'etc/doas.conf'
+	doas_conf = installation.target / DOAS_CONF.relative_to_root()
 
 	with doas_conf.open('a') as doas:
 		doas.write(f'permit {user.username} as root\n')

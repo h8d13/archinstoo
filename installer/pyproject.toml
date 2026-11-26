@@ -99,6 +99,17 @@ name = "No circular imports between sibling subpackages"
 type = "acyclic_siblings"
 ancestors = ["archinstoo", "archinstoo.**"]
 
+# models hold data: callers probe the host and pass values in. Logging is
+# the one lib import they keep (output is a leaf); direct imports only,
+# lazy ones included, TYPE_CHECKING ones excluded above
+[[tool.importlinter.contracts]]
+name = "Models import nothing from the logic but output"
+type = "forbidden"
+source_modules = ["archinstoo.lib.models"]
+forbidden_modules = ["archinstoo.lib.*", "archinstoo.default_profiles", "archinstoo.scripts"]
+ignore_imports = ["archinstoo.lib.models.* -> archinstoo.lib.output"]
+allow_indirect_imports = true
+
 [tool.pytest]
 cache_dir = "~/.cache/archinstoo/pytest"
 addopts = [

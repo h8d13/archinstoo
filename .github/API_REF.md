@@ -11,7 +11,7 @@ How to extend, run, or edit the installer. Default flow:
 `python -m archinstoo --script <name>` (or installed `archinstoo --script
 <name>`). `--script list` prints what is available. `guided` is
 `DEFAULT_SCRIPT` in
-[args.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/args.py).
+[cli.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/cli.py).
 
 Dispatch:
 [`__init__.py`](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/__init__.py)
@@ -45,7 +45,7 @@ shared between scripts, not scripts (`_resolve.py`).
   for config/args and `resolve_config(handler, show_menu)` from
   [configuration.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/configuration.py)
   for the menu/save/confirm loop; `show_menu` is where a script
-  `set_enabled`/`set_mandatory`s the `GlobalMenu` for its mode (live,
+  `set_enabled`/`set_mandatory`s the `GlobalMenu` for its mode (guided,
   packages, format all do this).
 
 ## Add an application (audio/firewall/... category or `cat/`)
@@ -65,29 +65,38 @@ flag for an enum, the way `firewall`/`management` do.
    `install(self, install_session, ...)` using the Installer primitives
    (below).
 3. [application_handler.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/application_handler.py):
-   `if app_config.media_codecs_config and ...enabled: MediaCodecsApp().install(...)`.
-   Order is install order (apps run before bootloader, after users).
+   one row in `CATEGORIES`, `Category('media_codecs_config', MediaCodecsApp)`.
+   Row order is install order (apps run before bootloader, after users).
+   The handler installs a category when its one field is set (flag on, a
+   choice made, a non-empty list): a flag App gets `install(install_session)`,
+   a choice App `install(install_session, config)`. The same row is the
+   category's `schema.toml` section and the pick `--script count` walks, so
+   `schema_gen.py` and `_resolve.py` need no edit. `section=` names the
+   section where it is not the key less `_config`.
 4. [application_menu.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/applications/application_menu.py):
    a `MenuItem` with `key='media_codecs_config'`, `preview_action=self._prev`
    (one preview serves every category, labelled by the item's text) and
-   `select_media_codecs`. Flags reuse `_select_enabled` / `_enabled_text`.
-   The global menu's Applications preview reads these previews, nothing to
-   add there.
-5. [schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py):
-   one `Section` in install order, with `pick=('media_codecs_config', 'enabled')`,
-   the key path the choice lives at under `app_config`. The pick is what
-   `--script count` walks, so `_resolve.py` needs no edit. Then:
+   `action=_select_enabled('<prompt>\n', MediaCodecsConfiguration)`. A
+   choice category writes its own `select_*` instead. The global menu's
+   Applications preview reads these previews, nothing to add there.
 
-   ```shell
-   python -m archinstoo --script schema   # regenerates schema.toml
-   ./nvchecker/NVGEN gen                  # tracks the new packages
-   ```
+Then:
 
-`tests/test_schema.py` fails until 5 is done: every `_config_parsers` key
-needs a section with a pick, every pick path has to exist in the
-serialization, and the committed `schema.toml`/`nvchecker.toml` must match.
-Add the category to `examples/config_sample_full.json` so `--config` users
-see it.
+```shell
+python -m archinstoo --script schema   # regenerates schema.toml
+./nvchecker/NVGEN gen                  # tracks the new packages
+```
+
+A section lists the App's flat `packages` unless the category has a table
+of options (`audio`, `firewalls`, ...): that one adds its table to
+`_APP_TABLES` in
+[schema_gen.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/schema_gen.py),
+keyed by the same config key.
+
+`tests/test_schema.py` fails until 3 is done: every `_config_parsers` key
+needs a `CATEGORIES` row, and the committed `schema.toml`/`nvchecker.toml`
+must match. Add the category to `examples/config_sample_full.json` so
+`--config` users see it.
 
 ## Add a profile (server or desktop)
 
@@ -111,13 +120,13 @@ set `ProfileType` (`ServerType` / `DesktopEnv` / `WindowMgr`). Contract
   greeter setup; every flow.
 - `post_install(install_session)`: system-level finalize after packages
   land, no user context (e.g. mariadb runs `mariadb-install-db`). Runs
-  after `install_profile_config` in guided/live/packages; not minimal.
+  after `install_profile_config` in guided/packages; not minimal.
 - `provision(install_session, users)`: per-user wiring that needs the user
   list (e.g. docker/wayland add each user to a group,
   `accounts.add_to_group`). Runs right after `post_install` in
-  guided/live/packages. Guided uses the configured users; live falls back
-  to, and packages always uses, the sudo/doas invoking user
-  (`invoking_user()` in models/users.py: running-system flows).
+  guided/packages. Guided uses the configured users; packages uses the
+  sudo/doas invoking user (`Host.invoking_username()` in utils/host.py:
+  it targets the running system).
 - `do_on_select()`: menu-time hook run when the profile is picked.
 - `default_greeter_type` / `display_servers()`: graphical metadata (greeter
   default, Xorg/Wayland advertised).
@@ -137,8 +146,6 @@ decoupled parts.
    [guided.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/guided.py),
    gated on the config it needs, at the right point in the order (`install_shells`
    runs right after `create_users`). Mirror into
-   [live.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/live.py)
-   if it applies to live mode, and
    [packages.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/scripts/packages.py)
    if it concerns profiles/apps/packages/services. Each script holds
    its own copy of the order, there is no shared list. Call the
@@ -161,7 +168,7 @@ add `MenuItem(action=self._select_x, key='x')` + the `_select_x` handler.
 `key` must match a field on `ArchConfig`
 ([args.py](https://github.com/h8d13/archinstoo/blob/master/installer/archinstoo/lib/args.py))
 so it round-trips through save/load. Toggle visibility with
-`set_enabled()` / `set_mandatory()` (live mode disables several). Config
+`set_enabled()` / `set_mandatory()` (packages and format disable most). Config
 with no consuming step is a dead option; conversely a step can derive from
 existing config and skip the menu entirely (shell is a field on each
 `User`, set in the auth menu, never a top-level item).
@@ -191,7 +198,7 @@ Edit the module, keep the entry, unless reordering.
 `report_outcome` over `_helper_flags`: `base` is set by
 `minimal_installation()`, a flag still `False` is reported as a step not
 reached. Scripts that never run it claim it with `set_helper_flag('base',
-True)` (live/packages target `/`, format stops after mount).
+True)` (packages targets `/`, format stops after mount).
 
 | Step | Lives in |
 |---|---|

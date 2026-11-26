@@ -14,7 +14,7 @@ from archinstoo.lib.disk.mdadm import write_mdadm_conf
 from archinstoo.lib.disk.mount import LayoutMounter
 from archinstoo.lib.exceptions import DiskError, SysCallError
 from archinstoo.lib.hardware import SysInfo
-from archinstoo.lib.kernel.initramfs import LVM, Initramfs
+from archinstoo.lib.kernel.initramfs import Initramfs
 from archinstoo.lib.kernel.swap import setup_swapfile
 from archinstoo.lib.kernel.sysctl import setup_sysctl
 from archinstoo.lib.kernel.zram import setup_zram
@@ -28,6 +28,16 @@ from archinstoo.lib.models.device import (
 	SnapshotType,
 )
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
+from archinstoo.lib.models.packages import (
+	ACCESSIBILITY_PACKAGES,
+	ARCHPORTS_PACKAGES,
+	BASE_PACKAGES,
+	FIDO2_PACKAGES,
+	LVM,
+	LVM_PACKAGES,
+	RAID_PACKAGES,
+	TER_FONT_PACKAGES,
+)
 from archinstoo.lib.output import copy_artifacts, debug, error, info, warn
 from archinstoo.lib.pm import Pacman, mirrors
 
@@ -45,33 +55,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.swap import SwapConfiguration
 	from archinstoo.lib.models.sysctl import SysctlConfiguration
 	from archinstoo.lib.models.users import User
-
-# Base packages installed by default (firmware added based on FirmwareConfiguration)
-# mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
-# pacman picks the first initramfs provider from the host's pacman.conf, which on
-# non-Arch hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
-# UKI presets, both of which assume mkinitcpio is present in the chroot.
-BASE_PACKAGES = ['base', 'mkinitcpio']
-# Arch Ports (aarch64) ships its keyring from forge, not as a pacman dependency
-ARCHPORTS_PACKAGES = ['archports-keyring']
-
-# Package sets minimal_installation() and the steps after it add conditionally.
-# Named rather than inlined so schema_gen can read the same list the installer
-# straps, instead of a transcription of it.
-LVM_PACKAGES = [LVM]
-# sd-encrypt only bundles the fido2 dlopen libs if this is present when the
-# initramfs is built
-FIDO2_PACKAGES = ['libfido2']
-# the array has to be assembled before the root is reachable, so this goes
-# into base rather than the post-install package list
-RAID_PACKAGES = ['mdadm']
-# fonts that are in the ISO but won't be on target unless requested before base,
-# otherwise mkinitcpio will be screaming at you
-TER_FONT_PACKAGES = ['terminus-font']
-
-# Additional packages that are installed if the user is running the Live ISO with
-# accessibility tools enabled
-ACCESSIBILITY_PACKAGES = ['brltty', 'espeakup', 'alsa-utils']
 
 
 class Installer:

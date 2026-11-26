@@ -6,9 +6,9 @@ import pytest
 
 from archinstoo.default_profiles.desktops.nwg import NwgShellProfile
 from archinstoo.lib.installer import Installer
+from archinstoo.lib.models.profile import GreeterType
 from archinstoo.lib.models.users import User
 from archinstoo.lib.profile import profiles_handler
-from archinstoo.lib.profile.base import GreeterType
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 if TYPE_CHECKING:

@@ -2,6 +2,66 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Self
 
+# Base packages installed by default (firmware added based on FirmwareConfiguration)
+# mkinitcpio is listed explicitly so pacstrap installs it deterministically. Otherwise
+# pacman picks the first initramfs provider from the host's pacman.conf, which on
+# non-Arch hosts (EndeavourOS prefers dracut, etc.) breaks the initramfs build and the
+# UKI presets, both of which assume mkinitcpio is present in the chroot.
+BASE_PACKAGES = ['base', 'mkinitcpio']
+# Arch Ports (aarch64) ships its keyring from forge, not as a pacman dependency
+ARCHPORTS_PACKAGES = ['archports-keyring']
+
+# Package sets minimal_installation() and the steps after it add conditionally.
+# Named rather than inlined so schema_gen can read the same list the installer
+# straps, instead of a transcription of it.
+LVM = 'lvm2'  # package and mkinitcpio hook share the name
+LVM_PACKAGES = [LVM]
+# sd-encrypt only bundles the fido2 dlopen libs if this is present when the
+# initramfs is built
+FIDO2_PACKAGES = ['libfido2']
+# the array has to be assembled before the root is reachable, so this goes
+# into base rather than the post-install package list
+RAID_PACKAGES = ['mdadm']
+# fonts that are in the ISO but won't be on target unless requested before base,
+# otherwise mkinitcpio will be screaming at you
+TER_FONT_PACKAGES = ['terminus-font']
+
+# Additional packages that are installed if the user is running the Live ISO with
+# accessibility tools enabled
+ACCESSIBILITY_PACKAGES = ['brltty', 'espeakup', 'alsa-utils']
+
+# what grimoire needs on the target before it can build anything from the AUR.
+# base-devel spelled out (its member list minus sudo) so a doas install does
+# not drag sudo in as a side effect of wanting a toolchain
+AUR_BOOTSTRAP_PACKAGES = [
+	'git',
+	'archlinux-keyring',
+	'autoconf',
+	'automake',
+	'binutils',
+	'bison',
+	'debugedit',
+	'fakeroot',
+	'file',
+	'findutils',
+	'flex',
+	'gawk',
+	'gcc',
+	'gettext',
+	'grep',
+	'groff',
+	'gzip',
+	'libtool',
+	'm4',
+	'make',
+	'pacman',
+	'patch',
+	'pkgconf',
+	'sed',
+	'texinfo',
+	'which',
+]
+
 
 class Repository(Enum):
 	Core = 'core'

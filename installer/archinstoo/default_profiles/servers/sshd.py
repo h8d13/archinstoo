@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.applications.cat.firewall import FirewallApp
-from archinstoo.lib.profile.base import Profile, ProfileType
+from archinstoo.lib.models.profile import ProfileType
+from archinstoo.lib.profile.base import Profile
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer

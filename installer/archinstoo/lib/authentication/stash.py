@@ -1,14 +1,11 @@
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from archinstoo.lib.models.users import STASH_PACKAGES
 from archinstoo.lib.output import error, info
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
-
-# a user's dotfiles repo, cloned into ~/.stash right after useradd
-# cloning a user stash
-STASH_PACKAGES = ['git']
 
 
 def clone_user_stash(installation: Installer, username: str, stash_url: str) -> None:
