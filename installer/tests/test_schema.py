@@ -240,6 +240,24 @@ def test_resolve_defaults_the_compositor_like_the_profile() -> None:
 	assert installed <= _resolve.collect({'profile_config': {'profiles': [entry]}})
 
 
+@pytest.mark.parametrize('main', [None, '', 'nope', 'desktop'])
+def test_resolve_skips_profile_entries_the_install_drops(main: str | None) -> None:
+	# no profile for main: parse_profile_config drops the entry, details and
+	# their settings with it
+	entry: Any = {
+		'main': main,
+		'details': ['sway'],
+		'custom_settings': {'sway': {'seat_access': 'seatd'}},
+	}
+	raw: Any = {'profile_config': {'profiles': [entry]}}
+	installed = bool(ProfileHandler().parse_config({'profiles': [entry]}).profiles)
+	assert installed == (main == 'desktop')
+
+	added = _resolve.collect(raw) - _resolve.collect({})
+	assert ({'sway', 'seatd'} <= added) == installed
+	assert bool(added) == installed
+
+
 def test_resolve_skips_deleted_partitions() -> None:
 	# minimal_installation prepares no filesystem for a partition it removes
 	disk: Any = {
