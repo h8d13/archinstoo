@@ -53,14 +53,14 @@ from archinstoo.lib.models.packages import (
 	LVM_PACKAGES,
 	TER_FONT_PACKAGES,
 )
-from archinstoo.lib.models.swap import ZRAM_PACKAGES
-from archinstoo.lib.models.users import STASH_PACKAGES, Shell
-from archinstoo.lib.profile.base import (
+from archinstoo.lib.models.profile import (
 	DisplayServer,
 	GreeterType,
 	ProfileType,
 	SeatAccess,
 )
+from archinstoo.lib.models.swap import ZRAM_PACKAGES
+from archinstoo.lib.models.users import STASH_PACKAGES, Shell
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA_PATH
 

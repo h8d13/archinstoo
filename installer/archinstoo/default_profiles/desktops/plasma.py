@@ -1,7 +1,7 @@
 from typing import override
 
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import GreeterType, ProfileType
+from archinstoo.lib.models.profile import GreeterType, ProfileType
 
 
 class PlasmaProfile(WaylandProfile):

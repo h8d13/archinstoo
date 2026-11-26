@@ -1,6 +1,7 @@
 from typing import override
 
-from archinstoo.lib.profile.base import DisplayServer, Profile, ProfileType
+from archinstoo.lib.models.profile import DisplayServer, ProfileType
+from archinstoo.lib.profile.base import Profile
 
 
 class XorgProfile(Profile):

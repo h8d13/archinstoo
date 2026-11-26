@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, NotRequired, Self, TypedDict
 
+from archinstoo.lib.models.profile import DisplayServer, GreeterType
 from archinstoo.lib.output import warn
-from archinstoo.lib.profile.base import DisplayServer, GreeterType, Profile
 
 if TYPE_CHECKING:
+	from archinstoo.lib.profile.base import Profile
 	from archinstoo.lib.profile.profiles_handler import ProfileSerialization
 
 

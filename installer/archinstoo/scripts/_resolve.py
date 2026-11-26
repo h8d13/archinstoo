@@ -17,8 +17,8 @@ from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.network import NicType
+from archinstoo.lib.models.profile import DisplayServer
 from archinstoo.lib.pm.groups import expand
-from archinstoo.lib.profile.base import DisplayServer
 from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.utils.paths import locate_binary
 

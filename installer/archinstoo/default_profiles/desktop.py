@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING, Self, override
 
 from archinstoo.lib.exceptions import SysCallError
+from archinstoo.lib.models.profile import GreeterType, ProfileType, SelectResult
 from archinstoo.lib.output import debug, info, warn
-from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType, SelectResult
+from archinstoo.lib.profile.base import Profile
 from archinstoo.lib.profile.profiles_handler import ProfileHandler, one_shell
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

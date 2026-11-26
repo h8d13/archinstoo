@@ -1,7 +1,7 @@
 from typing import override
 
 from archinstoo.default_profiles.xorg import XorgProfile
-from archinstoo.lib.profile.base import GreeterType, ProfileType
+from archinstoo.lib.models.profile import GreeterType, ProfileType
 
 
 class QtileProfile(XorgProfile):

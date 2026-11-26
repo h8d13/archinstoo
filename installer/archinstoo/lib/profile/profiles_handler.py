@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
+from archinstoo.lib.models.profile import GreeterType
 from archinstoo.lib.output import debug, error, info, warn
-from archinstoo.lib.profile.base import GreeterType, Profile
+from archinstoo.lib.profile.base import Profile
 
 if TYPE_CHECKING:
 	from types import ModuleType

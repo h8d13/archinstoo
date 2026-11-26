@@ -8,10 +8,11 @@ from archinstoo.lib.models.device import (
 )
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
+from archinstoo.lib.models.profile import GreeterType, ProfileType
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.pm import list_available_packages
-from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
+from archinstoo.lib.profile.base import Profile
 from archinstoo.lib.tui.content_editor import edit_content
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

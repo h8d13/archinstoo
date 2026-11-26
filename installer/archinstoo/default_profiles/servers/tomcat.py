@@ -1,6 +1,7 @@
 from typing import override
 
-from archinstoo.lib.profile.base import Profile, ProfileType
+from archinstoo.lib.models.profile import ProfileType
+from archinstoo.lib.profile.base import Profile
 
 
 class TomcatProfile(Profile):

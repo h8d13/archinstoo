@@ -2,7 +2,7 @@ from typing import override
 
 from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import (
+from archinstoo.lib.models.profile import (
 	GreeterType,
 	ProfileType,
 	seat_packages,

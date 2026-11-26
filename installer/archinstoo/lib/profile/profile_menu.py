@@ -4,7 +4,8 @@ if TYPE_CHECKING:
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 from archinstoo.lib.menu.abstract_menu import CONFIG_KEY, AbstractSubMenu
-from archinstoo.lib.profile.base import GreeterType, Profile, ProfileType
+from archinstoo.lib.models.profile import GreeterType, ProfileType
+from archinstoo.lib.profile.base import Profile
 from archinstoo.lib.profile.config import ProfileConfiguration
 from archinstoo.lib.tui.curses_menu import SelectMenu
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, override
 
 from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.profile.base import ProfileType, seat_packages, seat_services
+from archinstoo.lib.models.profile import ProfileType, seat_packages, seat_services
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
