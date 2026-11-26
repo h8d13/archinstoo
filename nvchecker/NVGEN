@@ -6,9 +6,8 @@ Tracks (into nvchecker.toml) the Arch packages archinstoo touches:
 - Optional dependencies (PKGBUILD optdepends)
 - Build dependencies (PKGBUILD makedepends)
 - All installable packages (schema.toml)
-- Config-conditional packages that live in code enums, not the schema:
-  kernels + headers, vendor firmware, gfx extras (dkms), microcode, seat
-  access (the sources _resolve.py reads when expanding a saved config)
+- Kernels (+ headers) and vendor firmware, which no schema section lists: a
+  config names them directly, so they are read from their enums
 
 Subcommands:
     ./NVGEN gen            write nvchecker.toml in place (default; --stdout to pipe)
@@ -45,24 +44,15 @@ GROUPS_MODULE = PKG / 'lib' / 'pm' / 'groups.py'
 PKGBUILD_DEV = ROOT / 'PKGBUILD'
 PKGBUILD_REL = ROOT / 'installer' / 'PKGBUILD'
 
-# enums holding package names that never reach schema.toml, so the schema walk
-# alone under-reports what an install can pull. covers the non-schema sources
-# _resolve.py:collect() reads, plus the microcode installer.py adds from the
-# detected CPU. each member value becomes one package per suffix:
+# enums holding package names that never reach schema.toml: no section is
+# generated for these, a config names the packages directly. everything else
+# an install can pull (drivers, microcode, seat access) is a section there.
+# each member value becomes one package per suffix:
 #   Kernel         config['kernels'], plus -headers for kernel_headers/DKMS
 #   FirmwareVendor firmware_config vendors, for firmware_type = "vendor"
-#   GfxPackage     driver extras the schema can't model (dkms, nvidia-open-dkms,
-#                  xorg-server/xorg-xinit added for xorg profiles)
-#   CpuVendor      values are vendor tags ('amd'), only <tag>-ucode is a package.
-#                  _Unknown has no microcode and drops out via the private-member
-#                  rule in enum_values()
-#   SeatAccess     per-profile seat_access custom_setting (sway/river/niri/...)
 PKG_ENUMS = (
 	(PKG / 'lib' / 'models' / 'kernel.py', 'Kernel', ('', '-headers')),
 	(PKG / 'lib' / 'models' / 'firmware.py', 'FirmwareVendor', ('',)),
-	(PKG / 'lib' / 'models' / 'graphics.py', 'GfxPackage', ('',)),
-	(PKG / 'lib' / 'models' / 'firmware.py', 'CpuVendor', ('-ucode',)),
-	(PKG / 'lib' / 'models' / 'profile.py', 'SeatAccess', ('',)),
 )
 
 
@@ -272,7 +262,7 @@ def generate_toml() -> str:
 	add_section('OPTIONAL DEPENDENCIES', optdepends - depends)
 	add_section('BUILD DEPENDENCIES', makedepends - depends - optdepends)
 	pkgbuild = depends | optdepends | makedepends
-	add_section('KERNELS, FIRMWARE, DRIVER AND SEAT OPTIONS', code_pkgs - pkgbuild)
+	add_section('KERNELS AND VENDOR FIRMWARE', code_pkgs - pkgbuild)
 	add_section('INSTALLABLE PACKAGES', schema_pkgs - pkgbuild - code_pkgs)
 
 	total = len(pkgbuild | code_pkgs | schema_pkgs)
