@@ -23,6 +23,7 @@ from archinstoo.lib.models.profile import DisplayServer
 from archinstoo.lib.network.network_handler import ISO_IWD_DIR
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.schema import SCHEMA
+from archinstoo.lib.serialize import strip_none
 from archinstoo.lib.utils.paths import locate_binary
 
 if TYPE_CHECKING:
@@ -229,7 +230,9 @@ def _application_packages(app: ApplicationSerialization) -> set[str]:
 	return pkgs
 
 
-def collect(config: ArchConfigSerialization) -> set[str]:
+def collect(raw: ArchConfigSerialization) -> set[str]:
+	# read the file the way the loader does: a null key is an unset one
+	config: ArchConfigSerialization = strip_none(dict(raw))
 	pkgs: set[str] = set()
 
 	# base + firmware + whatever the host itself dictates
