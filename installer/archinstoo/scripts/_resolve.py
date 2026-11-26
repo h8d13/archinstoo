@@ -36,8 +36,13 @@ from archinstoo.lib.utils.paths import locate_binary
 if TYPE_CHECKING:
 	from archinstoo.lib.args import ArchConfigSerialization
 	from archinstoo.lib.models.applications import ApplicationSerialization
-	from archinstoo.lib.models.device import _DiskLayoutConfigurationSerialization
+	from archinstoo.lib.models.device import (
+		_DiskLayoutConfigurationSerialization,
+		_LvmVolumeSerialization,
+		_PartitionModificationSerialization,
+	)
 	from archinstoo.lib.models.profile import ProfileSerialization
+	from archinstoo.lib.models.users import UserSerialization
 	from archinstoo.lib.schema_gen import Section
 
 
@@ -98,6 +103,14 @@ def _host_packages() -> set[str]:
 	return pkgs
 
 
+def _status(
+	vol: _PartitionModificationSerialization | _LvmVolumeSerialization,
+) -> str | None:
+	# .get() takes any key and reads one the type lacks as object: the return
+	# type is what holds this read to the two serializations
+	return vol.get('status')
+
+
 def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str]:
 	# minimal_installation() prepares LVM volumes or partitions, never both, and
 	# lvm_config sits next to device_modifications rather than inside them
@@ -116,7 +129,7 @@ def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str
 			fs_types.update(
 				part.get('fs_type') or ''
 				for part in dev.get('partitions') or []
-				if part.get('status') != ModificationStatus.DELETE.value
+				if _status(part) != ModificationStatus.DELETE.value
 			)
 
 	pkgs = {p for fs in fs_types if fs in fs_tools for p in fs_tools[fs]}
@@ -130,7 +143,8 @@ def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str
 def _has_default_btrfs_vols(disk: _DiskLayoutConfigurationSerialization) -> bool:
 	# mirrors DiskLayoutConfiguration.has_default_btrfs_vols(): a btrfs
 	# partition or LVM volume being set up, with @ mounted on /
-	vols: list[Any] = [
+	vols: list[_PartitionModificationSerialization | _LvmVolumeSerialization]
+	vols = [
 		part
 		for dev in disk.get('device_modifications') or []
 		for part in dev.get('partitions') or []
@@ -140,7 +154,7 @@ def _has_default_btrfs_vols(disk: _DiskLayoutConfigurationSerialization) -> bool
 			vols += group.get('volumes') or []
 
 	return any(
-		vol.get('status')
+		_status(vol)
 		in {ModificationStatus.CREATE.value, ModificationStatus.MODIFY.value}
 		and vol.get('fs_type') == FilesystemType.BTRFS.value
 		and any(
@@ -363,14 +377,21 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 		if net_type == NicType.ISO.value and _iso_has_psks():
 			pkgs.update(_flat('network_iso_extra'))
 
-	# users: an entry without a username is none, as User.parse_arguments has it
-	auth = config.get('auth_config') or {}
-	users = [u for u in auth.get('users') or [] if u.get('username')]
-	# create_users wants the elevated user to have a password as well
+	# users: an entry without a username is none, as User.parse_arguments has
+	# it. create_users wants the elevated one to have a password as well
 	# (User.any_elevated). A saved config never holds one: the menu install it
 	# was saved from did, and asks again before the next. So here an elevated
 	# user counts as having theirs
-	elevated = any(user.get('elev') is True for user in users)
+	auth = config.get('auth_config') or {}
+	users: list[UserSerialization] = []
+	elevated = False
+	for entry in auth.get('users') or []:
+		# annotated: .get() takes any key, the type is what checks these two
+		username: str | None = entry.get('username')
+		elev: bool | None = entry.get('elev')
+		if username:
+			users.append(entry)
+			elevated = elevated or elev is True
 
 	# privilege escalation: create_users straps it once a user can use it
 	priv_esc: str | None = auth.get(
