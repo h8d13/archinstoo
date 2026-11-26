@@ -163,7 +163,7 @@ class GlobalMenu(AbstractMenu[None]):
 			),
 			MenuItem(
 				text='Firmware',
-				value=FirmwareConfiguration.default(),
+				value=FirmwareConfiguration.default(SysInfo.is_vm()),
 				action=select_firmware,
 				preview_action=self._prev_firmware,
 				key='firmware',

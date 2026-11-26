@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 from archinstoo.lib.cli import DEFAULT_SCRIPT, Arguments, build_parser
 from archinstoo.lib.disk.device_handler import DeviceHandler
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.localization.catalog import get_kb_layout
 from archinstoo.lib.models.applications import ApplicationConfiguration
 from archinstoo.lib.models.authentication import AuthenticationConfiguration
@@ -68,7 +69,7 @@ class ArchConfig:
 	kernels: list[str] = field(default_factory=lambda: [DEFAULT_KERNEL.value])
 	kernel_headers: bool = False
 	firmware: FirmwareConfiguration = field(
-		default_factory=FirmwareConfiguration.default
+		default_factory=lambda: FirmwareConfiguration.default(SysInfo.is_vm())
 	)
 	ntp: bool = True
 	packages: list[str] = field(default_factory=list)

@@ -1070,12 +1070,10 @@ class PartitionGUID(Enum):
 	LINUX_ROOT_X86_64 = '4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709'
 
 	@classmethod
-	def linux_root(cls) -> PartitionGUID:
+	def linux_root(cls, arch: str) -> PartitionGUID:
 		# discoverable partitions spec keys root by arch: the wrong GUID
 		# leaves systemd-gpt-auto-generator unable to find /
-		from archinstoo.lib.hardware import SysInfo
-
-		if SysInfo.arch() == 'aarch64':
+		if arch == 'aarch64':
 			return cls.LINUX_ROOT_AARCH64
 		return cls.LINUX_ROOT_X86_64
 
