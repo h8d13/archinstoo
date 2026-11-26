@@ -4,6 +4,12 @@
 # expands pacman groups, then the full dependency tree via pactree
 # (pacman-contrib). Kept free of a module-level entrypoint so count and the
 # tests can import it without side effects.
+#
+# Package lists come from schema.toml (SCHEMA); what a config selects is asked
+# of the installer's own code where it can be, else mirrored (the helpers
+# marked "mirrors"). Not from the schema: kernels, additional packages, vendor
+# firmware, the seat package (taken as saved) and a custom 'path' profile.
+# A pre-mount layout's devices are not probed: no filesystem tools, no mdadm.
 
 import re
 import sys
