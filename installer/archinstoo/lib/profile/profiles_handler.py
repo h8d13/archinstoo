@@ -52,10 +52,6 @@ class ProfileHandler:
 	def __init__(self) -> None:
 		self._profiles: list[Profile] | None = None
 
-		# custom profile file from the config, kept to export it again when
-		# the user saves the configuration
-		self._custom_path: str | None = None
-
 	def to_json(self, profile: Profile | None) -> ProfileSerialization:
 		# Serialize the selected profile setting to JSON
 		data: ProfileSerialization = {}
@@ -72,9 +68,8 @@ class ProfileHandler:
 					for profile in profile.current_selection
 				},
 			}
-
-		if self._custom_path is not None:
-			data['path'] = self._custom_path
+			if profile.custom_path is not None:
+				data['path'] = profile.custom_path
 
 		return data
 
@@ -90,7 +85,6 @@ class ProfileHandler:
 		custom_profiles: list[Profile] = []
 
 		if custom_path := profile_config.get('path', None):
-			self._custom_path = custom_path
 			local_path = Path(custom_path)
 
 			# local files only: a profile is code run as root, fetch and
@@ -113,6 +107,8 @@ class ProfileHandler:
 
 		if not profile:
 			return None
+
+		profile.custom_path = custom_path
 
 		valid_sub_profiles: list[Profile] = []
 		invalid_sub_profiles: list[str] = []

@@ -29,6 +29,8 @@ class Profile:
 		self.name = name
 		self.profile_type = profile_type
 		self.custom_settings: dict[str, str | list[str] | None] = {}
+		# the file a config's 'path' loaded this from, exported again on save
+		self.custom_path: str | None = None
 
 		self.current_selection = list(current_selection or [])
 		self._packages = list(packages or [])
