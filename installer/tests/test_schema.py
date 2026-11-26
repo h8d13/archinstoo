@@ -11,7 +11,7 @@ import importlib.machinery
 import importlib.util
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, get_type_hints
+from typing import TYPE_CHECKING, get_type_hints
 
 import pytest
 
@@ -119,7 +119,7 @@ def test_pick_paths_exist_in_the_serialization(section: schema_gen.Section) -> N
 def test_resolve_walks_the_picks() -> None:
 	# one of each shape: flag on a flat section, name on a flat section, name
 	# on a table, list on a table; an unknown name drops out
-	app: dict[str, Any] = {
+	app: ApplicationSerialization = {
 		'media_codecs_config': {'enabled': True},
 		'print_service_config': {'enabled': False},
 		'cpu_scheduler_config': {'scheduler': 'scx_lavd'},
