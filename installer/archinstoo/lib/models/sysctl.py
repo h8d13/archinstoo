@@ -97,6 +97,9 @@ class SysctlConfiguration:
 	def enabled(self) -> bool:
 		return self.optimized or bool(self.entries)
 
+	def json(self) -> SysctlConfigSerialization:
+		return {'optimized': self.optimized, 'entries': list(self.entries)}
+
 	@classmethod
 	def parse_arg(cls, arg: SysctlConfigSerialization) -> Self:
 		return cls(

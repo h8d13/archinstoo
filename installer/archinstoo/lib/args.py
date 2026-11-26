@@ -125,7 +125,7 @@ class ArchConfig:
 			'disk_config': self.disk_config.json()
 			if self.disk_config
 			else None,
-			'swap': None,
+			'swap': self.swap.json() if self.swap else None,
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
 			'firmware': self.firmware.json(),
@@ -156,14 +156,9 @@ class ArchConfig:
 				s.json() if isinstance(s, UserService) else s
 				for s in self.services
 			],
-			'sysctl': None,
+			'sysctl': self.sysctl.json() if self.sysctl else None,
 			'custom_commands': self.custom_commands,
 		}
-		# these two go out as dataclasses: jsonify writes their vars(), nulls
-		# kept. set here because an ignore inside the literal would also
-		# silence its unknown-key check
-		config['swap'] = self.swap  # type: ignore[typeddict-item]
-		config['sysctl'] = self.sysctl  # type: ignore[typeddict-item]
 		return config
 
 	@classmethod
