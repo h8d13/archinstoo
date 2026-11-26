@@ -133,8 +133,10 @@ def validate_bootloader(
 		errors.append(f'{bootloader.display_name()} requires a UEFI system')
 
 	# Firmware reads the kernel directly from the boot partition, which must be FAT.
+	# A UKI lives on the ESP instead, so /boot is free to be anything.
 	if (
 		bootloader == Bootloader.Efistub
+		and not bootloader_config.uki
 		and boot_partition is not None
 		and (
 			boot_partition.fs_type is None
