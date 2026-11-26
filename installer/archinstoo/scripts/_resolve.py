@@ -122,10 +122,12 @@ def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str
 def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	prof_pkgs = set(SCHEMA['profiles'][name])
 
-	# <name>_compositor swaps the default (niri) compositor set
-	if comp_sets := SCHEMA['compositors'].get(name):
+	# <name>_compositor swaps the default (niri) compositor set. unset, the
+	# profile keeps that default
+	picked = settings.get(f'{name}_compositor')
+	if picked and (comp_sets := SCHEMA['compositors'].get(name)):
 		prof_pkgs.difference_update(comp_sets['niri'])
-		prof_pkgs.update(comp_sets[settings[f'{name}_compositor']])
+		prof_pkgs.update(comp_sets[picked])
 
 	return prof_pkgs
 
