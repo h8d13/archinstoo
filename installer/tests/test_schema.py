@@ -12,6 +12,7 @@ import importlib.util
 import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, get_type_hints
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -296,6 +297,148 @@ def test_resolve_keeps_one_shell_like_the_install(details: list[str]) -> None:
 	pkgs = _resolve.collect({'profile_config': {'profiles': [entry]}})
 	assert installed <= pkgs
 	assert not dropped & pkgs
+
+
+_SEATD: Any = {'seat_access': 'seatd'}
+
+# one entry of each shape parse_profile_config and Profile.install() tell
+# apart. A 'path' names custom code below, written to a file for the test
+_PROFILE_SHAPES: dict[str, Any] = {
+	'seat picked': {
+		'main': 'desktop',
+		'details': ['sway'],
+		'custom_settings': {'sway': _SEATD},
+	},
+	'seat package excluded': {
+		'main': 'desktop',
+		'details': ['sway'],
+		'custom_settings': {'sway': {**_SEATD, 'excluded_packages': ['seatd']}},
+	},
+	'seat key on a profile that never asks': {
+		'main': 'desktop',
+		'details': ['gnome'],
+		'custom_settings': {'gnome': _SEATD},
+	},
+	'xorg selection': {'main': 'desktop', 'details': ['i3-wm']},
+	'two shells': {'main': 'desktop', 'details': ['dms', 'noctalia']},
+	'unknown detail': {'main': 'desktop', 'details': ['nope', 'kde-plasma']},
+	'settings without the compositor': {
+		'main': 'desktop',
+		'details': ['dms'],
+		'custom_settings': {'dms': {'excluded_packages': ['niri']}},
+	},
+	'null compositor': {
+		'main': 'desktop',
+		'details': ['dms'],
+		'custom_settings': {'dms': {'dms_compositor': None}},
+	},
+	'server': {'main': 'server', 'details': ['sshd', 'docker']},
+	# only desktop and server strap their selection
+	'main that straps nothing': {
+		'main': 'minimal',
+		'details': ['sway'],
+		'custom_settings': {'sway': _SEATD},
+	},
+	'xorg main': {'main': 'xorg', 'details': ['i3-wm']},
+	# it answers for its own display server, not its selection's
+	'leaf as main': {'main': 'sway', 'details': ['i3-wm']},
+	# dropped whole
+	'unknown main': {'main': 'nope', 'details': ['sway']},
+	'no main': {'details': ['sway']},
+	'main under itself': {'main': 'desktop', 'details': ['desktop', 'sway']},
+	'null details': {'main': 'desktop', 'details': None},
+	# custom code, loaded for real or not at all
+	'example profile': {'path': 'example', 'details': ['xfce4']},
+	'missing file': {'path': '/nowhere.py', 'details': ['sway']},
+	'missing file, stock main': {
+		'path': '/nowhere.py',
+		'main': 'desktop',
+		'details': ['sway'],
+	},
+	'custom file, main that straps nothing': {
+		'path': 'example',
+		'main': 'minimal',
+		'details': ['sway'],
+	},
+	'custom code under a stock name': {
+		'path': 'own sway',
+		'main': 'desktop',
+		'details': ['sway'],
+	},
+	'custom desktop under the stock name': {
+		'path': 'own desktop',
+		'details': ['i3-wm'],
+	},
+	'custom profile without install()': {'path': 'bare', 'details': ['sway']},
+	'custom profile with install()': {'path': 'strapping', 'details': ['sway']},
+}
+
+_CUSTOM_CODE = {
+	'example': (Path(__file__).parents[1] / 'examples' / 'custom.py').read_text(),
+	'own sway': """
+from archinstoo.default_profiles.desktops.sway import SwayProfile
+
+class OwnSway(SwayProfile):
+	@property
+	def packages(self):
+		return [*super().packages, 'waybar', 'fuzzel']
+""",
+	'own desktop': """
+from archinstoo.default_profiles.desktop import DesktopProfile
+
+class OwnDesktop(DesktopProfile):
+	@property
+	def packages(self):
+		return ['vlc']
+""",
+	'bare': """
+from archinstoo.lib.models.profile import ProfileType
+from archinstoo.lib.profile.base import Profile
+
+class Bare(Profile):
+	def __init__(self):
+		super().__init__('Bare', ProfileType.Custom, packages=['htop'])
+""",
+	'strapping': """
+from archinstoo.lib.models.profile import ProfileType
+from archinstoo.lib.profile.base import Profile
+
+class Strapping(Profile):
+	def __init__(self):
+		super().__init__('Strapping', ProfileType.Custom, packages=['htop'])
+
+	def install(self, install_session):
+		install_session.add_additional_packages(self.effective_packages())
+		for sub in self.current_selection:
+			install_session.add_additional_packages(sub.effective_packages())
+""",
+}
+
+
+@pytest.mark.parametrize('greeter', [None, 'sddm'])
+@pytest.mark.parametrize('shape', _PROFILE_SHAPES)
+def test_resolve_straps_what_install_profile_config_does(
+	shape: str, greeter: str | None, tmp_path: Path
+) -> None:
+	entry = dict(_PROFILE_SHAPES[shape])
+	if code := _CUSTOM_CODE.get(entry.get('path', '')):
+		custom = tmp_path / 'custom.py'
+		custom.write_text(code)
+		entry['path'] = str(custom)
+	raw: Any = {'profiles': [entry], 'greeter': greeter}
+
+	# everything the install hands to pacstrap for these profiles
+	session = MagicMock(target=tmp_path, kernels=['linux'])
+	handler = ProfileHandler()
+	handler.install_profile_config(session, handler.parse_config(raw))
+	strapped: set[str] = set()
+	for call in session.add_additional_packages.call_args_list:
+		(pkgs,) = call.args
+		strapped.update([pkgs] if isinstance(pkgs, str) else pkgs)
+
+	counted = _resolve.collect({'profile_config': raw})
+	assert strapped <= counted
+	assert counted - _resolve.collect({}) <= strapped
 
 
 def test_resolve_skips_deleted_partitions() -> None:
