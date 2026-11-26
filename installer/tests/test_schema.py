@@ -26,6 +26,10 @@ from archinstoo.lib.models.applications import (
 	PowerManagement,
 	Security,
 )
+from archinstoo.lib.models.authentication import (
+	AuthenticationConfiguration,
+	PrivilegeEscalation,
+)
 from archinstoo.lib.models.firmware import (
 	FULL_FIRMWARE,
 	CpuVendor,
@@ -36,7 +40,7 @@ from archinstoo.lib.models.graphics import GfxPackage
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.profile import SeatAccess
 from archinstoo.lib.models.swap import SwapConfigSerialization, SwapConfiguration
-from archinstoo.lib.pm import groups
+from archinstoo.lib.pm import aur, groups
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA, SCHEMA_PATH
 from archinstoo.scripts import _resolve
@@ -217,6 +221,20 @@ def test_resolve_lists_privilege_escalation_for_elevated_users_only(
 	raw: Any = {'auth_config': {'privilege_escalation': 'doas', 'users': [user]}}
 	assert ('opendoas' in _resolve.collect(raw)) == elev
 	assert 'sudo' not in _resolve.collect({})
+
+
+@pytest.mark.parametrize('priv_esc', [None, *PrivilegeEscalation], ids=str)
+def test_resolve_lists_the_aur_bootstrap_where_it_builds(
+	priv_esc: PrivilegeEscalation | None,
+) -> None:
+	# run_grimoire_installation builds through sudo, doas or su and skips
+	# run0: read from a config saved with each choice
+	auth: Any = AuthenticationConfiguration(privilege_escalation=priv_esc).json()
+	auth['users'] = [{'username': 'a', 'elev': True}]
+	raw: Any = {'auth_config': auth, 'aur_packages': ['yay']}
+	builds = priv_esc in aur._TEMP_RULES
+	assert builds == (priv_esc is not PrivilegeEscalation.Run0)
+	assert ('fakeroot' in _resolve.collect(raw)) == builds
 
 
 @pytest.mark.parametrize(
