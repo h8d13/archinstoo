@@ -2146,3 +2146,22 @@ class LsblkInfo:
 			'fsroots',
 			'serial',
 		]
+
+
+@dataclass
+class LsblkOutput:
+	blockdevices: list[LsblkInfo]
+
+	@classmethod
+	def from_json(cls, data: str) -> LsblkOutput:
+		parsed = json.loads(data)
+		devices = [
+			LsblkInfo.from_dict(d) for d in parsed.get('blockdevices', [])
+		]
+		return cls(blockdevices=devices)
+
+	def to_json(self) -> str:
+		return json.dumps(
+			{'blockdevices': [d.to_dict() for d in self.blockdevices]},
+			indent=4,
+		)
