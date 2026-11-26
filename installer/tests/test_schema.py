@@ -17,6 +17,7 @@ import pytest
 
 from archinstoo.lib import installer, schema, schema_gen
 from archinstoo.lib.args import ArchConfig
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.applications import (
 	ApplicationConfiguration,
 	ApplicationSerialization,
@@ -25,7 +26,12 @@ from archinstoo.lib.models.applications import (
 	PowerManagement,
 	Security,
 )
-from archinstoo.lib.models.firmware import CpuVendor, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.firmware import (
+	FULL_FIRMWARE,
+	CpuVendor,
+	FirmwareType,
+	FirmwareVendor,
+)
 from archinstoo.lib.models.graphics import GfxPackage
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.profile import SeatAccess
@@ -157,6 +163,16 @@ def test_resolve_agrees_with_the_install_on_kernels(kernels: list[str] | None) -
 	installed = ArchConfig.from_config(raw).kernels
 	expected = {*installed, *(f'{k}-headers' for k in installed)}
 	assert expected <= _resolve.collect(raw)
+
+
+@pytest.mark.parametrize('is_vm', [True, False])
+def test_resolve_agrees_with_the_install_on_unset_firmware(
+	monkeypatch: pytest.MonkeyPatch, is_vm: bool
+) -> None:
+	# an unset section is MINIMAL on a VM, count listed linux-firmware anyway
+	monkeypatch.setattr(SysInfo, 'is_vm', staticmethod(lambda: is_vm))
+	installed = set(ArchConfig().firmware.packages())
+	assert _resolve.collect({}) & set(FULL_FIRMWARE) == installed
 
 
 # -- reverse cover -----------------------------------------------------------
