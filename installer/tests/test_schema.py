@@ -255,6 +255,72 @@ def test_resolve_skips_deleted_partitions() -> None:
 	assert _resolve._filesystem_packages(disk) == {'xfsprogs'}
 
 
+_DEFAULT_ROOT = [{'name': '@', 'mountpoint': '/'}]
+
+
+@pytest.mark.parametrize(
+	('vol', 'installed'),
+	[
+		(
+			{
+				'status': 'create',
+				'fs_type': 'btrfs',
+				'btrfs': _DEFAULT_ROOT,
+			},
+			True,
+		),
+		(
+			{
+				'status': 'modify',
+				'fs_type': 'btrfs',
+				'btrfs': _DEFAULT_ROOT,
+			},
+			True,
+		),
+		(
+			{
+				'status': 'existing',
+				'fs_type': 'btrfs',
+				'btrfs': _DEFAULT_ROOT,
+			},
+			False,
+		),
+		(
+			{'status': 'create', 'fs_type': 'ext4', 'btrfs': _DEFAULT_ROOT},
+			False,
+		),
+		({'status': 'create', 'fs_type': 'btrfs'}, False),
+		(
+			{
+				'status': 'create',
+				'fs_type': 'btrfs',
+				'btrfs': [{'name': '@root', 'mountpoint': '/'}],
+			},
+			False,
+		),
+	],
+	ids=['create', 'modify', 'untouched', 'ext4', 'no-subvols', 'other-root'],
+)
+@pytest.mark.parametrize('lvm', [False, True])
+def test_resolve_lists_snapshots_on_a_default_btrfs_layout_only(
+	vol: Any,  # noqa: ANN401
+	installed: bool,
+	lvm: bool,
+) -> None:
+	# guided asks has_default_btrfs_vols() first, on partitions and LVM
+	# volumes alike; count took any snapshot_config
+	disk: Any = {'btrfs_options': {'snapshot_config': {'type': 'snapper'}}}
+	if lvm:
+		disk['lvm_config'] = {'vol_groups': [{'volumes': [vol]}]}
+	else:
+		disk['device_modifications'] = [{'partitions': [vol]}]
+	raw: Any = {'disk_config': disk, 'bootloader_config': {'bootloader': 'grub'}}
+
+	pkgs = _resolve.collect(raw)
+	assert ('snapper' in pkgs) == installed
+	assert ('grub-btrfs' in pkgs) == installed
+
+
 # -- reverse cover -----------------------------------------------------------
 
 
