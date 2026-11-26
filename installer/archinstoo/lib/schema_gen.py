@@ -1,8 +1,10 @@
 # Generate schema.toml from the installer's own package definitions.
 #
-# Flattening what an install can pull into plain tables lets two tools read it
-# without the runtime: scripts/_resolve.py (count), which expands a saved
-# config, and nvchecker/NVGEN, which version-tracks every package we can touch.
+# Flattening what an install can pull into plain tables lets two tools read it:
+# nvchecker/NVGEN, which version-tracks every package we can touch without the
+# runtime, and scripts/_resolve.py (count), which expands a saved config and
+# asks the runtime only what a list cannot say (the profiles an entry selects,
+# a custom profile's own packages).
 # Generating rather than transcribing is what keeps them from disagreeing with
 # the install; tests/test_schema.py fails when the committed file goes stale.
 #

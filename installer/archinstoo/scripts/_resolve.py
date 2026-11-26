@@ -285,7 +285,7 @@ def _pick(app: ApplicationSerialization, section: Section) -> set[str]:
 def _application_packages(app: ApplicationSerialization) -> set[str]:
 	# every app_config category is a section with a pick; what follows is the
 	# part a pick alone cannot say. schema_gen drags the installer in, so it
-	# stays a function-local import like installer above
+	# stays a function-local import
 	from archinstoo.lib.schema_gen import SECTIONS
 
 	pkgs: set[str] = set()

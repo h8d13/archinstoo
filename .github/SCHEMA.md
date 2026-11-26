@@ -98,8 +98,11 @@ So to change what gets installed, change the codepath, then regenerate:
 python -m archinstoo --script schema
 ```
 
-`tests/test_schema.py` fails if the committed file is stale, and `--script count` and
-`nvchecker/NVGEN` all read the generated file rather than the runtime.
+`tests/test_schema.py` fails if the committed file is stale. `nvchecker/NVGEN` reads
+only the generated file. `--script count` takes its package lists from it too, but
+reads a config's `profile_config` through the installer's own `parse_profile_config`:
+which profiles an entry selects comes from the code, and so do the packages of one
+the file does not list (a `path` profile).
 
 Each application category's `Section` also carries a `pick`:
 the key path under `app_config` where a saved config keeps that choice.
