@@ -175,6 +175,19 @@ def test_resolve_agrees_with_the_install_on_unset_firmware(
 	assert _resolve.collect({}) & set(FULL_FIRMWARE) == installed
 
 
+def test_resolve_reads_null_as_unset() -> None:
+	# the loader strips nulls before any default applies: zram stays on, and
+	# the privilege escalation stays sudo
+	user: Any = {'username': 'a', 'elev': True}
+	nulled: Any = {
+		'kernels': None,
+		'swap': {'zram': None},
+		'auth_config': {'privilege_escalation': None, 'users': [user]},
+	}
+	unset: Any = {'swap': {}, 'auth_config': {'users': [user]}}
+	assert _resolve.collect(nulled) == _resolve.collect(unset)
+
+
 # -- reverse cover -----------------------------------------------------------
 
 
