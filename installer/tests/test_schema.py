@@ -37,6 +37,7 @@ from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.profile import SeatAccess
 from archinstoo.lib.models.swap import SwapConfigSerialization, SwapConfiguration
 from archinstoo.lib.pm import groups
+from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA, SCHEMA_PATH
 from archinstoo.scripts import _resolve
 
@@ -215,6 +216,17 @@ def test_resolve_lists_privilege_escalation_for_elevated_users_only(
 	}
 	assert ('opendoas' in _resolve.collect(raw)) == elev
 	assert 'sudo' not in _resolve.collect({})
+
+
+@pytest.mark.parametrize(
+	'profiles', [[], [{'main': 'server'}], [{'main': 'desktop'}]], ids=str
+)
+def test_resolve_agrees_with_the_install_on_greeter(profiles: Any) -> None:  # noqa: ANN401
+	# install_profile_config skips a greeter no selected profile supports
+	raw: Any = {'profiles': profiles, 'greeter': 'sddm'}
+	config = ProfileHandler().parse_config(raw)
+	installed = bool(config.profiles) and config.is_greeter_supported()
+	assert ('sddm' in _resolve.collect({'profile_config': raw})) == installed
 
 
 # -- reverse cover -----------------------------------------------------------
