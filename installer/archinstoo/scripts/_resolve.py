@@ -356,8 +356,9 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 
 	pkgs.update(_application_packages(config.get('app_config') or {}))
 
-	# shells (per-user in auth_config)
-	users = auth.get('users', []) or []
+	# shells (per-user in auth_config). an entry without a username is no
+	# user, as User.parse_arguments has it
+	users = [u for u in auth.get('users') or [] if u.get('username')]
 	for user in users:
 		shell: str = user.get('shell', '')
 		if shell in SCHEMA['shells']:
