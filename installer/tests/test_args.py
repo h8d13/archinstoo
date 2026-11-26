@@ -49,7 +49,7 @@ from archinstoo.lib.models.profile import GreeterType
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.users import Password, Shell, User
-from archinstoo.lib.serialize import JSON
+from archinstoo.lib.serialize import JSON, strip_none
 
 if TYPE_CHECKING:
 	import pytest
@@ -365,12 +365,15 @@ def test_privilege_escalation_survives_a_saved_config() -> None:
 		if choice is None:
 			assert saved['auth_config']['privilege_escalation'] == 'none'
 
-	# hand-written spellings of none keep working, an absent key is sudo
+	# the spellings of none parse_arg accepts. A null only gets this far
+	# where the file is read raw (resume): --config strips it first, and
+	# there, as for an absent key, it is sudo
 	for unset in ('none', '', None):
 		parsed = AuthenticationConfiguration.parse_arg(
 			{'privilege_escalation': unset}
 		)
 		assert parsed.privilege_escalation is None
+	assert strip_none({'privilege_escalation': None}) == {}
 	assert (
 		AuthenticationConfiguration.parse_arg({}).privilege_escalation
 		is PrivilegeEscalation.Sudo
