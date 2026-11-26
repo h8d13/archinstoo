@@ -28,6 +28,7 @@ from archinstoo.lib.models.firmware import CpuVendor, FirmwareType, FirmwareVend
 from archinstoo.lib.models.graphics import GfxPackage
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.profile import SeatAccess
+from archinstoo.lib.models.swap import SwapConfigSerialization, SwapConfiguration
 from archinstoo.lib.pm import groups
 from archinstoo.lib.schema import SCHEMA, SCHEMA_PATH
 from archinstoo.scripts import _resolve
@@ -133,6 +134,19 @@ def test_resolve_walks_the_picks() -> None:
 		| {'htop', 'git'}
 	)
 	assert _resolve._application_packages(app) == expected
+
+
+@pytest.mark.parametrize(
+	'swap',
+	[None, {}, {'hibernation': True}, {'zram': False}, {'zram': True}],
+)
+def test_resolve_agrees_with_the_install_on_zram(
+	swap: SwapConfigSerialization | None,
+) -> None:
+	# count once read a section without the key as zram off
+	installed = swap is not None and SwapConfiguration.parse_arg(swap).zram
+	listed = 'zram-generator' in _resolve.collect({'swap': swap})
+	assert listed == installed
 
 
 # -- reverse cover -----------------------------------------------------------
