@@ -324,9 +324,10 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 
 	main = next(iter(mains), '')
 
-	# greeter
+	# greeter: install_profile_config skips one no selected profile supports,
+	# and only the desktop top profile does
 	greeter: str | None = pc.get('greeter') if pc else None
-	if greeter in SCHEMA['greeters']:
+	if has_desktop and greeter in SCHEMA['greeters']:
 		pkgs.update(SCHEMA['greeters'][greeter])
 
 	pkgs.update(
