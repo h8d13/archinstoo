@@ -1,6 +1,6 @@
 import json
 import stat
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from archinstoo.lib.tui.curses_menu import SelectMenu, Tui
 from archinstoo.lib.tui.menu_item import MenuItem, MenuItemGroup
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 	from collections.abc import Callable
 	from pathlib import Path
 
-	from .args import ArchConfigHandler
+	from .args import ArchConfigHandler, ArchConfigSerialization
 	from .cli import Arguments
 
 
@@ -96,12 +96,14 @@ class ConfigStore:
 		return cls._saved_config_path().exists()
 
 	@classmethod
-	def load_saved_config(cls) -> dict[str, Any] | None:
+	def load_saved_config(cls) -> ArchConfigSerialization | None:
 		config_file = cls._saved_config_path()
 		try:
 			if config_file.exists():
 				with config_file.open() as f:
 					data = json.load(f)
+				# typed before the check below narrows the raw value
+				config: ArchConfigSerialization = data
 
 				# Validate at the boundary: valid JSON of the wrong type
 				# (list/scalar/null, or dict with non-str keys) must
@@ -116,7 +118,7 @@ class ConfigStore:
 					)
 					return None
 
-				return data
+				return config
 		except Exception as e:
 			warn(f'Failed to load saved config: {e}')
 		return None
@@ -129,7 +131,7 @@ class ConfigStore:
 			debug(f'Deleted saved configuration {config_file}')
 
 	@classmethod
-	def prompt_resume(cls) -> dict[str, Any] | None:
+	def prompt_resume(cls) -> ArchConfigSerialization | None:
 		# Prompt user to resume from saved config. Returns config dict or None.
 		if not cls.has_saved_config():
 			return None
