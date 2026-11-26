@@ -7,6 +7,7 @@ from archinstoo.lib.models.device import (
 	BtrfsMountOption,
 	DeviceModification,
 	FilesystemType,
+	FreeSpace,
 	ModificationStatus,
 	PartitionFlag,
 	PartitionModification,
@@ -28,30 +29,6 @@ from archinstoo.lib.tui.prompts import (
 
 from .layouts import suggest_disk_layout
 from .subvolume_menu import SubvolumeMenu
-
-
-class FreeSpace:
-	def __init__(self, start: Size, end: Size) -> None:
-		# only the aligned span is usable, so a gap between off-grain
-		# neighbours that rounds below the buffer is never offered
-		self.start = start.align_up()
-		self.end = end.align_down()
-
-	@property
-	def length(self) -> Size:
-		return self.end - self.start
-
-	def table_data(self) -> dict[str, str]:
-		# Called for displaying size data in table format
-		return {
-			'Start': self.start.format_size(
-				Unit.sectors, self.start.sector_size, include_unit=False
-			),
-			'End': self.end.format_size(
-				Unit.sectors, self.start.sector_size, include_unit=False
-			),
-			'Size': self.length.format_highest(),
-		}
 
 
 class DiskSegment:
