@@ -327,8 +327,6 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 	if any(DisplayServer.X11 in p.display_servers() for p in selected):
 		pkgs.update(_flat('xorg_extra'))
 
-	main = next(iter(mains), '')
-
 	# greeter: install_profile_config skips one no selected profile supports,
 	# and only the desktop top profile does
 	greeter: str | None = pc.get('greeter') if pc else None
