@@ -315,19 +315,23 @@ class GlobalMenu(AbstractMenu[None]):
 			missing.add('SDDM requires at least one regular user to log in')
 
 		aur_packages_item = self._item_group.find_by_key('aur_packages')
-		if (
-			aur_packages_item.has_value()
-			and aur_packages_item.value
-			and (
-				not auth_config
-				or auth_config.privilege_escalation
+		if aur_packages_item.has_value() and aur_packages_item.value:
+			if not auth_config:
+				missing.add(
+					'AUR packages require a user with elevated '
+					'privileges to build them'
+				)
+			# the build goes through sudo, doas or su. Run0 only where it
+			# will be set up: without a password on the user it is not
+			elif (
+				auth_config.effective_escalation
 				== PrivilegeEscalation.Run0
-			)
-		):
-			missing.add(
-				'AUR packages require Sudo or Doas privilege '
-				'escalation (Run0 requires booted environment)'
-			)
+			):
+				missing.add(
+					'AUR packages cannot be built with Run0 '
+					'privilege escalation (it requires a booted '
+					'environment)'
+				)
 
 		for item in self._item_group.items:
 			if item.mandatory:

@@ -26,7 +26,7 @@ def select_gfx_packages(preset: list[GfxPackage] | None = None) -> list[GfxPacka
 	# a pick saved on the other arch may hold names this list lacks
 	group.set_selected_by_value([p for p in preset or [] if p in choices])
 
-	if SysInfo.arch() == 'x86_64':
+	if SysInfo.is_x86_64():
 		header = (
 			'dkms and xorg packages are added from the kernel and '
 			'profile picks.\n'
@@ -65,7 +65,7 @@ def select_driver(
 	# Select a graphics driver from a pre-defined set of popular options.
 	# This comment was stupid so I removed it. A profile should plain dictate
 	# What it needs to run and be in minimal functional state.
-	x86 = SysInfo.arch() == 'x86_64'
+	x86 = SysInfo.is_x86_64()
 	if not options:
 		options = gfx_drivers(SysInfo.arch())
 		debug(

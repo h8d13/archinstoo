@@ -1,8 +1,10 @@
 # Generate schema.toml from the installer's own package definitions.
 #
-# Flattening what an install can pull into plain tables lets two tools read it
-# without the runtime: scripts/_resolve.py (count), which expands a saved
-# config, and nvchecker/NVGEN, which version-tracks every package we can touch.
+# Flattening what an install can pull into plain tables lets two tools read it:
+# nvchecker/NVGEN, which version-tracks every package we can touch without the
+# runtime, and scripts/_resolve.py (count), which expands a saved config and
+# asks the runtime only what a list cannot say (the profiles an entry selects,
+# a custom profile's own packages).
 # Generating rather than transcribing is what keeps them from disagreeing with
 # the install; tests/test_schema.py fails when the committed file goes stale.
 #
@@ -21,7 +23,6 @@ from archinstoo.lib.applications.application_handler import CATEGORIES
 from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.firewall import FirewallApp
 from archinstoo.lib.applications.cat.power_management import PowerManagementApp
-from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.models.applications import (
 	ApplicationSerialization,
 	Audio,
@@ -134,21 +135,7 @@ _APP_TABLES: dict[str, Callable[[], Value]] = {
 	'monitor_config': lambda: _one_to_one(Monitor),
 	'editor_config': lambda: {e.value: e.packages for e in Editor},
 	'terminal_config': lambda: {t.value: t.packages for t in Terminal},
-	'security_config': lambda: {
-		Security.APPARMOR.value: SecurityApp().apparmor_packages,
-		Security.FIREJAIL.value: SecurityApp().firejail_packages,
-		Security.BUBBLEWRAP.value: SecurityApp().bubblewrap_packages,
-		**{
-			s.value: [s.value]
-			for s in Security
-			if s
-			not in {
-				Security.APPARMOR,
-				Security.FIREJAIL,
-				Security.BUBBLEWRAP,
-			}
-		},
-	},
+	'security_config': lambda: _one_to_one(Security),
 }
 
 

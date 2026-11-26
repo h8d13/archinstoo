@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, override
 
 from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.models.profile import ProfileType, seat_packages, seat_services
+from archinstoo.lib.models.profile import ProfileType, seat_packages
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -22,7 +22,7 @@ class LabwcProfile(WaylandProfile):
 	def packages(self) -> list[str]:
 		return [
 			'labwc',
-			*seat_packages(self.custom_settings.get('seat_access')),
+			*seat_packages(self.seat_access),
 			# labwc-portals.conf: default=wlr; labwc pulls no backend
 			'xdg-desktop-portal-wlr',
 			# first in lab-sensible-terminal's list after $TERMINAL
@@ -51,14 +51,8 @@ class LabwcProfile(WaylandProfile):
 			autostart.write_text(existing + line)
 			autostart.chmod(0o755)
 
-	@property
-	@override
-	def services(self) -> list[str]:
-		return seat_services(self.custom_settings.get('seat_access'))
-
 	@override
 	def do_on_select(self) -> None:
 		self.custom_settings['seat_access'] = select_seat_access(
-			'labwc',
-			self.custom_settings.get('seat_access'),
+			'labwc', self.seat_access
 		)

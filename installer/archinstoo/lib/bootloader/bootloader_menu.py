@@ -171,11 +171,7 @@ class BootloaderMenu(AbstractSubMenu[BootloaderConfiguration]):
 
 	def _select_serial_console(self, preset: str | None) -> str | None:
 		# pl011 UART on ARM, 16550 everywhere else
-		default = (
-			'ttyAMA0,115200'
-			if SysInfo.arch() == 'aarch64'
-			else 'ttyS0,115200'
-		)
+		default = 'ttyAMA0,115200' if SysInfo.is_aarch64() else 'ttyS0,115200'
 		header = (
 			'Kernel "console=" value for a serial console (e.g. '
 			f'{default}).\nLeave empty to disable.\n'

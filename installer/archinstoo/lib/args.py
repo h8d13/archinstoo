@@ -33,7 +33,11 @@ from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration
-from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
+from archinstoo.lib.models.graphics import (
+	GFX_CUSTOM_CHOICES,
+	GfxDriver,
+	GfxPackage,
+)
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
@@ -43,6 +47,7 @@ from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.lib.serialize import strip_none
 
 
 def _ignored(key: str, value: object) -> None:
@@ -246,12 +251,14 @@ class ArchConfig:
 		# subscripted: GfxDriver() takes any object, .get() any key
 		if args_config.get('gfx_driver'):
 			arch_config.gfx_driver = GfxDriver(args_config['gfx_driver'])
-		# unknown names are dropped, the same way kernels are parsed
-		arch_config.gfx_packages = [
-			GfxPackage(p)
-			for p in args_config.get('gfx_packages') or []
-			if p in GfxPackage
-		]
+		# names outside the custom pool are dropped: unknown ones, and dkms
+		# with its nvidia variant, which the kernel list decides. A list, as
+		# an entry that is no name at all (a nested list) cannot be hashed
+		pool = [p.value for p in GFX_CUSTOM_CHOICES]
+		picked = args_config.get('gfx_packages') or []
+		arch_config.gfx_packages = [GfxPackage(p) for p in picked if p in pool]
+		if dropped := [p for p in picked if p not in pool]:
+			debug(f'Ignoring gfx_packages {dropped!r}: not a custom choice')
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 		if firmware := args_config.get('firmware'):
@@ -325,7 +332,7 @@ class ArchConfigHandler:
 				raise SystemExit(1) from e
 
 		# the JSON boundary: nothing checks the shape, from_config tolerates it
-		cleaned: ArchConfigSerialization = self._cleanup_config(config)
+		cleaned: ArchConfigSerialization = strip_none(config)
 		return cleaned
 
 	def _fetch_from_url(self, url: str) -> str:
@@ -348,20 +355,6 @@ class ArchConfigHandler:
 			sys.exit(1)
 
 		return path.read_text()
-
-	def _cleanup_config(self, config: dict[str, Any]) -> Any:  # noqa: ANN401 - JSON boundary
-		clean_args = {}
-		for key, raw in config.items():
-			val = (
-				self._cleanup_config(raw)
-				if isinstance(raw, dict)
-				else raw
-			)
-
-			if val is not None:
-				clean_args[key] = val
-
-		return clean_args
 
 
 class _ArchConfigHandlerHolder:

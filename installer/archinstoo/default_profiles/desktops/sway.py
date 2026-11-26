@@ -2,7 +2,7 @@ from typing import override
 
 from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.models.profile import ProfileType, seat_packages, seat_services
+from archinstoo.lib.models.profile import ProfileType, seat_packages
 
 
 class SwayProfile(WaylandProfile):
@@ -29,21 +29,15 @@ class SwayProfile(WaylandProfile):
 			'slurp',
 			'pavucontrol',
 			'xorg-xwayland',
-			*seat_packages(self.custom_settings.get('seat_access')),
+			*seat_packages(self.seat_access),
 			# sway-portals.conf: gtk default, wlr for
 			# screencast; sway pulls neither
 			'xdg-desktop-portal-gtk',
 			'xdg-desktop-portal-wlr',
 		]
 
-	@property
-	@override
-	def services(self) -> list[str]:
-		return seat_services(self.custom_settings.get('seat_access'))
-
 	@override
 	def do_on_select(self) -> None:
 		self.custom_settings['seat_access'] = select_seat_access(
-			'Sway',
-			self.custom_settings.get('seat_access'),
+			'Sway', self.seat_access
 		)

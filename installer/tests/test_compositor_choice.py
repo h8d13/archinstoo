@@ -9,6 +9,7 @@ from archinstoo.default_profiles.desktops.dms import DmsProfile
 from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.lib.installer import Installer
 from archinstoo.lib.models.users import User
+from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.scripts._resolve import _profile_packages
 
 if TYPE_CHECKING:
@@ -43,6 +44,38 @@ def test_resolver_agrees_with_profile(
 	profile.custom_settings[key] = setting
 
 	assert _profile_packages(profile.name, {key: setting}) == set(profile.packages)
+
+
+@pytest.mark.parametrize('name', ['dms', 'noctalia'])
+@pytest.mark.parametrize(
+	'settings',
+	[
+		{'excluded_packages': ['niri']},
+		{'seat_access': 'seatd'},
+		# unset, the way a saved config spells it
+		{'{name}_compositor': None},
+		{'{name}_compositor': ''},
+	],
+	ids=str,
+)
+def test_config_settings_keep_the_default_compositor(
+	name: str, settings: dict[str, str | list[str] | None]
+) -> None:
+	# the config's settings replaced the profile's own, and its packages
+	# raised KeyError on the compositor halfway through the install
+	given = {key.format(name=name): value for key, value in settings.items()}
+	profile = ProfileHandler().parse_profile_config(
+		{'main': 'desktop', 'details': [name], 'custom_settings': {name: given}}
+	)
+	assert profile is not None
+	(shell,) = profile.current_selection
+
+	assert shell.compositor == 'niri'
+	assert set(shell.compositor_packages['niri']) <= set(shell.packages)
+	# what the config did set is kept
+	for key, value in given.items():
+		if value:
+			assert shell.custom_settings[key] == value
 
 
 @pytest.mark.parametrize('compositor', list(DmsProfile.compositor_packages))

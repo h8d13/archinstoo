@@ -123,7 +123,7 @@ def wait_iso_services(skip_ntp: bool, skip_wkd: bool) -> None:
 			'time is incorrect)'
 		)
 
-	if not skip_wkd and SysInfo.arch() == 'x86_64':
+	if not skip_wkd and SysInfo.is_x86_64():
 		info('Waiting for Arch Linux keyring sync...')
 		# same bound as NTP: a timer that never fires or a sync that never
 		# returns (no route to the WKD host) must not hold the install

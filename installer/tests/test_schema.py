@@ -11,11 +11,14 @@ import importlib.machinery
 import importlib.util
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, Any, get_type_hints
+from unittest.mock import MagicMock
 
 import pytest
 
 from archinstoo.lib import installer, schema, schema_gen
+from archinstoo.lib.args import ArchConfig
+from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.models.applications import (
 	ApplicationConfiguration,
 	ApplicationSerialization,
@@ -24,12 +27,22 @@ from archinstoo.lib.models.applications import (
 	PowerManagement,
 	Security,
 )
-from archinstoo.lib.models.firmware import CpuVendor, FirmwareType, FirmwareVendor
+from archinstoo.lib.models.authentication import (
+	AuthenticationConfiguration,
+	PrivilegeEscalation,
+)
+from archinstoo.lib.models.firmware import (
+	FULL_FIRMWARE,
+	CpuVendor,
+	FirmwareType,
+	FirmwareVendor,
+)
 from archinstoo.lib.models.graphics import GfxPackage
 from archinstoo.lib.models.kernel import Kernel
 from archinstoo.lib.models.profile import SeatAccess
 from archinstoo.lib.models.swap import SwapConfigSerialization, SwapConfiguration
-from archinstoo.lib.pm import groups
+from archinstoo.lib.pm import aur, groups
+from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.schema import SCHEMA, SCHEMA_PATH
 from archinstoo.scripts import _resolve
 
@@ -147,6 +160,379 @@ def test_resolve_agrees_with_the_install_on_zram(
 	installed = swap is not None and SwapConfiguration.parse_arg(swap).zram
 	listed = 'zram-generator' in _resolve.collect({'swap': swap})
 	assert listed == installed
+
+
+@pytest.mark.parametrize('kernels', [None, [], ['linux-zen']])
+def test_resolve_agrees_with_the_install_on_kernels(kernels: list[str] | None) -> None:
+	# from_config keeps the default for an empty list, count listed no kernel
+	raw: Any = {'kernels': kernels, 'kernel_headers': True}
+	installed = ArchConfig.from_config(raw).kernels
+	expected = {*installed, *(f'{k}-headers' for k in installed)}
+	# both ways: no kernel the install leaves out either
+	listed = _resolve.collect(raw) - _resolve.collect({'kernels': ['none']})
+	assert listed - {'none'} == expected
+
+
+@pytest.mark.parametrize('is_vm', [True, False])
+def test_resolve_agrees_with_the_install_on_unset_firmware(
+	monkeypatch: pytest.MonkeyPatch, is_vm: bool
+) -> None:
+	# an unset section is MINIMAL on a VM, count listed linux-firmware anyway
+	monkeypatch.setattr(SysInfo, 'is_vm', staticmethod(lambda: is_vm))
+	installed = set(ArchConfig().firmware.packages())
+	assert _resolve.collect({}) & set(FULL_FIRMWARE) == installed
+
+
+def test_resolve_reads_null_as_unset() -> None:
+	# the loader strips nulls before any default applies: zram stays on, and
+	# the privilege escalation stays sudo
+	user: Any = {'username': 'a', 'elev': True}
+	nulled: Any = {
+		'kernels': None,
+		'swap': {'zram': None},
+		'auth_config': {'privilege_escalation': None, 'users': [user]},
+	}
+	unset: Any = {'swap': {}, 'auth_config': {'users': [user]}}
+	assert _resolve.collect(nulled) == _resolve.collect(unset)
+
+
+def test_resolve_skips_users_the_install_skips() -> None:
+	# User.parse_arguments drops an entry without a username, shell, stash
+	# and elevation with it
+	ghost: Any = {
+		'username': '',
+		'elev': True,
+		'shell': 'fish',
+		'stash_urls': ['https://example.invalid/dots'],
+	}
+	assert _resolve.collect(
+		{'auth_config': {'users': [ghost]}}
+	) == _resolve.collect({})
+
+
+@pytest.mark.parametrize('elev', [True, False])
+@pytest.mark.parametrize('enc_password', ['$y$hash', None])
+def test_resolve_lists_privilege_escalation_for_elevated_users_only(
+	elev: bool, enc_password: str | None
+) -> None:
+	# create_users straps it for an elevated user with a password. A saved
+	# config never holds one and the menu asks for it again, so count takes
+	# it as given
+	user: Any = {'username': 'a', 'elev': elev}
+	if enc_password:
+		user['enc_password'] = enc_password
+	raw: Any = {'auth_config': {'privilege_escalation': 'doas', 'users': [user]}}
+	assert ('opendoas' in _resolve.collect(raw)) == elev
+	assert 'sudo' not in _resolve.collect({})
+
+
+@pytest.mark.parametrize('priv_esc', [None, *PrivilegeEscalation], ids=str)
+def test_resolve_lists_the_aur_bootstrap_where_it_builds(
+	priv_esc: PrivilegeEscalation | None,
+) -> None:
+	# run_grimoire_installation builds through sudo, doas or su and skips
+	# run0: read from a config saved with each choice
+	auth: Any = AuthenticationConfiguration(privilege_escalation=priv_esc).json()
+	auth['users'] = [{'username': 'a', 'elev': True}]
+	raw: Any = {'auth_config': auth, 'aur_packages': ['yay']}
+	builds = priv_esc in aur._TEMP_RULES
+	assert builds == (priv_esc is not PrivilegeEscalation.Run0)
+	assert ('fakeroot' in _resolve.collect(raw)) == builds
+
+
+@pytest.mark.parametrize(
+	'profiles', [[], [{'main': 'server'}], [{'main': 'desktop'}]], ids=str
+)
+def test_resolve_agrees_with_the_install_on_greeter(
+	profiles: Any,  # noqa: ANN401
+) -> None:
+	# install_profile_config skips a greeter no selected profile supports
+	raw: Any = {'profiles': profiles, 'greeter': 'sddm'}
+	config = ProfileHandler().parse_config(raw)
+	installed = bool(config.profiles) and config.is_greeter_supported()
+	assert ('sddm' in _resolve.collect({'profile_config': raw})) == installed
+
+
+def test_resolve_defaults_the_compositor_like_the_profile() -> None:
+	# no custom_settings in the config: the profile's own default, count
+	# raised KeyError
+	entry: Any = {'main': 'desktop', 'details': ['dms']}
+	profile = ProfileHandler().parse_profile_config(entry)
+	assert profile is not None
+	installed = set(profile.current_selection[0].effective_packages())
+	assert installed <= _resolve.collect({'profile_config': {'profiles': [entry]}})
+
+
+@pytest.mark.parametrize('main', [None, '', 'nope', 'desktop'])
+def test_resolve_skips_profile_entries_the_install_drops(main: str | None) -> None:
+	# no profile for main: parse_profile_config drops the entry, details and
+	# their settings with it
+	entry: Any = {
+		'main': main,
+		'details': ['sway'],
+		'custom_settings': {'sway': {'seat_access': 'seatd'}},
+	}
+	raw: Any = {'profile_config': {'profiles': [entry]}}
+	installed = bool(ProfileHandler().parse_config({'profiles': [entry]}).profiles)
+	assert installed == (main == 'desktop')
+
+	added = _resolve.collect(raw) - _resolve.collect({})
+	assert ({'sway', 'seatd'} <= added) == installed
+	assert bool(added) == installed
+
+
+@pytest.mark.parametrize(
+	'details', [['dms', 'noctalia', 'sway'], ['noctalia', 'sway', 'dms']], ids=str
+)
+def test_resolve_keeps_one_shell_like_the_install(details: list[str]) -> None:
+	# one_shell keeps the first shell picked, count added both
+	entry: Any = {'main': 'desktop', 'details': details}
+	profile = ProfileHandler().parse_profile_config(entry)
+	assert profile is not None
+	installed = {
+		pkg
+		for sub in profile.current_selection
+		for pkg in sub.effective_packages()
+	}
+	every = {pkg for name in details for pkg in SCHEMA['profiles'][name]}
+	dropped = every - installed
+	assert dropped
+
+	pkgs = _resolve.collect({'profile_config': {'profiles': [entry]}})
+	assert installed <= pkgs
+	assert not dropped & pkgs
+
+
+_SEATD: Any = {'seat_access': 'seatd'}
+
+# one entry of each shape parse_profile_config and Profile.install() tell
+# apart. A 'path' names custom code below, written to a file for the test
+_PROFILE_SHAPES: dict[str, Any] = {
+	'seat picked': {
+		'main': 'desktop',
+		'details': ['sway'],
+		'custom_settings': {'sway': _SEATD},
+	},
+	'seat package excluded': {
+		'main': 'desktop',
+		'details': ['sway'],
+		'custom_settings': {'sway': {**_SEATD, 'excluded_packages': ['seatd']}},
+	},
+	'seat key on a profile that never asks': {
+		'main': 'desktop',
+		'details': ['gnome'],
+		'custom_settings': {'gnome': _SEATD},
+	},
+	'xorg selection': {'main': 'desktop', 'details': ['i3-wm']},
+	'two shells': {'main': 'desktop', 'details': ['dms', 'noctalia']},
+	'unknown detail': {'main': 'desktop', 'details': ['nope', 'kde-plasma']},
+	'settings without the compositor': {
+		'main': 'desktop',
+		'details': ['dms'],
+		'custom_settings': {'dms': {'excluded_packages': ['niri']}},
+	},
+	'null compositor': {
+		'main': 'desktop',
+		'details': ['dms'],
+		'custom_settings': {'dms': {'dms_compositor': None}},
+	},
+	'server': {'main': 'server', 'details': ['sshd', 'docker']},
+	# only desktop and server strap their selection
+	'main that straps nothing': {
+		'main': 'minimal',
+		'details': ['sway'],
+		'custom_settings': {'sway': _SEATD},
+	},
+	'xorg main': {'main': 'xorg', 'details': ['i3-wm']},
+	# it answers for its own display server, not its selection's
+	'leaf as main': {'main': 'sway', 'details': ['i3-wm']},
+	# dropped whole
+	'unknown main': {'main': 'nope', 'details': ['sway']},
+	'no main': {'details': ['sway']},
+	'main under itself': {'main': 'desktop', 'details': ['desktop', 'sway']},
+	'null details': {'main': 'desktop', 'details': None},
+	# custom code, loaded for real or not at all
+	'example profile': {'path': 'example', 'details': ['xfce4']},
+	'missing file': {'path': '/nowhere.py', 'details': ['sway']},
+	'missing file, stock main': {
+		'path': '/nowhere.py',
+		'main': 'desktop',
+		'details': ['sway'],
+	},
+	'custom file, main that straps nothing': {
+		'path': 'example',
+		'main': 'minimal',
+		'details': ['sway'],
+	},
+	'custom code under a stock name': {
+		'path': 'own sway',
+		'main': 'desktop',
+		'details': ['sway'],
+	},
+	'custom desktop under the stock name': {
+		'path': 'own desktop',
+		'details': ['i3-wm'],
+	},
+	'custom profile without install()': {'path': 'bare', 'details': ['sway']},
+	'custom profile with install()': {'path': 'strapping', 'details': ['sway']},
+}
+
+_CUSTOM_CODE = {
+	'example': (Path(__file__).parents[1] / 'examples' / 'custom.py').read_text(),
+	'own sway': """
+from archinstoo.default_profiles.desktops.sway import SwayProfile
+
+class OwnSway(SwayProfile):
+	@property
+	def packages(self):
+		return [*super().packages, 'waybar', 'fuzzel']
+""",
+	'own desktop': """
+from archinstoo.default_profiles.desktop import DesktopProfile
+
+class OwnDesktop(DesktopProfile):
+	@property
+	def packages(self):
+		return ['vlc']
+""",
+	'bare': """
+from archinstoo.lib.models.profile import ProfileType
+from archinstoo.lib.profile.base import Profile
+
+class Bare(Profile):
+	def __init__(self):
+		super().__init__('Bare', ProfileType.Custom, packages=['htop'])
+""",
+	'strapping': """
+from archinstoo.lib.models.profile import ProfileType
+from archinstoo.lib.profile.base import Profile
+
+class Strapping(Profile):
+	def __init__(self):
+		super().__init__('Strapping', ProfileType.Custom, packages=['htop'])
+
+	def install(self, install_session):
+		install_session.add_additional_packages(self.effective_packages())
+		for sub in self.current_selection:
+			install_session.add_additional_packages(sub.effective_packages())
+""",
+}
+
+
+@pytest.mark.parametrize('greeter', [None, 'sddm'])
+@pytest.mark.parametrize('shape', _PROFILE_SHAPES)
+def test_resolve_straps_what_install_profile_config_does(
+	shape: str, greeter: str | None, tmp_path: Path
+) -> None:
+	entry = dict(_PROFILE_SHAPES[shape])
+	if code := _CUSTOM_CODE.get(entry.get('path', '')):
+		custom = tmp_path / 'custom.py'
+		custom.write_text(code)
+		entry['path'] = str(custom)
+	raw: Any = {'profiles': [entry], 'greeter': greeter}
+
+	# everything the install hands to pacstrap for these profiles
+	session = MagicMock(target=tmp_path, kernels=['linux'])
+	handler = ProfileHandler()
+	handler.install_profile_config(session, handler.parse_config(raw))
+	strapped: set[str] = set()
+	for call in session.add_additional_packages.call_args_list:
+		(pkgs,) = call.args
+		strapped.update([pkgs] if isinstance(pkgs, str) else pkgs)
+
+	counted = _resolve.collect({'profile_config': raw})
+	assert strapped <= counted
+	assert counted - _resolve.collect({}) <= strapped
+
+
+@pytest.mark.parametrize('disk', [{}, [], '', 0, False], ids=repr)
+def test_resolve_reads_an_empty_disk_section_as_unset(
+	disk: Any,  # noqa: ANN401
+) -> None:
+	# from_config ignores an empty section whatever its type, the snapshot
+	# check asked it for its layout
+	assert _resolve.collect({'disk_config': disk}) == _resolve.collect({})
+
+
+def test_resolve_skips_deleted_partitions() -> None:
+	# minimal_installation prepares no filesystem for a partition it removes
+	disk: Any = {
+		'device_modifications': [
+			{
+				'partitions': [
+					{'status': 'delete', 'fs_type': 'btrfs'},
+					{'status': 'create', 'fs_type': 'xfs'},
+				]
+			}
+		]
+	}
+	assert _resolve._filesystem_packages(disk) == {'xfsprogs'}
+
+
+_DEFAULT_ROOT = [{'name': '@', 'mountpoint': '/'}]
+
+
+@pytest.mark.parametrize(
+	('vol', 'installed'),
+	[
+		(
+			{
+				'status': 'create',
+				'fs_type': 'btrfs',
+				'btrfs': _DEFAULT_ROOT,
+			},
+			True,
+		),
+		(
+			{
+				'status': 'modify',
+				'fs_type': 'btrfs',
+				'btrfs': _DEFAULT_ROOT,
+			},
+			True,
+		),
+		(
+			{
+				'status': 'existing',
+				'fs_type': 'btrfs',
+				'btrfs': _DEFAULT_ROOT,
+			},
+			False,
+		),
+		(
+			{'status': 'create', 'fs_type': 'ext4', 'btrfs': _DEFAULT_ROOT},
+			False,
+		),
+		({'status': 'create', 'fs_type': 'btrfs'}, False),
+		(
+			{
+				'status': 'create',
+				'fs_type': 'btrfs',
+				'btrfs': [{'name': '@root', 'mountpoint': '/'}],
+			},
+			False,
+		),
+	],
+	ids=['create', 'modify', 'untouched', 'ext4', 'no-subvols', 'other-root'],
+)
+@pytest.mark.parametrize('lvm', [False, True])
+def test_resolve_lists_snapshots_on_a_default_btrfs_layout_only(
+	vol: Any,  # noqa: ANN401
+	installed: bool,
+	lvm: bool,
+) -> None:
+	# guided asks has_default_btrfs_vols() first, on partitions and LVM
+	# volumes alike; count took any snapshot_config
+	disk: Any = {'btrfs_options': {'snapshot_config': {'type': 'snapper'}}}
+	if lvm:
+		disk['lvm_config'] = {'vol_groups': [{'volumes': [vol]}]}
+	else:
+		disk['device_modifications'] = [{'partitions': [vol]}]
+	raw: Any = {'disk_config': disk, 'bootloader_config': {'bootloader': 'grub'}}
+
+	pkgs = _resolve.collect(raw)
+	assert ('snapper' in pkgs) == installed
+	assert ('grub-btrfs' in pkgs) == installed
 
 
 # -- reverse cover -----------------------------------------------------------

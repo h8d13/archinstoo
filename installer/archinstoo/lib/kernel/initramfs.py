@@ -38,7 +38,7 @@ class Initramfs:
 			'fsck',
 		]
 		# the hook only knows x86 vendors and warns its way out elsewhere
-		if SysInfo.arch() != 'x86_64':
+		if not SysInfo.is_x86_64():
 			self.hooks.remove('microcode')
 
 	def add_lvm(self) -> None:

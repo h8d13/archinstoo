@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 # on the running system; under a target, relative_to_root()
 DOAS_CONF: Final = LPath('/etc/doas.conf')
 SUDOERS_DIR: Final = LPath('/etc/sudoers.d')
+# makepkg.conf as pacman ships it: sudo when installed, su otherwise
+PACMAN_AUTH_UNSET: Final = '#PACMAN_AUTH=()'
 
 
 def _enable_sudo(installation: Installer, user: User, group: bool = False) -> None:
@@ -94,8 +96,17 @@ def create_users(
 		step=True,
 	)
 
+	# an elevated user without a password could not use sudo/doas: no
+	# package then, and no rules or makepkg override for it either. wheel
+	# and su remain
+	if privilege_escalation and not User.any_elevated(users):
+		if any(user.elev for user in users):
+			tool = privilege_escalation.value
+			warn(f'No elevated user has a password: {tool} is not set up')
+		privilege_escalation = None
+
 	# Install the privilege escalation package
-	if privilege_escalation is not None and User.any_elevated(users):
+	if privilege_escalation is not None:
 		installation.pacman.strap(privilege_escalation.packages())
 
 	_configure_makepkg(installation, privilege_escalation)
@@ -129,7 +140,7 @@ def _configure_makepkg(
 		return
 
 	content = makepkg_conf.read_text()
-	content = content.replace('#PACMAN_AUTH=()', f'PACMAN_AUTH=({auth_binary})')
+	content = content.replace(PACMAN_AUTH_UNSET, f'PACMAN_AUTH=({auth_binary})')
 	makepkg_conf.write_text(content)
 	debug(f'Set PACMAN_AUTH=({auth_binary}) in makepkg.conf')
 

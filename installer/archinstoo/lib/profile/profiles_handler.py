@@ -112,27 +112,40 @@ class ProfileHandler:
 
 		valid_sub_profiles: list[Profile] = []
 		invalid_sub_profiles: list[str] = []
-		details: list[str] = profile_config.get('details', [])
 
-		for detail in filter(None, details):
-			if sub_profile := self.get_profile_by_name(detail):
+		for detail in filter(None, profile_config.get('details') or []):
+			sub_profile = self.get_profile_by_name(detail)
+			# a main is no selection: one under itself, or two under each
+			# other, would recurse in every walk of the selection
+			if (
+				sub_profile
+				and sub_profile is not profile
+				and not sub_profile.current_selection
+			):
 				valid_sub_profiles.append(sub_profile)
 			else:
 				invalid_sub_profiles.append(detail)
 
 		if invalid_sub_profiles:
 			info(
-				'No profile definition found: '
+				'Not a profile to select, skipped: '
 				f'{", ".join(invalid_sub_profiles)}'
 			)
 
-		custom_settings = profile_config.get('custom_settings', {})
 		profile.current_selection = one_shell(valid_sub_profiles)
 
+		# on top of the profile's own defaults: a config naming some keys keeps
+		# the rest, the compositor of dms and noctalia among them. A null or
+		# '' is an unset key, the way jsonify saves one: strip_none does not
+		# reach into the profiles list
+		custom_settings = profile_config.get('custom_settings') or {}
 		for sub_profile in valid_sub_profiles:
-			sub_profile_settings = custom_settings.get(sub_profile.name, {})
-			if sub_profile_settings:
-				sub_profile.custom_settings = sub_profile_settings
+			settings = custom_settings.get(sub_profile.name) or {}
+			sub_profile.custom_settings |= {
+				key: value
+				for key, value in settings.items()
+				if value is not None and value != ''  # noqa: PLC1901 - value is Any
+			}
 
 		return profile
 

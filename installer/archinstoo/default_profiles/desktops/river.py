@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, override
 
 from archinstoo.default_profiles.desktops import select_seat_access
 from archinstoo.default_profiles.wayland import WaylandProfile
-from archinstoo.lib.models.profile import ProfileType, seat_packages, seat_services
+from archinstoo.lib.models.profile import ProfileType, seat_packages
 
 if TYPE_CHECKING:
 	from archinstoo.lib.installer import Installer
@@ -38,13 +38,8 @@ class RiverProfile(WaylandProfile):
 			'pamixer',
 			'playerctl',
 			'brightnessctl',
-			*seat_packages(self.custom_settings.get('seat_access')),
+			*seat_packages(self.seat_access),
 		]
-
-	@property
-	@override
-	def services(self) -> list[str]:
-		return seat_services(self.custom_settings.get('seat_access'))
 
 	@override
 	def provision(self, install_session: Installer, users: list[User]) -> None:
@@ -85,6 +80,5 @@ class RiverProfile(WaylandProfile):
 	@override
 	def do_on_select(self) -> None:
 		self.custom_settings['seat_access'] = select_seat_access(
-			'River',
-			self.custom_settings.get('seat_access'),
+			'River', self.seat_access
 		)

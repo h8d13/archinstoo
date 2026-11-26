@@ -37,6 +37,12 @@ class AuthenticationConfiguration:
 	def has_elevated_users(self) -> bool:
 		return User.any_elevated(self.users)
 
+	@property
+	def effective_escalation(self) -> PrivilegeEscalation | None:
+		# what create_users sets up: nothing where no elevated user has a
+		# password to use it with, and su is all there is
+		return self.privilege_escalation if self.has_elevated_users else None
+
 	@classmethod
 	def parse_arg(cls, args: AuthenticationSerialization) -> Self:
 		auth_config = cls()
@@ -54,8 +60,11 @@ class AuthenticationConfiguration:
 
 		if 'privilege_escalation' in args:
 			priv_esc = args.get('privilege_escalation')
+			# 'none' is how json() saves the menu's None entry
 			auth_config.privilege_escalation = (
-				PrivilegeEscalation(priv_esc) if priv_esc else None
+				PrivilegeEscalation(priv_esc)
+				if priv_esc and priv_esc != 'none'
+				else None
 			)
 
 		return auth_config
@@ -66,11 +75,12 @@ class AuthenticationConfiguration:
 		if self.lock_root_account:
 			config['lock_root_account'] = self.lock_root_account
 
+		# a null would be dropped on save and read back as the sudo default
 		if self.privilege_escalation != PrivilegeEscalation.Sudo:
 			config['privilege_escalation'] = (
 				self.privilege_escalation.value
 				if self.privilege_escalation
-				else None
+				else 'none'
 			)
 
 		if self.users:

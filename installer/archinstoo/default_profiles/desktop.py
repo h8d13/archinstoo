@@ -38,7 +38,7 @@ class DesktopProfile(Profile):
 		# seatd profiles sort first, so their greeter wins a clash
 		ordered = sorted(
 			self.current_selection,
-			key=lambda p: p.custom_settings.get('seat_access') != 'seatd',
+			key=lambda p: not p.uses_seatd,
 		)
 		greeters = list(
 			dict.fromkeys(

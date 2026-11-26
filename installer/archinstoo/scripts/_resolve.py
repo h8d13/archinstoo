@@ -14,22 +14,35 @@ from archinstoo.lib.command import SysCommand
 from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.host_services import accessibility_tools_in_use
+from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.bootloader import Bootloader
-from archinstoo.lib.models.firmware import FirmwareType
-from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
+from archinstoo.lib.models.device import (
+	FilesystemType,
+	ModificationStatus,
+	SubvolumeModification,
+)
+from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType
+from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, needs_dkms_build
+from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.profile import DisplayServer
 from archinstoo.lib.network.network_handler import ISO_IWD_DIR
 from archinstoo.lib.pm.groups import expand
+from archinstoo.lib.profile.base import Profile
 from archinstoo.lib.schema import SCHEMA
+from archinstoo.lib.serialize import strip_none
 from archinstoo.lib.utils.paths import locate_binary
 
 if TYPE_CHECKING:
 	from archinstoo.lib.args import ArchConfigSerialization
 	from archinstoo.lib.models.applications import ApplicationSerialization
-	from archinstoo.lib.models.device import _DiskLayoutConfigurationSerialization
+	from archinstoo.lib.models.device import (
+		_DiskLayoutConfigurationSerialization,
+		_LvmVolumeSerialization,
+		_PartitionModificationSerialization,
+	)
 	from archinstoo.lib.models.profile import ProfileSerialization
-	from archinstoo.lib.profile.base import Profile
+	from archinstoo.lib.models.users import UserSerialization
 	from archinstoo.lib.schema_gen import Section
 
 
@@ -51,8 +64,11 @@ def _requirements(*binaries: str) -> bool:
 
 def _firmware_packages(config: ArchConfigSerialization) -> set[str]:
 	# mirrors FirmwareConfiguration.packages(): the schema holds what is
-	# static, the picked vendors come from the config
-	firmware_type = FirmwareType.FULL.value
+	# static, the picked vendors come from the config. An unset section is
+	# ArchConfig's default, which depends on the host being a VM
+	firmware_type = FirmwareConfiguration.default(
+		SysInfo.is_vm()
+	).firmware_type.value
 	vendors: list[str] = []
 	if firmware_cfg := config.get('firmware'):
 		firmware_type = firmware_cfg.get('firmware_type', firmware_type)
@@ -81,10 +97,18 @@ def _host_packages() -> set[str]:
 	if not SysInfo.is_vm() and (vendor := SysInfo.cpu_vendor()):
 		pkgs.update(SCHEMA['microcode'].get(vendor.value, []))
 
-	if SysInfo.arch() == 'aarch64':
+	if SysInfo.is_aarch64():
 		pkgs.update(_flat('archports'))
 
 	return pkgs
+
+
+def _status(
+	vol: _PartitionModificationSerialization | _LvmVolumeSerialization,
+) -> str | None:
+	# .get() takes any key and reads one the type lacks as object: the return
+	# type is what holds this read to the two serializations
+	return vol.get('status')
 
 
 def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str]:
@@ -101,9 +125,11 @@ def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str
 			)
 	else:
 		for dev in disk.get('device_modifications') or []:
+			# a partition on its way out gets no filesystem prepared
 			fs_types.update(
 				part.get('fs_type') or ''
 				for part in dev.get('partitions') or []
+				if _status(part) != ModificationStatus.DELETE.value
 			)
 
 	pkgs = {p for fs in fs_types if fs in fs_tools for p in fs_tools[fs]}
@@ -114,45 +140,99 @@ def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str
 	return pkgs
 
 
+def _has_default_btrfs_vols(disk: _DiskLayoutConfigurationSerialization) -> bool:
+	# mirrors DiskLayoutConfiguration.has_default_btrfs_vols(): a btrfs
+	# partition or LVM volume being set up, with @ mounted on /
+	vols: list[_PartitionModificationSerialization | _LvmVolumeSerialization]
+	vols = [
+		part
+		for dev in disk.get('device_modifications') or []
+		for part in dev.get('partitions') or []
+	]
+	if lvm_config := disk.get('lvm_config'):
+		for group in lvm_config.get('vol_groups') or []:
+			vols += group.get('volumes') or []
+
+	return any(
+		_status(vol)
+		in {ModificationStatus.CREATE.value, ModificationStatus.MODIFY.value}
+		and vol.get('fs_type') == FilesystemType.BTRFS.value
+		and any(
+			subvol.is_default_root()
+			for subvol in SubvolumeModification.parse_args(
+				vol.get('btrfs') or []
+			)
+		)
+		for vol in vols
+	)
+
+
 def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	prof_pkgs = set(SCHEMA['profiles'][name])
 
-	# <name>_compositor swaps the default (niri) compositor set
-	if comp_sets := SCHEMA['compositors'].get(name):
+	# <name>_compositor swaps the default (niri) compositor set. unset, the
+	# profile keeps that default
+	picked = settings.get(f'{name}_compositor')
+	if picked and (comp_sets := SCHEMA['compositors'].get(name)):
 		prof_pkgs.difference_update(comp_sets['niri'])
-		prof_pkgs.update(comp_sets[settings[f'{name}_compositor']])
+		prof_pkgs.update(comp_sets[picked])
 
 	return prof_pkgs
 
 
-def _named_profiles(names: list[str]) -> list[Profile]:
-	# built-in profiles by name, for what a name alone cannot say: display
-	# server, whether a terminal is shipped
-	if not names:
-		return []
-	from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
-	return [p for p in ProfileHandler().profiles if p.name in names]
-
-
-def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
-	# custom 'path' profiles are code, not schema entries; load them the same
-	# way the installer does so their packages and desktop-typing count too
-	entries = [
-		tp
-		for tp in top_profiles
-		if 'path' in tp and tp['path']  # noqa: RUF019 - .get() takes any key
-	]
+def _top_profiles(
+	entries: list[ProfileSerialization],
+) -> tuple[list[Profile], list[Profile]]:
+	# every entry as the installer reads it: one whose main names no profile
+	# is dropped, a selection loses unknown names and each shell after the
+	# first, and a 'path' file is loaded as the code it is. With them the
+	# handler's own profiles, the ones schema.toml lists: a 'path' file can
+	# put its code under one of their names
 	if not entries:
-		return []
+		return [], []
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 	handler = ProfileHandler()
-	return [
+	stock = list(handler.profiles)
+	tops = [
 		profile
-		for tp in entries
-		if (profile := handler.parse_profile_config(tp))
+		for entry in entries
+		if (profile := handler.parse_profile_config(entry))
 	]
+	return tops, stock
+
+
+def _top_packages(top: Profile, stock: list[Profile]) -> set[str]:
+	# mirrors Profile.install(): desktop and server strap themselves and their
+	# selection, any other of the handler's profiles named as main straps
+	# nothing. A 'path' profile is custom code: with an install() of its own
+	# it is taken to strap like the former
+	if top in stock:
+		base = SCHEMA['profile_base'].get(top.name)
+	elif type(top).install is not Profile.install:
+		base = top.effective_packages()
+	else:
+		base = None
+	if base is None:
+		return set()
+
+	pkgs = set(base)
+	for sub in top.current_selection:
+		# the schema where it lists the profile, the profile's own word where
+		# it is custom code
+		if sub not in stock or sub.name not in SCHEMA['profiles']:
+			pkgs.update(sub.effective_packages())
+			continue
+		# free-form per profile, no TypedDict names these keys
+		settings: dict[str, Any] = sub.custom_settings
+		excluded = set(settings.get('excluded_packages') or [])
+		pkgs.update(_profile_packages(sub.name, settings) - excluded)
+		# seat_access, for the profiles that place its package (seat_packages)
+		seat = settings.get('seat_access')
+		if seat in sub.effective_packages():
+			pkgs.add(seat)
+
+	return pkgs
 
 
 def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
@@ -162,7 +242,7 @@ def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
 
 	# a non-standard kernel swaps nvidia-open for its DKMS build: the whole
 	# preset set from the schema, or the one package in a hand-picked list
-	build = any('-' in k for k in kernels)
+	build = needs_dkms_build(kernels)
 	dkms = SCHEMA['gfx_drivers_dkms'].get(gfx) if build else None
 
 	if gfx == GfxDriver.Custom.value:
@@ -205,7 +285,7 @@ def _pick(app: ApplicationSerialization, section: Section) -> set[str]:
 def _application_packages(app: ApplicationSerialization) -> set[str]:
 	# every app_config category is a section with a pick; what follows is the
 	# part a pick alone cannot say. schema_gen drags the installer in, so it
-	# stays a function-local import like installer above
+	# stays a function-local import
 	from archinstoo.lib.schema_gen import SECTIONS
 
 	pkgs: set[str] = set()
@@ -225,7 +305,9 @@ def _application_packages(app: ApplicationSerialization) -> set[str]:
 	return pkgs
 
 
-def collect(config: ArchConfigSerialization) -> set[str]:
+def collect(raw: ArchConfigSerialization) -> set[str]:
+	# read the file the way the loader does: a null key is an unset one
+	config: ArchConfigSerialization = strip_none(dict(raw))
 	pkgs: set[str] = set()
 
 	# base + firmware + whatever the host itself dictates
@@ -233,8 +315,8 @@ def collect(config: ArchConfigSerialization) -> set[str]:
 	pkgs.update(_firmware_packages(config))
 	pkgs.update(_host_packages())
 
-	# kernels
-	kernels = config.get('kernels', ['linux'])
+	# kernels: an empty list keeps the default, as ArchConfig.from_config does
+	kernels = config.get('kernels') or [DEFAULT_KERNEL.value]
 	pkgs.update(kernels)
 
 	# kernel headers
@@ -258,69 +340,23 @@ def collect(config: ArchConfigSerialization) -> set[str]:
 		if p:
 			pkgs.add(p)
 
-	# profile
+	# profile: what install_profile_config straps, the selected profiles and
+	# around them the X server and a greeter one of them supports
 	pc = config.get('profile_config')
-	top_profiles = (pc.get('profiles') if pc else None) or []
-	profiles = SCHEMA['profiles']
-	mains: set[str] = set()
-	details: list[str] = []
+	tops, stock = _top_profiles((pc.get('profiles') if pc else None) or [])
+	for top in tops:
+		pkgs.update(_top_packages(top, stock))
 
-	for tp in top_profiles:
-		main = tp.get('main', '')
-		if main:
-			mains.add(main)
-			# desktop and server carry different base sets
-			pkgs.update(SCHEMA['profile_base'].get(main, []))
-
-		tp_details = tp.get('details', []) or []
-		details.extend(tp_details)
-		custom_settings = tp.get('custom_settings') or {}
-
-		for name in tp_details:
-			# free-form per profile, no TypedDict names these keys
-			settings: dict[str, Any] = custom_settings.get(name) or {}
-			excluded = set(settings.get('excluded_packages') or [])
-
-			if name in profiles:
-				pkgs.update(
-					p
-					for p in _profile_packages(name, settings)
-					if p not in excluded
-				)
-
-			# seat_access for the wayland WMs (see seat_packages)
-			if (
-				seat := settings.get('seat_access')
-			) and seat not in excluded:
-				pkgs.add(seat)
-
-	# custom path profiles: own packages plus selections, exclusions applied,
-	# mirroring Profile.install() (self + current_selection effective_packages)
-	custom_profiles = _path_profiles(top_profiles)
-	for profile in custom_profiles:
-		pkgs.update(profile.effective_packages())
-		for sub in profile.current_selection:
-			pkgs.update(sub.effective_packages())
-
-	has_desktop = 'desktop' in mains or any(
-		p.is_desktop_profile() for p in custom_profiles
-	)
-
-	# every profile the install will see, as install_profile_config() does:
-	# tops and details by name, path profiles with their selections
-	selected = _named_profiles([*mains, *details])
-	for profile in custom_profiles:
-		selected += [profile, *profile.current_selection]
-
-	if any(DisplayServer.X11 in p.display_servers() for p in selected):
+	if any(DisplayServer.X11 in top.display_servers() for top in tops):
 		pkgs.update(_flat('xorg_extra'))
 
-	main = next(iter(mains), '')
-
-	# greeter
 	greeter: str | None = pc.get('greeter') if pc else None
-	if greeter in SCHEMA['greeters']:
+	if greeter in SCHEMA['greeters'] and any(
+		top.is_greeter_supported() for top in tops
+	):
 		pkgs.update(SCHEMA['greeters'][greeter])
+
+	has_desktop = any(top.is_desktop_profile() for top in tops)
 
 	pkgs.update(
 		_gfx_packages(
@@ -341,16 +377,32 @@ def collect(config: ArchConfigSerialization) -> set[str]:
 		if net_type == NicType.ISO.value and _iso_has_psks():
 			pkgs.update(_flat('network_iso_extra'))
 
-	# privilege escalation
+	# users: an entry without a username is none, as User.parse_arguments has
+	# it. create_users wants the elevated one to have a password as well
+	# (User.any_elevated). A saved config never holds one: the menu install it
+	# was saved from did, and asks again before the next. So here an elevated
+	# user counts as having theirs
 	auth = config.get('auth_config') or {}
-	priv_esc: str | None = auth.get('privilege_escalation', 'sudo')
-	if priv_esc in SCHEMA['privilege_escalation']:
+	users: list[UserSerialization] = []
+	elevated = False
+	for entry in auth.get('users') or []:
+		# annotated: .get() takes any key, the type is what checks these two
+		username: str | None = entry.get('username')
+		elev: bool | None = entry.get('elev')
+		if username:
+			users.append(entry)
+			elevated = elevated or elev is True
+
+	# privilege escalation: create_users straps it once a user can use it
+	priv_esc: str | None = auth.get(
+		'privilege_escalation', PrivilegeEscalation.Sudo.value
+	)
+	if elevated and priv_esc in SCHEMA['privilege_escalation']:
 		pkgs.update(SCHEMA['privilege_escalation'][priv_esc])
 
 	pkgs.update(_application_packages(config.get('app_config') or {}))
 
 	# shells (per-user in auth_config)
-	users = auth.get('users', []) or []
 	for user in users:
 		shell: str = user.get('shell', '')
 		if shell in SCHEMA['shells']:
@@ -365,8 +417,9 @@ def collect(config: ArchConfigSerialization) -> set[str]:
 	if str(font).startswith('ter-'):
 		pkgs.update(_flat('ter_fonts'))
 
-	# snapshots
-	btrfs = (disk.get('btrfs_options') if disk else None) or {}
+	# snapshots: guided only sets them up on the default btrfs layout
+	default_vols = _has_default_btrfs_vols(disk) if disk else False
+	btrfs = (disk.get('btrfs_options') if disk and default_vols else None) or {}
 	snapshot = btrfs.get('snapshot_config')
 	snap_type: str = snapshot.get('type', '') if snapshot else ''
 	if snap_type in SCHEMA['snapshots']:
@@ -383,11 +436,11 @@ def collect(config: ArchConfigSerialization) -> set[str]:
 		pkgs.update(SCHEMA['swap'].get('zram', []))
 
 	# grimoire builds AUR packages on the target, so its toolchain lands there.
-	# it needs an elevated user to build as, and the AUR packages themselves are
-	# in no repo, so nothing here can resolve them
+	# an elevated user builds them, through sudo, doas or su: run0 needs a
+	# booted system. The AUR packages themselves are in no repo, so nothing
+	# here can resolve them
 	aur: list[str] = config.get('aur_packages') or []
-	elev: list[bool] = [user.get('elev', False) for user in users]
-	if aur and any(elev):
+	if aur and elevated and priv_esc != PrivilegeEscalation.Run0.value:
 		pkgs.update(_flat('aur_bootstrap'))
 
 	stash_urls: list[list[str]] = [user.get('stash_urls') or [] for user in users]

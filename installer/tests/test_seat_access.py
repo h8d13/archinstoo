@@ -16,11 +16,12 @@ from archinstoo.default_profiles.desktops.niri import NiriProfile
 from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
+from archinstoo.default_profiles.wayland import WaylandProfile
 from archinstoo.lib.models.profile import SeatAccess, seat_services
+from archinstoo.lib.profile.profiles_handler import ProfileHandler
 from archinstoo.lib.tui.result import Result, ResultType
 
 if TYPE_CHECKING:
-	from archinstoo.default_profiles.wayland import WaylandProfile
 	from archinstoo.lib.tui.menu_item import MenuItemGroup
 
 SEAT_PROFILES: list[type[WaylandProfile]] = [
@@ -106,3 +107,19 @@ def test_labels_name_the_mechanism() -> None:
 	assert SeatAccess.seatd.label == 'seatd'
 	# the saved-config and nvchecker token stays the package name
 	assert SeatAccess('polkit') is SeatAccess.logind
+
+
+def test_seatd_unit_only_where_the_profile_places_the_package() -> None:
+	# a config can hand any Wayland profile the key. Gnome and Plasma place no
+	# seat package: enabling a unit nothing strapped aborts the install
+	wayland = [
+		p for p in ProfileHandler().profiles if isinstance(p, WaylandProfile)
+	]
+	asking = {cls().name for cls in SEAT_PROFILES}
+	assert {'gnome', 'kde-plasma'} <= {p.name for p in wayland} - asking
+
+	for profile in wayland:
+		profile.custom_settings['seat_access'] = SeatAccess.seatd.value
+		assert set(profile.services) <= set(profile.packages), profile.name
+		if profile.name in asking:
+			assert profile.services == ['seatd']

@@ -223,7 +223,7 @@ class PMenu(AbstractSubMenu[PacmanConfiguration]):
 				key='mirror_regions',
 			),
 		]
-		return (regions if SysInfo.arch() == 'x86_64' else []) + [
+		return (regions if SysInfo.is_x86_64() else []) + [
 			MenuItem(
 				text='Optional repositories',
 				action=select_optional_repositories,
@@ -373,7 +373,7 @@ def optional_repositories() -> list[Repository]:
 	# the commented-out sections of the port's pacman.conf: multilib and
 	# testing on archlinux.org, testing only on Arch Ports (forge ships
 	# enabled there, nothing to toggle)
-	if SysInfo.arch() == 'x86_64':
+	if SysInfo.is_x86_64():
 		return [
 			Repository.Multilib,
 			Repository.MultilibTesting,
