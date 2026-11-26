@@ -2,6 +2,7 @@
 # Covers the one derived step (the nvidia-open dkms swap) on both the install
 # path and the count mirror, and the config round trip that drops unknowns.
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -208,3 +209,12 @@ def test_config_drops_hand_typed_dkms_like_the_count_mirror() -> None:
 			installed |= {f'{k}-headers' for k in kernels}
 		assert needs_headers == (kernels == ['linux-zen'])
 		assert _resolve._gfx_packages('custom', picked, kernels) == installed
+
+
+def test_config_drops_entries_that_are_no_names() -> None:
+	# a nested list or an object is unhashable: dropped, not raised on
+	raw: Any = {
+		'gfx_driver': 'custom',
+		'gfx_packages': ['mesa', ['vulkan-intel'], {'name': 'mesa'}, 3, None],
+	}
+	assert ArchConfig.from_config(raw).gfx_packages == [GfxPackage.Mesa]
