@@ -15,7 +15,11 @@ from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.models.bootloader import Bootloader
-from archinstoo.lib.models.device import ModificationStatus
+from archinstoo.lib.models.device import (
+	FilesystemType,
+	ModificationStatus,
+	SubvolumeModification,
+)
 from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, needs_dkms_build
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
@@ -120,6 +124,32 @@ def _filesystem_packages(disk: _DiskLayoutConfigurationSerialization) -> set[str
 		pkgs.update(_flat('lvm'))
 
 	return pkgs
+
+
+def _has_default_btrfs_vols(disk: _DiskLayoutConfigurationSerialization) -> bool:
+	# mirrors DiskLayoutConfiguration.has_default_btrfs_vols(): a btrfs
+	# partition or LVM volume being set up, with @ mounted on /
+	vols: list[Any] = [
+		part
+		for dev in disk.get('device_modifications') or []
+		for part in dev.get('partitions') or []
+	]
+	if lvm_config := disk.get('lvm_config'):
+		for group in lvm_config.get('vol_groups') or []:
+			vols += group.get('volumes') or []
+
+	return any(
+		vol.get('status')
+		in {ModificationStatus.CREATE.value, ModificationStatus.MODIFY.value}
+		and vol.get('fs_type') == FilesystemType.BTRFS.value
+		and any(
+			subvol.is_default_root()
+			for subvol in SubvolumeModification.parse_args(
+				vol.get('btrfs') or []
+			)
+		)
+		for vol in vols
+	)
 
 
 def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
@@ -383,8 +413,9 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 	if str(font).startswith('ter-'):
 		pkgs.update(_flat('ter_fonts'))
 
-	# snapshots
-	btrfs = (disk.get('btrfs_options') if disk else None) or {}
+	# snapshots: guided only sets them up on the default btrfs layout
+	default_vols = _has_default_btrfs_vols(disk) if disk else False
+	btrfs = (disk.get('btrfs_options') if disk and default_vols else None) or {}
 	snapshot = btrfs.get('snapshot_config')
 	snap_type: str = snapshot.get('type', '') if snapshot else ''
 	if snap_type in SCHEMA['snapshots']:
