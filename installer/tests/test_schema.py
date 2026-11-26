@@ -28,8 +28,8 @@ from archinstoo.lib.models.applications import (
 from archinstoo.lib.models.firmware import FirmwareType, FirmwareVendor
 from archinstoo.lib.models.graphics import GfxPackage
 from archinstoo.lib.models.kernel import Kernel
+from archinstoo.lib.models.profile import SeatAccess
 from archinstoo.lib.pm import groups
-from archinstoo.lib.profile.base import SeatAccess
 from archinstoo.lib.schema import SCHEMA, SCHEMA_PATH
 from archinstoo.scripts import _resolve
 

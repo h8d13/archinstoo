@@ -45,10 +45,10 @@ from archinstoo.lib.models.mirrors import (
 )
 from archinstoo.lib.models.network import NetworkConfiguration, Nic, NicType
 from archinstoo.lib.models.packages import Repository
+from archinstoo.lib.models.profile import GreeterType
 from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.users import Password, Shell, User
-from archinstoo.lib.profile.base import GreeterType
 
 if TYPE_CHECKING:
 	import pytest

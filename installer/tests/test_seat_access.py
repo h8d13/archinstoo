@@ -16,7 +16,7 @@ from archinstoo.default_profiles.desktops.niri import NiriProfile
 from archinstoo.default_profiles.desktops.noctalia import NoctaliaProfile
 from archinstoo.default_profiles.desktops.river import RiverProfile
 from archinstoo.default_profiles.desktops.sway import SwayProfile
-from archinstoo.lib.profile.base import SeatAccess, seat_services
+from archinstoo.lib.models.profile import SeatAccess, seat_services
 from archinstoo.lib.tui.result import Result, ResultType
 
 if TYPE_CHECKING:
