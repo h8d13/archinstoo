@@ -188,6 +188,20 @@ def test_resolve_reads_null_as_unset() -> None:
 	assert _resolve.collect(nulled) == _resolve.collect(unset)
 
 
+def test_resolve_skips_users_the_install_skips() -> None:
+	# User.parse_arguments drops an entry without a username, shell, stash
+	# and elevation with it
+	ghost: Any = {
+		'username': '',
+		'elev': True,
+		'shell': 'fish',
+		'stash_urls': ['https://example.invalid/dots'],
+	}
+	assert _resolve.collect(
+		{'auth_config': {'users': [ghost]}}
+	) == _resolve.collect({})
+
+
 # -- reverse cover -----------------------------------------------------------
 
 
