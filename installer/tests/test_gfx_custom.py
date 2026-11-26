@@ -191,3 +191,20 @@ def test_profile_install_adds_its_display_server(
 	)
 
 	assert set(server.packages()) <= set(installed)
+
+
+def test_config_drops_hand_typed_dkms_like_the_count_mirror() -> None:
+	# both come from the kernel list (dkms_packages), never from the config
+	picked = ['nvidia-open', 'dkms', 'nvidia-open-dkms']
+	parsed = ArchConfig.from_config(
+		{'gfx_driver': 'custom', 'gfx_packages': picked}
+	)
+	assert parsed.gfx_packages == [GfxPackage.NvidiaOpen]
+	for kernels in (['linux'], ['linux-zen']):
+		installed = {
+			p.value for p in dkms_packages(parsed.gfx_packages, kernels)
+		}
+		if needs_headers := GfxPackage.NvidiaOpenDkms.value in installed:
+			installed |= {f'{k}-headers' for k in kernels}
+		assert needs_headers == (kernels == ['linux-zen'])
+		assert _resolve._gfx_packages('custom', picked, kernels) == installed
