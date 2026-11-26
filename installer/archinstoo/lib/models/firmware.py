@@ -46,6 +46,13 @@ FIRMWARE_OPTDEPS = frozenset(
 FULL_FIRMWARE = ['linux-firmware']
 
 
+class Arch(StrEnum):
+	# platform.machine() values the installer branches on. SysInfo.arch()
+	# stays a plain str: any other machine just compares unequal
+	X86_64 = 'x86_64'
+	AARCH64 = 'aarch64'
+
+
 class CpuVendor(Enum):
 	AuthenticAMD = 'amd'
 	GenuineIntel = 'intel'

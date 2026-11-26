@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .command import SysCommand
 from .exceptions import RequirementError, SysCallError
-from .models.firmware import CpuVendor
+from .models.firmware import Arch, CpuVendor
 from .output import debug
 
 _DMI_ID = Path('/sys/class/dmi/id')
@@ -141,6 +141,15 @@ class SysInfo:
 	@staticmethod
 	def arch() -> str:
 		return platform.machine()
+
+	# any other machine() value (riscv64, armv7l...) is neither
+	@staticmethod
+	def is_x86_64() -> bool:
+		return SysInfo.arch() == Arch.X86_64
+
+	@staticmethod
+	def is_aarch64() -> bool:
+		return SysInfo.arch() == Arch.AARCH64
 
 	@staticmethod
 	def has_thunderbolt() -> bool:

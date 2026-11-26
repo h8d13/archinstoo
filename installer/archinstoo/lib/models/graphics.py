@@ -1,5 +1,7 @@
 from enum import Enum
 
+from archinstoo.lib.models.firmware import Arch
+
 
 class GfxPackage(Enum):
 	Dkms = 'dkms'
@@ -118,7 +120,7 @@ GFX_CUSTOM_CHOICES: list[GfxPackage] = [
 # hidden per arch. x86_64 repos carry the SoC and translation-layer vulkan
 # drivers, but no x86 GPU uses them; Arch Ports aarch64 builds no Intel media
 _HIDDEN: dict[str, frozenset[GfxPackage]] = {
-	'x86_64': frozenset(
+	Arch.X86_64: frozenset(
 		{
 			GfxPackage.VulkanAsahi,
 			GfxPackage.VulkanBroadcom,
@@ -129,7 +131,7 @@ _HIDDEN: dict[str, frozenset[GfxPackage]] = {
 			GfxPackage.VulkanPowervr,
 		}
 	),
-	'aarch64': frozenset(
+	Arch.AARCH64: frozenset(
 		{
 			GfxPackage.IntelMediaDriver,
 			GfxPackage.LibvaIntelDriver,
@@ -152,7 +154,7 @@ def gfx_drivers(arch: str) -> list[GfxDriver]:
 		d
 		for d in GfxDriver
 		if hidden.isdisjoint(GFX_PACKAGES[d])
-		and not (arch == 'x86_64' and d is GfxDriver.MesaOpenSource)
+		and not (arch == Arch.X86_64 and d is GfxDriver.MesaOpenSource)
 	]
 
 

@@ -407,7 +407,7 @@ class BootloaderInstaller:
 		# same entry bootctl writes; EFI/BOOT/BOOT*.EFI stays as the fallback
 		suffix = (
 			'aa64'
-			if SysInfo.arch() == 'aarch64'
+			if SysInfo.is_aarch64()
 			else 'ia32'
 			if SysInfo.bitness() == 32
 			else 'x64'
@@ -576,7 +576,7 @@ class BootloaderInstaller:
 
 			info(f'GRUB EFI partition: {efi_partition.dev_path}')
 
-			if SysInfo.arch() == 'aarch64':
+			if SysInfo.is_aarch64():
 				# grub names its EFI target arm64, not aarch64
 				grub_target = 'arm64-efi'
 			elif SysInfo.bitness() == 64:
@@ -739,7 +739,7 @@ class BootloaderInstaller:
 			# binaries; 64-bit one last
 			efi_binaries: tuple[str, ...] = (
 				('BOOTAA64.EFI',)
-				if SysInfo.arch() == 'aarch64'
+				if SysInfo.is_aarch64()
 				else ('BOOTIA32.EFI', 'BOOTX64.EFI')
 			)
 
@@ -991,7 +991,7 @@ class BootloaderInstaller:
 					/ 'EFI/BOOT'
 					/ (
 						'BOOTAA64.EFI'
-						if SysInfo.arch() == 'aarch64'
+						if SysInfo.is_aarch64()
 						else 'BOOTX64.EFI'
 					)
 				)

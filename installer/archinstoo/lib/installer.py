@@ -330,7 +330,7 @@ class Installer:
 		else:
 			debug('Archinstoo will not install any ucode.')
 
-		if SysInfo.arch() == 'aarch64':
+		if SysInfo.is_aarch64():
 			self._base_packages.extend(ARCHPORTS_PACKAGES)
 
 		if locale_config:

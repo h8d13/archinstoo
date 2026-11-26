@@ -297,7 +297,7 @@ def select_management(
 	options = [
 		m
 		for m in Management
-		if not (m == Management.REFLECTOR and SysInfo.arch() != 'x86_64')
+		if m != Management.REFLECTOR or SysInfo.is_x86_64()
 	]
 	items = [MenuItem(m.value, value=m) for m in options]
 	group = MenuItemGroup(items)

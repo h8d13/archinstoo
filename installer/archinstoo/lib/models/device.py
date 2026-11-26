@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.disk.device_handler import DeviceHandler
 
+from archinstoo.lib.models.firmware import Arch
 from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, warn
 
@@ -1096,7 +1097,7 @@ class PartitionGUID(Enum):
 	def linux_root(cls, arch: str) -> PartitionGUID:
 		# discoverable partitions spec keys root by arch: the wrong GUID
 		# leaves systemd-gpt-auto-generator unable to find /
-		if arch == 'aarch64':
+		if arch == Arch.AARCH64:
 			return cls.LINUX_ROOT_AARCH64
 		return cls.LINUX_ROOT_X86_64
 
