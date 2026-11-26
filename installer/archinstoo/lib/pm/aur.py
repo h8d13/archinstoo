@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from archinstoo.lib.chroot import KEEP_ENV
 from archinstoo.lib.exceptions import SysCallError
 from archinstoo.lib.models.authentication import PrivilegeEscalation
+from archinstoo.lib.models.packages import AUR_BOOTSTRAP_PACKAGES
 from archinstoo.lib.output import debug, info, warn
 
 if TYPE_CHECKING:
@@ -13,38 +14,6 @@ if TYPE_CHECKING:
 
 	from archinstoo.lib.installer import Installer
 	from archinstoo.lib.models.authentication import AuthenticationConfiguration
-
-# what grimoire needs on the target before it can build anything from the AUR.
-# base-devel spelled out (its member list minus sudo) so a doas install does
-# not drag sudo in as a side effect of wanting a toolchain
-AUR_BOOTSTRAP_PACKAGES = [
-	'git',
-	'archlinux-keyring',
-	'autoconf',
-	'automake',
-	'binutils',
-	'bison',
-	'debugedit',
-	'fakeroot',
-	'file',
-	'findutils',
-	'flex',
-	'gawk',
-	'gcc',
-	'gettext',
-	'grep',
-	'groff',
-	'gzip',
-	'libtool',
-	'm4',
-	'make',
-	'pacman',
-	'patch',
-	'pkgconf',
-	'sed',
-	'texinfo',
-	'which',
-]
 
 
 # grimoire elevates `pacman -S` for official repo deps: those downloads need

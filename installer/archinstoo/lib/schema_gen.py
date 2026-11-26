@@ -51,6 +51,7 @@ from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicTy
 from archinstoo.lib.models.packages import (
 	ACCESSIBILITY_PACKAGES,
 	ARCHPORTS_PACKAGES,
+	AUR_BOOTSTRAP_PACKAGES,
 	BASE_PACKAGES,
 	FIDO2_PACKAGES,
 	LVM_PACKAGES,
@@ -58,7 +59,6 @@ from archinstoo.lib.models.packages import (
 )
 from archinstoo.lib.models.swap import ZRAM_PACKAGES
 from archinstoo.lib.models.users import STASH_PACKAGES, Shell
-from archinstoo.lib.pm import aur
 from archinstoo.lib.profile.base import (
 	DisplayServer,
 	GreeterType,
@@ -405,7 +405,7 @@ SECTIONS: tuple[Section, ...] = (
 	),
 	Section(
 		'aur_bootstrap',
-		lambda: aur.AUR_BOOTSTRAP_PACKAGES,
+		lambda: AUR_BOOTSTRAP_PACKAGES,
 		site='run_grimoire_installation',
 	),
 )

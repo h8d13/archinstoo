@@ -30,6 +30,38 @@ TER_FONT_PACKAGES = ['terminus-font']
 # accessibility tools enabled
 ACCESSIBILITY_PACKAGES = ['brltty', 'espeakup', 'alsa-utils']
 
+# what grimoire needs on the target before it can build anything from the AUR.
+# base-devel spelled out (its member list minus sudo) so a doas install does
+# not drag sudo in as a side effect of wanting a toolchain
+AUR_BOOTSTRAP_PACKAGES = [
+	'git',
+	'archlinux-keyring',
+	'autoconf',
+	'automake',
+	'binutils',
+	'bison',
+	'debugedit',
+	'fakeroot',
+	'file',
+	'findutils',
+	'flex',
+	'gawk',
+	'gcc',
+	'gettext',
+	'grep',
+	'groff',
+	'gzip',
+	'libtool',
+	'm4',
+	'make',
+	'pacman',
+	'patch',
+	'pkgconf',
+	'sed',
+	'texinfo',
+	'which',
+]
+
 
 class Repository(Enum):
 	Core = 'core'
