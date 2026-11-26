@@ -22,8 +22,10 @@ def test_example_profile_loads() -> None:
 	assert profile is not None
 	assert profile.name == 'CustomDesktop'
 	assert {'vlc', 'neovim'} <= set(profile.packages)
-	# exported again on save
+	# exported again on save, by whichever handler serializes it: safe_json
+	# does not hold the one that parsed the config
 	assert handler.to_json(profile)['path'] == str(EXAMPLE)
+	assert ProfileHandler().to_json(profile)['path'] == str(EXAMPLE)
 
 
 def test_url_path_not_fetched(monkeypatch: pytest.MonkeyPatch) -> None:
