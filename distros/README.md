@@ -25,7 +25,7 @@ Instead of host packages, [`--script bootstrap`](https://github.com/h8d13/archin
 runs archinstoo inside the [Arch bootstrap tarball](https://wiki.archlinux.org/title/Install_Arch_Linux_from_existing_Linux#Creating_a_chroot):
 no pacman, keyring or `arch-install-scripts` on the host.
 
-On aarch64 it takes the Arch Linux Ports tarball instead, see [`architecture/`](https://github.com/h8d13/archinstoo/blob/master/architecture).
+On aarch64 it takes the Arch Linux Ports tarball instead.
 
 A host _only_ needs:
 
