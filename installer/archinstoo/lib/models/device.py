@@ -15,9 +15,8 @@ if TYPE_CHECKING:
 	from parted import Disk, Geometry, Partition
 
 	from archinstoo.lib.disk.device_handler import DeviceHandler
-	from archinstoo.lib.models.users import Password
 
-
+from archinstoo.lib.models.users import Password
 from archinstoo.lib.output import debug, warn
 
 # libparted PED_PARTITION_* values, re-exported verbatim by pyparted.
@@ -1973,9 +1972,6 @@ class DiskEncryption:
 		arg: _DiskEncryptionSerialization,
 		disk_config: DiskLayoutConfiguration,
 	) -> Self:
-		# users imports stay lazy here: device.py only type-checks Password
-		from archinstoo.lib.models.users import Password
-
 		encryption_type = EncryptionType(arg['encryption_type'])
 
 		password: Password | None = None

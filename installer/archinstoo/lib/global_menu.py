@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, override
 
 from archinstoo.lib.disk.disk_menu import DiskLayoutConfigurationMenu
+from archinstoo.lib.models.authentication import PrivilegeEscalation
 from archinstoo.lib.models.device import (
 	DiskLayoutConfiguration,
 	DiskLayoutType,
@@ -47,6 +48,7 @@ from .pm.config import PacmanConfig
 from .pm.mirrors import PMenu
 from .pm.selectors import select_additional_packages, select_aur_packages
 from .profile.config import ProfileConfiguration
+from .profile.profile_menu import ProfileMenu
 
 if TYPE_CHECKING:
 	from archinstoo.lib.models.applications import ApplicationConfiguration
@@ -313,20 +315,19 @@ class GlobalMenu(AbstractMenu[None]):
 			missing.add('SDDM requires at least one regular user to log in')
 
 		aur_packages_item = self._item_group.find_by_key('aur_packages')
-		if aur_packages_item.has_value() and aur_packages_item.value:
-			from archinstoo.lib.models.authentication import (
-				PrivilegeEscalation,
-			)
-
-			if (
+		if (
+			aur_packages_item.has_value()
+			and aur_packages_item.value
+			and (
 				not auth_config
 				or auth_config.privilege_escalation
 				== PrivilegeEscalation.Run0
-			):
-				missing.add(
-					'AUR packages require Sudo or Doas privilege '
-					'escalation (Run0 requires booted environment)'
-				)
+			)
+		):
+			missing.add(
+				'AUR packages require Sudo or Doas privilege '
+				'escalation (Run0 requires booted environment)'
+			)
 
 		for item in self._item_group.items:
 			if item.mandatory:
@@ -761,8 +762,6 @@ class GlobalMenu(AbstractMenu[None]):
 	def _select_profile(
 		self, current_profile: ProfileConfiguration | None
 	) -> ProfileConfiguration | None:
-		from .profile.profile_menu import ProfileMenu
-
 		return ProfileMenu(preset=current_profile).run()
 
 	def _select_gfx_driver(
