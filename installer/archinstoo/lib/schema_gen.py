@@ -22,7 +22,6 @@ from archinstoo.lib.applications.cat.audio import AudioApp
 from archinstoo.lib.applications.cat.firewall import FirewallApp
 from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.security import SecurityApp
-from archinstoo.lib.hardware import CpuVendor
 from archinstoo.lib.models.applications import (
 	ApplicationSerialization,
 	Audio,
@@ -41,7 +40,7 @@ from archinstoo.lib.models.device import (
 	FilesystemType,
 	SnapshotType,
 )
-from archinstoo.lib.models.firmware import FULL_FIRMWARE, FirmwareType
+from archinstoo.lib.models.firmware import FULL_FIRMWARE, CpuVendor, FirmwareType
 from archinstoo.lib.models.graphics import GFX_CUSTOM_CHOICES, GFX_PACKAGES, GfxDriver
 from archinstoo.lib.models.network import ISO_PSK_EXTRA, NM_DESKTOP_EXTRA, NicType
 from archinstoo.lib.models.packages import (

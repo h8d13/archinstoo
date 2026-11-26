@@ -1,37 +1,11 @@
 import platform
-from enum import Enum
 from functools import cached_property
 from pathlib import Path
 
 from .command import SysCommand
 from .exceptions import RequirementError, SysCallError
+from .models.firmware import CpuVendor
 from .output import debug
-
-
-class CpuVendor(Enum):
-	AuthenticAMD = 'amd'
-	GenuineIntel = 'intel'
-	_Unknown = 'unknown'
-
-	@classmethod
-	def get_vendor(cls, name: str) -> CpuVendor:
-		if name in cls.__members__:
-			return cls[name]
-		debug(f"Unknown CPU vendor '{name}' detected.")
-		return cls._Unknown
-
-	def _has_microcode(self) -> bool:
-		match self:
-			case CpuVendor.AuthenticAMD | CpuVendor.GenuineIntel:
-				return True
-			case _:
-				return False
-
-	def get_ucode(self) -> Path | None:
-		if self._has_microcode():
-			return Path(self.value + '-ucode.img')
-		return None
-
 
 _DMI_ID = Path('/sys/class/dmi/id')
 _PROC_MODULES = Path('/proc/modules')
@@ -175,6 +149,8 @@ class SysInfo:
 	@staticmethod
 	def cpu_vendor() -> CpuVendor | None:
 		if vendor := _sys_info.cpu_info.get('vendor_id'):
+			if vendor not in CpuVendor.__members__:
+				debug(f"Unknown CPU vendor '{vendor}' detected.")
 			return CpuVendor.get_vendor(vendor)
 		return None
 
