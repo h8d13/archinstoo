@@ -18,6 +18,7 @@ from archinstoo.lib.models.firmware import FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.profile import DisplayServer
+from archinstoo.lib.network.network_handler import ISO_IWD_DIR
 from archinstoo.lib.pm.groups import expand
 from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.utils.paths import locate_binary
@@ -59,7 +60,7 @@ def _firmware_packages(config: dict[str, Any]) -> set[str]:
 def _iso_has_psks() -> bool:
 	# mirrors copy_iso_network_config(): the target only needs iwd when there
 	# are ISO PSKs to carry over
-	return bool(list(Path('/var/lib/iwd').glob('*.psk')))
+	return bool(list(Path(ISO_IWD_DIR).glob('*.psk')))
 
 
 def _host_packages() -> set[str]:
