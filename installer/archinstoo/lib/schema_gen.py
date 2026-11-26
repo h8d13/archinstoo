@@ -27,7 +27,6 @@ from archinstoo.lib.applications.cat.power_management import PowerManagementApp
 from archinstoo.lib.applications.cat.print_service import PrintServiceApp
 from archinstoo.lib.applications.cat.security import SecurityApp
 from archinstoo.lib.applications.cat.thunderbolt import ThunderboltApp
-from archinstoo.lib.authentication import stash
 from archinstoo.lib.hardware import CpuVendor
 from archinstoo.lib.models.applications import (
 	Audio,
@@ -58,7 +57,7 @@ from archinstoo.lib.models.packages import (
 	TER_FONT_PACKAGES,
 )
 from archinstoo.lib.models.swap import ZRAM_PACKAGES
-from archinstoo.lib.models.users import Shell
+from archinstoo.lib.models.users import STASH_PACKAGES, Shell
 from archinstoo.lib.pm import aur
 from archinstoo.lib.profile.base import (
 	DisplayServer,
@@ -188,9 +187,7 @@ SECTIONS: tuple[Section, ...] = (
 		lambda: {p.value: p.packages() for p in PrivilegeEscalation},
 		site='installation.create_users',
 	),
-	Section(
-		'stash', lambda: stash.STASH_PACKAGES, site='installation.create_users'
-	),
+	Section('stash', lambda: STASH_PACKAGES, site='installation.create_users'),
 	Section(
 		'shells',
 		lambda: {s.value: s.packages for s in Shell},
