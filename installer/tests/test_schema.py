@@ -204,16 +204,17 @@ def test_resolve_skips_users_the_install_skips() -> None:
 
 
 @pytest.mark.parametrize('elev', [True, False])
+@pytest.mark.parametrize('enc_password', ['$y$hash', None])
 def test_resolve_lists_privilege_escalation_for_elevated_users_only(
-	elev: bool,
+	elev: bool, enc_password: str | None
 ) -> None:
-	# create_users straps it only when a user gets to use it
-	raw: Any = {
-		'auth_config': {
-			'privilege_escalation': 'doas',
-			'users': [{'username': 'a', 'elev': elev}],
-		}
-	}
+	# create_users straps it for an elevated user with a password. A saved
+	# config never holds one and the menu asks for it again, so count takes
+	# it as given
+	user: Any = {'username': 'a', 'elev': elev}
+	if enc_password:
+		user['enc_password'] = enc_password
+	raw: Any = {'auth_config': {'privilege_escalation': 'doas', 'users': [user]}}
 	assert ('opendoas' in _resolve.collect(raw)) == elev
 	assert 'sudo' not in _resolve.collect({})
 

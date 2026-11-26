@@ -8,7 +8,7 @@ from archinstoo.lib.models.authentication import (
 	AuthenticationConfiguration,
 	PrivilegeEscalation,
 )
-from archinstoo.lib.models.users import User
+from archinstoo.lib.models.users import Password, User
 from archinstoo.lib.pm import aur
 
 if TYPE_CHECKING:
@@ -33,9 +33,10 @@ def _build(tmp_path: Path, priv_esc: PrivilegeEscalation) -> dict[str, str]:
 		add_additional_packages=lambda _: None,
 		arch_chroot=arch_chroot,
 	)
-	auth = AuthenticationConfiguration(
-		users=[User('ada', None, True)], privilege_escalation=priv_esc
-	)
+	# with a password: without one create_users sets up no sudo/doas and the
+	# build is skipped
+	ada = User('ada', Password(enc_password='$y$hash'), True)
+	auth = AuthenticationConfiguration(users=[ada], privilege_escalation=priv_esc)
 	aur.run_grimoire_installation(['yay'], installation, auth)  # type: ignore[arg-type]
 	return seen
 
@@ -61,3 +62,15 @@ def test_doas_rule_keeps_proxy_env(tmp_path: Path) -> None:
 		)
 	# the user's own rules survive the cleanup, ours do not
 	assert (tmp_path / 'etc/doas.conf').read_text() == 'permit persist :wheel\n'
+
+
+def test_build_skipped_without_a_usable_elevated_user(tmp_path: Path) -> None:
+	# no password, so no sudo/doas on the target and no sudoers.d to write to
+	installed: list[str] = []
+	installation = SimpleNamespace(
+		target=tmp_path, add_additional_packages=installed.extend
+	)
+	auth = AuthenticationConfiguration(users=[User('ada', None, True)])
+	aur.run_grimoire_installation(['yay'], installation, auth)  # type: ignore[arg-type]
+
+	assert not installed
