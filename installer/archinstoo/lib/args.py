@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 	from collections.abc import Callable
 	from pathlib import Path
 
+	from archinstoo.lib.profile.config import ProfileConfiguration
+
 from archinstoo.lib.cli import DEFAULT_SCRIPT, Arguments, build_parser
 from archinstoo.lib.disk.device_handler import DeviceHandler
 from archinstoo.lib.hardware import SysInfo
@@ -29,7 +31,7 @@ from archinstoo.lib.models.service import UserService
 from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.output import debug, error, warn
-from archinstoo.lib.profile.config import ProfileConfiguration
+from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 
 def _set_direct(obj: object, config: dict[str, Any], mapping: dict[str, str]) -> None:
@@ -100,7 +102,9 @@ class ArchConfig:
 			'kernels': self.kernels,
 			'kernel_headers': self.kernel_headers,
 			'firmware': self.firmware.json(),
-			'profile_config': self.profile_config.json()
+			'profile_config': ProfileHandler().config_json(
+				self.profile_config
+			)
 			if self.profile_config
 			else None,
 			'gfx_driver': self.gfx_driver.value
@@ -170,7 +174,7 @@ class ArchConfig:
 						arg, DeviceHandler()
 					)
 				),
-				'profile_config': ProfileConfiguration.parse_arg,
+				'profile_config': ProfileHandler().parse_config,
 				'auth_config': AuthenticationConfiguration.parse_arg,
 				'app_config': ApplicationConfiguration.parse_arg,
 				'network_config': NetworkConfiguration.parse_arg,

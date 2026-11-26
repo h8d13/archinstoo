@@ -163,3 +163,8 @@ class ProfileSerialization(TypedDict):
 	details: NotRequired[list[str]]
 	custom_settings: NotRequired[dict[str, dict[str, str | list[str] | None]]]
 	path: NotRequired[str]
+
+
+class ProfileConfigurationSerialization(TypedDict):
+	profiles: list[ProfileSerialization]
+	greeter: NotRequired[str | None]

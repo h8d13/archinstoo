@@ -7,15 +7,19 @@ from typing import TYPE_CHECKING
 
 from archinstoo.lib.authentication.accounts import add_to_group
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage, dkms_packages
-from archinstoo.lib.models.profile import GreeterType, ProfileSerialization
+from archinstoo.lib.models.profile import (
+	GreeterType,
+	ProfileConfigurationSerialization,
+	ProfileSerialization,
+)
 from archinstoo.lib.output import debug, error, info, warn
 from archinstoo.lib.profile.base import Profile
+from archinstoo.lib.profile.config import ProfileConfiguration
 
 if TYPE_CHECKING:
 	from types import ModuleType
 
 	from archinstoo.lib.installer import Installer
-	from archinstoo.lib.profile.config import ProfileConfiguration
 
 # greetd's stock config.toml runs the tty agreety greeter, so every front-end
 # here replaces it wholesale. tuigreet reads the sessions each compositor ships
@@ -135,6 +139,41 @@ class ProfileHandler:
 				sub_profile.custom_settings = sub_profile_settings
 
 		return profile
+
+	def config_json(
+		self, config: ProfileConfiguration
+	) -> ProfileConfigurationSerialization:
+		return {
+			'profiles': [self.to_json(p) for p in config.profiles],
+			'greeter': config.greeter.value if config.greeter else None,
+		}
+
+	def parse_config(
+		self, arg: ProfileConfigurationSerialization
+	) -> ProfileConfiguration:
+		profiles = [
+			profile
+			for profile_data in arg.get('profiles', [])
+			if (profile := self.parse_profile_config(profile_data))
+		]
+
+		greeter = arg.get('greeter', None)
+
+		config = ProfileConfiguration(
+			profiles,
+			GreeterType(greeter) if greeter else None,
+		)
+
+		# the menu gates this on the selection; a hand-written config does not,
+		# and install_profile_config would drop it without a word after pacstrap
+		# had already run
+		if config.greeter and not config.is_greeter_supported():
+			warn(
+				f'Greeter {config.greeter.value} in the config: no '
+				'selected profile supports one, it will be skipped'
+			)
+
+		return config
 
 	@property
 	def profiles(self) -> list[Profile]:
