@@ -33,7 +33,11 @@ from archinstoo.lib.models.authentication import AuthenticationConfiguration
 from archinstoo.lib.models.bootloader import BootloaderConfiguration
 from archinstoo.lib.models.device import DiskLayoutConfiguration
 from archinstoo.lib.models.firmware import FirmwareConfiguration
-from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
+from archinstoo.lib.models.graphics import (
+	GFX_CUSTOM_CHOICES,
+	GfxDriver,
+	GfxPackage,
+)
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.localization import LocaleConfiguration
 from archinstoo.lib.models.mirrors import PacmanConfiguration
@@ -247,12 +251,14 @@ class ArchConfig:
 		# subscripted: GfxDriver() takes any object, .get() any key
 		if args_config.get('gfx_driver'):
 			arch_config.gfx_driver = GfxDriver(args_config['gfx_driver'])
-		# unknown names are dropped, the same way kernels are parsed
-		arch_config.gfx_packages = [
-			GfxPackage(p)
-			for p in args_config.get('gfx_packages') or []
-			if p in GfxPackage
-		]
+		# names outside the custom pool are dropped: unknown ones, and dkms
+		# with its nvidia variant, which the kernel list decides. A list, as
+		# an entry that is no name at all (a nested list) cannot be hashed
+		pool = [p.value for p in GFX_CUSTOM_CHOICES]
+		picked = args_config.get('gfx_packages') or []
+		arch_config.gfx_packages = [GfxPackage(p) for p in picked if p in pool]
+		if dropped := [p for p in picked if p not in pool]:
+			debug(f'Ignoring gfx_packages {dropped!r}: not a custom choice')
 
 		arch_config.kernel_headers = args_config.get('kernel_headers', False)
 		if firmware := args_config.get('firmware'):
