@@ -11,7 +11,7 @@ def jsonify(obj: object, safe: bool = True) -> Any:  # noqa: ANN401 - dynamic JS
 	# Converts objects into json.dumps() compatible nested dictionaries.
 	# Setting safe to True skips dictionary keys starting with a bang (!)
 	# Unset values (None / '') are omitted: loaders presence-check keys and
-	# fall back to defaults, and _cleanup_config strips None on load anyway.
+	# fall back to defaults, and strip_none drops None on load anyway.
 
 	compatible_types = str, int, float, bool
 	if isinstance(obj, dict):
@@ -40,6 +40,19 @@ def jsonify(obj: object, safe: bool = True) -> Any:  # noqa: ANN401 - dynamic JS
 		return vars(obj)
 
 	return obj
+
+
+def strip_none(config: dict[str, Any]) -> Any:  # noqa: ANN401 - JSON boundary
+	# the read side of jsonify: a null key is an unset one, in nested dicts
+	# too. Lists are left as they are
+	clean = {}
+	for key, raw in config.items():
+		val = strip_none(raw) if isinstance(raw, dict) else raw
+
+		if val is not None:
+			clean[key] = val
+
+	return clean
 
 
 class JSON(json.JSONEncoder, json.JSONDecoder):

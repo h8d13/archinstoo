@@ -43,6 +43,7 @@ from archinstoo.lib.models.swap import SwapConfiguration
 from archinstoo.lib.models.sysctl import SysctlConfiguration
 from archinstoo.lib.output import debug, error, warn
 from archinstoo.lib.profile.profiles_handler import ProfileHandler
+from archinstoo.lib.serialize import strip_none
 
 
 def _ignored(key: str, value: object) -> None:
@@ -325,7 +326,7 @@ class ArchConfigHandler:
 				raise SystemExit(1) from e
 
 		# the JSON boundary: nothing checks the shape, from_config tolerates it
-		cleaned: ArchConfigSerialization = self._cleanup_config(config)
+		cleaned: ArchConfigSerialization = strip_none(config)
 		return cleaned
 
 	def _fetch_from_url(self, url: str) -> str:
@@ -348,20 +349,6 @@ class ArchConfigHandler:
 			sys.exit(1)
 
 		return path.read_text()
-
-	def _cleanup_config(self, config: dict[str, Any]) -> Any:  # noqa: ANN401 - JSON boundary
-		clean_args = {}
-		for key, raw in config.items():
-			val = (
-				self._cleanup_config(raw)
-				if isinstance(raw, dict)
-				else raw
-			)
-
-			if val is not None:
-				clean_args[key] = val
-
-		return clean_args
 
 
 class _ArchConfigHandlerHolder:
