@@ -319,6 +319,13 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 			pkgs.update(SCHEMA['profile_base'].get(main, []))
 
 		tp_details = tp.get('details', []) or []
+		if tp_details:
+			# the first shell picked stays, later ones are dropped
+			from archinstoo.lib.profile.profiles_handler import one_shell
+
+			named = {p.name: p for p in _named_profiles(tp_details)}
+			picked = [named[name] for name in tp_details if name in named]
+			tp_details = [p.name for p in one_shell(picked)]
 		details.extend(tp_details)
 		custom_settings = tp.get('custom_settings') or {}
 
