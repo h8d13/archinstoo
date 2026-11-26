@@ -8,6 +8,7 @@ from archinstoo.lib.command import SysCommand
 from archinstoo.lib.disk.fstab import mounted_at
 from archinstoo.lib.exceptions import DiskError
 from archinstoo.lib.hardware import SysInfo
+from archinstoo.lib.models.device import FilesystemType
 from archinstoo.lib.output import info
 
 if TYPE_CHECKING:
@@ -44,7 +45,7 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 	fs_type = root_fs['fstype']
 	info(f'Setting up {size}GiB swap file on {fs_type}')
 
-	if fs_type == 'btrfs':
+	if fs_type == FilesystemType.BTRFS:
 		swapfile = '/swap/swapfile'
 		_mount_swap_subvol(installation.target, root_fs['uuid'])
 		installation.arch_chroot(
@@ -80,7 +81,7 @@ def setup_swapfile(installation: Installer, size_gib: int) -> tuple[str, list[st
 
 	if not SysInfo.has_uefi():
 		fs_uuid = root_fs['uuid']
-		if fs_type == 'btrfs':
+		if fs_type == FilesystemType.BTRFS:
 			result = installation.arch_chroot(
 				[
 					'btrfs',
