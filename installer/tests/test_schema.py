@@ -202,6 +202,21 @@ def test_resolve_skips_users_the_install_skips() -> None:
 	) == _resolve.collect({})
 
 
+@pytest.mark.parametrize('elev', [True, False])
+def test_resolve_lists_privilege_escalation_for_elevated_users_only(
+	elev: bool,
+) -> None:
+	# create_users straps it only when a user gets to use it
+	raw: Any = {
+		'auth_config': {
+			'privilege_escalation': 'doas',
+			'users': [{'username': 'a', 'elev': elev}],
+		}
+	}
+	assert ('opendoas' in _resolve.collect(raw)) == elev
+	assert 'sudo' not in _resolve.collect({})
+
+
 # -- reverse cover -----------------------------------------------------------
 
 
