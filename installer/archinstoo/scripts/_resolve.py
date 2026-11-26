@@ -28,6 +28,7 @@ from archinstoo.lib.models.network import NicType
 from archinstoo.lib.models.profile import DisplayServer
 from archinstoo.lib.network.network_handler import ISO_IWD_DIR
 from archinstoo.lib.pm.groups import expand
+from archinstoo.lib.profile.base import Profile
 from archinstoo.lib.schema import SCHEMA
 from archinstoo.lib.serialize import strip_none
 from archinstoo.lib.utils.paths import locate_binary
@@ -37,7 +38,6 @@ if TYPE_CHECKING:
 	from archinstoo.lib.models.applications import ApplicationSerialization
 	from archinstoo.lib.models.device import _DiskLayoutConfigurationSerialization
 	from archinstoo.lib.models.profile import ProfileSerialization
-	from archinstoo.lib.profile.base import Profile
 	from archinstoo.lib.schema_gen import Section
 
 
@@ -166,34 +166,59 @@ def _profile_packages(name: str, settings: dict[str, Any]) -> set[str]:
 	return prof_pkgs
 
 
-def _named_profiles(names: list[str]) -> list[Profile]:
-	# built-in profiles by name, for what a name alone cannot say: display
-	# server, whether a terminal is shipped
-	if not names:
-		return []
-	from archinstoo.lib.profile.profiles_handler import ProfileHandler
-
-	return [p for p in ProfileHandler().profiles if p.name in names]
-
-
-def _path_profiles(top_profiles: list[ProfileSerialization]) -> list[Profile]:
-	# custom 'path' profiles are code, not schema entries; load them the same
-	# way the installer does so their packages and desktop-typing count too
-	entries = [
-		tp
-		for tp in top_profiles
-		if 'path' in tp and tp['path']  # noqa: RUF019 - .get() takes any key
-	]
+def _top_profiles(
+	entries: list[ProfileSerialization],
+) -> tuple[list[Profile], list[Profile]]:
+	# every entry as the installer reads it: one whose main names no profile
+	# is dropped, a selection loses unknown names and each shell after the
+	# first, and a 'path' file is loaded as the code it is. With them the
+	# handler's own profiles, the ones schema.toml lists: a 'path' file can
+	# put its code under one of their names
 	if not entries:
-		return []
+		return [], []
 	from archinstoo.lib.profile.profiles_handler import ProfileHandler
 
 	handler = ProfileHandler()
-	return [
+	stock = list(handler.profiles)
+	tops = [
 		profile
-		for tp in entries
-		if (profile := handler.parse_profile_config(tp))
+		for entry in entries
+		if (profile := handler.parse_profile_config(entry))
 	]
+	return tops, stock
+
+
+def _top_packages(top: Profile, stock: list[Profile]) -> set[str]:
+	# mirrors Profile.install(): desktop and server strap themselves and their
+	# selection, any other of the handler's profiles named as main straps
+	# nothing. A 'path' profile is custom code: with an install() of its own
+	# it is taken to strap like the former
+	if top in stock:
+		base = SCHEMA['profile_base'].get(top.name)
+	elif type(top).install is not Profile.install:
+		base = top.effective_packages()
+	else:
+		base = None
+	if base is None:
+		return set()
+
+	pkgs = set(base)
+	for sub in top.current_selection:
+		# the schema where it lists the profile, the profile's own word where
+		# it is custom code
+		if sub not in stock or sub.name not in SCHEMA['profiles']:
+			pkgs.update(sub.effective_packages())
+			continue
+		# free-form per profile, no TypedDict names these keys
+		settings: dict[str, Any] = sub.custom_settings
+		excluded = set(settings.get('excluded_packages') or [])
+		pkgs.update(_profile_packages(sub.name, settings) - excluded)
+		# seat_access, for the profiles that place its package (seat_packages)
+		seat = settings.get('seat_access')
+		if seat in sub.effective_packages():
+			pkgs.add(seat)
+
+	return pkgs
 
 
 def _gfx_packages(gfx: str, custom: list[str], kernels: list[str]) -> set[str]:
@@ -301,79 +326,23 @@ def collect(raw: ArchConfigSerialization) -> set[str]:
 		if p:
 			pkgs.add(p)
 
-	# profile
+	# profile: what install_profile_config straps, the selected profiles and
+	# around them the X server and a greeter one of them supports
 	pc = config.get('profile_config')
-	top_profiles = (pc.get('profiles') if pc else None) or []
-	profiles = SCHEMA['profiles']
-	mains: set[str] = set()
-	details: list[str] = []
+	tops, stock = _top_profiles((pc.get('profiles') if pc else None) or [])
+	for top in tops:
+		pkgs.update(_top_packages(top, stock))
 
-	for tp in top_profiles:
-		main = tp.get('main', '')
-		# parse_profile_config drops an entry whose main names no profile,
-		# details and all. A 'path' entry is _path_profiles' to judge
-		if not _named_profiles([main]) and not tp.get('path'):
-			continue
-		if main:
-			mains.add(main)
-			# desktop and server carry different base sets
-			pkgs.update(SCHEMA['profile_base'].get(main, []))
-
-		tp_details = tp.get('details', []) or []
-		if tp_details:
-			# the first shell picked stays, later ones are dropped
-			from archinstoo.lib.profile.profiles_handler import one_shell
-
-			named = {p.name: p for p in _named_profiles(tp_details)}
-			picked = [named[name] for name in tp_details if name in named]
-			tp_details = [p.name for p in one_shell(picked)]
-		details.extend(tp_details)
-		custom_settings = tp.get('custom_settings') or {}
-
-		for name in tp_details:
-			# free-form per profile, no TypedDict names these keys
-			settings: dict[str, Any] = custom_settings.get(name) or {}
-			excluded = set(settings.get('excluded_packages') or [])
-
-			if name in profiles:
-				pkgs.update(
-					p
-					for p in _profile_packages(name, settings)
-					if p not in excluded
-				)
-
-			# seat_access for the wayland WMs (see seat_packages)
-			if (
-				seat := settings.get('seat_access')
-			) and seat not in excluded:
-				pkgs.add(seat)
-
-	# custom path profiles: own packages plus selections, exclusions applied,
-	# mirroring Profile.install() (self + current_selection effective_packages)
-	custom_profiles = _path_profiles(top_profiles)
-	for profile in custom_profiles:
-		pkgs.update(profile.effective_packages())
-		for sub in profile.current_selection:
-			pkgs.update(sub.effective_packages())
-
-	has_desktop = 'desktop' in mains or any(
-		p.is_desktop_profile() for p in custom_profiles
-	)
-
-	# every profile the install will see, as install_profile_config() does:
-	# tops and details by name, path profiles with their selections
-	selected = _named_profiles([*mains, *details])
-	for profile in custom_profiles:
-		selected += [profile, *profile.current_selection]
-
-	if any(DisplayServer.X11 in p.display_servers() for p in selected):
+	if any(DisplayServer.X11 in top.display_servers() for top in tops):
 		pkgs.update(_flat('xorg_extra'))
 
-	# greeter: install_profile_config skips one no selected profile supports,
-	# and only the desktop top profile does
 	greeter: str | None = pc.get('greeter') if pc else None
-	if has_desktop and greeter in SCHEMA['greeters']:
+	if greeter in SCHEMA['greeters'] and any(
+		top.is_greeter_supported() for top in tops
+	):
 		pkgs.update(SCHEMA['greeters'][greeter])
+
+	has_desktop = any(top.is_desktop_profile() for top in tops)
 
 	pkgs.update(
 		_gfx_packages(
