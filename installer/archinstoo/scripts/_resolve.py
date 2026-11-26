@@ -15,7 +15,7 @@ from archinstoo.lib.exceptions import RequirementError
 from archinstoo.lib.hardware import SysInfo
 from archinstoo.lib.host_services import accessibility_tools_in_use
 from archinstoo.lib.models.bootloader import Bootloader
-from archinstoo.lib.models.firmware import FirmwareType
+from archinstoo.lib.models.firmware import FirmwareConfiguration, FirmwareType
 from archinstoo.lib.models.graphics import GfxDriver, GfxPackage
 from archinstoo.lib.models.kernel import DEFAULT_KERNEL
 from archinstoo.lib.models.network import NicType
@@ -52,8 +52,11 @@ def _requirements(*binaries: str) -> bool:
 
 def _firmware_packages(config: ArchConfigSerialization) -> set[str]:
 	# mirrors FirmwareConfiguration.packages(): the schema holds what is
-	# static, the picked vendors come from the config
-	firmware_type = FirmwareType.FULL.value
+	# static, the picked vendors come from the config. An unset section is
+	# ArchConfig's default, which depends on the host being a VM
+	firmware_type = FirmwareConfiguration.default(
+		SysInfo.is_vm()
+	).firmware_type.value
 	vendors: list[str] = []
 	if firmware_cfg := config.get('firmware'):
 		firmware_type = firmware_cfg.get('firmware_type', firmware_type)
